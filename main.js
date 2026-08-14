@@ -2884,9 +2884,13 @@ const TASK_SCHEMA = {
     ...GOAL,
     THEME,
     f$3("系列ID", "canonical-reference", "target", "record-id", "Optional TaskSeries reference.", { aliases: ["seriesId"] }),
-    f$3("计划日期", "domain-fact", "target", "date", "Scheduled execution date.", { aliases: ["scheduledDate"] }),
-    f$3("开始日期", "domain-fact", "target", "date", "Declared start date.", { aliases: ["startDate"] }),
-    f$3("截止日期", "domain-fact", "target", "date", "Due date.", { aliases: ["dueDate"] }),
+    f$3("计划时间", "domain-fact", "target", "datetime", "Scheduled execution timestamp.", { aliases: ["scheduledAt"] }),
+    f$3("开始时间", "domain-fact", "target", "datetime", "Declared start timestamp.", { aliases: ["startAt"] }),
+    f$3("结束时间", "domain-fact", "target", "datetime", "Declared end timestamp. Actual execution history still belongs to TaskSession.", { aliases: ["endAt"] }),
+    f$3("截止时间", "domain-fact", "target", "datetime", "Due timestamp.", { aliases: ["dueAt"] }),
+    f$3("计划日期", "domain-fact", "target", "date", "Legacy scheduled execution date retained for compatibility.", { aliases: ["scheduledDate"] }),
+    f$3("开始日期", "domain-fact", "target", "date", "Legacy declared start date retained for compatibility.", { aliases: ["startDate"] }),
+    f$3("截止日期", "domain-fact", "target", "date", "Legacy due date retained for compatibility.", { aliases: ["dueDate"] }),
     f$3("完成于", "domain-fact", "target", "datetime", "Task completion timestamp/date.", { aliases: ["completedAt"] }),
     f$3("取消于", "domain-fact", "target", "datetime", "Task cancellation timestamp/date.", { aliases: ["cancelledAt"] }),
     f$3("跳过于", "domain-fact", "target", "datetime", "Recurring occurrence skipped timestamp/date.", { aliases: ["skippedAt"] }),
@@ -3001,30 +3005,45 @@ function define(contract, capture) {
   };
 }
 const TASK_FIELDS = [
-  { id: "core.task.content", key: "任务内容", label: "任务内容", type: "textarea", semantic: "body" },
+  { id: "core.task.status", key: "status", label: "状态", type: "singleSelect", semantic: "status", defaultValue: "open", autoSelectFirst: true, options: [
+    { value: "open", label: "未完成" },
+    { value: "done", label: "已完成" },
+    { value: "cancelled", label: "已取消" },
+    { value: "skipped", label: "已跳过" }
+  ] },
+  { id: "core.task.content", key: "任务内容", label: "内容", type: "text", semantic: "body" },
+  { id: "core.task.recurrenceUnit", key: "recurrenceUnit", label: "重复", type: "singleSelect", semantic: "recurrence", defaultValue: "none", autoSelectFirst: true, options: [
+    { value: "none", label: "不重复" },
+    { value: "day", label: "天" },
+    { value: "week", label: "周" },
+    { value: "month", label: "月" },
+    { value: "quarter", label: "季" },
+    { value: "year", label: "年" }
+  ] },
+  { id: "core.task.recurrenceInterval", key: "recurrenceInterval", label: "重复间隔", type: "number", min: 1, defaultValue: "1" },
+  // 主题属于 GoalTemplate / Goal 上下文：保留为隐藏系统字段参与模板默认值和持久化，不在任务创建表单中直接选择。
   themeField,
-  { id: "core.task.scheduledDate", key: "scheduledDate", label: "计划日期", type: "date" },
-  { id: "core.task.startDate", key: "startDate", label: "开始日期", type: "date" },
-  { id: "core.task.dueDate", key: "dueDate", label: "截止日期", type: "date" },
-  { id: "core.task.expectedDuration", key: "expectedDurationMinutes", label: "预计时长", type: "number", min: 1 },
-  { id: "core.task.priority", key: "priority", label: "优先级", type: "singleSelect", options: [
+  // 以下均属于“更多选项”。时间与任务状态互相独立，填写结束时间不会自动完成任务。
+  { id: "core.task.startAt", key: "startAt", label: "开始/预计时间", type: "datetime", semantic: "date" },
+  { id: "core.task.endAt", key: "endAt", label: "结束时间", type: "datetime", semantic: "date" },
+  { id: "core.task.priority", key: "priority", label: "优先级", type: "singleSelect", autoSelectFirst: true, options: [
     { value: "lowest", label: "最低" },
     { value: "low", label: "低" },
     { value: "medium", label: "中" },
     { value: "high", label: "高" },
     { value: "highest", label: "最高" }
   ] },
-  { id: "core.task.energyDemand", key: "energyDemand", label: "精力要求", type: "singleSelect", options: [
+  { id: "core.task.energyDemand", key: "energyDemand", label: "精力要求", type: "singleSelect", autoSelectFirst: true, options: [
     { value: "low", label: "低" },
     { value: "medium", label: "中" },
     { value: "high", label: "高" }
   ] },
-  { id: "core.task.brainDemand", key: "brainDemand", label: "脑力要求", type: "singleSelect", options: [
+  { id: "core.task.brainDemand", key: "brainDemand", label: "脑力要求", type: "singleSelect", autoSelectFirst: true, options: [
     { value: "low", label: "低" },
     { value: "medium", label: "中" },
     { value: "high", label: "高" }
   ] },
-  { id: "core.task.physicalDemand", key: "physicalDemand", label: "体力要求", type: "singleSelect", options: [
+  { id: "core.task.physicalDemand", key: "physicalDemand", label: "体力要求", type: "singleSelect", autoSelectFirst: true, options: [
     { value: "low", label: "低" },
     { value: "medium", label: "中" },
     { value: "high", label: "高" }
@@ -3036,21 +3055,7 @@ const TASK_FIELDS = [
     { value: "commute", label: "通勤" },
     { value: "out", label: "外出" }
   ] },
-  { id: "core.task.recoveryIntent", key: "recoveryIntent", label: "恢复意图", type: "boolean" },
-  { id: "core.task.recurrenceUnit", key: "recurrenceUnit", label: "重复单位", type: "singleSelect", options: [
-    { value: "day", label: "天" },
-    { value: "week", label: "周" },
-    { value: "month", label: "月" },
-    { value: "quarter", label: "季" },
-    { value: "year", label: "年" }
-  ] },
-  { id: "core.task.recurrenceInterval", key: "recurrenceInterval", label: "重复间隔", type: "number", min: 1, defaultValue: "1" },
-  { id: "core.task.recurrenceAnchor", key: "recurrenceAnchor", label: "重复锚点", type: "singleSelect", defaultValue: "scheduled", options: [
-    { value: "scheduled", label: "计划日期" },
-    { value: "start", label: "开始日期" },
-    { value: "due", label: "截止日期" },
-    { value: "completion", label: "完成日期" }
-  ] }
+  { id: "core.task.recoveryIntent", key: "recoveryIntent", label: "恢复意图", type: "boolean" }
 ];
 const TASK_DEFINITION = define(TASK_SCHEMA, {
   id: RECORD_TYPE_IDS.TASK,
@@ -4546,6 +4551,37 @@ function parseDate$1(value) {
   if (!raw) return void 0;
   return normalizeDateStr(raw) || raw;
 }
+function normalizeStoredDateTime(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return void 0;
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(raw)) return raw.replace(" ", "T");
+  return raw;
+}
+function formatRecordDateTimeForMarkdown(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const naive = raw.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?$/);
+  if (naive) return `${naive[1]} ${naive[2]}`;
+  const parsed = new Date(raw);
+  if (!Number.isFinite(parsed.getTime())) return raw.replace("T", " ");
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  const hour = String(parsed.getHours()).padStart(2, "0");
+  const minute = String(parsed.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hour}:${minute}`;
+}
+const TASK_READABLE_DATETIME_LABELS = /* @__PURE__ */ new Set([
+  "创建于",
+  "计划时间",
+  "开始时间",
+  "结束时间",
+  "截止时间",
+  "完成于",
+  "取消于",
+  "跳过于"
+]);
 function decodeRecordContentLines(contentLines, _parentFolder) {
   let categoryKey = null;
   let date2;
@@ -4569,6 +4605,10 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
   let schemaVersion;
   let status;
   let templateSourceType;
+  let scheduledAt;
+  let startAt;
+  let endAt;
+  let dueAt;
   let scheduledDate;
   let startDate;
   let dueDate;
@@ -4647,8 +4687,8 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
       else if (["滚动策略", "rolloverpolicy"].includes(key)) {
         if (value.trim().toLowerCase() === "carry") rolloverPolicy = "carry";
       } else if (coreBlock === "task-session" && ["任务id", "taskid"].includes(key)) taskId = value.trim() || void 0;
-      else if (coreBlock === "task-session" && ["开始于", "sessionstartedat"].includes(key)) sessionStartedAt = value.trim() || void 0;
-      else if (coreBlock === "task-session" && ["结束于", "sessionendedat"].includes(key)) sessionEndedAt = value.trim() || void 0;
+      else if (coreBlock === "task-session" && ["开始于", "sessionstartedat"].includes(key)) sessionStartedAt = normalizeStoredDateTime(value);
+      else if (coreBlock === "task-session" && ["结束于", "sessionendedat"].includes(key)) sessionEndedAt = normalizeStoredDateTime(value);
       else if (coreBlock === "task-session" && ["时长", "sessiondurationminutes"].includes(key)) sessionDurationMinutes = decodeMarkdownNumber(value);
       else if (coreBlock === "task-session" && ["结果", "sessionresult"].includes(key)) {
         const result = value.trim().toLowerCase();
@@ -4666,13 +4706,17 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
       else if (["状态", "status"].includes(key)) status = value.trim().toLowerCase();
       else if (key === "目标") goalPath = decodeMarkdownString(value, FIELD_CODEC_PRESETS.goalPath);
       else if (["日期", "date"].includes(key)) date2 = parseDate$1(value);
+      else if (["计划时间", "scheduledat"].includes(key)) scheduledAt = normalizeStoredDateTime(value);
+      else if (["开始时间", "startat"].includes(key)) startAt = normalizeStoredDateTime(value);
+      else if (["结束时间", "endat"].includes(key)) endAt = normalizeStoredDateTime(value);
+      else if (["截止时间", "dueat"].includes(key)) dueAt = normalizeStoredDateTime(value);
       else if (["计划日期", "scheduleddate"].includes(key)) scheduledDate = parseDate$1(value);
       else if (["开始日期", "startdate"].includes(key)) startDate = parseDate$1(value);
       else if (["截止日期", "duedate"].includes(key)) dueDate = parseDate$1(value);
-      else if (["创建于", "createdat"].includes(key)) createdAt = value.trim() || void 0;
-      else if (["完成于", "completedat"].includes(key)) completedAt = value.trim() || void 0;
-      else if (["取消于", "cancelledat"].includes(key)) cancelledAt = value.trim() || void 0;
-      else if (["跳过于", "skippedat"].includes(key)) skippedAt = value.trim() || void 0;
+      else if (["创建于", "createdat"].includes(key)) createdAt = normalizeStoredDateTime(value);
+      else if (["完成于", "completedat"].includes(key)) completedAt = normalizeStoredDateTime(value);
+      else if (["取消于", "cancelledat"].includes(key)) cancelledAt = normalizeStoredDateTime(value);
+      else if (["跳过于", "skippedat"].includes(key)) skippedAt = normalizeStoredDateTime(value);
       else if (["优先级", "priority"].includes(key)) {
         const p2 = value.trim().toLowerCase();
         if (["lowest", "low", "medium", "high", "highest"].includes(p2)) priority = p2;
@@ -4721,6 +4765,10 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
     categoryKey: categoryKey || "",
     status,
     date: date2,
+    scheduledAt,
+    startAt,
+    endAt,
+    dueAt,
     scheduledDate,
     startDate,
     dueDate,
@@ -4783,6 +4831,8 @@ const TASK_FIELD_ORDER = [
   ["目标", ["目标", "goalPath"]],
   ["主题", ["主题", "themePath"]],
   ["创建于", ["创建于", "createdAt"]],
+  ["开始时间", ["开始时间", "startAt"]],
+  ["结束时间", ["结束时间", "endAt"]],
   ["优先级", ["优先级", "priority"]],
   ["预计时长", ["预计时长", "expectedDurationMinutes"]],
   ["精力要求", ["精力要求", "energyDemand"]],
@@ -4790,6 +4840,8 @@ const TASK_FIELD_ORDER = [
   ["体力要求", ["体力要求", "physicalDemand"]],
   ["可用场景", ["可用场景", "availabilityContexts"]],
   ["恢复意图", ["恢复意图", "recoveryIntent"]],
+  ["计划时间", ["计划时间", "scheduledAt"]],
+  ["截止时间", ["截止时间", "dueAt"]],
   ["计划日期", ["计划日期", "scheduledDate"]],
   ["开始日期", ["开始日期", "startDate"]],
   ["截止日期", ["截止日期", "dueDate"]],
@@ -4870,6 +4922,7 @@ function encodeRecordBlock(document2) {
       let value = firstValue(fields, keys);
       if (label === "状态" && !value) value = "open";
       if (label === "创建于" && !value) value = (/* @__PURE__ */ new Date()).toISOString();
+      if (value && TASK_READABLE_DATETIME_LABELS.has(label)) value = formatRecordDateTimeForMarkdown(value);
       if (value) {
         lines.push(`${label}:: ${value}`);
         keys.forEach((key) => emitted.add(key));
@@ -5394,30 +5447,50 @@ function addRecurrenceToDate(baseDateISO, recurrence) {
   const next2 = recurrence.unit === "quarter" ? base.add(recurrence.interval * 3, "month") : base.add(recurrence.interval, recurrence.unit);
   return next2.format("YYYY-MM-DD");
 }
+function addRecurrenceToDateTime(baseValue, recurrence) {
+  const raw = String(baseValue || "").trim();
+  if (!raw) return raw;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return addRecurrenceToDate(raw, recurrence);
+  const base = dayjs(raw.replace(" ", "T"));
+  if (!base.isValid()) throw new Error(`task_recurrence_invalid_base_datetime:${baseValue}`);
+  const next2 = recurrence.unit === "quarter" ? base.add(recurrence.interval * 3, "month") : base.add(recurrence.interval, recurrence.unit);
+  return next2.format("YYYY-MM-DDTHH:mm");
+}
+function firstTime(...values2) {
+  return values2.find((value) => Boolean(String(value || "").trim()));
+}
 function getTaskRecurrenceBaseDate(task, recurrence, completedAtISO) {
-  const completionDate = normalizeDateStr(completedAtISO) || String(completedAtISO || "").slice(0, 10);
-  if (recurrence.anchor === "completion") return completionDate;
-  if (recurrence.anchor === "start") return task.startDate || task.scheduledDate || task.dueDate || completionDate;
-  if (recurrence.anchor === "due") return task.dueDate || task.scheduledDate || task.startDate || completionDate;
-  return task.scheduledDate || task.startDate || task.dueDate || completionDate;
+  const completion = String(completedAtISO || "").trim();
+  if (recurrence.anchor === "completion") return completion;
+  if (recurrence.anchor === "start") return firstTime(task.startAt, task.startDate, task.scheduledAt, task.scheduledDate, task.dueAt, task.dueDate) || completion;
+  if (recurrence.anchor === "due") return firstTime(task.dueAt, task.dueDate, task.startAt, task.startDate, task.scheduledAt, task.scheduledDate) || completion;
+  return firstTime(task.scheduledAt, task.scheduledDate, task.startAt, task.startDate, task.dueAt, task.dueDate) || completion;
 }
 function buildNextOccurrenceDates(task, recurrence, completedAtISO) {
-  const baseDate = getTaskRecurrenceBaseDate(task, recurrence, completedAtISO);
-  const nextAnchorDate = addRecurrenceToDate(baseDate, recurrence);
+  const base = getTaskRecurrenceBaseDate(task, recurrence, completedAtISO);
+  const nextAnchor = addRecurrenceToDateTime(base, recurrence);
   const result = {};
-  const shift = (value) => {
-    if (!value) return void 0;
-    return addRecurrenceToDate(value, recurrence);
-  };
-  if (recurrence.anchor === "scheduled") result.scheduledDate = nextAnchorDate;
-  else result.scheduledDate = shift(task.scheduledDate);
-  if (recurrence.anchor === "start") result.startDate = nextAnchorDate;
-  else result.startDate = shift(task.startDate);
-  if (recurrence.anchor === "due") result.dueDate = nextAnchorDate;
-  else result.dueDate = shift(task.dueDate);
-  if (recurrence.anchor === "completion" && !result.scheduledDate && !result.startDate && !result.dueDate) {
-    result.scheduledDate = nextAnchorDate;
+  const shift = (value) => value ? addRecurrenceToDateTime(value, recurrence) : void 0;
+  if (recurrence.anchor === "scheduled") {
+    if (task.scheduledAt) result.scheduledAt = nextAnchor;
+    else result.scheduledDate = nextAnchor.slice(0, 10);
+  } else {
+    result.scheduledAt = shift(task.scheduledAt);
+    result.scheduledDate = shift(task.scheduledDate)?.slice(0, 10);
   }
+  if (recurrence.anchor === "start") result.startAt = nextAnchor;
+  else {
+    result.startAt = shift(task.startAt);
+    result.startDate = shift(task.startDate)?.slice(0, 10);
+  }
+  if (recurrence.anchor === "due") {
+    if (task.dueAt) result.dueAt = nextAnchor;
+    else result.dueDate = nextAnchor.slice(0, 10);
+  } else {
+    result.dueAt = shift(task.dueAt);
+    result.dueDate = shift(task.dueDate)?.slice(0, 10);
+  }
+  if (recurrence.anchor === "completion" && !result.scheduledAt && !result.scheduledDate && !result.startAt && !result.startDate && !result.dueAt && !result.dueDate) result.startAt = nextAnchor;
   return result;
 }
 const DEFAULT_HIGH_BEFORE_GAP = 60;
@@ -5524,10 +5597,10 @@ function meanEffect(values2) {
 function roundedEffect(value) {
   return Math.round(value * 10) / 10;
 }
-function aggregateEffectRows(samples, dimension, keyOf, minimumTrendSamples, supportedTrendSamples) {
+function aggregateEffectRows(samples, dimension, keyOf2, minimumTrendSamples, supportedTrendSamples) {
   const groups = /* @__PURE__ */ new Map();
   for (const sample of samples) {
-    const key = keyOf(sample);
+    const key = keyOf2(sample);
     const bucket = groups.get(key) || [];
     bucket.push(sample);
     groups.set(key, bucket);
@@ -5909,10 +5982,10 @@ function median(values2) {
   const value = finite.length % 2 ? finite[middle] : (finite[middle - 1] + finite[middle]) / 2;
   return Math.round(value);
 }
-function aggregate(rows, keyOf) {
+function aggregate(rows, keyOf2) {
   const grouped = /* @__PURE__ */ new Map();
   for (const row of rows) {
-    const key = normalized(keyOf(row));
+    const key = normalized(keyOf2(row));
     if (!key) continue;
     grouped.set(key, [...grouped.get(key) || [], row]);
   }
@@ -6894,6 +6967,10 @@ const FIELD_REGISTRY = {
   startTime: { key: "startTime", label: "开始时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "startTime", aliases: ["时间", "time", "start"] },
   endTime: { key: "endTime", label: "结束时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "endTime", aliases: ["结束", "end"] },
   expectedDurationMinutes: { key: "expectedDurationMinutes", label: "预计时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["预计时长", "expectedDuration", "expectedDurationMinutes"], description: "Task 的用户声明预计时长；实际工作时长只来自 TaskSession。" },
+  scheduledAt: { key: "scheduledAt", label: "计划时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["计划时间", "scheduledAt"] },
+  startAt: { key: "startAt", label: "开始时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["开始时间", "startAt"] },
+  endAt: { key: "endAt", label: "结束时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["结束时间", "endAt"] },
+  dueAt: { key: "dueAt", label: "截止时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["截止时间", "dueAt"] },
   scheduledDate: { key: "scheduledDate", label: "计划日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["计划日期", "scheduledDate"] },
   startDate: { key: "startDate", label: "开始日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["开始日期", "startDate"] },
   dueDate: { key: "dueDate", label: "截止日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["截止日期", "dueDate"] },
@@ -6949,6 +7026,10 @@ const VIEW_FIELD_PICKER_KEYS = /* @__PURE__ */ new Set([
   "status",
   "cadence",
   "date",
+  "scheduledAt",
+  "startAt",
+  "endAt",
+  "dueAt",
   "scheduledDate",
   "startDate",
   "dueDate",
@@ -13955,7 +14036,7 @@ function toRecordViewItem(record) {
 }
 const METADATA_PORT_TOKEN = "MetadataPort";
 const FILESTAT_PORT_TOKEN = "FileStatPort";
-const CURRENT_CACHE_SCHEMA_VERSION = 14;
+const CURRENT_CACHE_SCHEMA_VERSION = 15;
 function toCachedItem(it) {
   return {
     id: it.id,
@@ -13987,7 +14068,12 @@ function toCachedItem(it) {
     physicalDemand: it.physicalDemand,
     availabilityContexts: it.availabilityContexts,
     recoveryIntent: it.recoveryIntent,
+    createdAt: it.createdAt,
     createdDate: it.createdDate,
+    scheduledAt: it.scheduledAt,
+    startAt: it.startAt,
+    endAt: it.endAt,
+    dueAt: it.dueAt,
     scheduledDate: it.scheduledDate,
     startDate: it.startDate,
     dueDate: it.dueDate,
@@ -14052,7 +14138,12 @@ function fromCachedItem(c2) {
     physicalDemand: c2.physicalDemand,
     availabilityContexts: c2.availabilityContexts,
     recoveryIntent: c2.recoveryIntent,
+    createdAt: c2.createdAt,
     createdDate: c2.createdDate,
+    scheduledAt: c2.scheduledAt,
+    startAt: c2.startAt,
+    endAt: c2.endAt,
+    dueAt: c2.dueAt,
     scheduledDate: c2.scheduledDate,
     startDate: c2.startDate,
     dueDate: c2.dueDate,
@@ -14189,6 +14280,15 @@ class DataStoreCache {
     return { schemaVersion: CURRENT_CACHE_SCHEMA_VERSION, files: {} };
   }
 }
+function localCalendarDate(value) {
+  if (!value) return void 0;
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return void 0;
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
   const contentLines = lines.slice(startIdx + 1, endIdx);
   const parsed = decodeRecordContentLines(contentLines);
@@ -14205,7 +14305,7 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
   if (isTaskSeries && !recurrenceInfo) return null;
   const sessionDuration = normalizeTaskSessionDurationMinutes(parsed.sessionDurationMinutes);
   if (isTaskSession && (!parsed.taskId || !parsed.sessionStartedAt || !parsed.sessionEndedAt || sessionDuration == null || !parsed.sessionResult || !parsed.sessionSource)) return null;
-  const canonicalDate = parsed.scheduledDate || parsed.dueDate || parsed.startDate || parsed.date || (parsed.sessionStartedAt ? parsed.sessionStartedAt.slice(0, 10) : void 0);
+  const canonicalDate = localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate || parsed.date || localCalendarDate(parsed.sessionStartedAt);
   const schema = getRecordSchemaDefinition(parsed.coreBlock);
   const derivedCategory = parsed.coreBlock === "thought" && parsed.recordSubtype ? `闪念/${parsed.recordSubtype}` : schema?.categoryKey || parentFolder;
   const categoryKey = parsed.categoryKey || derivedCategory;
@@ -14229,6 +14329,10 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
     coreBlock: parsed.coreBlock,
     priority: parsed.priority,
     createdAt: parsed.createdAt,
+    scheduledAt: parsed.scheduledAt,
+    startAt: parsed.startAt,
+    endAt: parsed.endAt,
+    dueAt: parsed.dueAt,
     energyDemand: parsed.energyDemand,
     brainDemand: parsed.brainDemand,
     physicalDemand: parsed.physicalDemand,
@@ -14274,8 +14378,8 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
   if (parsed.expectedDurationMinutes !== void 0) {
     item.expectedDurationMinutes = parsed.expectedDurationMinutes;
   }
-  item.startISO = parsed.sessionStartedAt || parsed.startDate || parsed.scheduledDate || parsed.dueDate || parsed.date;
-  item.endISO = parsed.sessionEndedAt || parsed.completedAt || parsed.cancelledAt || parsed.dueDate || item.startISO;
+  item.startISO = parsed.sessionStartedAt || parsed.startAt || parsed.scheduledAt || parsed.startDate || parsed.scheduledDate || parsed.dueAt || parsed.dueDate || parsed.date;
+  item.endISO = parsed.sessionEndedAt || parsed.endAt || parsed.completedAt || parsed.cancelledAt || parsed.dueAt || parsed.dueDate || item.startISO;
   if (item.startISO) item.startMs = Date.parse(item.startISO);
   if (item.endISO) item.endMs = Date.parse(item.endISO);
   if (item.period && item.date) item.periodCount = getPeriodCount(item.period, dayjs(item.date));
@@ -14294,11 +14398,11 @@ function normalizeItemDates(it) {
   }
   const pick2 = {
     done: it.doneDate,
-    due: it.dueDate,
-    scheduled: it.scheduledDate,
-    start: it.startDate ?? it.startISO,
-    created: it.createdDate,
-    end: it.endISO
+    due: it.dueAt ?? it.dueDate,
+    scheduled: it.scheduledAt ?? it.scheduledDate,
+    start: it.startAt ?? it.startDate ?? it.startISO,
+    created: it.createdAt ?? it.createdDate,
+    end: it.endAt ?? it.endISO
   };
   for (const k2 of ORDER) {
     const iso = pick2[k2];
@@ -18235,6 +18339,10 @@ function formatTaskItem(item) {
     ["主题", item.themePath || item.theme],
     ["优先级", item.priority],
     ["预计时长", item.expectedDurationMinutes ?? item.duration],
+    ["计划时间", item.scheduledAt],
+    ["开始时间", item.startAt],
+    ["结束时间", item.endAt],
+    ["截止时间", item.dueAt],
     ["计划日期", item.scheduledDate],
     ["开始日期", item.startDate],
     ["截止日期", item.dueDate],
@@ -18651,30 +18759,58 @@ function getMonthWeeksData(items, categories, targetMonth, usePeriod = false, bu
 function parseDuration(value) {
   if (value === null || value === void 0 || value === "") return null;
   const numeric = typeof value === "number" ? value : Number.parseInt(String(value), 10);
-  return Number.isFinite(numeric) ? numeric : null;
+  return Number.isFinite(numeric) && numeric >= 0 ? numeric : null;
+}
+function isClockValue(value) {
+  return timeToMinutes(value) !== null;
+}
+function isDateTimeValue(value) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}[T ]\d{1,2}:\d{2}/.test(value)) return false;
+  return dayjs(value).isValid();
 }
 function normalizeTimeValue(value) {
-  if (!value) return void 0;
-  return timeToMinutes(value) === null ? void 0 : value;
+  const text2 = String(value || "").trim();
+  if (!text2) return void 0;
+  return isClockValue(text2) || isDateTimeValue(text2) ? text2 : void 0;
+}
+function formatDateTimeLike(source, value) {
+  if (source.includes("T")) return value.format("YYYY-MM-DDTHH:mm");
+  return value.format("YYYY-MM-DD HH:mm");
 }
 function deriveDurationFromRange(startTime, endTime) {
-  const startMinutes = timeToMinutes(String(startTime || ""));
-  const endMinutes = timeToMinutes(String(endTime || ""));
+  const start2 = String(startTime || "").trim();
+  const end2 = String(endTime || "").trim();
+  if (isDateTimeValue(start2) && isDateTimeValue(end2)) {
+    const diff = dayjs(end2).diff(dayjs(start2), "minute");
+    return diff >= 0 ? diff : null;
+  }
+  const startMinutes = timeToMinutes(start2);
+  const endMinutes = timeToMinutes(end2);
   if (startMinutes === null || endMinutes === null) return null;
   let duration2 = endMinutes - startMinutes;
   if (duration2 < 0) duration2 += 24 * 60;
   return duration2;
 }
 function deriveEndFromStartAndDuration(startTime, duration2) {
-  const startMinutes = timeToMinutes(String(startTime || ""));
+  const start2 = String(startTime || "").trim();
   const normalizedDuration = parseDuration(duration2);
-  if (startMinutes === null || normalizedDuration === null) return null;
+  if (normalizedDuration === null) return null;
+  if (isDateTimeValue(start2)) {
+    return formatDateTimeLike(start2, dayjs(start2).add(normalizedDuration, "minute"));
+  }
+  const startMinutes = timeToMinutes(start2);
+  if (startMinutes === null) return null;
   return minutesToTime(startMinutes + normalizedDuration) || null;
 }
 function deriveStartFromEndAndDuration(endTime, duration2) {
-  const endMinutes = timeToMinutes(String(endTime || ""));
+  const end2 = String(endTime || "").trim();
   const normalizedDuration = parseDuration(duration2);
-  if (endMinutes === null || normalizedDuration === null) return null;
+  if (normalizedDuration === null) return null;
+  if (isDateTimeValue(end2)) {
+    return formatDateTimeLike(end2, dayjs(end2).subtract(normalizedDuration, "minute"));
+  }
+  const endMinutes = timeToMinutes(end2);
+  if (endMinutes === null) return null;
   return minutesToTime(endMinutes - normalizedDuration) || null;
 }
 function applyTaskTimePolicy(input) {
@@ -19637,13 +19773,36 @@ function readScalarOption(value) {
   const option = readOptionText$2(value);
   return String(option.value || option.label || value || "").trim();
 }
+function normalizeLocalDateTime(value) {
+  const text2 = readScalarOption(value);
+  if (!text2) return void 0;
+  const normalized2 = text2.replace(" ", "T");
+  const parsed = new Date(normalized2);
+  return Number.isFinite(parsed.getTime()) ? normalized2 : void 0;
+}
+function localDatePart(value) {
+  if (!value) return void 0;
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return void 0;
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+function durationMinutesBetween(start2, end2) {
+  if (!start2 || !end2) return void 0;
+  const startMs = new Date(start2).getTime();
+  const endMs = new Date(end2).getTime();
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs < startMs) return void 0;
+  return Math.max(1, Math.round((endMs - startMs) / 6e4));
+}
 function readStructuredTaskRecurrence(renderData) {
-  const rawUnit = readScalarOption(renderData["重复单位"] ?? renderData.recurrenceUnit).toLowerCase();
+  const rawUnit = readScalarOption(renderData["重复"] ?? renderData["重复单位"] ?? renderData.recurrenceUnit).toLowerCase();
   if (!rawUnit || rawUnit === "none") return null;
   if (!["day", "week", "month", "quarter", "year"].includes(rawUnit)) throw new Error(`task_recurrence_unit_invalid:${rawUnit}`);
   const interval = Number(renderData["重复间隔"] ?? renderData.recurrenceInterval ?? 1);
   if (!Number.isInteger(interval) || interval < 1) throw new Error(`task_recurrence_interval_invalid:${interval}`);
-  const rawAnchor = readScalarOption(renderData["重复锚点"] ?? renderData.recurrenceAnchor ?? "scheduled").toLowerCase();
+  const rawAnchor = readScalarOption(renderData["重复锚点"] ?? renderData.recurrenceAnchor ?? "start").toLowerCase();
   if (!["scheduled", "start", "due", "completion"].includes(rawAnchor)) throw new Error(`task_recurrence_anchor_invalid:${rawAnchor}`);
   return { unit: rawUnit, interval, anchor: rawAnchor };
 }
@@ -19743,6 +19902,11 @@ function buildRecordOutputPlan(input) {
     const recurrence = readStructuredTaskRecurrence(renderData);
     if (!recurrence && status === "skipped") throw new Error("task_status_skipped_requires_series");
     if (recurrence && status !== "open") throw new Error("task_series_initial_instance_must_be_open");
+    const startAt = normalizeLocalDateTime(
+      renderData["开始/预计时间"] ?? renderData["开始时间"] ?? renderData.startAt ?? renderData["计划时间"] ?? renderData.scheduledAt ?? renderData["计划日期"] ?? renderData.scheduledDate
+    );
+    const endAt = normalizeLocalDateTime(renderData["结束时间"] ?? renderData.endAt);
+    const declaredDuration = renderData["时长（分钟）"] ?? renderData["时长"] ?? renderData["预计时长"] ?? renderData.expectedDurationMinutes;
     const taskFields = {
       status,
       content: renderData["任务内容"] ?? renderData["内容"] ?? renderData.content,
@@ -19755,14 +19919,31 @@ function buildRecordOutputPlan(input) {
       physicalDemand: renderData["体力要求"] ?? renderData.physicalDemand,
       availabilityContexts: renderData["可用场景"] ?? renderData.availabilityContexts,
       recoveryIntent: renderData["恢复意图"] ?? renderData.recoveryIntent,
-      scheduledDate: renderData["计划日期"] ?? renderData.scheduledDate ?? renderData["日期"] ?? renderData.date,
-      startDate: renderData["开始日期"] ?? renderData.startDate,
-      dueDate: renderData["截止日期"] ?? renderData.dueDate,
-      expectedDurationMinutes: renderData["预计时长"] ?? renderData.expectedDurationMinutes,
+      startAt,
+      endAt,
+      expectedDurationMinutes: declaredDuration || durationMinutesBetween(startAt, endAt),
       createdAt: renderData["创建于"] ?? renderData.createdAt ?? (/* @__PURE__ */ new Date()).toISOString(),
       seriesId: renderData.seriesId ?? renderData["系列ID"]
     };
-    Object.assign(taskFields, buildCustomCaptureFields("task", renderData, input.template.fields));
+    const customTaskFields = buildCustomCaptureFields("task", renderData, input.template.fields);
+    for (const key of [
+      "重复",
+      "重复单位",
+      "重复间隔",
+      "重复锚点",
+      "recurrenceUnit",
+      "recurrenceInterval",
+      "recurrenceAnchor",
+      "计划时间",
+      "计划日期",
+      "截止时间",
+      "截止日期",
+      "scheduledAt",
+      "scheduledDate",
+      "dueAt",
+      "dueDate"
+    ]) delete customTaskFields[key];
+    Object.assign(taskFields, customTaskFields);
     const existingSeriesId = String(taskFields.seriesId || "").trim();
     if (recurrence && existingSeriesId) {
       throw new Error("task_series_recurrence_edit_requires_series_command");
@@ -19770,7 +19951,9 @@ function buildRecordOutputPlan(input) {
     if (recurrence && !existingSeriesId) {
       const seriesId = createRecordId("task-series");
       taskFields.seriesId = seriesId;
-      const seriesStartDate = String(taskFields.scheduledDate || taskFields.startDate || taskFields.dueDate || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10));
+      const seriesStartDate = String(
+        localDatePart(String(taskFields.startAt || "")) || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)
+      );
       const seriesBlock = encodeRecordBlock({
         recordId: seriesId,
         schemaVersion: RECORD_SCHEMA_VERSION,
@@ -20234,6 +20417,9 @@ function nextTaskFields(task, series, completedAt, nextDates) {
     physicalDemand: series.physicalDemand,
     availabilityContexts: series.availabilityContexts,
     recoveryIntent: series.recoveryIntent,
+    scheduledAt: nextDates.scheduledAt,
+    startAt: nextDates.startAt,
+    dueAt: nextDates.dueAt,
     scheduledDate: nextDates.scheduledDate,
     startDate: nextDates.startDate,
     dueDate: nextDates.dueDate,
@@ -20465,6 +20651,10 @@ const PATCH_FIELDS = {
   goalPath: { label: "目标", aliases: ["目标", "goalPath"] },
   themePath: { label: "主题", aliases: ["主题", "theme", "themePath"] },
   createdAt: { label: "创建于", aliases: ["创建于", "createdAt"] },
+  scheduledAt: { label: "计划时间", aliases: ["计划时间", "scheduledAt"] },
+  startAt: { label: "开始时间", aliases: ["开始时间", "startAt"] },
+  endAt: { label: "结束时间", aliases: ["结束时间", "endAt"] },
+  dueAt: { label: "截止时间", aliases: ["截止时间", "dueAt"] },
   scheduledDate: { label: "计划日期", aliases: ["计划日期", "scheduledDate"] },
   startDate: { label: "开始日期", aliases: ["开始日期", "startDate"] },
   dueDate: { label: "截止日期", aliases: ["截止日期", "dueDate"] },
@@ -20528,7 +20718,10 @@ function patchRecordBlockMarkdown(markdown, patch) {
     const key = rawKey.trim();
     if (!key || protectedKeys.has(key.toLowerCase())) continue;
     const definition = resolvePatchField(key);
-    const encoded = scalar(value);
+    const isTaskRecord2 = lines.some((line2) => /^\s*(?:核心Block|coreBlock)\s*::\s*task\s*$/i.test(line2));
+    const taskDateTimeLabels = /* @__PURE__ */ new Set(["创建于", "计划时间", "开始时间", "结束时间", "截止时间", "完成于", "取消于", "跳过于"]);
+    const rawEncoded = scalar(value);
+    const encoded = isTaskRecord2 && taskDateTimeLabels.has(definition.label) ? formatRecordDateTimeForMarkdown(rawEncoded) : rawEncoded;
     const contentIndex = lines.findIndex((line2, i2) => i2 > 0 && /^\s*(?:内容|content)\s*::/i.test(line2));
     const metadataEnd = contentIndex >= 0 ? contentIndex : lines.length - 1;
     if (definition.label === "内容") {
@@ -24157,6 +24350,12 @@ function buildViewRecordQuery(input) {
 function queryViewRecords(input) {
   return executeRecordQuery(input.items, buildViewRecordQuery(input)).items;
 }
+function queryViewBaseRecords(input) {
+  return executeRecordQuery(input.items, {
+    filterGroups: [input.layoutFilters || [], input.viewFilters || []],
+    keyword: input.keyword || ""
+  }).items;
+}
 class ViewInstanceUseCase {
   store;
   constructor(store) {
@@ -24989,7 +25188,16 @@ function findGoal(goalSettings, goalId) {
 function mergeTemplate(base, patch) {
   const required2 = new Set(patch.requiredFields || []);
   const defaultValues = patch.defaultValues || {};
-  const fields = (patch.fields ?? base.fields).map((field) => {
+  const chosenFields = [...patch.fields ?? base.fields];
+  for (const baseField of base.fields || []) {
+    const isSystemContext = isSystemRecordContextField(baseField.key, baseField.label, String(baseField.semantic || baseField.semanticType || ""));
+    if (!isSystemContext) continue;
+    const exists = chosenFields.some(
+      (field) => field.key === baseField.key || field.label && baseField.label && field.label === baseField.label
+    );
+    if (!exists) chosenFields.push(baseField);
+  }
+  const fields = chosenFields.map((field) => {
     const key = field.key || field.label;
     const defaultValue2 = defaultValues[key] ?? defaultValues[field.label || ""];
     return {
@@ -25808,9 +26016,9 @@ function parseDurationValue(value) {
   return Number.isFinite(parsed) ? parsed : void 0;
 }
 function finalizeTimeFieldsByTemplate(formData, fields, direction) {
-  const startKey = findFieldKey(fields, ["时间", "开始", "开始时间", "time", "start", "starttime", "startTime"], "时间", "startTime");
-  const endKey = findFieldKey(fields, ["结束", "结束时间", "end", "endtime", "endTime"], "结束", "endTime");
-  const durationKey = findFieldKey(fields, ["时长", "duration", "minutes", "持续时间"], "时长", "duration");
+  const startKey = findFieldKey(fields, ["时间", "开始", "开始时间", "开始/预计时间", "time", "start", "starttime", "startTime", "startAt"], "时间", "startTime");
+  const endKey = findFieldKey(fields, ["结束", "结束时间", "end", "endtime", "endTime", "endAt"], "结束", "endTime");
+  const durationKey = findFieldKey(fields, ["时长", "时长（分钟）", "预计时长", "duration", "minutes", "持续时间", "expectedDurationMinutes"], "时长", "duration");
   const startTime = formData[startKey] ?? formData["时间"];
   const endTime = formData[endKey] ?? formData["结束"];
   const duration2 = parseDurationValue(formData[durationKey] ?? formData["时长"]);
@@ -48773,10 +48981,16 @@ function HierarchySingleSelect({
     ] })
   ] });
 }
-function QuickInputFieldLabel({ label, required: required2 = false }) {
+function QuickInputFormLabel({ label, required: required2 = false }) {
   return /* @__PURE__ */ u2("span", { className: "think-qif-label", children: [
     label,
     required2 ? /* @__PURE__ */ u2("span", { className: "think-qif-label__required", children: "*" }) : null
+  ] });
+}
+function QuickInputFormRow({ label, required: required2 = false, children, className = "" }) {
+  return /* @__PURE__ */ u2("div", { className: ["think-qif-row", className].filter(Boolean).join(" "), children: [
+    /* @__PURE__ */ u2("div", { className: "think-qif-row__label", children: /* @__PURE__ */ u2(QuickInputFormLabel, { label, required: required2 }) }),
+    /* @__PURE__ */ u2("div", { className: "think-qif-row__control", children })
   ] });
 }
 function QuickInputFieldFrame({
@@ -48786,16 +49000,20 @@ function QuickInputFieldFrame({
   inline = false,
   children
 }) {
-  if (inline) {
-    return /* @__PURE__ */ u2("div", { className: "think-form-row think-form-row--inline think-qif-frame think-qif-frame--inline", children: [
-      /* @__PURE__ */ u2("div", { className: "think-qif-frame__inline-label", children: /* @__PURE__ */ u2(QuickInputFieldLabel, { label, required: required2 }) }),
-      /* @__PURE__ */ u2("div", { className: "think-qif-frame__inline-control", children })
-    ] });
-  }
-  return /* @__PURE__ */ u2("div", { className: textarea ? "think-form-row think-textarea-row think-qif-frame" : "think-form-row think-qif-frame", children: [
-    /* @__PURE__ */ u2(QuickInputFieldLabel, { label, required: required2 }),
-    children
-  ] });
+  return /* @__PURE__ */ u2(
+    QuickInputFormRow,
+    {
+      label,
+      required: required2,
+      className: [
+        "think-form-row",
+        "think-qif-frame",
+        textarea ? "think-textarea-row" : "",
+        inline ? "think-qif-frame--inline" : ""
+      ].filter(Boolean).join(" "),
+      children
+    }
+  );
 }
 function readObjectField(value, key) {
   if (!value || typeof value !== "object") return void 0;
@@ -48983,7 +49201,7 @@ function isQuickInputSystemContextField(field) {
 function isQuickInputInlineRowField(field) {
   const semantic = getTemplateFieldSemantic(field);
   const label = field.label || field.key;
-  return semantic === "status" || semantic === "recurrence" || semantic === "date" || label === "状态" || label === "重复" || label === "日期";
+  return semantic === "status" || semantic === "recurrence" || semantic === "date" || semantic === "duration" || label === "状态" || label === "重复" || label === "日期";
 }
 function isQuickInputTimeField(field) {
   const semantic = getTemplateFieldSemantic(field);
@@ -49077,7 +49295,10 @@ function QuickInputSingleSelectFieldRenderer({
       choices,
       value: rawValue,
       compact: dense,
-      onSelect: (choice) => onUpdate(field.key, choice, true)
+      onSelect: (choice) => {
+        const canClear = !field.required && !field.defaultValue;
+        onUpdate(field.key, canClear && isQuickInputChoiceSelected(rawValue, choice) ? "" : choice, true);
+      }
     }
   ) : /* @__PURE__ */ u2(
     "input",
@@ -49295,7 +49516,7 @@ function QuickInputNativeFieldRenderer({
     "input",
     {
       ...commonProps,
-      type: inputType === "text" ? "text" : inputType,
+      type: inputType === "text" ? "text" : inputType === "datetime" ? "datetime-local" : inputType,
       min: field.min,
       max: field.max,
       enterkeyhint: isMobileLike ? "enter" : "done",
@@ -49368,6 +49589,29 @@ function QuickInputTimeFieldsSection({
     ] }) })
   ] });
 }
+function scalarValue(value) {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    const option = value;
+    return String(option.value ?? option.label ?? "").trim().toLowerCase();
+  }
+  return String(value ?? "").trim().toLowerCase();
+}
+const TASK_PRIMARY_ORDER = ["status", "body", "recurrence", "start", "end", "duration"];
+function taskPrimarySlot(field) {
+  const semantic = getTemplateFieldSemantic(field);
+  const key = String(field?.key || field?.label || "");
+  if (semantic === "status" || key === "status" || key === "状态") return "status";
+  if (semantic === "body") return "body";
+  if (semantic === "recurrence" || key === "recurrenceUnit" || key === "重复") return "recurrence";
+  if (key === "startAt" || key === "开始/预计时间" || key === "开始时间") return "start";
+  if (key === "endAt" || key === "结束时间") return "end";
+  if (semantic === "duration" || key === "expectedDurationMinutes" || key === "预计时长" || key === "时长" || key === "时长（分钟）") return "duration";
+  return null;
+}
+function taskPrimaryRank(field) {
+  const slot = taskPrimarySlot(field);
+  return slot ? TASK_PRIMARY_ORDER.indexOf(slot) : 99;
+}
 function QuickInputEditorFields({
   getResourcePath,
   template,
@@ -49382,8 +49626,9 @@ function QuickInputEditorFields({
   showTimeDirectionControl = false
 }) {
   const [tagDrafts, setTagDrafts] = d({});
+  const [advancedOpen, setAdvancedOpen] = d(false);
   const fields = template?.fields || [];
-  const { regularFields, dateFields, timeFields } = groupQuickInputFields(fields);
+  const isTaskTemplate2 = String(template?.coreBlockId || template?.id || "").replace(/^core\./, "") === "task";
   const rendererProps = {
     getResourcePath,
     formData,
@@ -49395,6 +49640,34 @@ function QuickInputEditorFields({
     tagDrafts,
     onTagDraftsChange: setTagDrafts
   };
+  if (isTaskTemplate2) {
+    const taskFields = fields.filter((field) => !isQuickInputSystemContextField(field));
+    const recurrenceUnit = scalarValue(formData.recurrenceUnit ?? formData["重复"]);
+    const repeats = !!recurrenceUnit && recurrenceUnit !== "none";
+    const primaryFields = taskFields.filter((field) => taskPrimaryRank(field) < 99).sort((left2, right2) => taskPrimaryRank(left2) - taskPrimaryRank(right2));
+    const recurrenceDetailFields = repeats ? taskFields.filter((field) => ["recurrenceInterval", "重复间隔"].includes(String(field?.key || field?.label || ""))) : [];
+    const excluded = /* @__PURE__ */ new Set([...primaryFields, ...recurrenceDetailFields]);
+    const advancedFields = taskFields.filter((field) => {
+      if (excluded.has(field)) return false;
+      return !["recurrenceInterval", "重复间隔"].includes(String(field?.key || field?.label || ""));
+    });
+    return /* @__PURE__ */ u2("div", { className: `think-qif-fields-stack${dense ? " is-dense" : ""}`, children: [
+      primaryFields.map((field) => /* @__PURE__ */ u2("div", { className: "think-qif-fields-stack__item", children: /* @__PURE__ */ u2(QuickInputFieldRenderer, { field, ...rendererProps }) }, field.id)),
+      recurrenceDetailFields.map((field) => /* @__PURE__ */ u2("div", { className: "think-qif-fields-stack__item think-qif-recurrence-detail", children: /* @__PURE__ */ u2(QuickInputFieldRenderer, { field, ...rendererProps }) }, field.id)),
+      advancedFields.length ? /* @__PURE__ */ u2(
+        ThinkDisclosure,
+        {
+          title: "更多选项",
+          className: "think-qif-advanced-disclosure",
+          open: advancedOpen,
+          onOpenChange: setAdvancedOpen,
+          children: /* @__PURE__ */ u2("div", { className: `think-qif-fields-stack${dense ? " is-dense" : ""}`, children: advancedFields.map((field) => /* @__PURE__ */ u2("div", { className: "think-qif-fields-stack__item", children: /* @__PURE__ */ u2(QuickInputFieldRenderer, { field, ...rendererProps }) }, field.id)) })
+        }
+      ) : null
+    ] });
+  }
+  const visibleFields = fields.filter((field) => !isQuickInputSystemContextField(field));
+  const { regularFields, dateFields, timeFields } = groupQuickInputFields(visibleFields);
   return /* @__PURE__ */ u2("div", { className: `think-qif-fields-stack${dense ? " is-dense" : ""}`, children: [
     regularFields.map((field) => /* @__PURE__ */ u2("div", { className: "think-qif-fields-stack__item", children: /* @__PURE__ */ u2(QuickInputFieldRenderer, { field, ...rendererProps }) }, field.id)),
     dateFields.map((field) => /* @__PURE__ */ u2("div", { className: "think-qif-fields-stack__item", children: /* @__PURE__ */ u2(QuickInputFieldRenderer, { field, ...rendererProps }) }, field.id)),
@@ -49473,12 +49746,6 @@ function RecordTypeSwitcher({ blocks, currentBlockId, onBlockChange }) {
     );
   }) });
 }
-function ContextRow({ label, children }) {
-  return /* @__PURE__ */ u2("div", { className: "think-quick-input-context-row", children: [
-    /* @__PURE__ */ u2("div", { className: "think-quick-input-context-row__label", children: label }),
-    /* @__PURE__ */ u2("div", { className: "think-quick-input-context-row__control", children })
-  ] });
-}
 function QuickInputEditorView({
   getResourcePath,
   blocks,
@@ -49510,9 +49777,10 @@ function QuickInputEditorView({
     return /* @__PURE__ */ u2("div", { children: "错误：找不到当前记录类型的默认配置。" });
   }
   const shouldShowCoreBlockFallbackHint = Boolean(currentGoalPath) && templateSourceType === "core-block" && templateVariants.length === 0;
+  const isTaskTemplate2 = String(currentBlockId || template?.coreBlockId || template?.id || "").replace(/^core\./, "") === "task";
   return /* @__PURE__ */ u2("div", { className: `think-quick-input-editor${dense ? " is-dense" : ""}`, children: [
     /* @__PURE__ */ u2("div", { className: "think-quick-input-context-grid", children: [
-      allowBlockSwitch && blocks.length > 1 && /* @__PURE__ */ u2(ContextRow, { label: "记录类型", children: /* @__PURE__ */ u2(
+      allowBlockSwitch && blocks.length > 1 && /* @__PURE__ */ u2(QuickInputFormRow, { label: "记录类型", children: /* @__PURE__ */ u2(
         RecordTypeSwitcher,
         {
           blocks,
@@ -49520,7 +49788,7 @@ function QuickInputEditorView({
           onBlockChange
         }
       ) }),
-      /* @__PURE__ */ u2(ContextRow, { label: "目标", children: /* @__PURE__ */ u2("div", { className: "think-quick-input-context-row__stack", children: [
+      /* @__PURE__ */ u2(QuickInputFormRow, { label: "目标", children: /* @__PURE__ */ u2("div", { className: "think-quick-input-context-row__stack", children: [
         /* @__PURE__ */ u2(
           GoalSelector,
           {
@@ -49533,7 +49801,7 @@ function QuickInputEditorView({
         ),
         shouldShowCoreBlockFallbackHint && /* @__PURE__ */ u2("div", { className: "think-quick-input-context-hint", children: "当前目标没有此记录类型的专属预设，已使用记录类型默认模板。" })
       ] }) }),
-      templateVariants.length > 0 && /* @__PURE__ */ u2(ContextRow, { label: "记录预设", children: /* @__PURE__ */ u2("div", { className: "think-quick-input-pill-row think-quick-input-template-variant-switcher", children: templateVariants.map((variant) => {
+      templateVariants.length > 0 && /* @__PURE__ */ u2(QuickInputFormRow, { label: "记录预设", children: /* @__PURE__ */ u2("div", { className: "think-quick-input-pill-row think-quick-input-template-variant-switcher", children: templateVariants.map((variant) => {
         const isSelected = (selectedTemplateVariantId || "default") === variant.value;
         return /* @__PURE__ */ u2(
           SelectablePill,
@@ -49548,7 +49816,7 @@ function QuickInputEditorView({
         );
       }) }) })
     ] }),
-    showDivider && /* @__PURE__ */ u2("div", { className: "think-quick-input-context-divider", "aria-hidden": "true" }),
+    showDivider && !isTaskTemplate2 && /* @__PURE__ */ u2("div", { className: "think-quick-input-context-divider", "aria-hidden": "true" }),
     /* @__PURE__ */ u2("div", { className: "think-quick-input-fields", children: /* @__PURE__ */ u2(
       QuickInputEditorFields,
       {
@@ -49727,22 +49995,29 @@ function hydrateQuickInputTemplateDefaults({
     } else if (!hasMeaningfulExisting || existingSource === void 0 || existingSource === "system_auto") {
       if (field.type === "date") assignValue(key, dayjs().format("YYYY-MM-DD"), "system_auto");
       else if (field.type === "time") assignValue(key, dayjs().format("HH:mm"), "system_auto");
-      else if (isSelectableField(field) && field.options?.length) {
+      else if (isSelectableField(field) && field.options?.length && field.autoSelectFirst !== false) {
         const first2 = field.options[0];
         assignValue(key, { value: first2.value, label: first2.label || first2.value }, "system_auto");
       }
     }
   });
   if (!changed) return { changed: false, formData: current2, fieldSources };
-  const finalized = finalizeLinkedTimeFields(
+  const taskTimeKeys = { startKey: "startAt", endKey: "endAt", durationKey: "expectedDurationMinutes" };
+  const legacyTimeKeys = { startKey: "时间", endKey: "结束", durationKey: "时长" };
+  const taskFinalized = finalizeLinkedTimeFields(
     next2,
-    { startKey: "时间", endKey: "结束", durationKey: "时长" },
+    taskTimeKeys,
+    { durationOutput: "number", direction: timeDirection }
+  );
+  const finalized = finalizeLinkedTimeFields(
+    taskFinalized,
+    legacyTimeKeys,
     { durationOutput: "number", direction: timeDirection }
   );
   const autoComputedKeys = [];
-  if (finalized["时间"] !== next2["时间"]) autoComputedKeys.push("时间");
-  if (finalized["结束"] !== next2["结束"]) autoComputedKeys.push("结束");
-  if (finalized["时长"] !== next2["时长"]) autoComputedKeys.push("时长");
+  for (const key of [...Object.values(taskTimeKeys), ...Object.values(legacyTimeKeys)]) {
+    if (finalized[key] !== next2[key]) autoComputedKeys.push(key);
+  }
   autoComputedKeys.forEach((key) => {
     next2[key] = finalized[key];
     nextSources[key] = "system_auto";
@@ -49773,13 +50048,6 @@ function deriveQuickInputInitialSelection(initialFormData, context) {
     ]) ?? null,
     timeDirection: initialFormData?.__timeDirection === "backward" ? "backward" : "forward"
   };
-}
-function resolveQuickInputThemeSelectionOnClick(params) {
-  const { selectedThemeId, themeId, path, pathToIdMap } = params;
-  if (!themeId || !path) return null;
-  if (selectedThemeId !== themeId) return themeId;
-  const parentPath = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
-  return parentPath ? pathToIdMap.get(parentPath) ?? null : null;
 }
 const splitThemePathParts = (path) => {
   const parts = splitHierarchyPath(path);
@@ -49845,24 +50113,134 @@ function buildQuickInputEditorState(input) {
     fieldSourceSummary: buildFieldSourceSummary(input.fieldSources)
   };
 }
+const TASK_STATUS_FIELD = {
+  id: "core.task.status",
+  key: "status",
+  label: "状态",
+  type: "singleSelect",
+  semantic: "status",
+  defaultValue: "open",
+  autoSelectFirst: true,
+  options: [
+    { value: "open", label: "未完成" },
+    { value: "done", label: "已完成" }
+  ]
+};
+const TASK_CONTENT_FIELD = { id: "core.task.content", key: "任务内容", label: "内容", type: "text", semantic: "body" };
+const TASK_RECURRENCE_FIELD = {
+  id: "core.task.recurrenceUnit",
+  key: "recurrenceUnit",
+  label: "重复",
+  type: "singleSelect",
+  semantic: "recurrence",
+  defaultValue: "none",
+  autoSelectFirst: true,
+  options: [
+    { value: "none", label: "不重复" },
+    { value: "day", label: "天" },
+    { value: "week", label: "周" },
+    { value: "month", label: "月" },
+    { value: "quarter", label: "季" },
+    { value: "year", label: "年" }
+  ]
+};
+const TASK_RECURRENCE_INTERVAL_FIELD = { id: "core.task.recurrenceInterval", key: "recurrenceInterval", label: "重复间隔", type: "number", min: 1, defaultValue: "1" };
+const TASK_START_FIELD = { id: "core.task.startAt", key: "startAt", label: "开始/预计时间", type: "datetime", semantic: "startTime" };
+const TASK_END_FIELD = { id: "core.task.endAt", key: "endAt", label: "结束时间", type: "datetime", semantic: "endTime" };
+const TASK_DURATION_FIELD = { id: "core.task.expectedDurationMinutes", key: "expectedDurationMinutes", label: "时长（分钟）", type: "number", semantic: "duration", min: 1 };
+function keyOf(field) {
+  return String(field.key || field.label || "").trim();
+}
+function isTaskTemplate(rawTemplate, effectiveBlockId) {
+  return String(effectiveBlockId || rawTemplate.coreBlockId || rawTemplate.id || "").replace(/^core\./, "") === "task";
+}
+function findField(fields, predicate) {
+  return fields.find(predicate);
+}
+function normalizeTaskFields(fields) {
+  const legacyStartKeys = /* @__PURE__ */ new Set(["scheduledAt", "计划时间", "scheduledDate", "计划日期", "startAt", "开始时间", "开始/预计时间"]);
+  const legacyEndKeys = /* @__PURE__ */ new Set(["endAt", "结束时间"]);
+  const hiddenLegacyKeys = /* @__PURE__ */ new Set(["dueAt", "截止时间", "dueDate", "截止日期", "startDate", "开始日期", "recurrenceAnchor", "重复锚点"]);
+  const statusExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === "status" || keyOf(field) === "status");
+  const bodyExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === "body");
+  const recurrenceExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === "recurrence" || keyOf(field) === "recurrenceUnit");
+  const recurrenceIntervalExisting = findField(fields, (field) => keyOf(field) === "recurrenceInterval" || keyOf(field) === "重复间隔");
+  const durationExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === "duration" || ["expectedDurationMinutes", "预计时长", "时长", "时长（分钟）"].includes(keyOf(field)));
+  const startExisting = findField(fields, (field) => legacyStartKeys.has(keyOf(field)));
+  const endExisting = findField(fields, (field) => legacyEndKeys.has(keyOf(field)));
+  const reserved = new Set([
+    statusExisting,
+    bodyExisting,
+    recurrenceExisting,
+    recurrenceIntervalExisting,
+    startExisting,
+    endExisting,
+    durationExisting
+  ].filter(Boolean));
+  const rest = fields.filter((field) => {
+    if (reserved.has(field)) return false;
+    if (hiddenLegacyKeys.has(keyOf(field))) return false;
+    return true;
+  });
+  const normalizedRest = rest.map((field) => {
+    if (!["select", "singleSelect", "radio"].includes(field.type) || !field.options?.length) return field;
+    return {
+      ...field,
+      autoSelectFirst: true,
+      defaultValue: field.options[0]?.value
+    };
+  });
+  const status = {
+    ...TASK_STATUS_FIELD,
+    ...statusExisting || {},
+    label: "状态",
+    type: "singleSelect",
+    semantic: "status",
+    autoSelectFirst: true,
+    defaultValue: "open",
+    options: TASK_STATUS_FIELD.options
+  };
+  const body = { ...TASK_CONTENT_FIELD, ...bodyExisting || {}, label: "内容", type: "text", semantic: "body" };
+  const recurrenceOptions = recurrenceExisting?.options?.length ? recurrenceExisting.options : TASK_RECURRENCE_FIELD.options;
+  const recurrence = {
+    ...TASK_RECURRENCE_FIELD,
+    ...recurrenceExisting || {},
+    label: "重复",
+    type: "singleSelect",
+    semantic: "recurrence",
+    autoSelectFirst: true,
+    defaultValue: recurrenceOptions?.[0]?.value ?? "none",
+    options: recurrenceOptions
+  };
+  const recurrenceInterval = { ...TASK_RECURRENCE_INTERVAL_FIELD, ...recurrenceIntervalExisting || {}, label: "重复间隔", type: "number", min: recurrenceIntervalExisting?.min ?? 1, defaultValue: recurrenceIntervalExisting?.defaultValue || "1" };
+  const start2 = { ...TASK_START_FIELD, ...startExisting || {}, key: "startAt", label: "开始/预计时间", type: "datetime", semantic: "startTime" };
+  const end2 = { ...TASK_END_FIELD, ...endExisting || {}, key: "endAt", label: "结束时间", type: "datetime", semantic: "endTime" };
+  const duration2 = { ...TASK_DURATION_FIELD, ...durationExisting || {}, key: "expectedDurationMinutes", label: "时长（分钟）", type: "number", semantic: "duration", min: durationExisting?.min ?? 1 };
+  return [status, body, recurrence, recurrenceInterval, start2, end2, duration2, ...normalizedRest];
+}
 function buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, availableThemes, goalFieldOptions) {
   if (!rawTemplate?.fields?.length) return rawTemplate ?? null;
   const themeFieldOptions = themeOptions(availableThemes);
+  const task = isTaskTemplate(rawTemplate, effectiveBlockId);
+  const mappedFields = rawTemplate.fields.map((field) => {
+    const semantic = getTemplateFieldSemantic(field);
+    if (semantic === "goalPath") return { ...field, options: goalFieldOptions };
+    if (semantic === "themePath") {
+      return {
+        ...field,
+        type: field.type === "path" ? "hierarchicalSingleSelect" : field.type,
+        options: themeFieldOptions
+      };
+    }
+    if (task && ["select", "singleSelect", "radio"].includes(field.type) && field.options?.length) {
+      return { ...field, autoSelectFirst: true };
+    }
+    return field;
+  });
   return {
     ...rawTemplate,
     coreBlockId: effectiveBlockId || rawTemplate.coreBlockId,
-    fields: rawTemplate.fields.map((field) => {
-      const semantic = getTemplateFieldSemantic(field);
-      if (semantic === "goalPath") return { ...field, options: goalFieldOptions };
-      if (semantic === "themePath") {
-        return {
-          ...field,
-          type: field.type === "path" ? "hierarchicalSingleSelect" : field.type,
-          options: themeFieldOptions
-        };
-      }
-      return field;
-    })
+    fields: task ? normalizeTaskFields(mappedFields) : mappedFields
   };
 }
 function shouldShowQuickInputTimeDirectionControl(template) {
@@ -49887,11 +50265,22 @@ function buildQuickInputPeriodUi(currentPeriod) {
     } : {}
   };
 }
+const LEGACY_TIME_KEYS = { startKey: "时间", endKey: "结束", durationKey: "时长" };
+const TASK_TIME_KEYS = { startKey: "startAt", endKey: "endAt", durationKey: "expectedDurationMinutes" };
+function usesTaskDateTimeFields(data, changedKey) {
+  if (changedKey && Object.values(TASK_TIME_KEYS).includes(changedKey)) return true;
+  return Object.values(TASK_TIME_KEYS).some((key) => Object.prototype.hasOwnProperty.call(data, key));
+}
+function linkedTimeKeysFor(data, changedKey) {
+  return usesTaskDateTimeFields(data, changedKey) ? TASK_TIME_KEYS : LEGACY_TIME_KEYS;
+}
 function applyQuickInputLinkedTimeChanges(draft, direction) {
+  const changedKey = typeof draft.lastChanged === "string" ? draft.lastChanged : void 0;
+  const keys = linkedTimeKeysFor(draft, changedKey);
   const changes = computeLinkedTimeChanges(
     draft,
-    { startKey: "时间", endKey: "结束", durationKey: "时长" },
-    typeof draft.lastChanged === "string" ? draft.lastChanged : void 0,
+    keys,
+    changedKey,
     {
       durationOutput: "number",
       direction
@@ -50559,12 +50948,6 @@ function QuickInputEditor({
     if (newBlockId === currentBlockId || newBlockId === currentEffectiveBlockIdForTemplates) return;
     dispatchSession({ type: "switchRecordType", blockId: newBlockId });
   };
-  const handleSelectTheme = (themeId, path) => {
-    dispatchSession({
-      type: "selectTheme",
-      themeId: resolveQuickInputThemeSelectionOnClick({ selectedThemeId, themeId, path, pathToIdMap })
-    });
-  };
   const handleSelectGoal = (option) => {
     if (!option || !option.value) {
       dispatchSession({ type: "selectGoal", goalId: null, goalPath: null });
@@ -50606,9 +50989,6 @@ function QuickInputEditor({
       allowBlockSwitch,
       currentBlockId: currentEffectiveBlockIdForTemplates || currentBlockId,
       onBlockChange: handleBlockChange,
-      themes: availableThemes,
-      selectedThemeId,
-      onSelectTheme: handleSelectTheme,
       goals: goalOptions,
       selectedGoalPath: currentGoalPath,
       onSelectGoal: handleSelectGoal,
@@ -50618,7 +50998,7 @@ function QuickInputEditor({
       onSelectTemplateVariant: (variantId) => dispatchSession({ type: "selectTemplateVariant", variantId }),
       template,
       formData,
-      fieldValueOptionsByKey: { themePath: themeOptions(availableThemes), "主题": themeOptions(availableThemes), ...currentPeriodOptions },
+      fieldValueOptionsByKey: currentPeriodOptions,
       timeDirection,
       dense,
       showDivider,
@@ -50627,7 +51007,6 @@ function QuickInputEditor({
       onRequestSubmit,
       isMobileLike,
       showTimeDirectionControl,
-      currentThemePath: String(formData.themePath ?? formData["主题"] ?? theme?.path ?? selectedGoal?.themePath ?? "") || null,
       currentPeriodLabel: currentPeriod?.label || null,
       templateSourceType,
       fieldSourceSummary: makeEditorState(formData, timeDirection, fieldSources).fieldSourceSummary
@@ -66091,6 +66470,15 @@ function ViewContent({
     useFieldGranularity,
     layoutFilters
   });
+  const timelineBaseItems = T$1(
+    () => normalizedViewInstance.viewType === "TimelineView" ? queryViewBaseRecords({
+      items: allItems,
+      layoutFilters,
+      viewFilters: normalizedViewInstance.filters || [],
+      keyword
+    }) : viewItems,
+    [allItems, keyword, layoutFilters, normalizedViewInstance, viewItems]
+  );
   const selectedLayoutCategories = T$1(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
   const excelAvailableFields = T$1(() => getAllFields(allItems), [allItems]);
   y(() => {
@@ -66111,7 +66499,7 @@ function ViewContent({
   });
   const viewProps = buildViewProps({
     viewInstance: normalizedViewInstance,
-    viewItems,
+    viewItems: normalizedViewInstance.viewType === "TimelineView" ? timelineBaseItems : viewItems,
     dateRange,
     layoutView,
     useFieldGranularity,

@@ -86,7 +86,7 @@ export function QuickInputNativeFieldRenderer({
   ) : (
     <input
       {...commonProps}
-      type={inputType === 'text' ? 'text' : inputType}
+      type={inputType === 'text' ? 'text' : inputType === 'datetime' ? 'datetime-local' : inputType}
       min={field.min}
       max={field.max}
       enterkeyhint={isMobileLike ? 'enter' : 'done'}

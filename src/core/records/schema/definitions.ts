@@ -50,35 +50,37 @@ function define(
 }
 
 const TASK_FIELDS: TemplateField[] = [
-  { id: 'core.task.content', key: '任务内容', label: '任务内容', type: 'textarea', semantic: 'body' },
+  { id: 'core.task.status', key: 'status', label: '状态', type: 'singleSelect', semantic: 'status', defaultValue: 'open', autoSelectFirst: true, options: [
+    { value: 'open', label: '未完成' }, { value: 'done', label: '已完成' }, { value: 'cancelled', label: '已取消' }, { value: 'skipped', label: '已跳过' },
+  ] },
+  { id: 'core.task.content', key: '任务内容', label: '内容', type: 'text', semantic: 'body' },
+  { id: 'core.task.recurrenceUnit', key: 'recurrenceUnit', label: '重复', type: 'singleSelect', semantic: 'recurrence', defaultValue: 'none', autoSelectFirst: true, options: [
+    { value: 'none', label: '不重复' }, { value: 'day', label: '天' }, { value: 'week', label: '周' }, { value: 'month', label: '月' }, { value: 'quarter', label: '季' }, { value: 'year', label: '年' },
+  ] },
+  { id: 'core.task.recurrenceInterval', key: 'recurrenceInterval', label: '重复间隔', type: 'number', min: 1, defaultValue: '1' },
+
+  // 主题属于 GoalTemplate / Goal 上下文：保留为隐藏系统字段参与模板默认值和持久化，不在任务创建表单中直接选择。
   themeField,
-  { id: 'core.task.scheduledDate', key: 'scheduledDate', label: '计划日期', type: 'date' },
-  { id: 'core.task.startDate', key: 'startDate', label: '开始日期', type: 'date' },
-  { id: 'core.task.dueDate', key: 'dueDate', label: '截止日期', type: 'date' },
-  { id: 'core.task.expectedDuration', key: 'expectedDurationMinutes', label: '预计时长', type: 'number', min: 1 },
-  { id: 'core.task.priority', key: 'priority', label: '优先级', type: 'singleSelect', options: [
+
+  // 以下均属于“更多选项”。时间与任务状态互相独立，填写结束时间不会自动完成任务。
+  { id: 'core.task.startAt', key: 'startAt', label: '开始/预计时间', type: 'datetime', semantic: 'date' },
+  { id: 'core.task.endAt', key: 'endAt', label: '结束时间', type: 'datetime', semantic: 'date' },
+  { id: 'core.task.priority', key: 'priority', label: '优先级', type: 'singleSelect', autoSelectFirst: true, options: [
     { value: 'lowest', label: '最低' }, { value: 'low', label: '低' }, { value: 'medium', label: '中' }, { value: 'high', label: '高' }, { value: 'highest', label: '最高' },
   ] },
-  { id: 'core.task.energyDemand', key: 'energyDemand', label: '精力要求', type: 'singleSelect', options: [
+  { id: 'core.task.energyDemand', key: 'energyDemand', label: '精力要求', type: 'singleSelect', autoSelectFirst: true, options: [
     { value: 'low', label: '低' }, { value: 'medium', label: '中' }, { value: 'high', label: '高' },
   ] },
-  { id: 'core.task.brainDemand', key: 'brainDemand', label: '脑力要求', type: 'singleSelect', options: [
+  { id: 'core.task.brainDemand', key: 'brainDemand', label: '脑力要求', type: 'singleSelect', autoSelectFirst: true, options: [
     { value: 'low', label: '低' }, { value: 'medium', label: '中' }, { value: 'high', label: '高' },
   ] },
-  { id: 'core.task.physicalDemand', key: 'physicalDemand', label: '体力要求', type: 'singleSelect', options: [
+  { id: 'core.task.physicalDemand', key: 'physicalDemand', label: '体力要求', type: 'singleSelect', autoSelectFirst: true, options: [
     { value: 'low', label: '低' }, { value: 'medium', label: '中' }, { value: 'high', label: '高' },
   ] },
   { id: 'core.task.availabilityContexts', key: 'availabilityContexts', label: '可用场景', type: 'multiSelect', options: [
     { value: 'any', label: '任意' }, { value: 'work', label: '工作' }, { value: 'home', label: '家' }, { value: 'commute', label: '通勤' }, { value: 'out', label: '外出' },
   ] },
   { id: 'core.task.recoveryIntent', key: 'recoveryIntent', label: '恢复意图', type: 'boolean' },
-  { id: 'core.task.recurrenceUnit', key: 'recurrenceUnit', label: '重复单位', type: 'singleSelect', options: [
-    { value: 'day', label: '天' }, { value: 'week', label: '周' }, { value: 'month', label: '月' }, { value: 'quarter', label: '季' }, { value: 'year', label: '年' },
-  ] },
-  { id: 'core.task.recurrenceInterval', key: 'recurrenceInterval', label: '重复间隔', type: 'number', min: 1, defaultValue: '1' },
-  { id: 'core.task.recurrenceAnchor', key: 'recurrenceAnchor', label: '重复锚点', type: 'singleSelect', defaultValue: 'scheduled', options: [
-    { value: 'scheduled', label: '计划日期' }, { value: 'start', label: '开始日期' }, { value: 'due', label: '截止日期' }, { value: 'completion', label: '完成日期' },
-  ] },
 ];
 
 export const TASK_DEFINITION = define(TASK_SCHEMA, {

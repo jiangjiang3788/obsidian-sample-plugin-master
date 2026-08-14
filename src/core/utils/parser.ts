@@ -7,6 +7,16 @@ import { normalizeRecurrenceInfo } from '@/core/records/task/taskRecurrence';
 import { normalizeTaskSessionDurationMinutes } from '@/core/records/task/taskSession';
 import { getRecordSchemaDefinition } from '@/core/records/schema';
 
+function localCalendarDate(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return undefined;
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 /**
  * Parse one <!-- start --> ... <!-- end --> Record Block.
  * Missing/invalid Record IDs are isolated by returning null; runtime never falls
@@ -37,7 +47,11 @@ export function parseRecordBlock(
   if (isTaskSeries && !recurrenceInfo) return null;
   const sessionDuration = normalizeTaskSessionDurationMinutes(parsed.sessionDurationMinutes);
   if (isTaskSession && (!parsed.taskId || !parsed.sessionStartedAt || !parsed.sessionEndedAt || sessionDuration == null || !parsed.sessionResult || !parsed.sessionSource)) return null;
-  const canonicalDate = parsed.scheduledDate || parsed.dueDate || parsed.startDate || parsed.date || (parsed.sessionStartedAt ? parsed.sessionStartedAt.slice(0, 10) : undefined);
+  const canonicalDate = localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate
+    || localCalendarDate(parsed.dueAt) || parsed.dueDate
+    || localCalendarDate(parsed.startAt) || parsed.startDate
+    || parsed.date
+    || localCalendarDate(parsed.sessionStartedAt);
   const schema = getRecordSchemaDefinition(parsed.coreBlock);
   const derivedCategory = parsed.coreBlock === 'thought' && parsed.recordSubtype
     ? `闪念/${parsed.recordSubtype}`
@@ -63,6 +77,10 @@ export function parseRecordBlock(
     coreBlock: parsed.coreBlock,
     priority: parsed.priority,
     createdAt: parsed.createdAt,
+    scheduledAt: parsed.scheduledAt,
+    startAt: parsed.startAt,
+    endAt: parsed.endAt,
+    dueAt: parsed.dueAt,
     energyDemand: parsed.energyDemand,
     brainDemand: parsed.brainDemand,
     physicalDemand: parsed.physicalDemand,
@@ -110,8 +128,8 @@ export function parseRecordBlock(
     item.expectedDurationMinutes = parsed.expectedDurationMinutes;
   }
 
-  item.startISO = parsed.sessionStartedAt || parsed.startDate || parsed.scheduledDate || parsed.dueDate || parsed.date;
-  item.endISO = parsed.sessionEndedAt || parsed.completedAt || parsed.cancelledAt || parsed.dueDate || item.startISO;
+  item.startISO = parsed.sessionStartedAt || parsed.startAt || parsed.scheduledAt || parsed.startDate || parsed.scheduledDate || parsed.dueAt || parsed.dueDate || parsed.date;
+  item.endISO = parsed.sessionEndedAt || parsed.endAt || parsed.completedAt || parsed.cancelledAt || parsed.dueAt || parsed.dueDate || item.startISO;
   if (item.startISO) item.startMs = Date.parse(item.startISO);
   if (item.endISO) item.endMs = Date.parse(item.endISO);
 

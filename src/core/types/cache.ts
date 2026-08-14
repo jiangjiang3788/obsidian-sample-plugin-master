@@ -31,7 +31,12 @@ export interface CachedItem {
   physicalDemand?: string;
   availabilityContexts?: RecordViewItem['availabilityContexts'];
   recoveryIntent?: boolean;
+  createdAt?: string;
   createdDate?: string;
+  scheduledAt?: string;
+  startAt?: string;
+  endAt?: string;
+  dueAt?: string;
   scheduledDate?: string;
   startDate?: string;
   dueDate?: string;
@@ -86,7 +91,7 @@ export interface CacheV1 {
 }
 
 // v14: persist Task recommendation metadata so warm-start and cold scan produce identical Energy recommendations.
-export const CURRENT_CACHE_SCHEMA_VERSION = 14;
+export const CURRENT_CACHE_SCHEMA_VERSION = 15;
 
 export function toCachedItem(it: RecordViewItem): CachedItem {
   return {
@@ -119,7 +124,12 @@ export function toCachedItem(it: RecordViewItem): CachedItem {
     physicalDemand: it.physicalDemand,
     availabilityContexts: it.availabilityContexts,
     recoveryIntent: it.recoveryIntent,
+    createdAt: it.createdAt,
     createdDate: it.createdDate,
+    scheduledAt: it.scheduledAt,
+    startAt: it.startAt,
+    endAt: it.endAt,
+    dueAt: it.dueAt,
     scheduledDate: it.scheduledDate,
     startDate: it.startDate,
     dueDate: it.dueDate,
@@ -185,7 +195,12 @@ export function fromCachedItem(c: CachedItem): RecordViewItem {
     physicalDemand: c.physicalDemand,
     availabilityContexts: c.availabilityContexts,
     recoveryIntent: c.recoveryIntent,
+    createdAt: c.createdAt,
     createdDate: c.createdDate,
+    scheduledAt: c.scheduledAt,
+    startAt: c.startAt,
+    endAt: c.endAt,
+    dueAt: c.dueAt,
     scheduledDate: c.scheduledDate,
     startDate: c.startDate,
     dueDate: c.dueDate,

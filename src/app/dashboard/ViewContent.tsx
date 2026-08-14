@@ -6,6 +6,7 @@ import type { ActionService, DataStore } from '@core/services/public';
 import type { FilterRule, InputSettings, RecordViewItem, ViewInstance } from '@core/types/public';
 import { getAllFields } from '@core/types/public';
 import { getCategoryValuesFromFilters } from '@core/utils/public';
+import { queryViewBaseRecords } from '@core/view/public';
 import { DashboardViewComponents as ViewComponents } from '@features/views/public';
 import { selectCategoryColors, selectSettings } from '@/app/store/selectors';
 import { useMessageRenderPort } from '@/app/AppStoreContext';
@@ -76,6 +77,15 @@ export function ViewContent({
     layoutFilters,
   });
 
+  const timelineBaseItems = useMemo(() => normalizedViewInstance.viewType === 'TimelineView'
+    ? queryViewBaseRecords({
+        items: allItems,
+        layoutFilters,
+        viewFilters: normalizedViewInstance.filters || [],
+        keyword,
+      })
+    : viewItems,
+  [allItems, keyword, layoutFilters, normalizedViewInstance, viewItems]);
   const selectedLayoutCategories = useMemo(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
   const excelAvailableFields = useMemo(() => getAllFields(allItems), [allItems]);
 
@@ -97,7 +107,7 @@ export function ViewContent({
 
   const viewProps = buildViewProps({
     viewInstance: normalizedViewInstance,
-    viewItems,
+    viewItems: normalizedViewInstance.viewType === 'TimelineView' ? timelineBaseItems : viewItems,
     dateRange,
     layoutView,
     useFieldGranularity,

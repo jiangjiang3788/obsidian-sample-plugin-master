@@ -9,7 +9,7 @@ export function isQuickInputSystemContextField(field: TemplateField): boolean {
 export function isQuickInputInlineRowField(field: TemplateField): boolean {
   const semantic = getTemplateFieldSemantic(field);
   const label = field.label || field.key;
-  return semantic === 'status' || semantic === 'recurrence' || semantic === 'date' || label === '状态' || label === '重复' || label === '日期';
+  return semantic === 'status' || semantic === 'recurrence' || semantic === 'date' || semantic === 'duration' || label === '状态' || label === '重复' || label === '日期';
 }
 
 export function isQuickInputTimeField(field: TemplateField): boolean {

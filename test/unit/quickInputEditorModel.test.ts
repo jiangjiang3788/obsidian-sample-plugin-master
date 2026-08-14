@@ -86,6 +86,33 @@ describe('QuickInputEditorModel', () => {
 
 
 
+  it('keeps optional select fields empty when autoSelectFirst is disabled', () => {
+    const hydrated = hydrateQuickInputTemplateDefaults({
+      template: {
+        fields: [
+          { id: 'priority', key: 'priority', label: '优先级', type: 'singleSelect', autoSelectFirst: false, options: [
+            { value: 'lowest', label: '最低' },
+            { value: 'high', label: '高' },
+          ] },
+          { id: 'repeat', key: 'recurrenceUnit', label: '重复', type: 'singleSelect', defaultValue: 'none', options: [
+            { value: 'none', label: '不重复' },
+            { value: 'day', label: '天' },
+          ] },
+        ],
+      },
+      current: {},
+      fieldSources: {},
+      selectedGoal: null,
+      currentGoalPath: '',
+      currentGoalTitle: '',
+      timeDirection: 'forward',
+    });
+
+    expect(hydrated.formData.priority).toBeUndefined();
+    expect(hydrated.formData.recurrenceUnit).toEqual({ value: 'none', label: '不重复' });
+  });
+
+
   it('updates a user field and returns goal/theme selection side effects', () => {
     const updated = applyQuickInputFieldUpdate({
       formData: { 内容: '旧内容' },
@@ -115,6 +142,24 @@ describe('QuickInputEditorModel', () => {
   it('keeps linked time draft cleanup inside the model layer', () => {
     const linked = applyQuickInputLinkedTimeChanges({ 时间: '09:00', 时长: 30, lastChanged: '时间' }, 'forward');
     expect(linked.formData.lastChanged).toBeUndefined();
+  });
+
+  it('links task datetime range to duration across midnight', () => {
+    const linked = applyQuickInputLinkedTimeChanges({
+      startAt: '2026-08-13T23:40',
+      endAt: '2026-08-14T07:20',
+      lastChanged: 'endAt',
+    }, 'forward');
+    expect(linked.formData.expectedDurationMinutes).toBe(460);
+  });
+
+  it('derives task end datetime from start plus duration', () => {
+    const linked = applyQuickInputLinkedTimeChanges({
+      startAt: '2026-08-13T23:40',
+      expectedDurationMinutes: 460,
+      lastChanged: 'expectedDurationMinutes',
+    }, 'forward');
+    expect(linked.formData.endAt).toBe('2026-08-14T07:20');
   });
 
 

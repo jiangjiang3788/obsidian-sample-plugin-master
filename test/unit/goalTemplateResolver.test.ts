@@ -66,4 +66,28 @@ describe('GoalTemplateResolver', () => {
     expect(result.template?.fields.find((field) => field.key === 'themePath')?.defaultValue).toBe('工作/插件');
     expect(result.template?.fields.length).toBeGreaterThan(0);
   });
+  it('preserves template theme context even when a custom preset omits the theme field from visible fields', () => {
+    const settings = baseSettings();
+    settings.goalSettings!.goalTemplates.push({
+      id: 'goal-template.goal.plugin.core.task',
+      goalId: 'goal.plugin',
+      coreBlockId: 'core.task',
+      enabled: true,
+      fields: [
+        { id: 'body', key: '任务内容', label: '内容', type: 'text', semantic: 'body' },
+      ],
+      defaultValues: { themePath: '工作/模板主题' },
+      createdAt: '2026-08-14T00:00:00.000Z',
+      updatedAt: '2026-08-14T00:00:00.000Z',
+    });
+
+    const result = GoalTemplateResolver.resolve({
+      settings,
+      blockId: 'core.task',
+      goalId: 'goal.plugin',
+    });
+
+    expect(result.template?.fields.find((field) => field.key === 'themePath')?.defaultValue).toBe('工作/模板主题');
+  });
+
 });

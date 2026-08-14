@@ -11,16 +11,38 @@ import type {
 } from "./model/types";
 import { normalizeGoalPath } from '@core/goal/public';
 
-/** 将“时间/结束/时长”字段收敛成最终数据，并去掉编辑态元字段。 */
+const LEGACY_TIME_KEYS = { startKey: "时间", endKey: "结束", durationKey: "时长" } as const;
+const TASK_TIME_KEYS = { startKey: "startAt", endKey: "endAt", durationKey: "expectedDurationMinutes" } as const;
+
+function usesTaskDateTimeFields(data: QuickInputFormData, changedKey?: string | null): boolean {
+  if (changedKey && Object.values(TASK_TIME_KEYS).includes(changedKey as any)) return true;
+  return Object.values(TASK_TIME_KEYS).some((key) => Object.prototype.hasOwnProperty.call(data, key));
+}
+
+function linkedTimeKeysFor(data: QuickInputFormData, changedKey?: string | null) {
+  return usesTaskDateTimeFields(data, changedKey) ? TASK_TIME_KEYS : LEGACY_TIME_KEYS;
+}
+
+/**
+ * 将“开始 / 结束 / 时长”收敛成最终数据，并去掉编辑态元字段。
+ * Task 使用 datetime-local + expectedDurationMinutes；其他记录继续兼容旧的 时间/结束/时长。
+ */
 export function finalizeQuickInputFormData(formData: QuickInputFormData) {
-  const finalData = { ...formData };
+  let finalData = { ...formData };
   const direction =
     finalData.__timeDirection === "backward" ? "backward" : "forward";
   delete finalData.lastChanged;
   delete finalData.__timeDirection;
+
+  // 两套 key 都走同一个 linked-time policy；不存在的字段不会被凭空生成。
+  finalData = finalizeLinkedTimeFields(
+    finalData,
+    TASK_TIME_KEYS,
+    { durationOutput: "number", direction },
+  );
   return finalizeLinkedTimeFields(
     finalData,
-    { startKey: "时间", endKey: "结束", durationKey: "时长" },
+    LEGACY_TIME_KEYS,
     { durationOutput: "number", direction },
   );
 }
@@ -29,10 +51,12 @@ export function applyQuickInputLinkedTimeChanges(
   draft: QuickInputFormData,
   direction: TimeDirection,
 ) {
+  const changedKey = typeof draft.lastChanged === 'string' ? draft.lastChanged : undefined;
+  const keys = linkedTimeKeysFor(draft, changedKey);
   const changes = computeLinkedTimeChanges(
     draft,
-    { startKey: "时间", endKey: "结束", durationKey: "时长" },
-    typeof draft.lastChanged === 'string' ? draft.lastChanged : undefined,
+    keys,
+    changedKey,
     {
       durationOutput: "number",
       direction,

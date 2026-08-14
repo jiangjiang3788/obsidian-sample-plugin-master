@@ -5,7 +5,7 @@ import { appendUnderHeaderText } from '@/core/recordInput/mutation/HeaderAppende
 import { resolveRecordBlockRangeById } from '@/core/recordInput/mutationLocator';
 import { createRecordId, RECORD_SCHEMA_VERSION } from './RecordId';
 import { RecordMutationTransaction, RecordTransactionRecoveryError } from './RecordMutationTransaction';
-import { encodeRecordBlock, type RecordDocument } from './codec/MarkdownRecordCodec';
+import { encodeRecordBlock, formatRecordDateTimeForMarkdown, type RecordDocument } from './codec/MarkdownRecordCodec';
 
 export interface NewRecord extends Omit<RecordDocument, 'recordId'> {
   recordId?: string;
@@ -32,6 +32,10 @@ const PATCH_FIELDS: Record<string, { label: string; aliases: string[] }> = {
   goalPath: { label: '目标', aliases: ['目标', 'goalPath'] },
   themePath: { label: '主题', aliases: ['主题', 'theme', 'themePath'] },
   createdAt: { label: '创建于', aliases: ['创建于', 'createdAt'] },
+  scheduledAt: { label: '计划时间', aliases: ['计划时间', 'scheduledAt'] },
+  startAt: { label: '开始时间', aliases: ['开始时间', 'startAt'] },
+  endAt: { label: '结束时间', aliases: ['结束时间', 'endAt'] },
+  dueAt: { label: '截止时间', aliases: ['截止时间', 'dueAt'] },
   scheduledDate: { label: '计划日期', aliases: ['计划日期', 'scheduledDate'] },
   startDate: { label: '开始日期', aliases: ['开始日期', 'startDate'] },
   dueDate: { label: '截止日期', aliases: ['截止日期', 'dueDate'] },
@@ -100,7 +104,12 @@ export function patchRecordBlockMarkdown(markdown: string, patch: RecordPatch): 
     const key = rawKey.trim();
     if (!key || protectedKeys.has(key.toLowerCase())) continue;
     const definition = resolvePatchField(key);
-    const encoded = scalar(value);
+    const isTaskRecord = lines.some((line) => /^\s*(?:核心Block|coreBlock)\s*::\s*task\s*$/i.test(line));
+    const taskDateTimeLabels = new Set(['创建于', '计划时间', '开始时间', '结束时间', '截止时间', '完成于', '取消于', '跳过于']);
+    const rawEncoded = scalar(value);
+    const encoded = isTaskRecord && taskDateTimeLabels.has(definition.label)
+      ? formatRecordDateTimeForMarkdown(rawEncoded)
+      : rawEncoded;
     const contentIndex = lines.findIndex((line, i) => i > 0 && /^\s*(?:内容|content)\s*::/i.test(line));
     const metadataEnd = contentIndex >= 0 ? contentIndex : lines.length - 1;
 

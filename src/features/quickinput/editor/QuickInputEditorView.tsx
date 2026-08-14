@@ -1,12 +1,11 @@
 /** @jsxImportSource preact */
-import { h, type ComponentChildren } from 'preact';
-
-import type { ThemeDefinition } from '@core/types/public';
+import { h } from 'preact';
 
 import { QuickInputEditorFields } from './components/Fields';
 import { GoalSelector, type GoalSelectorOption } from './components/GoalSelector';
 import { RecordTypeSwitcher } from './components/RecordTypeSwitcher';
 import { SelectablePill } from './components/SelectablePill';
+import { QuickInputFormRow } from './components/FormRow';
 
 export interface QuickInputEditorViewProps {
   getResourcePath: (path: string) => string;
@@ -16,9 +15,6 @@ export interface QuickInputEditorViewProps {
   currentBlockId: string;
   onBlockChange: (blockId: string) => void;
 
-  themes: ThemeDefinition[];
-  selectedThemeId: string | null;
-  onSelectTheme: (themeId: string | null, path: string | null) => void;
   goals: GoalSelectorOption[];
   selectedGoalPath: string | null;
   onSelectGoal: (goal: GoalSelectorOption | null) => void;
@@ -38,20 +34,10 @@ export interface QuickInputEditorViewProps {
   onRequestSubmit?: () => void;
   isMobileLike?: boolean;
   showTimeDirectionControl?: boolean;
-  currentThemePath?: string | null;
   currentGoalPath?: string | null;
   templateSourceType?: 'core-block' | 'goal-template' | null;
   fieldSourceSummary?: Record<string, number>;
   currentPeriodLabel?: string | null;
-}
-
-function ContextRow({ label, children }: { label: string; children: ComponentChildren }) {
-  return (
-    <div className="think-quick-input-context-row">
-      <div className="think-quick-input-context-row__label">{label}</div>
-      <div className="think-quick-input-context-row__control">{children}</div>
-    </div>
-  );
 }
 
 export function QuickInputEditorView({
@@ -88,21 +74,22 @@ export function QuickInputEditorView({
   const shouldShowCoreBlockFallbackHint = Boolean(currentGoalPath)
     && templateSourceType === 'core-block'
     && templateVariants.length === 0;
+  const isTaskTemplate = String(currentBlockId || template?.coreBlockId || template?.id || '').replace(/^core\./, '') === 'task';
 
   return (
     <div className={`think-quick-input-editor${dense ? ' is-dense' : ''}`}>
       <div className="think-quick-input-context-grid">
           {allowBlockSwitch && blocks.length > 1 && (
-            <ContextRow label="记录类型">
+            <QuickInputFormRow label="记录类型">
               <RecordTypeSwitcher
                 blocks={blocks}
                 currentBlockId={currentBlockId}
                 onBlockChange={onBlockChange}
               />
-            </ContextRow>
+            </QuickInputFormRow>
           )}
 
-          <ContextRow label="目标">
+          <QuickInputFormRow label="目标">
             <div className="think-quick-input-context-row__stack">
               <GoalSelector
                 goals={goals}
@@ -115,10 +102,10 @@ export function QuickInputEditorView({
                 <div className="think-quick-input-context-hint">当前目标没有此记录类型的专属预设，已使用记录类型默认模板。</div>
               )}
             </div>
-          </ContextRow>
+          </QuickInputFormRow>
 
           {templateVariants.length > 0 && (
-            <ContextRow label="记录预设">
+            <QuickInputFormRow label="记录预设">
               <div className="think-quick-input-pill-row think-quick-input-template-variant-switcher">
                 {templateVariants.map((variant) => {
                   const isSelected = (selectedTemplateVariantId || 'default') === variant.value;
@@ -135,11 +122,11 @@ export function QuickInputEditorView({
                   );
                 })}
               </div>
-            </ContextRow>
+            </QuickInputFormRow>
           )}
       </div>
 
-      {showDivider && <div className="think-quick-input-context-divider" aria-hidden="true" />}
+      {showDivider && !isTaskTemplate && <div className="think-quick-input-context-divider" aria-hidden="true" />}
 
       <div className="think-quick-input-fields">
         <QuickInputEditorFields

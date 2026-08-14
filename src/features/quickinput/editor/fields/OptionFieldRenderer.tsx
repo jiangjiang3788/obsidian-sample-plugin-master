@@ -2,6 +2,7 @@
 import { h } from 'preact';
 
 import { QuickInputOptionPillGroup } from '../components/QuickInputOptionPillGroup';
+import { isQuickInputChoiceSelected } from '../components/quickInputOptionSelection';
 import { SelectablePill } from '../components/SelectablePill';
 import { templateFieldValueToArray } from '@core/fields/public';
 
@@ -90,7 +91,10 @@ export function QuickInputSingleSelectFieldRenderer({
       choices={choices}
       value={rawValue}
       compact={dense}
-      onSelect={(choice) => onUpdate(field.key, choice, true)}
+      onSelect={(choice) => {
+        const canClear = !field.required && !field.defaultValue;
+        onUpdate(field.key, canClear && isQuickInputChoiceSelected(rawValue, choice) ? '' : choice, true);
+      }}
     />
   ) : (
     <input

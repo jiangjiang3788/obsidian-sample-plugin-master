@@ -23,11 +23,11 @@ export function normalizeItemDates(it: RecordViewItem): void {
   // Task：按优先级推导统一日期
   const pick: Record<DateKey, string | undefined> = {
     done     : it.doneDate,
-    due      : it.dueDate,
-    scheduled: it.scheduledDate,
-    start    : it.startDate ?? it.startISO,
-    created  : it.createdDate,
-    end      : it.endISO,
+    due      : it.dueAt ?? it.dueDate,
+    scheduled: it.scheduledAt ?? it.scheduledDate,
+    start    : it.startAt ?? it.startDate ?? it.startISO,
+    created  : it.createdAt ?? it.createdDate,
+    end      : it.endAt ?? it.endISO,
   };
 
   for (const k of ORDER) {

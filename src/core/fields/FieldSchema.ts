@@ -58,6 +58,8 @@ export interface CaptureFieldConfig {
   aliases?: string[];
   auxKey?: string;
   defaultValue?: string;
+  /** Keep optional select fields empty instead of implicitly choosing the first option. */
+  autoSelectFirst?: boolean;
   required?: boolean;
   options?: FieldOption[];
   min?: number;

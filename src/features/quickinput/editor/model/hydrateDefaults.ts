@@ -161,7 +161,7 @@ export function hydrateQuickInputTemplateDefaults({
     } else if (!hasMeaningfulExisting || existingSource === undefined || existingSource === 'system_auto') {
       if (field.type === 'date') assignValue(key, dayjs().format('YYYY-MM-DD'), 'system_auto');
       else if (field.type === 'time') assignValue(key, dayjs().format('HH:mm'), 'system_auto');
-      else if (isSelectableField(field) && field.options?.length) {
+      else if (isSelectableField(field) && field.options?.length && field.autoSelectFirst !== false) {
         const first = field.options[0];
         assignValue(key, { value: first.value, label: first.label || first.value }, 'system_auto');
       }
@@ -170,15 +170,22 @@ export function hydrateQuickInputTemplateDefaults({
 
   if (!changed) return { changed: false, formData: current, fieldSources };
 
-  const finalized = finalizeLinkedTimeFields(
+  const taskTimeKeys = { startKey: 'startAt', endKey: 'endAt', durationKey: 'expectedDurationMinutes' };
+  const legacyTimeKeys = { startKey: '时间', endKey: '结束', durationKey: '时长' };
+  const taskFinalized = finalizeLinkedTimeFields(
     next,
-    { startKey: '时间', endKey: '结束', durationKey: '时长' },
+    taskTimeKeys,
+    { durationOutput: 'number', direction: timeDirection },
+  );
+  const finalized = finalizeLinkedTimeFields(
+    taskFinalized,
+    legacyTimeKeys,
     { durationOutput: 'number', direction: timeDirection },
   );
   const autoComputedKeys: string[] = [];
-  if (finalized['时间'] !== next['时间']) autoComputedKeys.push('时间');
-  if (finalized['结束'] !== next['结束']) autoComputedKeys.push('结束');
-  if (finalized['时长'] !== next['时长']) autoComputedKeys.push('时长');
+  for (const key of [...Object.values(taskTimeKeys), ...Object.values(legacyTimeKeys)]) {
+    if (finalized[key] !== next[key]) autoComputedKeys.push(key);
+  }
   autoComputedKeys.forEach((key) => {
     next[key] = finalized[key];
     nextSources[key] = 'system_auto';

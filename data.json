@@ -363,7 +363,7 @@
       "id": "vi_mpi3dydfsejfio8",
       "parentId": null,
       "title": "事件时间线",
-      "viewType": "EventTimelineView",
+      "viewType": "TimelineView",
       "viewConfig": {
         "categories": [
           {

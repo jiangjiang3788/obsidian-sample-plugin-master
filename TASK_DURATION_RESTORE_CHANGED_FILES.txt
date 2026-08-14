@@ -1,0 +1,12 @@
+src/features/quickinput/editor/model/displayTemplate.ts
+src/features/quickinput/editor/components/Fields.tsx
+src/features/quickinput/editor/fields/fieldSemantics.ts
+src/features/quickinput/editor/quickInputTimeModel.ts
+src/features/quickinput/editor/model/hydrateDefaults.ts
+src/core/records/task/taskTime.ts
+src/core/recordInput/normalization.ts
+src/core/recordInput/snapshot/OutputPlanner.ts
+test/unit/quickInputTaskDisplayTemplate.test.ts
+test/unit/quickInputEditorModel.test.ts
+test/unit/taskTimeDateTime.test.ts
+BUILD_STATUS.md

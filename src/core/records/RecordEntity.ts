@@ -124,6 +124,10 @@ export interface TaskRecordEntity extends RecordEntity {
   recoveryIntent?: boolean;
   createdAt?: string;
   createdDate?: string;
+  scheduledAt?: string;
+  startAt?: string;
+  endAt?: string;
+  dueAt?: string;
   scheduledDate?: string;
   startDate?: string;
   dueDate?: string;
@@ -206,6 +210,10 @@ export interface RecordViewItem extends RecordEntity {
   recoveryIntent?: boolean;
   createdAt?: string;
   createdDate?: string;
+  scheduledAt?: string;
+  startAt?: string;
+  endAt?: string;
+  dueAt?: string;
   scheduledDate?: string;
   startDate?: string;
   dueDate?: string;

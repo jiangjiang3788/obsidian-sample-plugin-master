@@ -2,7 +2,7 @@ import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
 import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import type { GoalDefinition, GoalSettings } from '@/core/goal';
-import { findGoalTemplate, resolveTemplatePeriodPolicy } from '@/core/goal';
+import { findGoalTemplate, isSystemRecordContextField, resolveTemplatePeriodPolicy } from '@/core/goal';
 import { getCoreBlockById } from '@/core/blocks';
 import { ThemeMetadataResolver } from '@/core/themeMetadata';
 
@@ -37,7 +37,22 @@ function findGoal(goalSettings: GoalSettings | undefined, goalId?: string | null
 function mergeTemplate(base: RecordCaptureTemplate, patch: Partial<RecordCaptureTemplate> & { defaultValues?: Record<string, unknown>; requiredFields?: string[]; granularity?: string }): RecordCaptureTemplate {
   const required = new Set(patch.requiredFields || []);
   const defaultValues = patch.defaultValues || {};
-  const fields = (patch.fields ?? base.fields).map((field) => {
+  const chosenFields = [...(patch.fields ?? base.fields)];
+
+  // GoalTemplate can replace the visible field list, but system context fields (themePath, goalPath, etc.)
+  // must survive as hidden data channels. Otherwise a preset-associated theme disappears simply because
+  // the user removed the theme picker from the visible task form.
+  for (const baseField of base.fields || []) {
+    const isSystemContext = isSystemRecordContextField(baseField.key, baseField.label, String(baseField.semantic || baseField.semanticType || ''));
+    if (!isSystemContext) continue;
+    const exists = chosenFields.some((field) =>
+      field.key === baseField.key
+      || (field.label && baseField.label && field.label === baseField.label)
+    );
+    if (!exists) chosenFields.push(baseField);
+  }
+
+  const fields = chosenFields.map((field) => {
     const key = field.key || field.label;
     const defaultValue = defaultValues[key] ?? defaultValues[field.label || ''];
     return {

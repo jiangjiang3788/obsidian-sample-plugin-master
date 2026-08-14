@@ -6679,23 +6679,27 @@ body.excel-view-is-resizing-column * {
   gap: var(--think-space-5);
   min-width: 0;
 }
-.modal.think-quick-input-modal .think-quick-input-context-row {
+.modal.think-quick-input-modal .think-qif-row {
   display: grid;
   grid-template-columns: var(--think-qif-label-column) minmax(0, 1fr);
   column-gap: var(--think-space-5);
   align-items: start;
+  width: 100%;
   min-width: 0;
 }
-.modal.think-quick-input-modal .think-quick-input-context-row__label,
-.modal.think-quick-input-modal .think-qif-label {
+.modal.think-quick-input-modal .think-qif-row__label {
   padding-top: var(--think-space-3);
+  min-width: 0;
+}
+.modal.think-quick-input-modal .think-qif-label {
+  display: block;
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-sm);
   font-weight: var(--think-font-weight-semibold);
   line-height: var(--think-line-height-normal);
   white-space: nowrap;
 }
-.modal.think-quick-input-modal .think-quick-input-context-row__control,
+.modal.think-quick-input-modal .think-qif-row__control,
 .modal.think-quick-input-modal .think-quick-input-context-row__stack {
   min-width: 0;
 }
@@ -6729,32 +6733,10 @@ body.excel-view-is-resizing-column * {
 .modal.think-quick-input-modal .think-qif-fields-stack__item {
   min-width: 0;
 }
-.modal.think-quick-input-modal .think-qif-frame,
-.modal.think-quick-input-modal .think-qif-frame--inline {
-  display: grid;
-  grid-template-columns: var(--think-qif-label-column) minmax(0, 1fr);
-  align-items: start;
-  column-gap: var(--think-space-5);
+.modal.think-quick-input-modal .think-qif-frame {
   row-gap: var(--think-space-3);
-  width: 100%;
-  min-width: 0;
 }
-.modal.think-quick-input-modal .think-qif-frame > .think-qif-label {
-  grid-column: 1;
-}
-.modal.think-quick-input-modal .think-qif-frame > :not(.think-qif-label) {
-  grid-column: 2;
-  min-width: 0;
-}
-.modal.think-quick-input-modal .think-qif-frame__inline-label {
-  grid-column: 1;
-  min-width: 0;
-}
-.modal.think-quick-input-modal .think-qif-frame__inline-label .think-qif-label {
-  display: block;
-}
-.modal.think-quick-input-modal .think-qif-frame__inline-control {
-  grid-column: 2;
+.modal.think-quick-input-modal .think-qif-row__control {
   min-width: 0;
 }
 .modal.think-quick-input-modal .think-qif-label__required {
@@ -6895,14 +6877,31 @@ body.excel-view-is-resizing-column * {
   font-size: var(--think-font-size-xs);
   cursor: pointer;
 }
+/*
+ * Task advanced fields are one collapsible card, rather than another form section.
+ * The heading stays on the left edge and no divider is used to split it from the primary task fields.
+ */
+.modal.think-quick-input-modal .think-qif-advanced-disclosure {
+  margin-top: var(--think-space-1);
+  overflow: hidden;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-lg);
+  background: var(--think-bg-surface-1);
+}
+.modal.think-quick-input-modal .think-qif-advanced-disclosure > .think-disclosure__summary {
+  min-height: 44px;
+  padding: var(--think-space-3) var(--think-space-4);
+  color: var(--think-text-secondary);
+}
+.modal.think-quick-input-modal .think-qif-advanced-disclosure > .think-disclosure__body {
+  padding: 0 var(--think-space-4) var(--think-space-4);
+}
 @media (max-width: 640px) {
   .modal.think-quick-input-modal {
     --think-qif-label-column: 76px;
   }
 
-  .modal.think-quick-input-modal .think-quick-input-context-row,
-  .modal.think-quick-input-modal .think-qif-frame,
-  .modal.think-quick-input-modal .think-qif-frame--inline {
+  .modal.think-quick-input-modal .think-qif-row {
     column-gap: var(--think-space-4);
   }
 
@@ -6911,28 +6910,26 @@ body.excel-view-is-resizing-column * {
   }
 }
 @media (max-width: 440px) {
-  .modal.think-quick-input-modal .think-quick-input-context-row,
-  .modal.think-quick-input-modal .think-qif-frame,
-  .modal.think-quick-input-modal .think-qif-frame--inline {
+  .modal.think-quick-input-modal .think-qif-row {
     grid-template-columns: 1fr;
     row-gap: var(--think-space-2);
   }
 
-  .modal.think-quick-input-modal .think-quick-input-context-row__label,
-  .modal.think-quick-input-modal .think-qif-label {
+  .modal.think-quick-input-modal .think-qif-row__label {
     padding-top: 0;
-  }
-
-  .modal.think-quick-input-modal .think-qif-frame > .think-qif-label,
-  .modal.think-quick-input-modal .think-qif-frame > :not(.think-qif-label),
-  .modal.think-quick-input-modal .think-qif-frame__inline-label,
-  .modal.think-quick-input-modal .think-qif-frame__inline-control {
-    grid-column: 1;
   }
 
   .modal.think-quick-input-modal .think-qif-time-direction {
     justify-content: flex-start;
     padding-left: 0;
+  }
+
+  .modal.think-quick-input-modal .think-qif-advanced-disclosure > .think-disclosure__summary {
+    padding: var(--think-space-3);
+  }
+
+  .modal.think-quick-input-modal .think-qif-advanced-disclosure > .think-disclosure__body {
+    padding: var(--think-space-3);
   }
 
   .modal.think-quick-input-modal .think-qif-hierarchy-level {

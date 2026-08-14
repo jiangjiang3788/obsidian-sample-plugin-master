@@ -18,6 +18,10 @@ export interface ParsedRecordMetadata {
   categoryKey: string;
   status?: string;
   date?: string;
+  scheduledAt?: string;
+  startAt?: string;
+  endAt?: string;
+  dueAt?: string;
   scheduledDate?: string;
   startDate?: string;
   dueDate?: string;
@@ -108,6 +112,33 @@ function parseDate(value: string): string | undefined {
   return normalizeDateStr(raw) || raw;
 }
 
+function normalizeStoredDateTime(value: string): string | undefined {
+  const raw = String(value || '').trim();
+  if (!raw) return undefined;
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(raw)) return raw.replace(' ', 'T');
+  return raw;
+}
+
+export function formatRecordDateTimeForMarkdown(value: unknown): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const naive = raw.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?$/);
+  if (naive) return `${naive[1]} ${naive[2]}`;
+  const parsed = new Date(raw);
+  if (!Number.isFinite(parsed.getTime())) return raw.replace('T', ' ');
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
+  const hour = String(parsed.getHours()).padStart(2, '0');
+  const minute = String(parsed.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hour}:${minute}`;
+}
+
+const TASK_READABLE_DATETIME_LABELS = new Set([
+  '创建于', '计划时间', '开始时间', '结束时间', '截止时间', '完成于', '取消于', '跳过于',
+]);
+
 /** Record Block body -> canonical typed metadata. Only canonical Record Block fields are accepted here. */
 export function decodeRecordContentLines(contentLines: string[], _parentFolder: string): ParsedRecordMetadata {
   let categoryKey: string | null = null;
@@ -132,6 +163,10 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
   let schemaVersion: number | undefined;
   let status: string | undefined;
   let templateSourceType: 'core-block' | 'goal-template' | undefined;
+  let scheduledAt: string | undefined;
+  let startAt: string | undefined;
+  let endAt: string | undefined;
+  let dueAt: string | undefined;
   let scheduledDate: string | undefined;
   let startDate: string | undefined;
   let dueDate: string | undefined;
@@ -222,8 +257,8 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
         else if (['当前任务id', 'currenttaskid'].includes(key)) currentTaskId = value.trim() || undefined;
         else if (['滚动策略', 'rolloverpolicy'].includes(key)) { if (value.trim().toLowerCase() === 'carry') rolloverPolicy = 'carry'; }
         else if (coreBlock === 'task-session' && ['任务id', 'taskid'].includes(key)) taskId = value.trim() || undefined;
-        else if (coreBlock === 'task-session' && ['开始于', 'sessionstartedat'].includes(key)) sessionStartedAt = value.trim() || undefined;
-        else if (coreBlock === 'task-session' && ['结束于', 'sessionendedat'].includes(key)) sessionEndedAt = value.trim() || undefined;
+        else if (coreBlock === 'task-session' && ['开始于', 'sessionstartedat'].includes(key)) sessionStartedAt = normalizeStoredDateTime(value);
+        else if (coreBlock === 'task-session' && ['结束于', 'sessionendedat'].includes(key)) sessionEndedAt = normalizeStoredDateTime(value);
         else if (coreBlock === 'task-session' && ['时长', 'sessiondurationminutes'].includes(key)) sessionDurationMinutes = decodeMarkdownNumber(value);
         else if (coreBlock === 'task-session' && ['结果', 'sessionresult'].includes(key)) {
           const result = value.trim().toLowerCase();
@@ -243,13 +278,17 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
         else if (['状态', 'status'].includes(key)) status = value.trim().toLowerCase();
         else if (key === '目标') goalPath = decodeMarkdownString(value, FIELD_CODEC_PRESETS.goalPath);
         else if (['日期', 'date'].includes(key)) date = parseDate(value);
+        else if (['计划时间', 'scheduledat'].includes(key)) scheduledAt = normalizeStoredDateTime(value);
+        else if (['开始时间', 'startat'].includes(key)) startAt = normalizeStoredDateTime(value);
+        else if (['结束时间', 'endat'].includes(key)) endAt = normalizeStoredDateTime(value);
+        else if (['截止时间', 'dueat'].includes(key)) dueAt = normalizeStoredDateTime(value);
         else if (['计划日期', 'scheduleddate'].includes(key)) scheduledDate = parseDate(value);
         else if (['开始日期', 'startdate'].includes(key)) startDate = parseDate(value);
         else if (['截止日期', 'duedate'].includes(key)) dueDate = parseDate(value);
-        else if (['创建于', 'createdat'].includes(key)) createdAt = value.trim() || undefined;
-        else if (['完成于', 'completedat'].includes(key)) completedAt = value.trim() || undefined;
-        else if (['取消于', 'cancelledat'].includes(key)) cancelledAt = value.trim() || undefined;
-        else if (['跳过于', 'skippedat'].includes(key)) skippedAt = value.trim() || undefined;
+        else if (['创建于', 'createdat'].includes(key)) createdAt = normalizeStoredDateTime(value);
+        else if (['完成于', 'completedat'].includes(key)) completedAt = normalizeStoredDateTime(value);
+        else if (['取消于', 'cancelledat'].includes(key)) cancelledAt = normalizeStoredDateTime(value);
+        else if (['跳过于', 'skippedat'].includes(key)) skippedAt = normalizeStoredDateTime(value);
         else if (['优先级', 'priority'].includes(key)) {
           const p = value.trim().toLowerCase();
           if (['lowest','low','medium','high','highest'].includes(p)) priority = p as ParsedRecordMetadata['priority'];
@@ -298,7 +337,7 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
   const finalTags = unique(tags);
   return {
     recordId, schemaVersion, title: buildTitle(content, finalTags), content: content.trim(),
-    categoryKey: categoryKey || '', status, date, scheduledDate, startDate, dueDate,
+    categoryKey: categoryKey || '', status, date, scheduledAt, startAt, endAt, dueAt, scheduledDate, startDate, dueDate,
     completedAt, cancelledAt, skippedAt, createdAt, tags: finalTags, goalPath,
     goalId, cycleId, coreBlock, recordSubtype, extra, icon, period, rating, image, pintu, theme, templateId,
     templateSourceType, priority, expectedDurationMinutes, energyDemand, brainDemand, physicalDemand, availabilityContexts, recoveryIntent, seriesId,
@@ -317,10 +356,12 @@ function markdownScalar(value: unknown): string {
 
 const TASK_FIELD_ORDER: Array<[string, string[]]> = [
   ['状态', ['状态','status']], ['目标ID', ['目标ID','goalId']], ['目标', ['目标','goalPath']],
-  ['主题', ['主题','themePath']], ['创建于', ['创建于','createdAt']], ['优先级', ['优先级','priority']],
-  ['预计时长', ['预计时长','expectedDurationMinutes']], ['精力要求', ['精力要求','energyDemand']],
-  ['脑力要求', ['脑力要求','brainDemand']], ['体力要求', ['体力要求','physicalDemand']],
-  ['可用场景', ['可用场景','availabilityContexts']], ['恢复意图', ['恢复意图','recoveryIntent']],
+  ['主题', ['主题','themePath']], ['创建于', ['创建于','createdAt']],
+  ['开始时间', ['开始时间','startAt']], ['结束时间', ['结束时间','endAt']],
+  ['优先级', ['优先级','priority']], ['预计时长', ['预计时长','expectedDurationMinutes']],
+  ['精力要求', ['精力要求','energyDemand']], ['脑力要求', ['脑力要求','brainDemand']],
+  ['体力要求', ['体力要求','physicalDemand']], ['可用场景', ['可用场景','availabilityContexts']], ['恢复意图', ['恢复意图','recoveryIntent']],
+  ['计划时间', ['计划时间','scheduledAt']], ['截止时间', ['截止时间','dueAt']],
   ['计划日期', ['计划日期','scheduledDate']], ['开始日期', ['开始日期','startDate']], ['截止日期', ['截止日期','dueDate']],
   ['完成于', ['完成于','completedAt']], ['取消于', ['取消于','cancelledAt']], ['跳过于', ['跳过于','skippedAt']],
   ['系列ID', ['系列ID','seriesId']], ['模板ID', ['模板ID','templateId']], ['模板来源', ['模板来源','templateSourceType']],
@@ -385,6 +426,7 @@ export function encodeRecordBlock(document: RecordDocument): string {
       let value = firstValue(fields, keys);
       if (label === '状态' && !value) value = 'open';
       if (label === '创建于' && !value) value = new Date().toISOString();
+      if (value && TASK_READABLE_DATETIME_LABELS.has(label)) value = formatRecordDateTimeForMarkdown(value);
       if (value) { lines.push(`${label}:: ${value}`); keys.forEach(key => emitted.add(key)); }
     }
     for (const [key, raw] of Object.entries(fields)) {

@@ -1,0 +1,15 @@
+System rework files changed from the supplied 1.0.59 theme/readable-time source baseline:
+
+src/core/records/schema/definitions.ts
+src/core/services/GoalTemplateResolver.ts
+src/features/quickinput/editor/QuickInputEditorContainer.tsx
+src/features/quickinput/editor/QuickInputEditorView.tsx
+src/features/quickinput/editor/components/Fields.tsx
+src/features/quickinput/editor/components/FormRow.tsx
+src/features/quickinput/editor/fields/FieldFrame.tsx
+src/features/quickinput/editor/model/displayTemplate.ts
+src/styles/features/quick-input-editor.css
+test/unit/goalTemplateResolver.test.ts
+test/unit/quickInputTaskDisplayTemplate.test.ts
+docs/reports/TASK_CAPTURE_SYSTEM_REWORK_2026-08-14.md
+BUILD_STATUS.md

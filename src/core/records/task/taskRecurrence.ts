@@ -44,45 +44,47 @@ export function addRecurrenceToDate(baseDateISO: string, recurrence: RecurrenceI
   return next.format('YYYY-MM-DD');
 }
 
-export function getTaskRecurrenceBaseDate(
-  task: Pick<TaskRecordEntity, 'scheduledDate' | 'startDate' | 'dueDate' | 'completedAt'>,
-  recurrence: RecurrenceInfo,
-  completedAtISO: string,
-): string {
-  const completionDate = normalizeDateStr(completedAtISO) || String(completedAtISO || '').slice(0, 10);
-  if (recurrence.anchor === 'completion') return completionDate;
-  if (recurrence.anchor === 'start') return task.startDate || task.scheduledDate || task.dueDate || completionDate;
-  if (recurrence.anchor === 'due') return task.dueDate || task.scheduledDate || task.startDate || completionDate;
-  return task.scheduledDate || task.startDate || task.dueDate || completionDate;
+function addRecurrenceToDateTime(baseValue: string, recurrence: RecurrenceInfo): string {
+  const raw = String(baseValue || '').trim();
+  if (!raw) return raw;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return addRecurrenceToDate(raw, recurrence);
+  const base = dayjs(raw.replace(' ', 'T'));
+  if (!base.isValid()) throw new Error(`task_recurrence_invalid_base_datetime:${baseValue}`);
+  const next = recurrence.unit === 'quarter'
+    ? base.add(recurrence.interval * 3, 'month')
+    : base.add(recurrence.interval, recurrence.unit);
+  return next.format('YYYY-MM-DDTHH:mm');
 }
 
-export function buildNextOccurrenceDates(
-  task: Pick<TaskRecordEntity, 'scheduledDate' | 'startDate' | 'dueDate' | 'completedAt'>,
-  recurrence: RecurrenceInfo,
-  completedAtISO: string,
-): Pick<TaskRecordEntity, 'scheduledDate' | 'startDate' | 'dueDate'> {
-  const baseDate = getTaskRecurrenceBaseDate(task, recurrence, completedAtISO);
-  const nextAnchorDate = addRecurrenceToDate(baseDate, recurrence);
+type RecurrenceTaskTimeFields = Pick<TaskRecordEntity,
+  'scheduledAt' | 'startAt' | 'dueAt' | 'scheduledDate' | 'startDate' | 'dueDate' | 'completedAt'>;
+type NextOccurrenceTimes = Pick<TaskRecordEntity,
+  'scheduledAt' | 'startAt' | 'dueAt' | 'scheduledDate' | 'startDate' | 'dueDate'>;
+function firstTime(...values: Array<string | undefined>): string | undefined {
+  return values.find(value => Boolean(String(value || '').trim()));
+}
 
-  const result: Pick<TaskRecordEntity, 'scheduledDate' | 'startDate' | 'dueDate'> = {};
-  const shift = (value?: string): string | undefined => {
-    if (!value) return undefined;
-    return addRecurrenceToDate(value, recurrence);
-  };
+export function getTaskRecurrenceBaseDate(task: RecurrenceTaskTimeFields, recurrence: RecurrenceInfo, completedAtISO: string): string {
+  const completion = String(completedAtISO || '').trim();
+  if (recurrence.anchor === 'completion') return completion;
+  if (recurrence.anchor === 'start') return firstTime(task.startAt, task.startDate, task.scheduledAt, task.scheduledDate, task.dueAt, task.dueDate) || completion;
+  if (recurrence.anchor === 'due') return firstTime(task.dueAt, task.dueDate, task.startAt, task.startDate, task.scheduledAt, task.scheduledDate) || completion;
+  return firstTime(task.scheduledAt, task.scheduledDate, task.startAt, task.startDate, task.dueAt, task.dueDate) || completion;
+}
 
-  if (recurrence.anchor === 'scheduled') result.scheduledDate = nextAnchorDate;
-  else result.scheduledDate = shift(task.scheduledDate);
-
-  if (recurrence.anchor === 'start') result.startDate = nextAnchorDate;
-  else result.startDate = shift(task.startDate);
-
-  if (recurrence.anchor === 'due') result.dueDate = nextAnchorDate;
-  else result.dueDate = shift(task.dueDate);
-
-  // completion-anchored series with no explicit dates still need an actionable next occurrence.
-  if (recurrence.anchor === 'completion' && !result.scheduledDate && !result.startDate && !result.dueDate) {
-    result.scheduledDate = nextAnchorDate;
-  }
-
+export function buildNextOccurrenceDates(task: RecurrenceTaskTimeFields, recurrence: RecurrenceInfo, completedAtISO: string): NextOccurrenceTimes {
+  const base = getTaskRecurrenceBaseDate(task, recurrence, completedAtISO);
+  const nextAnchor = addRecurrenceToDateTime(base, recurrence);
+  const result: NextOccurrenceTimes = {};
+  const shift = (value?: string): string | undefined => value ? addRecurrenceToDateTime(value, recurrence) : undefined;
+  if (recurrence.anchor === 'scheduled') {
+    if (task.scheduledAt) result.scheduledAt = nextAnchor; else result.scheduledDate = nextAnchor.slice(0, 10);
+  } else { result.scheduledAt = shift(task.scheduledAt); result.scheduledDate = shift(task.scheduledDate)?.slice(0, 10); }
+  if (recurrence.anchor === 'start') result.startAt = nextAnchor;
+  else { result.startAt = shift(task.startAt); result.startDate = shift(task.startDate)?.slice(0, 10); }
+  if (recurrence.anchor === 'due') {
+    if (task.dueAt) result.dueAt = nextAnchor; else result.dueDate = nextAnchor.slice(0, 10);
+  } else { result.dueAt = shift(task.dueAt); result.dueDate = shift(task.dueDate)?.slice(0, 10); }
+  if (recurrence.anchor === 'completion' && !result.scheduledAt && !result.scheduledDate && !result.startAt && !result.startDate && !result.dueAt && !result.dueDate) result.startAt = nextAnchor;
   return result;
 }

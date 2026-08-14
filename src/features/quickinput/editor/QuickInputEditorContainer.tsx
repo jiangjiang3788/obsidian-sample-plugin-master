@@ -23,12 +23,10 @@ import {
   deriveQuickInputInitialSelection,
   getGoalPath,
   hydrateQuickInputTemplateDefaults,
-  resolveQuickInputThemeSelectionOnClick,
   resolveQuickInputCoreBlockId,
   resolveQuickInputEnergyThemePath,
   shouldShowQuickInputTimeDirectionControl,
   splitPathParts,
-  themeOptions,
 } from './QuickInputEditorModel';
 import type { QuickInputEditorProps, QuickInputFieldSourceMap, QuickInputFormData, TimeDirection } from './QuickInputEditorModel';
 export { finalizeQuickInputFormData } from './QuickInputEditorModel';
@@ -266,13 +264,6 @@ export function QuickInputEditor({
     dispatchSession({ type: 'switchRecordType', blockId: newBlockId });
   };
 
-  const handleSelectTheme = (themeId: string | null, path: string | null) => {
-    dispatchSession({
-      type: 'selectTheme',
-      themeId: resolveQuickInputThemeSelectionOnClick({ selectedThemeId, themeId, path, pathToIdMap }),
-    });
-  };
-
   const handleSelectGoal = (option: GoalSelectorOption | null) => {
     if (!option || !option.value) {
       dispatchSession({ type: 'selectGoal', goalId: null, goalPath: null });
@@ -314,9 +305,6 @@ export function QuickInputEditor({
       allowBlockSwitch={allowBlockSwitch}
       currentBlockId={currentEffectiveBlockIdForTemplates || currentBlockId}
       onBlockChange={handleBlockChange}
-      themes={availableThemes}
-      selectedThemeId={selectedThemeId}
-      onSelectTheme={handleSelectTheme}
       goals={goalOptions}
       selectedGoalPath={currentGoalPath}
       onSelectGoal={handleSelectGoal}
@@ -326,7 +314,7 @@ export function QuickInputEditor({
       onSelectTemplateVariant={(variantId) => dispatchSession({ type: 'selectTemplateVariant', variantId })}
       template={template}
       formData={formData}
-      fieldValueOptionsByKey={{ themePath: themeOptions(availableThemes), '主题': themeOptions(availableThemes), ...currentPeriodOptions }}
+      fieldValueOptionsByKey={currentPeriodOptions}
       timeDirection={timeDirection}
       dense={dense}
       showDivider={showDivider}
@@ -335,7 +323,6 @@ export function QuickInputEditor({
       onRequestSubmit={onRequestSubmit}
       isMobileLike={isMobileLike}
       showTimeDirectionControl={showTimeDirectionControl}
-      currentThemePath={String(formData.themePath ?? formData['主题'] ?? theme?.path ?? selectedGoal?.themePath ?? '') || null}
       currentPeriodLabel={currentPeriod?.label || null}
       templateSourceType={templateSourceType}
       fieldSourceSummary={makeEditorState(formData, timeDirection, fieldSources).fieldSourceSummary}

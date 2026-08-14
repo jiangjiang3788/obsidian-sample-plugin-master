@@ -1,20 +1,14 @@
 /** @jsxImportSource preact */
 import { h, type ComponentChildren } from 'preact';
 
+import { QuickInputFormRow } from '../components/FormRow';
+
 interface QuickInputFieldFrameProps {
   label: string;
   required?: boolean;
   textarea?: boolean;
   inline?: boolean;
   children: ComponentChildren;
-}
-
-function QuickInputFieldLabel({ label, required = false }: { label: string; required?: boolean }) {
-  return (
-    <span className="think-qif-label">
-      {label}{required ? <span className="think-qif-label__required">*</span> : null}
-    </span>
-  );
 }
 
 export function QuickInputFieldFrame({
@@ -24,21 +18,18 @@ export function QuickInputFieldFrame({
   inline = false,
   children,
 }: QuickInputFieldFrameProps) {
-  if (inline) {
-    return (
-      <div className="think-form-row think-form-row--inline think-qif-frame think-qif-frame--inline">
-        <div className="think-qif-frame__inline-label">
-          <QuickInputFieldLabel label={label} required={required} />
-        </div>
-        <div className="think-qif-frame__inline-control">{children}</div>
-      </div>
-    );
-  }
-
   return (
-    <div className={textarea ? 'think-form-row think-textarea-row think-qif-frame' : 'think-form-row think-qif-frame'}>
-      <QuickInputFieldLabel label={label} required={required} />
+    <QuickInputFormRow
+      label={label}
+      required={required}
+      className={[
+        'think-form-row',
+        'think-qif-frame',
+        textarea ? 'think-textarea-row' : '',
+        inline ? 'think-qif-frame--inline' : '',
+      ].filter(Boolean).join(' ')}
+    >
       {children}
-    </div>
+    </QuickInputFormRow>
   );
 }

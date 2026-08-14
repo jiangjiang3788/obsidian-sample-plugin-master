@@ -1,0 +1,10 @@
+Task form refinement files changed from think-os-1.0.59-task-capture-system-rework-source.zip:
+
+src/features/quickinput/editor/model/displayTemplate.ts
+src/features/quickinput/editor/components/Fields.tsx
+src/features/quickinput/editor/QuickInputEditorView.tsx
+src/styles/features/quick-input-editor.css
+test/unit/quickInputTaskDisplayTemplate.test.ts
+docs/reports/TASK_FORM_UI_REFINEMENT_2026-08-14.md
+BUILD_STATUS.md
+TASK_FORM_REFINEMENT_CHANGED_FILES.txt

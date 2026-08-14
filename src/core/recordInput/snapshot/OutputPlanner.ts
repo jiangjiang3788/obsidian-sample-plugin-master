@@ -22,13 +22,39 @@ function readScalarOption(value: unknown): string {
   return String(option.value || option.label || value || '').trim();
 }
 
+function normalizeLocalDateTime(value: unknown): string | undefined {
+  const text = readScalarOption(value);
+  if (!text) return undefined;
+  const normalized = text.replace(' ', 'T');
+  const parsed = new Date(normalized);
+  return Number.isFinite(parsed.getTime()) ? normalized : undefined;
+}
+
+function localDatePart(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return undefined;
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function durationMinutesBetween(start: string | undefined, end: string | undefined): number | undefined {
+  if (!start || !end) return undefined;
+  const startMs = new Date(start).getTime();
+  const endMs = new Date(end).getTime();
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs < startMs) return undefined;
+  return Math.max(1, Math.round((endMs - startMs) / 60000));
+}
+
 function readStructuredTaskRecurrence(renderData: Record<string, unknown>): { unit: 'day' | 'week' | 'month' | 'quarter' | 'year'; interval: number; anchor: 'scheduled' | 'start' | 'due' | 'completion' } | null {
-  const rawUnit = readScalarOption(renderData['重复单位'] ?? renderData.recurrenceUnit).toLowerCase();
+  const rawUnit = readScalarOption(renderData['重复'] ?? renderData['重复单位'] ?? renderData.recurrenceUnit).toLowerCase();
   if (!rawUnit || rawUnit === 'none') return null;
   if (!['day', 'week', 'month', 'quarter', 'year'].includes(rawUnit)) throw new Error(`task_recurrence_unit_invalid:${rawUnit}`);
   const interval = Number(renderData['重复间隔'] ?? renderData.recurrenceInterval ?? 1);
   if (!Number.isInteger(interval) || interval < 1) throw new Error(`task_recurrence_interval_invalid:${interval}`);
-  const rawAnchor = readScalarOption(renderData['重复锚点'] ?? renderData.recurrenceAnchor ?? 'scheduled').toLowerCase();
+  const rawAnchor = readScalarOption(renderData['重复锚点'] ?? renderData.recurrenceAnchor ?? 'start').toLowerCase();
   if (!['scheduled', 'start', 'due', 'completion'].includes(rawAnchor)) throw new Error(`task_recurrence_anchor_invalid:${rawAnchor}`);
   return { unit: rawUnit as any, interval, anchor: rawAnchor as any };
 }
@@ -153,6 +179,17 @@ export function buildRecordOutputPlan(input: {
     const recurrence = readStructuredTaskRecurrence(renderData);
     if (!recurrence && status === 'skipped') throw new Error('task_status_skipped_requires_series');
     if (recurrence && status !== 'open') throw new Error('task_series_initial_instance_must_be_open');
+    const startAt = normalizeLocalDateTime(
+      renderData['开始/预计时间']
+      ?? renderData['开始时间']
+      ?? renderData.startAt
+      ?? renderData['计划时间']
+      ?? renderData.scheduledAt
+      ?? renderData['计划日期']
+      ?? renderData.scheduledDate,
+    );
+    const endAt = normalizeLocalDateTime(renderData['结束时间'] ?? renderData.endAt);
+    const declaredDuration = renderData['时长（分钟）'] ?? renderData['时长'] ?? renderData['预计时长'] ?? renderData.expectedDurationMinutes;
     const taskFields = {
       status,
       content: renderData['任务内容'] ?? renderData['内容'] ?? renderData.content,
@@ -165,14 +202,20 @@ export function buildRecordOutputPlan(input: {
       physicalDemand: renderData['体力要求'] ?? renderData.physicalDemand,
       availabilityContexts: renderData['可用场景'] ?? renderData.availabilityContexts,
       recoveryIntent: renderData['恢复意图'] ?? renderData.recoveryIntent,
-      scheduledDate: renderData['计划日期'] ?? renderData.scheduledDate ?? renderData['日期'] ?? renderData.date,
-      startDate: renderData['开始日期'] ?? renderData.startDate,
-      dueDate: renderData['截止日期'] ?? renderData.dueDate,
-      expectedDurationMinutes: renderData['预计时长'] ?? renderData.expectedDurationMinutes,
+      startAt,
+      endAt,
+      expectedDurationMinutes: declaredDuration || durationMinutesBetween(startAt, endAt),
       createdAt: renderData['创建于'] ?? renderData.createdAt ?? new Date().toISOString(),
       seriesId: renderData.seriesId ?? renderData['系列ID'],
     } as Record<string, unknown>;
-    Object.assign(taskFields, buildCustomCaptureFields('task', renderData, input.template.fields));
+    const customTaskFields = buildCustomCaptureFields('task', renderData, input.template.fields);
+    for (const key of [
+      '重复', '重复单位', '重复间隔', '重复锚点',
+      'recurrenceUnit', 'recurrenceInterval', 'recurrenceAnchor',
+      '计划时间', '计划日期', '截止时间', '截止日期',
+      'scheduledAt', 'scheduledDate', 'dueAt', 'dueDate',
+    ]) delete customTaskFields[key];
+    Object.assign(taskFields, customTaskFields);
     const existingSeriesId = String(taskFields.seriesId || '').trim();
     if (recurrence && existingSeriesId) {
       throw new Error('task_series_recurrence_edit_requires_series_command');
@@ -180,7 +223,10 @@ export function buildRecordOutputPlan(input: {
     if (recurrence && !existingSeriesId) {
       const seriesId = createRecordId('task-series');
       taskFields.seriesId = seriesId;
-      const seriesStartDate = String(taskFields.scheduledDate || taskFields.startDate || taskFields.dueDate || new Date().toISOString().slice(0, 10));
+      const seriesStartDate = String(
+        localDatePart(String(taskFields.startAt || ''))
+        || new Date().toISOString().slice(0, 10)
+      );
       const seriesBlock = encodeRecordBlock({
         recordId: seriesId,
         schemaVersion: RECORD_SCHEMA_VERSION,
