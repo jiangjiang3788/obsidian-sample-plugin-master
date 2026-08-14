@@ -62,7 +62,7 @@ const TASK_FIELDS: TemplateField[] = [
   // 主题属于 GoalTemplate / Goal 上下文：保留为隐藏系统字段参与模板默认值和持久化，不在任务创建表单中直接选择。
   themeField,
 
-  // 以下均属于“更多选项”。时间与任务状态互相独立，填写结束时间不会自动完成任务。
+  // 时间是任务主字段，与状态互相独立；填写结束时间不会自动完成任务。其余需求/场景字段由 UI 放入“更多选项”。
   { id: 'core.task.startAt', key: 'startAt', label: '开始/预计时间', type: 'datetime', semantic: 'date' },
   { id: 'core.task.endAt', key: 'endAt', label: '结束时间', type: 'datetime', semantic: 'date' },
   { id: 'core.task.priority', key: 'priority', label: '优先级', type: 'singleSelect', autoSelectFirst: true, options: [

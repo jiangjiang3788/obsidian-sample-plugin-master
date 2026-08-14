@@ -70,15 +70,15 @@ export function DayColumnBody({
     const lastTouchRef = useRef<{ time: number; x: number; y: number } | null>(null);
     const suppressClickUntilRef = useRef(0);
 
-    const tryUpdateTaskTime = async (taskId: string, updates: Parameters<UpdateTaskTimeHandler>[1]) => {
+    const tryUpdateTaskTime = async (recordId: string, updates: Parameters<UpdateTaskTimeHandler>[1]) => {
         if (!onUpdateTaskTime) {
-            onNotice?.('未提供保存处理器，无法更新工作 Session 时间');
+            onNotice?.('未提供保存处理器，无法更新时间');
             return;
         }
         try {
-            await onUpdateTaskTime(taskId, updates);
+            await onUpdateTaskTime(recordId, updates);
         } catch (e) {
-            onNotice?.('更新工作 Session 时间失败');
+            onNotice?.('更新记录时间失败');
         }
     };
 

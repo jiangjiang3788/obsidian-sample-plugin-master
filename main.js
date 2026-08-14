@@ -2864,7 +2864,7 @@ const BLOCKER_SCHEMA = simpleGoalRecord("blocker", "阻碍");
 const MILESTONE_SCHEMA = simpleGoalRecord("milestone", "里程碑");
 const TASK_DEMAND_FIELDS = [
   f$3("优先级", "domain-fact", "target", "enum", "User-declared Task priority.", { aliases: ["priority"], allowedValues: ["lowest", "low", "medium", "high", "highest"] }),
-  f$3("预计时长", "domain-fact", "target", "number", "User-declared expected duration in minutes. Actual execution duration belongs to TaskSession.", { aliases: ["expectedDurationMinutes"] }),
+  f$3("预计时长", "domain-fact", "target", "number", "User-declared duration in minutes. It can complete a manual Task time range when endAt is absent; TaskSession remains the source for multi-session timer history.", { aliases: ["expectedDurationMinutes"] }),
   f$3("精力要求", "domain-fact", "target", "enum", "Declared overall energy demand.", { aliases: ["energyDemand"], allowedValues: ["low", "medium", "high"] }),
   f$3("脑力要求", "domain-fact", "target", "enum", "Declared cognitive demand.", { aliases: ["brainDemand"], allowedValues: ["low", "medium", "high"] }),
   f$3("体力要求", "domain-fact", "target", "enum", "Declared physical demand.", { aliases: ["physicalDemand"], allowedValues: ["low", "medium", "high"] }),
@@ -2886,7 +2886,7 @@ const TASK_SCHEMA = {
     f$3("系列ID", "canonical-reference", "target", "record-id", "Optional TaskSeries reference.", { aliases: ["seriesId"] }),
     f$3("计划时间", "domain-fact", "target", "datetime", "Scheduled execution timestamp.", { aliases: ["scheduledAt"] }),
     f$3("开始时间", "domain-fact", "target", "datetime", "Declared start timestamp.", { aliases: ["startAt"] }),
-    f$3("结束时间", "domain-fact", "target", "datetime", "Declared end timestamp. Actual execution history still belongs to TaskSession.", { aliases: ["endAt"] }),
+    f$3("结束时间", "domain-fact", "target", "datetime", "Declared end timestamp. Together with startAt it may represent a manually recorded time range; TaskSession remains preferred when session history exists.", { aliases: ["endAt"] }),
     f$3("截止时间", "domain-fact", "target", "datetime", "Due timestamp.", { aliases: ["dueAt"] }),
     f$3("计划日期", "domain-fact", "target", "date", "Legacy scheduled execution date retained for compatibility.", { aliases: ["scheduledDate"] }),
     f$3("开始日期", "domain-fact", "target", "date", "Legacy declared start date retained for compatibility.", { aliases: ["startDate"] }),
@@ -3023,7 +3023,7 @@ const TASK_FIELDS = [
   { id: "core.task.recurrenceInterval", key: "recurrenceInterval", label: "重复间隔", type: "number", min: 1, defaultValue: "1" },
   // 主题属于 GoalTemplate / Goal 上下文：保留为隐藏系统字段参与模板默认值和持久化，不在任务创建表单中直接选择。
   themeField,
-  // 以下均属于“更多选项”。时间与任务状态互相独立，填写结束时间不会自动完成任务。
+  // 时间是任务主字段，与状态互相独立；填写结束时间不会自动完成任务。其余需求/场景字段由 UI 放入“更多选项”。
   { id: "core.task.startAt", key: "startAt", label: "开始/预计时间", type: "datetime", semantic: "date" },
   { id: "core.task.endAt", key: "endAt", label: "结束时间", type: "datetime", semantic: "date" },
   { id: "core.task.priority", key: "priority", label: "优先级", type: "singleSelect", autoSelectFirst: true, options: [
@@ -3721,8 +3721,8 @@ dayjs.extend = function(plugin, option) {
 };
 dayjs.locale = parseLocale;
 dayjs.isDayjs = isDayjs;
-dayjs.unix = function(timestamp) {
-  return dayjs(timestamp * 1e3);
+dayjs.unix = function(timestamp2) {
+  return dayjs(timestamp2 * 1e3);
 };
 dayjs.en = Ls[L$2];
 dayjs.Ls = Ls;
@@ -6453,7 +6453,7 @@ function normalizeGoalTemplateStorageRow(row) {
   };
 }
 function toGoalTemplateStorageRow(template, previous) {
-  const timestamp = nowIso$1();
+  const timestamp2 = nowIso$1();
   const variantId = normalizeVariantId(template.variantId);
   return {
     ...previous || {},
@@ -6471,8 +6471,8 @@ function toGoalTemplateStorageRow(template, previous) {
     appendUnderHeader: template.appendUnderHeader || void 0,
     defaultValues: template.defaultValues && Object.keys(template.defaultValues).length ? template.defaultValues : void 0,
     requiredFields: template.requiredFields?.length ? template.requiredFields : void 0,
-    createdAt: template.createdAt || previous?.createdAt || timestamp,
-    updatedAt: template.updatedAt || timestamp
+    createdAt: template.createdAt || previous?.createdAt || timestamp2,
+    updatedAt: template.updatedAt || timestamp2
   };
 }
 function goalTemplateIdentityKey(template) {
@@ -6966,7 +6966,7 @@ const FIELD_REGISTRY = {
   period: text$1({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
   startTime: { key: "startTime", label: "开始时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "startTime", aliases: ["时间", "time", "start"] },
   endTime: { key: "endTime", label: "结束时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "endTime", aliases: ["结束", "end"] },
-  expectedDurationMinutes: { key: "expectedDurationMinutes", label: "预计时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["预计时长", "expectedDuration", "expectedDurationMinutes"], description: "Task 的用户声明预计时长；实际工作时长只来自 TaskSession。" },
+  expectedDurationMinutes: { key: "expectedDurationMinutes", label: "预计时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["预计时长", "expectedDuration", "expectedDurationMinutes"], description: "Task 的用户声明时长；可与开始时间组成手工时间段，存在 TaskSession 时仍优先使用 Session 历史。" },
   scheduledAt: { key: "scheduledAt", label: "计划时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["计划时间", "scheduledAt"] },
   startAt: { key: "startAt", label: "开始时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["开始时间", "startAt"] },
   endAt: { key: "endAt", label: "结束时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["结束时间", "endAt"] },
@@ -6987,7 +6987,7 @@ const FIELD_REGISTRY = {
     { value: "out", label: "外出" }
   ], description: "任务实际可执行的场景；留空或任意表示不限制。" },
   recoveryIntent: { key: "recoveryIntent", label: "恢复意图", valueType: "boolean", inputType: "boolean", category: "core", source: "item", semantic: "none", aliases: ["恢复意图", "recoveryIntent"], description: "标记散步、休息等主动恢复类任务。" },
-  duration: { key: "duration", label: "时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"], hiddenByDefault: true, description: "通用/历史时长字段；Task 应使用 expectedDurationMinutes，执行历史使用 TaskSession。" },
+  duration: { key: "duration", label: "时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"], hiddenByDefault: true, description: "通用/历史时长字段；Task 应使用 expectedDurationMinutes；多段计时历史使用 TaskSession。" },
   rating: { key: "rating", label: "评分", valueType: "number", inputType: "rating", category: "core", source: "item", semantic: "rating", aliases: ["评分", "rating"] },
   image: { key: "image", label: "图片", valueType: "image", inputType: "image", category: "core", source: "item", semantic: "image", aliases: ["图片", "image", "评图", "pintu"], description: "通用图片字段；当前兼容读取旧 pintu/评图 数据" },
   // --- 主题语义：只从显式 theme 派生，header 永不参与 ---
@@ -18918,15 +18918,15 @@ function collectFileNames(items) {
   });
   return Array.from(fileNames).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
 }
-function mapTaskToCategory(taskFileName, categoriesConfig) {
-  if (!taskFileName || !categoriesConfig) return taskFileName;
+function mapTaskToCategory(taskFileName2, categoriesConfig) {
+  if (!taskFileName2 || !categoriesConfig) return taskFileName2;
   for (const categoryName in categoriesConfig) {
     const categoryInfo = categoriesConfig[categoryName];
-    if (categoryInfo.files && categoryInfo.files.some((fileKey) => taskFileName.includes(fileKey))) {
+    if (categoryInfo.files && categoryInfo.files.some((fileKey) => taskFileName2.includes(fileKey))) {
       return categoryName;
     }
   }
-  return taskFileName;
+  return taskFileName2;
 }
 function buildMonthlyAndWeeklySummary(timelineTasks, config2) {
   const data = [];
@@ -19141,8 +19141,8 @@ function buildRecordSubmitRecoveryPresentation(result, options = {}) {
   };
 }
 function logErrorEntryToConsole(entry) {
-  const timestamp = new Date(entry.timestamp).toLocaleString();
-  const prefix2 = `[ErrorHandler][${entry.type}][${timestamp}]`;
+  const timestamp2 = new Date(entry.timestamp).toLocaleString();
+  const prefix2 = `[ErrorHandler][${entry.type}][${timestamp2}]`;
   devLog(prefix2);
   devError("Message:", entry.message);
   if (entry.context) {
@@ -19907,6 +19907,7 @@ function buildRecordOutputPlan(input) {
     );
     const endAt = normalizeLocalDateTime(renderData["结束时间"] ?? renderData.endAt);
     const declaredDuration = renderData["时长（分钟）"] ?? renderData["时长"] ?? renderData["预计时长"] ?? renderData.expectedDurationMinutes;
+    const capturedAt = (/* @__PURE__ */ new Date()).toISOString();
     const taskFields = {
       status,
       content: renderData["任务内容"] ?? renderData["内容"] ?? renderData.content,
@@ -19922,7 +19923,8 @@ function buildRecordOutputPlan(input) {
       startAt,
       endAt,
       expectedDurationMinutes: declaredDuration || durationMinutesBetween(startAt, endAt),
-      createdAt: renderData["创建于"] ?? renderData.createdAt ?? (/* @__PURE__ */ new Date()).toISOString(),
+      createdAt: renderData["创建于"] ?? renderData.createdAt ?? capturedAt,
+      completedAt: status === "done" ? renderData["完成于"] ?? renderData.completedAt ?? capturedAt : void 0,
       seriesId: renderData.seriesId ?? renderData["系列ID"]
     };
     const customTaskFields = buildCustomCaptureFields("task", renderData, input.template.fields);
@@ -20275,7 +20277,7 @@ class MigrationBackupService {
   }
 }
 const ENERGY_FEEDBACK_WINDOW_MINUTES = 120;
-function parseClock(value) {
+function parseClock$1(value) {
   const match5 = String(value || "").trim().match(/^(\d{1,2}):(\d{2})$/);
   if (!match5) return null;
   const hours = Number(match5[1]);
@@ -20283,8 +20285,8 @@ function parseClock(value) {
   if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
   return { hours, minutes };
 }
-function withLocalClock(iso, value) {
-  const clock = parseClock(value);
+function withLocalClock$1(iso, value) {
+  const clock = parseClock$1(value);
   if (!clock) throw new Error("task_session_clock_invalid");
   const date2 = new Date(iso);
   if (!Number.isFinite(date2.getTime())) throw new Error("task_session_time_invalid");
@@ -20320,9 +20322,9 @@ class TaskSessionMutation {
     let startedMs = Date.parse(session.sessionStartedAt);
     let endedMs = Date.parse(session.sessionEndedAt);
     const originalDuration = session.sessionDurationMinutes;
-    if (updates.time) startedMs = withLocalClock(session.sessionStartedAt, updates.time);
+    if (updates.time) startedMs = withLocalClock$1(session.sessionStartedAt, updates.time);
     if (updates.endTime) {
-      endedMs = withLocalClock(session.sessionEndedAt, updates.endTime);
+      endedMs = withLocalClock$1(session.sessionEndedAt, updates.endTime);
       if (endedMs < startedMs) endedMs += 864e5;
     } else if (updates.duration != null || updates.time) {
       const duration2 = updates.duration != null ? updates.duration : originalDuration;
@@ -20587,6 +20589,85 @@ class TaskCompletionMutation {
     const task = asTaskRecord(await this.repository.getById(itemId));
     if (!task) throw new Error(`task_record_required:${itemId}`);
     return task;
+  }
+}
+function parseClock(value) {
+  const match5 = String(value || "").trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!match5) return null;
+  const hours = Number(match5[1]);
+  const minutes = Number(match5[2]);
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+  return { hours, minutes };
+}
+function normalizedDateTime$1(value) {
+  const raw = String(value || "").trim();
+  return /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(raw) ? raw.replace(" ", "T") : raw;
+}
+function timeMs(value) {
+  if (!value) return null;
+  const ms = Date.parse(normalizedDateTime$1(value));
+  return Number.isFinite(ms) ? ms : null;
+}
+function withLocalClock(baseMs, value) {
+  const clock = parseClock(value);
+  if (!clock) throw new Error("task_time_clock_invalid");
+  const date2 = new Date(baseMs);
+  date2.setHours(clock.hours, clock.minutes, 0, 0);
+  return date2.getTime();
+}
+function localDateTime(ms) {
+  const date2 = new Date(ms);
+  const year = date2.getFullYear();
+  const month = String(date2.getMonth() + 1).padStart(2, "0");
+  const day = String(date2.getDate()).padStart(2, "0");
+  const hour = String(date2.getHours()).padStart(2, "0");
+  const minute = String(date2.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+function roundMinutes(value) {
+  return Math.round(value * 100) / 100;
+}
+class TaskTimeMutation {
+  constructor(repository, taskSessions) {
+    this.repository = repository;
+    this.taskSessions = taskSessions;
+  }
+  repository;
+  taskSessions;
+  async update(recordId, updates) {
+    const record = await this.repository.getById(recordId);
+    if (asTaskSessionRecord(record)) return this.taskSessions.updateSessionTime(recordId, updates);
+    const task = asTaskRecord(record);
+    if (!task) throw new Error(`task_or_session_required:${recordId}`);
+    if (!task.startAt) throw new Error(`task_start_time_required:${recordId}`);
+    let startedMs = timeMs(task.startAt);
+    if (startedMs == null) throw new Error("task_time_invalid");
+    const persistedEndMs = timeMs(task.endAt);
+    const declaredDuration = Number(task.expectedDurationMinutes);
+    let originalDuration = persistedEndMs != null && persistedEndMs >= startedMs ? (persistedEndMs - startedMs) / 6e4 : declaredDuration;
+    if (!Number.isFinite(originalDuration) || originalDuration <= 0) throw new Error("task_duration_invalid");
+    let endedMs = persistedEndMs != null && persistedEndMs >= startedMs ? persistedEndMs : startedMs + originalDuration * 6e4;
+    if (updates.time) startedMs = withLocalClock(startedMs, updates.time);
+    if (updates.endTime) {
+      endedMs = withLocalClock(endedMs, updates.endTime);
+      if (endedMs < startedMs) endedMs += 864e5;
+    } else if (updates.duration != null || updates.time) {
+      const duration2 = updates.duration != null ? Number(updates.duration) : originalDuration;
+      if (!Number.isFinite(duration2) || duration2 <= 0) throw new Error("task_duration_invalid");
+      endedMs = startedMs + duration2 * 6e4;
+    }
+    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs <= startedMs) {
+      throw new Error("task_time_order_invalid");
+    }
+    originalDuration = roundMinutes((endedMs - startedMs) / 6e4);
+    await this.repository.update(task.id, {
+      startAt: localDateTime(startedMs),
+      endAt: localDateTime(endedMs),
+      expectedDurationMinutes: originalDuration
+    });
+    const updated = await this.repository.getById(task.id);
+    if (!updated) throw new Error(`task_time_update_scan_failed:${task.id}`);
+    return updated;
   }
 }
 class RecordTransactionRecoveryError extends Error {
@@ -20867,12 +20948,14 @@ var __decorateParam$6 = (index, decorator) => (target, key) => decorator(target,
 let ItemService = class {
   taskCompletion;
   taskSessions;
+  taskTime;
   inlineFields;
   goalTemplateMigration;
   migrationBackup;
   constructor(dataStore, vault) {
     const recordRepository = new RecordRepository(vault, dataStore);
     this.taskSessions = new TaskSessionMutation(dataStore, recordRepository);
+    this.taskTime = new TaskTimeMutation(recordRepository, this.taskSessions);
     this.taskCompletion = new TaskCompletionMutation(dataStore, recordRepository, this.taskSessions);
     this.inlineFields = new InlineFieldMutation(recordRepository);
     this.goalTemplateMigration = new GoalTemplateMigrationMutation(recordRepository);
@@ -20909,7 +20992,7 @@ let ItemService = class {
     return this.taskCompletion.updateSeries(seriesId, update, options);
   }
   async updateItemTime(itemId, updates, _mutationOptions = {}) {
-    await this.taskSessions.updateSessionTime(itemId, updates);
+    await this.taskTime.update(itemId, updates);
   }
   upsertItemInlineFields(itemId, fields, mutationOptions = {}) {
     return this.inlineFields.upsertItemInlineFields(itemId, fields, mutationOptions);
@@ -27546,7 +27629,7 @@ class RecordInputUseCase {
           affectedRecordId: params.itemId,
           refresh: buildRefreshPlan([path]),
           feedback: {
-            notice: normalizedUpdates.duration != null ? `工作 Session 时长已更新为 ${normalizedUpdates.duration} 分钟。` : "工作 Session 时间已更新。"
+            notice: normalizedUpdates.duration != null ? `时间已更新为 ${normalizedUpdates.duration} 分钟。` : "记录时间已更新。"
           }
         });
       }
@@ -27577,7 +27660,7 @@ function normalizeGoalInput(input) {
   const goalPath = requireGoalPath(input.goalPath || input.title);
   const title = String(input.title || "").trim() || goalPath.split("/").filter(Boolean).pop() || goalPath;
   if (title.includes("#") || title.includes("＃")) throw new Error("Goal title must not contain # markers.");
-  const timestamp = nowIso();
+  const timestamp2 = nowIso();
   return {
     id: makeStableGoalIdFromPath(goalPath),
     title,
@@ -27587,8 +27670,8 @@ function normalizeGoalInput(input) {
     parentGoalId: null,
     themePath: input.themePath ?? null,
     metrics: [],
-    createdAt: timestamp,
-    updatedAt: timestamp
+    createdAt: timestamp2,
+    updatedAt: timestamp2
   };
 }
 function normalizeStoredGoalPath(goal) {
@@ -27748,7 +27831,7 @@ class GoalUseCase {
     }
   }
   async upsertGoalTemplateDraft(input) {
-    const timestamp = nowIso();
+    const timestamp2 = nowIso();
     await this.upsertGoalTemplate({
       id: getGoalTemplateId(input.goalId, input.coreBlockId, input.templateVariantId || "default"),
       goalId: input.goalId,
@@ -27764,8 +27847,8 @@ class GoalUseCase {
       defaultValues: input.defaultValues || {},
       requiredFields: input.requiredFields || [],
       periodPolicy: input.periodPolicy,
-      createdAt: timestamp,
-      updatedAt: timestamp
+      createdAt: timestamp2,
+      updatedAt: timestamp2
     });
   }
   async deleteGoalTemplate(goalId, coreBlockId, templateVariantId = "default") {
@@ -52333,7 +52416,7 @@ async function updateTimeFromView(params) {
     }),
     {
       uiPort: params.uiPort,
-      failureMessage: "更新工作 Session 时间失败",
+      failureMessage: "更新记录时间失败",
       successNotice: params.showSuccessNotice
     }
   );
@@ -59811,15 +59894,15 @@ function DayColumnBody({
 }) {
   const lastTouchRef = A$1(null);
   const suppressClickUntilRef = A$1(0);
-  const tryUpdateTaskTime = async (taskId, updates) => {
+  const tryUpdateTaskTime = async (recordId, updates) => {
     if (!onUpdateTaskTime) {
-      onNotice?.("未提供保存处理器，无法更新工作 Session 时间");
+      onNotice?.("未提供保存处理器，无法更新时间");
       return;
     }
     try {
-      await onUpdateTaskTime(taskId, updates);
+      await onUpdateTaskTime(recordId, updates);
     } catch (e2) {
-      onNotice?.("更新工作 Session 时间失败");
+      onNotice?.("更新记录时间失败");
     }
   };
   const handleEdit = (block) => {
@@ -60109,58 +60192,129 @@ function TimelineViewView(props) {
     }
   );
 }
+function normalizedDateTime(value) {
+  const raw = String(value || "").trim();
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(raw)) {
+    return raw.replace(" ", "T");
+  }
+  return raw;
+}
+function timestamp(value) {
+  const ms = Date.parse(normalizedDateTime(value));
+  return Number.isFinite(ms) ? ms : null;
+}
 function localDate(value) {
-  const date2 = new Date(value);
-  if (!Number.isFinite(date2.getTime())) return null;
+  const ms = timestamp(value);
+  if (ms == null) return null;
+  const date2 = new Date(ms);
   const y2 = date2.getFullYear();
   const m2 = String(date2.getMonth() + 1).padStart(2, "0");
   const d2 = String(date2.getDate()).padStart(2, "0");
   return `${y2}-${m2}-${d2}`;
 }
 function localMinute(value) {
-  const date2 = new Date(value);
-  if (!Number.isFinite(date2.getTime())) return null;
+  const ms = timestamp(value);
+  if (ms == null) return null;
+  const date2 = new Date(ms);
   return date2.getHours() * 60 + date2.getMinutes() + date2.getSeconds() / 60;
 }
 function displayText(task) {
   return String(task.content || task.editableText || task.title || "").trim();
 }
+function taskFileName(task) {
+  return task.file?.basename || task.filename || task.fileName || "";
+}
+function buildTimelineTask(args) {
+  const startedMs = timestamp(args.startedAt);
+  const endedMs = timestamp(args.endedAt);
+  if (startedMs == null || endedMs == null || endedMs < startedMs) return null;
+  if (!Number.isFinite(args.durationMinutes) || args.durationMinutes <= 0) return null;
+  const actualStartDate = localDate(args.startedAt);
+  const startMinute = localMinute(args.startedAt);
+  if (!actualStartDate || startMinute == null) return null;
+  const fileName = taskFileName(args.task);
+  if (!fileName) return null;
+  return {
+    ...args.task,
+    id: args.id,
+    sessionRecordId: args.sessionRecordId,
+    taskRecordId: args.task.id,
+    timelineSource: args.timelineSource,
+    date: actualStartDate,
+    doneDate: actualStartDate,
+    startTime: new Date(startedMs).toTimeString().slice(0, 5),
+    endTime: new Date(endedMs).toTimeString().slice(0, 5),
+    duration: args.durationMinutes,
+    startMinute,
+    // Keep endMinute monotonic across midnight. splitTaskIntoDayBlocks() will split it per day.
+    endMinute: startMinute + args.durationMinutes,
+    pureText: displayText(args.task),
+    fileName,
+    actualStartDate
+  };
+}
+function projectSession(task, record) {
+  const session = asTaskSessionRecord(record);
+  if (!session) return null;
+  const startedMs = timestamp(session.sessionStartedAt);
+  const endedMs = timestamp(session.sessionEndedAt);
+  if (startedMs == null || endedMs == null || endedMs < startedMs) return null;
+  const duration2 = Number(session.sessionDurationMinutes);
+  if (!Number.isFinite(duration2) || duration2 <= 0) return null;
+  return buildTimelineTask({
+    task,
+    id: session.id,
+    sessionRecordId: session.id,
+    timelineSource: "task-session",
+    startedAt: session.sessionStartedAt,
+    endedAt: session.sessionEndedAt,
+    durationMinutes: duration2
+  });
+}
+function projectTaskRange(taskItem) {
+  const task = asTaskRecord(taskItem);
+  if (!task || !task.startAt) return null;
+  const startedMs = timestamp(task.startAt);
+  if (startedMs == null) return null;
+  let endedAt = String(task.endAt || "").trim();
+  let duration2 = Number.NaN;
+  if (endedAt) {
+    const endedMs = timestamp(endedAt);
+    if (endedMs == null || endedMs < startedMs) return null;
+    duration2 = (endedMs - startedMs) / 6e4;
+  } else {
+    const declaredDuration = Number(task.expectedDurationMinutes);
+    if (!Number.isFinite(declaredDuration) || declaredDuration <= 0) return null;
+    duration2 = declaredDuration;
+    endedAt = new Date(startedMs + declaredDuration * 6e4).toISOString();
+  }
+  return buildTimelineTask({
+    task,
+    id: task.id,
+    timelineSource: "task-range",
+    startedAt: task.startAt,
+    endedAt,
+    durationMinutes: duration2
+  });
+}
 function processItemsToTimelineTasks(records) {
   const byId = new Map(records.map((record) => [record.id, record]));
   const timelineTasks = [];
+  const taskIdsWithProjectedSessions = /* @__PURE__ */ new Set();
   for (const record of records) {
     const session = asTaskSessionRecord(record);
     if (!session) continue;
     const task = byId.get(session.taskId);
     if (!task || task.coreBlock !== "task") continue;
-    const startedMs = Date.parse(session.sessionStartedAt);
-    const endedMs = Date.parse(session.sessionEndedAt);
-    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs < startedMs) continue;
-    const actualStartDate = localDate(session.sessionStartedAt);
-    const startMinute = localMinute(session.sessionStartedAt);
-    if (!actualStartDate || startMinute == null) continue;
-    const duration2 = Number(session.sessionDurationMinutes);
-    if (!Number.isFinite(duration2) || duration2 < 0) continue;
-    const endMinute = startMinute + duration2;
-    const fileName = task.file?.basename || task.filename || "";
-    if (!fileName) continue;
-    timelineTasks.push({
-      ...task,
-      // A Timeline row represents an execution fact, so its identity is the Session identity.
-      id: session.id,
-      sessionRecordId: session.id,
-      taskRecordId: task.id,
-      date: actualStartDate,
-      doneDate: actualStartDate,
-      startTime: new Date(startedMs).toTimeString().slice(0, 5),
-      endTime: new Date(endedMs).toTimeString().slice(0, 5),
-      duration: duration2,
-      startMinute,
-      endMinute,
-      pureText: displayText(task),
-      fileName,
-      actualStartDate
-    });
+    const projected = projectSession(task, record);
+    if (!projected) continue;
+    timelineTasks.push(projected);
+    taskIdsWithProjectedSessions.add(task.id);
+  }
+  for (const record of records) {
+    if (record.coreBlock !== "task" || taskIdsWithProjectedSessions.has(record.id)) continue;
+    const projected = projectTaskRange(record);
+    if (projected) timelineTasks.push(projected);
   }
   return timelineTasks;
 }
@@ -66249,11 +66403,11 @@ function useViewRuntimeHandlers({
   const ui = useUiPort();
   const modal = useModalPort();
   const onUpdateTaskTime = q$1(
-    async (taskId, updates) => {
+    async (recordId, updates) => {
       const ok = await updateTimeFromView({
         uiPort: ui,
         useCases,
-        itemId: taskId,
+        itemId: recordId,
         updates: {
           time: updates.time,
           endTime: updates.endTime,
@@ -66261,7 +66415,7 @@ function useViewRuntimeHandlers({
         },
         source: "unknown"
       });
-      if (!ok) throw new Error("更新工作 Session 时间失败");
+      if (!ok) throw new Error("更新记录时间失败");
     },
     [ui, useCases]
   );

@@ -62,11 +62,11 @@ export function useViewRuntimeHandlers({
   const modal = useModalPort();
 
   const onUpdateTaskTime = useCallback<UpdateTaskTimeHandler>(
-    async (taskId, updates) => {
+    async (recordId, updates) => {
       const ok = await updateTimeFromView({
         uiPort: ui,
         useCases,
-        itemId: taskId,
+        itemId: recordId,
         updates: {
           time: updates.time,
           endTime: updates.endTime,
@@ -75,7 +75,7 @@ export function useViewRuntimeHandlers({
         source: 'unknown',
       });
 
-      if (!ok) throw new Error('更新工作 Session 时间失败');
+      if (!ok) throw new Error('更新记录时间失败');
     },
     [ui, useCases]
   );

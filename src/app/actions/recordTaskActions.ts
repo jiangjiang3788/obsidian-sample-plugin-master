@@ -54,7 +54,7 @@ export async function updateTimeFromView(params: UpdateTimeFromViewParams): Prom
     }),
     {
       uiPort: params.uiPort,
-      failureMessage: '更新工作 Session 时间失败',
+      failureMessage: '更新记录时间失败',
       successNotice: params.showSuccessNotice,
     },
   );

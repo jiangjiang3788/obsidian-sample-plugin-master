@@ -190,6 +190,7 @@ export function buildRecordOutputPlan(input: {
     );
     const endAt = normalizeLocalDateTime(renderData['结束时间'] ?? renderData.endAt);
     const declaredDuration = renderData['时长（分钟）'] ?? renderData['时长'] ?? renderData['预计时长'] ?? renderData.expectedDurationMinutes;
+    const capturedAt = new Date().toISOString();
     const taskFields = {
       status,
       content: renderData['任务内容'] ?? renderData['内容'] ?? renderData.content,
@@ -205,7 +206,8 @@ export function buildRecordOutputPlan(input: {
       startAt,
       endAt,
       expectedDurationMinutes: declaredDuration || durationMinutesBetween(startAt, endAt),
-      createdAt: renderData['创建于'] ?? renderData.createdAt ?? new Date().toISOString(),
+      createdAt: renderData['创建于'] ?? renderData.createdAt ?? capturedAt,
+      completedAt: status === 'done' ? (renderData['完成于'] ?? renderData.completedAt ?? capturedAt) : undefined,
       seriesId: renderData.seriesId ?? renderData['系列ID'],
     } as Record<string, unknown>;
     const customTaskFields = buildCustomCaptureFields('task', renderData, input.template.fields);

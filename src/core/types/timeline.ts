@@ -2,7 +2,7 @@
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 /**
- * Timeline 视图的领域类型：从持久 TaskSession 执行事实中投影的结构。
+ * Timeline 视图的领域类型：从 TaskSession 或 Task 手工时间段投影的结构。
  *
  * 这是“结构性唯一真源”：
  * - shared / features / app 之间传递 timeline 数据，都应使用这里的类型；
@@ -13,8 +13,10 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
  * 增强后的任务项，包含用于时间轴视图的额外信息。
  */
 export interface TimelineTask extends RecordViewItem {
-  /** Timeline row identity: persisted TaskSession Record ID. */
-  sessionRecordId: string;
+  /** Persisted TaskSession Record ID. Manual Task-range projections do not have one. */
+  sessionRecordId?: string;
+  /** Projection source used to distinguish execution sessions from manual Task time ranges. */
+  timelineSource?: 'task-session' | 'task-range';
   /** Source Task identity used when opening/editing Task metadata. */
   taskRecordId: string;
   startMinute: number;

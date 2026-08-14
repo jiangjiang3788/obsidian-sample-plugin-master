@@ -61,7 +61,7 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   period: text({ key: 'period', label: '字段粒度', category: 'core', source: 'item', semantic: 'period', inputType: 'singleSelect', description: '时间粒度：年/季/月/周/天' }),
   startTime: { key: 'startTime', label: '开始时间', valueType: 'time', inputType: 'time', category: 'core', source: 'item', semantic: 'startTime', aliases: ['时间', 'time', 'start'] },
   endTime: { key: 'endTime', label: '结束时间', valueType: 'time', inputType: 'time', category: 'core', source: 'item', semantic: 'endTime', aliases: ['结束', 'end'] },
-  expectedDurationMinutes: { key: 'expectedDurationMinutes', label: '预计时长', valueType: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['预计时长', 'expectedDuration', 'expectedDurationMinutes'], description: 'Task 的用户声明预计时长；实际工作时长只来自 TaskSession。' },
+  expectedDurationMinutes: { key: 'expectedDurationMinutes', label: '预计时长', valueType: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['预计时长', 'expectedDuration', 'expectedDurationMinutes'], description: 'Task 的用户声明时长；可与开始时间组成手工时间段，存在 TaskSession 时仍优先使用 Session 历史。' },
   scheduledAt: { key: 'scheduledAt', label: '计划时间', valueType: 'datetime', inputType: 'datetime', category: 'core', source: 'item', semantic: 'date', aliases: ['计划时间', 'scheduledAt'] },
   startAt: { key: 'startAt', label: '开始时间', valueType: 'datetime', inputType: 'datetime', category: 'core', source: 'item', semantic: 'date', aliases: ['开始时间', 'startAt'] },
   endAt: { key: 'endAt', label: '结束时间', valueType: 'datetime', inputType: 'datetime', category: 'core', source: 'item', semantic: 'date', aliases: ['结束时间', 'endAt'] },
@@ -78,7 +78,7 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
     { value: 'any', label: '任意' }, { value: 'work', label: '工作' }, { value: 'home', label: '家' }, { value: 'commute', label: '通勤' }, { value: 'out', label: '外出' },
   ], description: '任务实际可执行的场景；留空或任意表示不限制。' },
   recoveryIntent: { key: 'recoveryIntent', label: '恢复意图', valueType: 'boolean', inputType: 'boolean', category: 'core', source: 'item', semantic: 'none', aliases: ['恢复意图', 'recoveryIntent'], description: '标记散步、休息等主动恢复类任务。' },
-  duration: { key: 'duration', label: '时长', valueType: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['时长', 'duration'], hiddenByDefault: true, description: '通用/历史时长字段；Task 应使用 expectedDurationMinutes，执行历史使用 TaskSession。' },
+  duration: { key: 'duration', label: '时长', valueType: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['时长', 'duration'], hiddenByDefault: true, description: '通用/历史时长字段；Task 应使用 expectedDurationMinutes；多段计时历史使用 TaskSession。' },
   rating: { key: 'rating', label: '评分', valueType: 'number', inputType: 'rating', category: 'core', source: 'item', semantic: 'rating', aliases: ['评分', 'rating'] },
   image: { key: 'image', label: '图片', valueType: 'image', inputType: 'image', category: 'core', source: 'item', semantic: 'image', aliases: ['图片', 'image', '评图', 'pintu'], description: '通用图片字段；当前兼容读取旧 pintu/评图 数据' },
 

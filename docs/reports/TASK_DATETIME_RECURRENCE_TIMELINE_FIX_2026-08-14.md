@@ -25,13 +25,13 @@ Version base: 1.0.59
 
 ## Timeline fix
 
-Timeline task eligibility now uses the base non-date query (layout/view/keyword filters) rather than the already date-filtered Task list. Actual Timeline placement continues to come from `TaskSession.startedAt / endedAt`.
+Timeline task eligibility uses the base non-date query (layout/view/keyword filters) rather than the already date-filtered Task list. Timeline placement now accepts either `TaskSession.startedAt / endedAt` or, when no valid Session exists, the Task's own `startAt / endAt` manual range.
 
 This fixes the case where an open Task has an old due/scheduled date but a new `work-block-ended` TaskSession on the current day: the Session is no longer hidden merely because the parent Task date falls outside the Timeline range.
 
 ## Data model rule retained
 
-`Task.startAt/endAt` are declared Task bounds. Actual execution history remains owned by `TaskSession`; the Timeline execution projection still consumes TaskSession records rather than treating Task dates as execution facts.
+`Task.startAt/endAt` can represent one manually recorded/declared time range. `TaskSession` remains the model for timer/energy execution history and for multiple work sessions. When both exist, Timeline prefers TaskSession and suppresses the Task-range fallback to avoid duplicates.
 
 ## Validation performed
 

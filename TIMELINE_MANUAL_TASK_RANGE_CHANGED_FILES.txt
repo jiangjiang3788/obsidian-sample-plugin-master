@@ -1,0 +1,31 @@
+Timeline manual Task range fix (2026-08-14)
+
+Behavior:
+- Timeline accepts Task.startAt + Task.endAt as a manual time range when no valid TaskSession exists.
+- Timeline accepts Task.startAt + expectedDurationMinutes and derives the end time when endAt is absent.
+- Task lifecycle status (open/done) does not control timeline visibility.
+- Valid TaskSession history takes precedence over Task's own range to avoid duplicate blocks.
+- Timeline time editing now routes by Record kind: TaskSession edits Session fields; manual Task blocks edit Task startAt/endAt/duration.
+- Quick-entry creation with status=done writes completedAt automatically.
+- Existing records require no migration.
+
+Changed source:
+- src/features/views/runtime/timeline-parser.ts
+- src/features/views/runtime/components/timeline/DayColumnBody.tsx
+- src/core/types/timeline.ts
+- src/core/recordInput/snapshot/OutputPlanner.ts
+- src/core/services/item/TaskTimeMutation.ts (new)
+- src/core/services/item/ItemService.ts
+- src/core/records/schema/definitions.ts
+- src/core/records/schema/contracts.ts
+- src/core/fields/FieldRegistry.ts
+- src/shared/types/taskTime.ts
+- src/app/usecases/recordInput.usecase.ts
+- src/app/actions/recordTaskActions.ts
+- src/app/dashboard/useViewRuntimeHandlers.ts
+- docs/reports/TASK_DATETIME_RECURRENCE_TIMELINE_FIX_2026-08-14.md
+
+Tests added/updated:
+- test/unit/timelineViewModel.test.ts
+- test/unit/taskOutputPlannerLifecycle.test.ts
+- test/unit/taskTimeMutation.test.ts

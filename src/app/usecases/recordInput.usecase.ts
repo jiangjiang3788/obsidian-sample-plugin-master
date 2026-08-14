@@ -177,8 +177,8 @@ export class RecordInputUseCase {
           refresh: buildRefreshPlan([path]),
           feedback: {
             notice: normalizedUpdates.duration != null
-              ? `工作 Session 时长已更新为 ${normalizedUpdates.duration} 分钟。`
-              : '工作 Session 时间已更新。',
+              ? `时间已更新为 ${normalizedUpdates.duration} 分钟。`
+              : '记录时间已更新。',
           },
         });
       },

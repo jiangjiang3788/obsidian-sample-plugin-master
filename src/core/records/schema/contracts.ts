@@ -104,7 +104,7 @@ export const MILESTONE_SCHEMA = simpleGoalRecord('milestone', '里程碑');
 
 const TASK_DEMAND_FIELDS = [
   f('优先级', 'domain-fact', 'target', 'enum', 'User-declared Task priority.', { aliases: ['priority'], allowedValues: ['lowest', 'low', 'medium', 'high', 'highest'] }),
-  f('预计时长', 'domain-fact', 'target', 'number', 'User-declared expected duration in minutes. Actual execution duration belongs to TaskSession.', { aliases: ['expectedDurationMinutes'] }),
+  f('预计时长', 'domain-fact', 'target', 'number', 'User-declared duration in minutes. It can complete a manual Task time range when endAt is absent; TaskSession remains the source for multi-session timer history.', { aliases: ['expectedDurationMinutes'] }),
   f('精力要求', 'domain-fact', 'target', 'enum', 'Declared overall energy demand.', { aliases: ['energyDemand'], allowedValues: ['low', 'medium', 'high'] }),
   f('脑力要求', 'domain-fact', 'target', 'enum', 'Declared cognitive demand.', { aliases: ['brainDemand'], allowedValues: ['low', 'medium', 'high'] }),
   f('体力要求', 'domain-fact', 'target', 'enum', 'Declared physical demand.', { aliases: ['physicalDemand'], allowedValues: ['low', 'medium', 'high'] }),
@@ -128,7 +128,7 @@ export const TASK_SCHEMA: RecordSchemaContract = {
     f('系列ID', 'canonical-reference', 'target', 'record-id', 'Optional TaskSeries reference.', { aliases: ['seriesId'] }),
     f('计划时间', 'domain-fact', 'target', 'datetime', 'Scheduled execution timestamp.', { aliases: ['scheduledAt'] }),
     f('开始时间', 'domain-fact', 'target', 'datetime', 'Declared start timestamp.', { aliases: ['startAt'] }),
-    f('结束时间', 'domain-fact', 'target', 'datetime', 'Declared end timestamp. Actual execution history still belongs to TaskSession.', { aliases: ['endAt'] }),
+    f('结束时间', 'domain-fact', 'target', 'datetime', 'Declared end timestamp. Together with startAt it may represent a manually recorded time range; TaskSession remains preferred when session history exists.', { aliases: ['endAt'] }),
     f('截止时间', 'domain-fact', 'target', 'datetime', 'Due timestamp.', { aliases: ['dueAt'] }),
     f('计划日期', 'domain-fact', 'target', 'date', 'Legacy scheduled execution date retained for compatibility.', { aliases: ['scheduledDate'] }),
     f('开始日期', 'domain-fact', 'target', 'date', 'Legacy declared start date retained for compatibility.', { aliases: ['startDate'] }),

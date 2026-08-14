@@ -6,6 +6,7 @@ import { InlineFieldMutation } from './InlineFieldMutation';
 import { MigrationBackupService } from './MigrationBackupService';
 import { TaskCompletionMutation, type TaskSeriesUpdate } from './TaskCompletionMutation';
 import { TaskSessionMutation } from './TaskSessionMutation';
+import { TaskTimeMutation } from './TaskTimeMutation';
 import type { TaskSessionCreateInput } from '@/core/types/timer';
 import { RecordRepository } from '@/core/records/RecordRepository';
 import type {
@@ -25,6 +26,7 @@ import type {
 export class ItemService {
     private readonly taskCompletion: TaskCompletionMutation;
     private readonly taskSessions: TaskSessionMutation;
+    private readonly taskTime: TaskTimeMutation;
     private readonly inlineFields: InlineFieldMutation;
     private readonly goalTemplateMigration: GoalTemplateMigrationMutation;
     private readonly migrationBackup: MigrationBackupService;
@@ -35,6 +37,7 @@ export class ItemService {
     ) {
         const recordRepository = new RecordRepository(vault, dataStore);
         this.taskSessions = new TaskSessionMutation(dataStore, recordRepository);
+        this.taskTime = new TaskTimeMutation(recordRepository, this.taskSessions);
         this.taskCompletion = new TaskCompletionMutation(dataStore, recordRepository, this.taskSessions);
         this.inlineFields = new InlineFieldMutation(recordRepository);
         this.goalTemplateMigration = new GoalTemplateMigrationMutation(recordRepository);
@@ -98,7 +101,7 @@ export class ItemService {
         updates: ItemTimeUpdates,
         _mutationOptions: ItemMutationOptions = {},
     ): Promise<void> {
-        await this.taskSessions.updateSessionTime(itemId, updates);
+        await this.taskTime.update(itemId, updates);
     }
 
     upsertItemInlineFields(
