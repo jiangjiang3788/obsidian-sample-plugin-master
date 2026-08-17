@@ -1,5 +1,3 @@
-export const RECORD_SCHEMA_VERSION = 2;
-
 const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
 function encodeTime(time: number, length = 10): string {

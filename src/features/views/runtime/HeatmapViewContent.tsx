@@ -2,7 +2,7 @@
 import type { RecordViewItem } from '@core/types/public';
 import type { OpenRecordOriginHandler, ResolveResourcePathHandler } from '@shared/types/public';
 import { HeatmapDayView } from './HeatmapDayView';
-import { HeatmapThemeGroup } from './HeatmapThemeGroup';
+import { HeatmapGoalGroup } from './HeatmapGoalGroup';
 import {
     createHeatmapPresetContext,
     type GoalHeatmapGroup,
@@ -18,14 +18,14 @@ interface HeatmapViewContentProps {
     resolveResourcePath?: ResolveResourcePathHandler;
     onOpenRecordOrigin?: OpenRecordOriginHandler;
     goalGroupsToDisplay: GoalHeatmapGroup[];
-    themesToTrack: string[];
-    dataByThemeAndDate: Map<string, Map<string, RecordViewItem[]>>;
+    goalPathsToTrack: string[];
+    dataByGoalAndDate: Map<string, Map<string, RecordViewItem[]>>;
     verticalLayouts: Set<string>;
-    collapsedThemes: Set<string>;
+    collapsedGoals: Set<string>;
     headerRefs: { current: Map<string, HTMLElement> };
-    onToggleThemeCollapsed: (themeKey: string) => void;
-    onCellClick: (date: string, dayItems: RecordViewItem[] | undefined, themePath?: string, goalPath?: string, presetContext?: HeatmapPresetContext) => void;
-    resolveCellRatingMapping: (themePath: string, presetContext?: HeatmapPresetContext) => Map<string, string>;
+    onToggleGoalCollapsed: (goalKey: string) => void;
+    onCellClick: (date: string, dayItems: RecordViewItem[] | undefined, goalPath?: string, presetContext?: HeatmapPresetContext) => void;
+    resolveCellRatingMapping: (goalPath: string, presetContext?: HeatmapPresetContext) => Map<string, string>;
 }
 
 export function HeatmapViewContent({
@@ -37,25 +37,24 @@ export function HeatmapViewContent({
     resolveResourcePath,
     onOpenRecordOrigin,
     goalGroupsToDisplay,
-    themesToTrack,
-    dataByThemeAndDate,
+    goalPathsToTrack,
+    dataByGoalAndDate,
     verticalLayouts,
-    collapsedThemes,
+    collapsedGoals,
     headerRefs,
-    onToggleThemeCollapsed,
+    onToggleGoalCollapsed,
     onCellClick,
     resolveCellRatingMapping,
 }: HeatmapViewContentProps) {
-    const renderThemeGroup = (params: {
-        theme: string;
-        dataForTheme: Map<string, RecordViewItem[]>;
-        goalPath?: string;
+    const renderGoalRow = (params: {
+        goalPath: string;
+        dataForGoal: Map<string, RecordViewItem[]>;
         keyPrefix?: string;
         entryKey?: string;
         label?: string;
         presetContext?: HeatmapPresetContext;
     }) => (
-        <HeatmapThemeGroup
+        <HeatmapGoalGroup
             {...params}
             normalizedCurrentView={normalizedCurrentView}
             dateRange={dateRange}
@@ -63,9 +62,9 @@ export function HeatmapViewContent({
             resolveResourcePath={resolveResourcePath}
             onOpenRecordOrigin={onOpenRecordOrigin}
             verticalLayouts={verticalLayouts}
-            collapsedThemes={collapsedThemes}
+            collapsedGoals={collapsedGoals}
             headerRefs={headerRefs}
-            onToggleThemeCollapsed={onToggleThemeCollapsed}
+            onToggleGoalCollapsed={onToggleGoalCollapsed}
             onCellClick={onCellClick}
             resolveCellRatingMapping={resolveCellRatingMapping}
         />
@@ -76,8 +75,8 @@ export function HeatmapViewContent({
             <HeatmapDayView
                 dayDateStr={dateRangeStart}
                 goalGroupsToDisplay={goalGroupsToDisplay}
-                themesToTrack={themesToTrack}
-                dataByThemeAndDate={dataByThemeAndDate}
+                goalPathsToTrack={goalPathsToTrack}
+                dataByGoalAndDate={dataByGoalAndDate}
                 config={config}
                 resolveResourcePath={resolveResourcePath}
                 onOpenRecordOrigin={onOpenRecordOrigin}
@@ -99,13 +98,12 @@ export function HeatmapViewContent({
                             <h3 class="heatmap-goal-title">{goalGroup.label}</h3>
                             <span class="heatmap-goal-meta">{goalGroup.entries.length} 个打卡 · {goalGroup.count} 条记录</span>
                         </div>
-                        <div class="heatmap-goal-theme-list">
-                            {goalGroup.entries.map((entry) => renderThemeGroup({
-                                theme: entry.themePath,
-                                dataForTheme: entry.dataForTheme,
-                                goalPath: goalGroup.goalPath,
+                        <div class="heatmap-goal-list">
+                            {goalGroup.entries.map((entry) => renderGoalRow({
+                                goalPath: entry.goalPath,
+                                dataForGoal: entry.dataForGoal,
                                 keyPrefix: `${goalGroup.goalPath}\u0000`,
-                                entryKey: entry.presetKey || entry.themePath,
+                                entryKey: entry.presetKey || entry.goalPath,
                                 label: entry.label,
                                 presetContext: createHeatmapPresetContext(entry),
                             }))}
@@ -116,13 +114,12 @@ export function HeatmapViewContent({
         );
     }
 
-    const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ['__default__'];
-
+    const goalsToDisplay = goalPathsToTrack.length > 0 ? goalPathsToTrack : ['__default__'];
     return (
         <div class={`heatmap-view-wrapper ${wrapperClass}`}>
-            {themesToDisplay.map((theme) => renderThemeGroup({
-                theme,
-                dataForTheme: dataByThemeAndDate.get(theme) || new Map(),
+            {goalsToDisplay.map((goalPath) => renderGoalRow({
+                goalPath,
+                dataForGoal: dataByGoalAndDate.get(goalPath) || new Map(),
             }))}
         </div>
     );

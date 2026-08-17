@@ -4,31 +4,22 @@ import type { CoreBlockDefinition } from '@core/blocks/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { GoalTemplateMatrixGroupRows } from './GoalTemplateMatrixRow';
 import { splitGoalsByRoot } from './goalTemplateMatrixModel';
-import type { GoalDropState, PresetDragState, PresetDropCellState } from './goalTemplateMatrixModel';
+import type { GoalDropState } from './goalTemplateMatrixModel';
 
 export interface GoalTemplateMatrixTableProps {
   visibleGoals: GoalDefinition[];
   goals: GoalDefinition[];
   visibleBlocks: CoreBlockDefinition[];
   templates: GoalTemplate[];
-  themeIconByPath: Map<string, string>;
   expandedPaths: Set<string>;
-  collapsedGoalIds: Set<string>;
-  draggingGoalId: string | null;
+  draggingGoalPath: string | null;
   goalDrop: GoalDropState;
-  draggingPreset: PresetDragState | null;
-  presetDropCell: PresetDropCellState;
-  setDraggingGoalId: (value: string | null) => void;
+  setDraggingGoalPath: (value: string | null) => void;
   setGoalDrop: (value: GoalDropState) => void;
-  setDraggingPreset: (value: PresetDragState | null) => void;
-  setPresetDropCell: (value: PresetDropCellState) => void;
-  toggleGoalRow: (goalId: string) => void;
   toggleTreePath: (path: string) => void;
-  reorderGoalSiblings: (dragGoalId: string, targetGoalId: string, position: 'before' | 'after') => Promise<void>;
+  reorderGoalSiblings: (dragGoalPath: string, targetGoalPath: string, position: 'before' | 'after') => Promise<void>;
   handleDeleteGoal: (event: MouseEvent, goal: GoalDefinition) => Promise<void>;
-  handlePresetDropOnCell: (event: DragEvent, goal: GoalDefinition, block: CoreBlockDefinition) => Promise<void>;
   openEditor: (goal: GoalDefinition, block: CoreBlockDefinition, template?: GoalTemplate | null) => void;
-  openPresetContextMenu: (event: MouseEvent, goal: GoalDefinition, block: CoreBlockDefinition, template: GoalTemplate) => void;
 }
 
 function GoalTemplateMatrixHeader({ visibleBlocks }: { visibleBlocks: CoreBlockDefinition[] }) {

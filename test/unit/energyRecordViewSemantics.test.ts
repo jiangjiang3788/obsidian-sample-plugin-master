@@ -1,37 +1,17 @@
-import { resolveQuickInputEnergyDefaultGoal, resolveQuickInputEnergyThemePath } from '@/features/quickinput/editor/QuickInputEditorModel';
+import { resolveQuickInputEnergyDefaultGoal } from '@/features/quickinput/editor/QuickInputEditorModel';
 
 const goals: any[] = [
-  { id: 'goal.a', value: '生活/A', label: 'A', goal: { id: 'goal.a' } },
-  { id: 'goal.b', value: '生活/B', label: 'B', goal: { id: 'goal.b' } },
+  { id: '生活/A', value: '生活/A', label: 'A', goal: { id: '生活/A', goalPath: '生活/A' } },
+  { id: '生活/B', value: '生活/B', label: 'B', goal: { id: '生活/B', goalPath: '生活/B' } },
 ];
 
 describe('Energy desktop defaults', () => {
   it('prefers configured Energy Goal and otherwise falls back to first visible Goal', () => {
-    expect(resolveQuickInputEnergyDefaultGoal(goals, 'goal.b')?.id).toBe('goal.b');
-    expect(resolveQuickInputEnergyDefaultGoal(goals, 'missing')?.id).toBe('goal.a');
-    expect(resolveQuickInputEnergyDefaultGoal([], 'goal.b')).toBeNull();
+    expect(resolveQuickInputEnergyDefaultGoal(goals, '生活/B')?.id).toBe('生活/B');
+    expect(resolveQuickInputEnergyDefaultGoal(goals, 'missing')?.id).toBe('生活/A');
+    expect(resolveQuickInputEnergyDefaultGoal([], '生活/B')).toBeNull();
   });
 
-  it('uses explicit theme first, then Energy default theme, then Goal theme', () => {
-    expect(resolveQuickInputEnergyThemePath({
-      formThemePath: '上下文/主题',
-      formThemeSource: 'invocation_context',
-      defaultThemePath: '生活/精力',
-      goalThemePath: '生活/默认',
-    })).toBe('上下文/主题');
-    expect(resolveQuickInputEnergyThemePath({
-      formThemePath: '生活/目标主题',
-      formThemeSource: 'goal_context',
-      defaultThemePath: '生活/精力',
-      goalThemePath: '生活/目标主题',
-    })).toBe('生活/精力');
-    expect(resolveQuickInputEnergyThemePath({
-      formThemePath: '生活/目标主题',
-      formThemeSource: 'goal_context',
-      defaultThemePath: '',
-      goalThemePath: '生活/目标主题',
-    })).toBe('生活/目标主题');
-  });
 });
 import { isEnergyItem, readEnergyItemSnapshot } from '@core/energy/public';
 
@@ -72,7 +52,6 @@ import type { RecordViewItem } from '@core/types/public';
 function energy(id: string, date: string, time: string, score: number, brain?: number, physical?: number): RecordViewItem {
   return {
     id,
-    schemaVersion: 2,
     title: 'energy',
     content: '',
     tags: [],

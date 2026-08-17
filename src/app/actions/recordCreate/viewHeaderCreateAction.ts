@@ -20,7 +20,6 @@ export function openCreateFromViewHeader(params: HeaderCreateParams): boolean {
       ENERGY_RECORD_TYPE_ID,
       goalPath ? { goalPath } : undefined,
       undefined,
-      undefined,
       true,
       { mode: 'create', source: 'view_quick_create' },
     ).open();

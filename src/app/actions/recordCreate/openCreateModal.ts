@@ -15,7 +15,7 @@ export function openCreateModal(
 ): boolean {
   if (!config?.blockId) return false;
   const modalApp = app as ConstructorParameters<typeof QuickInputModal>[0];
-  new QuickInputModal(modalApp, config.blockId, config.context, config.themeId, undefined, options.allowBlockSwitch ?? true, {
+  new QuickInputModal(modalApp, config.blockId, config.context, undefined, options.allowBlockSwitch ?? true, {
     mode: 'create',
     source,
   }).open();

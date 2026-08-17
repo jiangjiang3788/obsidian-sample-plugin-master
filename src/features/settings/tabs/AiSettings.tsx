@@ -38,7 +38,6 @@ export function AiSettings(_props: AiSettingsProps) {
     const aiSettings = useSelector(selectAiSettings) ?? DEFAULT_AI_SETTINGS;
     const inputSettings = useSelector(selectInputSettings);
     const blocks = inputSettings?.blocks ?? [];
-    const themes = inputSettings?.themes ?? [];
 
     const [localSettings, setLocalSettings] = useState<AiSettingsType>(aiSettings);
     const [testStatus, setTestStatus] = useState<AiTestStatus>('idle');
@@ -191,7 +190,6 @@ export function AiSettings(_props: AiSettingsProps) {
                 settings={localSettings}
                 onUpdate={updateLocal}
                 blocks={blocks}
-                themes={themes}
                 staleEnabledBlockIds={staleEnabledBlockIds}
                 onInitAllBlocks={handleInitAllBlocks}
                 onClearStaleBlockIds={handleClearStaleBlockIds}

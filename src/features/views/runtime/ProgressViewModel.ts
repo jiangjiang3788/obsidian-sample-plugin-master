@@ -1,6 +1,6 @@
-import type { RecordViewItem, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { RecordViewItem, ViewInstance } from '@core/types/public';
 import type { GoalDefinition } from '@core/goal/public';
-import { buildGoalBuckets, getItemGoalKey, getItemThemeKey } from '@core/goal/public';
+import { buildGoalBuckets, getItemGoalKey, getItemRootGoalKey } from '@core/goal/public';
 import { computeProgression } from '@core/progression/public';
 import { isEnergyItem } from '@core/energy/public';
 import { PROGRESS_VIEW_DEFAULT_CONFIG } from '@core/view/public';
@@ -36,8 +36,8 @@ export interface GoalProgressCardModel {
   latestDate?: string | null;
   blockCounts: Record<string, number>;
   categoryBreakdown?: ProgressBreakdownLike[];
-  themeBreakdown?: ProgressBreakdownLike[];
-  themeRecentRecords?: Record<string, ProgressRecentRecordModel[]>;
+  goalBreakdown?: ProgressBreakdownLike[];
+  goalRecentRecords?: Record<string, ProgressRecentRecordModel[]>;
   energySummary?: GoalEnergySummaryModel | null;
 }
 
@@ -49,13 +49,13 @@ export interface ProgressSummaryModel {
 
 export interface ProgressViewRenderModel {
   config: unknown;
-  mode?: 'goal' | 'legacy';
+  mode?: 'goal';
   goalCards?: GoalProgressCardModel[];
   summary?: ProgressSummaryModel;
   result?: unknown;
 }
 
-/** Goal-mode builder contract. Unlike the legacy union, these fields always exist. */
+/** Goal-mode builder contract; these fields always exist. */
 export interface ProgressGoalViewRenderModel extends ProgressViewRenderModel {
   mode: 'goal';
   goalCards: GoalProgressCardModel[];
@@ -159,15 +159,14 @@ export function buildProgressViewRenderModel(args: {
   items: RecordViewItem[];
   module: Pick<ViewInstance, 'viewConfig'>;
   goals?: GoalDefinition[];
-  themes?: ThemeDefinition[];
 }): ProgressGoalViewRenderModel {
-  const { items, module, goals = [], themes = [] } = args;
+  const { items, module, goals = [] } = args;
   const config = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...(module?.viewConfig || {}), mode: 'goal' as const, metric: 'recordCount' as const };
-  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
+  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, level: 'root' });
   const levelStep = Math.max(1, Number(config.levelStep) || 20);
 
   const cards: GoalProgressCardModel[] = buckets.map((bucket) => {
-    const goalItems = items.filter((item) => getItemGoalKey(item, goals) === bucket.name);
+    const goalItems = items.filter((item) => getItemRootGoalKey(item, goals) === bucket.name);
     const progressItems = goalItems.filter((item) => !isEnergyItem(item));
     const progression = computeProgression(progressItems, {
       basePoints: config.basePoints,
@@ -199,11 +198,11 @@ export function buildProgressViewRenderModel(args: {
       latestDate: dates.length ? dates[dates.length - 1] : null,
       blockCounts,
       categoryBreakdown: progression.categoryBreakdown,
-      themeBreakdown: progression.themeBreakdown,
-      themeRecentRecords: Object.fromEntries(
-        progression.themeBreakdown.map((row) => [
+      goalBreakdown: progression.goalBreakdown,
+      goalRecentRecords: Object.fromEntries(
+        progression.goalBreakdown.map((row) => [
           row.key,
-          buildProgressRecentRecords(progressItems.filter((item) => getItemThemeKey(item) === row.key), 5),
+          buildProgressRecentRecords(progressItems.filter((item) => getItemGoalKey(item, goals) === row.key), 5),
         ]),
       ),
       energySummary: buildGoalEnergySummary(goalItems.filter(isEnergyItem), 5, { contextRecords: items, effectRecords: items }),
@@ -268,7 +267,7 @@ export function progressBarWidth(value: number): string {
 
 export function getProgressLeafLabel(path: string): string {
   const parts = String(path || '').split('/').map((part) => part.trim()).filter(Boolean);
-  return parts[parts.length - 1] || path || '未设置主题';
+  return parts[parts.length - 1] || path || '未设置目标';
 }
 
 export function getGoalProgressTitle(card: GoalProgressCardModel): string {
@@ -293,7 +292,7 @@ export function buildProgressTrackSegments(count: number = TRACK_SEGMENT_COUNT):
 }
 
 export function buildProgressSkillRows(card: GoalProgressCardModel): ProgressSkillRowModel[] {
-  return getVisibleProgressThemeBreakdown(card.themeBreakdown).map((row) => {
+  return getVisibleProgressGoalBreakdown(card.goalBreakdown).map((row) => {
     const safeLevelStep = Math.max(1, Number(card.levelStep || 1));
     const level = Math.floor(Number(row.points || 0) / safeLevelStep) + 1;
     const currentLevelPoints = Number(row.points || 0) - ((level - 1) * safeLevelStep);
@@ -305,12 +304,12 @@ export function buildProgressSkillRows(card: GoalProgressCardModel): ProgressSki
       level,
       levelMeta: getProgressLevelMeta(level),
       progressRatio: clampProgressRatio(currentLevelPoints / safeLevelStep),
-      recentRecords: card.themeRecentRecords?.[row.key] || [],
+      recentRecords: card.goalRecentRecords?.[row.key] || [],
     };
   });
 }
 
-export function getVisibleProgressThemeBreakdown(rows?: ProgressBreakdownLike[]) {
+export function getVisibleProgressGoalBreakdown(rows?: ProgressBreakdownLike[]) {
   return (rows || []).filter((row) => row.count > 0).slice(0, 8);
 }
 

@@ -246,10 +246,10 @@ function incrementReason(diagnostics: EnergyCandidateDiagnostics, reason: Energy
 function personalEffectFor(candidate: EnergyActionCandidate, management?: EnergyManagementModel | null): EnergyActionHistoricalEffect | undefined {
   if (!management) return undefined;
   const title = normalizedLabel(candidate.title);
-  const theme = normalizedLabel(candidate.theme || '');
+  const goal = normalizedLabel(candidate.goalPath || '');
   const rows = [...management.recoveryCandidates, ...management.cautionCandidates];
   const row = rows.find((entry) => normalizedLabel(entry.label) === title)
-    || (theme ? rows.find((entry) => normalizedLabel(entry.label) === theme) : undefined);
+    || (goal ? rows.find((entry) => normalizedLabel(entry.label) === goal) : undefined);
   if (!row || row.sampleCount < 3) return undefined;
   return {
     meanDelta: row.meanDelta,
@@ -333,10 +333,8 @@ export function buildEnergyActionCandidateResult(items: RecordViewItem[], option
       id: item.id,
       title,
       source,
-      goalId: item.goalId,
       goalPath: item.goalPath,
       seriesId: item.seriesId,
-      theme: text(item.themePath || item.theme) || undefined,
       activityLabel: classifyEnergyActivity(item),
       durationMinutes: inferredDuration(item, history),
       brainLoad: load(item.brainDemand) || sharedLoad,

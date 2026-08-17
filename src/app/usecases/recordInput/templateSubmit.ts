@@ -3,11 +3,6 @@ import type { RecordCaptureTemplate, RecordViewItem } from '@core/types/public';
 import type { NormalizeRecordInputParams, NormalizeRecordInputResult, RecordSubmitResult, ResolveDependenciesResult } from '@core/recordInput/public';
 import type { RecordInputKernel } from '@core/recordInput/public';
 
-export interface TemplateExecutionMeta {
-  templateId: string;
-  templateSourceType: 'core-block' | 'goal-template';
-}
-
 export type ResolvedTemplateDependencies = ResolveDependenciesResult & {
   blockId: string;
   template: RecordCaptureTemplate;
@@ -27,7 +22,6 @@ export function prepareTemplateSubmit(params: {
   kernel: RecordInputKernel;
   operation: 'create' | 'update';
   blockId: string;
-  themeId?: string | null;
   item?: RecordViewItem;
   formData: Record<string, unknown>;
   context?: Record<string, unknown>;
@@ -36,7 +30,6 @@ export function prepareTemplateSubmit(params: {
 }): PrepareTemplateSubmitResult {
   const resolved = params.kernel.resolveMissingDependencies({
     blockId: params.blockId,
-    themeId: params.themeId ?? null,
     item: params.item,
     context: { ...(params.context || {}), ...params.formData },
   });
@@ -79,15 +72,5 @@ export function prepareTemplateSubmit(params: {
       normalized,
       warnings,
     },
-  };
-}
-
-export function getTemplateExecutionMeta(
-  resolved: ResolveDependenciesResult,
-  template: RecordCaptureTemplate,
-): TemplateExecutionMeta {
-  return {
-    templateId: resolved.meta.templateId ?? template.id,
-    templateSourceType: resolved.meta.templateSourceType ?? 'core-block',
   };
 }

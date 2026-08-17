@@ -7,7 +7,6 @@ import { asTaskSessionRecord } from '@/core/records/task/taskSession';
 function record(overrides: Record<string, unknown>): RecordEntity {
   return {
     id: 'rec.base',
-    schemaVersion: 2,
     coreBlock: 'thought',
     title: '',
     content: '',

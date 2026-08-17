@@ -52,7 +52,6 @@ describe('TimelineViewModel', () => {
   it('projects a manual Task start/end range when no TaskSession exists', () => {
     const task = {
       id: 'task.01KZZQ6G798KJN54XBGKJVH7YA',
-      schemaVersion: 2,
       coreBlock: 'task',
       status: 'done',
       content: '个地方官方',
@@ -85,7 +84,7 @@ describe('TimelineViewModel', () => {
 
   it('projects an open Task range too because lifecycle status does not control timeline visibility', () => {
     const task = {
-      id: 'task.01KZZQ6G798KJN54XBGKJVH7YB', schemaVersion: 2, coreBlock: 'task', status: 'open',
+      id: 'task.01KZZQ6G798KJN54XBGKJVH7YB', coreBlock: 'task', status: 'open',
       content: '未完成但已经记录时间', title: '未完成但已经记录时间', tags: [], categoryKey: '任务',
       created: 0, modified: 0, extra: {}, startAt: '2026-08-14T10:00', expectedDurationMinutes: 30,
       filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
@@ -98,13 +97,13 @@ describe('TimelineViewModel', () => {
 
   it('prefers TaskSession history over the Task manual range to avoid duplicate timeline blocks', () => {
     const task = {
-      id: 'task.01KZZQ6G798KJN54XBGKJVH7YC', schemaVersion: 2, coreBlock: 'task', status: 'done',
+      id: 'task.01KZZQ6G798KJN54XBGKJVH7YC', coreBlock: 'task', status: 'done',
       content: '有 session 的任务', title: '有 session 的任务', tags: [], categoryKey: '任务',
       created: 0, modified: 0, extra: {}, startAt: '2026-08-14T16:45', endAt: '2026-08-14T17:35',
       expectedDurationMinutes: 50, filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
     } as any;
     const session = {
-      id: 'task-session.01KZZQ6G798KJN54XBGKJVH7YD', schemaVersion: 2, coreBlock: 'task-session',
+      id: 'task-session.01KZZQ6G798KJN54XBGKJVH7YD', coreBlock: 'task-session',
       taskId: task.id, sessionStartedAt: '2026-08-14T16:50:00', sessionEndedAt: '2026-08-14T17:20:00',
       sessionDurationMinutes: 30, sessionResult: 'task-completed', sessionSource: 'timer',
       title: '', content: '', tags: [], categoryKey: '任务工作块', created: 0, modified: 0, extra: {},

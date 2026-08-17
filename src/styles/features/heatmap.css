@@ -16,7 +16,7 @@
     gap: var(--think-space-4);
 }
 
-.heatmap-theme-group {
+.heatmap-goal-group {
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -24,11 +24,11 @@
     border-bottom: 1px solid var(--think-data-grid-border);
 }
 
-.heatmap-theme-group:last-child {
+.heatmap-goal-group:last-child {
     border-bottom: 0;
 }
 
-.heatmap-theme-header {
+.heatmap-goal-header {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -39,13 +39,13 @@
     background: transparent;
 }
 
-.heatmap-theme-header:is(.week-inline-layout, .row-inline-layout) {
+.heatmap-goal-header:is(.week-inline-layout, .row-inline-layout) {
     flex-direction: row;
     align-items: center;
     gap: var(--think-space-4);
 }
 
-.heatmap-theme-header.vertical-layout {
+.heatmap-goal-header.vertical-layout {
     flex-direction: column;
     align-items: stretch;
 }
@@ -80,7 +80,7 @@
     transform: rotate(-90deg);
 }
 
-.theme-name {
+.heatmap-goal-name {
     max-width: 180px;
     min-width: 0;
     overflow: hidden;
@@ -102,11 +102,11 @@
     min-width: 0;
 }
 
-.heatmap-theme-header:is(.week-inline-layout, .row-inline-layout) .heatmap-header-cells {
+.heatmap-goal-header:is(.week-inline-layout, .row-inline-layout) .heatmap-header-cells {
     width: auto;
 }
 
-.heatmap-theme-header.row-inline-layout .heatmap-header-cells {
+.heatmap-goal-header.row-inline-layout .heatmap-header-cells {
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
@@ -153,7 +153,7 @@
     font-size: var(--think-font-size-xs);
 }
 
-.heatmap-goal-theme-list {
+.heatmap-goal-list {
     display: flex;
     flex-direction: column;
     gap: var(--think-space-1);
@@ -290,12 +290,12 @@ body.theme-dark .heatmap-cell.empty {
         padding: var(--think-space-2);
     }
 
-    .heatmap-theme-header.row-inline-layout {
+    .heatmap-goal-header.row-inline-layout {
         flex-direction: column;
         align-items: flex-start;
     }
 
-    .heatmap-theme-header.row-inline-layout .heatmap-header-cells {
+    .heatmap-goal-header.row-inline-layout .heatmap-header-cells {
         width: 100%;
     }
 

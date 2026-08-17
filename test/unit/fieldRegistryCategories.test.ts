@@ -5,9 +5,9 @@ describe('field registry user-facing categories', () => {
     expect(Object.keys(FIELD_CATEGORY_LABELS).sort()).toEqual(['core', 'custom', 'file']);
   });
 
-  it('treats category, theme and tags as built-in core fields', () => {
+  it('treats category, Goal and tags as built-in core fields', () => {
     expect(FIELD_REGISTRY.categoryKey.category).toBe('core');
-    expect(FIELD_REGISTRY.themePath.category).toBe('core');
+    expect(FIELD_REGISTRY.goalPath.category).toBe('core');
     expect(FIELD_REGISTRY.tags.category).toBe('core');
   });
 

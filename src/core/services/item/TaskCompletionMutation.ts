@@ -14,9 +14,7 @@ function timestampNow(): string { return new Date().toISOString(); }
 export interface TaskSeriesUpdate {
   recurrence?: Partial<RecurrenceInfo>;
   content?: string;
-  goalId?: string | null;
   goalPath?: string | null;
-  themePath?: string | null;
   priority?: TaskPriority | null;
   expectedDurationMinutes?: number | null;
   energyDemand?: TaskDemandLevel | null;
@@ -37,9 +35,7 @@ function nextTaskFields(task: TaskRecord, series: TaskSeriesRecord, completedAt:
     // Series owns future-instance defaults. Historical/current Task metadata is never used
     // as the authority for future occurrences after a Series update.
     content: series.content || task.content,
-    goalId: series.goalId,
     goalPath: series.goalPath,
-    themePath: series.themePath || series.theme,
     createdAt: completedAt,
     priority: series.priority,
     expectedDurationMinutes: series.expectedDurationMinutes,
@@ -55,8 +51,6 @@ function nextTaskFields(task: TaskRecord, series: TaskSeriesRecord, completedAt:
     startDate: nextDates.startDate,
     dueDate: nextDates.dueDate,
     seriesId: series.id,
-    templateId: task.templateId,
-    templateSourceType: task.templateSourceType,
   };
 }
 
@@ -113,9 +107,7 @@ export class TaskCompletionMutation {
 
     const sharedFields: Array<[keyof TaskSeriesUpdate, string]> = [
       ['content', 'content'],
-      ['goalId', 'goalId'],
       ['goalPath', 'goalPath'],
-      ['themePath', 'themePath'],
       ['priority', 'priority'],
       ['expectedDurationMinutes', 'expectedDurationMinutes'],
       ['energyDemand', 'energyDemand'],

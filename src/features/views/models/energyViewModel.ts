@@ -12,7 +12,7 @@ import {
   type EnergyPatternAnalytics,
   type EnergyPeriodModel,
 } from '@core/energy/public';
-import type { CurrentView, RecordViewItem, ThemeDefinition, TimerState } from '@core/types/public';
+import type { CurrentView, RecordViewItem, TimerState } from '@core/types/public';
 import { dayjs } from '@core/utils/public';
 import { ENERGY_VIEW_DEFAULT_CONFIG, type EnergyViewConfig } from '@core/view/public';
 import { buildGoalEnergyContext, buildGoalEnergySummary, type GoalEnergyContextModel, type GoalEnergySummaryModel } from './energySummaryModel';
@@ -233,10 +233,9 @@ export function buildEnergyViewModel(args: {
   currentView: CurrentView;
   dateRange: [Date, Date];
   goals?: GoalDefinition[];
-  themes?: ThemeDefinition[];
   timers?: TimerState[];
 }): EnergyViewRenderModel {
-  const { items = [], records = items, module, goals = [], themes = [], timers = [], currentView, dateRange } = args;
+  const { items = [], records = items, module, goals = [], timers = [], currentView, dateRange } = args;
   const rawConfig = { ...ENERGY_VIEW_DEFAULT_CONFIG, ...(module?.viewConfig || {}) };
   const config: EnergyViewConfig = {
     ...rawConfig,
@@ -255,7 +254,7 @@ export function buildEnergyViewModel(args: {
   const nowTime = now.format('HH:mm');
   const displayPeriodLabel = periodLabel(currentView, dateRange);
   const requestedGoal = normalizedGoalFilter(config.goalPath);
-  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
+  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false });
   const panels: EnergyGoalPanelModel[] = [];
 
   for (const bucket of buckets) {

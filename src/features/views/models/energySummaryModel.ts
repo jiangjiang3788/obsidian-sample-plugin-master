@@ -57,7 +57,7 @@ export interface GoalEnergyEffectsModel {
   mediumConfidencePairCount: number;
   excludedActivityCount: number;
   byActivity: GoalEnergyEffectRowModel[];
-  byTheme: GoalEnergyEffectRowModel[];
+  byGoal: GoalEnergyEffectRowModel[];
   byDuration: GoalEnergyEffectRowModel[];
 }
 
@@ -132,7 +132,7 @@ function buildGoalEnergyEffects(evidenceRecords: RecordViewItem[]): GoalEnergyEf
     mediumConfidencePairCount: effects.mediumConfidencePairCount,
     excludedActivityCount: effects.excludedActivityCount,
     byActivity: mapRows(effects.byActivity),
-    byTheme: mapRows(effects.byTheme),
+    byGoal: mapRows(effects.byGoal),
     byDuration: mapRows(effects.byDuration),
   };
 }

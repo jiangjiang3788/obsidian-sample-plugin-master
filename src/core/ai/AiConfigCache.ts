@@ -53,14 +53,12 @@ export class AiConfigCache {
             this.lastUpdated = now;
             devLog(`${prefix} buildAiConfigSnapshot 完成 (${elapsedMs(rebuildStart)})`, {
                 blocksCount: nextSnapshot.blocks?.length ?? 0,
-                themesCount: nextSnapshot.themes?.length ?? 0,
                 goalsCount: nextSnapshot.goals?.length ?? 0,
                 goalPresetsCount: nextSnapshot.goalPresets?.length ?? 0,
             });
             if (nowMs() - rebuildStart >= 50) {
                 devWarn(`${prefix} 慢步骤: buildAiConfigSnapshot (${elapsedMs(rebuildStart)})`, {
                     blocksCount: nextSnapshot.blocks?.length ?? 0,
-                    themesCount: nextSnapshot.themes?.length ?? 0,
                 goalsCount: nextSnapshot.goals?.length ?? 0,
                 goalPresetsCount: nextSnapshot.goalPresets?.length ?? 0,
                 });
@@ -74,7 +72,6 @@ export class AiConfigCache {
         devLog(`${prefix} getSnapshot 返回 (${elapsedMs(totalStart)})`, {
             cacheHit,
             blocksCount: snapshot.blocks?.length ?? 0,
-            themesCount: snapshot.themes?.length ?? 0,
             goalsCount: snapshot.goals?.length ?? 0,
             goalPresetsCount: snapshot.goalPresets?.length ?? 0,
         });

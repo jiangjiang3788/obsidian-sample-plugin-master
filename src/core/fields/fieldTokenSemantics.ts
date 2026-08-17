@@ -41,16 +41,6 @@ function templateFieldSemanticToken(field: TemplateFieldLike | null | undefined)
   return normalizeFieldToken(field?.semantic || field?.semanticType);
 }
 
-export function isThemeTemplateField(field: TemplateFieldLike | null | undefined): boolean {
-  const key = normalizeFieldToken(field?.key);
-  const label = normalizeFieldLabelToken(field?.label);
-  const semantic = templateFieldSemanticToken(field);
-  return key === 'themepath'
-    || key === '主题'
-    || label === '主题'
-    || semantic.includes('themepath')
-    || semantic === 'theme';
-}
 
 export function isIconTemplateField(field: TemplateFieldLike | null | undefined): boolean {
   const key = normalizeFieldToken(field?.key);

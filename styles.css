@@ -67,7 +67,7 @@
 
   /* View shell hierarchy: framed workspace panel, not accent-filled card. */
   --think-panel-bg: var(--think-bg-canvas);
-  --think-panel-header-bg: var(--think-surface-subtle);
+  --think-panel-header-bg: var(--background-secondary, var(--think-bg-canvas));
   --think-panel-header-hover-bg: var(--background-modifier-hover, var(--think-panel-header-bg));
   --think-panel-header-border: var(--think-border-divider);
   --think-panel-header-accent: var(--interactive-accent);
@@ -2604,74 +2604,6 @@
 /* Shared minimum widths used by the compact filter / sort rule editor. */
 .think-os .think-rule-builder__logic { min-width: 50px; }
 .think-os .think-rule-builder__operator { min-width: 110px; }
-/* Phase 4 Settings pilot: flat, compact, high-frequency theme metadata workspace. */
-.think-os--settings .think-theme-metadata__section {
-  padding-top: 0;
-  border: 0;
-}
-.think-os--settings .think-theme-metadata__preview-icon {
-  color: var(--think-text-primary);
-  font-size: var(--think-font-size-sm);
-}
-.think-os--settings .think-theme-metadata__ellipsis,
-.think-os--settings .think-theme-metadata__source {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.think-os--settings .think-theme-metadata__columns,
-.think-os--settings .think-theme-metadata__entry {
-  display: grid;
-  grid-template-columns: 64px minmax(220px, 1fr) minmax(150px, 0.7fr) 108px 28px;
-  align-items: center;
-  gap: var(--think-space-3);
-  min-width: 0;
-}
-.think-os--settings .think-theme-metadata__columns {
-  padding: 0 var(--think-space-2) var(--think-space-2);
-  color: var(--think-text-secondary);
-  font-size: var(--think-font-size-xs);
-  font-weight: var(--think-font-weight-medium);
-}
-.think-os--settings .think-theme-metadata__entries {
-  display: grid;
-  gap: var(--think-object-gap);
-  min-width: 0;
-}
-.think-os--settings .think-theme-metadata__entry {
-  padding: var(--think-rhythm-row);
-}
-.think-os--settings .think-theme-metadata__entry:hover {
-  background: var(--think-bg-hover);
-}
-.think-os--settings .think-theme-metadata__source {
-  color: var(--think-text-secondary);
-  font-size: var(--think-font-size-xs);
-  line-height: var(--think-line-height-normal);
-}
-.think-os--settings .think-theme-metadata__empty {
-  margin: 0;
-  padding-block: var(--think-space-6);
-  text-align: center;
-}
-@container think-settings (max-width: 760px) {
-  .think-os--settings .think-theme-metadata__columns { display: none; }
-  .think-os--settings .think-theme-metadata__entry { grid-template-columns: 64px minmax(0, 1fr) 108px 28px; }
-  .think-os--settings .think-theme-metadata__source { grid-column: 2 / -1; grid-row: 2; }
-  .think-os--settings .think-theme-metadata__status { grid-column: 3; grid-row: 1; }
-  .think-os--settings .think-theme-metadata__delete { grid-column: 4; grid-row: 1; }
-}
-@container think-settings (max-width: 520px) {
-  .think-os--settings .think-editor-grid--metadata { grid-template-columns: minmax(0, 1fr) 84px; }
-  .think-os--settings .think-editor-grid--metadata .think-button { grid-column: 1 / -1; justify-self: start; }
-  .think-os--settings .think-editor-grid--list-toolbar { grid-template-columns: 1fr; }
-  .think-os--settings .think-settings-search { width: 100%; max-width: none; }
-  .think-os--settings .think-theme-metadata__entry { grid-template-columns: 56px minmax(0, 1fr) 28px; }
-  .think-os--settings .think-theme-metadata__status { grid-column: 2; grid-row: 2; }
-  .think-os--settings .think-theme-metadata__source { grid-column: 2 / -1; grid-row: 3; }
-  .think-os--settings .think-theme-metadata__delete { grid-column: 3; grid-row: 1; }
-}
 /* Goal template settings: flat rows, native primitives and a data-grid matrix. */
 .think-os--settings .think-goal-template-editor {
   min-height: 0;
@@ -2760,7 +2692,6 @@
 .think-os--settings .think-goal-template-matrix__drag-handle:active { cursor: grabbing; }
 .think-os--settings .think-goal-template-matrix__tree-toggle,
 .think-os--settings .think-goal-template-matrix__delete { width: 24px; min-width: 24px; height: 24px; min-height: 24px; border: 0; background: transparent; }
-.think-os--settings .think-goal-template-matrix__collapse-state { width: var(--think-icon-size-sm); flex: 0 0 auto; color: var(--think-text-subtle); }
 .think-os--settings .think-goal-template-matrix__goal-name { min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .think-os--settings .think-goal-template-matrix__goal-row.is-drop-before > td { box-shadow: inset 0 2px 0 var(--think-accent); }
 .think-os--settings .think-goal-template-matrix__goal-row.is-drop-after > td { box-shadow: inset 0 -2px 0 var(--think-accent); }
@@ -2781,8 +2712,25 @@
   border-radius: var(--think-radius-sm);
 }
 .think-os--settings .think-goal-template-matrix__preset-cell.is-drop-target { outline: 2px dashed var(--think-accent); outline-offset: -2px; }
-.think-os--settings .think-goal-template-matrix__add { width: 100%; min-height: 30px; justify-content: center; border: 1px solid transparent; color: var(--think-text-secondary); }
-.think-os--settings .think-goal-template-matrix__add:hover { border-color: var(--think-border-subtle); }
+.think-os--settings .think-goal-template-matrix__preset-cell.is-empty {
+  cursor: pointer;
+  border: 1px solid transparent;
+  min-height: 36px;
+}
+.think-os--settings .think-goal-template-matrix__preset-cell.is-empty:hover {
+  border-color: var(--think-border-subtle);
+  background: var(--think-bg-hover);
+}
+.think-os--settings .think-goal-template-matrix__preset-cell.is-empty::after {
+  content: '+';
+  place-self: center;
+  color: transparent;
+  font-size: var(--think-font-size-md);
+}
+.think-os--settings .think-goal-template-matrix__preset-cell.is-empty:hover::after,
+.think-os--settings .think-goal-template-matrix__preset-cell.is-empty:focus-visible::after {
+  color: var(--think-text-subtle);
+}
 .think-os--settings .think-goal-preset {
   width: 100%;
   min-height: 30px;
@@ -3014,43 +2962,33 @@
 .think-os--settings .think-block-accordion__drag--placeholder { visibility: hidden; cursor: default; }
 .think-os--settings .think-block-accordion__meta { color: var(--think-text-secondary); font-size: var(--think-type-meta-size); white-space: nowrap; }
 .think-os--settings .think-block-accordion--builtin .think-block-accordion__summary { grid-template-columns: auto minmax(0, 1fr) auto auto; }
-/* Goal template and theme metadata editor extensions. */
-.think-os--settings .think-goal-template-editor__primary-grid.is-two-column {
-  grid-template-columns: 1.2fr 1.2fr;
-}
+/* Goal settings extensions. */
 .think-os--settings .think-goal-template-editor__section-heading {
   margin-bottom: var(--think-space-3);
   font-size: var(--think-type-section-size);
   font-weight: var(--think-type-section-weight);
 }
-.think-os--settings .think-goal-template-editor__section-help {
-  display: block;
-  margin-bottom: var(--think-space-3);
-}
-.think-os--settings .think-goal-template-editor__output-heading {
-  margin-bottom: var(--think-space-3);
-}
-/* Phase 5: goal and metric settings follow the flat Settings row language. */
-.think-os--settings .think-goal-manager, .think-os--settings .think-goal-metrics {
-  width: 100%; max-width: 1240px; margin-inline: auto; display: grid; gap: var(--think-rhythm-section);
+.think-os--settings .think-goal-manager,
+.think-os--settings .think-goal-metrics {
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  display: grid;
+  gap: var(--think-rhythm-section);
 }
 .think-os--settings .think-goal-manager__create {
-  display: grid; grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.55fr) auto; gap: var(--think-space-3); align-items: center;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: var(--think-space-3);
+  align-items: center;
 }
-.think-os--settings .think-goal-manager__presets { display: grid; gap: var(--think-rhythm-related); padding-top: 0; border: 0; }
-.think-os--settings .think-goal-manager__presets-header { display: flex; align-items: center; justify-content: space-between; gap: var(--think-space-4); flex-wrap: wrap; }
-.think-os--settings .think-goal-manager__title, .think-os--settings .think-goal-metrics__title { font-weight: var(--think-font-weight-semibold); }
-.think-os--settings .think-goal-metrics__identity, .think-os--settings .think-goal-metrics__target { display: grid; gap: var(--think-space-3); align-items: center; }
-.think-os--settings .think-goal-metrics__identity { grid-template-columns: minmax(180px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr); }
-.think-os--settings .think-goal-metrics__target { grid-template-columns: minmax(160px, 1fr) 120px 90px auto; }
 .think-os--settings .think-goal-metrics__items { display: flex; flex-wrap: wrap; gap: var(--think-space-2); }
-@container think-settings (max-width: 720px) {
-  .think-os--settings .think-goal-manager__create, .think-os--settings .think-goal-metrics__identity, .think-os--settings .think-goal-metrics__target { grid-template-columns: 1fr; }
-}
-/* Goal management is one create row followed by one matrix workspace. */
 .think-os--settings .think-goal-manager__create-row { padding-bottom: var(--think-rhythm-related); }
 .think-os--settings .think-goal-manager__status { margin-top: var(--think-rhythm-inline); }
 .think-os--settings .think-goal-template-matrix__toolbar { margin-bottom: var(--think-rhythm-related); }
+@container think-settings (max-width: 720px) {
+  .think-os--settings .think-goal-manager__create { grid-template-columns: 1fr; }
+}
 /* Field editor grid and row controls. */
 .think-os--settings .think-fields-editor {
   width: 100%;
@@ -3445,6 +3383,18 @@
         padding: var(--think-space-3);
     }
 }
+/* Expanded dashboard views are viewport-gated so a long layout does not execute every
+ * heavy view model at once. The placeholder keeps layout geometry stable until the
+ * panel approaches the viewport. */
+.think-os .think-view-viewport-gate.is-deferred {
+  display: block;
+  contain: layout paint style;
+}
+.think-os .think-view-viewport-gate.is-deferred .module-deferred-placeholder {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+}
 /* Dashboard toolbar: one framed, single-line Obsidian-native action language. */
 .think-os .tp-toolbar {
     --tp-toolbar-control-height: var(--think-control-height-md);
@@ -3492,9 +3442,6 @@
     max-width: 300px; gap: var(--think-space-1); overflow: hidden;
 }
 .tp-toolbar-layout-settings { flex: 0 0 auto; }
-.tp-toolbar .theme-filter-container,
-.tp-toolbar .theme-filter { white-space: nowrap; }
-.tp-toolbar .theme-filter-selected-chips { flex-wrap: nowrap; overflow: hidden; }
 @container (max-width: 700px) {
     .tp-toolbar .think-filter-popover__selected-chips { max-width: 180px; }
 }
@@ -3770,8 +3717,8 @@
     box-shadow: var(--think-shadow-overlay);
 }
 /* Progress / 成长视图：纯列表系统。
-   目标 -> 主题 -> 复用 BlockView/TaskRow 的真实记录；不建立卡片、白底或目标统计胶囊。
-   Goal / Theme 共用同一列系统，确保等级与进度条严格纵向对齐。 */
+   目标 -> 子目标 -> 复用 BlockView/TaskRow 的真实记录；不建立卡片、白底或目标统计胶囊。
+   Goal 子层级共用同一列系统，确保等级与进度条严格纵向对齐。 */
 .think-progress-view {
   --think-progress-chevron-col: 12px;
   --think-progress-icon-col: 24px;
@@ -3921,7 +3868,7 @@
   min-width: 0;
   border-top: 0;
 }
-/* 二级：主题。与目标完全共用列宽，只在图标列 + 名称列制造轻微缩进。
+/* 二级：子目标。与根目标完全共用列宽，只在图标列 + 名称列制造轻微缩进。
    这样缩进不会推动 Lv / progress / meta 三列。 */
 .think-progress-skill {
   display: grid;
@@ -3974,14 +3921,13 @@
   white-space: nowrap;
 }
 .think-progress-empty-skill,
-.think-progress-theme-records__empty {
+.think-progress-goal-records__empty {
   padding: var(--think-space-3) 0;
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-sm);
 }
-/* 主题展开后直接复用 Statistics 使用的 BlockView 渲染链。
-   记录内容从主题名称起点再内缩一层，不影响主列表列对齐。 */
-.think-progress-theme-records {
+/* 子目标展开后直接复用 BlockView 渲染链；记录内容从子目标名称起点再内缩一层。 */
+.think-progress-goal-records {
   min-width: 0;
   margin-left: calc(
     var(--think-progress-chevron-col) +
@@ -3991,17 +3937,17 @@
   padding: 0 0 var(--think-space-2) var(--think-space-3);
   border-left: 2px solid color-mix(in srgb, var(--think-data-5) 28%, transparent);
 }
-.think-progress-theme-records .bv-container {
+.think-progress-goal-records .bv-container {
   gap: 0;
   padding: 0;
   background: transparent;
 }
-.think-progress-theme-records :is(.bv-item, .task-row) {
+.think-progress-goal-records :is(.bv-item, .task-row) {
   min-height: var(--think-list-row-min-height-compact);
 }
-.think-progress-theme-records .bv-block-main { gap: 0; }
-.think-progress-theme-records .bv-block-content,
-.think-progress-theme-records .bv-block-title {
+.think-progress-goal-records .bv-block-main { gap: 0; }
+.think-progress-goal-records .bv-block-content,
+.think-progress-goal-records .bv-block-title {
   font-size: var(--think-font-size-sm);
 }
 /* 小屏仍然共用同一列系统：缩列但不改变列语义，所以 Lv / progress 始终对齐。 */
@@ -5047,17 +4993,17 @@
     flex-direction: column;
     gap: var(--think-space-4);
 }
-.heatmap-theme-group {
+.heatmap-goal-group {
     display: flex;
     flex-direction: column;
     gap: 0;
     padding: var(--think-space-2) 0;
     border-bottom: 1px solid var(--think-data-grid-border);
 }
-.heatmap-theme-group:last-child {
+.heatmap-goal-group:last-child {
     border-bottom: 0;
 }
-.heatmap-theme-header {
+.heatmap-goal-header {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -5067,12 +5013,12 @@
     border: 0;
     background: transparent;
 }
-.heatmap-theme-header:is(.week-inline-layout, .row-inline-layout) {
+.heatmap-goal-header:is(.week-inline-layout, .row-inline-layout) {
     flex-direction: row;
     align-items: center;
     gap: var(--think-space-4);
 }
-.heatmap-theme-header.vertical-layout {
+.heatmap-goal-header.vertical-layout {
     flex-direction: column;
     align-items: stretch;
 }
@@ -5100,7 +5046,7 @@
 .heatmap-collapse-arrow.is-collapsed {
     transform: rotate(-90deg);
 }
-.theme-name {
+.heatmap-goal-name {
     max-width: 180px;
     min-width: 0;
     overflow: hidden;
@@ -5120,10 +5066,10 @@
     width: 100%;
     min-width: 0;
 }
-.heatmap-theme-header:is(.week-inline-layout, .row-inline-layout) .heatmap-header-cells {
+.heatmap-goal-header:is(.week-inline-layout, .row-inline-layout) .heatmap-header-cells {
     width: auto;
 }
-.heatmap-theme-header.row-inline-layout .heatmap-header-cells {
+.heatmap-goal-header.row-inline-layout .heatmap-header-cells {
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
@@ -5162,7 +5108,7 @@
     color: var(--think-text-secondary);
     font-size: var(--think-font-size-xs);
 }
-.heatmap-goal-theme-list {
+.heatmap-goal-list {
     display: flex;
     flex-direction: column;
     gap: var(--think-space-1);
@@ -5280,12 +5226,12 @@ body.theme-dark .heatmap-cell.empty {
         padding: var(--think-space-2);
     }
 
-    .heatmap-theme-header.row-inline-layout {
+    .heatmap-goal-header.row-inline-layout {
         flex-direction: column;
         align-items: flex-start;
     }
 
-    .heatmap-theme-header.row-inline-layout .heatmap-header-cells {
+    .heatmap-goal-header.row-inline-layout .heatmap-header-cells {
         width: 100%;
     }
 
@@ -6562,7 +6508,6 @@ body.excel-view-is-resizing-column * {
 .think-ai-chat-session:focus-within .think-ai-chat-session__delete { opacity: 1; }
 .think-ai-chat-filters { display: flex; align-items: center; gap: var(--think-space-3); min-width: 0; padding: var(--think-space-3) var(--think-space-5); border-bottom: 1px solid var(--think-border-subtle); overflow-x: auto; scrollbar-width: thin; }
 .think-ai-chat-filters__toggle { flex: 0 0 auto; }
-.think-ai-chat-filters__theme { width: 170px; flex: 0 0 170px; }
 .think-ai-chat-filters__select { width: 118px; flex: 0 0 118px; }
 .think-ai-chat-filters__select--block { width: 148px; flex-basis: 148px; }
 .think-ai-chat-filters__index { flex: 0 0 auto; color: var(--think-text-secondary); font-size: var(--think-font-size-xs); white-space: nowrap; }

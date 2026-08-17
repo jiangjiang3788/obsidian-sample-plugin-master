@@ -4,7 +4,6 @@ import { h } from 'preact';
 import { QuickInputEditorFields } from './components/Fields';
 import { GoalSelector, type GoalSelectorOption } from './components/GoalSelector';
 import { RecordTypeSwitcher } from './components/RecordTypeSwitcher';
-import { SelectablePill } from './components/SelectablePill';
 import { QuickInputFormRow } from './components/FormRow';
 
 export interface QuickInputEditorViewProps {
@@ -19,9 +18,6 @@ export interface QuickInputEditorViewProps {
   selectedGoalPath: string | null;
   onSelectGoal: (goal: GoalSelectorOption | null) => void;
   onCreateGoal?: (goalPath: string) => Promise<void> | void;
-  templateVariants?: Array<{ value: string; label: string }>;
-  selectedTemplateVariantId?: string | null;
-  onSelectTemplateVariant?: (variantId: string | null) => void;
 
   template: any;
   formData: Record<string, any>;
@@ -50,9 +46,6 @@ export function QuickInputEditorView({
   selectedGoalPath,
   onSelectGoal,
   onCreateGoal,
-  templateVariants = [],
-  selectedTemplateVariantId = null,
-  onSelectTemplateVariant,
   template,
   formData,
   fieldValueOptionsByKey,
@@ -72,8 +65,7 @@ export function QuickInputEditorView({
   }
 
   const shouldShowCoreBlockFallbackHint = Boolean(currentGoalPath)
-    && templateSourceType === 'core-block'
-    && templateVariants.length === 0;
+    && templateSourceType === 'core-block';
   const isTaskTemplate = String(currentBlockId || template?.coreBlockId || template?.id || '').replace(/^core\./, '') === 'task';
 
   return (
@@ -103,27 +95,6 @@ export function QuickInputEditorView({
               )}
             </div>
           </QuickInputFormRow>
-
-          {templateVariants.length > 0 && (
-            <QuickInputFormRow label="记录预设">
-              <div className="think-quick-input-pill-row think-quick-input-template-variant-switcher">
-                {templateVariants.map((variant) => {
-                  const isSelected = (selectedTemplateVariantId || 'default') === variant.value;
-                  return (
-                    <SelectablePill
-                      key={variant.value}
-                      selected={isSelected}
-                      disabled={templateVariants.length <= 1}
-                      onClick={() => templateVariants.length > 1 ? onSelectTemplateVariant?.(variant.value) : undefined}
-                      title={variant.label}
-                    >
-                      {variant.label}
-                    </SelectablePill>
-                  );
-                })}
-              </div>
-            </QuickInputFormRow>
-          )}
       </div>
 
       {showDivider && !isTaskTemplate && <div className="think-quick-input-context-divider" aria-hidden="true" />}

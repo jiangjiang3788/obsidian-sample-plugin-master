@@ -17,9 +17,9 @@ describe('view domain field policy', () => {
     ]);
   });
 
-  it('removes noisy template / period columns from default visible fields', () => {
-    expect(normalizeDisplayFields(['goalPath', 'templateId', 'cycleId', 'content'])).toEqual(['goalPath', 'content']);
-    expect(normalizeViewGroupFields(['categoryKey', '模板来源', 'leafTheme'])).toEqual(['coreBlock', 'leafTheme']);
+  it('keeps current Goal/content fields and canonical grouping fields', () => {
+    expect(normalizeDisplayFields(['goalPath', 'content'])).toEqual(['goalPath', 'content']);
+    expect(normalizeViewGroupFields(['coreBlock', 'leafGoal'])).toEqual(['coreBlock', 'leafGoal']);
   });
 
   it('normalizes canonical view axes without introducing Task storage aliases', () => {
@@ -29,12 +29,12 @@ describe('view domain field policy', () => {
       groupBy: 'coreBlock',
       categories: [{ name: '打卡' }],
     });
-    expect(normalizeViewConfigDomain({ categories: [], themePaths: [] })).toEqual({});
+    expect(normalizeViewConfigDomain({ categories: [], goalPaths: [] })).toEqual({});
   });
 
   it('resolves explicit status and structured cadence', () => {
     const item = {
-      id: 'task.01J00000000000000000000044', schemaVersion: 2, coreBlock: 'task', status: 'done',
+      id: 'task.01J00000000000000000000044', coreBlock: 'task', status: 'done',
       title: 'done task', content: 'done task', tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
       seriesId: 'taskseries.01J00000000000000000000044', recurrenceInfo: { unit: 'week', interval: 1, anchor: 'scheduled' },
     } as RecordViewItem;

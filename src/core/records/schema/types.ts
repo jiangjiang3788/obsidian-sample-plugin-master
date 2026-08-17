@@ -49,7 +49,7 @@ export type RecordFieldValueType =
   | 'enum';
 
 export interface RecordFieldContract {
-  /** Canonical persisted Markdown key, e.g. 目标ID / 记录子类型. */
+  /** Canonical persisted Markdown key, e.g. 目标 / 记录子类型. */
   key: string;
   aliases?: readonly string[];
   role: RecordFieldRole;

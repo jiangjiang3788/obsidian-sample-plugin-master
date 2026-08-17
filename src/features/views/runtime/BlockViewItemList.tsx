@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { Fragment, h } from 'preact';
-import type { RecordViewItem, ThemeDefinition } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import type { MessageRenderPort } from '@core/ports/public';
 import { TaskRow } from './components/items/TaskRow';
 import { BlockItem } from './components/items/BlockItem';
@@ -16,7 +16,6 @@ export interface BlockViewItemListProps {
   onMarkDone: (id: string) => void;
   timerService: TimerController;
   timers: any[];
-  allThemes: ThemeDefinition[];
   onOpenRecord?: OpenRecordHandler;
 }
 
@@ -30,7 +29,6 @@ export function BlockViewItemList(props: BlockViewItemListProps) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     onOpenRecord,
   } = props;
 
@@ -47,7 +45,6 @@ export function BlockViewItemList(props: BlockViewItemListProps) {
               onOpenRecordOrigin={onOpenRecordOrigin}
               timerService={timerService}
               timer={findBlockViewTimer(timers, item.id)}
-              allThemes={allThemes}
               onOpenRecord={onOpenRecord}
               showFields={[]}
               compact
@@ -64,7 +61,6 @@ export function BlockViewItemList(props: BlockViewItemListProps) {
             resolveResourcePath={resolveResourcePath}
             onOpenRecordOrigin={onOpenRecordOrigin}
             messageRenderPort={messageRenderPort}
-            allThemes={allThemes}
             onOpenRecord={onOpenRecord}
           />
         );

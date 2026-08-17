@@ -68,9 +68,6 @@ const NEVER_INLINE_EDITABLE = new Set<string>([
 ]);
 
 const DERIVED_FIELDS = new Set<string>([
-  'themePath',
-  'rootTheme',
-  'leafTheme',
   'baseCategory',
   'leafCategory',
   'fullData',
@@ -202,7 +199,7 @@ export function getFieldEditPolicy(field: string, sampleValue?: unknown): FieldE
 
   const editorKind = getFieldEditorKind(definition, sampleValue);
   if (editorKind === 'path' || definition?.valueType === 'path' || definition?.inputType === 'path' || definition?.inputType === 'multiPath') {
-    return readonlyPolicy(field, canonicalField, definition, '路径类字段涉及文件定位、分类或主题结构，不能在 Excel 单元格内直接修改');
+    return readonlyPolicy(field, canonicalField, definition, '路径类字段涉及文件定位、分类或目标结构，不能在 Excel 单元格内直接修改');
   }
 
   if (editorKind === 'readonly' || definition?.valueType === 'file' || definition?.inputType === 'file') {

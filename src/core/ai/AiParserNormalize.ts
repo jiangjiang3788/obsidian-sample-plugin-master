@@ -5,113 +5,93 @@ import type { UnknownRecord } from '../utils/unknownRecord';
 import type { AiParserSnapshot, AiSnapshotBlock, AiSnapshotGoal, AiSnapshotPreset } from './AiParserSnapshot';
 
 type AiCommandTarget = NaturalRecordCommand['target'] & UnknownRecord;
-type AiParsedCommand = NaturalRecordCommand & {
-    target: AiCommandTarget;
-    fieldValues: Record<string, unknown>;
-};
+type AiParsedCommand = NaturalRecordCommand & { target: AiCommandTarget; fieldValues: Record<string, unknown> };
 
 function ensureCommandTarget(item: Partial<NaturalRecordCommand> & { target?: unknown }): AiCommandTarget {
-    if (!isUnknownRecord(item.target)) {
-        item.target = { blockId: '' };
-    }
-    const target = item.target as AiCommandTarget;
-    if (typeof target.blockId !== 'string') target.blockId = '';
-    return target;
+  if (!isUnknownRecord(item.target)) item.target = { blockId: '' };
+  const target = item.target as AiCommandTarget;
+  if (typeof target.blockId !== 'string') target.blockId = '';
+  return target;
 }
 
 export function cleanAiFieldValues(values: unknown): Record<string, unknown> {
-    const result: Record<string, unknown> = {};
-    const record = asUnknownRecord(values);
-    if (!record) return result;
-    for (const [key, value] of Object.entries(record)) {
-        if (isSystemRecordContextField(key)) continue;
-        result[key] = value;
-    }
-    return result;
+  const result: Record<string, unknown> = {};
+  const record = asUnknownRecord(values);
+  if (!record) return result;
+  for (const [key, value] of Object.entries(record)) {
+    if (isSystemRecordContextField(key)) continue;
+    result[key] = value;
+  }
+  return result;
 }
 
 function targetString(target: UnknownRecord, key: string): string {
-    return readTrimmedString(target, key) ?? '';
+  return readTrimmedString(target, key) ?? '';
 }
 
 function findBlockByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): AiSnapshotBlock | null {
-    const blocks = snapshot.blocks ?? [];
-    const blockId = targetString(target, 'blockId');
-    const categoryKey = targetString(target, 'categoryKey');
-    return blocks.find((block) => block.id === blockId)
-        || blocks.find((block) => block.categoryKey === categoryKey || block.name === categoryKey)
-        || null;
+  const blocks = snapshot.blocks ?? [];
+  const blockId = targetString(target, 'blockId');
+  const categoryKey = targetString(target, 'categoryKey');
+  return blocks.find((block) => block.id === blockId)
+    || blocks.find((block) => block.categoryKey === categoryKey || block.name === categoryKey)
+    || null;
 }
 
 function findGoalByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): AiSnapshotGoal | null {
-    const goals = snapshot.goals ?? [];
-    const goalPath = targetString(target, 'goalPath');
-    const goalId = targetString(target, 'goalId');
-    return goals.find((goal) => goal.id === goalId)
-        || goals.find((goal) => goal.path === goalPath || goal.title === goalPath)
-        || null;
+  const path = targetString(target, 'goalPath');
+  return (snapshot.goals ?? []).find((goal) => goal.path === path) || null;
 }
 
 function findPresetByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): AiSnapshotPreset | null {
-    const presets = snapshot.goalPresets ?? [];
-    const explicitId = targetString(target, 'goalTemplateId') || targetString(target, 'templateId');
-    const variantId = targetString(target, 'templateVariantId') || targetString(target, 'goalTemplateVariantId');
-    const goalPath = targetString(target, 'goalPath');
-    const goalId = targetString(target, 'goalId');
-    const blockId = targetString(target, 'blockId');
-    const categoryKey = targetString(target, 'categoryKey');
-    if (explicitId) {
-        const exact = presets.find((preset) => preset.id === explicitId || preset.goalTemplateId === explicitId);
-        if (exact) return exact;
-    }
-    const candidates = presets.filter((preset) => {
-        const goalMatches = !goalPath && !goalId ? true : preset.goalPath === goalPath || preset.goalId === goalId;
-        const blockMatches = !blockId && !categoryKey ? true : preset.blockId === blockId || preset.categoryKey === categoryKey;
-        return goalMatches && blockMatches;
-    });
-    if (variantId) {
-        const exactVariant = candidates.find((preset) => preset.variantId === variantId || preset.id === variantId || preset.goalTemplateId === variantId);
-        if (exactVariant) return exactVariant;
-    }
-    return candidates[0] || null;
+  const presets = snapshot.goalPresets ?? [];
+  const explicitId = targetString(target, 'goalTemplateId') || targetString(target, 'templateId');
+  if (explicitId) {
+    const exact = presets.find((preset) => preset.id === explicitId || preset.goalTemplateId === explicitId);
+    if (exact) return exact;
+  }
+  const goalPath = targetString(target, 'goalPath');
+  const blockId = targetString(target, 'blockId');
+  const categoryKey = targetString(target, 'categoryKey');
+  return presets.find((preset) => {
+    const goalMatches = !goalPath || preset.goalPath === goalPath;
+    const blockMatches = (!blockId && !categoryKey) || preset.blockId === blockId || preset.categoryKey === categoryKey;
+    return goalMatches && blockMatches;
+  }) || null;
 }
 
-export function normalizeParsedBatch(batch: NaturalRecordBatch, snapshot: AiParserSnapshot, rawText: string, defaultThemeId?: string): NaturalRecordBatch {
-    if (!batch.items) batch.items = [];
-    batch.items.forEach((item) => {
-        const parsedItem = item as AiParsedCommand;
-        if (!parsedItem.rawText) parsedItem.rawText = rawText;
-        const target = ensureCommandTarget(parsedItem);
-        parsedItem.fieldValues = cleanAiFieldValues(parsedItem.fieldValues);
+export function normalizeParsedBatch(
+  batch: NaturalRecordBatch,
+  snapshot: AiParserSnapshot,
+  rawText: string,
+): NaturalRecordBatch {
+  if (!batch.items) batch.items = [];
+  batch.items.forEach((item) => {
+    const parsedItem = item as AiParsedCommand;
+    if (!parsedItem.rawText) parsedItem.rawText = rawText;
+    const target = ensureCommandTarget(parsedItem);
+    parsedItem.fieldValues = cleanAiFieldValues(parsedItem.fieldValues);
 
-        const preset = findPresetByTarget(snapshot, target);
-        if (preset) {
-            target.goalTemplateId = preset.goalTemplateId || preset.id;
-            target.templateVariantId = preset.variantId;
-            target.goalId = preset.goalId;
-            target.goalPath = preset.goalPath;
-            target.blockId = preset.blockId || target.blockId;
-            target.categoryKey = preset.categoryKey;
-            if (!target.themeId && preset.themePath) target.themeId = preset.themePath;
-        }
+    const preset = findPresetByTarget(snapshot, target);
+    if (preset) {
+      target.goalTemplateId = preset.goalTemplateId || preset.id;
+      target.goalPath = preset.goalPath || target.goalPath;
+      target.blockId = preset.blockId || target.blockId;
+      target.categoryKey = preset.categoryKey || target.categoryKey;
+    }
 
-        const block = findBlockByTarget(snapshot, target);
-        if (block) {
-            target.blockId = target.blockId || block.id || '';
-            target.categoryKey = target.categoryKey || block.categoryKey;
-        } else if (!target.categoryKey && snapshot.blocks?.[0]?.categoryKey) {
-            target.categoryKey = snapshot.blocks[0].categoryKey;
-            target.blockId = snapshot.blocks[0].id || '';
-        }
+    const block = findBlockByTarget(snapshot, target);
+    if (block) {
+      target.blockId = target.blockId || block.id || '';
+      target.categoryKey = target.categoryKey || block.categoryKey;
+    } else if (!target.categoryKey && snapshot.blocks?.[0]?.categoryKey) {
+      target.categoryKey = snapshot.blocks[0].categoryKey;
+      target.blockId = snapshot.blocks[0].id || '';
+    }
 
-        const goal = findGoalByTarget(snapshot, target);
-        if (goal) {
-            target.goalId = target.goalId || goal.id;
-            target.goalPath = target.goalPath || goal.path;
-            if (!target.themeId && goal.themePath) target.themeId = goal.themePath;
-        }
+    const goal = findGoalByTarget(snapshot, target);
+    if (goal) target.goalPath = target.goalPath || goal.path;
 
-        if (!target.themeId && defaultThemeId) target.themeId = defaultThemeId;
-    });
-    return batch;
+  });
+  return batch;
 }

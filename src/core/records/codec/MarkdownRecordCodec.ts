@@ -6,16 +6,13 @@ import {
   FIELD_CODEC_PRESETS,
   type FieldCodecDefinition,
 } from './FieldValueCodec';
-import { RECORD_SCHEMA_VERSION } from '@/core/records/RecordId';
 import type { RecordDraft } from '@/core/records/RecordDraft';
 import { getRecordFieldContract, getRecordSchemaDefinition } from '@/core/records/schema';
 
 export interface ParsedRecordMetadata {
   recordId?: string;
-  schemaVersion?: number;
   title: string;
   content: string;
-  categoryKey: string;
   status?: string;
   date?: string;
   scheduledAt?: string;
@@ -31,19 +28,12 @@ export interface ParsedRecordMetadata {
   createdAt?: string;
   tags: string[];
   goalPath?: string;
-  goalId?: string;
-  cycleId?: string;
   coreBlock?: string;
   recordSubtype?: string;
   extra: Record<string, string | number | boolean>;
   icon?: string;
-  period?: string;
   rating?: number;
   image?: string;
-  pintu?: string;
-  theme?: string;
-  templateId?: string;
-  templateSourceType?: 'core-block' | 'goal-template';
   priority?: 'lowest' | 'low' | 'medium' | 'high' | 'highest';
   expectedDurationMinutes?: number;
   energyDemand?: string;
@@ -74,7 +64,6 @@ export interface ParsedRecordMetadata {
 
 export interface RecordDocument {
   recordId: string;
-  schemaVersion?: number;
   coreBlock: string;
   fields?: Record<string, unknown>;
 }
@@ -141,7 +130,6 @@ const TASK_READABLE_DATETIME_LABELS = new Set([
 
 /** Record Block body -> canonical typed metadata. Only canonical Record Block fields are accepted here. */
 export function decodeRecordContentLines(contentLines: string[], _parentFolder: string): ParsedRecordMetadata {
-  let categoryKey: string | null = null;
   let date: string | undefined;
   const tags: string[] = [];
   let goalPath: string | undefined;
@@ -149,20 +137,12 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
   let content = '';
   let contentStarted = false;
   let icon: string | undefined;
-  let period: string | undefined;
   let rating: number | undefined;
   let image: string | undefined;
-  let pintu: string | undefined;
-  let theme: string | undefined;
-  let templateId: string | undefined;
-  let goalId: string | undefined;
-  let cycleId: string | undefined;
   let coreBlock: string | undefined;
   let recordSubtype: string | undefined;
   let recordId: string | undefined;
-  let schemaVersion: number | undefined;
   let status: string | undefined;
-  let templateSourceType: 'core-block' | 'goal-template' | undefined;
   let scheduledAt: string | undefined;
   let startAt: string | undefined;
   let endAt: string | undefined;
@@ -201,11 +181,11 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
   let brainDelta: number | undefined;
   let physicalDelta: number | undefined;
 
-  // Grammar V5: discover the Record kind from the strict envelope first.
+  // Discover the Record kind from the strict current-only envelope first.
   // Only ASCII double-colon is Record metadata; single-colon prose is never a field.
   const envelopeCoreBlock = contentLines
     .map((rawLine) => rawLine.trim().match(/^([^:\r\n]{1,64})::\s*(.*)$/))
-    .find((match) => match && ['核心block', 'coreblock'].includes(normalizeMetaKey(match[1])))?.[2]?.trim();
+    .find((match) => match && normalizeMetaKey(match[1]) === '核心block')?.[2]?.trim();
   if (envelopeCoreBlock) coreBlock = envelopeCoreBlock;
   const recordSchema = getRecordSchemaDefinition(coreBlock);
   const supportsCustomFields = Boolean(recordSchema?.capabilities.customFields);
@@ -224,102 +204,87 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
         const value = kv[2] || '';
         const key = normalizeMetaKey(rawKey);
 
-        if (['记录id', 'recordid'].includes(key)) recordId = value.trim() || undefined;
-        else if (['记录版本', 'recordversion', 'schemaversion'].includes(key)) {
-          const parsed = Number.parseInt(value.trim(), 10);
-          if (Number.isFinite(parsed)) schemaVersion = parsed;
-        }
-        else if (['分类', '类别', 'category', 'categorypath', '分类路径'].includes(key)) categoryKey = decodeMarkdownString(value, FIELD_CODEC_PRESETS.categoryPath) || '';
-        else if (['记录子类型', 'recordsubtype', 'subtype'].includes(key)) recordSubtype = value.trim() || undefined;
-        else if (['模板id', 'templateid'].includes(key)) templateId = value.trim();
-        else if (['模板来源', 'templatesource', 'templatesourcetype'].includes(key)) {
-          const source = value.trim();
-          if (['core-block', 'goal-template'].includes(source)) templateSourceType = source as any;
-        }
-        else if (['主题', 'theme', '主题路径', 'themepath'].includes(key)) theme = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
-        else if (['标签', 'tag', 'tags'].includes(key)) tags.push(...(decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags) as string[]));
-        else if (['目标id', 'goalid'].includes(key)) goalId = value.trim();
-        else if (['周期id', 'cycleid'].includes(key)) cycleId = value.trim();
-        else if (['系列id', 'seriesid'].includes(key)) seriesId = value.trim();
-        else if (['重复单位', 'recurrenceunit'].includes(key)) {
+        if (key === '记录id') recordId = value.trim() || undefined;
+        else if (key === '记录子类型') recordSubtype = value.trim() || undefined;
+        else if (key === '标签') tags.push(...(decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags) as string[]));
+        else if (key === '系列id') seriesId = value.trim();
+        else if (key === '重复单位') {
           const unit = value.trim().toLowerCase();
           if (['day','week','month','quarter','year'].includes(unit)) recurrenceUnit = unit as ParsedRecordMetadata['recurrenceUnit'];
         }
-        else if (['重复间隔', 'recurrenceinterval'].includes(key)) {
+        else if (key === '重复间隔') {
           const interval = Number.parseInt(value.trim(), 10);
           if (Number.isInteger(interval) && interval > 0) recurrenceInterval = interval;
         }
-        else if (['重复锚点', 'recurrenceanchor'].includes(key)) {
+        else if (key === '重复锚点') {
           const anchor = value.trim().toLowerCase();
           if (['scheduled','start','due','completion'].includes(anchor)) recurrenceAnchor = anchor as ParsedRecordMetadata['recurrenceAnchor'];
         }
-        else if (['系列开始日期', 'seriesstartdate'].includes(key)) seriesStartDate = parseDate(value);
-        else if (['当前任务id', 'currenttaskid'].includes(key)) currentTaskId = value.trim() || undefined;
-        else if (['滚动策略', 'rolloverpolicy'].includes(key)) { if (value.trim().toLowerCase() === 'carry') rolloverPolicy = 'carry'; }
-        else if (coreBlock === 'task-session' && ['任务id', 'taskid'].includes(key)) taskId = value.trim() || undefined;
-        else if (coreBlock === 'task-session' && ['开始于', 'sessionstartedat'].includes(key)) sessionStartedAt = normalizeStoredDateTime(value);
-        else if (coreBlock === 'task-session' && ['结束于', 'sessionendedat'].includes(key)) sessionEndedAt = normalizeStoredDateTime(value);
-        else if (coreBlock === 'task-session' && ['时长', 'sessiondurationminutes'].includes(key)) sessionDurationMinutes = decodeMarkdownNumber(value);
-        else if (coreBlock === 'task-session' && ['结果', 'sessionresult'].includes(key)) {
+        else if (key === '系列开始日期') seriesStartDate = parseDate(value);
+        else if (key === '当前任务id') currentTaskId = value.trim() || undefined;
+        else if (key === '滚动策略') { if (value.trim().toLowerCase() === 'carry') rolloverPolicy = 'carry'; }
+        else if (coreBlock === 'task-session' && key === '任务id') taskId = value.trim() || undefined;
+        else if (coreBlock === 'task-session' && key === '开始于') sessionStartedAt = normalizeStoredDateTime(value);
+        else if (coreBlock === 'task-session' && key === '结束于') sessionEndedAt = normalizeStoredDateTime(value);
+        else if (coreBlock === 'task-session' && key === '时长') sessionDurationMinutes = decodeMarkdownNumber(value);
+        else if (coreBlock === 'task-session' && key === '结果') {
           const result = value.trim().toLowerCase();
           if (['work-block-ended','task-completed'].includes(result)) sessionResult = result as ParsedRecordMetadata['sessionResult'];
         }
-        else if (coreBlock === 'task-session' && ['来源', 'sessionsource'].includes(key)) {
+        else if (coreBlock === 'task-session' && key === '来源') {
           const source = value.trim().toLowerCase();
           if (['timer','energy-view','unknown'].includes(source)) sessionSource = source as ParsedRecordMetadata['sessionSource'];
         }
-        else if (coreBlock === 'task-session' && ['建议时长', 'suggesteddurationminutes'].includes(key)) suggestedDurationMinutes = decodeMarkdownNumber(value);
-        else if (coreBlock === 'task-session' && ['开始精力记录id', 'startenergyrecordid'].includes(key)) startEnergyRecordId = value.trim() || undefined;
-        else if (coreBlock === 'task-session' && ['结束精力记录id', 'endenergyrecordid'].includes(key)) endEnergyRecordId = value.trim() || undefined;
-        else if (coreBlock === 'task-session' && ['精力变化', 'energydelta'].includes(key)) energyDelta = decodeMarkdownNumber(value);
-        else if (coreBlock === 'task-session' && ['脑力变化', 'braindelta'].includes(key)) brainDelta = decodeMarkdownNumber(value);
-        else if (coreBlock === 'task-session' && ['体力变化', 'physicaldelta'].includes(key)) physicalDelta = decodeMarkdownNumber(value);
-        else if (['核心block', 'coreblock'].includes(key)) coreBlock = value.trim();
-        else if (['状态', 'status'].includes(key)) status = value.trim().toLowerCase();
+        else if (coreBlock === 'task-session' && key === '建议时长') suggestedDurationMinutes = decodeMarkdownNumber(value);
+        else if (coreBlock === 'task-session' && key === '开始精力记录id') startEnergyRecordId = value.trim() || undefined;
+        else if (coreBlock === 'task-session' && key === '结束精力记录id') endEnergyRecordId = value.trim() || undefined;
+        else if (coreBlock === 'task-session' && key === '精力变化') energyDelta = decodeMarkdownNumber(value);
+        else if (coreBlock === 'task-session' && key === '脑力变化') brainDelta = decodeMarkdownNumber(value);
+        else if (coreBlock === 'task-session' && key === '体力变化') physicalDelta = decodeMarkdownNumber(value);
+        else if (key === '核心block') coreBlock = value.trim();
+        else if (key === '状态') status = value.trim().toLowerCase();
         else if (key === '目标') goalPath = decodeMarkdownString(value, FIELD_CODEC_PRESETS.goalPath);
-        else if (['日期', 'date'].includes(key)) date = parseDate(value);
-        else if (['计划时间', 'scheduledat'].includes(key)) scheduledAt = normalizeStoredDateTime(value);
-        else if (['开始时间', 'startat'].includes(key)) startAt = normalizeStoredDateTime(value);
-        else if (['结束时间', 'endat'].includes(key)) endAt = normalizeStoredDateTime(value);
-        else if (['截止时间', 'dueat'].includes(key)) dueAt = normalizeStoredDateTime(value);
-        else if (['计划日期', 'scheduleddate'].includes(key)) scheduledDate = parseDate(value);
-        else if (['开始日期', 'startdate'].includes(key)) startDate = parseDate(value);
-        else if (['截止日期', 'duedate'].includes(key)) dueDate = parseDate(value);
-        else if (['创建于', 'createdat'].includes(key)) createdAt = normalizeStoredDateTime(value);
-        else if (['完成于', 'completedat'].includes(key)) completedAt = normalizeStoredDateTime(value);
-        else if (['取消于', 'cancelledat'].includes(key)) cancelledAt = normalizeStoredDateTime(value);
-        else if (['跳过于', 'skippedat'].includes(key)) skippedAt = normalizeStoredDateTime(value);
-        else if (['优先级', 'priority'].includes(key)) {
+        else if (key === '日期') date = parseDate(value);
+        else if (key === '计划时间') scheduledAt = normalizeStoredDateTime(value);
+        else if (key === '开始时间') startAt = normalizeStoredDateTime(value);
+        else if (key === '结束时间') endAt = normalizeStoredDateTime(value);
+        else if (key === '截止时间') dueAt = normalizeStoredDateTime(value);
+        else if (key === '计划日期') scheduledDate = parseDate(value);
+        else if (key === '开始日期') startDate = parseDate(value);
+        else if (key === '截止日期') dueDate = parseDate(value);
+        else if (key === '创建于') createdAt = normalizeStoredDateTime(value);
+        else if (key === '完成于') completedAt = normalizeStoredDateTime(value);
+        else if (key === '取消于') cancelledAt = normalizeStoredDateTime(value);
+        else if (key === '跳过于') skippedAt = normalizeStoredDateTime(value);
+        else if (key === '优先级') {
           const p = value.trim().toLowerCase();
           if (['lowest','low','medium','high','highest'].includes(p)) priority = p as ParsedRecordMetadata['priority'];
         }
-        else if (['预计时长', 'expectedduration', 'expecteddurationminutes'].includes(key)) expectedDurationMinutes = decodeMarkdownNumber(value);
-        else if (['精力要求', 'energydemand'].includes(key)) energyDemand = value.trim().toLowerCase() || undefined;
-        else if (['脑力要求', 'braindemand'].includes(key)) brainDemand = value.trim().toLowerCase() || undefined;
-        else if (['体力要求', 'physicaldemand'].includes(key)) physicalDemand = value.trim().toLowerCase() || undefined;
-        else if (['可用场景', 'availabilitycontexts'].includes(key)) {
+        else if (key === '预计时长') expectedDurationMinutes = decodeMarkdownNumber(value);
+        else if (key === '精力要求') energyDemand = value.trim().toLowerCase() || undefined;
+        else if (key === '脑力要求') brainDemand = value.trim().toLowerCase() || undefined;
+        else if (key === '体力要求') physicalDemand = value.trim().toLowerCase() || undefined;
+        else if (key === '可用场景') {
           const allowed = new Set(['any', 'work', 'home', 'commute', 'out']);
           const aliases: Record<string, string> = { '任意': 'any', '工作': 'work', '公司': 'work', '家': 'home', '居家': 'home', '通勤': 'commute', '外出': 'out' };
           const values = String(value || '').split(/[,，\n]/).map(part => part.trim()).filter(Boolean).map(part => aliases[part] || part.toLowerCase()).filter(part => allowed.has(part));
           availabilityContexts = Array.from(new Set(values)) as ParsedRecordMetadata['availabilityContexts'];
         }
-        else if (['恢复意图', 'recoveryintent'].includes(key)) recoveryIntent = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.boolean) as boolean | undefined;
-        else if (['周期', 'period'].includes(key)) period = decodeMarkdownString(value);
-        else if (['评分', 'rating'].includes(key)) {
+        else if (key === '恢复意图') recoveryIntent = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.boolean) as boolean | undefined;
+        else if (key === '评分') {
           const decodedRating = decodeMarkdownNumber(value);
           if (decodedRating !== undefined) rating = decodedRating;
           else {
             const visualRating = String(value || '').trim();
             if (visualRating) {
               extra[rawKey] = decodeUnknownMarkdownKvValue(visualRating);
-              if (!pintu) pintu = visualRating;
               if (!image) image = visualRating;
             }
           }
         }
-        else if (['图标', 'icon'].includes(key)) icon = value.trim();
-        else if (['评图', 'pintu', '图片', 'image'].includes(key)) { image = decodeMarkdownString(value, FIELD_CODEC_PRESETS.image); pintu = image; }
-        else if (['内容', 'content', '任务内容'].includes(key)) {
+        else if (key === '图标') icon = value.trim();
+        else if (key === '图片') image = decodeMarkdownString(value, FIELD_CODEC_PRESETS.image);
+        else if (key === '内容') {
           if (supportsBody) {
             contentStarted = true;
             content = value;
@@ -327,7 +292,7 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
         }
         else if (supportsCustomFields) extra[rawKey] = decodeUnknownMarkdownKvValue(value);
     } else {
-      // V5 does not guess metadata or body from arbitrary prose. A body starts only
+      // Current-only grammar does not guess metadata or body from arbitrary prose. A body starts only
       // at the schema-owned 内容:: marker. This is what prevents '晚上：...' and
       // '7:30 ...' from becoming fields.
       continue;
@@ -336,11 +301,10 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
 
   const finalTags = unique(tags);
   return {
-    recordId, schemaVersion, title: buildTitle(content, finalTags), content: content.trim(),
-    categoryKey: categoryKey || '', status, date, scheduledAt, startAt, endAt, dueAt, scheduledDate, startDate, dueDate,
+    recordId, title: buildTitle(content, finalTags), content: content.trim(),
+    status, date, scheduledAt, startAt, endAt, dueAt, scheduledDate, startDate, dueDate,
     completedAt, cancelledAt, skippedAt, createdAt, tags: finalTags, goalPath,
-    goalId, cycleId, coreBlock, recordSubtype, extra, icon, period, rating, image, pintu, theme, templateId,
-    templateSourceType, priority, expectedDurationMinutes, energyDemand, brainDemand, physicalDemand, availabilityContexts, recoveryIntent, seriesId,
+    coreBlock, recordSubtype, extra, icon, rating, image, priority, expectedDurationMinutes, energyDemand, brainDemand, physicalDemand, availabilityContexts, recoveryIntent, seriesId,
     recurrenceUnit, recurrenceInterval, recurrenceAnchor, seriesStartDate, currentTaskId, rolloverPolicy,
     taskId, sessionStartedAt, sessionEndedAt, sessionDurationMinutes, sessionResult, sessionSource,
     suggestedDurationMinutes, startEnergyRecordId, endEnergyRecordId, energyDelta, brainDelta, physicalDelta,
@@ -355,8 +319,8 @@ function markdownScalar(value: unknown): string {
 }
 
 const TASK_FIELD_ORDER: Array<[string, string[]]> = [
-  ['状态', ['状态','status']], ['目标ID', ['目标ID','goalId']], ['目标', ['目标','goalPath']],
-  ['主题', ['主题','themePath']], ['创建于', ['创建于','createdAt']],
+  ['状态', ['状态','status']], ['目标', ['目标','goalPath']],
+  ['创建于', ['创建于','createdAt']],
   ['开始时间', ['开始时间','startAt']], ['结束时间', ['结束时间','endAt']],
   ['优先级', ['优先级','priority']], ['预计时长', ['预计时长','expectedDurationMinutes']],
   ['精力要求', ['精力要求','energyDemand']], ['脑力要求', ['脑力要求','brainDemand']],
@@ -364,12 +328,12 @@ const TASK_FIELD_ORDER: Array<[string, string[]]> = [
   ['计划时间', ['计划时间','scheduledAt']], ['截止时间', ['截止时间','dueAt']],
   ['计划日期', ['计划日期','scheduledDate']], ['开始日期', ['开始日期','startDate']], ['截止日期', ['截止日期','dueDate']],
   ['完成于', ['完成于','completedAt']], ['取消于', ['取消于','cancelledAt']], ['跳过于', ['跳过于','skippedAt']],
-  ['系列ID', ['系列ID','seriesId']], ['模板ID', ['模板ID','templateId']], ['模板来源', ['模板来源','templateSourceType']],
+  ['系列ID', ['系列ID','seriesId']],
 ];
 
 const TASK_SESSION_FIELD_ORDER: Array<[string, string[]]> = [
-  ['任务ID', ['任务ID','taskId']], ['系列ID', ['系列ID','seriesId']], ['目标ID', ['目标ID','goalId']],
-  ['目标', ['目标','goalPath']], ['主题', ['主题','themePath']],
+  ['任务ID', ['任务ID','taskId']], ['系列ID', ['系列ID','seriesId']],
+  ['目标', ['目标','goalPath']],
   ['开始于', ['开始于','sessionStartedAt']], ['结束于', ['结束于','sessionEndedAt']],
   ['时长', ['时长','sessionDurationMinutes']], ['结果', ['结果','sessionResult']], ['来源', ['来源','sessionSource']],
   ['建议时长', ['建议时长','suggestedDurationMinutes']], ['开始精力记录ID', ['开始精力记录ID','startEnergyRecordId']],
@@ -378,8 +342,8 @@ const TASK_SESSION_FIELD_ORDER: Array<[string, string[]]> = [
 ];
 
 const TASK_SERIES_FIELD_ORDER: Array<[string, string[]]> = [
-  ['状态', ['状态','status']], ['目标ID', ['目标ID','goalId']], ['目标', ['目标','goalPath']],
-  ['主题', ['主题','themePath']], ['优先级', ['优先级','priority']], ['预计时长', ['预计时长','expectedDurationMinutes']],
+  ['状态', ['状态','status']], ['目标', ['目标','goalPath']],
+  ['优先级', ['优先级','priority']], ['预计时长', ['预计时长','expectedDurationMinutes']],
   ['精力要求', ['精力要求','energyDemand']], ['脑力要求', ['脑力要求','brainDemand']], ['体力要求', ['体力要求','physicalDemand']],
   ['可用场景', ['可用场景','availabilityContexts']], ['恢复意图', ['恢复意图','recoveryIntent']],
   ['重复单位', ['重复单位','recurrenceUnit']], ['重复间隔', ['重复间隔','recurrenceInterval']],
@@ -414,11 +378,10 @@ function emitBody(lines: string[], body: string): void {
   lines.push(...parts);
 }
 
-/** Canonical Record v2 encoder. Grammar V5 always emits custom metadata before an optional terminal body. */
+/** Canonical Record encoder. Custom metadata is emitted before an optional terminal body. */
 export function encodeRecordBlock(document: RecordDocument): string {
-  const schemaVersion = document.schemaVersion ?? RECORD_SCHEMA_VERSION;
   const fields = document.fields || {};
-  const lines = ['<!-- start -->', `记录ID:: ${document.recordId}`, `记录版本:: ${schemaVersion}`, `核心Block:: ${document.coreBlock}`];
+  const lines = ['<!-- start -->', `记录ID:: ${document.recordId}`, `核心Block:: ${document.coreBlock}`];
   const emitted = new Set<string>();
 
   if (document.coreBlock === 'task') {
@@ -430,7 +393,7 @@ export function encodeRecordBlock(document: RecordDocument): string {
       if (value) { lines.push(`${label}:: ${value}`); keys.forEach(key => emitted.add(key)); }
     }
     for (const [key, raw] of Object.entries(fields)) {
-      if (emitted.has(key) || BODY_FIELD_ALIASES.includes(key) || ['记录ID','recordId','id','记录版本','schemaVersion','核心Block','coreBlock'].includes(key)) continue;
+      if (emitted.has(key) || BODY_FIELD_ALIASES.includes(key) || ['记录ID','recordId','id','核心Block','coreBlock'].includes(key)) continue;
       const value = markdownScalar(raw);
       if (value) lines.push(`${key}:: ${value}`);
     }
@@ -455,7 +418,7 @@ export function encodeRecordBlock(document: RecordDocument): string {
     const supportsBody = Boolean(schema && getRecordFieldContract(schema.coreBlock, '内容'));
     for (const [key, raw] of Object.entries(fields)) {
       if (supportsBody && BODY_FIELD_ALIASES.includes(key)) continue;
-      if (['记录ID','recordId','id','记录版本','schemaVersion','核心Block','coreBlock'].includes(key)) continue;
+      if (['记录ID','recordId','id','核心Block','coreBlock'].includes(key)) continue;
       const value = markdownScalar(raw);
       if (value) lines.push(`${key}:: ${value}`);
     }
@@ -467,22 +430,21 @@ export function encodeRecordBlock(document: RecordDocument): string {
 }
 
 /** Canonical R4 writer for a schema-filtered RecordDraft. */
-export function encodeRecordDraft(input: { recordId: string; schemaVersion?: number; draft: RecordDraft }): string {
+export function encodeRecordDraft(input: { recordId: string; draft: RecordDraft }): string {
   return encodeRecordBlock({
     recordId: input.recordId,
-    schemaVersion: input.schemaVersion ?? RECORD_SCHEMA_VERSION,
     coreBlock: input.draft.coreBlock,
     fields: input.draft.fields,
   });
 }
 
 /** Adds/replaces the universal envelope in an existing Record Block. */
-export function ensureRecordEnvelope(markdown: string, input: { recordId: string; coreBlock: string; schemaVersion?: number }): string {
+export function ensureRecordEnvelope(markdown: string, input: { recordId: string; coreBlock: string }): string {
   const trimmed = markdown.trim();
   const lines = trimmed.split(/\r?\n/);
   if (lines[0]?.trim() !== '<!-- start -->' || lines[lines.length - 1]?.trim() !== '<!-- end -->') {
-    throw new Error('Record Foundation v2 只允许写入 Markdown Record Block。');
+    throw new Error('只允许写入 Markdown Record Block。');
   }
-  const body = lines.slice(1, -1).filter(line => !/^\s*(?:记录ID|recordId|记录版本|schemaVersion|核心Block|coreBlock)\s*::/i.test(line));
-  return ['<!-- start -->', `记录ID:: ${input.recordId}`, `记录版本:: ${input.schemaVersion ?? RECORD_SCHEMA_VERSION}`, `核心Block:: ${input.coreBlock}`, ...body, '<!-- end -->'].join('\n');
+  const body = lines.slice(1, -1).filter(line => !/^\s*(?:记录ID|核心Block)\s*::/.test(line));
+  return ['<!-- start -->', `记录ID:: ${input.recordId}`, `核心Block:: ${input.coreBlock}`, ...body, '<!-- end -->'].join('\n');
 }

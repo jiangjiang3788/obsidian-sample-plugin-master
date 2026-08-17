@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import type { InputSettings, RecordViewItem, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { InputSettings, RecordViewItem, ViewInstance } from '@core/types/public';
 import type { GoalDefinition } from '@core/goal/public';
 import type { MessageRenderPort } from '@core/ports/public';
 import type { MarkDoneHandler, OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '@shared/types/public';
@@ -20,7 +20,6 @@ interface ProgressViewProps {
   onMarkDone: MarkDoneHandler;
   timerService: TimerController;
   timers: any[];
-  allThemes: ThemeDefinition[];
 }
 
 export function ProgressView({
@@ -35,9 +34,8 @@ export function ProgressView({
   onMarkDone,
   timerService,
   timers = [],
-  allThemes = [],
 }: ProgressViewProps) {
-  const progressModel = useMemo(() => buildProgressViewRenderModel({ items, module, goals, themes: inputSettings?.themes || allThemes }), [items, module, goals, inputSettings?.themes, allThemes]);
+  const progressModel = useMemo(() => buildProgressViewRenderModel({ items, module, goals }), [items, module, goals]);
   const cards = progressModel.goalCards || [];
   const [collapsedKeys, setCollapsedKeys] = useState<Record<string, boolean>>({});
 
@@ -61,7 +59,6 @@ export function ProgressView({
             onMarkDone={onMarkDone}
             timerService={timerService}
             timers={timers}
-            allThemes={allThemes}
             goals={goals}
           />
         );

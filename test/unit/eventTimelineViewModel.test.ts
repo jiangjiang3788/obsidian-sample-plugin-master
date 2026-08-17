@@ -25,8 +25,8 @@ const task = (id: string, date: string, content = '') => ({
 function recordItem(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: 'task.01J00000000000000000000001', title: '标题', content: '干净内容',
-    fullData: '<!-- start -->\n记录ID:: task.01J00000000000000000000001\n记录版本:: 2\n核心Block:: task\n状态:: open\n内容:: 干净内容\n<!-- end -->',
-    rawSource: '<!-- start -->\n记录ID:: task.01J00000000000000000000001\n记录版本:: 2\n核心Block:: task\n状态:: open\n内容:: 干净内容\n<!-- end -->',
+    fullData: '<!-- start -->\n记录ID:: task.01J00000000000000000000001\n核心Block:: task\n状态:: open\n内容:: 干净内容\n<!-- end -->',
+    rawSource: '<!-- start -->\n记录ID:: task.01J00000000000000000000001\n核心Block:: task\n状态:: open\n内容:: 干净内容\n<!-- end -->',
     tags: [], categoryKey: '任务', coreBlock: 'task', status: 'open', date: '2026-06-04T09:00:00', created: 1, modified: 2, extra: {}, ...overrides,
   } as RecordViewItem;
 }

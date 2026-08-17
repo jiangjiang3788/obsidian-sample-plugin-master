@@ -25,7 +25,6 @@ export function AiBatchConfirmRecordHeader({ title, currentIndex, record, onClos
           <div className="think-ai-batch-header__meta">
             <span>目标 {shortDisplay(record.goalLabel, '未匹配')}</span>
             <span>预设 {shortDisplay(record.presetLabel, '默认')}</span>
-            <span>主题 {shortDisplay(record.themePath, '未指定')}</span>
           </div>
         </div>
       }

@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import type { GoalDefinition } from '@core/goal/public';
-import type { RecordViewItem, ThemeDefinition } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import type { MessageRenderPort } from '@core/ports/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '@shared/types/public';
 import { GroupedContainer } from '@shared/ui/public';
@@ -21,7 +21,6 @@ interface BlockViewProps {
     onMarkDone: (id: string) => void;
     timerService: TimerController;
     timers: any[];
-    allThemes: ThemeDefinition[];
     goals?: GoalDefinition[];
     onOpenRecord?: OpenRecordHandler;
 }
@@ -38,7 +37,6 @@ export function BlockView(props: BlockViewProps) {
         onMarkDone,
         timerService,
         timers,
-        allThemes,
         goals = [],
         onOpenRecord,
     } = props;
@@ -57,7 +55,6 @@ export function BlockView(props: BlockViewProps) {
         onMarkDone,
         timerService,
         timers,
-        allThemes,
         onOpenRecord,
     };
 

@@ -20,7 +20,7 @@ export interface StatisticsViewConfig {
 export interface HeatmapViewConfig {
   displayMode: 'habit' | 'count';
   sourceBlockId: string;
-  themePaths: string[];
+  goalPaths: string[];
   maxDailyChecks: number;
   allowManualEdit: boolean;
 }
@@ -36,7 +36,7 @@ export interface ProgressViewConfig {
   includedCategories: string[];
   ratingBonusThreshold: number;
   ratingBonusPoints: number;
-  showThemeBreakdown: boolean;
+  showGoalBreakdown: boolean;
   showCategoryBreakdown: boolean;
   topN: number;
 }

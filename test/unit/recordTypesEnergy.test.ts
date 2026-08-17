@@ -32,9 +32,7 @@ describe('Energy direct record foundation', () => {
 
   it('builds Goal-bound but non-Template-bound quick energy markdown', () => {
     const record = buildEnergySnapshotRecord({
-      goalId: 'goal.我若安好便是晴天',
-      goalPath: '#我若安好便是晴天',
-      themePath: '生活',
+      goalPath: '我若安好便是晴天',
       date: '2026-08-10',
       time: '15:42',
       score: 80,
@@ -46,9 +44,11 @@ describe('Energy direct record foundation', () => {
 
     const markdown = buildEnergySnapshotMarkdown(record);
     expect(markdown).toMatch(/记录ID:: energy\.[0-9A-HJKMNP-TV-Z]{26}/);
-    expect(markdown).toContain('记录版本:: 2');
+    expect(markdown).not.toContain('记录版本::');
     expect(markdown).toContain('核心Block:: energy');
-    expect(markdown).toContain('目标ID:: goal.我若安好便是晴天');
+    expect(markdown).toContain('目标:: 我若安好便是晴天');
+    expect(markdown).not.toContain('目标ID::');
+    expect(markdown).not.toContain('主题::');
     expect(markdown).toContain('精力值:: 80');
     expect(markdown).not.toContain('精力档位::');
     expect(markdown).not.toContain('分类:: 精力');
@@ -62,9 +62,7 @@ describe('Energy direct record foundation', () => {
     expect(calculateDetailedEnergyScore(73, 41)).toBe(57);
 
     const record = buildEnergySnapshotRecord({
-      goalId: 'goal.我若安好便是晴天',
-      goalPath: '#我若安好便是晴天',
-      themePath: '生活',
+      goalPath: '我若安好便是晴天',
       date: '2026-08-10',
       time: '16:20',
       scoreMode: 'detailed',
@@ -103,13 +101,13 @@ describe('Energy direct record foundation', () => {
 
   it('resolves the configured default goal and safely falls back to an active goal', () => {
     const goals = [
-      { id: 'goal.a', title: 'A', goalPath: 'A', status: 'paused', parentGoalId: null, themePath: '生活', createdAt: '', updatedAt: '' },
-      { id: 'goal.b', title: 'B', goalPath: 'B', status: 'active', parentGoalId: null, themePath: '工作', createdAt: '', updatedAt: '' },
-      { id: 'goal.c', title: 'C', goalPath: 'C', status: 'archived', parentGoalId: null, themePath: null, createdAt: '', updatedAt: '' },
+      { path: 'A', status: 'paused' },
+      { path: 'B', status: 'active' },
+      { path: 'C', status: 'archived' },
     ];
-    expect(resolveEnergyCaptureGoal(goals as any, 'goal.a')?.id).toBe('goal.a');
-    expect(resolveEnergyCaptureGoal(goals as any, 'missing')?.id).toBe('goal.b');
-    expect(resolveEnergyCaptureGoal(goals as any, 'goal.c')?.id).toBe('goal.b');
+    expect(resolveEnergyCaptureGoal(goals as any, 'A')?.path).toBe('A');
+    expect(resolveEnergyCaptureGoal(goals as any, 'missing')?.path).toBe('B');
+    expect(resolveEnergyCaptureGoal(goals as any, 'C')?.path).toBe('B');
   });
 
 });

@@ -2,7 +2,6 @@
 import type { RefObject } from 'preact';
 import { ChatIcon, ModalHeader } from '@shared/ui/public';
 import type { ChatMessage, ChatSession } from '@core/ai/public';
-import type { ThemeDefinition } from '@core/types/public';
 import { FiltersBar, type BlockDefinition } from './components/FiltersBar';
 import { SessionList } from './components/SessionList';
 import { ChatMessages } from './components/ChatMessages';
@@ -18,9 +17,9 @@ export interface AiChatModalViewProps {
     onDeleteSession: (sessionId: string, e: Event) => void;
     enableRetrieval: boolean;
     setEnableRetrieval: (enabled: boolean) => void;
-    themes: ThemeDefinition[];
-    selectedThemes: string[];
-    setSelectedThemes: (themes: string[]) => void;
+    goals: string[];
+    selectedGoalPath: string;
+    setSelectedGoalPath: (path: string) => void;
     selectedType: string;
     setSelectedType: (t: string) => void;
     blocks: BlockDefinition[];
@@ -43,7 +42,7 @@ export interface AiChatModalViewProps {
 export function AiChatModalView(props: AiChatModalViewProps) {
     const {
         closeModal, sessions, currentSessionId, currentSessionTitle, onNewSession, onSelectSession, onDeleteSession,
-        enableRetrieval, setEnableRetrieval, themes, selectedThemes, setSelectedThemes, selectedType, setSelectedType,
+        enableRetrieval, setEnableRetrieval, goals, selectedGoalPath, setSelectedGoalPath, selectedType, setSelectedType,
         blocks, selectedBlockId, setSelectedBlockId, indexItemCount, messages, isLoading, messagesEndRef, error,
         inputText, setInputText, onKeyDown, onSend, composerDisabled, composerPlaceholder, emptyHint,
     } = props;
@@ -72,9 +71,9 @@ export function AiChatModalView(props: AiChatModalViewProps) {
                 <FiltersBar
                     enableRetrieval={enableRetrieval}
                     setEnableRetrieval={setEnableRetrieval}
-                    themes={themes}
-                    selectedThemes={selectedThemes}
-                    setSelectedThemes={setSelectedThemes}
+                    goals={goals}
+                    selectedGoalPath={selectedGoalPath}
+                    setSelectedGoalPath={setSelectedGoalPath}
                     selectedType={selectedType}
                     setSelectedType={setSelectedType}
                     blocks={blocks}

@@ -3,7 +3,6 @@ import { RetrievalService } from '../../src/core/ai/RetrievalService';
 
 const baseItem = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   id: 'item-1',
-  schemaVersion: 2,
   title: '记录',
   content: '记录',
   tags: [],
@@ -17,30 +16,29 @@ const baseItem = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
 });
 
 describe('RetrievalService field semantics', () => {
-  it('themePaths 过滤只使用 themePath，不使用 header 或 legacy theme', () => {
+  it('goalPaths 过滤只使用 canonical goalPath，不使用 header', () => {
     const items = [
       baseItem({
         id: 'header-only',
-        title: '无主题任务',
-        content: '无主题任务',
-        header: '健康/睡眠',
+        title: '无目标任务',
+        content: '无目标任务',
+        header: '照顾好自己/健康/睡眠',
       }),
       baseItem({
-        id: 'explicit-theme',
-        title: '显式主题任务',
-        content: '显式主题任务',
-        theme: '健康/睡眠',
-        themePath: '健康/睡眠',
-        rootTheme: '健康',
-        leafTheme: '睡眠',
+        id: 'explicit-goal',
+        title: '显式目标任务',
+        content: '显式目标任务',
+        goalPath: '照顾好自己/健康/睡眠',
+        rootGoal: '照顾好自己',
+        leafGoal: '睡眠',
       }),
     ];
     const service = new RetrievalService({ queryItems: () => items } as any);
     service.buildIndex(items);
 
-    const result = service.search('任务', { themePaths: ['健康'] });
+    const result = service.search('任务', { goalPaths: ['照顾好自己/健康'] });
 
-    expect(result.items.map(item => item.id)).toEqual(['explicit-theme']);
+    expect(result.items.map(item => item.id)).toEqual(['explicit-goal']);
   });
 
   it('extra 搜索索引保留显式未知 KV，但排除历史正文 alias 污染', () => {

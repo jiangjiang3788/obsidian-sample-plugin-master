@@ -1,4 +1,4 @@
-import type { RecordViewItem, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { RecordViewItem, ViewInstance } from '@core/types/public';
 import type { PeriodData } from '@core/utils/public';
 import type { CategoryConfig, StatisticsViewConfig } from '@core/view/public';
 import {
@@ -11,7 +11,7 @@ import {
   getWeeksInYear,
 } from '@core/utils/public';
 import type { GoalDefinition } from '@core/goal/public';
-import { buildGoalBuckets, getItemGoalKey, getItemThemeKey } from '@core/goal/public';
+import { buildGoalBuckets, getItemRootGoalKey } from '@core/goal/public';
 import { STATISTICS_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 
 export type StatisticsCurrentView = '年' | '季' | '月' | '周' | '天';
@@ -56,7 +56,7 @@ export function resolveStatisticsYear(startDate: StatisticsDateLike): number {
 }
 
 export function resolveStatisticsBucketAccessor(goals: GoalDefinition[] = []): (item: RecordViewItem) => string {
-  return (item: RecordViewItem) => getItemGoalKey(item, goals);
+  return (item: RecordViewItem) => getItemRootGoalKey(item, goals);
 }
 
 export function buildYearlyWeekStructure(year: number, enabled = true): StatisticsYearlyWeekMonth[] {
@@ -79,39 +79,17 @@ export function resolveYearlyWeekStructure(input: { year: number; isYearView: bo
 export function buildStatisticsGoalBuckets(args: {
   items: RecordViewItem[];
   goals?: GoalDefinition[];
-  themes?: ThemeDefinition[];
   topN?: number;
 }): CategoryConfig[] {
-  const buckets = buildGoalBuckets(args.items, args.goals || [], { includeUnassigned: true, includeKnownGoals: true, themes: args.themes || [] });
+  // Statistics is intentionally a strategic overview: child Goal records roll up to
+  // their root Goal instead of expanding every leaf into a separate chart category.
+  const buckets = buildGoalBuckets(args.items, args.goals || [], {
+    includeUnassigned: true,
+    includeKnownGoals: true,
+    level: 'root',
+  });
   const topN = Math.max(0, Number(args.topN) || 0);
   return topN > 0 ? buckets.slice(0, topN) : buckets;
-}
-
-export interface StatisticsGoalThemeSummary {
-  goalPath: string;
-  themes: Array<{ themePath: string; label: string; count: number }>;
-}
-
-export function buildStatisticsGoalThemeSummaries(items: RecordViewItem[], categories: CategoryConfig[], goals: GoalDefinition[] = []): StatisticsGoalThemeSummary[] {
-  const bucketAccessor = resolveStatisticsBucketAccessor(goals);
-  const counts = new Map<string, Map<string, number>>();
-  for (const item of items) {
-    const goalKey = bucketAccessor(item);
-    const themeKey = getItemThemeKey(item);
-    const inner = counts.get(goalKey) || new Map<string, number>();
-    inner.set(themeKey, (inner.get(themeKey) || 0) + 1);
-    counts.set(goalKey, inner);
-  }
-  return categories.map((category) => ({
-    goalPath: category.name,
-    themes: Array.from((counts.get(category.name) || new Map<string, number>()).entries())
-      .map(([themePath, count]) => {
-        const parts = String(themePath || '').split('/').filter(Boolean);
-        return { themePath, label: parts[parts.length - 1] || themePath || '未设置主题', count };
-      })
-      .sort((a, b) => b.count - a.count || a.themePath.localeCompare(b.themePath, 'zh-CN'))
-      .slice(0, 3),
-  }));
 }
 
 export function buildStatisticsProcessedData(input: {
@@ -122,7 +100,7 @@ export function buildStatisticsProcessedData(input: {
   usePeriod: boolean;
   bucketAccessor?: (item: RecordViewItem) => string;
 }): StatisticsPeriodDataModel {
-  const bucketAccessor = input.bucketAccessor || getItemGoalKey;
+  const bucketAccessor = input.bucketAccessor || getItemRootGoalKey;
   if (!input.isYearView) {
     return {
       yearData: createPeriodData(input.filteredCategories),

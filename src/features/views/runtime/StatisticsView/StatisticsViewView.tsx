@@ -5,7 +5,6 @@ import type { CategoryConfig } from '@core/view/public';
 import type { PeriodData } from '@core/utils/public';
 import type { StatisticsCurrentView, StatisticsCellClickHandler } from './types';
 import type { OpenRecordOriginHandler } from '@shared/types/public';
-import type { StatisticsGoalThemeSummary } from './StatisticsGoalThemeSummaryStrip';
 import { DayStatisticsView } from './views/DayStatisticsView';
 import { WeekStatisticsView } from './views/WeekStatisticsView';
 import { MonthStatisticsView, QuarterStatisticsView, YearStatisticsView } from './views/PeriodStatisticsView';
@@ -29,7 +28,6 @@ interface StatisticsViewViewProps {
     weeksData: PeriodData[];
   };
   bucketAccessor?: (item: RecordViewItem) => string;
-  goalThemeSummaries?: StatisticsGoalThemeSummary[];
   onOpenRecordOrigin?: OpenRecordOriginHandler;
 }
 
@@ -47,14 +45,12 @@ export function StatisticsViewView({
   yearlyWeekStructure,
   processedData,
   bucketAccessor,
-  goalThemeSummaries = [],
   onOpenRecordOrigin,
 }: StatisticsViewViewProps) {
   if (!categories || categories.length === 0) {
     return <div class="statistics-view-placeholder think-viz-empty">暂无目标统计数据。</div>;
   }
 
-  void goalThemeSummaries;
   const sharedProps = { categories, onCellClick, displayMode, minVisibleHeight, bucketAccessor, onOpenRecordOrigin };
 
   switch (currentView) {

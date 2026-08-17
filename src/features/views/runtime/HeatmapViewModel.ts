@@ -1,57 +1,49 @@
 import type { InputSettings, RecordViewItem } from '@core/types/public';
-import { getItemThemePath } from '@core/utils/public';
-import { parsePath } from '@core/theme/public';
+import { splitGoalPath } from '@core/goal/public';
 
-export interface DayThemeEntry {
-    themePath: string;
+export interface DayGoalEntry {
+    goalPath: string;
     label: string;
-    dataForTheme: Map<string, RecordViewItem[]>;
+    dataForGoal: Map<string, RecordViewItem[]>;
 }
 
-export interface DayThemeGroup {
+export interface DayGoalGroup {
     title: string;
-    entries: DayThemeEntry[];
+    entries: DayGoalEntry[];
 }
 
 export interface HeatmapPresetContext {
     sourceBlockId?: string;
-    goalId?: string;
     templateId?: string;
-    templateVariantId?: string;
     ratingOptions?: Array<{ value?: unknown; label?: unknown }>;
 }
 
-export interface GoalHeatmapThemeEntry {
+export interface GoalHeatmapEntry {
     presetKey?: string;
     templateId?: string;
-    templateVariantId?: string;
     sourceBlockId?: string;
-    goalId?: string;
     ratingOptions?: Array<{ value?: unknown; label?: unknown }>;
-    themePath: string;
+    goalPath: string;
     label: string;
     count: number;
-    dataForTheme: Map<string, RecordViewItem[]>;
+    dataForGoal: Map<string, RecordViewItem[]>;
 }
 
 export interface GoalHeatmapGroup {
     goalPath: string;
     label: string;
     count: number;
-    entries: GoalHeatmapThemeEntry[];
+    entries: GoalHeatmapEntry[];
 }
 
-export function getThemeLeafLabel(themePath: string): string {
-    if (!themePath || themePath === '__default__') return '未分类';
-    const segments = parsePath(themePath);
-    const leaf = segments[segments.length - 1];
-    return leaf?.name || themePath;
+export function getGoalLeafLabel(goalPath: string): string {
+    if (!goalPath || goalPath === '__default__') return '未分类';
+    return splitGoalPath(goalPath).leafGoal || goalPath;
 }
 
-export function getThemeGroupTitle(themePath: string): string {
-    if (!themePath || themePath === '__default__') return '未分类';
-    const segments = parsePath(themePath);
-    return segments[0]?.name || themePath;
+export function getGoalGroupTitle(goalPath: string): string {
+    if (!goalPath || goalPath === '__default__') return '未分类';
+    return splitGoalPath(goalPath).rootGoal || goalPath;
 }
 
 export function filterGoalHeatmapGroups(groups?: GoalHeatmapGroup[]): GoalHeatmapGroup[] {
@@ -64,8 +56,9 @@ export function normalizeHeatmapBlockId(params: {
     configuredSourceBlockId?: string;
 }): string {
     const { candidate, inputSettings, configuredSourceBlockId } = params;
-    const value = String(candidate || '').trim();
-    if (!value) return '';
+    const rawValue = String(candidate || '').trim();
+    if (!rawValue) return '';
+    const value = rawValue.startsWith('core.') ? rawValue : `core.${rawValue}`;
 
     const byId = inputSettings.blocks.find((block) => block.id === value);
     if (byId) return byId.id;
@@ -73,11 +66,7 @@ export function normalizeHeatmapBlockId(params: {
     const byCore = inputSettings.blocks.find((block) => block.coreBlockId === value);
     if (byCore) return byCore.id;
 
-    const byCategory = inputSettings.blocks.find((block) => block.categoryKey === value || block.name === value);
-    if (byCategory) return byCategory.id;
-
-    // 旧数据里常见 sourceBlockId 已经不存在；打卡视图优先回退到 core.habit。
-    if (configuredSourceBlockId && value === configuredSourceBlockId) {
+    if (configuredSourceBlockId && (value === configuredSourceBlockId || rawValue === configuredSourceBlockId)) {
         const habit = inputSettings.blocks.find((block) => block.coreBlockId === 'core.habit' || block.categoryKey === '打卡' || block.name === '打卡');
         if (habit) return habit.id;
     }
@@ -85,72 +74,70 @@ export function normalizeHeatmapBlockId(params: {
     return value;
 }
 
-export function inferHeatmapBlockIdByTheme(items: RecordViewItem[]): Map<string, string> {
+/** Infer the dominant source Block for each canonical Goal path. */
+export function inferHeatmapBlockIdByGoal(items: RecordViewItem[]): Map<string, string> {
     const result = new Map<string, string>();
     const counts = new Map<string, Map<string, number>>();
 
     for (const item of items) {
-        const themePath = getItemThemePath(item);
-        const themeKey = themePath || '__default__';
-        const blockId = typeof item?.templateId === 'string' && item.templateId.trim().length > 0
-            ? item.templateId
-            : (typeof item?.categoryKey === 'string' && item.categoryKey.trim().length > 0 ? item.categoryKey : '');
+        const goalPath = String(item.goalPath || '').trim() || '__default__';
+        const blockId = item.coreBlock ? `core.${String(item.coreBlock).replace(/^core\./, '')}` : '';
         if (!blockId) continue;
-        if (!counts.has(themeKey)) counts.set(themeKey, new Map());
-        const themeCounts = counts.get(themeKey)!;
-        themeCounts.set(blockId, (themeCounts.get(blockId) || 0) + 1);
+        if (!counts.has(goalPath)) counts.set(goalPath, new Map());
+        const goalCounts = counts.get(goalPath)!;
+        goalCounts.set(blockId, (goalCounts.get(blockId) || 0) + 1);
     }
 
-    counts.forEach((themeCounts, themeKey) => {
+    counts.forEach((goalCounts, goalPath) => {
         let bestBlockId = '';
         let bestCount = -1;
-        themeCounts.forEach((count, blockId) => {
+        goalCounts.forEach((count, blockId) => {
             if (count > bestCount) {
                 bestCount = count;
                 bestBlockId = blockId;
             }
         });
-        if (bestBlockId) result.set(themeKey, bestBlockId);
+        if (bestBlockId) result.set(goalPath, bestBlockId);
     });
 
     return result;
 }
 
 export function resolveHeatmapCreateBlockId(params: {
-    themePath?: string;
+    goalPath?: string;
     item?: RecordViewItem;
     sourceBlockId?: string;
     heatmapSourceBlockId?: string;
-    inferredBlockIdByTheme: Map<string, string>;
+    inferredBlockIdByGoal: Map<string, string>;
     normalizeBlockId: (candidate?: string | null) => string;
 }): string {
-    const { themePath, item, sourceBlockId, heatmapSourceBlockId, inferredBlockIdByTheme, normalizeBlockId } = params;
+    const { goalPath, item, sourceBlockId, heatmapSourceBlockId, inferredBlockIdByGoal, normalizeBlockId } = params;
     const rowBlock = normalizeBlockId(sourceBlockId);
-    const itemBlock = item?.coreBlock || item?.templateId || item?.categoryKey;
+    const itemBlock = item?.coreBlock ? `core.${String(item.coreBlock).replace(/^core\./, '')}` : '';
     return rowBlock
         || normalizeBlockId(heatmapSourceBlockId)
         || normalizeBlockId(itemBlock)
-        || normalizeBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : undefined)
-        || normalizeBlockId(inferredBlockIdByTheme.get('__default__'))
+        || normalizeBlockId(goalPath ? inferredBlockIdByGoal.get(goalPath) : undefined)
+        || normalizeBlockId(inferredBlockIdByGoal.get('__default__'))
         || '';
 }
 
-export function buildDayThemeGroups(params: {
-    themesToTrack: string[];
-    dataByThemeAndDate: Map<string, Map<string, RecordViewItem[]>>;
-}): DayThemeGroup[] {
-    const { themesToTrack, dataByThemeAndDate } = params;
-    const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ['__default__'];
-    const groups: DayThemeGroup[] = [];
-    const groupMap = new Map<string, DayThemeGroup>();
+export function buildDayGoalGroups(params: {
+    goalPathsToTrack: string[];
+    dataByGoalAndDate: Map<string, Map<string, RecordViewItem[]>>;
+}): DayGoalGroup[] {
+    const { goalPathsToTrack, dataByGoalAndDate } = params;
+    const goalsToDisplay = goalPathsToTrack.length > 0 ? goalPathsToTrack : ['__default__'];
+    const groups: DayGoalGroup[] = [];
+    const groupMap = new Map<string, DayGoalGroup>();
 
-    themesToDisplay.forEach((themePath) => {
-        const title = getThemeGroupTitle(themePath);
-        const label = getThemeLeafLabel(themePath);
-        const entry: DayThemeEntry = {
-            themePath,
+    goalsToDisplay.forEach((goalPath) => {
+        const title = getGoalGroupTitle(goalPath);
+        const label = getGoalLeafLabel(goalPath);
+        const entry: DayGoalEntry = {
+            goalPath,
             label,
-            dataForTheme: dataByThemeAndDate.get(themePath) || new Map(),
+            dataForGoal: dataByGoalAndDate.get(goalPath) || new Map(),
         };
 
         const existingGroup = groupMap.get(title);
@@ -159,7 +146,7 @@ export function buildDayThemeGroups(params: {
             return;
         }
 
-        const newGroup: DayThemeGroup = { title, entries: [entry] };
+        const newGroup: DayGoalGroup = { title, entries: [entry] };
         groupMap.set(title, newGroup);
         groups.push(newGroup);
     });
@@ -167,12 +154,10 @@ export function buildDayThemeGroups(params: {
     return groups;
 }
 
-export function createHeatmapPresetContext(entry: GoalHeatmapThemeEntry): HeatmapPresetContext {
+export function createHeatmapPresetContext(entry: GoalHeatmapEntry): HeatmapPresetContext {
     return {
         sourceBlockId: entry.sourceBlockId,
-        goalId: entry.goalId,
         templateId: entry.templateId,
-        templateVariantId: entry.templateVariantId,
         ratingOptions: entry.ratingOptions,
     };
 }

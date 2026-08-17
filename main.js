@@ -2351,7 +2351,7 @@ function finalize$1(rootScope, value, path) {
   }
   return state.copy_;
 }
-function finalizeProperty(rootScope, parentState, targetObject, prop, childValue, rootPath, targetIsSet) {
+function finalizeProperty(rootScope, parentState, targetObject, prop, childValue, rootPath2, targetIsSet) {
   if (childValue == null) {
     return;
   }
@@ -2363,8 +2363,8 @@ function finalizeProperty(rootScope, parentState, targetObject, prop, childValue
     return;
   }
   if (isDraft(childValue)) {
-    const path = rootPath && parentState && parentState.type_ !== 3 && // Set objects are atomic since they have no keys.
-    !has(parentState.assigned_, prop) ? rootPath.concat(prop) : void 0;
+    const path = rootPath2 && parentState && parentState.type_ !== 3 && // Set objects are atomic since they have no keys.
+    !has(parentState.assigned_, prop) ? rootPath2.concat(prop) : void 0;
     const res = finalize$1(rootScope, childValue, path);
     set(targetObject, prop, res);
     if (isDraft(res)) {
@@ -2761,7 +2761,6 @@ const DEFAULT_AI_SETTINGS = {
   maxTokens: 4096,
   requestTimeoutMs: 3e4,
   enabledBlockIds: [],
-  defaultThemeId: void 0,
   allowMultipleResults: false,
   maxResults: 10,
   confirmMode: "batch",
@@ -2770,10 +2769,10 @@ const DEFAULT_AI_SETTINGS = {
   customPrompt: ""
 };
 const CUSTOM_PROMPT_EXAMPLES = `【示例规则】
-1. 优先选择已有目标，再选择记录类型，最后选择目标 × Block 下最匹配的记录预设。
-2. 当我说"心情"、"开心"、"难过"等情绪词时，优先匹配目标下的"情绪/心情"打卡预设。
-3. 当我说"写文章"、"写作"时，使用任务记录类型，并优先匹配电脑/写作相关预设。
-4. 不要把目标、主题、模板ID、周期ID写进 fieldValues；这些属于 target 或应用自动推导。
+1. 优先选择已有目标，再选择记录类型；一个目标 × Block 最多只有一个字段预设。
+2. 当我说"心情"、"开心"、"难过"等情绪词时，优先匹配最接近的完整目标路径。
+3. 当我说"写文章"、"写作"时，使用任务记录类型，并优先匹配对应目标路径。
+4. 不要把目标、模板ID、周期ID写进 fieldValues；这些属于 target 或应用自动推导。
 5. 计划/总结的周期由应用根据预设 periodPolicy 和日期自动生成。`;
 const DEFAULT_GOAL_SETTINGS = {
   goals: [],
@@ -2785,28 +2784,25 @@ function f$3(key, role, persistence, valueType, description, options = {}) {
 }
 const ENVELOPE = [
   f$3("记录ID", "identity", "target", "record-id", "Stable Record identity; never derived from file path or line.", { required: true, aliases: ["recordId", "id"] }),
-  f$3("记录版本", "identity", "target", "number", "Persisted Record schema version.", { required: true, aliases: ["schemaVersion"] }),
   f$3("核心Block", "identity", "target", "enum", "Business record type discriminator.", { required: true, aliases: ["coreBlock"] })
 ];
 const GOAL = [
-  f$3("目标ID", "canonical-reference", "target", "goal-id", "Stable Goal reference and business truth.", { aliases: ["goalId"] }),
-  f$3("目标", "human-snapshot", "target", "string", "Human-readable Goal snapshot; never used as identity.", { aliases: ["goalPath"] })
+  f$3("目标", "canonical-reference", "target", "string", "Canonical human-readable Goal path. The path itself is the Goal identity.", { aliases: ["goalPath"] })
 ];
-const THEME = f$3("主题", "business-history", "target", "string", "Historical theme-path snapshot. May reference a theme no longer present in current settings.", { aliases: ["theme", "themePath"] });
 const DATE$1 = f$3("日期", "business-fact", "target", "date", "Record occurrence/business date.", { aliases: ["date"] });
-const CONTENT = f$3("内容", "business-fact", "target", "string", "Primary human-authored Record content.", { aliases: ["content", "正文", "title", "任务内容", "阻碍", "里程碑"] });
-const TAGS = f$3("标签", "business-fact", "target", "tags", "User-authored tags. Omit when empty.", { aliases: ["tag", "tags"] });
+const CONTENT = f$3("内容", "business-fact", "target", "string", "Primary human-authored Record content.", { aliases: ["content", "任务内容"] });
+const TAGS = f$3("标签", "business-fact", "target", "tags", "User-authored tags. Omit when empty.", { aliases: ["tags"] });
 const ICON = f$3("图标", "display-snapshot", "target", "string", "Historical display snapshot. R5 decides whether displayStyle can replace this.", { aliases: ["icon"] });
-const GENERIC_COMMON = [...ENVELOPE, ...GOAL, DATE$1, THEME];
+const GENERIC_COMMON = [...ENVELOPE, ...GOAL, DATE$1];
 const THOUGHT_SCHEMA = {
   contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
   coreBlock: "thought",
   displayName: "思考",
   family: "generic",
-  capabilities: { userVisible: true, goalBindable: true, themeAware: true, dated: true, subtypeAware: true, customFields: true },
+  capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, subtypeAware: true, customFields: true },
   recordFields: [
     ...GENERIC_COMMON,
-    f$3("记录子类型", "business-fact", "target", "enum", "Thought subtype: 感受 or 思考. This replaces the old 闪念/感受 and 闪念/思考 分类 values.", { aliases: ["recordSubtype", "subtype"], allowedValues: ["感受", "思考"] }),
+    f$3("记录子类型", "business-fact", "target", "enum", "Thought subtype: 感受 or 思考. This replaces the old 闪念/感受 and 闪念/思考 分类 values.", { aliases: ["recordSubtype"], allowedValues: ["感受", "思考"] }),
     TAGS,
     ICON,
     CONTENT
@@ -2817,7 +2813,7 @@ const EVIDENCE_SCHEMA = {
   coreBlock: "evidence",
   displayName: "事件 / 证据",
   family: "generic",
-  capabilities: { userVisible: true, goalBindable: true, themeAware: true, dated: true, customFields: true },
+  capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, customFields: true },
   recordFields: [...GENERIC_COMMON, TAGS, ICON, CONTENT]
 };
 const HABIT_SCHEMA = {
@@ -2825,7 +2821,7 @@ const HABIT_SCHEMA = {
   coreBlock: "habit",
   displayName: "打卡",
   family: "generic",
-  capabilities: { userVisible: true, goalBindable: true, themeAware: true, dated: true, customFields: true },
+  capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, customFields: true },
   recordFields: [
     ...GENERIC_COMMON,
     f$3("评分", "business-fact", "target", "number", "Habit rating/value.", { aliases: ["rating"] }),
@@ -2839,10 +2835,10 @@ function periodRecord(coreBlock, displayName) {
     coreBlock,
     displayName,
     family: "generic",
-    capabilities: { userVisible: true, goalBindable: true, themeAware: true, dated: true, periodAware: true, customFields: true },
+    capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, periodAware: true, customFields: true },
     recordFields: [
       ...GENERIC_COMMON,
-      f$3("周期粒度", "business-fact", "target", "enum", "Only persisted period fact. Period ID/label are derived from 日期 + 周期粒度.", { aliases: ["periodGranularity", "goalGranularity"], allowedValues: ["week", "month", "quarter", "year"] }),
+      f$3("周期粒度", "business-fact", "target", "enum", "Only persisted period fact. Period ID/label are derived from 日期 + 周期粒度.", { aliases: ["periodGranularity"], allowedValues: ["week", "month", "quarter", "year"] }),
       ICON,
       CONTENT
     ]
@@ -2856,7 +2852,7 @@ function simpleGoalRecord(coreBlock, displayName) {
     coreBlock,
     displayName,
     family: "generic",
-    capabilities: { userVisible: true, goalBindable: true, themeAware: true, dated: true, customFields: true },
+    capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, customFields: true },
     recordFields: [...GENERIC_COMMON, ICON, CONTENT]
   };
 }
@@ -2876,26 +2872,25 @@ const TASK_SCHEMA = {
   coreBlock: "task",
   displayName: "任务",
   family: "task-domain",
-  capabilities: { userVisible: true, goalBindable: true, themeAware: true, dated: true, statusful: true, customFields: true },
+  capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, statusful: true, customFields: true },
   recordFields: [
     ...ENVELOPE,
     f$3("状态", "domain-fact", "target", "enum", "Task lifecycle state.", { required: true, aliases: ["status"], allowedValues: ["open", "done", "cancelled", "skipped"] }),
-    f$3("创建于", "domain-fact", "target", "datetime", "Task creation timestamp when created by the v2 writer.", { aliases: ["createdAt"] }),
+    f$3("创建于", "domain-fact", "target", "datetime", "Task creation timestamp.", { aliases: ["createdAt"] }),
     ...GOAL,
-    THEME,
     f$3("系列ID", "canonical-reference", "target", "record-id", "Optional TaskSeries reference.", { aliases: ["seriesId"] }),
     f$3("计划时间", "domain-fact", "target", "datetime", "Scheduled execution timestamp.", { aliases: ["scheduledAt"] }),
     f$3("开始时间", "domain-fact", "target", "datetime", "Declared start timestamp.", { aliases: ["startAt"] }),
     f$3("结束时间", "domain-fact", "target", "datetime", "Declared end timestamp. Together with startAt it may represent a manually recorded time range; TaskSession remains preferred when session history exists.", { aliases: ["endAt"] }),
     f$3("截止时间", "domain-fact", "target", "datetime", "Due timestamp.", { aliases: ["dueAt"] }),
-    f$3("计划日期", "domain-fact", "target", "date", "Legacy scheduled execution date retained for compatibility.", { aliases: ["scheduledDate"] }),
-    f$3("开始日期", "domain-fact", "target", "date", "Legacy declared start date retained for compatibility.", { aliases: ["startDate"] }),
-    f$3("截止日期", "domain-fact", "target", "date", "Legacy due date retained for compatibility.", { aliases: ["dueDate"] }),
+    f$3("计划日期", "domain-fact", "target", "date", "Date-only scheduled execution fact used by current records.", { aliases: ["scheduledDate"] }),
+    f$3("开始日期", "domain-fact", "target", "date", "Date-only declared start fact used by current records.", { aliases: ["startDate"] }),
+    f$3("截止日期", "domain-fact", "target", "date", "Date-only due fact used by current records.", { aliases: ["dueDate"] }),
     f$3("完成于", "domain-fact", "target", "datetime", "Task completion timestamp/date.", { aliases: ["completedAt"] }),
     f$3("取消于", "domain-fact", "target", "datetime", "Task cancellation timestamp/date.", { aliases: ["cancelledAt"] }),
     f$3("跳过于", "domain-fact", "target", "datetime", "Recurring occurrence skipped timestamp/date.", { aliases: ["skippedAt"] }),
     ...TASK_DEMAND_FIELDS,
-    f$3("内容", "domain-fact", "target", "string", "Task intent/content.", { aliases: ["content", "正文", "title", "任务内容"] })
+    f$3("内容", "domain-fact", "target", "string", "Task intent/content.", { aliases: ["content", "任务内容"] })
   ]
 };
 const TASK_SERIES_SCHEMA = {
@@ -2903,12 +2898,11 @@ const TASK_SERIES_SCHEMA = {
   coreBlock: "task-series",
   displayName: "任务系列",
   family: "task-domain",
-  capabilities: { userVisible: false, goalBindable: true, themeAware: true, dated: true, statusful: true },
+  capabilities: { userVisible: false, goalBindable: true, themeAware: false, dated: true, statusful: true },
   recordFields: [
     ...ENVELOPE,
     f$3("状态", "domain-fact", "target", "enum", "TaskSeries lifecycle state.", { required: true, aliases: ["status"], allowedValues: ["active", "stopped"] }),
     ...GOAL,
-    THEME,
     ...TASK_DEMAND_FIELDS,
     f$3("重复单位", "domain-fact", "target", "enum", "Structured recurrence unit.", { required: true, aliases: ["recurrenceUnit"], allowedValues: ["day", "week", "month", "quarter", "year"] }),
     f$3("重复间隔", "domain-fact", "target", "number", "Structured recurrence interval.", { required: true, aliases: ["recurrenceInterval"], defaultValue: 1 }),
@@ -2916,7 +2910,7 @@ const TASK_SERIES_SCHEMA = {
     f$3("系列开始日期", "domain-fact", "target", "date", "Series anchor/start date.", { aliases: ["seriesStartDate"] }),
     f$3("当前任务ID", "canonical-reference", "target", "record-id", "Current active occurrence reference.", { aliases: ["currentTaskId"] }),
     f$3("滚动策略", "domain-fact", "omit-default", "enum", "Rollover policy; carry is currently the sole/default strategy.", { aliases: ["rolloverPolicy"], allowedValues: ["carry"], defaultValue: "carry" }),
-    f$3("内容", "domain-fact", "target", "string", "Long-lived recurring Task definition.", { aliases: ["content", "正文", "title"] })
+    f$3("内容", "domain-fact", "target", "string", "Long-lived recurring Task definition.", { aliases: ["content"] })
   ]
 };
 const TASK_SESSION_SCHEMA = {
@@ -2924,13 +2918,12 @@ const TASK_SESSION_SCHEMA = {
   coreBlock: "task-session",
   displayName: "任务工作块",
   family: "internal-history",
-  capabilities: { userVisible: false, goalBindable: true, themeAware: true, dated: true, executionHistory: true },
+  capabilities: { userVisible: false, goalBindable: true, themeAware: false, dated: true, executionHistory: true },
   recordFields: [
     ...ENVELOPE,
     f$3("任务ID", "canonical-reference", "target", "record-id", "Executed Task reference.", { required: true, aliases: ["taskId"] }),
     f$3("系列ID", "canonical-reference", "target", "record-id", "Optional TaskSeries reference.", { aliases: ["seriesId"] }),
     ...GOAL,
-    THEME,
     f$3("开始于", "domain-fact", "target", "datetime", "Actual session start.", { required: true, aliases: ["sessionStartedAt"] }),
     f$3("结束于", "domain-fact", "target", "datetime", "Actual session end.", { required: true, aliases: ["sessionEndedAt"] }),
     f$3("时长", "domain-fact", "target", "number", "Actual session duration in minutes.", { required: true, aliases: ["sessionDurationMinutes"] }),
@@ -2949,15 +2942,14 @@ const ENERGY_SCHEMA = {
   coreBlock: "energy",
   displayName: "精力",
   family: "energy-domain",
-  capabilities: { userVisible: true, goalBindable: true, themeAware: true, dated: true, subtypeAware: true, customFields: true },
+  capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, subtypeAware: true, customFields: true },
   recordFields: [
     ...ENVELOPE,
-    f$3("记录子类型", "domain-fact", "target", "enum", "Energy domain discriminator.", { required: true, aliases: ["recordSubtype", "subtype"], allowedValues: ["snapshot", "change", "recovery", "depletion", "stop"] }),
+    f$3("记录子类型", "domain-fact", "target", "enum", "Energy domain discriminator.", { required: true, aliases: ["recordSubtype"], allowedValues: ["snapshot", "change", "recovery", "depletion", "stop"] }),
     ...GOAL,
     DATE$1,
     f$3("时间", "business-fact", "target", "string", "Energy observation time when known.", { aliases: ["time"] }),
     f$3("时段", "business-fact", "target", "string", "Energy observation period when exact time is unavailable.", { aliases: ["period"] }),
-    THEME,
     f$3("精力值", "domain-fact", "target", "number", "Canonical 0-100 energy score.", { aliases: ["score"] }),
     f$3("脑力精力", "domain-fact", "target", "number", "Detailed cognitive energy score.", { aliases: ["brainScore"] }),
     f$3("体力精力", "domain-fact", "target", "number", "Detailed physical energy score.", { aliases: ["physicalScore"] }),
@@ -2982,16 +2974,6 @@ const RECORD_TYPE_IDS = {
   TASK_SERIES: "internal.task-series",
   TASK_SESSION: "internal.task-session"
 };
-const themeField = {
-  id: "core.field.themePath",
-  key: "themePath",
-  label: "主题",
-  type: "hierarchicalSingleSelect",
-  semantic: "themePath",
-  semanticType: "path",
-  hierarchical: true,
-  defaultValue: "{{goal.themePath}}"
-};
 const dateField = { id: "core.field.date", key: "日期", label: "日期", type: "date", semantic: "date" };
 const iconField = { id: "core.field.icon", key: "icon", label: "图标", type: "text", semantic: "icon" };
 const contentField = { id: "core.field.content", key: "内容", label: "内容", type: "textarea", semantic: "body" };
@@ -3007,9 +2989,7 @@ function define(contract, capture) {
 const TASK_FIELDS = [
   { id: "core.task.status", key: "status", label: "状态", type: "singleSelect", semantic: "status", defaultValue: "open", autoSelectFirst: true, options: [
     { value: "open", label: "未完成" },
-    { value: "done", label: "已完成" },
-    { value: "cancelled", label: "已取消" },
-    { value: "skipped", label: "已跳过" }
+    { value: "done", label: "已完成" }
   ] },
   { id: "core.task.content", key: "任务内容", label: "内容", type: "text", semantic: "body" },
   { id: "core.task.recurrenceUnit", key: "recurrenceUnit", label: "重复", type: "singleSelect", semantic: "recurrence", defaultValue: "none", autoSelectFirst: true, options: [
@@ -3021,11 +3001,10 @@ const TASK_FIELDS = [
     { value: "year", label: "年" }
   ] },
   { id: "core.task.recurrenceInterval", key: "recurrenceInterval", label: "重复间隔", type: "number", min: 1, defaultValue: "1" },
-  // 主题属于 GoalTemplate / Goal 上下文：保留为隐藏系统字段参与模板默认值和持久化，不在任务创建表单中直接选择。
-  themeField,
   // 时间是任务主字段，与状态互相独立；填写结束时间不会自动完成任务。其余需求/场景字段由 UI 放入“更多选项”。
   { id: "core.task.startAt", key: "startAt", label: "开始/预计时间", type: "datetime", semantic: "date" },
   { id: "core.task.endAt", key: "endAt", label: "结束时间", type: "datetime", semantic: "date" },
+  { id: "core.task.expectedDurationMinutes", key: "expectedDurationMinutes", label: "时长（分钟）", type: "number", semantic: "duration", min: 1 },
   { id: "core.task.priority", key: "priority", label: "优先级", type: "singleSelect", autoSelectFirst: true, options: [
     { value: "lowest", label: "最低" },
     { value: "low", label: "低" },
@@ -3076,7 +3055,7 @@ function genericTemplate(contract, input) {
     captureMode: "template",
     coreBlockId: input.id,
     description: input.description,
-    fields: [contentField, themeField, dateField, ...input.extraFields || [], iconField],
+    fields: [contentField, dateField, ...input.extraFields || [], iconField],
     periodPolicy: input.period ? { enabled: true, granularity: "week" } : void 0,
     targetFile: input.targetFile,
     appendUnderHeader: "## {{goalPath}}"
@@ -3176,21 +3155,17 @@ const DEFAULT_CORE_BLOCK_SETTINGS = {
 };
 const ENERGY_QUICK_LEVELS = [20, 40, 60, 80, 100];
 const DEFAULT_ENERGY_SETTINGS = {
-  defaultGoalId: "",
-  defaultThemePath: ""
+  defaultGoalPath: ""
 };
-const THINK_SETTINGS_SCHEMA_VERSION = 5;
 const DEFAULT_SETTINGS = {
-  schemaVersion: THINK_SETTINGS_SCHEMA_VERSION,
   groups: [],
   viewInstances: [],
   layouts: [],
-  inputSettings: { blocks: [], themes: [] },
+  inputSettings: { blocks: [] },
   goalSettings: DEFAULT_GOAL_SETTINGS,
   coreBlockSettings: DEFAULT_CORE_BLOCK_SETTINGS,
   energySettings: DEFAULT_ENERGY_SETTINGS,
   floatingTimerEnabled: true,
-  activeThemePaths: [],
   aiSettings: DEFAULT_AI_SETTINGS,
   devConsoleStackEnabled: false
 };
@@ -3217,7 +3192,6 @@ function calculateDetailedEnergyScore(brainScore, physicalScore) {
   const physical = normalizeEnergyScore(physicalScore);
   return normalizeEnergyScore((brain + physical) / 2);
 }
-const RECORD_SCHEMA_VERSION = 2;
 const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 function encodeTime(time2, length2 = 10) {
   let value = Math.max(0, Math.floor(time2));
@@ -4325,14 +4299,6 @@ function getHierarchyPathBase(value) {
 function getHierarchyPathLeaf(value) {
   return splitHierarchyPathValue(value).leaf ?? "";
 }
-function buildHierarchyPathSegments(value) {
-  const parts = normalizeHierarchyPathParts(value);
-  return parts.map((name, depth) => ({
-    name,
-    fullPath: parts.slice(0, depth + 1).join("/"),
-    depth
-  }));
-}
 function buildHierarchyPathOption(value) {
   const path = normalizeHierarchyPathValue(value);
   if (!path) return null;
@@ -4400,18 +4366,13 @@ function getGoalPathCandidates(path) {
   for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
   return result;
 }
-function makeStableGoalIdFromPath(path) {
-  const normalized2 = requireGoalPath(path);
-  const safe = normalized2.toLowerCase().replace(/[\/\s]+/g, "-").replace(/[^a-z0-9\-_.\u4e00-\u9fa5]/gi, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
-  return `goal.${safe || "untitled"}`;
-}
 const DEFAULT_MULTI_SEPARATOR = ", ";
 function isFieldCodecMultiValue(def) {
   const inputType = def?.inputType;
   return def?.cardinality === "multi" || inputType === "multiSelect" || inputType === "multiPath" || inputType === "multiTag" || inputType === "multiImage";
 }
 function isFieldCodecPath(def) {
-  return def?.valueType === "path" || def?.inputType === "path" || def?.inputType === "multiPath" || def?.semantic === "themePath" || def?.semantic === "categoryPath" || def?.semantic === "goalPath";
+  return def?.valueType === "path" || def?.inputType === "path" || def?.inputType === "multiPath" || def?.semantic === "categoryPath" || def?.semantic === "goalPath";
 }
 function isFieldCodecTag(def) {
   return def?.valueType === "tags" || def?.inputType === "tag" || def?.inputType === "multiTag" || def?.semantic === "tags";
@@ -4515,8 +4476,6 @@ function formatFieldValueForTemplate(value, def) {
   return encodeFieldValueForMarkdown(value, def, { multiSeparator: ", " });
 }
 const FIELD_CODEC_PRESETS = {
-  themePath: { valueType: "path", inputType: "path", semantic: "themePath", hierarchical: true },
-  categoryPath: { valueType: "path", inputType: "path", semantic: "categoryPath", hierarchical: true },
   tags: { valueType: "tags", inputType: "multiTag", semantic: "tags", cardinality: "multi" },
   goalPath: { valueType: "path", inputType: "hierarchicalSingleSelect", semantic: "goalPath", cardinality: "single", hierarchical: true },
   image: { valueType: "image", inputType: "image", semantic: "image" },
@@ -4583,7 +4542,6 @@ const TASK_READABLE_DATETIME_LABELS = /* @__PURE__ */ new Set([
   "跳过于"
 ]);
 function decodeRecordContentLines(contentLines, _parentFolder) {
-  let categoryKey = null;
   let date2;
   const tags2 = [];
   let goalPath;
@@ -4591,20 +4549,12 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
   let content = "";
   let contentStarted = false;
   let icon;
-  let period;
   let rating;
   let image;
-  let pintu;
-  let theme;
-  let templateId;
-  let goalId;
-  let cycleId;
   let coreBlock;
   let recordSubtype;
   let recordId;
-  let schemaVersion;
   let status;
-  let templateSourceType;
   let scheduledAt;
   let startAt;
   let endAt;
@@ -4642,7 +4592,7 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
   let energyDelta;
   let brainDelta;
   let physicalDelta;
-  const envelopeCoreBlock = contentLines.map((rawLine) => rawLine.trim().match(/^([^:\r\n]{1,64})::\s*(.*)$/)).find((match5) => match5 && ["核心block", "coreblock"].includes(normalizeMetaKey(match5[1])))?.[2]?.trim();
+  const envelopeCoreBlock = contentLines.map((rawLine) => rawLine.trim().match(/^([^:\r\n]{1,64})::\s*(.*)$/)).find((match5) => match5 && normalizeMetaKey(match5[1]) === "核心block")?.[2]?.trim();
   if (envelopeCoreBlock) coreBlock = envelopeCoreBlock;
   const recordSchema = getRecordSchemaDefinition(coreBlock);
   const supportsCustomFields = Boolean(recordSchema?.capabilities.customFields);
@@ -4658,95 +4608,80 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
       const rawKey = kv[1].trim();
       const value = kv[2] || "";
       const key = normalizeMetaKey(rawKey);
-      if (["记录id", "recordid"].includes(key)) recordId = value.trim() || void 0;
-      else if (["记录版本", "recordversion", "schemaversion"].includes(key)) {
-        const parsed = Number.parseInt(value.trim(), 10);
-        if (Number.isFinite(parsed)) schemaVersion = parsed;
-      } else if (["分类", "类别", "category", "categorypath", "分类路径"].includes(key)) categoryKey = decodeMarkdownString(value, FIELD_CODEC_PRESETS.categoryPath) || "";
-      else if (["记录子类型", "recordsubtype", "subtype"].includes(key)) recordSubtype = value.trim() || void 0;
-      else if (["模板id", "templateid"].includes(key)) templateId = value.trim();
-      else if (["模板来源", "templatesource", "templatesourcetype"].includes(key)) {
-        const source = value.trim();
-        if (["core-block", "goal-template"].includes(source)) templateSourceType = source;
-      } else if (["主题", "theme", "主题路径", "themepath"].includes(key)) theme = decodeMarkdownString(value, FIELD_CODEC_PRESETS.themePath);
-      else if (["标签", "tag", "tags"].includes(key)) tags2.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
-      else if (["目标id", "goalid"].includes(key)) goalId = value.trim();
-      else if (["周期id", "cycleid"].includes(key)) cycleId = value.trim();
-      else if (["系列id", "seriesid"].includes(key)) seriesId = value.trim();
-      else if (["重复单位", "recurrenceunit"].includes(key)) {
+      if (key === "记录id") recordId = value.trim() || void 0;
+      else if (key === "记录子类型") recordSubtype = value.trim() || void 0;
+      else if (key === "标签") tags2.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
+      else if (key === "系列id") seriesId = value.trim();
+      else if (key === "重复单位") {
         const unit = value.trim().toLowerCase();
         if (["day", "week", "month", "quarter", "year"].includes(unit)) recurrenceUnit = unit;
-      } else if (["重复间隔", "recurrenceinterval"].includes(key)) {
+      } else if (key === "重复间隔") {
         const interval = Number.parseInt(value.trim(), 10);
         if (Number.isInteger(interval) && interval > 0) recurrenceInterval = interval;
-      } else if (["重复锚点", "recurrenceanchor"].includes(key)) {
+      } else if (key === "重复锚点") {
         const anchor = value.trim().toLowerCase();
         if (["scheduled", "start", "due", "completion"].includes(anchor)) recurrenceAnchor = anchor;
-      } else if (["系列开始日期", "seriesstartdate"].includes(key)) seriesStartDate = parseDate$1(value);
-      else if (["当前任务id", "currenttaskid"].includes(key)) currentTaskId = value.trim() || void 0;
-      else if (["滚动策略", "rolloverpolicy"].includes(key)) {
+      } else if (key === "系列开始日期") seriesStartDate = parseDate$1(value);
+      else if (key === "当前任务id") currentTaskId = value.trim() || void 0;
+      else if (key === "滚动策略") {
         if (value.trim().toLowerCase() === "carry") rolloverPolicy = "carry";
-      } else if (coreBlock === "task-session" && ["任务id", "taskid"].includes(key)) taskId = value.trim() || void 0;
-      else if (coreBlock === "task-session" && ["开始于", "sessionstartedat"].includes(key)) sessionStartedAt = normalizeStoredDateTime(value);
-      else if (coreBlock === "task-session" && ["结束于", "sessionendedat"].includes(key)) sessionEndedAt = normalizeStoredDateTime(value);
-      else if (coreBlock === "task-session" && ["时长", "sessiondurationminutes"].includes(key)) sessionDurationMinutes = decodeMarkdownNumber(value);
-      else if (coreBlock === "task-session" && ["结果", "sessionresult"].includes(key)) {
+      } else if (coreBlock === "task-session" && key === "任务id") taskId = value.trim() || void 0;
+      else if (coreBlock === "task-session" && key === "开始于") sessionStartedAt = normalizeStoredDateTime(value);
+      else if (coreBlock === "task-session" && key === "结束于") sessionEndedAt = normalizeStoredDateTime(value);
+      else if (coreBlock === "task-session" && key === "时长") sessionDurationMinutes = decodeMarkdownNumber(value);
+      else if (coreBlock === "task-session" && key === "结果") {
         const result = value.trim().toLowerCase();
         if (["work-block-ended", "task-completed"].includes(result)) sessionResult = result;
-      } else if (coreBlock === "task-session" && ["来源", "sessionsource"].includes(key)) {
+      } else if (coreBlock === "task-session" && key === "来源") {
         const source = value.trim().toLowerCase();
         if (["timer", "energy-view", "unknown"].includes(source)) sessionSource = source;
-      } else if (coreBlock === "task-session" && ["建议时长", "suggesteddurationminutes"].includes(key)) suggestedDurationMinutes = decodeMarkdownNumber(value);
-      else if (coreBlock === "task-session" && ["开始精力记录id", "startenergyrecordid"].includes(key)) startEnergyRecordId = value.trim() || void 0;
-      else if (coreBlock === "task-session" && ["结束精力记录id", "endenergyrecordid"].includes(key)) endEnergyRecordId = value.trim() || void 0;
-      else if (coreBlock === "task-session" && ["精力变化", "energydelta"].includes(key)) energyDelta = decodeMarkdownNumber(value);
-      else if (coreBlock === "task-session" && ["脑力变化", "braindelta"].includes(key)) brainDelta = decodeMarkdownNumber(value);
-      else if (coreBlock === "task-session" && ["体力变化", "physicaldelta"].includes(key)) physicalDelta = decodeMarkdownNumber(value);
-      else if (["核心block", "coreblock"].includes(key)) coreBlock = value.trim();
-      else if (["状态", "status"].includes(key)) status = value.trim().toLowerCase();
+      } else if (coreBlock === "task-session" && key === "建议时长") suggestedDurationMinutes = decodeMarkdownNumber(value);
+      else if (coreBlock === "task-session" && key === "开始精力记录id") startEnergyRecordId = value.trim() || void 0;
+      else if (coreBlock === "task-session" && key === "结束精力记录id") endEnergyRecordId = value.trim() || void 0;
+      else if (coreBlock === "task-session" && key === "精力变化") energyDelta = decodeMarkdownNumber(value);
+      else if (coreBlock === "task-session" && key === "脑力变化") brainDelta = decodeMarkdownNumber(value);
+      else if (coreBlock === "task-session" && key === "体力变化") physicalDelta = decodeMarkdownNumber(value);
+      else if (key === "核心block") coreBlock = value.trim();
+      else if (key === "状态") status = value.trim().toLowerCase();
       else if (key === "目标") goalPath = decodeMarkdownString(value, FIELD_CODEC_PRESETS.goalPath);
-      else if (["日期", "date"].includes(key)) date2 = parseDate$1(value);
-      else if (["计划时间", "scheduledat"].includes(key)) scheduledAt = normalizeStoredDateTime(value);
-      else if (["开始时间", "startat"].includes(key)) startAt = normalizeStoredDateTime(value);
-      else if (["结束时间", "endat"].includes(key)) endAt = normalizeStoredDateTime(value);
-      else if (["截止时间", "dueat"].includes(key)) dueAt = normalizeStoredDateTime(value);
-      else if (["计划日期", "scheduleddate"].includes(key)) scheduledDate = parseDate$1(value);
-      else if (["开始日期", "startdate"].includes(key)) startDate = parseDate$1(value);
-      else if (["截止日期", "duedate"].includes(key)) dueDate = parseDate$1(value);
-      else if (["创建于", "createdat"].includes(key)) createdAt = normalizeStoredDateTime(value);
-      else if (["完成于", "completedat"].includes(key)) completedAt = normalizeStoredDateTime(value);
-      else if (["取消于", "cancelledat"].includes(key)) cancelledAt = normalizeStoredDateTime(value);
-      else if (["跳过于", "skippedat"].includes(key)) skippedAt = normalizeStoredDateTime(value);
-      else if (["优先级", "priority"].includes(key)) {
+      else if (key === "日期") date2 = parseDate$1(value);
+      else if (key === "计划时间") scheduledAt = normalizeStoredDateTime(value);
+      else if (key === "开始时间") startAt = normalizeStoredDateTime(value);
+      else if (key === "结束时间") endAt = normalizeStoredDateTime(value);
+      else if (key === "截止时间") dueAt = normalizeStoredDateTime(value);
+      else if (key === "计划日期") scheduledDate = parseDate$1(value);
+      else if (key === "开始日期") startDate = parseDate$1(value);
+      else if (key === "截止日期") dueDate = parseDate$1(value);
+      else if (key === "创建于") createdAt = normalizeStoredDateTime(value);
+      else if (key === "完成于") completedAt = normalizeStoredDateTime(value);
+      else if (key === "取消于") cancelledAt = normalizeStoredDateTime(value);
+      else if (key === "跳过于") skippedAt = normalizeStoredDateTime(value);
+      else if (key === "优先级") {
         const p2 = value.trim().toLowerCase();
         if (["lowest", "low", "medium", "high", "highest"].includes(p2)) priority = p2;
-      } else if (["预计时长", "expectedduration", "expecteddurationminutes"].includes(key)) expectedDurationMinutes = decodeMarkdownNumber(value);
-      else if (["精力要求", "energydemand"].includes(key)) energyDemand = value.trim().toLowerCase() || void 0;
-      else if (["脑力要求", "braindemand"].includes(key)) brainDemand = value.trim().toLowerCase() || void 0;
-      else if (["体力要求", "physicaldemand"].includes(key)) physicalDemand = value.trim().toLowerCase() || void 0;
-      else if (["可用场景", "availabilitycontexts"].includes(key)) {
+      } else if (key === "预计时长") expectedDurationMinutes = decodeMarkdownNumber(value);
+      else if (key === "精力要求") energyDemand = value.trim().toLowerCase() || void 0;
+      else if (key === "脑力要求") brainDemand = value.trim().toLowerCase() || void 0;
+      else if (key === "体力要求") physicalDemand = value.trim().toLowerCase() || void 0;
+      else if (key === "可用场景") {
         const allowed = /* @__PURE__ */ new Set(["any", "work", "home", "commute", "out"]);
         const aliases2 = { "任意": "any", "工作": "work", "公司": "work", "家": "home", "居家": "home", "通勤": "commute", "外出": "out" };
         const values2 = String(value || "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean).map((part) => aliases2[part] || part.toLowerCase()).filter((part) => allowed.has(part));
         availabilityContexts2 = Array.from(new Set(values2));
-      } else if (["恢复意图", "recoveryintent"].includes(key)) recoveryIntent = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.boolean);
-      else if (["周期", "period"].includes(key)) period = decodeMarkdownString(value);
-      else if (["评分", "rating"].includes(key)) {
+      } else if (key === "恢复意图") recoveryIntent = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.boolean);
+      else if (key === "评分") {
         const decodedRating = decodeMarkdownNumber(value);
         if (decodedRating !== void 0) rating = decodedRating;
         else {
           const visualRating = String(value || "").trim();
           if (visualRating) {
             extra[rawKey] = decodeUnknownMarkdownKvValue(visualRating);
-            if (!pintu) pintu = visualRating;
             if (!image) image = visualRating;
           }
         }
-      } else if (["图标", "icon"].includes(key)) icon = value.trim();
-      else if (["评图", "pintu", "图片", "image"].includes(key)) {
-        image = decodeMarkdownString(value, FIELD_CODEC_PRESETS.image);
-        pintu = image;
-      } else if (["内容", "content", "任务内容"].includes(key)) {
+      } else if (key === "图标") icon = value.trim();
+      else if (key === "图片") image = decodeMarkdownString(value, FIELD_CODEC_PRESETS.image);
+      else if (key === "内容") {
         if (supportsBody) {
           contentStarted = true;
           content = value;
@@ -4759,10 +4694,8 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
   const finalTags = unique$1(tags2);
   return {
     recordId,
-    schemaVersion,
     title: buildTitle(content, finalTags),
     content: content.trim(),
-    categoryKey: categoryKey || "",
     status,
     date: date2,
     scheduledAt,
@@ -4778,19 +4711,12 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
     createdAt,
     tags: finalTags,
     goalPath,
-    goalId,
-    cycleId,
     coreBlock,
     recordSubtype,
     extra,
     icon,
-    period,
     rating,
     image,
-    pintu,
-    theme,
-    templateId,
-    templateSourceType,
     priority,
     expectedDurationMinutes,
     energyDemand,
@@ -4827,9 +4753,7 @@ function markdownScalar(value) {
 }
 const TASK_FIELD_ORDER = [
   ["状态", ["状态", "status"]],
-  ["目标ID", ["目标ID", "goalId"]],
   ["目标", ["目标", "goalPath"]],
-  ["主题", ["主题", "themePath"]],
   ["创建于", ["创建于", "createdAt"]],
   ["开始时间", ["开始时间", "startAt"]],
   ["结束时间", ["结束时间", "endAt"]],
@@ -4848,16 +4772,12 @@ const TASK_FIELD_ORDER = [
   ["完成于", ["完成于", "completedAt"]],
   ["取消于", ["取消于", "cancelledAt"]],
   ["跳过于", ["跳过于", "skippedAt"]],
-  ["系列ID", ["系列ID", "seriesId"]],
-  ["模板ID", ["模板ID", "templateId"]],
-  ["模板来源", ["模板来源", "templateSourceType"]]
+  ["系列ID", ["系列ID", "seriesId"]]
 ];
 const TASK_SESSION_FIELD_ORDER = [
   ["任务ID", ["任务ID", "taskId"]],
   ["系列ID", ["系列ID", "seriesId"]],
-  ["目标ID", ["目标ID", "goalId"]],
   ["目标", ["目标", "goalPath"]],
-  ["主题", ["主题", "themePath"]],
   ["开始于", ["开始于", "sessionStartedAt"]],
   ["结束于", ["结束于", "sessionEndedAt"]],
   ["时长", ["时长", "sessionDurationMinutes"]],
@@ -4872,9 +4792,7 @@ const TASK_SESSION_FIELD_ORDER = [
 ];
 const TASK_SERIES_FIELD_ORDER = [
   ["状态", ["状态", "status"]],
-  ["目标ID", ["目标ID", "goalId"]],
   ["目标", ["目标", "goalPath"]],
-  ["主题", ["主题", "themePath"]],
   ["优先级", ["优先级", "priority"]],
   ["预计时长", ["预计时长", "expectedDurationMinutes"]],
   ["精力要求", ["精力要求", "energyDemand"]],
@@ -4913,9 +4831,8 @@ function emitBody(lines, body) {
   lines.push(...parts);
 }
 function encodeRecordBlock(document2) {
-  const schemaVersion = document2.schemaVersion ?? RECORD_SCHEMA_VERSION;
   const fields = document2.fields || {};
-  const lines = ["<!-- start -->", `记录ID:: ${document2.recordId}`, `记录版本:: ${schemaVersion}`, `核心Block:: ${document2.coreBlock}`];
+  const lines = ["<!-- start -->", `记录ID:: ${document2.recordId}`, `核心Block:: ${document2.coreBlock}`];
   const emitted = /* @__PURE__ */ new Set();
   if (document2.coreBlock === "task") {
     for (const [label, keys] of TASK_FIELD_ORDER) {
@@ -4929,7 +4846,7 @@ function encodeRecordBlock(document2) {
       }
     }
     for (const [key, raw] of Object.entries(fields)) {
-      if (emitted.has(key) || BODY_FIELD_ALIASES.includes(key) || ["记录ID", "recordId", "id", "记录版本", "schemaVersion", "核心Block", "coreBlock"].includes(key)) continue;
+      if (emitted.has(key) || BODY_FIELD_ALIASES.includes(key) || ["记录ID", "recordId", "id", "核心Block", "coreBlock"].includes(key)) continue;
       const value = markdownScalar(raw);
       if (value) lines.push(`${key}:: ${value}`);
     }
@@ -4954,7 +4871,7 @@ function encodeRecordBlock(document2) {
     const supportsBody = Boolean(schema && getRecordFieldContract(schema.coreBlock, "内容"));
     for (const [key, raw] of Object.entries(fields)) {
       if (supportsBody && BODY_FIELD_ALIASES.includes(key)) continue;
-      if (["记录ID", "recordId", "id", "记录版本", "schemaVersion", "核心Block", "coreBlock"].includes(key)) continue;
+      if (["记录ID", "recordId", "id", "核心Block", "coreBlock"].includes(key)) continue;
       const value = markdownScalar(raw);
       if (value) lines.push(`${key}:: ${value}`);
     }
@@ -4966,7 +4883,6 @@ function encodeRecordBlock(document2) {
 function encodeRecordDraft(input) {
   return encodeRecordBlock({
     recordId: input.recordId,
-    schemaVersion: input.schemaVersion ?? RECORD_SCHEMA_VERSION,
     coreBlock: input.draft.coreBlock,
     fields: input.draft.fields
   });
@@ -4986,9 +4902,7 @@ function buildEnergySnapshotRecord(input) {
   return {
     ...input,
     recordId: createRecordId("energy"),
-    goalId: clean(input.goalId) || void 0,
     goalPath: clean(input.goalPath) || void 0,
-    themePath: clean(input.themePath) || void 0,
     time: clean(input.time) || void 0,
     period: clean(input.period) || void 0,
     recordedAt: clean(input.recordedAt) || void 0,
@@ -5013,12 +4927,10 @@ function buildEnergySnapshotMarkdown(input) {
     coreBlock: "energy",
     fields: {
       "记录子类型": "snapshot",
-      "目标ID": record.goalId,
       "目标": record.goalPath,
       "日期": record.date,
       "时间": record.time,
       "时段": record.period,
-      "主题": record.themePath,
       "精力值": record.score,
       "脑力精力": record.brainScore,
       "体力精力": record.physicalScore,
@@ -5073,11 +4985,11 @@ function parseEnergyProtocolParams(params) {
   }
   return { ok: false, message: "精力快捷协议 mode 只支持 quick 或 detailed。" };
 }
-function resolveEnergyCaptureGoal(goals, defaultGoalId) {
+function resolveEnergyCaptureGoal(goals, defaultGoalPath) {
   const available = goals.filter((goal) => goal.status !== "archived");
-  const preferredId = String(defaultGoalId || "").trim();
-  if (preferredId) {
-    const preferred = available.find((goal) => goal.id === preferredId);
+  const preferredPath = String(defaultGoalPath || "").trim();
+  if (preferredPath) {
+    const preferred = available.find((goal) => goal.path === preferredPath);
     if (preferred) return preferred;
   }
   return available.find((goal) => goal.status === "active") || available[0] || null;
@@ -5150,9 +5062,7 @@ function buildTaskSessionFields(task, input) {
   return {
     taskId: task.id,
     seriesId: task.seriesId,
-    goalId: task.goalId,
     goalPath: task.goalPath,
-    themePath: task.themePath || task.theme,
     sessionStartedAt: input.startedAt,
     sessionEndedAt: input.endedAt,
     sessionDurationMinutes: durationMinutes2,
@@ -5521,9 +5431,7 @@ function resolveEffectActivityInterval(item, byId) {
   const activityItem = task ? {
     ...task,
     id: session.id,
-    goalId: session.goalId || task.goalId,
     goalPath: session.goalPath || task.goalPath,
-    themePath: session.themePath || task.themePath,
     duration: session.sessionDurationMinutes
   } : session;
   const start2 = localDateTimeFromMs(startMs);
@@ -5560,7 +5468,7 @@ function activityTitle(item) {
   return readEffectText(item.title) || readEffectText(item.content) || "未命名任务";
 }
 function classifyEnergyActivity(item) {
-  const text2 = [item.title, item.content, item.themePath, item.theme, item.leafTheme, item.rootTheme].map((value) => String(value || "")).join(" ");
+  const text2 = [item.title, item.content, item.goalPath].map((value) => String(value || "")).join(" ");
   if (/代码|编码|编程|开发|插件|debug|调试/i.test(text2)) return "代码 / 开发";
   if (/会议|开会|沟通|讨论|同步/.test(text2)) return "会议 / 沟通";
   if (/读书|阅读|看书|学习|课程/.test(text2)) return "阅读 / 学习";
@@ -5573,8 +5481,8 @@ function classifyEnergyActivity(item) {
   if (/家务|打扫|收拾|整理/.test(text2)) return "家务 / 整理";
   return activityTitle(item).slice(0, 24);
 }
-function effectThemeLabel(item) {
-  return readEffectText(item.themePath) || readEffectText(item.theme) || readEffectText(item.rootTheme) || readEffectText(item.leafTheme) || "未标主题";
+function effectGoalLabel(item) {
+  return readEffectText(item.goalPath) || "未分目标";
 }
 function effectDurationBucket(durationMinutes2) {
   if (durationMinutes2 < 30) return "<30min";
@@ -5670,7 +5578,7 @@ function buildEnergyEffects(items, options = {}) {
       activityItemId: session.id,
       activityTitle: activityTitle(interval.item),
       activityLabel: classifyEnergyActivity(interval.item),
-      themeLabel: effectThemeLabel(interval.item),
+      goalLabel: effectGoalLabel(interval.item),
       durationBucket: effectDurationBucket(interval.durationMinutes),
       durationMinutes: interval.durationMinutes,
       startDate: interval.startDate,
@@ -5696,7 +5604,7 @@ function buildEnergyEffects(items, options = {}) {
     excludedActivityCount: intervals.length - samples.length,
     samples,
     byActivity: aggregateEffectRows(samples, "activity", (sample) => sample.activityLabel, minimumTrendSamples, supportedTrendSamples),
-    byTheme: aggregateEffectRows(samples, "theme", (sample) => sample.themeLabel, minimumTrendSamples, supportedTrendSamples),
+    byGoal: aggregateEffectRows(samples, "goal", (sample) => sample.goalLabel, minimumTrendSamples, supportedTrendSamples),
     byDuration: aggregateEffectRows(samples, "duration", (sample) => sample.durationBucket, minimumTrendSamples, supportedTrendSamples)
   };
 }
@@ -5868,9 +5776,9 @@ function incrementReason(diagnostics, reason) {
 function personalEffectFor(candidate, management) {
   if (!management) return void 0;
   const title = normalizedLabel(candidate.title);
-  const theme = normalizedLabel(candidate.theme || "");
+  const goal = normalizedLabel(candidate.goalPath || "");
   const rows = [...management.recoveryCandidates, ...management.cautionCandidates];
-  const row = rows.find((entry) => normalizedLabel(entry.label) === title) || (theme ? rows.find((entry) => normalizedLabel(entry.label) === theme) : void 0);
+  const row = rows.find((entry) => normalizedLabel(entry.label) === title) || (goal ? rows.find((entry) => normalizedLabel(entry.label) === goal) : void 0);
   if (!row || row.sampleCount < 3) return void 0;
   return {
     meanDelta: row.meanDelta,
@@ -5936,10 +5844,8 @@ function buildEnergyActionCandidateResult(items, options = {}) {
       id: item.id,
       title,
       source,
-      goalId: item.goalId,
       goalPath: item.goalPath,
       seriesId: item.seriesId,
-      theme: text$3(item.themePath || item.theme) || void 0,
       activityLabel: classifyEnergyActivity(item),
       durationMinutes: inferredDuration(item, history),
       brainLoad: load(item.brainDemand) || sharedLoad,
@@ -6007,13 +5913,13 @@ function buildFeedbackRows(items) {
     const delta = finiteNumber$1(session.energyDelta);
     if (delta == null) continue;
     const task = byId.get(session.taskId);
-    const theme = text$2(session.themePath || task?.themePath || task?.theme) || void 0;
-    const activity = task ? classifyEnergyActivity(task) : theme || "未分类活动";
+    const goalPath = text$2(session.goalPath || task?.goalPath) || void 0;
+    const activity = task ? classifyEnergyActivity(task) : goalPath || "未分类活动";
     rows.push({
       taskId: session.taskId,
       seriesId: session.seriesId || task?.seriesId,
       activity,
-      theme,
+      goalPath,
       delta,
       brainDelta: finiteNumber$1(session.brainDelta),
       physicalDelta: finiteNumber$1(session.physicalDelta),
@@ -6035,14 +5941,14 @@ function buildEnergyRecommendationLearning(items) {
   const byTaskId = aggregate(rows, (row) => row.taskId);
   const bySeriesId = aggregate(rows.filter((row) => !!row.seriesId), (row) => row.seriesId || "");
   const byActivity = aggregate(rows, (row) => row.activity);
-  const byTheme = aggregate(rows.filter((row) => !!row.theme), (row) => row.theme || "");
+  const byGoal = aggregate(rows.filter((row) => !!row.goalPath), (row) => row.goalPath || "");
   return {
     feedbackSampleCount: rows.length,
     pairedActivityCount: rows.length,
     byTaskId,
     bySeriesId,
     byActivity,
-    byTheme,
+    byGoal,
     recoveryActivities: recoveryEntries(byActivity, "recovery"),
     depletionActivities: recoveryEntries(byActivity, "depletion")
   };
@@ -6051,9 +5957,9 @@ function attachEnergyRecommendationLearning(candidates, learning) {
   return candidates.map((candidate) => {
     const taskEffect = learning.byTaskId.get(normalized(candidate.id));
     const seriesEffect = candidate.seriesId ? learning.bySeriesId.get(normalized(candidate.seriesId)) : void 0;
-    const themeEffect = candidate.theme ? learning.byTheme.get(normalized(candidate.theme)) : void 0;
+    const goalEffect = candidate.goalPath ? learning.byGoal.get(normalized(candidate.goalPath)) : void 0;
     const activityEffect = candidate.activityLabel ? learning.byActivity.get(normalized(candidate.activityLabel)) : void 0;
-    const historicalEffect = taskEffect && taskEffect.sampleCount >= 3 ? taskEffect : seriesEffect && seriesEffect.sampleCount >= 3 ? seriesEffect : themeEffect && themeEffect.sampleCount >= 3 ? themeEffect : activityEffect && activityEffect.sampleCount >= 3 ? activityEffect : void 0;
+    const historicalEffect = taskEffect && taskEffect.sampleCount >= 3 ? taskEffect : seriesEffect && seriesEffect.sampleCount >= 3 ? seriesEffect : goalEffect && goalEffect.sampleCount >= 3 ? goalEffect : activityEffect && activityEffect.sampleCount >= 3 ? activityEffect : void 0;
     return historicalEffect ? { ...candidate, historicalEffect } : candidate;
   });
 }
@@ -6130,37 +6036,44 @@ function buildEnergyDataQuality(items, options) {
     gaps
   };
 }
-const GOAL_DEFAULT_KEYS = /* @__PURE__ */ new Set(["goalId", "目标ID", "goalPath", "目标", "目标路径"]);
+const GOAL_CONTEXT_KEYS = /* @__PURE__ */ new Set(["goalPath", "目标", "目标路径"]);
 function hasHash(value) {
   const text2 = String(value ?? "");
   return text2.includes("#") || text2.includes("＃");
 }
 function assertGoal(goal) {
-  if (!goal.id || !String(goal.id).startsWith("goal.")) throw new Error(`Invalid Goal id: ${goal.id || "<empty>"}`);
-  if (!goal.title?.trim() || hasHash(goal.title)) throw new Error(`Invalid Goal title for ${goal.id}: Goal title must not contain #.`);
-  const normalized2 = normalizeGoalPath(goal.goalPath || goal.title);
-  if (!normalized2 || normalized2 !== String(goal.goalPath || "").trim()) {
-    throw new Error(`Invalid Goal path for ${goal.id}: expected canonical slash path without #.`);
-  }
+  const raw = String(goal.path || "").trim();
+  if (hasHash(raw)) throw new Error(`Invalid Goal path ${raw}: Goal must not contain #.`);
+  const normalized2 = normalizeGoalPath(raw);
+  if (!normalized2) throw new Error("Invalid Goal: canonical slash path is required.");
+  if (goal.path !== normalized2) throw new Error(`Invalid Goal path: expected ${normalized2}.`);
 }
-function assertTemplate(template, goalIds) {
-  if (!goalIds.has(template.goalId)) throw new Error(`GoalTemplate ${template.id} references missing Goal (${template.goalId}).`);
+function assertTemplate(template, goalPaths) {
+  const goalPath = normalizeGoalPath(template.goalPath);
+  if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`GoalTemplate references missing Goal (${template.goalPath || "<empty>"}).`);
   for (const key of Object.keys(template.defaultValues || {})) {
-    if (GOAL_DEFAULT_KEYS.has(key)) throw new Error(`GoalTemplate ${template.id} must not persist Goal defaults (${key}).`);
+    if (GOAL_CONTEXT_KEYS.has(key)) throw new Error(`GoalTemplate ${goalPath}/${template.coreBlockId} must not persist Goal context defaults (${key}).`);
   }
   for (const field of template.fields || []) {
     const semantic = String(field.semantic || "").trim();
     const key = String(field.key || field.label || "").trim();
-    if ((semantic === "goalId" || semantic === "goalPath" || GOAL_DEFAULT_KEYS.has(key)) && field.defaultValue != null) {
-      throw new Error(`GoalTemplate ${template.id} must not persist Goal field defaultValue (${key || semantic}).`);
+    if (semantic === "goalPath" || GOAL_CONTEXT_KEYS.has(key)) {
+      throw new Error(`GoalTemplate ${goalPath}/${template.coreBlockId} must not persist Goal context field (${key || semantic}).`);
     }
   }
 }
 function assertCanonicalGoalSettings(goalSettings) {
   const goals = goalSettings?.goals || [];
   for (const goal of goals) assertGoal(goal);
-  const goalIds = new Set(goals.map((goal) => goal.id));
-  for (const template of goalSettings?.goalTemplates || []) assertTemplate(template, goalIds);
+  const paths = new Set(goals.map((goal) => goal.path));
+  if (paths.size !== goals.length) throw new Error("Duplicate Goal path detected.");
+  const templateKeys = /* @__PURE__ */ new Set();
+  for (const template of goalSettings?.goalTemplates || []) {
+    assertTemplate(template, paths);
+    const key = `${template.goalPath}::${template.coreBlockId}`;
+    if (templateKeys.has(key)) throw new Error(`Duplicate GoalTemplate detected (${key}).`);
+    templateKeys.add(key);
+  }
 }
 const UNKNOWN_GOAL_RANK = Number.MAX_SAFE_INTEGER - 1e3;
 const UNASSIGNED_GOAL_RANK = Number.MAX_SAFE_INTEGER;
@@ -6177,37 +6090,58 @@ function leafGoalLabel(value) {
 }
 function getGoalOrderPath(goal) {
   if (!goal) return "";
-  return normalizeOrderPath(goal.goalPath || goal.title || goal.id);
+  return normalizeOrderPath(goal.path);
 }
 function getGoalOrderLabel(goal) {
   if (!goal) return "";
-  return leafGoalLabel(goal.title || goal.goalPath || goal.id);
+  return leafGoalLabel(goal.path);
 }
 function createGoalOrderIndex(goals = []) {
-  const descriptors = (goals || []).map((goal, originalIndex) => {
+  const rawDescriptors = (goals || []).map((goal, originalIndex) => {
     const path = getGoalOrderPath(goal);
+    const parts = path.split("/").filter(Boolean);
     return {
-      id: goal.id,
       path,
+      parentPath: parts.slice(0, -1).join("/"),
       order: finiteNumber(goal?.sortOrder, originalIndex),
       originalIndex
     };
   }).filter((entry) => Boolean(entry.path));
-  descriptors.sort((left2, right2) => {
+  const descriptorByPath = /* @__PURE__ */ new Map();
+  for (const entry of rawDescriptors) {
+    if (!descriptorByPath.has(entry.path)) descriptorByPath.set(entry.path, entry);
+  }
+  const childrenByParent = /* @__PURE__ */ new Map();
+  const rootEntries = [];
+  for (const entry of descriptorByPath.values()) {
+    if (!entry.parentPath || !descriptorByPath.has(entry.parentPath)) {
+      rootEntries.push(entry);
+      continue;
+    }
+    const siblings = childrenByParent.get(entry.parentPath) || [];
+    siblings.push(entry);
+    childrenByParent.set(entry.parentPath, siblings);
+  }
+  const sortSiblings = (items) => items.sort((left2, right2) => {
     if (left2.order !== right2.order) return left2.order - right2.order;
-    return left2.originalIndex - right2.originalIndex;
+    if (left2.originalIndex !== right2.originalIndex) return left2.originalIndex - right2.originalIndex;
+    return left2.path.localeCompare(right2.path, "zh-CN");
   });
+  sortSiblings(rootEntries);
+  childrenByParent.forEach(sortSiblings);
+  const descriptors = [];
+  const visit = (entry) => {
+    descriptors.push(entry);
+    for (const child of childrenByParent.get(entry.path) || []) visit(child);
+  };
+  rootEntries.forEach(visit);
   const byPath = /* @__PURE__ */ new Map();
-  const byId = /* @__PURE__ */ new Map();
   const originalIndexByPath = /* @__PURE__ */ new Map();
   const orderedPaths = [];
   descriptors.forEach((entry, index) => {
-    if (!byPath.has(entry.path)) {
-      byPath.set(entry.path, index);
-      originalIndexByPath.set(entry.path, entry.originalIndex);
-      orderedPaths.push(entry.path);
-    }
-    if (entry.id && !byId.has(entry.id)) byId.set(entry.id, index);
+    byPath.set(entry.path, index);
+    originalIndexByPath.set(entry.path, entry.originalIndex);
+    orderedPaths.push(entry.path);
   });
   const rankOfPath = (path) => {
     const normalized2 = normalizeOrderPath(path || "");
@@ -6226,35 +6160,13 @@ function createGoalOrderIndex(goals = []) {
   const compareGoals = (left2, right2) => {
     const byPathOrder = compareGoalPaths(getGoalOrderPath(left2), getGoalOrderPath(right2));
     if (byPathOrder !== 0) return byPathOrder;
-    const leftIndex = left2.id && byId.has(left2.id) ? byId.get(left2.id) : UNKNOWN_GOAL_RANK;
-    const rightIndex = right2.id && byId.has(right2.id) ? byId.get(right2.id) : UNKNOWN_GOAL_RANK;
-    if (leftIndex !== rightIndex) return leftIndex - rightIndex;
-    return String(left2.id || "").localeCompare(String(right2.id || ""), "zh-CN");
+    return left2.path.localeCompare(right2.path, "zh-CN");
   };
-  return { byPath, byId, originalIndexByPath, orderedPaths, rankOfPath, compareGoalPaths, compareGoals };
+  return { byPath, originalIndexByPath, orderedPaths, rankOfPath, compareGoalPaths, compareGoals };
 }
 function sortGoalsBySettingsOrder(goals = []) {
   const order2 = createGoalOrderIndex(goals);
   return [...goals].sort(order2.compareGoals);
-}
-function templateSortValue(template, fallback) {
-  return finiteNumber(template?.sortOrder, fallback);
-}
-function sortGoalTemplatesBySettingsOrder(templates = [], goals = []) {
-  const goalOrder = createGoalOrderIndex(goals);
-  const originalIndex = /* @__PURE__ */ new Map();
-  templates.forEach((template, index) => originalIndex.set(template, index));
-  return [...templates].sort((left2, right2) => {
-    const leftGoalPath = goals.find((goal) => goal.id === left2.goalId)?.goalPath || left2.goalId;
-    const rightGoalPath = goals.find((goal) => goal.id === right2.goalId)?.goalPath || right2.goalId;
-    const byGoal = goalOrder.compareGoalPaths(leftGoalPath, rightGoalPath);
-    if (byGoal !== 0) return byGoal;
-    const byBlock = String(left2.coreBlockId || "").localeCompare(String(right2.coreBlockId || ""), "zh-CN");
-    if (byBlock !== 0) return byBlock;
-    const byTemplateOrder = templateSortValue(left2, originalIndex.get(left2) ?? 0) - templateSortValue(right2, originalIndex.get(right2) ?? 0);
-    if (byTemplateOrder !== 0) return byTemplateOrder;
-    return (originalIndex.get(left2) ?? 0) - (originalIndex.get(right2) ?? 0);
-  });
 }
 function isPeriodAwareCoreBlock(coreBlockId) {
   const id = String(coreBlockId || "").trim();
@@ -6341,10 +6253,7 @@ function resolveDerivedPeriod(dateValue, granularityValue) {
   const end2 = new Date(year, 11, 31);
   return { id: `${year}`, label: `${year} 年`, granularity, startDate: ymd(start2), endDate: ymd(end2) };
 }
-const DEFAULT_TEMPLATE_VARIANT_ID = "default";
 const SYSTEM_RECORD_CONTEXT_FIELD_KEYS = [
-  "goalId",
-  "目标ID",
   "goalPath",
   "目标",
   "目标路径",
@@ -6357,71 +6266,34 @@ const SYSTEM_RECORD_CONTEXT_FIELD_KEYS = [
   "模板ID",
   "templateSourceType",
   "模板来源",
-  "templateVariantId",
-  "goalTemplateVariantId",
-  "变体ID",
-  "记录预设",
   "cycleId",
   "周期ID",
   "periodId",
   "period",
   "周期",
   "周期粒度",
-  "goalGranularity",
-  "themeId",
-  "themePath",
-  "主题",
-  "rootTheme",
-  "leafTheme"
+  "goalGranularity"
 ];
-const SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET = new Set(SYSTEM_RECORD_CONTEXT_FIELD_KEYS);
-const SYSTEM_RECORD_CONTEXT_SEMANTICS = /* @__PURE__ */ new Set([
-  "goalId",
+const KEY_SET = new Set(SYSTEM_RECORD_CONTEXT_FIELD_KEYS);
+const SEMANTIC_SET = /* @__PURE__ */ new Set([
   "goalPath",
   "coreBlock",
   "templateId",
   "templateSourceType",
-  "templateVariantId",
   "cycleId",
-  "period",
-  "themeId",
-  "themePath"
+  "period"
 ]);
 function isSystemRecordContextField(key, label, semantic) {
   const normalizedKey = String(key || "").trim();
   const normalizedLabel2 = String(label || "").trim();
   const normalizedSemantic = String(semantic || "").trim();
-  return SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET.has(normalizedKey) || SYSTEM_RECORD_CONTEXT_FIELD_KEY_SET.has(normalizedLabel2) || SYSTEM_RECORD_CONTEXT_SEMANTICS.has(normalizedSemantic);
-}
-function normalizeTemplateVariantId(value) {
-  const normalized2 = String(value || "").trim();
-  return normalized2 || DEFAULT_TEMPLATE_VARIANT_ID;
-}
-function nowIso$1() {
-  return (/* @__PURE__ */ new Date()).toISOString();
-}
-function normalizeVariantId(value) {
-  return normalizeTemplateVariantId(value);
+  return KEY_SET.has(normalizedKey) || KEY_SET.has(normalizedLabel2) || SEMANTIC_SET.has(normalizedSemantic);
 }
 function safeIdPart(value) {
   return String(value || "").trim().replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-") || "default";
 }
-function parseVariantIdFromTemplateId(id) {
-  const text2 = String(id || "").trim();
-  if (!text2.startsWith("goal-template.")) return DEFAULT_TEMPLATE_VARIANT_ID;
-  const parts = text2.split(".");
-  if (parts.length <= 4) return DEFAULT_TEMPLATE_VARIANT_ID;
-  return normalizeVariantId(parts.slice(4).join("."));
-}
-function normalizeGoalTemplateId(goalId, coreBlockId, variantId, id) {
-  const text2 = String(id || "").trim();
-  const normalizedVariantId = normalizeVariantId(variantId);
-  if (text2 && text2.startsWith("goal-template.")) {
-    const idVariantId = parseVariantIdFromTemplateId(text2);
-    if (idVariantId === normalizedVariantId) return text2;
-    if (normalizedVariantId === DEFAULT_TEMPLATE_VARIANT_ID && idVariantId === DEFAULT_TEMPLATE_VARIANT_ID) return text2;
-  }
-  return getGoalTemplateId(goalId, coreBlockId, normalizedVariantId);
+function canonicalGoalPath(value) {
+  return normalizeGoalPath(value) || "";
 }
 function normalizeTemplatePeriodPolicy(coreBlockId, raw) {
   if (!isPeriodAwareCoreBlock(coreBlockId)) return void 0;
@@ -6431,52 +6303,41 @@ function normalizeTemplatePeriodPolicy(coreBlockId, raw) {
   }
   return { enabled: true, granularity: "week" };
 }
+function getGoalTemplateId(goalPath, coreBlockId) {
+  return `goal-template.${safeIdPart(canonicalGoalPath(goalPath))}.${safeIdPart(coreBlockId)}`;
+}
 function normalizeGoalTemplateStorageRow(row) {
-  const variantId = normalizeVariantId(row.variantId || parseVariantIdFromTemplateId(row.id));
+  const goalPath = canonicalGoalPath(row.goalPath);
   return {
-    id: normalizeGoalTemplateId(row.goalId, row.coreBlockId, variantId, row.id),
-    goalId: row.goalId,
+    id: getGoalTemplateId(goalPath, row.coreBlockId),
+    goalPath,
     coreBlockId: row.coreBlockId,
-    variantId,
-    name: row.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "记录预设" : variantId),
     description: row.description,
     periodPolicy: normalizeTemplatePeriodPolicy(row.coreBlockId, row),
-    sortOrder: typeof row.sortOrder === "number" ? row.sortOrder : void 0,
     enabled: row.enabled !== false,
     fields: row.fields,
     targetFile: row.targetFile,
     appendUnderHeader: row.appendUnderHeader,
     defaultValues: row.defaultValues || {},
-    requiredFields: row.requiredFields || [],
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt
+    requiredFields: row.requiredFields || []
   };
 }
-function toGoalTemplateStorageRow(template, previous) {
-  const timestamp2 = nowIso$1();
-  const variantId = normalizeVariantId(template.variantId);
+function toGoalTemplateStorageRow(template) {
   return {
-    ...previous || {},
-    id: normalizeGoalTemplateId(template.goalId, template.coreBlockId, variantId, template.id),
-    goalId: template.goalId,
+    goalPath: canonicalGoalPath(template.goalPath),
     coreBlockId: template.coreBlockId,
-    variantId,
-    name: template.name || (variantId === DEFAULT_TEMPLATE_VARIANT_ID ? "记录预设" : variantId),
-    description: template.description,
+    description: template.description || void 0,
     periodPolicy: normalizeTemplatePeriodPolicy(template.coreBlockId, template),
-    sortOrder: template.sortOrder,
     enabled: template.enabled !== false,
     fields: template.fields?.length ? template.fields : void 0,
     targetFile: template.targetFile || void 0,
     appendUnderHeader: template.appendUnderHeader || void 0,
     defaultValues: template.defaultValues && Object.keys(template.defaultValues).length ? template.defaultValues : void 0,
-    requiredFields: template.requiredFields?.length ? template.requiredFields : void 0,
-    createdAt: template.createdAt || previous?.createdAt || timestamp2,
-    updatedAt: template.updatedAt || timestamp2
+    requiredFields: template.requiredFields?.length ? template.requiredFields : void 0
   };
 }
 function goalTemplateIdentityKey(template) {
-  return `${template.goalId}::${template.coreBlockId}::${normalizeVariantId(template.variantId)}`;
+  return `${canonicalGoalPath(template.goalPath)}::${template.coreBlockId}`;
 }
 function getGoalTemplates(goalSettings) {
   const result = [];
@@ -6494,80 +6355,50 @@ function getGoalTemplates(goalSettings) {
   }
   return result;
 }
-function getGoalTemplateId(goalId, coreBlockId, variantId = "default") {
-  const normalizedVariantId = normalizeVariantId(variantId);
-  const base = `goal-template.${safeIdPart(goalId)}.${safeIdPart(coreBlockId)}`;
-  return normalizedVariantId === DEFAULT_TEMPLATE_VARIANT_ID ? base : `${base}.${safeIdPart(normalizedVariantId)}`;
-}
-function getGoalTemplateCandidateGoalIds(goalSettings, goal) {
+function getGoalTemplateCandidateGoalPaths(goal) {
   if (!goal) return [];
-  const goals = goalSettings?.goals || [];
-  const ids2 = [goal.id];
-  const path = splitGoalPath(goal.goalPath || goal.title).goalPath;
-  const byPath = new Map(goals.map((item) => [splitGoalPath(item.goalPath || item.title).goalPath, item]));
-  for (const parentPath of getGoalPathCandidates(path).slice(1)) {
-    const parentGoal = byPath.get(parentPath);
-    if (parentGoal && !ids2.includes(parentGoal.id)) ids2.push(parentGoal.id);
-  }
-  return ids2;
+  const path = splitGoalPath(goal.path).goalPath;
+  return getGoalPathCandidates(path);
 }
-function getGoalTemplateVariants(goalSettings, goal, coreBlockId) {
-  const candidateGoalIds = getGoalTemplateCandidateGoalIds(goalSettings, goal);
-  if (!candidateGoalIds.length) return [];
-  const rank = new Map(candidateGoalIds.map((id, index) => [id, index]));
-  return getGoalTemplates(goalSettings).map((template, storageIndex) => ({ template, storageIndex })).filter(({ template }) => template.enabled !== false && candidateGoalIds.includes(template.goalId) && template.coreBlockId === coreBlockId).sort((a2, b2) => {
-    const byGoal = (rank.get(a2.template.goalId) ?? 999) - (rank.get(b2.template.goalId) ?? 999);
-    if (byGoal !== 0) return byGoal;
-    const bySortOrder = (a2.template.sortOrder ?? 9999) - (b2.template.sortOrder ?? 9999);
-    if (bySortOrder !== 0) return bySortOrder;
-    return a2.storageIndex - b2.storageIndex;
-  }).map(({ template }) => template);
-}
-function findGoalTemplate(goalSettings, goal, coreBlockId, variantId) {
-  const variants = getGoalTemplateVariants(goalSettings, goal, coreBlockId);
-  if (!variants.length) return null;
-  const normalizedVariantId = normalizeVariantId(variantId);
-  if (variantId) {
-    const exact = variants.find((template) => normalizeVariantId(template.variantId) === normalizedVariantId || template.id === variantId);
-    if (exact) return exact;
+function findGoalTemplate(goalSettings, goal, coreBlockId) {
+  const candidates = getGoalTemplateCandidateGoalPaths(goal);
+  if (!candidates.length) return null;
+  const byIdentity = new Map(
+    getGoalTemplates(goalSettings).filter((template) => template.enabled !== false && template.coreBlockId === coreBlockId).map((template) => [canonicalGoalPath(template.goalPath), template])
+  );
+  for (const path of candidates) {
+    const template = byIdentity.get(path);
+    if (template) return template;
   }
-  return variants[0] || null;
+  return null;
 }
 function upsertGoalTemplateInSettings(goalSettings, template) {
-  const previousRows = goalSettings.goalTemplates || [];
-  const variantId = normalizeVariantId(template.variantId);
-  const nextTemplate = { ...template, variantId, id: template.id || getGoalTemplateId(template.goalId, template.coreBlockId, variantId) };
-  const rows = previousRows.slice();
-  const index = rows.findIndex((item) => {
-    const itemVariantId = normalizeVariantId(item.variantId || parseVariantIdFromTemplateId(item.id));
-    return item.id === nextTemplate.id || item.goalId === nextTemplate.goalId && item.coreBlockId === nextTemplate.coreBlockId && itemVariantId === variantId;
-  });
-  const next2 = toGoalTemplateStorageRow(nextTemplate, index >= 0 ? rows[index] : null);
-  const normalizedRows = rows.slice();
-  if (index >= 0) normalizedRows[index] = next2;
-  else normalizedRows.push(next2);
-  return { ...goalSettings, goalTemplates: normalizedRows };
+  const path = canonicalGoalPath(template.goalPath);
+  if (!path) throw new Error("GoalTemplate requires a canonical Goal path.");
+  const next2 = toGoalTemplateStorageRow({ ...template, goalPath: path, id: getGoalTemplateId(path, template.coreBlockId) });
+  const rows = [...goalSettings.goalTemplates || []];
+  const index = rows.findIndex((row) => canonicalGoalPath(row.goalPath) === path && row.coreBlockId === template.coreBlockId);
+  if (index >= 0) rows[index] = next2;
+  else rows.push(next2);
+  return { ...goalSettings, goalTemplates: rows };
 }
-function removeGoalTemplateFromSettings(goalSettings, goalId, coreBlockId, variantId = "default") {
-  const normalizedVariantId = normalizeVariantId(variantId);
+function removeGoalTemplateFromSettings(goalSettings, goalPath, coreBlockId) {
+  const path = canonicalGoalPath(goalPath);
   return {
     ...goalSettings,
-    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => {
-      const itemVariantId = normalizeVariantId(template.variantId || parseVariantIdFromTemplateId(template.id));
-      return !(template.goalId === goalId && template.coreBlockId === coreBlockId && itemVariantId === normalizedVariantId);
-    })
+    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => !(canonicalGoalPath(template.goalPath) === path && template.coreBlockId === coreBlockId))
   };
 }
-function removeGoalTemplatesForGoal(goalSettings, goalId) {
+function removeGoalTemplatesForGoal(goalSettings, goalPath) {
+  const path = canonicalGoalPath(goalPath);
   return {
     ...goalSettings,
-    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => template.goalId !== goalId)
+    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => canonicalGoalPath(template.goalPath) !== path)
   };
 }
 function cleanupGoalTemplateStorage(goalSettings) {
   const beforeRows = goalSettings.goalTemplates || [];
-  const templates = getGoalTemplates(goalSettings);
-  const afterRows = templates.map((template) => toGoalTemplateStorageRow(template));
+  const afterRows = getGoalTemplates(goalSettings).map(toGoalTemplateStorageRow);
   const beforeJson = JSON.stringify(beforeRows);
   const afterJson = JSON.stringify(afterRows);
   return {
@@ -6579,24 +6410,6 @@ function cleanupGoalTemplateStorage(goalSettings) {
       changed: beforeJson !== afterJson
     }
   };
-}
-function normalizeThemePath(value) {
-  return normalizeHierarchyPathValue(value) || "";
-}
-function normalizeThemePathOrNull(value) {
-  return normalizeHierarchyPathValue(value);
-}
-function getThemePathCandidates(value) {
-  const parts = normalizeHierarchyPathParts(value);
-  const result = [];
-  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
-  return result;
-}
-function getThemePathLeaf(value) {
-  return getHierarchyPathLeaf(value) || normalizeThemePath(value);
-}
-function buildThemePathMap(themes) {
-  return new Map((themes || []).map((theme) => [normalizeThemePath(theme.path), theme]).filter(([path]) => !!path));
 }
 function templateFieldTokenSources(field) {
   if (!field) return [];
@@ -6623,28 +6436,16 @@ function templateFieldMatchesAliases(field, aliases2) {
 function templateFieldSemanticToken(field) {
   return normalizeFieldToken(field?.semantic || field?.semanticType);
 }
-function isThemeTemplateField(field) {
-  const key = normalizeFieldToken(field?.key);
-  const label = normalizeFieldLabelToken(field?.label);
-  const semantic = templateFieldSemanticToken(field);
-  return key === "themepath" || key === "主题" || label === "主题" || semantic.includes("themepath") || semantic === "theme";
-}
 function isIconTemplateField(field) {
   const key = normalizeFieldToken(field?.key);
   const label = normalizeFieldLabelToken(field?.label);
   const semantic = templateFieldSemanticToken(field);
   return key === "icon" || key === "图标" || label === "图标" || semantic === "icon";
 }
-function isGoalPathTemplateField(field) {
-  const key = normalizeFieldToken(field?.key);
-  const label = normalizeFieldLabelToken(field?.label);
-  const semantic = templateFieldSemanticToken(field);
-  return key === "goalpath" || key === "目标" || label === "目标" || label === "目标路径" || semantic.includes("goalpath");
-}
 function isOptionLikeValue$1(value) {
   return !!value && typeof value === "object" && ("value" in value || "label" in value);
 }
-function readOptionText$2(value) {
+function readOptionText$1(value) {
   if (isOptionLikeValue$1(value)) {
     const rawValue = value.value ?? value.label;
     const rawLabel = value.label ?? value.value;
@@ -6659,7 +6460,7 @@ function readOptionText$2(value) {
   return { value: text2, label: text2 };
 }
 function readComparableValues(value, options = {}) {
-  const text2 = readOptionText$2(value);
+  const text2 = readOptionText$1(value);
   const rawValues = [text2.value, text2.label].map((entry) => String(entry ?? "").trim()).filter(Boolean);
   const values2 = new Set(rawValues);
   if (options.normalize) {
@@ -6684,88 +6485,42 @@ function findMatchingOption(options, rawValue, matchOptions = {}) {
     return optionComparable.some((entry) => rawComparable.has(entry));
   });
 }
-function readOptionText$1(value) {
-  return readOptionText$2(value).value;
+function readOptionText(value) {
+  return readOptionText$1(value).value;
 }
-function isGeneratedGoalTemplateName(value) {
-  const text2 = compactText(value);
-  return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "默认预设" || text2 === "默认模板" || text2 === "未命名预设";
-}
-function readFieldDefault$1(fields, predicate) {
+function readFieldDefault(fields, predicate) {
   for (const field of fields || []) {
     if (!predicate(field)) continue;
-    const value = readOptionText$1(field.defaultValue);
-    if (value && value !== "{{goal.themePath}}") return value;
+    const value = readOptionText(field.defaultValue);
+    if (value) return value;
   }
   return "";
 }
-function readGoalTemplateThemePath$1(template, goal) {
-  const values2 = template?.defaultValues || {};
-  return normalizeThemePath(
-    readOptionText$1(values2.themePath) || readOptionText$1(values2["主题"]) || readFieldDefault$1(template?.fields, isThemeTemplateField) || readOptionText$1(goal?.themePath)
-  );
-}
-function readGoalTemplateIcon$1(template, fallbackIcon) {
+function readGoalTemplateIcon(template, fallbackIcon) {
   const values2 = template?.defaultValues || {};
   return compactText(
-    readOptionText$1(values2.icon) || readOptionText$1(values2["图标"]) || readOptionText$1(values2["theme.icon"]) || readFieldDefault$1(template?.fields, isIconTemplateField) || fallbackIcon
+    readOptionText(values2.icon) || readOptionText(values2["图标"]) || readFieldDefault(template?.fields, isIconTemplateField) || fallbackIcon
   );
 }
-function getGoalTemplateDisplayName$1(template, goal, fallback = "记录预设") {
-  const rawName = compactText(template?.name);
-  if (rawName && !isGeneratedGoalTemplateName(rawName)) return rawName;
-  const themeLabel = getThemePathLeaf(readGoalTemplateThemePath$1(template, goal));
-  if (themeLabel) return themeLabel;
-  const variantId = normalizeTemplateVariantId(compactText(template?.variantId));
-  const variantText = variantId.replace(/^legacy-/, "");
-  if (variantText && variantText !== DEFAULT_TEMPLATE_VARIANT_ID && !isGeneratedGoalTemplateName(variantText)) return variantText;
-  return fallback;
-}
-function getGoalTemplateDisplayInfo(template, goal, fallbackIcon) {
-  const rawName = compactText(template?.name);
-  const themePath = readGoalTemplateThemePath$1(template, goal);
-  const name = getGoalTemplateDisplayName$1(template, goal);
-  return {
-    name,
-    themePath,
-    icon: readGoalTemplateIcon$1(template, fallbackIcon),
-    variantId: normalizeTemplateVariantId(template?.variantId),
-    isGeneratedName: !rawName || isGeneratedGoalTemplateName(rawName)
-  };
-}
-const ALLOWED_SYSTEM_DEFAULT_KEYS = /* @__PURE__ */ new Set(["themePath", "icon"]);
-const GOAL_CONTEXT_FIELD_KEYS = /* @__PURE__ */ new Set(["goalId", "目标ID", "goalPath", "目标", "目标路径", "rootGoal", "leafGoal"]);
-const FORBIDDEN_DEFAULT_KEYS = /* @__PURE__ */ new Set([
-  "legacyOverrideId",
-  "legacyThemePath",
-  "goalId",
-  "目标ID",
+const CONTEXT_FIELD_KEYS = /* @__PURE__ */ new Set([
   "goalPath",
   "目标",
+  "目标路径",
+  "rootGoal",
+  "leafGoal",
   "templateId",
   "模板ID",
   "templateSourceType",
-  "模板来源",
-  "templateVariantId",
-  "goalTemplateVariantId",
-  "变体ID",
-  "记录预设",
-  "period",
-  "periodId",
-  "cycleId",
-  "周期",
-  "周期ID",
-  "周期粒度",
-  "goalGranularity"
+  "模板来源"
 ]);
-function isGoalContextField(field) {
+function isContextField(field) {
   const source = field;
   const semantic = compactText(source.semantic || source.semanticType);
   const key = compactText(source.key || source.label);
-  return semantic === "goalId" || semantic === "goalPath" || GOAL_CONTEXT_FIELD_KEYS.has(key);
+  return semantic === "goalPath" || CONTEXT_FIELD_KEYS.has(key);
 }
-function stripGoalContextFields(fields) {
-  const result = (fields || []).filter((field) => !isGoalContextField(field));
+function stripContextFields(fields) {
+  const result = (fields || []).filter((field) => !isContextField(field));
   return result.length ? result : void 0;
 }
 function stableJson$1(value) {
@@ -6778,8 +6533,8 @@ function stableJson$1(value) {
     if (Array.isArray(input)) return input.map(normalize2);
     const out = {};
     Object.keys(input).sort().forEach((key) => {
-      const value2 = normalize2(input[key]);
-      if (value2 !== void 0) out[key] = value2;
+      const normalized2 = normalize2(input[key]);
+      if (normalized2 !== void 0) out[key] = normalized2;
     });
     return out;
   };
@@ -6820,17 +6575,15 @@ function getFieldDefaultMap$1(fields) {
   }
   return result;
 }
-function compactDefaultValues(values2, baseFields, goal) {
+function compactDefaultValues(values2, baseFields) {
   const baseDefaults = getFieldDefaultMap$1(baseFields);
-  const goalThemePath = compactText(goal?.themePath);
   const result = {};
   Object.entries(values2 || {}).forEach(([rawKey, raw]) => {
-    const key = rawKey === "主题" ? "themePath" : rawKey === "图标" ? "icon" : rawKey;
-    if (FORBIDDEN_DEFAULT_KEYS.has(key)) return;
+    const key = rawKey === "图标" ? "icon" : rawKey;
+    if (CONTEXT_FIELD_KEYS.has(key)) return;
     const value = compactText(raw);
     if (!value) return;
-    if (isSystemRecordContextField(key) && !ALLOWED_SYSTEM_DEFAULT_KEYS.has(key)) return;
-    if (key === "themePath" && (value === goalThemePath || value === "{{goal.themePath}}")) return;
+    if (isSystemRecordContextField(key)) return;
     if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
     result[key] = raw;
   });
@@ -6847,23 +6600,19 @@ function normalizePeriodPolicyForTemplate(template) {
 function compactGoalTemplateForStorage(template, options = {}) {
   const coreBlock = options.coreBlock || null;
   const baseFields = coreBlock?.fields;
-  const next2 = { ...template, fields: stripGoalContextFields(template.fields) };
-  if (!isPeriodAwareCoreBlock(template.coreBlockId)) {
-    next2.periodPolicy = void 0;
-  } else {
-    next2.periodPolicy = normalizePeriodPolicyForTemplate(template);
-  }
+  const next2 = { ...template, fields: stripContextFields(template.fields) };
+  next2.periodPolicy = normalizePeriodPolicyForTemplate(template);
   if (coreBlock) {
-    if (fieldsHaveSameStructure$1(next2.fields, stripGoalContextFields(baseFields))) next2.fields = void 0;
+    if (fieldsHaveSameStructure$1(next2.fields, stripContextFields(baseFields))) next2.fields = void 0;
     if (compactText(template.targetFile) === compactText(coreBlock.targetFile)) next2.targetFile = void 0;
     if (compactText(template.appendUnderHeader) === compactText(coreBlock.appendUnderHeader)) next2.appendUnderHeader = void 0;
-    const explicitRequired = (template.requiredFields && template.requiredFields.length ? template.requiredFields : deriveRequiredFields$1(template.fields)).filter((key) => !GOAL_CONTEXT_FIELD_KEYS.has(compactText(key)));
-    const baseRequired = deriveRequiredFields$1(baseFields).filter((key) => !GOAL_CONTEXT_FIELD_KEYS.has(compactText(key)));
-    next2.requiredFields = equalStringSet$1(explicitRequired || [], baseRequired) ? void 0 : (explicitRequired || []).filter(Boolean);
+    const explicitRequired = (template.requiredFields?.length ? template.requiredFields : deriveRequiredFields$1(template.fields)).filter((key) => !CONTEXT_FIELD_KEYS.has(compactText(key)));
+    const baseRequired = deriveRequiredFields$1(baseFields).filter((key) => !CONTEXT_FIELD_KEYS.has(compactText(key)));
+    next2.requiredFields = equalStringSet$1(explicitRequired, baseRequired) ? void 0 : explicitRequired;
   } else if (next2.requiredFields && !next2.requiredFields.length) {
     next2.requiredFields = void 0;
   }
-  next2.defaultValues = compactDefaultValues(template.defaultValues, baseFields, options.goal);
+  next2.defaultValues = compactDefaultValues(template.defaultValues, baseFields);
   return next2;
 }
 function describeGoalTemplateStorageDiff(template) {
@@ -6876,56 +6625,407 @@ function describeGoalTemplateStorageDiff(template) {
   if (template.periodPolicy) parts.push(`周期 ${template.periodPolicy.granularity}`);
   return parts;
 }
-const SYSTEM_DISPLAY_DEFAULT_KEYS = /* @__PURE__ */ new Set(["themePath", "主题", "icon", "图标"]);
-function goalTemplateHasCustomOverrides(template, coreBlock, goal) {
-  if (!template || !coreBlock || template.enabled === false) return false;
-  const patch = compactGoalTemplateForStorage(template, { coreBlock, goal });
-  if (patch.fields?.length) return true;
-  if (compactText(patch.targetFile)) return true;
-  if (compactText(patch.appendUnderHeader)) return true;
-  if (patch.requiredFields?.length) return true;
-  const customDefaultKeys = Object.keys(patch.defaultValues || {}).filter((key) => !SYSTEM_DISPLAY_DEFAULT_KEYS.has(key));
-  return customDefaultKeys.length > 0;
+const UNASSIGNED_GOAL_KEY = "未归属目标";
+function normalizeItemGoalPath(value) {
+  return normalizeGoalPath(String(value ?? "").trim()) || "";
 }
-function inferGoalTemplateEditMode(template, coreBlock, goal) {
-  if (template?.enabled === false) return "disabled";
-  return goalTemplateHasCustomOverrides(template, coreBlock, goal) ? "override" : "inherit";
+function findGoalByPath(goals = [], goalPath) {
+  const normalized2 = normalizeItemGoalPath(goalPath);
+  if (!normalized2) return null;
+  return goals.find((goal) => normalizeItemGoalPath(goal.path) === normalized2) || null;
 }
-function cleanThemePath(value) {
-  return splitHierarchyPathValue(value).path;
+function getItemGoalKey(item, _goals = []) {
+  return normalizeItemGoalPath(item.goalPath) || UNASSIGNED_GOAL_KEY;
 }
-function splitThemePath$1(themePath) {
-  const parts = splitHierarchyPathValue(themePath);
+function getItemRootGoalKey(item, goals = []) {
+  const path = getItemGoalKey(item, goals);
+  if (path === UNASSIGNED_GOAL_KEY) return path;
+  return splitGoalPath(path).rootGoal || path;
+}
+function resolveGoalIcon(goal) {
+  const direct = String(goal?.icon || "").trim();
+  return direct || void 0;
+}
+function stableColor(seed) {
+  const palette = ["#8b5cf6", "#06b6d4", "#22c55e", "#f59e0b", "#ef4444", "#6366f1", "#14b8a6", "#f97316", "#a855f7", "#0ea5e9"];
+  let hash2 = 0;
+  for (const ch of seed || "") hash2 = (hash2 << 5) - hash2 + ch.charCodeAt(0) | 0;
+  return palette[Math.abs(hash2) % palette.length] || "#8b5cf6";
+}
+function buildGoalBuckets(items, goals = [], options = {}) {
+  const { includeUnassigned = true, includeKnownGoals = false, level = "path" } = options;
+  const normalizeBucketPath = (value) => {
+    const normalized2 = normalizeItemGoalPath(value);
+    if (!normalized2 || normalized2 === UNASSIGNED_GOAL_KEY) return UNASSIGNED_GOAL_KEY;
+    return level === "root" ? splitGoalPath(normalized2).rootGoal || normalized2 : normalized2;
+  };
+  const map = /* @__PURE__ */ new Map();
+  const addBucket = (goalPath, sourceGoal) => {
+    const key = normalizeBucketPath(goalPath);
+    if (!includeUnassigned && key === UNASSIGNED_GOAL_KEY) return;
+    if (map.has(key)) return;
+    const goal = sourceGoal || findGoalByPath(goals, key);
+    const label = key === UNASSIGNED_GOAL_KEY ? UNASSIGNED_GOAL_KEY : splitGoalPath(goal?.path || key).leafGoal || key;
+    const icon = key === UNASSIGNED_GOAL_KEY ? "•" : resolveGoalIcon(goal);
+    map.set(key, {
+      name: key,
+      alias: icon && icon !== "•" ? `${icon} ${label}` : label,
+      color: goal?.color || stableColor(key),
+      files: [],
+      goalPath: key === UNASSIGNED_GOAL_KEY ? void 0 : key,
+      icon,
+      isUnassigned: key === UNASSIGNED_GOAL_KEY
+    });
+  };
+  if (includeKnownGoals) {
+    for (const goal of goals || []) {
+      const path = normalizeItemGoalPath(goal.path);
+      if (!path) continue;
+      const bucketPath = normalizeBucketPath(path);
+      const bucketGoal = level === "root" ? findGoalByPath(goals, bucketPath) : goal;
+      addBucket(bucketPath, bucketGoal);
+    }
+  }
+  for (const item of items || []) {
+    const path = level === "root" ? getItemRootGoalKey(item, goals) : getItemGoalKey(item, goals);
+    addBucket(path);
+  }
+  const order2 = createGoalOrderIndex(goals);
+  return Array.from(map.values()).sort((a2, b2) => {
+    if (a2.isUnassigned && !b2.isUnassigned) return 1;
+    if (!a2.isUnassigned && b2.isUnassigned) return -1;
+    const byGoal = order2.compareGoalPaths(a2.goalPath || a2.name, b2.goalPath || b2.name);
+    if (byGoal !== 0) return byGoal;
+    return (a2.alias || a2.name).localeCompare(b2.alias || b2.name, "zh-CN");
+  });
+}
+function applyPatch(block, patch) {
+  if (!patch) return block;
   return {
-    themePath: parts.path,
-    rootTheme: parts.root,
-    leafTheme: parts.leaf
+    ...block,
+    name: patch.displayName || block.name,
+    categoryKey: patch.categoryKey || block.categoryKey,
+    fields: patch.fields || block.fields,
+    targetFile: patch.targetFile || block.targetFile,
+    appendUnderHeader: patch.appendUnderHeader ?? block.appendUnderHeader
   };
 }
-function normalizeExplicitTheme(rawTheme, matcher) {
-  const explicitTheme = cleanThemePath(rawTheme);
-  if (!explicitTheme) return void 0;
-  const matched = matcher?.findThemeByPartialMatch(explicitTheme);
-  return cleanThemePath(matched) || explicitTheme;
+function normalizeCoreBlockSettings(settings2) {
+  return {
+    enabledCoreBlockIds: settings2?.enabledCoreBlockIds?.length ? settings2.enabledCoreBlockIds : DEFAULT_CORE_BLOCK_SETTINGS.enabledCoreBlockIds,
+    patches: settings2?.patches || []
+  };
 }
-function readExplicitThemePath(item) {
-  const normalized2 = cleanThemePath(item?.themePath);
-  if (normalized2) return normalized2;
-  const cached2 = cleanThemePath(item?.themePathNormalized);
-  if (cached2) return cached2;
-  return cleanThemePath(item?.theme) || void 0;
+function getEffectiveCoreBlocks(settings2) {
+  const coreSettings = normalizeCoreBlockSettings(settings2.coreBlockSettings);
+  const patchesById = new Map(coreSettings.patches.map((patch) => [patch.blockId, patch]));
+  const enabled2 = new Set(coreSettings.enabledCoreBlockIds);
+  return DEFAULT_CORE_BLOCKS.filter((block) => block.captureMode === "template" && enabled2.has(block.id) && !patchesById.get(block.id)?.hidden).map((block) => applyPatch(block, patchesById.get(block.id)));
 }
-function readExplicitThemeParts(item) {
-  return splitThemePath$1(readExplicitThemePath(item));
+function getCoreBlockById(settings2, blockId) {
+  return getEffectiveCoreBlocks(settings2).find((block) => block.id === blockId) || null;
 }
-function applyExplicitThemeViewFields(item) {
-  const parts = readExplicitThemeParts(item);
-  item.themePath = parts.themePath || void 0;
-  item.rootTheme = parts.rootTheme || void 0;
-  item.leafTheme = parts.leafTheme || void 0;
-  item.themePathNormalized = parts.themePath || void 0;
-  return item;
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
+function normalizeInputSettings(value) {
+  const raw = isRecord(value) ? value : {};
+  return {
+    ...DEFAULT_SETTINGS.inputSettings,
+    ...raw,
+    // Core blocks are runtime projections. Goal is the only classification dimension.
+    blocks: []
+  };
+}
+function hydrateGoalOnlySettings(value) {
+  const raw = isRecord(value) ? value : {};
+  const rawGoals = Array.isArray(raw.goals) ? raw.goals : [];
+  const goals = rawGoals.map((entry) => {
+    if (!isRecord(entry)) throw new Error("Invalid Goal row: expected object.");
+    const path = normalizeGoalPath(String(entry.path ?? ""));
+    if (!path) throw new Error("Invalid Goal row: path is required.");
+    return {
+      path,
+      description: typeof entry.description === "string" ? entry.description : void 0,
+      status: ["active", "paused", "completed", "archived"].includes(String(entry.status)) ? entry.status : "active",
+      metrics: Array.isArray(entry.metrics) ? entry.metrics : [],
+      createdAt: typeof entry.createdAt === "string" ? entry.createdAt : "",
+      updatedAt: typeof entry.updatedAt === "string" ? entry.updatedAt : "",
+      ...typeof entry.icon === "string" ? { icon: entry.icon } : null,
+      ...typeof entry.color === "string" ? { color: entry.color } : null,
+      ...typeof entry.sortOrder === "number" ? { sortOrder: entry.sortOrder } : null
+    };
+  });
+  const goalPaths = new Set(goals.map((goal) => goal.path));
+  const rawTemplates = Array.isArray(raw.goalTemplates) ? raw.goalTemplates : [];
+  const goalTemplates = rawTemplates.map((entry) => {
+    if (!isRecord(entry)) throw new Error("Invalid GoalTemplate row: expected object.");
+    const goalPath = normalizeGoalPath(String(entry.goalPath ?? ""));
+    const coreBlockId = String(entry.coreBlockId ?? "").trim();
+    if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`GoalTemplate references missing Goal path (${goalPath || "<empty>"}).`);
+    if (!coreBlockId) throw new Error(`GoalTemplate ${goalPath} is missing coreBlockId.`);
+    const fields = Array.isArray(entry.fields) ? entry.fields.filter((field) => {
+      if (!isRecord(field)) return false;
+      return field.semantic !== "goalPath" && field.key !== "goalPath" && field.key !== "目标";
+    }) : void 0;
+    const defaults = isRecord(entry.defaultValues) ? { ...entry.defaultValues } : void 0;
+    if (defaults) {
+      delete defaults.goalPath;
+      delete defaults["目标"];
+    }
+    return {
+      goalPath,
+      coreBlockId,
+      description: typeof entry.description === "string" ? entry.description : void 0,
+      enabled: entry.enabled !== false,
+      periodPolicy: isRecord(entry.periodPolicy) ? entry.periodPolicy : void 0,
+      fields,
+      targetFile: typeof entry.targetFile === "string" ? entry.targetFile : void 0,
+      appendUnderHeader: typeof entry.appendUnderHeader === "string" ? entry.appendUnderHeader : void 0,
+      defaultValues: defaults && Object.keys(defaults).length ? defaults : void 0,
+      requiredFields: Array.isArray(entry.requiredFields) ? entry.requiredFields.map(String) : void 0
+    };
+  });
+  const hydrated = { goals, goalTemplates };
+  assertCanonicalGoalSettings(hydrated);
+  return hydrated;
+}
+function toCurrentThinkSettings(rawValue) {
+  const raw = isRecord(rawValue) ? rawValue : {};
+  const partial2 = raw;
+  const current2 = {
+    ...DEFAULT_SETTINGS,
+    ...partial2,
+    // Kept runtime-only because a few infrastructure APIs still expose the
+    // historical property. It is deliberately omitted by persistence.
+    groups: Array.isArray(partial2.groups) ? partial2.groups : [],
+    viewInstances: Array.isArray(partial2.viewInstances) ? partial2.viewInstances : [],
+    layouts: Array.isArray(partial2.layouts) ? partial2.layouts : [],
+    inputSettings: normalizeInputSettings(partial2.inputSettings),
+    goalSettings: hydrateGoalOnlySettings(raw.goalSettings),
+    energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...isRecord(partial2.energySettings) ? partial2.energySettings : {} }
+  };
+  current2.inputSettings.blocks = getEffectiveCoreBlocks(current2);
+  return current2;
+}
+function persistGoalOnlySettings(settings2) {
+  const runtime = settings2.goalSettings || { goals: [], goalTemplates: [] };
+  const goals = (runtime.goals || []).map((goal) => {
+    const path = normalizeGoalPath(goal.path);
+    if (!path) throw new Error("Cannot persist Goal without canonical path.");
+    const source = goal;
+    return {
+      path,
+      status: goal.status,
+      ...goal.description ? { description: goal.description } : null,
+      ...source.icon ? { icon: source.icon } : null,
+      ...source.color ? { color: source.color } : null,
+      ...typeof source.sortOrder === "number" ? { sortOrder: source.sortOrder } : null,
+      ...goal.metrics?.length ? { metrics: goal.metrics } : null
+    };
+  });
+  const goalTemplates = (runtime.goalTemplates || []).map((template) => {
+    const path = normalizeGoalPath(template.goalPath);
+    if (!path) throw new Error("Cannot persist GoalTemplate without canonical Goal path.");
+    const fields = (template.fields || []).filter((field) => {
+      const record = field;
+      return record.semantic !== "goalPath" && record.key !== "goalPath" && record.key !== "目标";
+    });
+    const defaults = { ...template.defaultValues || {} };
+    for (const key of ["goalPath", "目标"]) delete defaults[key];
+    return {
+      goalPath: path,
+      coreBlockId: template.coreBlockId,
+      ...template.description ? { description: template.description } : null,
+      enabled: template.enabled !== false,
+      ...template.periodPolicy ? { periodPolicy: template.periodPolicy } : null,
+      ...fields.length ? { fields } : null,
+      ...template.targetFile ? { targetFile: template.targetFile } : null,
+      ...template.appendUnderHeader ? { appendUnderHeader: template.appendUnderHeader } : null,
+      ...Object.keys(defaults).length ? { defaultValues: defaults } : null,
+      ...template.requiredFields?.length ? { requiredFields: template.requiredFields } : null
+    };
+  });
+  return { goals, goalTemplates };
+}
+function toPersistedThinkSettings(settings2) {
+  const out = JSON.parse(JSON.stringify(settings2 ?? {}));
+  if (isRecord(out.inputSettings)) {
+    delete out.inputSettings.blocks;
+  }
+  out.goalSettings = persistGoalOnlySettings(settings2);
+  return out;
+}
+var __getOwnPropDesc$e = Object.getOwnPropertyDescriptor;
+var __decorateClass$e = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$e(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$d = (index, decorator) => (target, key) => decorator(target, key, index);
+const SETTINGS_PERSISTENCE_TOKEN = "SettingsPersistence";
+let SettingsRepository = class {
+  constructor(persistence) {
+    this.persistence = persistence;
+  }
+  persistence;
+  currentSettings = null;
+  listeners = /* @__PURE__ */ new Set();
+  /**
+   * 订阅设置变化
+   * @param listener 变化时调用的回调
+   * @returns 取消订阅函数
+   */
+  subscribe(listener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+  /**
+   * 通知所有订阅者
+   */
+  notify() {
+    if (this.currentSettings) {
+      this.listeners.forEach((listener) => listener(this.currentSettings));
+    }
+  }
+  /**
+   * 加载设置
+   * @returns 当前设置（如果未加载过会从持久化层读取）
+   */
+  async load() {
+    if (this.currentSettings) {
+      return this.currentSettings;
+    }
+    const loaded = await this.persistence.loadData();
+    const settings2 = toCurrentThinkSettings(loaded);
+    this.currentSettings = settings2;
+    this.notify();
+    return settings2;
+  }
+  /**
+   * 获取当前设置（同步，必须先调用 load）
+   */
+  getSettings() {
+    if (!this.currentSettings) {
+      throw new Error("SettingsRepository: 设置未加载，请先调用 load()");
+    }
+    return this.currentSettings;
+  }
+  /**
+   * 获取当前设置快照（getSettings 的别名，符合 S2 规范）
+   * @returns 当前设置的不可变快照
+   */
+  getSnapshot() {
+    return this.getSettings();
+  }
+  /**
+   * 设置初始值（用于首次加载或重置）
+   */
+  setInitialSettings(settings2) {
+    assertCanonicalGoalSettings(settings2.goalSettings);
+    this.currentSettings = settings2;
+    this.notify();
+  }
+  /**
+   * 保存设置
+   * @param settings 新设置
+   * @param meta 可选的动作元数据（用于 dev 日志）
+   */
+  async save(settings2, meta) {
+    assertCanonicalGoalSettings(settings2.goalSettings);
+    const before = this.currentSettings;
+    this.currentSettings = settings2;
+    await this.persistence.saveData(settings2);
+    logSettingsWrite(meta, before, settings2);
+  }
+  /**
+   * 使用 immer 更新设置
+   * @param mutator 修改函数，接收 draft 参数进行修改
+   * @param meta 可选的动作元数据（用于 dev 日志）
+   * @returns 更新后的设置
+   */
+  async update(mutator, meta) {
+    if (!this.currentSettings) {
+      throw new Error("SettingsRepository: 设置未加载，请先调用 load()");
+    }
+    const before = this.currentSettings;
+    const newSettings = produce(this.currentSettings, mutator);
+    if (newSettings !== this.currentSettings) {
+      assertCanonicalGoalSettings(newSettings.goalSettings);
+      this.currentSettings = newSettings;
+      await this.persistence.saveData(newSettings);
+      this.notify();
+      logSettingsWrite(meta, before, newSettings);
+    }
+    return newSettings;
+  }
+};
+SettingsRepository = __decorateClass$e([
+  singleton(),
+  __decorateParam$d(0, inject(SETTINGS_PERSISTENCE_TOKEN))
+], SettingsRepository);
+var __getOwnPropDesc$d = Object.getOwnPropertyDescriptor;
+var __decorateClass$d = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$d(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$c = (index, decorator) => (target, key) => decorator(target, key, index);
+let RepositorySettingsProvider = class {
+  constructor(settingsRepository) {
+    this.settingsRepository = settingsRepository;
+  }
+  settingsRepository;
+  getSettings() {
+    return this.settingsRepository.getSettings();
+  }
+};
+RepositorySettingsProvider = __decorateClass$d([
+  singleton(),
+  __decorateParam$c(0, inject(SettingsRepository))
+], RepositorySettingsProvider);
+function setupCoreContainer(app, settings2) {
+  instance.register(AppToken, { useValue: app });
+  instance.register(SETTINGS_TOKEN, { useValue: settings2 });
+  instance.register(STORAGE_TOKEN, { useClass: VaultFileStorage });
+  instance.registerSingleton(SettingsRepository);
+  instance.registerSingleton(RepositorySettingsProvider);
+  instance.register(SettingsProviderToken, { useToken: RepositorySettingsProvider });
+}
+const CODEBLOCK_LANG = "think";
+const EMPTY_LABEL = "无日期";
+const LOCAL_STORAGE_KEYS = {
+  SETTINGS_TABS: "think-settings-active-tab"
+};
+const DEFAULT_NAMES = {
+  NEW_LAYOUT: "新布局"
+};
+let _activeCategoryColors = {};
+function updateCategoryColorMap(userColors) {
+  _activeCategoryColors = { ...userColors };
+}
+function getActiveCategoryColors() {
+  return { ..._activeCategoryColors };
+}
+function getCategoryColor(categoryKey) {
+  const base = (categoryKey || "").split("/")[0] || "";
+  return _activeCategoryColors[base] || "#e0e0e0";
+}
+const VIEW_OPTIONS = [
+  "BlockView",
+  "TableView",
+  "ExcelView",
+  "TimelineView",
+  "StatisticsView",
+  "HeatmapView",
+  "EventTimelineView",
+  "ProgressView",
+  "EnergyView"
+];
 const FIELD_CATEGORY_LABELS = {
   core: "核心字段",
   file: "文件字段",
@@ -6945,9 +7045,8 @@ const FIELD_REGISTRY = {
   rawSource: text$1({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
   fullData: text$1({ key: "fullData", label: "完整数据", category: "core", source: "derived", semantic: "body", inputType: "textarea", aliases: ["完整数据", "原始数据", "源数据", "完整源文本", "原始源文本", "rawsource", "rawData", "sourceText", "fullData", "originalData"], description: "原始完整 Record Block，仅用于调试/导出，不作为业务语义真源。" }),
   // --- 内置核心业务字段 ---
-  categoryKey: text$1({ key: "categoryKey", label: "分类路径", valueType: "path", inputType: "path", category: "core", source: "item", semantic: "categoryPath", hierarchical: true, aliases: ["categoryPath", "分类", "类别", "分类路径"], description: "完整分类路径，例如 闪念/感受" }),
-  tags: { key: "tags", label: "标签", valueType: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "tags", cardinality: "multi", hierarchical: true, aliases: ["标签", "tag", "tags"], description: "多值层级标签，例如 项目/插件、地点/家", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
-  goalId: text$1({ key: "goalId", label: "目标ID", category: "core", source: "item", semantic: "goalId", inputType: "text", aliases: ["目标ID", "goalId"] }),
+  categoryKey: text$1({ key: "categoryKey", label: "分类路径", valueType: "path", inputType: "path", category: "core", source: "item", semantic: "categoryPath", hierarchical: true, aliases: ["分类路径", "categoryKey"], description: "完整分类路径，例如 闪念/感受" }),
+  tags: { key: "tags", label: "标签", valueType: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "tags", cardinality: "multi", hierarchical: true, aliases: ["标签", "tags"], description: "多值层级标签，例如 项目/插件、地点/家", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
   goalPath: text$1({ key: "goalPath", label: "目标", valueType: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "goalPath", hierarchical: true, aliases: ["目标", "目标路径", "goalPath"], description: "单值 Goal 路径；Goal 是独立实体，不使用 Tag 语义。" }),
   rootGoal: text$1({ key: "rootGoal", label: "根目标", valueType: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["根目标"] }),
   leafGoal: text$1({ key: "leafGoal", label: "叶目标", valueType: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["叶目标"] }),
@@ -6956,7 +7055,7 @@ const FIELD_REGISTRY = {
   "period.label": text$1({ key: "period.label", label: "周期", category: "core", source: "derived", semantic: "period", inputType: "text", aliases: ["周期", "periodLabel"] }),
   "period.granularity": text$1({ key: "period.granularity", label: "周期粒度", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期粒度", "periodGranularity"] }),
   coreBlock: text$1({ key: "coreBlock", label: "核心Block", category: "core", source: "item", semantic: "coreBlock", inputType: "text", aliases: ["核心Block", "coreBlock"] }),
-  recordSubtype: text$1({ key: "recordSubtype", label: "记录子类型", category: "core", source: "item", semantic: "recordSubtype", inputType: "singleSelect", aliases: ["记录子类型", "subtype", "recordSubtype"], description: "Record 类型内部的可选子类型，例如 Thought 的 感受/思考。" }),
+  recordSubtype: text$1({ key: "recordSubtype", label: "记录子类型", category: "core", source: "item", semantic: "recordSubtype", inputType: "singleSelect", aliases: ["记录子类型", "recordSubtype"], description: "Record 类型内部的可选子类型，例如 Thought 的 感受/思考。" }),
   status: text$1({ key: "status", label: "状态", category: "core", source: "item", semantic: "status", inputType: "singleSelect", aliases: ["状态", "status"], description: "实体显式状态；Task 使用 open/done/cancelled/skipped。" }),
   cadence: text$1({ key: "cadence", label: "任务周期", category: "core", source: "derived", semantic: "recurrence", inputType: "singleSelect", aliases: ["任务周期", "cadence"], description: "由 Task Series 结构化 recurrence 派生：routine/day/week/month/quarter/year。" }),
   date: { key: "date", label: "日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["日期", "date"], description: "记录的主要日期" },
@@ -6966,7 +7065,7 @@ const FIELD_REGISTRY = {
   period: text$1({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
   startTime: { key: "startTime", label: "开始时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "startTime", aliases: ["时间", "time", "start"] },
   endTime: { key: "endTime", label: "结束时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "endTime", aliases: ["结束", "end"] },
-  expectedDurationMinutes: { key: "expectedDurationMinutes", label: "预计时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["预计时长", "expectedDuration", "expectedDurationMinutes"], description: "Task 的用户声明时长；可与开始时间组成手工时间段，存在 TaskSession 时仍优先使用 Session 历史。" },
+  expectedDurationMinutes: { key: "expectedDurationMinutes", label: "预计时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["预计时长", "expectedDurationMinutes"], description: "Task 的用户声明时长；可与开始时间组成手工时间段，存在 TaskSession 时仍优先使用 Session 历史。" },
   scheduledAt: { key: "scheduledAt", label: "计划时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["计划时间", "scheduledAt"] },
   startAt: { key: "startAt", label: "开始时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["开始时间", "startAt"] },
   endAt: { key: "endAt", label: "结束时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["结束时间", "endAt"] },
@@ -6987,13 +7086,9 @@ const FIELD_REGISTRY = {
     { value: "out", label: "外出" }
   ], description: "任务实际可执行的场景；留空或任意表示不限制。" },
   recoveryIntent: { key: "recoveryIntent", label: "恢复意图", valueType: "boolean", inputType: "boolean", category: "core", source: "item", semantic: "none", aliases: ["恢复意图", "recoveryIntent"], description: "标记散步、休息等主动恢复类任务。" },
-  duration: { key: "duration", label: "时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"], hiddenByDefault: true, description: "通用/历史时长字段；Task 应使用 expectedDurationMinutes；多段计时历史使用 TaskSession。" },
+  duration: { key: "duration", label: "时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"], hiddenByDefault: true, description: "通用视图时长投影；Task 声明时长使用 expectedDurationMinutes，多段执行时长来自 TaskSession。" },
   rating: { key: "rating", label: "评分", valueType: "number", inputType: "rating", category: "core", source: "item", semantic: "rating", aliases: ["评分", "rating"] },
-  image: { key: "image", label: "图片", valueType: "image", inputType: "image", category: "core", source: "item", semantic: "image", aliases: ["图片", "image", "评图", "pintu"], description: "通用图片字段；当前兼容读取旧 pintu/评图 数据" },
-  // --- 主题语义：只从显式 theme 派生，header 永不参与 ---
-  themePath: text$1({ key: "themePath", label: "主题路径", valueType: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "themePath", hierarchical: true, aliases: ["主题", "主题路径", "完整主题", "theme", "themePath"], description: "主题已降级为用户可配置层级单选字段；筛选/分组仍默认使用此字段" }),
-  rootTheme: text$1({ key: "rootTheme", label: "根主题", valueType: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["根主题", "themeRoot"] }),
-  leafTheme: text$1({ key: "leafTheme", label: "叶主题", valueType: "path", category: "core", source: "derived", semantic: "themePath", hierarchical: true, aliases: ["叶主题", "themeLeaf"] }),
+  image: { key: "image", label: "图片", valueType: "image", inputType: "image", category: "core", source: "item", semantic: "image", aliases: ["图片", "image"], description: "通用图片字段" },
   // --- 分类派生 ---
   baseCategory: text$1({ key: "baseCategory", label: "根分类", valueType: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["根分类", "rootCategory", "分类根"] }),
   leafCategory: text$1({ key: "leafCategory", label: "叶分类", valueType: "path", category: "core", source: "derived", semantic: "categoryPath", hierarchical: true, aliases: ["叶分类", "leafCategory"] }),
@@ -7003,7 +7098,7 @@ const FIELD_REGISTRY = {
   "file.name": text$1({ key: "file.name", label: "文件名", category: "file", source: "file", semantic: "fileName", hiddenByDefault: true }),
   "file.folder": text$1({ key: "file.folder", label: "文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["文件夹"] }),
   folder: text$1({ key: "folder", label: "父文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["父文件夹"] }),
-  header: text$1({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "Markdown 所在章节，只表示位置，绝不作为主题" }),
+  header: text$1({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "Markdown 所在章节，只表示文件位置，不参与 Goal 归属" }),
   // --- 时间/统计派生 ---
   startISO: { key: "startISO", label: "开始日期", valueType: "date", category: "core", source: "derived", semantic: "date" },
   endISO: { key: "endISO", label: "结束日期", valueType: "date", category: "core", source: "derived", semantic: "date" },
@@ -7044,9 +7139,6 @@ const VIEW_FIELD_PICKER_KEYS = /* @__PURE__ */ new Set([
   "rating",
   "image",
   "icon",
-  "themePath",
-  "rootTheme",
-  "leafTheme",
   "period.label",
   "recurrence",
   "file.path",
@@ -7186,12 +7278,8 @@ const FIELD_LABEL_ALIASES = {
   filepath: "文件路径",
   filePath: "文件路径",
   path: "路径",
-  themeRoot: "根主题",
-  themeLeaf: "叶主题",
   rootCategory: "根分类",
-  leafCategory: "叶分类",
-  主题路径: "主题路径",
-  完整主题: "主题路径"
+  leafCategory: "叶分类"
 };
 function getFieldLabel(key) {
   const def = getFieldDefinition(key);
@@ -7288,7 +7376,7 @@ function readLeafCategory(item) {
   return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).leaf;
 }
 function readImageField(item) {
-  return normalizeImageValue(item.image ?? item.pintu ?? item.extra?.["图片"] ?? item.extra?.["image"] ?? item.extra?.["评图"] ?? item.extra?.["pintu"]);
+  return normalizeImageValue(item.image ?? item.extra?.["图片"] ?? item.extra?.["image"]);
 }
 function readCanonicalField(item, canonicalField) {
   if (canonicalField.startsWith("extra.")) {
@@ -7296,6 +7384,15 @@ function readCanonicalField(item, canonicalField) {
   }
   if (canonicalField.startsWith("file.")) {
     return readFileField(item, canonicalField);
+  }
+  if (canonicalField === "goalPath") {
+    return splitHierarchyPath(item.goalPath).path;
+  }
+  if (canonicalField === "rootGoal") {
+    return item.rootGoal || splitHierarchyPath(item.goalPath).root;
+  }
+  if (canonicalField === "leafGoal") {
+    return item.leafGoal || splitHierarchyPath(item.goalPath).leaf;
   }
   if (canonicalField === "categoryKey") {
     return readCategoryPath(item);
@@ -7305,15 +7402,6 @@ function readCanonicalField(item, canonicalField) {
   }
   if (canonicalField === "leafCategory") {
     return readLeafCategory(item);
-  }
-  if (canonicalField === "themePath") {
-    return readExplicitThemeParts(item).themePath ?? void 0;
-  }
-  if (canonicalField === "rootTheme") {
-    return readExplicitThemeParts(item).rootTheme ?? void 0;
-  }
-  if (canonicalField === "leafTheme") {
-    return readExplicitThemeParts(item).leafTheme ?? void 0;
   }
   if (canonicalField === "status") return item.status;
   if (canonicalField === "cadence") return item.coreBlock === "task" ? getTaskCadence(item) : void 0;
@@ -7342,9 +7430,6 @@ function readCanonicalField(item, canonicalField) {
   if (canonicalField === "filename" || canonicalField === "fileName") {
     return item.file?.basename ?? item.fileName ?? item.filename;
   }
-  if (canonicalField === "pintu") {
-    return item.pintu;
-  }
   return readUnknown(asUnknownRecord(item), canonicalField);
 }
 function resolveFieldValue(item, field) {
@@ -7362,8 +7447,7 @@ function resolveFieldValue(item, field) {
     field: canonicalField,
     value,
     source,
-    derived: source === "derived",
-    legacy: source === "legacy" || !!def?.deprecated
+    derived: source === "derived"
   };
 }
 function readFieldValue(item, field) {
@@ -7375,362 +7459,8 @@ function getAllFields(items) {
 function readField(item, field) {
   return readFieldValue(item, field);
 }
-const UNASSIGNED_GOAL_KEY = "未归属目标";
-function normalizeItemGoalPath(value) {
-  return normalizeGoalPath(String(value ?? "").trim()) || "";
-}
-function buildGoalPathById$1(goals = []) {
-  const map = /* @__PURE__ */ new Map();
-  for (const goal of goals || []) {
-    const path = normalizeItemGoalPath(goal.goalPath || goal.title);
-    if (goal.id && path) map.set(goal.id, path);
-  }
-  return map;
-}
-function findGoalByPath(goals = [], goalPath) {
-  const normalized2 = normalizeItemGoalPath(goalPath);
-  if (!normalized2) return null;
-  return goals.find((goal) => normalizeItemGoalPath(goal.goalPath || goal.title) === normalized2) || null;
-}
-function getItemGoalKey(item, goals = []) {
-  const goalId = String(item.goalId || "").trim();
-  if (!goalId) return UNASSIGNED_GOAL_KEY;
-  const currentPath = buildGoalPathById$1(goals).get(goalId);
-  if (currentPath) return currentPath;
-  return normalizeItemGoalPath(item.goalPath) || UNASSIGNED_GOAL_KEY;
-}
-function getItemGoalLabel(item, goals = []) {
-  const key = getItemGoalKey(item, goals);
-  if (key === UNASSIGNED_GOAL_KEY) return UNASSIGNED_GOAL_KEY;
-  const goal = findGoalByPath(goals, key);
-  return goal?.title || splitGoalPath(key).leafGoal || key;
-}
-function getItemThemeKey(item) {
-  const direct = normalizeThemePath(item.themePath) || normalizeThemePath(item.theme);
-  if (direct) return direct;
-  const fieldTheme = normalizeThemePath(readField(item, "themePath")) || normalizeThemePath(readField(item, "主题"));
-  if (fieldTheme) return fieldTheme;
-  const extra = item.extra || {};
-  const extraTheme = normalizeThemePath(extra.themePath) || normalizeThemePath(extra["主题"]) || normalizeThemePath(extra["主题路径"]);
-  if (extraTheme) return extraTheme;
-  return "未设置主题";
-}
-function resolveThemeIcon(goal, themes = []) {
-  const direct = String(goal?.icon || "").trim();
-  if (direct) return direct;
-  const goalThemePath = normalizeThemePath(goal?.themePath);
-  if (!goalThemePath) return void 0;
-  const byPath = new Map((themes || []).map((theme) => [normalizeThemePath(theme.path), theme]));
-  for (const candidate of getThemePathCandidates(goalThemePath)) {
-    const theme = byPath.get(candidate);
-    const icon = String(theme?.icon || "").trim();
-    if (icon) return icon;
-  }
-  return void 0;
-}
-function stableColor(seed) {
-  const palette = ["#8b5cf6", "#06b6d4", "#22c55e", "#f59e0b", "#ef4444", "#6366f1", "#14b8a6", "#f97316", "#a855f7", "#0ea5e9"];
-  let hash2 = 0;
-  for (const ch of seed) hash2 = (hash2 << 5) - hash2 + ch.charCodeAt(0) | 0;
-  return palette[Math.abs(hash2) % palette.length] || "#8b5cf6";
-}
-function buildGoalBuckets(items, goals = [], options = {}) {
-  const { includeUnassigned = true, includeKnownGoals = false, themes = [] } = options;
-  const map = /* @__PURE__ */ new Map();
-  const addBucket = (goalPath, sourceGoal) => {
-    const key = normalizeItemGoalPath(goalPath) || UNASSIGNED_GOAL_KEY;
-    if (!includeUnassigned && key === UNASSIGNED_GOAL_KEY) return;
-    if (map.has(key)) return;
-    const goal = sourceGoal || findGoalByPath(goals, key);
-    const label = key === UNASSIGNED_GOAL_KEY ? UNASSIGNED_GOAL_KEY : goal?.title || splitGoalPath(key).leafGoal || key;
-    const icon = key === UNASSIGNED_GOAL_KEY ? "•" : resolveThemeIcon(goal, themes);
-    map.set(key, {
-      name: key,
-      alias: icon && icon !== "•" ? `${icon} ${label}` : label,
-      color: stableColor(key),
-      files: [],
-      goalId: goal?.id || null,
-      goalPath: key === UNASSIGNED_GOAL_KEY ? void 0 : key,
-      icon,
-      isUnassigned: key === UNASSIGNED_GOAL_KEY
-    });
-  };
-  if (includeKnownGoals) {
-    for (const goal of goals || []) {
-      const path = normalizeItemGoalPath(goal.goalPath || goal.title);
-      if (path) addBucket(path, goal);
-    }
-  }
-  for (const item of items || []) {
-    addBucket(getItemGoalKey(item, goals));
-  }
-  const order2 = createGoalOrderIndex(goals);
-  return Array.from(map.values()).sort((a2, b2) => {
-    if (a2.isUnassigned && !b2.isUnassigned) return 1;
-    if (!a2.isUnassigned && b2.isUnassigned) return -1;
-    const byGoal = order2.compareGoalPaths(a2.goalPath || a2.name, b2.goalPath || b2.name);
-    if (byGoal !== 0) return byGoal;
-    return (a2.alias || a2.name).localeCompare(b2.alias || b2.name, "zh-CN");
-  });
-}
-function applyPatch(block, patch) {
-  if (!patch) return block;
-  return {
-    ...block,
-    name: patch.displayName || block.name,
-    categoryKey: patch.categoryKey || block.categoryKey,
-    fields: patch.fields || block.fields,
-    targetFile: patch.targetFile || block.targetFile,
-    appendUnderHeader: patch.appendUnderHeader ?? block.appendUnderHeader
-  };
-}
-function normalizeCoreBlockSettings(settings, _legacyBlocks = []) {
-  return {
-    enabledCoreBlockIds: settings?.enabledCoreBlockIds?.length ? settings.enabledCoreBlockIds : DEFAULT_CORE_BLOCK_SETTINGS.enabledCoreBlockIds,
-    patches: settings?.patches || []
-  };
-}
-function getEffectiveCoreBlocks(settings) {
-  const coreSettings = normalizeCoreBlockSettings(settings.coreBlockSettings, settings.inputSettings?.blocks || []);
-  const patchesById = new Map(coreSettings.patches.map((patch) => [patch.blockId, patch]));
-  const enabled2 = new Set(coreSettings.enabledCoreBlockIds);
-  return DEFAULT_CORE_BLOCKS.filter((block) => block.captureMode === "template" && enabled2.has(block.id) && !patchesById.get(block.id)?.hidden).map((block) => applyPatch(block, patchesById.get(block.id)));
-}
-function getCoreBlockById(settings, blockId) {
-  return getEffectiveCoreBlocks(settings).find((block) => block.id === blockId) || null;
-}
-function isRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function normalizeInputSettings(value) {
-  const raw = isRecord(value) ? value : {};
-  return {
-    ...DEFAULT_SETTINGS.inputSettings,
-    ...raw,
-    // Settings Compact V5: blocks are runtime projections of canonical CoreBlock definitions, never persisted user data.
-    blocks: [],
-    themes: Array.isArray(raw.themes) ? raw.themes : []
-  };
-}
-function assertCurrentSchemaVersion(raw) {
-  if (Object.keys(raw).length === 0) return;
-  if (raw.schemaVersion === THINK_SETTINGS_SCHEMA_VERSION) return;
-  throw new Error(
-    `Think OS settings schema mismatch: expected current schemaVersion ${THINK_SETTINGS_SCHEMA_VERSION}. This single-user build does not run legacy settings migrations. Update data.json to the current shape or remove it to start fresh.`
-  );
-}
-function toCurrentThinkSettings(rawValue) {
-  const raw = isRecord(rawValue) ? rawValue : {};
-  assertCurrentSchemaVersion(raw);
-  const partial2 = raw;
-  assertCanonicalGoalSettings(partial2.goalSettings);
-  const current2 = {
-    ...DEFAULT_SETTINGS,
-    ...partial2,
-    schemaVersion: THINK_SETTINGS_SCHEMA_VERSION,
-    groups: Array.isArray(partial2.groups) ? partial2.groups : [],
-    viewInstances: Array.isArray(partial2.viewInstances) ? partial2.viewInstances : [],
-    layouts: Array.isArray(partial2.layouts) ? partial2.layouts : [],
-    inputSettings: normalizeInputSettings(partial2.inputSettings),
-    energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...isRecord(partial2.energySettings) ? partial2.energySettings : {} },
-    activeThemePaths: Array.isArray(partial2.activeThemePaths) ? partial2.activeThemePaths : []
-  };
-  current2.inputSettings.blocks = getEffectiveCoreBlocks(current2);
-  return current2;
-}
-function toPersistedThinkSettings(settings) {
-  const out = JSON.parse(JSON.stringify(settings ?? {}));
-  if (isRecord(out.inputSettings)) delete out.inputSettings.blocks;
-  const templates = out.goalSettings?.goalTemplates;
-  if (Array.isArray(templates)) {
-    for (const template of templates) {
-      if (!isRecord(template) || !isRecord(template.defaultValues)) continue;
-      const defaults = template.defaultValues;
-      if (defaults.themePath === void 0 && defaults["主题"] !== void 0) defaults.themePath = defaults["主题"];
-      if (defaults.icon === void 0 && defaults["图标"] !== void 0) defaults.icon = defaults["图标"];
-      delete defaults["主题"];
-      delete defaults["图标"];
-      if (Object.keys(defaults).length === 0) delete template.defaultValues;
-    }
-  }
-  return out;
-}
-var __getOwnPropDesc$e = Object.getOwnPropertyDescriptor;
-var __decorateClass$e = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$e(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-var __decorateParam$d = (index, decorator) => (target, key) => decorator(target, key, index);
-const SETTINGS_PERSISTENCE_TOKEN = "SettingsPersistence";
-let SettingsRepository = class {
-  constructor(persistence) {
-    this.persistence = persistence;
-  }
-  persistence;
-  currentSettings = null;
-  listeners = /* @__PURE__ */ new Set();
-  /**
-   * 订阅设置变化
-   * @param listener 变化时调用的回调
-   * @returns 取消订阅函数
-   */
-  subscribe(listener) {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-  /**
-   * 通知所有订阅者
-   */
-  notify() {
-    if (this.currentSettings) {
-      this.listeners.forEach((listener) => listener(this.currentSettings));
-    }
-  }
-  /**
-   * 加载设置
-   * @returns 当前设置（如果未加载过会从持久化层读取）
-   */
-  async load() {
-    if (this.currentSettings) {
-      return this.currentSettings;
-    }
-    const loaded = await this.persistence.loadData();
-    const settings = toCurrentThinkSettings(loaded);
-    this.currentSettings = settings;
-    this.notify();
-    return settings;
-  }
-  /**
-   * 获取当前设置（同步，必须先调用 load）
-   */
-  getSettings() {
-    if (!this.currentSettings) {
-      throw new Error("SettingsRepository: 设置未加载，请先调用 load()");
-    }
-    return this.currentSettings;
-  }
-  /**
-   * 获取当前设置快照（getSettings 的别名，符合 S2 规范）
-   * @returns 当前设置的不可变快照
-   */
-  getSnapshot() {
-    return this.getSettings();
-  }
-  /**
-   * 设置初始值（用于首次加载或重置）
-   */
-  setInitialSettings(settings) {
-    assertCanonicalGoalSettings(settings.goalSettings);
-    this.currentSettings = settings;
-    this.notify();
-  }
-  /**
-   * 保存设置
-   * @param settings 新设置
-   * @param meta 可选的动作元数据（用于 dev 日志）
-   */
-  async save(settings, meta) {
-    assertCanonicalGoalSettings(settings.goalSettings);
-    const before = this.currentSettings;
-    this.currentSettings = settings;
-    await this.persistence.saveData(settings);
-    logSettingsWrite(meta, before, settings);
-  }
-  /**
-   * 使用 immer 更新设置
-   * @param mutator 修改函数，接收 draft 参数进行修改
-   * @param meta 可选的动作元数据（用于 dev 日志）
-   * @returns 更新后的设置
-   */
-  async update(mutator, meta) {
-    if (!this.currentSettings) {
-      throw new Error("SettingsRepository: 设置未加载，请先调用 load()");
-    }
-    const before = this.currentSettings;
-    const newSettings = produce(this.currentSettings, mutator);
-    if (newSettings !== this.currentSettings) {
-      assertCanonicalGoalSettings(newSettings.goalSettings);
-      this.currentSettings = newSettings;
-      await this.persistence.saveData(newSettings);
-      this.notify();
-      logSettingsWrite(meta, before, newSettings);
-    }
-    return newSettings;
-  }
-};
-SettingsRepository = __decorateClass$e([
-  singleton(),
-  __decorateParam$d(0, inject(SETTINGS_PERSISTENCE_TOKEN))
-], SettingsRepository);
-var __getOwnPropDesc$d = Object.getOwnPropertyDescriptor;
-var __decorateClass$d = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$d(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-var __decorateParam$c = (index, decorator) => (target, key) => decorator(target, key, index);
-let RepositorySettingsProvider = class {
-  constructor(settingsRepository) {
-    this.settingsRepository = settingsRepository;
-  }
-  settingsRepository;
-  getSettings() {
-    return this.settingsRepository.getSettings();
-  }
-};
-RepositorySettingsProvider = __decorateClass$d([
-  singleton(),
-  __decorateParam$c(0, inject(SettingsRepository))
-], RepositorySettingsProvider);
-function setupCoreContainer(app, settings) {
-  instance.register(AppToken, { useValue: app });
-  instance.register(SETTINGS_TOKEN, { useValue: settings });
-  instance.register(STORAGE_TOKEN, { useClass: VaultFileStorage });
-  instance.registerSingleton(SettingsRepository);
-  instance.registerSingleton(RepositorySettingsProvider);
-  instance.register(SettingsProviderToken, { useToken: RepositorySettingsProvider });
-}
-const CODEBLOCK_LANG = "think";
-const EMPTY_LABEL = "无日期";
-const LOCAL_STORAGE_KEYS = {
-  SETTINGS_TABS: "think-settings-active-tab"
-};
-const DEFAULT_NAMES = {
-  NEW_LAYOUT: "新布局"
-};
-let _activeCategoryColors = {};
-function updateCategoryColorMap(userColors) {
-  _activeCategoryColors = { ...userColors };
-}
-function getActiveCategoryColors() {
-  return { ..._activeCategoryColors };
-}
-function getCategoryColor(categoryKey) {
-  const base = (categoryKey || "").split("/")[0] || "";
-  return _activeCategoryColors[base] || "#e0e0e0";
-}
-const VIEW_OPTIONS = [
-  "BlockView",
-  "TableView",
-  "ExcelView",
-  "TimelineView",
-  "StatisticsView",
-  "HeatmapView",
-  "EventTimelineView",
-  "ProgressView",
-  "EnergyView"
-];
-const THEME_MATCHER_TOKEN = /* @__PURE__ */ Symbol("IThemeMatcher");
 function isActiveTimerState(timer) {
   return !!timer && (timer.status === "running" || timer.status === "paused");
-}
-function splitThemePath(themePath) {
-  return splitThemePath$1(themePath);
 }
 function pickEditableText(item) {
   if (item.editableText?.trim()) return item.editableText.trim();
@@ -7742,7 +7472,6 @@ function buildParsedRecordSnapshot(item) {
   const path = item.source?.path ?? item.file?.path ?? null;
   const line2 = item.source?.startLine ?? (typeof item.file?.line === "number" ? item.file.line : null);
   const editableText = pickEditableText(item);
-  const themeParts = readExplicitThemeParts(item);
   return {
     itemId: item.id,
     entryKind: item.coreBlock === "task" ? "task" : "block",
@@ -7755,30 +7484,24 @@ function buildParsedRecordSnapshot(item) {
       date: item.date || item.createdDate || null,
       period: item.period || null,
       tags: [...item.tags || []],
-      goalId: item.goalId || null,
       goalPath: item.goalPath || null,
       startTime: item.startTime || null,
       endTime: item.endTime || null,
       duration: item.duration ?? null,
-      themePath: themeParts.themePath,
-      rootTheme: themeParts.rootTheme,
-      leafTheme: themeParts.leafTheme,
       categoryKey: item.categoryKey || null
-    },
-    templateHint: {
-      templateId: item.templateId || null,
-      templateSourceType: item.templateSourceType || null
     },
     extra: { ...item.extra || {} }
   };
 }
-function getEffectiveTemplate(settings, blockId, themeId) {
-  const templates = [...settings.blocks || [], ...DEFAULT_CORE_BLOCKS.filter((block) => !(settings.blocks || []).some((existing) => existing.id === block.id))];
-  const template = templates.find((block) => block.id === blockId) ?? null;
-  const theme = themeId ? settings.themes.find((candidate) => candidate.id === themeId) ?? null : null;
+function getEffectiveTemplate(settings2, blockId) {
+  const configured = settings2.blocks || [];
+  const templates = [
+    ...configured,
+    ...DEFAULT_CORE_BLOCKS.filter((block) => !configured.some((existing) => existing.id === block.id))
+  ];
+  const template = templates.find((block) => block.id === blockId || block.coreBlockId === blockId) ?? null;
   return {
     template,
-    theme,
     templateId: template?.id ?? null,
     templateSourceType: template ? "core-block" : null
   };
@@ -7816,7 +7539,6 @@ const CORE_FIELD_GUIDE_KEYS = [
   "title",
   "content",
   "categoryKey",
-  "themePath",
   "tags",
   "goalPath",
   "date",
@@ -7833,7 +7555,7 @@ const FILE_FIELD_GUIDE_KEYS = [
   {
     category: "core",
     label: "插件核心字段",
-    description: "由插件内置维护。分类、主题、标签、目标等可以作为表单输入字段使用，但不会落到 extra。",
+    description: "由插件内置维护。分类、标签、目标等可以作为表单输入字段使用，但不会落到 extra。",
     fields: CORE_FIELD_GUIDE_KEYS.map((key) => FIELD_REGISTRY[key]).filter(Boolean).map((def) => ({
       key: def.key,
       label: def.label,
@@ -7854,36 +7576,18 @@ const FILE_FIELD_GUIDE_KEYS = [
   }
 ];
 const CORE_INPUT_ALIAS_TARGETS = {
-  // 主题
-  theme: "themePath",
-  themepath: "themePath",
-  "主题": "themePath",
-  "主题路径": "themePath",
-  "完整主题": "themePath",
   // Record 子类型
   recordsubtype: "recordSubtype",
-  subtype: "recordSubtype",
   "记录子类型": "recordSubtype",
   // 分类
-  category: "categoryKey",
-  categorykey: "categoryKey",
-  categorypath: "categoryKey",
-  "分类": "categoryKey",
-  "类别": "categoryKey",
-  "分类路径": "categoryKey",
   // 标签
-  tag: "tags",
   tags: "tags",
   "标签": "tags",
   // 目标：只支持中文字段名，不开放 goal/target 等别名。
   "目标": "goalPath",
   // 图片
   image: "image",
-  pic: "image",
-  photo: "image",
-  pintu: "image",
   "图片": "image",
-  "评图": "image",
   // 正文 / 标题
   title: "title",
   name: "title",
@@ -7932,10 +7636,6 @@ const RESERVED_NON_INPUT_FIELD_NAMES = [
   "所在章节",
   "header",
   "folder",
-  "rootTheme",
-  "根主题",
-  "leafTheme",
-  "叶主题",
   "baseCategory",
   "rootCategory",
   "根分类",
@@ -8160,9 +7860,7 @@ const KNOWN_SEMANTICS = /* @__PURE__ */ new Set([
   "title",
   "body",
   "categoryPath",
-  "themePath",
   "tags",
-  "goalId",
   "goalPath",
   "cycleId",
   "coreBlock",
@@ -8196,20 +7894,16 @@ function getTemplateFieldSemantic(field) {
   const semanticType = normalizeFieldToken(field.semanticType);
   if (semanticType === "ratingpair") return "rating";
   if (semanticType === "path") {
-    if (templateFieldMatches(field, ["主题", "theme", "themePath", "完整主题", "主题路径"])) return "themePath";
-    if (templateFieldMatches(field, ["分类", "类别", "思考分类", "闪念分类", "category", "categoryPath", "分类路径"])) return "categoryPath";
+    if (templateFieldMatches(field, ["目标", "目标路径", "goalPath"])) return "goalPath";
     return "none";
   }
   if (templateFieldMatches(field, ["标题", "title", "名称", "name"])) return "title";
   if (templateFieldMatches(field, ["正文", "内容", "任务内容", "记录内容", "body", "content", "text"])) return "body";
-  if (templateFieldMatches(field, ["主题", "theme", "themePath", "完整主题", "主题路径"])) return "themePath";
-  if (templateFieldMatches(field, ["分类", "类别", "思考分类", "闪念分类", "category", "categoryPath", "分类路径"])) return "categoryPath";
-  if (templateFieldMatches(field, ["标签", "tag", "tags"])) return "tags";
-  if (templateFieldMatches(field, ["目标ID", "goalId"])) return "goalId";
+  if (templateFieldMatches(field, ["标签", "tags"])) return "tags";
   if (templateFieldMatches(field, ["目标路径", "goalPath"])) return "goalPath";
   if (templateFieldMatches(field, ["周期ID", "cycleId"])) return "cycleId";
   if (templateFieldMatches(field, ["核心Block", "coreBlock"])) return "coreBlock";
-  if (templateFieldMatches(field, ["记录子类型", "recordSubtype", "subtype"])) return "recordSubtype";
+  if (templateFieldMatches(field, ["记录子类型", "recordSubtype"])) return "recordSubtype";
   if (templateFieldMatches(field, ["目标"])) return "goalPath";
   if (templateFieldMatches(field, ["状态", "status"])) return "status";
   if (templateFieldMatches(field, ["日期", "date"])) return "date";
@@ -8217,7 +7911,7 @@ function getTemplateFieldSemantic(field) {
   if (templateFieldMatches(field, ["结束", "结束时间", "end", "endTime"])) return "endTime";
   if (templateFieldMatches(field, ["时长", "duration", "minutes", "持续时间"])) return "duration";
   if (templateFieldMatches(field, ["评分", "rating"])) return "rating";
-  if (templateFieldMatches(field, ["图片", "image", "pic", "photo", "评图", "pintu"])) return "image";
+  if (templateFieldMatches(field, ["图片", "image"])) return "image";
   if (templateFieldMatches(field, ["图标", "icon"])) return "icon";
   if (templateFieldMatches(field, ["重复", "recurrence", "repeat"])) return "recurrence";
   if (templateFieldMatches(field, ["周期", "粒度", "period"])) return "period";
@@ -8228,7 +7922,7 @@ function getTemplateFieldInputType(field) {
   if (type) return type;
   const semantic = getTemplateFieldSemantic(field);
   if (semantic === "body") return "textarea";
-  if (semantic === "themePath" || semantic === "categoryPath" || semantic === "goalPath") return "hierarchicalSingleSelect";
+  if (semantic === "categoryPath" || semantic === "goalPath") return "hierarchicalSingleSelect";
   if (semantic === "tags") return "multiTag";
   if (semantic === "image") return "image";
   if (semantic === "rating") return "rating";
@@ -8250,7 +7944,7 @@ function isTemplateOptionField(field) {
 function isTemplatePathField(field) {
   const inputType = getTemplateFieldInputType(field);
   const semantic = getTemplateFieldSemantic(field);
-  return inputType === "path" || inputType === "hierarchicalSingleSelect" || inputType === "multiPath" || semantic === "themePath" || semantic === "categoryPath" || semantic === "goalPath" || normalizeFieldToken(field?.semanticType) === "path";
+  return inputType === "path" || inputType === "hierarchicalSingleSelect" || inputType === "multiPath" || semantic === "categoryPath" || semantic === "goalPath" || normalizeFieldToken(field?.semanticType) === "path";
 }
 function isTemplateTagField(field) {
   const inputType = getTemplateFieldInputType(field);
@@ -8270,7 +7964,7 @@ function splitMultiText(value) {
   return String(value ?? "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
 }
 function normalizeOptionObject(field, rawValue) {
-  const text2 = readOptionText$2(rawValue);
+  const text2 = readOptionText$1(rawValue);
   if (isTemplatePathField(field)) {
     const normalized2 = normalizeHierarchyPath(text2.value || text2.label);
     return normalized2 ? { value: normalized2, label: text2.label || normalized2.split("/").pop() || normalized2 } : rawValue;
@@ -8332,21 +8026,6 @@ function setIfMeaningful(data, key, value) {
 }
 function applyCoreTemplateAliases(data, field, value) {
   const semantic = getTemplateFieldSemantic(field);
-  if (semantic === "themePath") {
-    const path = normalizeHierarchyPath(singleTemplateValueToString(value));
-    if (!path) return;
-    const parts = splitHierarchyPath(path);
-    data.themePath = path;
-    data.rootTheme = parts.root || "";
-    data.leafTheme = parts.leaf || "";
-    data.theme = {
-      ...data.theme && typeof data.theme === "object" ? data.theme : {},
-      path,
-      root: parts.root || "",
-      leaf: parts.leaf || ""
-    };
-    return;
-  }
   if (semantic === "categoryPath") {
     const path = normalizeHierarchyPath(singleTemplateValueToString(value));
     if (!path) return;
@@ -8361,13 +8040,6 @@ function applyCoreTemplateAliases(data, field, value) {
   if (semantic === "tags") {
     const tags2 = parseTagList(value);
     if (tags2.length) data.tags = tags2;
-    return;
-  }
-  if (semantic === "goalId") {
-    const goalId = singleTemplateValueToString(value);
-    if (goalId) {
-      data.goalId = goalId;
-    }
     return;
   }
   if (semantic === "goalPath") {
@@ -8395,14 +8067,12 @@ function applyCoreTemplateAliases(data, field, value) {
       if (images.length) {
         data.image = images[0];
         data.images = images;
-        data.pintu = images[0];
       }
       return;
     }
     const image = normalizeImageValue(value)?.src ?? singleTemplateValueToString(value);
     if (image) {
       data.image = image;
-      data.pintu = image;
     }
     return;
   }
@@ -8431,7 +8101,7 @@ function normalizeTemplateRenderData(template, formData) {
       const obj = isOptionObject(raw) ? normalizeOptionObject(field, raw) : { value: raw, label: raw };
       normalizedData[field.key] = obj;
       if (field.label && field.label !== field.key) normalizedData[field.label] = obj;
-      const auxKey = field.auxKey || "评图";
+      const auxKey = field.auxKey || "image";
       if (obj.value !== void 0) normalizedData[auxKey] = obj.value;
       applyCoreTemplateAliases(normalizedData, field, obj);
       continue;
@@ -8497,11 +8167,6 @@ function isSafeMarkdownFieldKey(value) {
   const key = String(value ?? "").trim();
   return Boolean(key && key.length <= 64 && !/[\r\n:：]/.test(key));
 }
-function leaf(path) {
-  const text2 = String(path || "").trim();
-  if (!text2) return "";
-  return text2.split("/").filter(Boolean).pop() || text2;
-}
 function isAiVisibleField(field) {
   return !isSystemRecordContextField(field?.key, field?.label, field?.semantic || field?.semanticType);
 }
@@ -8511,71 +8176,50 @@ function normalizeField(field) {
     key: field.key,
     label: schema.label,
     type: schema.inputType || field.type,
-    options: (schema.options ?? []).map((o2) => ({
-      value: o2.value,
-      label: o2.label || o2.value
+    options: (schema.options ?? []).map((option) => ({
+      value: option.value,
+      label: option.label || option.value
     })),
     defaultValue: schema.defaultValue
   };
 }
-function readThemePath(value) {
-  if (!value) return void 0;
-  if (typeof value === "string") return value.trim() || void 0;
-  if (typeof value === "object" && value && "value" in value) {
-    const option = value;
-    return String(option.value || "").trim() || void 0;
-  }
-  return void 0;
-}
 function buildAiConfigSnapshot(input, ai, goalSettings) {
   const rawEnabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
   const inputBlocks = input?.blocks ?? [];
-  const hasEnabledBlockMatch = !!rawEnabledSet && inputBlocks.some((b2) => rawEnabledSet.has(b2.id) || rawEnabledSet.has(b2.coreBlockId || ""));
+  const hasEnabledBlockMatch = !!rawEnabledSet && inputBlocks.some(
+    (block) => rawEnabledSet.has(block.id) || rawEnabledSet.has(block.coreBlockId || "")
+  );
   const enabledSet = hasEnabledBlockMatch ? rawEnabledSet : null;
-  const blocks = inputBlocks.filter((b2) => !enabledSet || enabledSet.has(b2.id) || enabledSet.has(b2.coreBlockId || "")).map((b2) => {
-    const effective = input ? getEffectiveTemplate(input, b2.id, void 0) : void 0;
-    const sourceFields = effective?.template?.fields ?? b2.fields ?? [];
-    const fields = sourceFields.filter(isAiVisibleField).map(normalizeField);
+  const blocks = inputBlocks.filter((block) => !enabledSet || enabledSet.has(block.id) || enabledSet.has(block.coreBlockId || "")).map((block) => {
+    const effective = input ? getEffectiveTemplate(input, block.id) : void 0;
+    const sourceFields = effective?.template?.fields ?? block.fields ?? [];
     return {
-      id: b2.id,
-      name: b2.name,
-      categoryKey: b2.categoryKey,
-      fields
+      id: block.id,
+      name: block.name,
+      categoryKey: block.categoryKey,
+      fields: sourceFields.filter(isAiVisibleField).map(normalizeField)
     };
   });
   const blockById = new Map(inputBlocks.map((block) => [block.id, block]));
   const blockByCoreId = new Map(inputBlocks.map((block) => [block.coreBlockId || block.id, block]));
-  const themes = (input?.themes ?? []).map((t3) => ({
-    id: t3.id,
-    path: t3.path,
-    name: leaf(t3.path)
-  }));
-  const goals = (goalSettings?.goals ?? []).filter((goal) => goal.status !== "archived").map((goal) => ({
-    id: goal.id,
-    path: goal.goalPath || goal.title,
-    title: goal.title || leaf(goal.goalPath),
-    themePath: goal.themePath || null
-  }));
-  const goalPathById = new Map(goals.map((goal) => [goal.id, goal.path]));
-  const goalPresets = getGoalTemplates(goalSettings).filter((preset) => preset.enabled !== false).filter((preset) => goalPathById.has(preset.goalId)).filter((preset) => !enabledSet || enabledSet.has(preset.coreBlockId)).map((preset) => {
+  const goals = (goalSettings?.goals ?? []).filter((goal) => goal.status !== "archived").map((goal) => {
+    const path = String(goal.path || "").trim();
+    return { path };
+  }).filter((goal) => !!goal.path);
+  const goalPaths = new Set(goals.map((goal) => goal.path));
+  const goalPresets = getGoalTemplates(goalSettings).filter((preset) => preset.enabled !== false).filter((preset) => goalPaths.has(preset.goalPath)).filter((preset) => !enabledSet || enabledSet.has(preset.coreBlockId)).map((preset) => {
     const block = blockByCoreId.get(preset.coreBlockId) || blockById.get(preset.coreBlockId);
     const fields = (preset.fields?.length ? preset.fields : block?.fields || []).filter(isAiVisibleField).map(normalizeField);
-    const defaultThemePath = readThemePath(preset.defaultValues?.themePath) || readThemePath(preset.defaultValues?.["主题"]) || fields.map((field) => readThemePath(field.defaultValue)).find(Boolean);
     return {
       id: preset.id,
-      goalId: preset.goalId,
-      goalPath: goalPathById.get(preset.goalId),
+      goalPath: preset.goalPath,
       blockId: preset.coreBlockId,
       categoryKey: block?.categoryKey || preset.coreBlockId,
-      variantId: preset.variantId || "default",
-      goalTemplateId: preset.id,
-      name: preset.name || preset.variantId || "默认预设",
-      themePath: defaultThemePath,
       periodPolicy: preset.periodPolicy,
       fields
     };
   });
-  return { blocks, themes, goals, goalPresets };
+  return { blocks, goals, goalPresets };
 }
 function nowMs() {
   try {
@@ -8621,8 +8265,8 @@ class AiConfigCache {
     const totalStart = nowMs();
     const prefix2 = traceId ? `[AiInput][${traceId}][ConfigCache]` : "[AiInput][ConfigCache]";
     const settingsStart = nowMs();
-    const settings = this.settingsProvider.getSettings();
-    const ai = settings.aiSettings;
+    const settings2 = this.settingsProvider.getSettings();
+    const ai = settings2.aiSettings;
     devLog(`${prefix2} 读取 settings 完成 (${elapsedMs(settingsStart)})`);
     if (!ai) {
       throw new Error("AI settings missing");
@@ -8638,19 +8282,17 @@ class AiConfigCache {
     });
     if (!cacheHit) {
       const rebuildStart = nowMs();
-      const nextSnapshot = buildAiConfigSnapshot(settings.inputSettings, ai, settings.goalSettings);
+      const nextSnapshot = buildAiConfigSnapshot(settings2.inputSettings, ai, settings2.goalSettings);
       this.snapshot = nextSnapshot;
       this.lastUpdated = now2;
       devLog(`${prefix2} buildAiConfigSnapshot 完成 (${elapsedMs(rebuildStart)})`, {
         blocksCount: nextSnapshot.blocks?.length ?? 0,
-        themesCount: nextSnapshot.themes?.length ?? 0,
         goalsCount: nextSnapshot.goals?.length ?? 0,
         goalPresetsCount: nextSnapshot.goalPresets?.length ?? 0
       });
       if (nowMs() - rebuildStart >= 50) {
         devWarn(`${prefix2} 慢步骤: buildAiConfigSnapshot (${elapsedMs(rebuildStart)})`, {
           blocksCount: nextSnapshot.blocks?.length ?? 0,
-          themesCount: nextSnapshot.themes?.length ?? 0,
           goalsCount: nextSnapshot.goals?.length ?? 0,
           goalPresetsCount: nextSnapshot.goalPresets?.length ?? 0
         });
@@ -8663,7 +8305,6 @@ class AiConfigCache {
     devLog(`${prefix2} getSnapshot 返回 (${elapsedMs(totalStart)})`, {
       cacheHit,
       blocksCount: snapshot.blocks?.length ?? 0,
-      themesCount: snapshot.themes?.length ?? 0,
       goalsCount: snapshot.goals?.length ?? 0,
       goalPresetsCount: snapshot.goalPresets?.length ?? 0
     });
@@ -8687,8 +8328,8 @@ class AiConfigCache {
       devLog(`[AiInput][ConfigCache] isValid=false: snapshot missing (${elapsedMs(start2)})`);
       return false;
     }
-    const settings = this.settingsProvider.getSettings();
-    const ai = settings.aiSettings;
+    const settings2 = this.settingsProvider.getSettings();
+    const ai = settings2.aiSettings;
     if (!ai) {
       devLog(`[AiInput][ConfigCache] isValid=false: ai settings missing (${elapsedMs(start2)})`);
       return false;
@@ -8936,137 +8577,52 @@ function compactSnapshotForFastMode(snapshot) {
       id: block.id,
       name: block.name,
       categoryKey: block.categoryKey,
-      fields: (block.fields ?? []).map((field) => ({
-        key: field.key,
-        label: field.label,
-        type: field.type
-      }))
+      fields: (block.fields ?? []).map((field) => ({ key: field.key, label: field.label, type: field.type }))
     })),
-    themes: (snapshot.themes ?? []).map((theme) => ({
-      path: theme.path
-    })),
-    goals: (snapshot.goals ?? []).map((goal) => ({
-      path: goal.path
-    })),
+    goals: (snapshot.goals ?? []).map((goal) => ({ path: goal.path })),
     goalPresets: (snapshot.goalPresets ?? []).map((preset) => ({
       goalPath: preset.goalPath,
       blockId: preset.blockId,
       categoryKey: preset.categoryKey,
-      variantId: preset.variantId,
-      goalTemplateId: preset.goalTemplateId || preset.id,
-      name: preset.name,
-      themePath: preset.themePath
+      goalTemplateId: preset.goalTemplateId || preset.id
     }))
   };
 }
 function buildAiSystemPrompt(snapshot, customPrompt) {
-  const themeExamples = (snapshot.themes ?? []).slice(0, 5).map((t3) => t3.path).join(", ") || "";
-  const blockExamples = (snapshot.blocks ?? []).slice(0, 5).map((b2) => `${b2.id}(${b2.name})`).join(", ") || "";
-  const goalExamples = (snapshot.goals ?? []).slice(0, 6).map((g2) => g2.path).join(", ") || "";
-  const presetExamples = (snapshot.goalPresets ?? []).slice(0, 8).map((p2) => `${p2.goalPath} × ${p2.blockId || p2.categoryKey} → ${p2.name}${p2.themePath ? `(${p2.themePath})` : ""}`).join("；") || "";
-  const basePrompt = [
-    "You are a parser that converts natural language into Think plugin record commands.",
-    "Return ONLY valid JSON. No markdown code blocks. No explanations. No extra text.",
+  const blockExamples = (snapshot.blocks ?? []).slice(0, 5).map((b2) => `${b2.id}(${b2.name})`).join(", ");
+  const goalExamples = (snapshot.goals ?? []).slice(0, 8).map((g2) => g2.path).filter(Boolean).join(", ");
+  const presetExamples = (snapshot.goalPresets ?? []).slice(0, 10).map((p2) => `${p2.goalPath} × ${p2.blockId || p2.categoryKey}`).join("；");
+  const lines = [
+    "You convert natural language into Think plugin record commands.",
+    "Return ONLY valid JSON. No markdown and no explanations.",
     "",
-    "=== OUTPUT SCHEMA ===",
-    '{ "items": NaturalRecordCommand[] }',
+    "Schema:",
+    '{"items":[{"rawText":"...","target":{"blockId":"core.task","categoryKey":"optional","goalPath":"完整/目标/路径","goalTemplateId":"optional"},"fieldValues":{},"meta":{"confidence":0.9}}]}',
     "",
-    "NaturalRecordCommand structure:",
-    "{",
-    '  "rawText": "original input text",',
-    '  "target": {',
-    '    "blockId": "core-block-id-from-snapshot",',
-    '    "categoryKey": "optional-category-label-from-snapshot",',
-    '    "goalPath": "goal-path-from-snapshot",',
-    '    "templateVariantId": "preset-variant-from-snapshot",',
-    '    "themeId": "theme-path-from-selected-preset"',
-    "  },",
-    '  "fieldValues": { "fieldKey": "value" },',
-    '  "meta": { "confidence": 0.9, "reason": "explanation" }',
-    "}",
+    `Blocks: ${blockExamples}`,
+    `Goals: ${goalExamples}`,
+    `Configured Goal templates: ${presetExamples}`,
     "",
-    "=== AVAILABLE BLOCKS ===",
-    `Blocks: ${blockExamples}${(snapshot.blocks?.length ?? 0) > 5 ? "..." : ""}`,
-    "",
-    "=== AVAILABLE GOALS ===",
-    `Goal paths: ${goalExamples}${(snapshot.goals?.length ?? 0) > 6 ? "..." : ""}`,
-    "",
-    "=== AVAILABLE GOAL PRESETS ===",
-    `Goal presets: ${presetExamples}${(snapshot.goalPresets?.length ?? 0) > 8 ? "..." : ""}`,
-    "",
-    "=== AVAILABLE THEMES ===",
-    `Theme paths: ${themeExamples}${(snapshot.themes?.length ?? 0) > 5 ? "..." : ""}`
+    "Rules:",
+    "1. Goal has one identity: target.goalPath. Use a complete path from the provided Goal list.",
+    "2. blockId is required and must come from the provided Blocks.",
+    "3. A Goal x blockId has at most one configured template. When one exists, goalTemplateId may identify it; there is no template variant.",
+    "4. Record classification uses target.goalPath only. Put no system identity fields inside fieldValues.",
+    "5. Goal path is the only Goal identity; do not invent secondary identity fields.",
+    "6. fieldValues contains only user-editable record fields, never Goal/template/period context.",
+    "7. Dates use YYYY-MM-DD; times use HH:mm. Do not invent fields not present in the selected template/block."
   ];
-  if (customPrompt) {
-    basePrompt.push(
-      "",
-      "=== USER CUSTOM RULES (HIGHEST PRIORITY) ===",
-      "The following are user-defined rules. Follow these rules STRICTLY:",
-      "",
-      customPrompt,
-      "",
-      "=== END OF CUSTOM RULES ===",
-      ""
-    );
-  }
-  basePrompt.push(
-    "",
-    "=== DEFAULT RULES (use when custom rules do not apply) ===",
-    "",
-    "GOAL / PRESET SELECTION:",
-    "1. goalPath is REQUIRED when snapshot.goals is not empty. Use a FULL goal path from snapshot.goals[].path.",
-    "2. Choose blockId first, then choose the best preset from snapshot.goalPresets with the same goalPath and blockId. categoryKey is only a display helper.",
-    "3. If a preset clearly matches user words, return target.goalTemplateId = preset.goalTemplateId/id and target.templateVariantId = preset.variantId.",
-    "4. If several presets match, prefer the closest themePath/name match.",
-    "5. themeId should come from the selected preset themePath or selected goal themePath. Theme is only a form default/stat dimension, not the main template selector.",
-    "6. Do not output deprecated templateSourceType values.",
-    "",
-    "BLOCK SELECTION:",
-    "1. blockId is REQUIRED and must come from snapshot.blocks[].id or snapshot.goalPresets[].blockId, e.g. core.task/core.habit/core.plan.",
-    "2. categoryKey is optional display text. Return it only when it helps compatibility, and it must come from snapshot.blocks[].categoryKey.",
-    "3. Common patterns:",
-    '   - "任务"/"要做"/"待办" → blockId = "core.task"',
-    '   - "计划" → blockId = "core.plan"',
-    '   - "总结"/"复盘" → blockId = "core.review"',
-    '   - "打卡"/"记录状态" → blockId = "core.habit"',
-    '   - "闪念"/"想法"/"灵感" → blockId = "core.thought"',
-    "4. Do not invent blockId or categoryKey that does not exist in the snapshot.",
-    "",
-    "FIELD VALUES:",
-    "1. Keys MUST be from the selected preset.fields[].key when preset is selected; otherwise use snapshot.blocks[].fields[].key",
-    "2. Date format: YYYY-MM-DD",
-    "3. Time format: HH:mm",
-    "4. Select/radio/rating: return the exact option.value or option.label from snapshot; the app will map it back to the configured option object",
-    "5. Rating: use numeric value (1-5)",
-    "6. Use current date/time if not specified in input",
-    "7. Do NOT put system context fields into fieldValues: goalId, goalPath, themePath, templateId, templateSourceType, templateVariantId, 周期, 周期ID, 周期粒度. Put goal/preset/theme information under target only.",
-    "8. For 计划/总结, do not invent 周期 fields. The app derives period from the selected preset periodPolicy and 日期.",
-    "",
-    "=== EXAMPLE ===",
-    'If user says "记录今天运动 30 分钟" and goal/preset include "强健身体 × core.habit → 运动打卡(健康/运动)":',
-    "{",
-    '  "items": [{',
-    '    "rawText": "记录今天运动 30 分钟",',
-    '    "target": { "blockId": "core.habit", "categoryKey": "打卡", "goalPath": "强健身体", "goalTemplateId": "goal-template.goal.health.core.habit.running", "templateVariantId": "running", "themeId": "健康/运动" },',
-    '    "fieldValues": { "日期": "2024-01-15", "内容": "运动 30 分钟" },',
-    '    "meta": { "confidence": 0.95 }',
-    "  }]",
-    "}"
-  );
-  return basePrompt.join("\n");
+  if (customPrompt) lines.push("", "User custom rules, highest priority:", customPrompt);
+  return lines.join("\n");
 }
 function buildAiFastSystemPrompt(customPrompt) {
   const lines = [
-    "You convert user text into Think plugin record commands.",
-    "Return ONLY valid JSON. No markdown. No explanations.",
-    'Schema: {"items":[{"rawText":"...","target":{"blockId":"core.task","categoryKey":"optional label","goalPath":"...","goalTemplateId":"optional","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}',
-    "Use only goalPath/blockId/categoryKey/goalTemplateId/templateVariantId/themeId/fields provided by user prompt.",
-    "If uncertain, choose the first plausible goal, preset/theme, and blockId.",
-    "Dates: YYYY-MM-DD. Times: HH:mm. Never put goal/theme/template/period system fields into fieldValues."
+    "Convert user text into Think record commands. Return compact JSON only.",
+    'Schema: {"items":[{"rawText":"...","target":{"blockId":"core.task","categoryKey":"optional","goalPath":"...","goalTemplateId":"optional"},"fieldValues":{},"meta":{"confidence":0.9}}]}',
+    "Use only supplied Goal paths, Block IDs and editable fields.",
+    "Put no classification aliases, template variants, or system context inside fieldValues."
   ];
-  if (customPrompt) {
-    lines.push("", "User custom rules, highest priority:", customPrompt);
-  }
+  if (customPrompt) lines.push("", "User custom rules:", customPrompt);
   return lines.join("\n");
 }
 function buildAiUserPrompt(text2, nowIso2, maxResults, snapshot) {
@@ -9074,69 +8630,46 @@ function buildAiUserPrompt(text2, nowIso2, maxResults, snapshot) {
     `Current time: ${nowIso2}`,
     `Max results: ${maxResults}`,
     "",
-    "=== AVAILABLE GOALS (choose one when possible) ===",
+    "Goals:",
     JSON.stringify(snapshot.goals || [], null, 2),
     "",
-    "=== AVAILABLE GOAL PRESETS (prefer matching goalPath + Block) ===",
+    "Goal templates:",
     JSON.stringify(snapshot.goalPresets || [], null, 2),
     "",
-    "=== AVAILABLE THEMES (use preset themePath or choose one) ===",
-    JSON.stringify(snapshot.themes, null, 2),
+    "Blocks:",
+    JSON.stringify(snapshot.blocks || [], null, 2),
     "",
-    "=== AVAILABLE BLOCKS ===",
-    JSON.stringify(snapshot.blocks, null, 2),
-    "",
-    "=== USER INPUT ===",
+    "User input:",
     text2,
     "",
-    "Return JSON with target.goalPath, target.blockId, optional target.categoryKey, target.goalTemplateId/templateVariantId when possible, and target.themeId filled. Put only user-editable fields in fieldValues:"
+    "Return target.goalPath + target.blockId and optional target.goalTemplateId. Put only editable fields in fieldValues."
   ].join("\n");
 }
 function buildAiFastUserPrompt(text2, nowIso2, maxResults, snapshot) {
-  const themePaths = (snapshot.themes ?? []).map((theme) => theme.path).filter(Boolean);
-  const availableGoalPaths = (snapshot.goals ?? []).map((goal) => goal.path).filter(Boolean);
-  const compactPresets = (snapshot.goalPresets ?? []).map((preset) => ({
+  const goals = (snapshot.goals ?? []).map((goal) => goal.path).filter(Boolean);
+  const presets = (snapshot.goalPresets ?? []).map((preset) => ({
     goalPath: preset.goalPath,
     blockId: preset.blockId,
     categoryKey: preset.categoryKey,
-    variantId: preset.variantId,
-    goalTemplateId: preset.goalTemplateId || preset.id,
-    name: preset.name,
-    themePath: preset.themePath
+    goalTemplateId: preset.goalTemplateId || preset.id
   }));
-  const compactBlocks = (snapshot.blocks ?? []).map((block) => ({
+  const blocks = (snapshot.blocks ?? []).map((block) => ({
     id: block.id,
-    name: block.name,
     categoryKey: block.categoryKey,
     fields: (block.fields ?? []).map((field) => field.key || field.label).filter(Boolean)
   }));
   return [
     `Current time: ${nowIso2}`,
     `Max results: ${maxResults}`,
-    "Fast mode: prefer the simplest correct parse. Return compact JSON only.",
-    "",
-    "Goals:",
-    availableGoalPaths.join(" | "),
-    "",
-    "Goal presets:",
-    JSON.stringify(compactPresets),
-    "",
-    "Themes:",
-    themePaths.join(" | "),
-    "",
-    "Blocks:",
-    JSON.stringify(compactBlocks),
-    "",
-    "User input:",
-    text2,
-    "",
-    'Return JSON: {"items":[{"rawText":"...","target":{"goalPath":"...","blockId":"...","categoryKey":"optional","goalTemplateId":"optional","templateVariantId":"optional","themeId":"..."},"fieldValues":{},"meta":{"confidence":0.9}}]}'
+    `Goals: ${goals.join(" | ")}`,
+    `Goal templates: ${JSON.stringify(presets)}`,
+    `Blocks: ${JSON.stringify(blocks)}`,
+    `User input: ${text2}`,
+    "Return compact JSON with goalPath, blockId, optional goalTemplateId, and editable fieldValues only."
   ].join("\n");
 }
 function ensureCommandTarget(item) {
-  if (!isUnknownRecord(item.target)) {
-    item.target = { blockId: "" };
-  }
+  if (!isUnknownRecord(item.target)) item.target = { blockId: "" };
   const target = item.target;
   if (typeof target.blockId !== "string") target.blockId = "";
   return target;
@@ -9161,35 +8694,26 @@ function findBlockByTarget(snapshot, target) {
   return blocks.find((block) => block.id === blockId) || blocks.find((block) => block.categoryKey === categoryKey || block.name === categoryKey) || null;
 }
 function findGoalByTarget(snapshot, target) {
-  const goals = snapshot.goals ?? [];
-  const goalPath = targetString(target, "goalPath");
-  const goalId = targetString(target, "goalId");
-  return goals.find((goal) => goal.id === goalId) || goals.find((goal) => goal.path === goalPath || goal.title === goalPath) || null;
+  const path = targetString(target, "goalPath");
+  return (snapshot.goals ?? []).find((goal) => goal.path === path) || null;
 }
 function findPresetByTarget(snapshot, target) {
   const presets = snapshot.goalPresets ?? [];
   const explicitId = targetString(target, "goalTemplateId") || targetString(target, "templateId");
-  const variantId = targetString(target, "templateVariantId") || targetString(target, "goalTemplateVariantId");
-  const goalPath = targetString(target, "goalPath");
-  const goalId = targetString(target, "goalId");
-  const blockId = targetString(target, "blockId");
-  const categoryKey = targetString(target, "categoryKey");
   if (explicitId) {
     const exact = presets.find((preset) => preset.id === explicitId || preset.goalTemplateId === explicitId);
     if (exact) return exact;
   }
-  const candidates = presets.filter((preset) => {
-    const goalMatches = !goalPath && !goalId ? true : preset.goalPath === goalPath || preset.goalId === goalId;
-    const blockMatches = !blockId && !categoryKey ? true : preset.blockId === blockId || preset.categoryKey === categoryKey;
+  const goalPath = targetString(target, "goalPath");
+  const blockId = targetString(target, "blockId");
+  const categoryKey = targetString(target, "categoryKey");
+  return presets.find((preset) => {
+    const goalMatches = !goalPath || preset.goalPath === goalPath;
+    const blockMatches = !blockId && !categoryKey || preset.blockId === blockId || preset.categoryKey === categoryKey;
     return goalMatches && blockMatches;
-  });
-  if (variantId) {
-    const exactVariant = candidates.find((preset) => preset.variantId === variantId || preset.id === variantId || preset.goalTemplateId === variantId);
-    if (exactVariant) return exactVariant;
-  }
-  return candidates[0] || null;
+  }) || null;
 }
-function normalizeParsedBatch(batch, snapshot, rawText, defaultThemeId) {
+function normalizeParsedBatch(batch, snapshot, rawText) {
   if (!batch.items) batch.items = [];
   batch.items.forEach((item) => {
     const parsedItem = item;
@@ -9199,12 +8723,9 @@ function normalizeParsedBatch(batch, snapshot, rawText, defaultThemeId) {
     const preset = findPresetByTarget(snapshot, target);
     if (preset) {
       target.goalTemplateId = preset.goalTemplateId || preset.id;
-      target.templateVariantId = preset.variantId;
-      target.goalId = preset.goalId;
-      target.goalPath = preset.goalPath;
+      target.goalPath = preset.goalPath || target.goalPath;
       target.blockId = preset.blockId || target.blockId;
-      target.categoryKey = preset.categoryKey;
-      if (!target.themeId && preset.themePath) target.themeId = preset.themePath;
+      target.categoryKey = preset.categoryKey || target.categoryKey;
     }
     const block = findBlockByTarget(snapshot, target);
     if (block) {
@@ -9215,12 +8736,7 @@ function normalizeParsedBatch(batch, snapshot, rawText, defaultThemeId) {
       target.blockId = snapshot.blocks[0].id || "";
     }
     const goal = findGoalByTarget(snapshot, target);
-    if (goal) {
-      target.goalId = target.goalId || goal.id;
-      target.goalPath = target.goalPath || goal.path;
-      if (!target.themeId && goal.themePath) target.themeId = goal.themePath;
-    }
-    if (!target.themeId && defaultThemeId) target.themeId = defaultThemeId;
+    if (goal) target.goalPath = target.goalPath || goal.path;
   });
   return batch;
 }
@@ -9245,8 +8761,8 @@ class AiNaturalLanguageRecordParser {
       fastMode: !!input.fastMode
     });
     const settingsStart = nowMs();
-    const settings = this.settingsProvider.getSettings();
-    const ai = settings.aiSettings;
+    const settings2 = this.settingsProvider.getSettings();
+    const ai = settings2.aiSettings;
     logParserStep(traceId, "读取 settings 完成", settingsStart, {
       aiEnabled: !!ai?.enabled,
       model: ai?.model ?? "(missing)",
@@ -9261,7 +8777,6 @@ class AiNaturalLanguageRecordParser {
     logParserStep(traceId, "获取 AI 配置 snapshot 完成", snapshotStart, {
       fastMode: !!input.fastMode,
       blocksCount: snapshot.blocks?.length ?? 0,
-      themesCount: snapshot.themes?.length ?? 0,
       goalsCount: snapshot.goals?.length ?? 0,
       goalPresetsCount: snapshot.goalPresets?.length ?? 0,
       compacted: input.fastMode ? true : false
@@ -9286,7 +8801,6 @@ class AiNaturalLanguageRecordParser {
       fastMode: !!input.fastMode,
       userChars: user.length,
       blocksJsonChars: JSON.stringify(snapshot.blocks).length,
-      themesJsonChars: JSON.stringify(snapshot.themes).length,
       goalsJsonChars: JSON.stringify(snapshot.goals || []).length,
       goalPresetsJsonChars: JSON.stringify(snapshot.goalPresets || []).length,
       maxResults: effectiveMaxResults
@@ -9329,7 +8843,7 @@ class AiNaturalLanguageRecordParser {
     });
     warnSlowParserStep(traceId, "解析 AI JSON", jsonParseStart, 100, { rawLength: raw.length });
     const normalizeStart = nowMs();
-    normalizeParsedBatch(batch, snapshot, input.text, ai.defaultThemeId);
+    normalizeParsedBatch(batch, snapshot, input.text);
     if (!ai.allowMultipleResults && batch.items.length > 1) {
       batch.items = batch.items.slice(0, 1);
     }
@@ -9337,8 +8851,7 @@ class AiNaturalLanguageRecordParser {
       batch.items = batch.items.slice(0, effectiveMaxResults);
     }
     logParserStep(traceId, "结果兜底/规范化完成", normalizeStart, {
-      itemsCount: batch.items.length,
-      defaultThemeIdApplied: !!ai.defaultThemeId
+      itemsCount: batch.items.length
     });
     devLog(`[AiInput][${traceId}][Parser] parse completed (${formatMs$1(totalStart)})`, {
       itemsCount: batch.items.length,
@@ -13795,9 +13308,8 @@ const ChatMessageSchema = object({
   }).optional()
 });
 const SessionFiltersSchema = object({
-  themePaths: array(string()).optional(),
-  coreBlocks: array(string()).optional(),
-  blockTemplateIds: array(string()).optional()
+  goalPaths: array(string()).optional(),
+  coreBlocks: array(string()).optional()
 });
 const ChatSessionSchema = object({
   id: string(),
@@ -13952,14 +13464,14 @@ let ChatSessionStore = class {
     return this.data.sessions.find((s2) => s2.id === id);
   }
   /** 创建新会话 */
-  async createSession(title, filters) {
+  async createSession(title, filters2) {
     const now2 = Date.now();
     const session = {
       id: generateId(),
       title: title || `对话 ${(/* @__PURE__ */ new Date()).toLocaleString("zh-CN")}`,
       created: now2,
       modified: now2,
-      filters,
+      filters: filters2,
       messages: []
     };
     this.data.sessions.unshift(session);
@@ -14040,11 +13552,8 @@ const CURRENT_CACHE_SCHEMA_VERSION = 15;
 function toCachedItem(it) {
   return {
     id: it.id,
-    schemaVersion: it.schemaVersion,
     coreBlock: it.coreBlock,
     status: it.status,
-    templateId: it.templateId,
-    templateSourceType: it.templateSourceType,
     filePath: it.file?.path || it.source?.path || "",
     startLine: it.source?.startLine ?? it.file?.line,
     endLine: it.source?.endLine ?? it.file?.line,
@@ -14053,12 +13562,7 @@ function toCachedItem(it) {
     content: it.content || "",
     rawSource: it.rawSource,
     tags: [...it.tags || []],
-    goalId: it.goalId,
     goalPath: it.goalPath,
-    theme: it.theme,
-    themePath: it.themePath,
-    rootTheme: it.rootTheme,
-    leafTheme: it.leafTheme,
     categoryKey: it.categoryKey,
     recurrenceInfo: it.recurrenceInfo,
     priority: it.priority,
@@ -14114,21 +13618,13 @@ function fromCachedItem(c2) {
   const folder = c2.filePath.split("/").slice(0, -1).pop() || "";
   const it = {
     id: c2.id,
-    schemaVersion: c2.schemaVersion ?? 2,
     coreBlock: c2.coreBlock || "",
     status: c2.status,
-    templateId: c2.templateId,
-    templateSourceType: c2.templateSourceType,
     title: c2.title || "",
     content: c2.content || "",
     rawSource: c2.rawSource,
     tags: [...c2.tags || []],
-    goalId: c2.goalId,
     goalPath: c2.goalPath,
-    theme: c2.theme,
-    themePath: c2.themePath,
-    rootTheme: c2.rootTheme,
-    leafTheme: c2.leafTheme,
     categoryKey: c2.categoryKey,
     recurrenceInfo: c2.recurrenceInfo,
     priority: c2.priority,
@@ -14293,7 +13789,6 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
   const contentLines = lines.slice(startIdx + 1, endIdx);
   const parsed = decodeRecordContentLines(contentLines);
   if (!parsed.recordId || !isStableRecordId(parsed.recordId)) return null;
-  if (parsed.schemaVersion !== RECORD_SCHEMA_VERSION) return null;
   if (!parsed.coreBlock) return null;
   const isTask = parsed.coreBlock === "task";
   const isTaskSeries = parsed.coreBlock === "task-series";
@@ -14308,10 +13803,9 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
   const canonicalDate = localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate || parsed.date || localCalendarDate(parsed.sessionStartedAt);
   const schema = getRecordSchemaDefinition(parsed.coreBlock);
   const derivedCategory = parsed.coreBlock === "thought" && parsed.recordSubtype ? `闪念/${parsed.recordSubtype}` : schema?.categoryKey || parentFolder;
-  const categoryKey = parsed.categoryKey || derivedCategory;
+  const categoryKey = derivedCategory;
   const item = {
     id: parsed.recordId,
-    schemaVersion: parsed.schemaVersion,
     title: parsed.title || "",
     content: parsed.content,
     rawSource: lines.slice(startIdx, endIdx + 1).join("\n"),
@@ -14325,7 +13819,6 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
     extra: parsed.extra,
     categoryKey,
     folder: parentFolder,
-    theme: parsed.theme,
     coreBlock: parsed.coreBlock,
     priority: parsed.priority,
     createdAt: parsed.createdAt,
@@ -14365,15 +13858,9 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
     cancelledDate: parsed.cancelledAt,
     date: canonicalDate
   };
-  if (parsed.goalId) item.goalId = parsed.goalId;
-  if (parsed.cycleId) item.cycleId = parsed.cycleId;
-  if (parsed.templateId) item.templateId = parsed.templateId;
-  if (parsed.templateSourceType) item.templateSourceType = parsed.templateSourceType;
   if (parsed.icon) item.icon = parsed.icon;
-  if (parsed.period) item.period = parsed.period;
   if (parsed.rating !== void 0) item.rating = parsed.rating;
   if (parsed.image) item.image = parsed.image;
-  if (parsed.pintu) item.pintu = parsed.pintu;
   if (parsed.seriesId) item.extra["系列ID"] = parsed.seriesId;
   if (parsed.expectedDurationMinutes !== void 0) {
     item.expectedDurationMinutes = parsed.expectedDurationMinutes;
@@ -14439,17 +13926,13 @@ function normalizeRecordItem(item, context) {
     item.header = context.header;
   }
   item.tags = unique([...context.sectionTags || [], ...item.tags || []]);
-  item.goalId = String(item.goalId || "").trim() || void 0;
   const rawGoalPath = String(item.goalPath || "").trim();
-  const canonicalGoalPath = rawGoalPath ? normalizeGoalPath(rawGoalPath) : null;
-  if (rawGoalPath && !canonicalGoalPath) throw new Error(`invalid_record_goal_path:${item.id}`);
-  item.goalPath = canonicalGoalPath || void 0;
-  if (Boolean(item.goalId) !== Boolean(item.goalPath)) throw new Error(`invalid_record_goal_identity:${item.id}`);
+  const canonicalGoalPath2 = rawGoalPath ? normalizeGoalPath(rawGoalPath) : null;
+  if (rawGoalPath && !canonicalGoalPath2) throw new Error(`invalid_record_goal_path:${item.id}`);
+  item.goalPath = canonicalGoalPath2 || void 0;
   const goalParts = splitGoalPath(item.goalPath || null);
   item.rootGoal = goalParts.rootGoal || void 0;
   item.leafGoal = goalParts.leafGoal || void 0;
-  item.theme = normalizeExplicitTheme(item.theme, context.themeMatcher);
-  applyExplicitThemeViewFields(toRecordViewItem(item));
   if (!item.extra) item.extra = {};
   if (!item.categoryKey) item.categoryKey = item.coreBlock === "task" ? "任务" : context.parentFolder;
   normalizeItemDates(toRecordViewItem(item));
@@ -14479,16 +13962,14 @@ function basenameNoExt(filename) {
   return filename.toLowerCase().endsWith(".md") ? filename.slice(0, -3) : filename;
 }
 class DataStoreFileScanner {
-  constructor(vault, metadata, fileStat, themeMatcher) {
+  constructor(vault, metadata, fileStat) {
     this.vault = vault;
     this.metadata = metadata;
     this.fileStat = fileStat;
-    this.themeMatcher = themeMatcher;
   }
   vault;
   metadata;
   fileStat;
-  themeMatcher;
   async scan(filePathOrFile) {
     const filePath = normalizeFilePathInput(filePathOrFile);
     if (!filePath) {
@@ -14561,8 +14042,7 @@ class DataStoreFileScanner {
       modified: stat.mtime,
       line: line2,
       header: currentHeader || void 0,
-      sectionTags: currentSectionTags,
-      themeMatcher: this.themeMatcher
+      sectionTags: currentSectionTags
     });
     item.source = { path: filePath, startLine: line2, endLine, modified: stat.mtime };
     if (item.file) item.file.line = line2;
@@ -14641,7 +14121,7 @@ function matchRule(item, rule) {
   } else if (canonicalField === "content") {
     v1 = readString(itemRecord, "contentLower") ?? String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
-  } else if (["themePath", "rootTheme", "leafTheme", "goalPath", "rootGoal", "leafGoal"].includes(canonicalField)) {
+  } else if (["goalPath", "rootGoal", "leafGoal"].includes(canonicalField)) {
     v1 = String(v1 ?? "").toLowerCase();
     if (rule.op === "in" || rule.op === "notIn") {
       v2 = normalizeListValue(v2).map((value) => String(value ?? "").toLowerCase());
@@ -14728,7 +14208,7 @@ function filterByKeyword(items, kw) {
     const contentLower = readString(itemRecord, "contentLower") ?? (it.content || "").toLowerCase();
     const fullDataLower = readString(itemRecord, "fullDataLower") ?? (it.fullData || it.rawSource || "").toLowerCase();
     const tagsLower = (it.tags || []).join(" ").toLowerCase();
-    const semanticText = [it.goalPath, it.themePath, it.coreBlock, it.status].filter(Boolean).join(" ").toLowerCase();
+    const semanticText = [it.goalPath, it.coreBlock, it.status].filter(Boolean).join(" ").toLowerCase();
     return (titleLower + " " + contentLower + " " + fullDataLower + " " + tagsLower + " " + semanticText).includes(s2);
   });
 }
@@ -14755,7 +14235,7 @@ function buildPathOption(path) {
 }
 function isGoalOrderField(field) {
   const canonical = getCanonicalFieldKey(String(field || "").trim());
-  return ["goalPath", "rootGoal", "leafGoal", "goalId"].includes(canonical);
+  return ["goalPath", "rootGoal", "leafGoal"].includes(canonical);
 }
 function normalizeText(value) {
   if (value === null || value === void 0) return "";
@@ -14778,28 +14258,15 @@ function normalizeGoalComparable(value) {
   if (!text2) return "";
   return splitGoalPath(text2).goalPath || "";
 }
-function buildGoalPathById(goals = []) {
-  const result = /* @__PURE__ */ new Map();
-  for (const goal of goals || []) {
-    const path = normalizeGoalComparable(goal.goalPath || goal.title || goal.id);
-    if (goal.id && path) result.set(goal.id, path);
-  }
-  return result;
-}
 function resolveGoalFieldComparable(field, rawValue, context) {
-  const canonical = getCanonicalFieldKey(String(field || "").trim());
-  const goals = context?.goals || [];
-  if (canonical === "goalId") {
-    const id = firstText$1(rawValue);
-    return buildGoalPathById(goals).get(id) || id || "";
-  }
+  getCanonicalFieldKey(String(field || "").trim());
   return normalizeGoalComparable(rawValue);
 }
 function compareFieldValuesByViewOrder(field, left2, right2, context) {
   if (isGoalOrderField(field)) {
     const goalOrder = createGoalOrderIndex(context?.goals || []);
-    const leftGoal = resolveGoalFieldComparable(field, left2, context);
-    const rightGoal = resolveGoalFieldComparable(field, right2, context);
+    const leftGoal = resolveGoalFieldComparable(field, left2);
+    const rightGoal = resolveGoalFieldComparable(field, right2);
     const byGoal = goalOrder.compareGoalPaths(leftGoal, rightGoal);
     if (byGoal !== 0) return byGoal;
     return leftGoal.localeCompare(rightGoal, "zh-CN");
@@ -14809,9 +14276,6 @@ function compareFieldValuesByViewOrder(field, left2, right2, context) {
 function readOrderedFieldValue(item, field, context) {
   const canonical = getCanonicalFieldKey(String(field || "").trim());
   if (isGoalOrderField(canonical)) {
-    if (canonical === "goalId") {
-      return firstText$1(item[canonical]) || readField(item, canonical);
-    }
     return item.goalPath || readField(item, canonical) || readField(item, "goalPath");
   }
   return readField(item, canonical);
@@ -15019,13 +14483,45 @@ function applyDateConstraint(items, constraint) {
   if (mode === "strict") return applyStrictDateConstraint(items, constraint);
   return applyStandardDateConstraint(items, constraint);
 }
+const dateConstraintCache = /* @__PURE__ */ new WeakMap();
+const MAX_DATE_CACHE_ENTRIES_PER_SNAPSHOT = 48;
+function buildDateConstraintCacheKey(constraint) {
+  const [start2, end2] = constraint.range;
+  return JSON.stringify({
+    start: start2?.getTime?.() ?? Number(start2),
+    end: end2?.getTime?.() ?? Number(end2),
+    field: constraint.field || "date",
+    mode: constraint.mode || "",
+    granularity: constraint.granularity || "",
+    useFieldGranularity: !!constraint.useFieldGranularity,
+    periodValue: constraint.periodValue == null ? "" : String(constraint.periodValue),
+    precision: constraint.precision || "day"
+  });
+}
+function applyDateConstraintCached(items, constraint) {
+  if (!constraint) return items;
+  let byConstraint = dateConstraintCache.get(items);
+  if (!byConstraint) {
+    byConstraint = /* @__PURE__ */ new Map();
+    dateConstraintCache.set(items, byConstraint);
+  }
+  const key = buildDateConstraintCacheKey(constraint);
+  const cached2 = byConstraint.get(key);
+  if (cached2) return cached2;
+  const filtered = applyDateConstraint(items, constraint);
+  byConstraint.set(key, filtered);
+  if (byConstraint.size > MAX_DATE_CACHE_ENTRIES_PER_SNAPSHOT) {
+    const oldestKey = byConstraint.keys().next().value;
+    if (oldestKey) byConstraint.delete(oldestKey);
+  }
+  return filtered;
+}
 function executeRecordQuery(items, spec = {}) {
-  let result = items;
+  let result = applyDateConstraintCached(items, spec.date);
   for (const group of spec.filterGroups || []) {
     if (group.length) result = filterByRules(result, [...group]);
   }
   if (spec.keyword) result = filterByKeyword(result, spec.keyword);
-  result = applyDateConstraint(result, spec.date);
   if (spec.sort?.length) result = sortItems(result, [...spec.sort]);
   const groupFields = (spec.groupBy || []).filter(Boolean);
   const groupTree = groupFields.length ? groupItemsByFields(result, [...groupFields], spec.groupContext) : null;
@@ -15248,22 +14744,22 @@ class DataStoreIndex {
    * All valid Record v2 entities projected for existing query/view consumers.
    * Internal task-series/task-session records are included.
    */
-  queryRecords(filters = [], sortRules = []) {
-    const key = `records:${this.makeQueryKey(filters, sortRules)}`;
+  queryRecords(filters2 = [], sortRules = []) {
+    const key = `records:${this.makeQueryKey(filters2, sortRules)}`;
     const cached2 = this.queryCache.get(key);
     if (cached2) return cached2;
     const projected = this.records.map(toRecordViewItem);
-    const result = queryRecordItems(projected, { filterGroups: [filters], sort: sortRules });
+    const result = queryRecordItems(projected, { filterGroups: [filters2], sort: sortRules });
     this.queryCache.set(key, result);
     return result;
   }
   /** User-visible records only. Internal Series/Session entities stay behind the application boundary. */
-  queryItems(filters = [], sortRules = []) {
-    const key = this.makeQueryKey(filters, sortRules);
+  queryItems(filters2 = [], sortRules = []) {
+    const key = this.makeQueryKey(filters2, sortRules);
     const cached2 = this.queryCache.get(key);
     if (cached2) return cached2;
     const userVisibleItems = this.records.filter((record) => record.coreBlock !== "task-series" && record.coreBlock !== "task-session").map(toRecordViewItem);
-    const result = queryRecordItems(userVisibleItems, { filterGroups: [filters], sort: sortRules });
+    const result = queryRecordItems(userVisibleItems, { filterGroups: [filters2], sort: sortRules });
     this.queryCache.set(key, result);
     return result;
   }
@@ -15275,8 +14771,8 @@ class DataStoreIndex {
     this.records = this.recordIndex.rebuild(this.fileIndex);
     this.queryCache.clear();
   }
-  makeQueryKey(filters = [], sortRules = []) {
-    return JSON.stringify({ f: filters, s: sortRules, v: this.dataVersion });
+  makeQueryKey(filters2 = [], sortRules = []) {
+    return JSON.stringify({ f: filters2, s: sortRules, v: this.dataVersion });
   }
 }
 async function buildWarmStartPlan(paths, cache, fileStat) {
@@ -15308,19 +14804,17 @@ var __decorateClass$b = (decorators, target, key, kind) => {
 };
 var __decorateParam$a = (index, decorator) => (target, key) => decorator(target, key, index);
 let DataStore = class {
-  constructor(vault, metadata, fileStat, themeMatcher, storage) {
+  constructor(vault, metadata, fileStat, storage) {
     this.vault = vault;
     this.metadata = metadata;
     this.fileStat = fileStat;
-    this.themeMatcher = themeMatcher;
     this.storage = storage;
     this.cacheStore = new DataStoreCache(this.storage, () => this._assertNotDisposed());
-    this.fileScanner = new DataStoreFileScanner(this.vault, this.metadata, this.fileStat, this.themeMatcher);
+    this.fileScanner = new DataStoreFileScanner(this.vault, this.metadata, this.fileStat);
   }
   vault;
   metadata;
   fileStat;
-  themeMatcher;
   storage;
   index = new DataStoreIndex();
   cacheStore;
@@ -15477,11 +14971,11 @@ let DataStore = class {
     }
   }
   /* ---------------- 查询 ---------------- */
-  queryRecords(filters = [], sortRules = []) {
-    return this.index.queryRecords(filters, sortRules);
+  queryRecords(filters2 = [], sortRules = []) {
+    return this.index.queryRecords(filters2, sortRules);
   }
-  queryItems(filters = [], sortRules = []) {
-    return this.index.queryItems(filters, sortRules);
+  queryItems(filters2 = [], sortRules = []) {
+    return this.index.queryItems(filters2, sortRules);
   }
   /** Canonical entity lookup for repository/domain code; getRecordById is the consumer projection. */
   getRecordEntityById(recordId) {
@@ -15536,8 +15030,7 @@ DataStore = __decorateClass$b([
   __decorateParam$a(0, inject(VAULT_PORT_TOKEN)),
   __decorateParam$a(1, inject(METADATA_PORT_TOKEN)),
   __decorateParam$a(2, inject(FILESTAT_PORT_TOKEN)),
-  __decorateParam$a(3, inject(THEME_MATCHER_TOKEN)),
-  __decorateParam$a(4, inject(STORAGE_TOKEN))
+  __decorateParam$a(3, inject(STORAGE_TOKEN))
 ], DataStore);
 const HIDDEN_EXTRA_ALIAS_SET = /* @__PURE__ */ new Set(["正文", "内容", "任务内容", "记录内容", "editableText"]);
 function normalizeRetrievalText(value) {
@@ -15588,40 +15081,26 @@ function tokenizeRetrievalText(text2) {
   }
   return [.../* @__PURE__ */ new Set([...words, ...ngrams])];
 }
-function applyRetrievalFilters(results, filters, indexedItemsById) {
-  if (!filters) return results;
+function applyRetrievalFilters(results, filters2, indexedItemsById) {
+  if (!filters2) return results;
   return results.filter((sr) => {
     const item = indexedItemsById.get(getSearchResultId(sr));
-    if (!matchesThemePath(sr, item, filters)) return false;
-    if (!matchesCoreBlock(sr, item, filters)) return false;
-    if (!matchesRecordCaptureTemplateId(sr, item, filters)) return false;
-    if (!matchesRecordCaptureTemplateName(sr, item, filters)) return false;
+    if (!matchesGoalPath(sr, item, filters2)) return false;
+    if (!matchesCoreBlock(sr, item, filters2)) return false;
     return true;
   });
 }
-function matchesThemePath(sr, item, filters) {
-  if (!filters.themePaths?.length) return true;
-  const itemThemePath = normalizeRetrievalText(item ? readFieldValue(item, "themePath") : readSearchResultText(sr, "themePath"));
-  if (!itemThemePath) return false;
-  return filters.themePaths.some((tp) => itemThemePath === tp || itemThemePath.startsWith(tp + "/"));
+function matchesGoalPath(sr, item, filters2) {
+  if (!filters2.goalPaths?.length) return true;
+  const itemGoalPath2 = normalizeRetrievalText(item?.goalPath ?? (item ? readFieldValue(item, "goalPath") : readSearchResultText(sr, "goalPath")));
+  if (!itemGoalPath2) return false;
+  return filters2.goalPaths.some((path) => itemGoalPath2 === normalizeRetrievalText(path) || itemGoalPath2.startsWith(`${normalizeRetrievalText(path)}/`));
 }
-function matchesCoreBlock(sr, item, filters) {
-  const requestedCoreBlocks = filters.coreBlocks?.length ? filters.coreBlocks : filters.types;
+function matchesCoreBlock(sr, item, filters2) {
+  const requestedCoreBlocks = filters2.coreBlocks;
   if (!requestedCoreBlocks?.length) return true;
   const coreBlock = normalizeRetrievalText(item?.coreBlock ?? readSearchResultText(sr, "coreBlock"));
   return !!coreBlock && requestedCoreBlocks.map(normalizeRetrievalText).includes(coreBlock);
-}
-function matchesRecordCaptureTemplateId(sr, item, filters) {
-  if (!filters.blockTemplateIds?.length) return true;
-  const templateId = normalizeRetrievalText(item?.templateId ?? readSearchResultText(sr, "templateId"));
-  return !!templateId && filters.blockTemplateIds.includes(templateId);
-}
-function matchesRecordCaptureTemplateName(sr, item, filters) {
-  if (!filters.blockTemplateNames?.length) return true;
-  const categoryKey = normalizeRetrievalText(item ? readFieldValue(item, "categoryKey") : readSearchResultText(sr, "categoryKey"));
-  if (!categoryKey) return false;
-  const categoryBase = categoryKey.split("/")[0];
-  return filters.blockTemplateNames.includes(categoryBase);
 }
 const ENTRIES = "ENTRIES";
 const KEYS = "KEYS";
@@ -17437,9 +16916,9 @@ const SEARCH_FIELDS = [
   "content",
   "editableText",
   "tags",
-  "themePath",
-  "rootTheme",
-  "leafTheme",
+  "goalPath",
+  "rootGoal",
+  "leafGoal",
   "categoryKey",
   "baseCategory",
   "leafCategory",
@@ -17455,14 +16934,13 @@ const STORE_FIELDS = [
   "editableText",
   "fullData",
   "tags",
-  "themePath",
-  "rootTheme",
-  "leafTheme",
+  "goalPath",
+  "rootGoal",
+  "leafGoal",
   "categoryKey",
   "baseCategory",
   "leafCategory",
   "coreBlock",
-  "templateId",
   "fileName",
   "folder",
   "header",
@@ -17481,7 +16959,7 @@ function createRetrievalMiniSearch() {
       boost: {
         title: 2,
         editableText: 1.8,
-        themePath: 1.5,
+        goalPath: 1.5,
         tags: 1.3,
         categoryKey: 1.2,
         extraText: 0.8
@@ -17500,14 +16978,13 @@ function itemToSearchDocument(item) {
     editableText: normalizeRetrievalText(readFieldValue(item, "editableText") ?? item.editableText),
     fullData: normalizeRetrievalText(readFieldValue(item, "fullData") ?? item.fullData),
     tags: normalizeRetrievalText(readFieldValue(item, "tags")),
-    themePath: normalizeRetrievalText(readFieldValue(item, "themePath")),
-    rootTheme: normalizeRetrievalText(readFieldValue(item, "rootTheme")),
-    leafTheme: normalizeRetrievalText(readFieldValue(item, "leafTheme")),
+    goalPath: normalizeRetrievalText(item.goalPath ?? readFieldValue(item, "goalPath")),
+    rootGoal: normalizeRetrievalText(item.rootGoal ?? readFieldValue(item, "rootGoal")),
+    leafGoal: normalizeRetrievalText(item.leafGoal ?? readFieldValue(item, "leafGoal")),
     categoryKey: normalizeRetrievalText(readFieldValue(item, "categoryKey")),
     baseCategory: normalizeRetrievalText(readFieldValue(item, "baseCategory")),
     leafCategory: normalizeRetrievalText(readFieldValue(item, "leafCategory")),
     coreBlock: normalizeRetrievalText(item.coreBlock),
-    templateId: normalizeRetrievalText(item.templateId),
     fileName: normalizeRetrievalText(readFieldValue(item, "fileName")),
     folder: normalizeRetrievalText(readFieldValue(item, "file.folder") ?? item.folder),
     header: normalizeRetrievalText(readFieldValue(item, "header")),
@@ -17529,12 +17006,11 @@ function searchResultToItem(sr, indexedItemsById) {
     editableText: readSearchResultText(sr, "editableText"),
     fullData,
     coreBlock: readSearchResultText(sr, "coreBlock") || "unknown",
-    themePath: readSearchResultText(sr, "themePath") || void 0,
-    rootTheme: readSearchResultText(sr, "rootTheme") || void 0,
-    leafTheme: readSearchResultText(sr, "leafTheme") || void 0,
+    goalPath: readSearchResultText(sr, "goalPath") || void 0,
+    rootGoal: readSearchResultText(sr, "rootGoal") || void 0,
+    leafGoal: readSearchResultText(sr, "leafGoal") || void 0,
     tags: readSearchResultText(sr, "tags").split(/\s+/).filter(Boolean),
     categoryKey: readSearchResultText(sr, "categoryKey"),
-    templateId: readSearchResultText(sr, "templateId") || void 0,
     dateMs: readSearchResultNumber(sr, "dateMs"),
     created: readSearchResultNumber(sr, "created") ?? 0,
     modified: readSearchResultNumber(sr, "modified") ?? 0,
@@ -17612,16 +17088,16 @@ let RetrievalService = class {
       lastIndexTime: this.lastIndexTime
     };
   }
-  search(query, filters) {
+  search(query, filters2) {
     this.ensureIndex();
     if (!this.miniSearch || !query.trim()) {
       return { items: [], results: [], totalMatched: 0 };
     }
     try {
       const searchResults = this.miniSearch.search(query, {});
-      const totalFiltered = applyRetrievalFilters(searchResults, filters, this.indexedItemsById);
+      const totalFiltered = applyRetrievalFilters(searchResults, filters2, this.indexedItemsById);
       const totalMatched = totalFiltered.length;
-      const limited = totalFiltered.slice(0, filters?.limit ?? DEFAULT_RETRIEVAL_LIMIT);
+      const limited = totalFiltered.slice(0, filters2?.limit ?? DEFAULT_RETRIEVAL_LIMIT);
       const results = this.mapSearchResults(limited);
       const items = results.map((r2) => r2.item);
       devLog(`RetrievalService: 搜索 "${query}" 找到 ${totalMatched} 条，返回 ${items.length} 条`);
@@ -17675,7 +17151,7 @@ const SYSTEM_PROMPT = `你是一个个人工作记录助手，帮助用户查询
 你的职责：
 1. 根据用户的问题，从提供的上下文中找到相关信息并回答
 2. 回答时要简洁明了，使用中文
-3. 如果引用了某条记录，请提及其标题、日期或主题
+3. 如果引用了某条记录，请提及其标题、日期或目标
 4. 如果上下文中没有相关信息，诚实地说明
 5. 可以对记录进行分析、统计或总结
 
@@ -17721,11 +17197,11 @@ let AiChatService = class {
     let totalLength = 0;
     for (const item of items) {
       const date2 = item.dateMs ? dayjs(item.dateMs).format("YYYY-MM-DD") : "未知日期";
-      const theme = item.theme || "无主题";
+      const goalPath = item.goalPath || "未归属目标";
       const title = item.title || "无标题";
       const content = (item.content || "").slice(0, 5e3);
       const type = item.coreBlock === "task" ? "任务" : "记录";
-      const entry = `- ${type} | ${date2} | ${theme} | ${title}${content ? ": " + content : ""}`;
+      const entry = `- ${type} | ${date2} | ${goalPath} | ${title}${content ? ": " + content : ""}`;
       if (totalLength + entry.length > MAX_CONTEXT_LENGTH) {
         break;
       }
@@ -17743,11 +17219,11 @@ let AiChatService = class {
    * - signal 用于 modal 关闭/unload/takeLatest 等场景的取消
    */
   async chat(request, signal) {
-    const settings = this.getAiSettings();
-    if (!settings.enabled) {
+    const settings2 = this.getAiSettings();
+    if (!settings2.enabled) {
       throw new Error("AI 功能未启用，请在设置中开启");
     }
-    if (!settings.apiEndpoint || !settings.apiKey || !settings.model) {
+    if (!settings2.apiEndpoint || !settings2.apiKey || !settings2.model) {
       throw new Error("AI 配置不完整，请检查 API 设置");
     }
     const messages = [];
@@ -17759,23 +17235,9 @@ let AiChatService = class {
     let retrievalCount = 0;
     if (request.enableRetrieval) {
       const retrievalService = this.retrievalService;
-      const filters = { ...request.retrievalFilters };
-      if (filters.blockTemplateIds && filters.blockTemplateIds.length > 0) {
-        const blocks = this.getBlocks();
-        const blockTemplateNames = [];
-        for (const id of filters.blockTemplateIds) {
-          const block = blocks.find((b2) => b2.id === id);
-          if (block && block.name) {
-            blockTemplateNames.push(block.name);
-          }
-        }
-        if (blockTemplateNames.length > 0) {
-          filters.blockTemplateNames = blockTemplateNames;
-        }
-        delete filters.blockTemplateIds;
-      }
+      const filters2 = { ...request.retrievalFilters };
       const searchResult = retrievalService.search(request.userMessage, {
-        ...filters,
+        ...filters2,
         limit: request.retrievalLimit ?? 1e4
         // 默认不限制（使用较大值）
       });
@@ -17813,19 +17275,19 @@ ${contextStr}
     });
     try {
       const content = await this.httpClient.chatCompletion({
-        baseURL: settings.apiEndpoint,
-        apiKey: settings.apiKey,
-        model: settings.model,
-        temperature: settings.temperature,
-        max_tokens: settings.maxTokens,
+        baseURL: settings2.apiEndpoint,
+        apiKey: settings2.apiKey,
+        model: settings2.model,
+        temperature: settings2.temperature,
+        max_tokens: settings2.maxTokens,
         messages,
-        timeoutMs: settings.requestTimeoutMs,
+        timeoutMs: settings2.requestTimeoutMs,
         signal
       });
       return {
         content,
         referencedItemIds,
-        model: settings.model,
+        model: settings2.model,
         retrievalCount
       };
     } catch (e2) {
@@ -17846,11 +17308,11 @@ ${contextStr}
   /**
    * 带检索的问答
    */
-  async chatWithRetrieval(message, filters, history) {
+  async chatWithRetrieval(message, filters2, history) {
     return this.chat({
       userMessage: message,
       enableRetrieval: true,
-      retrievalFilters: filters,
+      retrievalFilters: filters2,
       history
     });
   }
@@ -18029,7 +17491,7 @@ const EXCEL_VIEW_DEFAULT_CONFIG = {
 const HEATMAP_VIEW_DEFAULT_CONFIG = {
   displayMode: "habit",
   sourceBlockId: "",
-  themePaths: [],
+  goalPaths: [],
   maxDailyChecks: 10,
   allowManualEdit: true
 };
@@ -18042,7 +17504,7 @@ const PROGRESS_VIEW_DEFAULT_CONFIG = {
   includedCategories: [],
   ratingBonusThreshold: 4,
   ratingBonusPoints: 1,
-  showThemeBreakdown: true,
+  showGoalBreakdown: true,
   showCategoryBreakdown: true,
   topN: 5
 };
@@ -18080,17 +17542,17 @@ const BLOCK_EXPORT_DEFAULT_CONFIG = {
   groupTitlePrefix: "",
   useMarkdownHeadingForGroup: true,
   idTemplate: "ID {{index}}/{{filename}}#{{id}}",
-  detailFields: ["categoryKey", "date", "rating", "pintu", "content"],
+  detailFields: ["categoryKey", "date", "rating", "image", "content"],
   fieldLabels: {
     categoryKey: "分类",
     date: "日期",
     rating: "评分",
-    pintu: "评图",
+    image: "图片",
     content: "内容",
     fullData: "完整数据"
   },
   fieldRender: {
-    pintu: { type: "emojiOrLink" },
+    image: { type: "emojiOrLink" },
     content: { type: "content" },
     fullData: { type: "content" }
   }
@@ -18334,9 +17796,7 @@ function formatTaskItem(item) {
   const fields = [
     ["记录ID", item.id],
     ["状态", status],
-    ["目标ID", item.goalId],
     ["目标", item.goalPath],
-    ["主题", item.themePath || item.theme],
     ["优先级", item.priority],
     ["预计时长", item.expectedDurationMinutes ?? item.duration],
     ["计划时间", item.scheduledAt],
@@ -18357,35 +17817,18 @@ function formatTaskItem(item) {
   }
   return lines.join("\n");
 }
-function getItemThemePath(item) {
-  if (!item) return "";
-  const candidates = [
-    item.themePath,
-    item.themePathNormalized,
-    item.theme,
-    item.extra?.themePath,
-    item.extra?.["themePath"],
-    item.extra?.["主题"]
-  ];
-  for (const value of candidates) {
-    if (typeof value === "string" && value.trim()) return value.trim();
-  }
-  return "";
-}
-function collectThemePathsForHeatmap(params) {
+function collectGoalPathsForHeatmap(params) {
   const { items, dataSource, sourceBlock } = params;
   const filteredItems = queryRecordItems(items, { filterGroups: [dataSource.filters || []] });
-  const themeSet = /* @__PURE__ */ new Set();
+  const paths = /* @__PURE__ */ new Set();
   filteredItems.forEach((item) => {
-    const itemBlock = item.coreBlock || item.templateId || item.categoryKey;
+    const itemBlock = item.coreBlock ? `core.${String(item.coreBlock).replace(/^core\./, "")}` : "";
     const sourceBlockKey = sourceBlock.coreBlockId || sourceBlock.id || sourceBlock.name || sourceBlock.categoryKey;
     const isSourceBlock = itemBlock === sourceBlockKey || item.categoryKey === sourceBlock.categoryKey || item.categoryKey === sourceBlock.name;
-    const themePath = getItemThemePath(item);
-    if (isSourceBlock && themePath) {
-      themeSet.add(themePath);
-    }
+    const goalPath = String(item.goalPath || item.extra?.["目标"] || "").trim();
+    if (isSourceBlock && goalPath) paths.add(goalPath);
   });
-  return Array.from(themeSet).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+  return Array.from(paths).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
 }
 function getEffectiveLevelCount(item) {
   if (item.levelCount !== void 0) return item.levelCount;
@@ -18401,79 +17844,14 @@ const isImagePath = (value) => {
 const isHexColor = (value) => {
   return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value);
 };
-function filterItemsByThemes(items, themesToTrack) {
-  const kept = [];
-  const skippedByReason = {
-    noDate: 0,
-    themeNotTracked: 0
-  };
-  const isDefaultMode = themesToTrack.length === 0 || themesToTrack.length === 1 && themesToTrack[0] === "__default__";
-  items.forEach((item) => {
-    if (!item.date) {
-      skippedByReason.noDate++;
-      return;
-    }
-    if (isDefaultMode) {
-      kept.push(item);
-      return;
-    }
-    const themePath = getItemThemePath(item);
-    if (themePath && themesToTrack.includes(themePath)) {
-      kept.push(item);
-    } else {
-      skippedByReason.themeNotTracked++;
-    }
-  });
-  return {
-    kept,
-    skippedCount: skippedByReason.noDate + skippedByReason.themeNotTracked,
-    skippedByReason
-  };
+function getEffectiveHeatmapTemplate(settings2, blockId) {
+  return settings2.blocks.find((block) => block.id === blockId || block.coreBlockId === blockId) ?? null;
 }
-function aggregateThemeData(items, themesToTrack) {
-  const themeMap = /* @__PURE__ */ new Map();
-  const effectiveThemes = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
-  effectiveThemes.forEach((theme) => themeMap.set(theme, /* @__PURE__ */ new Map()));
-  const isDefaultMode = effectiveThemes.length === 1 && effectiveThemes[0] === "__default__";
-  items.forEach((item) => {
-    if (!item.date) return;
-    const targetTheme = isDefaultMode ? "__default__" : getItemThemePath(item) || "__default__";
-    let targetThemeMap = themeMap.get(targetTheme);
-    if (!targetThemeMap) {
-      targetThemeMap = /* @__PURE__ */ new Map();
-      themeMap.set(targetTheme, targetThemeMap);
-    }
-    const existingItems = targetThemeMap.get(item.date) || [];
-    targetThemeMap.set(item.date, [...existingItems, item]);
-  });
-  return themeMap;
-}
-function buildThemeDataMapWithStats(items, themePaths) {
-  const themesToTrack = themePaths && themePaths.length > 0 ? themePaths : ["__default__"];
-  const filterResult = filterItemsByThemes(items, themesToTrack);
-  const themeMap = aggregateThemeData(filterResult.kept, themesToTrack);
-  return { themeMap, filterResult };
-}
-function buildThemeDataMap(items, themePaths) {
-  const result = buildThemeDataMapWithStats(items, themePaths);
-  if (result.filterResult.skippedCount > 0) {
-    devLog("[buildThemeDataMap] Skipped items:", result.filterResult.skippedByReason);
-  }
-  return result.themeMap;
-}
-function buildThemesByPathMap(themes) {
-  const map = /* @__PURE__ */ new Map();
-  themes.forEach((t3) => map.set(t3.path, t3));
-  return map;
-}
-function getEffectiveHeatmapTemplate(settings, blockId, themeId) {
-  return settings.blocks.find((block) => block.id === blockId) ?? null;
-}
-function buildRatingMapping(inputSettings, blockId, themeId) {
+function buildRatingMapping(inputSettings, blockId) {
   const effectiveTemplate = getEffectiveHeatmapTemplate(inputSettings, blockId);
-  const ratingField = effectiveTemplate?.fields.find((f2) => f2.type === "rating");
+  const ratingField = effectiveTemplate?.fields.find((field) => field.type === "rating");
   return new Map(
-    ratingField?.options?.filter((opt) => opt.value).map((opt) => [opt.label || "", opt.value]) || []
+    ratingField?.options?.filter((option) => option.value).map((option) => [option.label || "", option.value]) || []
   );
 }
 class RatingMappingCache {
@@ -18481,12 +17859,10 @@ class RatingMappingCache {
   clear() {
     this.cache.clear();
   }
-  get(inputSettings, blockId, themePath, themesByPath) {
-    themePath && themePath !== "__default__" && themesByPath ? themesByPath.get(themePath)?.id : void 0;
-    const cacheKey = `${blockId}:${themePath || "default"}`;
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey);
-    }
+  get(inputSettings, blockId, goalPath) {
+    const cacheKey = `${blockId}:${goalPath || "default"}`;
+    const cached2 = this.cache.get(cacheKey);
+    if (cached2) return cached2;
     const mapping = buildRatingMapping(inputSettings, blockId);
     this.cache.set(cacheKey, mapping);
     return mapping;
@@ -18536,11 +17912,8 @@ function readHeatmapRatingText(item) {
 function readHeatmapVisualText(item) {
   if (!item) return "";
   return firstNonEmptyText$1(
-    item.pintu,
     item.image,
     readExtra(item, "图片"),
-    readExtra(item, "评图"),
-    readExtra(item, "pintu"),
     readExtra(item, "image")
   );
 }
@@ -18562,9 +17935,9 @@ function asStringList(value) {
   if (value === null || value === void 0 || value === "") return [];
   return String(value).split(/[,，]/).map((v2) => v2.trim()).filter(Boolean);
 }
-function getCategoryValuesFromFilters(filters = []) {
+function getCategoryValuesFromFilters(filters2 = []) {
   const result = /* @__PURE__ */ new Set();
-  for (const rule of filters) {
+  for (const rule of filters2) {
     if (!["baseCategory", "categoryKey", "类别", "根类别"].includes(rule.field)) continue;
     if (!["=", "includes", "in"].includes(rule.op)) continue;
     for (const value of asStringList(rule.value)) {
@@ -19572,18 +18945,13 @@ function first(renderData, keys) {
   }
   return void 0;
 }
-function themeValue(renderData, key) {
-  const theme = renderData.theme;
-  if (!theme || typeof theme !== "object" || Array.isArray(theme)) return void 0;
-  return theme[key];
-}
 function normalizeThoughtSubtype(raw) {
   const parts = optionParts(raw);
   const text2 = String(parts.value ?? parts.label ?? "").trim();
   if (!text2) return void 0;
   const pathParts = text2.split("/").map((part) => part.trim()).filter(Boolean);
-  const leaf2 = pathParts.length ? pathParts[pathParts.length - 1] : text2;
-  if (leaf2 === "感受" || leaf2 === "思考") return leaf2;
+  const leaf = pathParts.length ? pathParts[pathParts.length - 1] : text2;
+  if (leaf === "感受" || leaf === "思考") return leaf;
   return void 0;
 }
 function normalizeFieldValue(field, raw) {
@@ -19645,8 +19013,6 @@ function normalizeCustomValue(field, raw) {
 }
 function candidateForField(coreBlock, field, renderData) {
   switch (field.key) {
-    case "目标ID":
-      return first(renderData, ["目标ID", "goalId"]);
     case "目标": {
       const explicit = first(renderData, ["目标", "goalPath"]);
       if (nonEmpty(explicit)) return explicit;
@@ -19654,21 +19020,19 @@ function candidateForField(coreBlock, field, renderData) {
     }
     case "日期":
       return first(renderData, ["日期", "date"]);
-    case "主题":
-      return first(renderData, ["主题", "themePath"]) ?? themeValue(renderData, "path");
     case "内容":
-      return first(renderData, ["内容", "content", "正文", "title", "阻碍", "里程碑", "任务内容"]);
+      return first(renderData, ["内容", "content", "任务内容"]);
     case "图标":
-      return first(renderData, ["图标", "icon"]) ?? themeValue(renderData, "icon");
+      return first(renderData, ["图标", "icon"]);
     case "标签":
-      return first(renderData, ["标签", "tags", "tag"]);
+      return first(renderData, ["标签", "tags"]);
     case "记录子类型":
       if (coreBlock === "thought") {
-        return normalizeThoughtSubtype(first(renderData, ["记录子类型", "recordSubtype", "subtype", "分类", "categoryKey", "categoryPath"]));
+        return normalizeThoughtSubtype(first(renderData, ["记录子类型", "recordSubtype"]));
       }
-      return first(renderData, ["记录子类型", "recordSubtype", "subtype"]);
+      return first(renderData, ["记录子类型", "recordSubtype"]);
     case "周期粒度": {
-      const explicit = first(renderData, ["周期粒度", "periodGranularity", "goalGranularity"]);
+      const explicit = first(renderData, ["周期粒度", "periodGranularity"]);
       if (nonEmpty(explicit)) return explicit;
       const period = renderData.period;
       return period && typeof period === "object" && !Array.isArray(period) ? period.granularity : void 0;
@@ -19679,7 +19043,7 @@ function candidateForField(coreBlock, field, renderData) {
       return option.label;
     }
     case "图片": {
-      const explicit = first(renderData, ["图片", "image", "评图", "pintu"]);
+      const explicit = first(renderData, ["图片", "image"]);
       if (nonEmpty(explicit)) return explicit;
       const rating = first(renderData, ["评分", "rating"]);
       return optionParts(rating).value;
@@ -19696,9 +19060,7 @@ function contractForCaptureField(coreBlock, field) {
   const semantic = getTemplateFieldSemantic(field);
   const keyBySemantic = {
     body: "内容",
-    themePath: "主题",
     tags: "标签",
-    goalId: "目标ID",
     goalPath: "目标",
     date: "日期",
     recordSubtype: "记录子类型",
@@ -19707,7 +19069,6 @@ function contractForCaptureField(coreBlock, field) {
     icon: "图标",
     period: "周期粒度"
   };
-  if (semantic === "categoryPath" && coreBlock === "thought") return getRecordFieldContract(coreBlock, "记录子类型");
   const key = keyBySemantic[semantic];
   return key ? getRecordFieldContract(coreBlock, key) : null;
 }
@@ -19740,16 +19101,8 @@ function buildGenericRecordDraft(coreBlock, renderData, captureFields) {
   const schema = requireRecordSchemaDefinition(coreBlock);
   if (schema.family !== "generic") throw new Error(`record_draft_not_generic:${coreBlock}`);
   const fields = {};
-  putCanonical(fields, coreBlock, getRecordFieldContract(coreBlock, "目标ID"), renderData);
   putCanonical(fields, coreBlock, getRecordFieldContract(coreBlock, "目标"), renderData);
   putCanonical(fields, coreBlock, getRecordFieldContract(coreBlock, "周期粒度"), renderData);
-  if (captureFields === void 0) {
-    for (const field of schema.recordFields) {
-      if (field.persistence !== "target" && field.persistence !== "omit-default") continue;
-      putCanonical(fields, coreBlock, field, renderData);
-    }
-    return { coreBlock, fields };
-  }
   for (const captureField of captureFields) {
     const rawContract = contractForCaptureField(coreBlock, captureField);
     const contract = rawContract ? targetContract(coreBlock, rawContract) : null;
@@ -19770,7 +19123,7 @@ function normalizeNonEmptyPath(value) {
   return trimmed || null;
 }
 function readScalarOption(value) {
-  const option = readOptionText$2(value);
+  const option = readOptionText$1(value);
   return String(option.value || option.label || value || "").trim();
 }
 function normalizeLocalDateTime(value) {
@@ -19806,21 +19159,14 @@ function readStructuredTaskRecurrence(renderData) {
   if (!["scheduled", "start", "due", "completion"].includes(rawAnchor)) throw new Error(`task_recurrence_anchor_invalid:${rawAnchor}`);
   return { unit: rawUnit, interval, anchor: rawAnchor };
 }
-function buildRenderData(template, formData, theme, templateMeta) {
+function buildRenderData(template, formData) {
   const normalizedData = normalizeTemplateRenderData(template, formData);
-  const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === "object" ? normalizedData.theme : null;
-  const explicitThemePath = String(normalizedData.themePath ?? normalizedTheme?.path ?? "").trim();
-  const themeParts = splitThemePath(explicitThemePath || theme?.path || null);
   const categoryPartsValue = splitHierarchyPathValue(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? null);
   const categoryPath = categoryPartsValue.path || "";
   const categoryParts = categoryPartsValue.parts;
   const rawGoalPath = String(normalizedData.goalPath ?? normalizedData["目标"] ?? "").trim();
   const goalPath = rawGoalPath ? requireGoalPath(rawGoalPath) : "";
   const goalParts = goalPath ? goalPath.split("/").filter(Boolean) : [];
-  const goalId = String(normalizedData.goalId ?? normalizedData["目标ID"] ?? "").trim();
-  if (goalId && !goalPath || !goalId && goalPath) {
-    throw new Error("Goal context must contain both goalId and canonical goalPath, or neither.");
-  }
   const coreBlock = String(normalizedData.coreBlock ?? normalizedData["核心Block"] ?? template.coreBlockId ?? template.id ?? "").trim();
   const recordDate = String(normalizedData["日期"] ?? normalizedData.date ?? "").trim();
   const periodPolicy = resolveTemplatePeriodPolicy(template);
@@ -19835,25 +19181,12 @@ function buildRenderData(template, formData, theme, templateMeta) {
     baseCategory: categoryParts[0] || "",
     rootCategory: categoryParts[0] || "",
     leafCategory: categoryParts.length ? categoryParts[categoryParts.length - 1] : "",
-    theme: {
-      ...normalizedTheme || {},
-      path: themeParts.themePath,
-      root: themeParts.rootTheme,
-      leaf: themeParts.leafTheme,
-      icon: theme?.icon || String(normalizedData.icon ?? normalizedData["图标"] ?? normalizedTheme?.icon ?? "")
-    },
-    themePath: themeParts.themePath,
-    rootTheme: themeParts.rootTheme,
-    leafTheme: themeParts.leafTheme,
     goal: {
-      id: goalId,
       title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
       path: goalPath,
       root: goalParts[0] || "",
-      leaf: goalParts.length ? goalParts[goalParts.length - 1] : "",
-      themePath: themeParts.themePath
+      leaf: goalParts.length ? goalParts[goalParts.length - 1] : ""
     },
-    goalId,
     goalPath,
     rootGoal: goalParts[0] || "",
     leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : "",
@@ -19866,37 +19199,33 @@ function buildRenderData(template, formData, theme, templateMeta) {
     periodLabel: derivedPeriod ? cycleTitle || derivedPeriod.label : "",
     "周期粒度": derivedPeriod ? derivedPeriod.granularity : "",
     "周期ID": derivedPeriod ? cycleId || derivedPeriod.id : "",
-    "周期": derivedPeriod ? cycleTitle || derivedPeriod.label : "",
-    templateId: templateMeta?.templateId || template.id,
-    templateSourceType: templateMeta?.templateSourceType || "core-block"
+    "周期": derivedPeriod ? cycleTitle || derivedPeriod.label : ""
   };
 }
 function buildRecordOutputPlan(input) {
   if (!input.template) {
     return {
       recordId: null,
-      schemaVersion: null,
       coreBlock: null,
       targetFilePath: null,
       targetHeader: null,
       outputContent: "",
-      renderData: {},
-      themeParts: splitThemePath(null)
+      renderData: {}
     };
   }
-  const renderData = buildRenderData(input.template, input.formData, input.theme, input.templateMeta);
+  const renderData = buildRenderData(input.template, input.formData);
   const explicitCoreBlockId = String(input.template.coreBlockId || "").trim();
   const systemCoreBlockId = String(input.template.id || "").trim().startsWith("core.") ? String(input.template.id || "").trim() : "";
   const trustedCoreBlock = (explicitCoreBlockId || systemCoreBlockId).replace(/^core\./, "");
   const hintedCoreBlock = String(renderData.coreBlock || input.template.id || "").trim().replace(/^core\./, "");
   const coreBlock = trustedCoreBlock || hintedCoreBlock;
-  if (!coreBlock) throw new Error("Record Foundation v2 要求每条记录都有核心Block。");
+  if (!coreBlock) throw new Error("每条记录都必须有核心Block。");
   const schema = getRecordSchemaDefinition(coreBlock);
   if (!schema) throw new Error(`unknown_record_schema:${coreBlock}`);
   const recordId = String(input.recordId || "").trim() || createRecordId(coreBlock);
   let outputContent;
   if (coreBlock === "task") {
-    const statusOption = readOptionText$2(renderData["状态"] ?? renderData.status);
+    const statusOption = readOptionText$1(renderData["状态"] ?? renderData.status);
     const candidateStatus = String(statusOption.value || statusOption.label || "open").trim().toLowerCase();
     const status = ["open", "done", "cancelled", "skipped"].includes(candidateStatus) ? candidateStatus : "open";
     const recurrence = readStructuredTaskRecurrence(renderData);
@@ -19911,9 +19240,7 @@ function buildRecordOutputPlan(input) {
     const taskFields = {
       status,
       content: renderData["任务内容"] ?? renderData["内容"] ?? renderData.content,
-      goalId: renderData.goalId,
       goalPath: renderData.goalPath,
-      themePath: renderData.themePath,
       priority: renderData["优先级"] ?? renderData.priority,
       energyDemand: renderData["精力要求"] ?? renderData.energyDemand,
       brainDemand: renderData["脑力要求"] ?? renderData.brainDemand,
@@ -19958,14 +19285,11 @@ function buildRecordOutputPlan(input) {
       );
       const seriesBlock = encodeRecordBlock({
         recordId: seriesId,
-        schemaVersion: RECORD_SCHEMA_VERSION,
         coreBlock: "task-series",
         fields: {
           status: "active",
           content: taskFields.content,
-          goalId: taskFields.goalId,
           goalPath: taskFields.goalPath,
-          themePath: taskFields.themePath,
           priority: taskFields.priority,
           expectedDurationMinutes: taskFields.expectedDurationMinutes,
           energyDemand: taskFields.energyDemand,
@@ -19980,16 +19304,16 @@ function buildRecordOutputPlan(input) {
           currentTaskId: recordId
         }
       });
-      const taskBlock = encodeRecordBlock({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, coreBlock: "task", fields: taskFields });
+      const taskBlock = encodeRecordBlock({ recordId, coreBlock: "task", fields: taskFields });
       outputContent = `${seriesBlock}
 
 ${taskBlock}`;
     } else {
-      outputContent = encodeRecordBlock({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, coreBlock: "task", fields: taskFields });
+      outputContent = encodeRecordBlock({ recordId, coreBlock: "task", fields: taskFields });
     }
   } else if (schema?.family === "generic") {
     const draft = buildGenericRecordDraft(schema.coreBlock, renderData, input.template.fields);
-    outputContent = encodeRecordDraft({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, draft });
+    outputContent = encodeRecordDraft({ recordId, draft });
   } else {
     throw new Error(`record_capture_not_supported:${schema.coreBlock}:${schema.captureMode}`);
   }
@@ -19997,13 +19321,11 @@ ${taskBlock}`;
   const targetHeader = input.template.appendUnderHeader ? normalizeNonEmptyPath(renderTemplate(input.template.appendUnderHeader, renderData)) : null;
   return {
     recordId,
-    schemaVersion: RECORD_SCHEMA_VERSION,
     coreBlock,
     targetFilePath,
     targetHeader,
     outputContent,
-    renderData,
-    themeParts: splitThemePath(input.theme?.path ?? null)
+    renderData
   };
 }
 function buildRecordPersistencePlan(input) {
@@ -20080,9 +19402,9 @@ let InputService = class {
   }
   vault;
   dataStore;
-  previewTemplateExecution(template, formData, theme, templateMeta, recordId) {
+  previewTemplateExecution(template, formData, recordId) {
     if (!template) throw new Error("传入了无效的模板对象。");
-    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta, recordId });
+    const outputPlan = buildRecordOutputPlan({ template, formData, recordId });
     return {
       recordId: outputPlan.recordId,
       renderData: outputPlan.renderData,
@@ -20091,10 +19413,10 @@ let InputService = class {
       header: outputPlan.targetHeader
     };
   }
-  async executeTemplate(template, formData, theme, templateMeta, options = {}) {
+  async executeTemplate(template, formData, options = {}) {
     const signal = options.signal;
     this.throwIfAborted(signal);
-    const preview = this.previewTemplateExecution(template, formData, theme, templateMeta, options.recordId);
+    const preview = this.previewTemplateExecution(template, formData, options.recordId);
     const { outputContent, targetFilePath, header } = preview;
     if (!targetFilePath) throw new Error("模板未定义目标文件路径 (targetFile)。");
     return this.appendDirectRecord(targetFilePath, outputContent, header, options);
@@ -20127,10 +19449,10 @@ ${outputContent}` : outputContent;
    * 计划第 6.5 步：安全迁移保存。
    * 只负责“先写新位置”，删除旧记录由 usecase 在确认写入成功后再执行。
    */
-  async createRecordAtPlannedLocation(template, formData, theme, templateMeta, options = {}) {
-    return this.executeTemplate(template, formData, theme, templateMeta, options);
+  async createRecordAtPlannedLocation(template, formData, options = {}) {
+    return this.executeTemplate(template, formData, options);
   }
-  async updateExistingRecord(item, template, formData, theme, templateMeta, options = {}) {
+  async updateExistingRecord(item, template, formData, options = {}) {
     const signal = options.signal;
     const autoRefresh = options.autoRefresh !== false;
     this.throwIfAborted(signal);
@@ -20141,7 +19463,7 @@ ${outputContent}` : outputContent;
     const existingContent = await this.vault.readFile(path);
     if (existingContent == null) throw createRecordConflictError("record_path_missing", `找不到文件: ${path}`);
     this.throwIfAborted(signal);
-    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta, recordId: item.id });
+    const outputPlan = buildRecordOutputPlan({ template, formData, recordId: item.id });
     const nextText = outputPlan.outputContent.trim();
     if (!nextText) throw new Error("编辑后的输出内容为空，已取消保存。");
     const lines = existingContent.split("\n");
@@ -20243,14 +19565,14 @@ class MigrationBackupService {
    * - 备份 DataStore 中已索引到的 Markdown 文件
    * - 不修改原始记录；用于用户侧“一键迁移前备份”
    */
-  async createMigrationBackup(backupRoot, settings) {
+  async createMigrationBackup(backupRoot, settings2) {
     const root = String(backupRoot || "").replace(/^\/+|\/+$/g, "") || `ThinkOS/Backups/goal-migration-${Date.now()}`;
     const settingsPath = `${root}/data-settings.json`;
     const items = this.dataStore.queryItems();
     const markdownPaths = Array.from(new Set(
       items.map((item) => item.source?.path || item.file?.path || "").filter((path) => !!path)
     )).sort((left2, right2) => left2.localeCompare(right2));
-    await this.vault.writeFile(settingsPath, JSON.stringify(settings, null, 2));
+    await this.vault.writeFile(settingsPath, JSON.stringify(settings2, null, 2));
     await this.vault.writeFile(`${root}/markdown-paths.json`, JSON.stringify(markdownPaths, null, 2));
     const failedPaths = [];
     let markdownFileCount = 0;
@@ -20408,9 +19730,7 @@ function nextTaskFields(task, series, completedAt, nextDates) {
     // Series owns future-instance defaults. Historical/current Task metadata is never used
     // as the authority for future occurrences after a Series update.
     content: series.content || task.content,
-    goalId: series.goalId,
     goalPath: series.goalPath,
-    themePath: series.themePath || series.theme,
     createdAt: completedAt,
     priority: series.priority,
     expectedDurationMinutes: series.expectedDurationMinutes,
@@ -20425,9 +19745,7 @@ function nextTaskFields(task, series, completedAt, nextDates) {
     scheduledDate: nextDates.scheduledDate,
     startDate: nextDates.startDate,
     dueDate: nextDates.dueDate,
-    seriesId: series.id,
-    templateId: task.templateId,
-    templateSourceType: task.templateSourceType
+    seriesId: series.id
   };
 }
 class TaskCompletionMutation {
@@ -20474,9 +19792,7 @@ class TaskCompletionMutation {
     }
     const sharedFields = [
       ["content", "content"],
-      ["goalId", "goalId"],
       ["goalPath", "goalPath"],
-      ["themePath", "themePath"],
       ["priority", "priority"],
       ["expectedDurationMinutes", "expectedDurationMinutes"],
       ["energyDemand", "energyDemand"],
@@ -20728,9 +20044,7 @@ class RecordMutationTransaction {
 const PATCH_FIELDS = {
   status: { label: "状态", aliases: ["状态", "status"] },
   content: { label: "内容", aliases: ["内容", "content"] },
-  goalId: { label: "目标ID", aliases: ["目标ID", "goalId"] },
   goalPath: { label: "目标", aliases: ["目标", "goalPath"] },
-  themePath: { label: "主题", aliases: ["主题", "theme", "themePath"] },
   createdAt: { label: "创建于", aliases: ["创建于", "createdAt"] },
   scheduledAt: { label: "计划时间", aliases: ["计划时间", "scheduledAt"] },
   startAt: { label: "开始时间", aliases: ["开始时间", "startAt"] },
@@ -20768,8 +20082,6 @@ const PATCH_FIELDS = {
   energyDelta: { label: "精力变化", aliases: ["精力变化", "energyDelta"] },
   brainDelta: { label: "脑力变化", aliases: ["脑力变化", "brainDelta"] },
   physicalDelta: { label: "体力变化", aliases: ["体力变化", "physicalDelta"] },
-  templateId: { label: "模板ID", aliases: ["模板ID", "templateId"] },
-  templateSourceType: { label: "模板来源", aliases: ["模板来源", "templateSourceType"] },
   startTime: { label: "时间", aliases: ["时间", "startTime"] },
   endTime: { label: "结束", aliases: ["结束", "endTime"] },
   duration: { label: "时长", aliases: ["时长", "duration"] }
@@ -20794,7 +20106,7 @@ function resolvePatchField(rawKey) {
 }
 function patchRecordBlockMarkdown(markdown, patch) {
   const lines = markdown.split(/\r?\n/);
-  const protectedKeys = /* @__PURE__ */ new Set(["记录id", "recordid", "id", "记录版本", "recordversion", "schemaversion", "核心block", "coreblock"]);
+  const protectedKeys = /* @__PURE__ */ new Set(["记录id", "recordid", "id", "核心block", "coreblock"]);
   for (const [rawKey, value] of Object.entries(patch)) {
     const key = rawKey.trim();
     if (!key || protectedKeys.has(key.toLowerCase())) continue;
@@ -20882,7 +20194,6 @@ class RecordRepository {
         createdIdsInBatch.add(recordId);
         const markdown = encodeRecordBlock({
           recordId,
-          schemaVersion: operation.record.schemaVersion ?? RECORD_SCHEMA_VERSION,
           coreBlock: operation.record.coreBlock,
           fields: operation.record.fields
         });
@@ -21000,8 +20311,8 @@ let ItemService = class {
   upsertItemGoalTemplateMigrationFields(itemId, fields, mutationOptions = {}) {
     return this.goalTemplateMigration.upsertItemGoalTemplateMigrationFields(itemId, fields, mutationOptions);
   }
-  createMigrationBackup(backupRoot, settings) {
-    return this.migrationBackup.createMigrationBackup(backupRoot, settings);
+  createMigrationBackup(backupRoot, settings2) {
+    return this.migrationBackup.createMigrationBackup(backupRoot, settings2);
   }
 };
 ItemService = __decorateClass$7([
@@ -21061,7 +20372,6 @@ let ActionService = class {
   settingsProvider;
   inputService;
   getRuntimeBlocks() {
-    const settings = this.settingsProvider.getSettings();
     return getEffectiveCoreBlocks(settings);
   }
   findBlockByCoreBlock(coreBlock) {
@@ -21085,12 +20395,11 @@ let ActionService = class {
     return void 0;
   }
   getQuickInputConfigForView(viewInstance, dateContext, periodContext) {
-    const settings = this.settingsProvider.getSettings();
     if (viewInstance.viewType === "StatisticsView") {
       return this.getQuickInputConfigForStatisticsView(viewInstance, dateContext, periodContext);
     }
-    const filters = viewInstance.filters || [];
-    const coreBlockFilter = filters.find((f2) => f2.field === "coreBlock" && (f2.op === "=" || f2.op === "includes"));
+    const filters2 = viewInstance.filters || [];
+    const coreBlockFilter = filters2.find((f2) => f2.field === "coreBlock" && (f2.op === "=" || f2.op === "includes"));
     if (!coreBlockFilter || !coreBlockFilter.value) {
       this.ui.notice('快捷输入失败：此视图未按 "coreBlock" 进行筛选。');
       return null;
@@ -21101,20 +20410,11 @@ let ActionService = class {
       this.ui.notice(`快捷输入失败：找不到核心 Block 为 "${coreBlock}" 的模板。`);
       return null;
     }
-    let preselectedThemeId;
-    const themeFilter = filters.find((f2) => f2.field === "tags" && f2.op === "includes" && typeof f2.value === "string");
-    if (themeFilter) {
-      const themePath = themeFilter.value;
-      const matchedTheme = settings.inputSettings.themes.find((t3) => t3.path === themePath);
-      if (matchedTheme) {
-        preselectedThemeId = matchedTheme.id;
-      }
-    }
     const context = {
       "日期": dateContext.format("YYYY-MM-DD"),
       "周期": periodContext
     };
-    const equalityFilters = filters.filter((f2) => f2.op === "=");
+    const equalityFilters = filters2.filter((f2) => f2.op === "=");
     for (const filter of equalityFilters) {
       if (filter.field === "coreBlock") continue;
       for (const templateField of targetBlock.fields) {
@@ -21126,8 +20426,7 @@ let ActionService = class {
     }
     return {
       blockId: targetBlock.id,
-      context,
-      themeId: preselectedThemeId
+      context
     };
   }
   buildFieldContextValue(field, item) {
@@ -21136,7 +20435,7 @@ let ActionService = class {
     const isCategoryField = fieldName.includes("分类") || fieldName.toLowerCase().includes("category");
     if (field.type === "rating") {
       const score = item.rating ?? item.extra?.["评分"] ?? item.extra?.["rating"];
-      const visual = item.pintu ?? item.extra?.["评图"] ?? item.extra?.["pintu"];
+      const visual = item.image ?? item.extra?.["图片"] ?? item.extra?.image;
       if (field.options?.length) {
         const scoreStr = score !== void 0 && score !== null ? String(score) : "";
         const matched = field.options.find(
@@ -21189,7 +20488,7 @@ let ActionService = class {
     };
   }
   getQuickInputConfigForStatisticsView(viewInstance, dateContext, periodContext, categoryName) {
-    const settings = this.settingsProvider.getSettings();
+    this.settingsProvider.getSettings();
     const viewConfig = viewInstance.viewConfig || {};
     const categories = viewConfig.categories || [];
     if (categories.length === 0) {
@@ -21201,16 +20500,6 @@ let ActionService = class {
     if (!targetBlock) {
       this.ui.notice(`快捷输入失败：找不到分类为 "${targetCategoryKey}" 的 Block 模板。`);
       return null;
-    }
-    let preselectedThemeId;
-    const filters = viewInstance.filters || [];
-    const themeFilter = filters.find((f2) => f2.field === "tags" && f2.op === "includes" && typeof f2.value === "string");
-    if (themeFilter) {
-      const themePath = themeFilter.value;
-      const matchedTheme = settings.inputSettings.themes.find((t3) => t3.path === themePath);
-      if (matchedTheme) {
-        preselectedThemeId = matchedTheme.id;
-      }
     }
     const context = {
       "日期": dateContext.format("YYYY-MM-DD"),
@@ -21227,8 +20516,7 @@ let ActionService = class {
     }
     return {
       blockId: targetBlock.id,
-      context,
-      themeId: preselectedThemeId
+      context
     };
   }
   getQuickInputConfigForNewTimer() {
@@ -22207,188 +21495,6 @@ function createSettingsMutationRunner(options) {
     }
   };
 }
-function normalizeThemeSettingsPath(path) {
-  return path.split("/").map((part) => part.trim()).filter(Boolean).join("/");
-}
-function getNearestThemeSettingsParentPath(path, themes) {
-  const parts = normalizeThemeSettingsPath(path).split("/");
-  if (parts.length <= 1) return null;
-  const themePaths = new Set(themes.map((theme) => normalizeThemeSettingsPath(theme.path)));
-  for (let index = parts.length - 1; index >= 1; index -= 1) {
-    const candidate = parts.slice(0, index).join("/");
-    if (themePaths.has(candidate)) return candidate;
-  }
-  return null;
-}
-function getThemeSettingsSiblingOrder(path, themes) {
-  const normalizedPath = normalizeThemeSettingsPath(path);
-  const parentPath = getNearestThemeSettingsParentPath(normalizedPath, themes);
-  const siblingOrders = themes.filter((theme) => getNearestThemeSettingsParentPath(theme.path, themes) === parentPath).map((theme) => typeof theme.order === "number" && Number.isFinite(theme.order) ? theme.order : -1);
-  const maxOrder = siblingOrders.length > 0 ? Math.max(...siblingOrders) : -1;
-  return maxOrder + 1;
-}
-function themeSettingsPathExists(themes, path, exceptThemeId) {
-  const normalizedPath = normalizeThemeSettingsPath(path);
-  return themes.some((theme) => normalizeThemeSettingsPath(theme.path) === normalizedPath && theme.id !== exceptThemeId);
-}
-function makeThemeSettingsDraft(path, existingThemes) {
-  const normalizedPath = normalizeThemeSettingsPath(path);
-  return {
-    id: generateId("thm"),
-    path: normalizedPath,
-    icon: "📁",
-    order: getThemeSettingsSiblingOrder(normalizedPath, existingThemes)
-  };
-}
-function ensureThemeSettingsList(draft) {
-  if (!draft.inputSettings.themes) draft.inputSettings.themes = [];
-  return draft.inputSettings.themes;
-}
-function addThemeSettingsDraft(draft, theme) {
-  ensureThemeSettingsList(draft).push(theme);
-}
-function patchThemeSettingsDraft(draft, id, updates) {
-  const theme = draft.inputSettings.themes?.find((candidate) => candidate.id === id);
-  if (theme) Object.assign(theme, updates);
-}
-function deleteThemeSettingsDraft(draft, id) {
-  draft.inputSettings.themes = draft.inputSettings.themes?.filter((theme) => theme.id !== id) || [];
-}
-function reorderThemeSettingsSiblings(draft, orderedThemeIds) {
-  const orderMap = /* @__PURE__ */ new Map();
-  orderedThemeIds.forEach((id, index) => orderMap.set(id, index));
-  const themes = draft.inputSettings.themes || [];
-  themes.forEach((theme) => {
-    const nextOrder = orderMap.get(theme.id);
-    if (typeof nextOrder === "number") theme.order = nextOrder;
-  });
-}
-function batchPatchThemeSettingsDraft(draft, themeIds, updates) {
-  themeIds.forEach((id) => patchThemeSettingsDraft(draft, id, updates));
-}
-function batchDeleteThemeSettingsDraft(draft, themeIds) {
-  const themeIdSet = new Set(themeIds);
-  draft.inputSettings.themes = draft.inputSettings.themes?.filter((theme) => !themeIdSet.has(theme.id)) || [];
-}
-function batchSetThemeSettingsStatus(draft, themeIds, status) {
-  const themePaths = themeIds.map((id) => draft.inputSettings.themes?.find((theme) => theme.id === id)?.path).filter((path) => Boolean(path));
-  if (!draft.activeThemePaths) draft.activeThemePaths = [];
-  if (status === "active") {
-    themePaths.forEach((path) => {
-      if (!draft.activeThemePaths.includes(path)) draft.activeThemePaths.push(path);
-    });
-  } else {
-    draft.activeThemePaths = draft.activeThemePaths.filter((path) => !themePaths.includes(path));
-  }
-}
-function batchSetThemeSettingsIcon(draft, themeIds, icon) {
-  themeIds.forEach((id) => {
-    const theme = draft.inputSettings.themes?.find((candidate) => candidate.id === id);
-    if (theme) theme.icon = icon;
-  });
-}
-function createThemeSlice(settingsRepository) {
-  return (set2, get) => {
-    const setThemeStatus = (loading, error) => {
-      set2({ themeLoading: loading, themeError: error });
-    };
-    const runThemeMutation = createSettingsMutationRunner({
-      sliceName: "ThemeSlice",
-      repository: settingsRepository,
-      getState: get,
-      setStatus: setThemeStatus
-    });
-    return {
-      themeLoading: false,
-      themeError: null,
-      addTheme: async (path) => {
-        const normalizedPath = normalizeThemeSettingsPath(path);
-        if (!normalizedPath) {
-          devWarn("[ThemeSlice] 主题路径不能为空");
-          return null;
-        }
-        const existingThemes = get().settings.inputSettings?.themes || [];
-        if (themeSettingsPathExists(existingThemes, normalizedPath)) {
-          devWarn(`[ThemeSlice] 主题路径 "${normalizedPath}" 已存在`);
-          return null;
-        }
-        const newTheme = makeThemeSettingsDraft(normalizedPath, existingThemes);
-        const result = await runThemeMutation({
-          action: "theme.addTheme",
-          fallbackError: "添加主题失败",
-          mutate: (draft) => addThemeSettingsDraft(draft, newTheme),
-          onSuccess: () => newTheme,
-          onUninitialized: () => null,
-          onError: () => null
-        });
-        return result ?? null;
-      },
-      updateTheme: async (id, updates) => {
-        const normalizedUpdates = updates.path ? { ...updates, path: normalizeThemeSettingsPath(updates.path) } : updates;
-        if (normalizedUpdates.path) {
-          const existingThemes = get().settings.inputSettings?.themes || [];
-          if (themeSettingsPathExists(existingThemes, normalizedUpdates.path, id)) {
-            devWarn(`[ThemeSlice] 主题路径 "${normalizedUpdates.path}" 已存在`);
-            return;
-          }
-        }
-        await runThemeMutation({
-          action: "theme.updateTheme",
-          fallbackError: "更新主题失败",
-          mutate: (draft) => patchThemeSettingsDraft(draft, id, normalizedUpdates)
-        });
-      },
-      deleteTheme: async (id) => {
-        await runThemeMutation({
-          action: "theme.deleteTheme",
-          fallbackError: "删除主题失败",
-          mutate: (draft) => deleteThemeSettingsDraft(draft, id)
-        });
-      },
-      reorderThemeSiblings: async (orderedThemeIds, parentKey) => {
-        if (!orderedThemeIds || orderedThemeIds.length === 0) return;
-        await runThemeMutation({
-          action: "theme.reorderThemeSiblings",
-          fallbackError: "主题排序失败",
-          mutate: (draft) => reorderThemeSettingsSiblings(draft, orderedThemeIds)
-        });
-      },
-      batchUpdateThemes: async (themeIds, updates) => {
-        await runThemeMutation({
-          action: "theme.batchUpdateThemes",
-          fallbackError: "批量更新主题失败",
-          mutate: (draft) => batchPatchThemeSettingsDraft(draft, themeIds, updates)
-        });
-      },
-      batchDeleteThemes: async (themeIds) => {
-        await runThemeMutation({
-          action: "theme.batchDeleteThemes",
-          fallbackError: "批量删除主题失败",
-          mutate: (draft) => batchDeleteThemeSettingsDraft(draft, themeIds)
-        });
-      },
-      batchUpdateThemeStatus: async (themeIds, status) => {
-        await runThemeMutation({
-          action: "theme.batchUpdateThemeStatus",
-          fallbackError: "批量更新主题状态失败",
-          mutate: (draft) => batchSetThemeSettingsStatus(draft, themeIds, status)
-        });
-      },
-      batchUpdateThemeIcon: async (themeIds, icon) => {
-        await runThemeMutation({
-          action: "theme.batchUpdateThemeIcon",
-          fallbackError: "批量更新主题图标失败",
-          mutate: (draft) => batchSetThemeSettingsIcon(draft, themeIds, icon)
-        });
-      },
-      getThemes: () => get().settings.inputSettings?.themes || [],
-      getTheme: (id) => get().settings.inputSettings?.themes?.find((theme) => theme.id === id),
-      setThemeError: (error) => {
-        set2({ themeError: error });
-      }
-    };
-  };
-}
 const DEFAULT_FREEFORM_LAYOUT_CONFIG = {
   snapToGrid: true,
   gridSize: 16,
@@ -22854,18 +21960,6 @@ function patchInputSettingsDraft(draft, updates) {
 function replaceAiSettingsDraft(draft, aiSettings) {
   draft.aiSettings = aiSettings;
 }
-function replaceActiveThemePathsDraft(draft, paths) {
-  draft.activeThemePaths = paths;
-}
-function addActiveThemePathDraft(draft, path) {
-  if (!draft.activeThemePaths) draft.activeThemePaths = [];
-  if (!draft.activeThemePaths.includes(path)) draft.activeThemePaths.push(path);
-}
-function removeActiveThemePathDraft(draft, path) {
-  if (draft.activeThemePaths) {
-    draft.activeThemePaths = draft.activeThemePaths.filter((candidate) => candidate !== path);
-  }
-}
 function patchSettingsDraft(draft, updates) {
   Object.assign(draft, updates);
 }
@@ -22904,27 +21998,6 @@ function createSettingsSlice(settingsRepository) {
           mutate: (draft) => replaceAiSettingsDraft(draft, aiSettings)
         });
       },
-      updateActiveThemePaths: async (paths) => {
-        await runSettingsMutation({
-          action: "settings.updateActiveThemePaths",
-          fallbackError: "更新活跃主题路径失败",
-          mutate: (draft) => replaceActiveThemePathsDraft(draft, paths)
-        });
-      },
-      addActiveThemePath: async (path) => {
-        await runSettingsMutation({
-          action: "settings.addActiveThemePath",
-          fallbackError: "添加活跃主题路径失败",
-          mutate: (draft) => addActiveThemePathDraft(draft, path)
-        });
-      },
-      removeActiveThemePath: async (path) => {
-        await runSettingsMutation({
-          action: "settings.removeActiveThemePath",
-          fallbackError: "移除活跃主题路径失败",
-          mutate: (draft) => removeActiveThemePathDraft(draft, path)
-        });
-      },
       updateSettings: async (mutator) => {
         await runSettingsMutation({
           action: "settings.updateSettings",
@@ -22940,7 +22013,6 @@ function createSettingsSlice(settingsRepository) {
         });
       },
       getFloatingTimerEnabled: () => get().settings.floatingTimerEnabled ?? false,
-      getActiveThemePaths: () => get().settings.activeThemePaths || [],
       getInputSettings: () => get().settings.inputSettings,
       getAiSettings: () => get().settings.aiSettings,
       setSettingsError: (error) => {
@@ -22972,7 +22044,7 @@ function createBlocksSlice(settingsRepository) {
         };
         await settingsRepository.update((draft) => {
           if (!draft.inputSettings) {
-            draft.inputSettings = { blocks: [], themes: [] };
+            draft.inputSettings = { blocks: [] };
           }
           if (!draft.inputSettings.blocks) {
             draft.inputSettings.blocks = [];
@@ -23227,10 +22299,10 @@ function createAppStore(settingsRepository) {
       isLoading: false,
       error: null,
       // ============== Core Actions ==============
-      initialize: (settings) => {
+      initialize: (settings2) => {
         set2((state) => ({
-          settings,
-          ui: { ...state.ui, isTimerWidgetVisible: settings.floatingTimerEnabled },
+          settings: settings2,
+          ui: { ...state.ui, isTimerWidgetVisible: settings2.floatingTimerEnabled },
           isInitialized: true
         }));
       },
@@ -23269,8 +22341,6 @@ function createAppStore(settingsRepository) {
       setLoading: (loading) => {
         set2({ isLoading: loading });
       },
-      // ============== Theme Slice ==============
-      ...createThemeSlice(settingsRepository)(set2, get, store),
       // ============== Layout Slice ==============
       ...createLayoutSlice(settingsRepository)(set2, get, store),
       // ============== Settings Slice ==============
@@ -23360,8 +22430,8 @@ class SettingsUseCase {
       devError("[SettingsUseCase] toggleTimerWidgetVisibility 失败:", error);
     }
   }
-  /** 设置无上下文精力记录（例如 iOS Shortcut）的默认目标。空值表示自动选择第一个活跃目标。 */
-  async setEnergyDefaultGoalId(goalId) {
+  /** 设置无上下文精力记录（例如 iOS Shortcut）的默认目标路径。空值表示自动选择第一个活跃目标。 */
+  async setEnergyDefaultGoalPath(goalPath) {
     try {
       const state = this.store.getState();
       if (!state.isInitialized) {
@@ -23371,30 +22441,11 @@ class SettingsUseCase {
       await state.updateSettings((draft) => {
         draft.energySettings = {
           ...draft.energySettings || {},
-          defaultGoalId: String(goalId || "").trim()
+          defaultGoalPath: String(goalPath || "").trim()
         };
       });
     } catch (error) {
-      devError("[SettingsUseCase] setEnergyDefaultGoalId 失败:", error);
-      throw error;
-    }
-  }
-  /** 设置 Energy 快捷记录的默认主题。主题仅作为记录元数据，不进入 GoalTemplate 解析。 */
-  async setEnergyDefaultThemePath(themePath) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) {
-        devError("[SettingsUseCase] Store 未初始化，无法设置默认精力主题");
-        return;
-      }
-      await state.updateSettings((draft) => {
-        draft.energySettings = {
-          ...draft.energySettings || {},
-          defaultThemePath: String(themePath || "").trim()
-        };
-      });
-    } catch (error) {
-      devError("[SettingsUseCase] setEnergyDefaultThemePath 失败:", error);
+      devError("[SettingsUseCase] setEnergyDefaultGoalPath 失败:", error);
       throw error;
     }
   }
@@ -23563,176 +22614,6 @@ class BlocksUseCase {
 }
 function createBlocksUseCase(store) {
   return new BlocksUseCase(store);
-}
-class ThemeUseCase {
-  store;
-  constructor(store) {
-    this.store = store;
-  }
-  // ============== Theme CRUD ==============
-  /**
-   * 添加主题
-   * @param path 主题路径
-   * @returns 新创建的主题定义，失败返回 null
-   */
-  async addTheme(path) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) {
-        devError("[ThemeUseCase] Store 未初始化");
-        return null;
-      }
-      return await state.addTheme(path);
-    } catch (error) {
-      devError("[ThemeUseCase] addTheme 失败:", error);
-      throw error;
-    }
-  }
-  /**
-   * 更新主题
-   * @param id 主题ID
-   * @param updates 更新内容
-   */
-  async updateTheme(id, updates) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) {
-        devError("[ThemeUseCase] Store 未初始化");
-        return;
-      }
-      await state.updateTheme(id, updates);
-    } catch (error) {
-      devError("[ThemeUseCase] updateTheme 失败:", error);
-      throw error;
-    }
-  }
-  /**
-   * 删除主题
-   * @param id 主题ID
-   */
-  async deleteTheme(id) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) {
-        devError("[ThemeUseCase] Store 未初始化");
-        return;
-      }
-      await state.deleteTheme(id);
-    } catch (error) {
-      devError("[ThemeUseCase] deleteTheme 失败:", error);
-      throw error;
-    }
-  }
-  /**
-   * 调整同级主题顺序
-   * @param orderedThemeIds 调整后的同级主题 ID 顺序
-   */
-  async reorderThemeSiblings(orderedThemeIds, parentKey) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) {
-        devError("[ThemeUseCase] Store 未初始化");
-        return;
-      }
-      await state.reorderThemeSiblings(orderedThemeIds, parentKey);
-    } catch (error) {
-      devError("[ThemeUseCase] reorderThemeSiblings 失败:", error);
-      throw error;
-    }
-  }
-  // ============== 批量操作 ==============
-  /**
-   * 批量更新主题
-   * @param themeIds 主题ID列表
-   * @param updates 更新内容
-   */
-  async batchUpdateThemes(themeIds, updates) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.batchUpdateThemes(themeIds, updates);
-    } catch (error) {
-      devError("[ThemeUseCase] batchUpdateThemes 失败:", error);
-      throw error;
-    }
-  }
-  /**
-   * 批量删除主题
-   * @param themeIds 主题ID列表
-   */
-  async batchDeleteThemes(themeIds) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.batchDeleteThemes(themeIds);
-    } catch (error) {
-      devError("[ThemeUseCase] batchDeleteThemes 失败:", error);
-      throw error;
-    }
-  }
-  /**
-   * 批量更新主题状态（激活/归档）
-   * @param themeIds 主题ID列表
-   * @param status 目标状态
-   */
-  async batchUpdateThemeStatus(themeIds, status) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.batchUpdateThemeStatus(themeIds, status);
-    } catch (error) {
-      devError("[ThemeUseCase] batchUpdateThemeStatus 失败:", error);
-      throw error;
-    }
-  }
-  /**
-   * 批量更新主题图标
-   * @param themeIds 主题ID列表
-   * @param icon 图标
-   */
-  async batchUpdateThemeIcon(themeIds, icon) {
-    try {
-      const state = this.store.getState();
-      if (!state.isInitialized) return;
-      await state.batchUpdateThemeIcon(themeIds, icon);
-    } catch (error) {
-      devError("[ThemeUseCase] batchUpdateThemeIcon 失败:", error);
-      throw error;
-    }
-  }
-  // ============== 查询方法 ==============
-  // 注意：查询方法不涉及写操作，UI 可以直接使用 Zustand selector 读取
-  // 这里提供的查询方法是为了保持 API 一致性
-  /**
-   * 获取所有主题
-   * @returns 主题列表
-   */
-  getThemes() {
-    try {
-      const state = this.store.getState();
-      return state.getThemes();
-    } catch (error) {
-      devError("[ThemeUseCase] getThemes 失败:", error);
-      return [];
-    }
-  }
-  /**
-   * 获取单个主题
-   * @param id 主题ID
-   * @returns 主题定义
-   */
-  getTheme(id) {
-    try {
-      const state = this.store.getState();
-      return state.getTheme(id);
-    } catch (error) {
-      devError("[ThemeUseCase] getTheme 失败:", error);
-      return void 0;
-    }
-  }
-}
-function createThemeUseCase(store) {
-  return new ThemeUseCase(store);
 }
 class LayoutUseCase {
   store;
@@ -24032,9 +22913,6 @@ const NEVER_INLINE_EDITABLE = /* @__PURE__ */ new Set([
   "fileName"
 ]);
 const DERIVED_FIELDS = /* @__PURE__ */ new Set([
-  "themePath",
-  "rootTheme",
-  "leafTheme",
   "baseCategory",
   "leafCategory",
   "fullData",
@@ -24156,7 +23034,7 @@ function getFieldEditPolicy(field, sampleValue) {
   }
   const editorKind = getFieldEditorKind(definition, sampleValue);
   if (editorKind === "path" || definition?.valueType === "path" || definition?.inputType === "path" || definition?.inputType === "multiPath") {
-    return readonlyPolicy(field, canonicalField, definition, "路径类字段涉及文件定位、分类或主题结构，不能在 Excel 单元格内直接修改");
+    return readonlyPolicy(field, canonicalField, definition, "路径类字段涉及文件定位、分类或目标结构，不能在 Excel 单元格内直接修改");
   }
   if (editorKind === "readonly" || definition?.valueType === "file" || definition?.inputType === "file") {
     return readonlyPolicy(field, canonicalField, definition, "该字段类型暂不支持内联编辑");
@@ -24174,42 +23052,14 @@ function getFieldEditPolicy(field, sampleValue) {
     reason: void 0
   };
 }
-const VIEW_LEGACY_FIELD_ALIASES = {
-  category: "coreBlock",
-  categoryPath: "coreBlock",
-  categoryKey: "coreBlock",
-  baseCategory: "coreBlock",
-  leafCategory: "coreBlock",
-  分类: "coreBlock",
-  类别: "coreBlock",
-  分类路径: "coreBlock",
-  根类别: "coreBlock",
-  block: "coreBlock",
-  blockId: "coreBlock",
-  coreBlockId: "coreBlock",
-  cycleId: "period.id",
-  周期ID: "period.id",
-  periodId: "period.id",
-  period: "period.label",
-  周期: "period.label",
-  granularity: "period.granularity",
-  周期粒度: "period.granularity",
-  repeat: "recurrence",
-  重复: "recurrence",
-  templateSourceType: "templateSource",
-  模板来源: "templateSource",
-  模板ID: "templateId",
+const VIEW_FIELD_ALIASES = {
   目标: "goalPath",
-  目标ID: "goalId",
-  主题: "themePath",
   核心Block: "coreBlock",
-  日期: "date"
+  日期: "date",
+  内容: "content",
+  状态: "status"
 };
-const TEMPLATE_SOURCE_FIELDS = /* @__PURE__ */ new Set(["templateSource", "templateSourceType"]);
 const VIEW_NOISY_DISPLAY_FIELDS = /* @__PURE__ */ new Set([
-  "templateSource",
-  "templateSourceType",
-  "templateId",
   "period.id",
   "period.label",
   "period.granularity"
@@ -24217,13 +23067,10 @@ const VIEW_NOISY_DISPLAY_FIELDS = /* @__PURE__ */ new Set([
 function normalizeViewFieldKey(field) {
   const raw = String(field || "").trim();
   if (!raw) return "";
-  return VIEW_LEGACY_FIELD_ALIASES[raw] || raw;
+  return VIEW_FIELD_ALIASES[raw] || raw;
 }
 function isNoisyViewDisplayField(field) {
   return VIEW_NOISY_DISPLAY_FIELDS.has(normalizeViewFieldKey(field));
-}
-function isTemplateSourceViewField(field) {
-  return TEMPLATE_SOURCE_FIELDS.has(normalizeViewFieldKey(field));
 }
 function normalizeRuleValue(field, value) {
   const normalizedField = normalizeViewFieldKey(field);
@@ -24243,12 +23090,12 @@ function normalizeRuleValue(field, value) {
   };
   return Array.isArray(value) ? value.map(mapOne) : mapOne(value);
 }
-function normalizeViewFilters(filters) {
+function normalizeViewFilters(filters2) {
   const result = [];
-  for (const rule of filters || []) {
+  for (const rule of filters2 || []) {
     const rawField = String(rule.field || "").trim();
     const field = normalizeViewFieldKey(rawField);
-    if (!field || isTemplateSourceViewField(field)) continue;
+    if (!field) continue;
     result.push({ ...rule, field, value: normalizeRuleValue(field, rule.value) });
   }
   return result.map((rule, index) => {
@@ -24263,7 +23110,7 @@ function normalizeViewSort(sort) {
   const result = [];
   for (const rule of sort || []) {
     const field = normalizeViewFieldKey(rule.field);
-    if (!field || isTemplateSourceViewField(field) || seen.has(field)) continue;
+    if (!field || seen.has(field)) continue;
     seen.add(field);
     result.push({ ...rule, field });
   }
@@ -24274,7 +23121,7 @@ function normalizeViewGroupFields(groupFields) {
   const result = [];
   for (const field of groupFields || []) {
     const key = normalizeViewFieldKey(field);
-    if (!key || isTemplateSourceViewField(key) || isNoisyViewDisplayField(key) || seen.has(key)) continue;
+    if (!key || isNoisyViewDisplayField(key) || seen.has(key)) continue;
     seen.add(key);
     result.push(key);
   }
@@ -24288,7 +23135,7 @@ function normalizeViewConfigDomain(viewConfig) {
   }
   if (next2.groupBy === "category" || next2.groupBy === "categoryKey") next2.groupBy = "coreBlock";
   if (Array.isArray(next2.categories) && next2.categories.length === 0) delete next2.categories;
-  if (Array.isArray(next2.themePaths) && next2.themePaths.length === 0) delete next2.themePaths;
+  if (Array.isArray(next2.goalPaths) && next2.goalPaths.length === 0) delete next2.goalPaths;
   return next2;
 }
 function normalizeViewInstanceDomain(view) {
@@ -24664,10 +23511,7 @@ function createTimerUseCase(store, timerStateService) {
 }
 function copyDraft$1(draft) {
   return {
-    selectedGoalId: draft.selectedGoalId,
     selectedGoalPath: draft.selectedGoalPath,
-    selectedTemplateVariantId: draft.selectedTemplateVariantId,
-    selectedThemeId: draft.selectedThemeId,
     timeDirection: draft.timeDirection,
     formData: { ...draft.formData },
     fieldSources: { ...draft.fieldSources }
@@ -24676,10 +23520,7 @@ function copyDraft$1(draft) {
 function createRecordInputDraftSnapshot(input) {
   const selection = input.initialSelection || {};
   return {
-    selectedGoalId: selection.selectedGoalId ?? null,
     selectedGoalPath: selection.selectedGoalPath ?? null,
-    selectedTemplateVariantId: selection.selectedTemplateVariantId ?? null,
-    selectedThemeId: selection.selectedThemeId ?? input.initialThemeId ?? null,
     timeDirection: selection.timeDirection ?? "forward",
     formData: { ...input.initialFormData || {} },
     fieldSources: { ...input.initialFieldSources || {} }
@@ -24693,16 +23534,12 @@ function initializeRecordInputSession(input) {
     currentBlockId: initialBlockId,
     originBlockId: initialBlockId,
     ...copyDraft$1(draft),
-    draftByBlockId: {
-      [initialBlockId]: copyDraft$1(draft)
-    },
+    draftByBlockId: { [initialBlockId]: copyDraft$1(draft) },
     dirty: false,
     revision: 0
   };
 }
 const RECORD_INPUT_GOAL_CONTEXT_KEYS = [
-  "goalId",
-  "目标ID",
   "goalPath",
   "目标",
   "rootGoal",
@@ -24712,9 +23549,7 @@ const RECORD_INPUT_GOAL_CONTEXT_KEYS = [
   "周期",
   "周期粒度",
   "templateId",
-  "goalTemplateId",
-  "templateVariantId",
-  "goalTemplateVariantId"
+  "goalTemplateId"
 ];
 const RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS = [
   "内容",
@@ -24727,11 +23562,7 @@ const RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS = [
   "note",
   "description",
   "目标",
-  "目标ID",
-  "goalId",
-  "goalPath",
-  "themePath",
-  "主题"
+  "goalPath"
 ];
 function isRecordInputMeaningfulValue(value) {
   if (value === void 0 || value === null) return false;
@@ -24748,7 +23579,7 @@ function isRecordInputSameValue(left2, right2) {
   return left2 === right2;
 }
 function isRecordInputRefreshableSource(source) {
-  return source === void 0 || source === "template_default" || source === "system_auto" || source === "goal_context" || source === "theme_context";
+  return source === void 0 || source === "template_default" || source === "system_auto" || source === "goal_context";
 }
 function clearRecordInputGoalContext(formData, fieldSources) {
   const nextFormData = { ...formData };
@@ -24779,10 +23610,7 @@ function readRecordInputString(formData, keys) {
 }
 function copyDraft(draft) {
   return {
-    selectedGoalId: draft.selectedGoalId,
     selectedGoalPath: draft.selectedGoalPath,
-    selectedTemplateVariantId: draft.selectedTemplateVariantId,
-    selectedThemeId: draft.selectedThemeId,
     timeDirection: draft.timeDirection,
     formData: { ...draft.formData },
     fieldSources: { ...draft.fieldSources }
@@ -24790,20 +23618,14 @@ function copyDraft(draft) {
 }
 function getRecordInputSessionDraft(state) {
   return copyDraft({
-    selectedGoalId: state.selectedGoalId,
     selectedGoalPath: state.selectedGoalPath,
-    selectedTemplateVariantId: state.selectedTemplateVariantId,
-    selectedThemeId: state.selectedThemeId,
     timeDirection: state.timeDirection,
     formData: state.formData,
     fieldSources: state.fieldSources
   });
 }
 function withCachedCurrentDraft(state) {
-  return {
-    ...state.draftByBlockId,
-    [state.currentBlockId]: getRecordInputSessionDraft(state)
-  };
+  return { ...state.draftByBlockId, [state.currentBlockId]: getRecordInputSessionDraft(state) };
 }
 function commitDraft(state, draft, extra) {
   const next2 = {
@@ -24826,10 +23648,7 @@ function buildSwitchFallbackDraft(state) {
   return {
     formData: preserved.formData,
     fieldSources: preserved.fieldSources,
-    selectedGoalId: readRecordInputString(preserved.formData, ["goalId", "目标ID"]) ?? state.selectedGoalId,
     selectedGoalPath: readRecordInputString(preserved.formData, ["goalPath", "目标"]) ?? state.selectedGoalPath,
-    selectedTemplateVariantId: null,
-    selectedThemeId: state.selectedThemeId,
     timeDirection: "forward"
   };
 }
@@ -24839,107 +23658,55 @@ function reduceRecordInputSession(state, action) {
       return initializeRecordInputSession(action.payload);
     case "setMode":
       if (action.mode === state.mode) return state;
-      return {
-        ...state,
-        mode: action.mode,
-        dirty: true,
-        revision: state.revision + 1
-      };
+      return { ...state, mode: action.mode, dirty: true, revision: state.revision + 1 };
     case "switchRecordType": {
       const nextBlockId = String(action.blockId || "");
       if (!nextBlockId || nextBlockId === state.currentBlockId) return state;
       const cachedDrafts = withCachedCurrentDraft(state);
       const restored = cachedDrafts[nextBlockId] ? copyDraft(cachedDrafts[nextBlockId]) : buildSwitchFallbackDraft(state);
       return commitDraft(
-        {
-          ...state,
-          currentBlockId: nextBlockId,
-          draftByBlockId: cachedDrafts
-        },
+        { ...state, currentBlockId: nextBlockId, draftByBlockId: cachedDrafts },
         restored,
         { currentBlockId: nextBlockId }
       );
     }
-    case "updateDraft": {
+    case "updateDraft":
       return commitDraft(state, {
         formData: action.formData,
         fieldSources: action.fieldSources,
-        selectedGoalId: action.selectedGoalId !== void 0 ? action.selectedGoalId : state.selectedGoalId,
         selectedGoalPath: action.selectedGoalPath !== void 0 ? action.selectedGoalPath : state.selectedGoalPath,
-        selectedTemplateVariantId: action.selectedTemplateVariantId !== void 0 ? action.selectedTemplateVariantId : state.selectedTemplateVariantId,
-        selectedThemeId: action.selectedThemeId !== void 0 ? action.selectedThemeId : state.selectedThemeId,
         timeDirection: action.timeDirection ?? state.timeDirection
       });
-    }
-    case "selectGoal": {
+    case "selectGoal":
       return commitDraft(state, {
         formData: action.formData || state.formData,
         fieldSources: action.fieldSources || state.fieldSources,
-        selectedGoalId: action.goalId,
         selectedGoalPath: action.goalPath,
-        selectedTemplateVariantId: null,
-        selectedThemeId: action.selectedThemeId !== void 0 ? action.selectedThemeId : state.selectedThemeId,
         timeDirection: state.timeDirection
       });
-    }
     case "clearGoalContext": {
       const cleared = clearRecordInputGoalContext(state.formData, state.fieldSources);
       return commitDraft(state, {
         formData: cleared.formData,
         fieldSources: cleared.fieldSources,
-        selectedGoalId: null,
         selectedGoalPath: null,
-        selectedTemplateVariantId: null,
-        selectedThemeId: state.selectedThemeId,
         timeDirection: state.timeDirection
       });
     }
-    case "selectTemplateVariant": {
-      if ((action.variantId ?? null) === state.selectedTemplateVariantId) return state;
-      return commitDraft(state, {
-        formData: state.formData,
-        fieldSources: state.fieldSources,
-        selectedGoalId: state.selectedGoalId,
-        selectedGoalPath: state.selectedGoalPath,
-        selectedTemplateVariantId: action.variantId ?? null,
-        selectedThemeId: state.selectedThemeId,
-        timeDirection: state.timeDirection
-      });
-    }
-    case "selectTheme": {
-      if ((action.themeId ?? null) === state.selectedThemeId) return state;
-      return commitDraft(state, {
-        formData: state.formData,
-        fieldSources: state.fieldSources,
-        selectedGoalId: state.selectedGoalId,
-        selectedGoalPath: state.selectedGoalPath,
-        selectedTemplateVariantId: state.selectedTemplateVariantId,
-        selectedThemeId: action.themeId ?? null,
-        timeDirection: state.timeDirection
-      });
-    }
-    case "changeTimeDirection": {
+    case "changeTimeDirection":
       return commitDraft(state, {
         formData: action.formData,
         fieldSources: action.fieldSources,
-        selectedGoalId: state.selectedGoalId,
         selectedGoalPath: state.selectedGoalPath,
-        selectedTemplateVariantId: state.selectedTemplateVariantId,
-        selectedThemeId: state.selectedThemeId,
         timeDirection: action.timeDirection
       });
-    }
-    case "hydrateDefaults": {
+    case "hydrateDefaults":
       return commitDraft(state, {
         formData: action.formData,
         fieldSources: action.fieldSources,
-        selectedGoalId: state.selectedGoalId,
         selectedGoalPath: state.selectedGoalPath,
-        selectedTemplateVariantId: state.selectedTemplateVariantId,
-        selectedThemeId: state.selectedThemeId,
         timeDirection: state.timeDirection
       });
-    }
     default:
       return state;
   }
@@ -25068,7 +23835,6 @@ function buildRecordCreateDraftFromEditorState({
 }) {
   return {
     blockId: state.blockId || void 0,
-    themeId: state.themeId ?? null,
     formData: { ...state.formData || {} },
     context,
     meta: state.meta,
@@ -25083,7 +23849,6 @@ function buildCreateRecordSubmitParamsFromEditorState({
 }) {
   return {
     blockId: String(state.blockId || ""),
-    themeId: state.themeId ?? null,
     formData: { ...state.formData || {} },
     context,
     meta: state.meta,
@@ -25102,7 +23867,6 @@ function buildUpdateRecordSubmitParamsFromEditorState({
   return {
     item,
     blockId: String(state.blockId || ""),
-    themeId: state.themeId ?? null,
     formData: { ...state.formData || {} },
     meta: state.meta,
     expectedOutputPlan: expectedOutputPlan ?? null,
@@ -25127,13 +23891,13 @@ function normalizeRecordInputFieldValueForTemplate(field, value) {
       if (isOptionLikeValue$1(entry) && "value" in entry && "label" in entry) return entry;
       const matched2 = findMatchingOption(options, entry);
       if (!matched2) return entry;
-      const text22 = readOptionText$2(matched2);
+      const text22 = readOptionText$1(matched2);
       return { value: text22.value, label: text22.label || text22.value };
     });
   }
   const matched = findMatchingOption(options, value);
   if (!matched) return value;
-  const text2 = readOptionText$2(matched);
+  const text2 = readOptionText$1(matched);
   return { value: text2.value, label: text2.label || text2.value };
 }
 function normalizeRecordInputFormDataForTemplate(template, formData) {
@@ -25198,9 +23962,7 @@ function buildEditableRecordSnapshot(input) {
   const parsed = input.item ? buildParsedRecordSnapshot(input.item) : null;
   const outputPlan = buildRecordOutputPlan({
     template: input.template ?? null,
-    formData: input.fields,
-    theme: input.theme ?? null,
-    templateMeta: input.templateMeta
+    formData: input.fields
   });
   const persistencePlan = buildRecordPersistencePlan({
     mode: input.mode,
@@ -25211,76 +23973,20 @@ function buildEditableRecordSnapshot(input) {
     mode: input.mode,
     parsed,
     blockId: input.blockId,
-    themeId: input.themeId,
     fields: { ...input.fields },
     outputPlan,
-    persistencePlan,
-    themeParts: outputPlan.themeParts
+    persistencePlan
   };
 }
-class ThemeMetadataResolver {
-  /**
-   * 返回给模板渲染层使用的主题对象。
-   *
-   * 主题现在只承担 metadata 角色：即使用户记录的 themePath 是更深层路径，
-   * 图标/颜色也可以从父主题回退，但渲染时仍保留原始 themePath。
-   */
-  static resolveThemeForRender(settings, themePath) {
-    const metadata = ThemeMetadataResolver.resolve(settings, themePath);
-    const renderPath = normalizeThemePath(themePath) || metadata.path;
-    if (!renderPath && !metadata.theme) return null;
-    return {
-      id: metadata.theme?.id || renderPath || "theme.metadata",
-      path: renderPath || metadata.theme?.path || "",
-      icon: metadata.icon || metadata.theme?.icon || "",
-      order: metadata.theme?.order,
-      status: metadata.theme?.status
-    };
-  }
-  static resolve(settings, themePath) {
-    const normalized2 = normalizeThemePathOrNull(themePath);
-    const themes = settings.inputSettings?.themes || [];
-    let theme = null;
-    let iconTheme = null;
-    if (normalized2) {
-      const byPath = buildThemePathMap(themes);
-      for (const candidate of getThemePathCandidates(normalized2)) {
-        const matched = byPath.get(candidate);
-        if (matched && !theme) theme = matched;
-        if (matched && String(matched.icon || "").trim()) {
-          iconTheme = matched;
-          break;
-        }
-      }
-    }
-    const path = normalized2 || theme?.path || null;
-    const color2 = path ? settings.categoryColors?.[path] ?? settings.categoryColors?.[path.split("/")[0]] ?? null : null;
-    return {
-      path,
-      icon: String((iconTheme || theme)?.icon || "").trim(),
-      color: color2,
-      theme
-    };
-  }
-}
-function findGoal(goalSettings, goalId) {
-  const id = String(goalId || "").trim();
-  if (!id) return null;
-  return (goalSettings?.goals || []).find((goal) => goal.id === id) || null;
+function findGoal(goalSettings, goalPath) {
+  const path = String(goalPath || "").trim();
+  if (!path) return null;
+  return (goalSettings?.goals || []).find((goal) => goal.path === path) || null;
 }
 function mergeTemplate(base, patch) {
   const required2 = new Set(patch.requiredFields || []);
   const defaultValues = patch.defaultValues || {};
-  const chosenFields = [...patch.fields ?? base.fields];
-  for (const baseField of base.fields || []) {
-    const isSystemContext = isSystemRecordContextField(baseField.key, baseField.label, String(baseField.semantic || baseField.semanticType || ""));
-    if (!isSystemContext) continue;
-    const exists = chosenFields.some(
-      (field) => field.key === baseField.key || field.label && baseField.label && field.label === baseField.label
-    );
-    if (!exists) chosenFields.push(baseField);
-  }
-  const fields = chosenFields.map((field) => {
+  const fields = [...patch.fields ?? base.fields].map((field) => {
     const key = field.key || field.label;
     const defaultValue2 = defaultValues[key] ?? defaultValues[field.label || ""];
     return {
@@ -25297,9 +24003,8 @@ function mergeTemplate(base, patch) {
     periodPolicy: patch.periodPolicy ?? base.periodPolicy
   };
   const policy = resolveTemplatePeriodPolicy(merged);
-  if (policy) {
-    merged.periodPolicy = policy;
-  } else {
+  if (policy) merged.periodPolicy = policy;
+  else {
     delete merged.periodPolicy;
     delete merged.granularity;
   }
@@ -25307,48 +24012,42 @@ function mergeTemplate(base, patch) {
 }
 class GoalTemplateResolver {
   static resolve(input) {
-    const { settings, blockId } = input;
+    const { settings: settings2, blockId } = input;
     const effectiveBlockId = blockId;
-    const goal = findGoal(settings.goalSettings, input.goalId);
-    const themePathFromId = input.themeId ? settings.inputSettings?.themes?.find((candidate) => candidate.id === input.themeId)?.path ?? null : null;
-    const effectiveThemePath = input.themePath || goal?.themePath || themePathFromId || null;
-    const theme = ThemeMetadataResolver.resolveThemeForRender(settings, effectiveThemePath);
-    const coreBlock = getCoreBlockById(settings, effectiveBlockId);
-    const baseTemplate = coreBlock;
+    const goal = findGoal(settings2.goalSettings, input.goalPath);
+    const baseTemplate = getCoreBlockById(settings2, effectiveBlockId);
     if (!baseTemplate) {
       return {
         template: null,
-        theme,
         goal,
         templateId: null,
         templateSourceType: null,
-        effectiveBlockId: null,
-        templateVariantId: null
+        effectiveBlockId: null
       };
     }
-    const goalTemplate = findGoalTemplate(settings.goalSettings, goal, effectiveBlockId, input.templateVariantId);
+    const goalTemplate = findGoalTemplate(settings2.goalSettings, goal, effectiveBlockId);
     if (goalTemplate) {
       return {
         template: mergeTemplate(baseTemplate, goalTemplate),
-        theme,
         goal,
         templateId: goalTemplate.id,
         templateSourceType: "goal-template",
-        effectiveBlockId,
-        templateVariantId: goalTemplate.variantId || "default"
+        effectiveBlockId
       };
     }
     const policy = resolveTemplatePeriodPolicy(baseTemplate);
     const template = policy ? { ...baseTemplate, periodPolicy: policy } : { ...baseTemplate, periodPolicy: void 0, granularity: void 0 };
-    return { template, theme, goal, templateId: baseTemplate.id, templateSourceType: "core-block", effectiveBlockId, templateVariantId: null };
+    return {
+      template,
+      goal,
+      templateId: baseTemplate.id,
+      templateSourceType: "core-block",
+      effectiveBlockId
+    };
   }
 }
 function issue$2(code, message, field) {
   return { code, message, field };
-}
-function findThemeIdByPath(settings, path) {
-  if (!path) return null;
-  return settings.themes.find((theme) => theme.path === path)?.id ?? null;
 }
 function readNestedGoalContext(context) {
   const nested2 = context?.__goalContext;
@@ -25374,155 +24073,77 @@ function readFirstString(...values2) {
   }
   return null;
 }
-function extractGoalContext(input) {
+function extractGoalPath(input) {
   const context = input.context || {};
   const nested2 = readNestedGoalContext(context);
   const item = input.item || null;
-  const goalId = readFirstString(
-    context.goalId,
-    context["目标ID"],
-    nested2.goalId,
-    nested2["目标ID"],
-    item?.goalId
-  );
-  const goalPath = readFirstString(
+  return readFirstString(
     context.goalPath,
     context["目标"],
-    context["目标路径"],
     nested2.goalPath,
     nested2["目标"],
-    nested2["目标路径"],
     item?.goalPath
   );
-  const themePath = readFirstString(
-    context.themePath,
-    context["主题"],
-    nested2.themePath,
-    nested2["主题"],
-    item?.themePath,
-    item?.theme
-  );
-  const templateVariantId = readFirstString(
-    context.templateVariantId,
-    context.goalTemplateVariantId,
-    context.goalTemplateId,
-    context.templateId,
-    context["模板ID"],
-    context["记录预设"],
-    context["模板变体ID"],
-    nested2.templateVariantId,
-    nested2.goalTemplateVariantId,
-    nested2.goalTemplateId,
-    nested2.templateId,
-    nested2["模板ID"],
-    nested2["记录预设"],
-    nested2["模板变体ID"]
-  );
-  return { goalId, goalPath, themePath, templateVariantId };
 }
-function normalizeRecordInputSettingsEnvelope(settings) {
-  const maybeFull = settings;
-  if (maybeFull?.inputSettings) return maybeFull;
+function buildEffectiveInputSettings(settings2) {
   return {
-    inputSettings: settings
-  };
-}
-function buildEffectiveInputSettings(settings) {
-  return {
-    ...settings.inputSettings,
-    blocks: getEffectiveCoreBlocks(settings)
+    ...settings2.inputSettings,
+    blocks: getEffectiveCoreBlocks(settings2)
   };
 }
 function resolveRecordDependencies(input) {
   const warnings = [];
   const errors = [];
-  const fullSettings = normalizeRecordInputSettingsEnvelope(input.settings);
-  fullSettings.inputSettings;
-  const requestedBlockId = input.blockId ?? null;
-  const effectiveBlockId = requestedBlockId ? String(requestedBlockId) : null;
+  const fullSettings = input.settings;
+  const requestedBlockId = input.blockId ? String(input.blockId) : null;
   const effectiveSettings = buildEffectiveInputSettings(fullSettings);
-  const goalContext = extractGoalContext(input);
-  const inferredThemeId = input.themeId ?? findThemeIdByPath(effectiveSettings, goalContext.themePath ?? input.item?.themePath ?? input.item?.theme ?? null);
-  let resolvedThemeId = inferredThemeId ?? null;
+  const goalPath = extractGoalPath(input);
   if (!requestedBlockId) {
     errors.push(issue$2("record_block_missing", "Missing blockId for record submission.", "blockId"));
     return {
       blockId: null,
-      themeId: resolvedThemeId,
       template: null,
-      theme: null,
       warnings,
       errors,
-      meta: {
-        templateId: null,
-        templateSourceType: null,
-        usedFallbackBlock: true,
-        usedFallbackTheme: !!resolvedThemeId
-      }
+      meta: { templateId: null, templateSourceType: null, usedFallbackBlock: true }
     };
   }
-  const block = effectiveBlockId ? effectiveSettings.blocks.find((candidate) => candidate.id === effectiveBlockId) ?? null : null;
+  const block = effectiveSettings.blocks.find((candidate) => candidate.id === requestedBlockId) ?? null;
   if (!block) {
     errors.push(issue$2("record_block_not_found", "Selected block no longer exists.", "blockId"));
     return {
-      blockId: effectiveBlockId || requestedBlockId,
-      themeId: resolvedThemeId,
+      blockId: requestedBlockId,
       template: null,
-      theme: null,
       warnings,
       errors,
-      meta: {
-        templateId: null,
-        templateSourceType: null,
-        usedFallbackBlock: true,
-        usedFallbackTheme: !!resolvedThemeId
-      }
+      meta: { templateId: null, templateSourceType: null, usedFallbackBlock: true }
     };
-  }
-  let usedFallbackTheme = false;
-  if (resolvedThemeId && !effectiveSettings.themes.some((theme) => theme.id === resolvedThemeId)) {
-    warnings.push(issue$2("record_theme_not_found", "Selected theme no longer exists. Continuing with goal/template metadata.", "themeId"));
-    resolvedThemeId = null;
-    usedFallbackTheme = true;
   }
   const resolved = GoalTemplateResolver.resolve({
     settings: fullSettings,
-    blockId: effectiveBlockId || requestedBlockId,
-    goalId: goalContext.goalId,
-    themeId: resolvedThemeId ?? void 0,
-    themePath: goalContext.themePath,
-    templateVariantId: goalContext.templateVariantId
+    blockId: requestedBlockId,
+    goalPath
   });
   if (resolved.template) {
     return {
-      blockId: resolved.effectiveBlockId || effectiveBlockId || requestedBlockId,
-      themeId: resolvedThemeId,
+      blockId: resolved.effectiveBlockId || requestedBlockId,
       template: resolved.template,
-      theme: resolved.theme,
       warnings,
       errors,
       meta: {
         templateId: resolved.templateId,
         templateSourceType: resolved.templateSourceType,
-        usedFallbackBlock: false,
-        usedFallbackTheme
+        usedFallbackBlock: false
       }
     };
   }
   errors.push(issue$2("record_template_missing", "No effective Goal + Block template is available for this record.", "blockId"));
   return {
-    blockId: effectiveBlockId || requestedBlockId,
-    themeId: resolvedThemeId,
+    blockId: requestedBlockId,
     template: null,
-    theme: resolved.theme,
     warnings,
     errors,
-    meta: {
-      templateId: null,
-      templateSourceType: null,
-      usedFallbackBlock: false,
-      usedFallbackTheme
-    }
+    meta: { templateId: null, templateSourceType: null, usedFallbackBlock: false }
   };
 }
 const EMPTY_INPUT_TYPES = [];
@@ -25561,7 +24182,7 @@ function optionLabelFromPath(value) {
   return value.split("/").filter(Boolean).pop() || value;
 }
 function normalizeOptionObjectForField(field, rawValue) {
-  const text2 = readOptionText$2(rawValue);
+  const text2 = readOptionText$1(rawValue);
   if (isTemplatePathField(field)) {
     const normalized2 = normalizeHierarchyPath(text2.value || text2.label);
     return normalized2 ? { value: normalized2, label: String(text2.label || optionLabelFromPath(normalized2)) } : rawValue;
@@ -25726,11 +24347,11 @@ function fieldCodecDefinition(field) {
   const inputType = getTemplateFieldInputType(field);
   const semantic = getTemplateFieldSemantic(field);
   return {
-    valueType: semantic === "tags" ? "tags" : semantic === "themePath" || semantic === "categoryPath" || semantic === "goalPath" || inputType === "path" || inputType === "multiPath" ? "path" : semantic === "image" || inputType === "image" || inputType === "multiImage" ? "image" : semantic === "rating" || inputType === "number" ? "number" : "string",
+    valueType: semantic === "tags" ? "tags" : semantic === "categoryPath" || semantic === "goalPath" || inputType === "path" || inputType === "multiPath" ? "path" : semantic === "image" || inputType === "image" || inputType === "multiImage" ? "image" : semantic === "rating" || inputType === "number" ? "number" : "string",
     inputType,
     semantic,
     cardinality: field.cardinality || (["multiSelect", "multiPath", "multiTag", "multiImage"].includes(inputType) ? "multi" : "single"),
-    hierarchical: field.hierarchical || semantic === "themePath" || semantic === "categoryPath" || semantic === "goalPath" || semantic === "tags"
+    hierarchical: field.hierarchical || semantic === "categoryPath" || semantic === "goalPath" || semantic === "tags"
   };
 }
 function readExtraByAlias(item, aliases2) {
@@ -25745,30 +24366,15 @@ function readExtraByAlias(item, aliases2) {
   }
   return void 0;
 }
-function readPeriodFromLegacyCategory(field, item, snapshot) {
-  const candidates = [snapshot.semantic.categoryKey, item.categoryKey];
-  const options = field.options || [];
-  for (const candidate of candidates) {
-    const raw = String(candidate || "").trim();
-    if (!raw) continue;
-    const leaf2 = getHierarchyPathLeaf(raw) || raw;
-    const matched = findMatchingOption(options, raw, { normalize: (value) => normalizeHierarchyPathValue(value), matchLeaf: true }) || findMatchingOption(options, leaf2);
-    if (matched) {
-      const text2 = readOptionText$2(matched);
-      return text2.value || text2.label || raw;
-    }
-  }
-  return void 0;
-}
 function buildRatingPairOption(field, item, snapshot) {
   const options = field.options || [];
   const score = String(item.rating ?? "");
-  const image = String(item.image ?? item.pintu ?? item.extra?.["评图"] ?? item.extra?.["pintu"] ?? item.extra?.["图片"] ?? "");
+  const image = String(item.image ?? item.extra?.["图片"] ?? item.extra?.["image"] ?? "");
   let matched = options.find((opt) => String(opt.label ?? "") === score && (!image || String(opt.value || "") === image));
   if (!matched && score) matched = findMatchingOption(options, score);
   if (!matched && image) matched = findMatchingOption(options, image);
   if (matched) {
-    const text2 = readOptionText$2(matched);
+    const text2 = readOptionText$1(matched);
     return { value: text2.value, label: text2.label || text2.value };
   }
   if (score || image) return { value: image || score, label: score || image };
@@ -25784,11 +24390,9 @@ function readSemanticFieldValue(field, item, snapshot) {
     case "date":
       return snapshot.semantic.date;
     case "period":
-      return snapshot.semantic.period || readPeriodFromLegacyCategory(field, item, snapshot);
+      return snapshot.semantic.period;
     case "tags":
       return parseTagList(snapshot.semantic.tags);
-    case "goalId":
-      return snapshot.semantic.goalId;
     case "goalPath":
       return snapshot.semantic.goalPath;
     case "startTime":
@@ -25797,15 +24401,13 @@ function readSemanticFieldValue(field, item, snapshot) {
       return snapshot.semantic.endTime;
     case "duration":
       return snapshot.semantic.duration;
-    case "themePath":
-      return snapshot.semantic.themePath;
     case "categoryPath":
       return snapshot.semantic.categoryKey;
     case "rating":
       if (isTemplateRatingPairField(field)) return buildRatingPairOption(field, item);
       return item.rating;
     case "image":
-      return normalizeImageValue(item.image ?? item.pintu ?? item.extra?.["图片"] ?? item.extra?.["image"] ?? item.extra?.["评图"] ?? item.extra?.["pintu"])?.src;
+      return normalizeImageValue(item.image ?? item.extra?.["图片"] ?? item.extra?.["image"])?.src;
     case "icon":
       return item.icon;
     case "priority":
@@ -25834,9 +24436,6 @@ function normalizeBackfillValue(field, rawValue) {
   if (!isPresent(rawValue)) return void 0;
   if (isTemplateRatingPairField(field) && isOptionObject(rawValue)) return rawValue;
   const decoded = decodeMarkdownFieldValue(rawValue, fieldCodecDefinition(field));
-  if (getTemplateFieldSemantic(field) === "tags" && getTemplateFieldInputType(field) === "text") {
-    return parseTagList(decoded).join(",");
-  }
   const normalized2 = normalizeTemplateFieldValue(field, decoded);
   return matchTemplateFieldOptionValue(field, normalized2);
 }
@@ -25867,11 +24466,9 @@ function getItemSemanticTokens(item) {
     if (normalized2) tokens.add(normalized2);
   };
   push(item.categoryKey);
-  push(item.theme);
   push(item.file?.basename);
   push(item.fileName);
   push(item.header);
-  push(item.templateId);
   Object.keys(item.extra || {}).forEach((key) => push(key));
   if (item.content) push("content");
   if (item.title) push("title");
@@ -25893,12 +24490,11 @@ function scoreTemplateForItem(block, item) {
   let score = 0;
   const semanticTokens = getItemSemanticTokens(item);
   const categoryKey = normalizeFieldToken(item.categoryKey);
-  const blockId = normalizeFieldToken(block?.id);
+  normalizeFieldToken(block?.id);
   const blockName = normalizeFieldToken(block?.name);
   const blockCategory = normalizeFieldToken(block?.categoryKey);
   const recordBlock = itemCoreBlock$1(item);
   const candidateBlock = templateCoreBlock(block);
-  if (item.templateId && normalizeFieldToken(item.templateId) === blockId) score += 100;
   if (recordBlock && candidateBlock === recordBlock) score += 80;
   if (categoryKey && categoryKey === blockCategory) score += 30;
   if (categoryKey && categoryKey === blockName) score += 20;
@@ -25932,7 +24528,6 @@ function resolveBlockForEdit(blocks, item, preferredBlockId) {
   if (!Array.isArray(blocks) || blocks.length === 0) {
     return {
       blockId: preferredBlockId ?? null,
-      themeIdFromTemplateHint: null,
       resolvedBy: "fallback",
       usedFallbackBlock: true,
       debugReason: "没有可用 block，只能使用 preferredBlockId。"
@@ -25946,22 +24541,9 @@ function resolveBlockForEdit(blocks, item, preferredBlockId) {
     if (block) {
       return {
         blockId: block.id,
-        themeIdFromTemplateHint: null,
         resolvedBy: "exact",
         usedFallbackBlock: false,
         debugReason: `根据记录中的核心Block ${coreBlockHint} 精确还原 block=${block.id}`
-      };
-    }
-  }
-  if (item.templateId) {
-    const exact = blocks.find((block) => block.id === item.templateId);
-    if (exact) {
-      return {
-        blockId: exact.id,
-        themeIdFromTemplateHint: null,
-        resolvedBy: "exact",
-        usedFallbackBlock: false,
-        debugReason: `根据 block 模板ID ${item.templateId} 精确命中。`
       };
     }
   }
@@ -25971,7 +24553,6 @@ function resolveBlockForEdit(blocks, item, preferredBlockId) {
     if (typeMatches) {
       return {
         blockId: preferred.id,
-        themeIdFromTemplateHint: null,
         resolvedBy: "exact",
         usedFallbackBlock: false,
         debugReason: `preferredBlockId 类型匹配，使用 ${preferred.id}。`
@@ -25985,7 +24566,6 @@ function resolveBlockForEdit(blocks, item, preferredBlockId) {
   if (top2 && top2.score > 0) {
     return {
       blockId: top2.block.id,
-      themeIdFromTemplateHint: null,
       resolvedBy: "inferred",
       usedFallbackBlock: false,
       debugReason: `按记录类型护栏后推断命中 ${top2.block.id}，score=${top2.score}。`
@@ -25994,19 +24574,24 @@ function resolveBlockForEdit(blocks, item, preferredBlockId) {
   const sameTypeFallback = item.coreBlock === "task" ? blocks.find(looksLikeTaskTemplate) : blocks.find(looksLikeRecordCaptureTemplate);
   return {
     blockId: sameTypeFallback?.id ?? blocks[0]?.id ?? null,
-    themeIdFromTemplateHint: null,
     resolvedBy: "fallback",
     usedFallbackBlock: true,
     debugReason: `无法精确/推断命中，使用同类型 fallback=${sameTypeFallback?.id || blocks[0]?.id || ""}。`
   };
 }
 function buildInitialFormData(template, item, snapshot = buildParsedRecordSnapshot(item)) {
-  return buildInitialEditFormData({ template, item, snapshot });
+  const formData = buildInitialEditFormData({ template, item, snapshot });
+  const goalPath = snapshot.semantic.goalPath;
+  if (goalPath) {
+    formData.goalPath = goalPath;
+    formData["目标"] = goalPath;
+  }
+  return formData;
 }
 function buildEditRecordState(input) {
-  const { settings, item, preferredBlockId, preferredThemeId } = input;
-  const fullSettings = normalizeRecordInputSettingsEnvelope(settings);
-  const inputSettings = fullSettings.inputSettings;
+  const { settings: settings2, item, preferredBlockId } = input;
+  const fullSettings = settings2;
+  fullSettings.inputSettings;
   const canonicalBlocks = getEffectiveCoreBlocks(fullSettings);
   const runtimeBlocks = canonicalBlocks;
   const resolvedBlock = resolveBlockForEdit(
@@ -26014,23 +24599,18 @@ function buildEditRecordState(input) {
     item,
     preferredBlockId
   );
-  const resolvedThemeId = resolvedBlock.themeIdFromTemplateHint ?? findThemeIdByPath(inputSettings, item.theme) ?? preferredThemeId ?? void 0;
   recordDebugLog("编辑模板解析", "任务/块模板选择", {
     coreBlock: item.coreBlock,
     itemTitle: item.title,
     itemEditableText: item.editableText,
-    templateId: item.templateId,
-    templateSourceType: item.templateSourceType,
     preferredBlockId,
     resolvedBlockId: resolvedBlock.blockId,
-    resolvedThemeId,
     resolvedBy: resolvedBlock.resolvedBy,
     reason: resolvedBlock.debugReason
   });
   const resolvedDependencies = resolveRecordDependencies({
     settings: fullSettings,
     blockId: resolvedBlock.blockId,
-    themeId: resolvedThemeId,
     item
   });
   const parsedSnapshot = buildParsedRecordSnapshot(item);
@@ -26047,26 +24627,18 @@ function buildEditRecordState(input) {
     mode: "edit",
     item,
     blockId: resolvedDependencies.blockId,
-    themeId: resolvedDependencies.themeId,
     fields: initialFormData,
-    template: resolvedDependencies.template,
-    theme: resolvedDependencies.theme,
-    templateMeta: {
-      templateId: resolvedDependencies.meta.templateId ?? resolvedDependencies.template?.id ?? null,
-      templateSourceType: resolvedDependencies.meta.templateSourceType ?? "core-block"
-    }
+    template: resolvedDependencies.template
   }) : null;
   const warnings = [...resolvedDependencies.warnings, ...resolvedDependencies.errors];
   if (snapshot?.persistencePlan.pathChanged) {
     warnings.push({
       code: "record_target_path_changed",
-      message: `当前模板/主题推导出的目标文件为 ${snapshot.outputPlan.targetFilePath}，与原文件 ${snapshot.persistencePlan.originalPath} 不同。当前仍按原位置更新；后续步骤会接入迁移保存。`,
-      field: "themeId"
+      message: `当前字段预设推导出的目标文件为 ${snapshot.outputPlan.targetFilePath}，与原文件 ${snapshot.persistencePlan.originalPath} 不同。当前仍按原位置更新；后续步骤会接入迁移保存。`
     });
   }
   return {
     blockId: resolvedDependencies.blockId,
-    themeId: resolvedDependencies.themeId,
     template: resolvedDependencies.template,
     initialFormData,
     snapshot,
@@ -26074,9 +24646,7 @@ function buildEditRecordState(input) {
     persistencePlan: snapshot?.persistencePlan,
     inferred: {
       usedFallbackBlock: resolvedBlock.usedFallbackBlock,
-      usedFallbackTheme: resolvedDependencies.meta.usedFallbackTheme,
       canonicalBlockId: resolvedDependencies.meta.canonicalBlockId,
-      compatibilityMode: resolvedDependencies.meta.compatibilityMode,
       templateSourceType: resolvedDependencies.meta.templateSourceType,
       resolvedBy: resolvedBlock.resolvedBy
     },
@@ -26205,31 +24775,23 @@ function validateRecordInput(input) {
   };
 }
 class RecordInputKernel {
-  constructor(settings) {
-    this.settings = settings;
+  constructor(settings2) {
+    this.settings = settings2;
   }
   settings;
   prepareCreate(params) {
     const resolved = this.resolveMissingDependencies({
       blockId: params.blockId ?? null,
-      themeId: params.themeId ?? null,
       context: params.context ?? null
     });
     const snapshot = buildEditableRecordSnapshot({
       mode: "create",
       blockId: resolved.blockId,
-      themeId: resolved.themeId,
       fields: {},
-      template: resolved.template,
-      theme: resolved.theme,
-      templateMeta: {
-        templateId: resolved.meta.templateId ?? resolved.template?.id ?? null,
-        templateSourceType: resolved.meta.templateSourceType ?? "core-block"
-      }
+      template: resolved.template
     });
     return {
       blockId: resolved.blockId,
-      themeId: resolved.themeId,
       template: resolved.template,
       initialFormData: {},
       snapshot,
@@ -26242,15 +24804,13 @@ class RecordInputKernel {
     return buildEditRecordState({
       settings: this.settings,
       item: params.item,
-      preferredBlockId: params.blockId ?? null,
-      preferredThemeId: params.themeId ?? null
+      preferredBlockId: params.blockId ?? null
     });
   }
   resolveMissingDependencies(params) {
     return resolveRecordDependencies({
       settings: this.settings,
       blockId: params.blockId ?? null,
-      themeId: params.themeId ?? null,
       item: params.item ?? null,
       context: params.context ?? null
     });
@@ -26276,9 +24836,9 @@ function isHabitLike(item) {
   return normalizeCoreBlock(item) === "habit";
 }
 function matchesEnergyGoal(energyItem, candidate) {
-  const energyGoalId = String(energyItem.goalId || "").trim();
-  if (!energyGoalId) return true;
-  return String(candidate.goalId || "").trim() === energyGoalId;
+  const energyGoalPath = String(energyItem.goalPath || "").trim();
+  if (!energyGoalPath) return true;
+  return String(candidate.goalPath || "").trim() === energyGoalPath;
 }
 function occurrenceDate(item) {
   if (item.coreBlock === "task-session" && item.sessionStartedAt) {
@@ -26391,7 +24951,7 @@ function activityRank(activity) {
 }
 function classifyDailySignal(item) {
   if (!isHabitLike(item)) return null;
-  const text2 = [item.title, item.content, item.themePath, item.theme, item.categoryKey].map((value) => String(value || "")).join(" ");
+  const text2 = [item.title, item.content, item.goalPath, item.categoryKey].map((value) => String(value || "")).join(" ");
   if (/睡眠|睡觉|睡醒/.test(text2)) return "sleep";
   if (/身体|体力|身体状态/.test(text2)) return "body";
   if (/运动|锻炼|健身|跑步|散步|八段锦|瑜伽|骑行|游泳/.test(text2)) return "exercise";
@@ -27124,7 +25684,6 @@ function normalizeTimeUpdates(updates) {
 function prepareTemplateSubmit(params) {
   const resolved = params.kernel.resolveMissingDependencies({
     blockId: params.blockId,
-    themeId: params.themeId ?? null,
     item: params.item,
     context: { ...params.context || {}, ...params.formData }
   });
@@ -27166,12 +25725,6 @@ function prepareTemplateSubmit(params) {
     }
   };
 }
-function getTemplateExecutionMeta(resolved, template) {
-  return {
-    templateId: resolved.meta.templateId ?? template.id,
-    templateSourceType: resolved.meta.templateSourceType ?? "core-block"
-  };
-}
 class CreateRecordWorkflow {
   constructor(runtime) {
     this.runtime = runtime;
@@ -27182,7 +25735,6 @@ class CreateRecordWorkflow {
       kernel: this.runtime.getKernel(),
       operation: "create",
       blockId: params.blockId,
-      themeId: params.themeId ?? null,
       formData: params.formData,
       context: params.context,
       normalizeMode: params.source === "ai_batch" ? "ai_batch" : "create",
@@ -27192,19 +25744,14 @@ class CreateRecordWorkflow {
     const { resolved, normalized: normalized2, warnings } = prepared.submit;
     try {
       throwIfAborted$1(params.signal);
-      const templateMeta = getTemplateExecutionMeta(resolved, resolved.template);
       const preview = this.runtime.deps.inputService.previewTemplateExecution(
         resolved.template,
-        normalized2.normalizedFormData,
-        resolved.theme ?? void 0,
-        templateMeta
+        normalized2.normalizedFormData
       );
       if (!preview.recordId) throw new Error("record_id_required_before_create");
       const path = await this.runtime.deps.inputService.executeTemplate(
         resolved.template,
         normalized2.normalizedFormData,
-        resolved.theme ?? void 0,
-        templateMeta,
         { signal: params.signal, recordId: preview.recordId || void 0 }
       );
       const refreshPlan = buildRefreshPlan([path]);
@@ -27261,8 +25808,6 @@ class RecordMigrationTransaction {
     const createdPath = await this.runtime.deps.inputService.createRecordAtPlannedLocation(
       params.template,
       params.normalized.normalizedFormData,
-      params.theme ?? void 0,
-      params.templateMeta,
       { signal: params.signal, autoRefresh: false, recordId: params.item.id }
     );
     const scannedNewPath = await applyRecordRefreshPlan(this.runtime.deps.dataStore, buildRefreshPlan([createdPath], false));
@@ -27343,7 +25888,7 @@ function buildPlanConsistencyIssues(params) {
   return issues;
 }
 function optionScalar(value) {
-  const option = readOptionText$2(value);
+  const option = readOptionText$1(value);
   return String(option.value || option.label || value || "").trim();
 }
 function nullableText(value) {
@@ -27381,9 +25926,7 @@ function boolValue(value) {
 function taskSeriesDefaults(renderData) {
   return {
     content: optionScalar(renderData["任务内容"] ?? renderData["内容"] ?? renderData.content),
-    goalId: nullableText(renderData.goalId ?? renderData["目标ID"]),
     goalPath: nullableText(renderData.goalPath ?? renderData["目标"]),
-    themePath: nullableText(renderData.themePath ?? renderData["主题"]),
     priority: nullableText(renderData["优先级"] ?? renderData.priority),
     expectedDurationMinutes: durationValue(renderData["预计时长"] ?? renderData.expectedDurationMinutes),
     energyDemand: nullableText(renderData["精力要求"] ?? renderData.energyDemand),
@@ -27416,7 +25959,6 @@ class UpdateRecordWorkflow {
       kernel: this.runtime.getKernel(),
       operation: "update",
       blockId: params.blockId,
-      themeId: params.themeId ?? null,
       item: params.item,
       formData: { ...params.formData, seriesId: params.item.seriesId },
       normalizeMode: "edit",
@@ -27424,12 +25966,9 @@ class UpdateRecordWorkflow {
     });
     if (!prepared.ok) return prepared.result;
     const { resolved, normalized: normalized2, warnings } = prepared.submit;
-    const templateMeta = getTemplateExecutionMeta(resolved, resolved.template);
     const outputPlan = buildRecordOutputPlan({
       template: resolved.template,
       formData: normalized2.normalizedFormData,
-      theme: resolved.theme ?? void 0,
-      templateMeta,
       recordId: params.item.id
     });
     const persistencePlan = buildRecordPersistencePlan({
@@ -27451,10 +25990,8 @@ class UpdateRecordWorkflow {
         const result = await new RecordMigrationTransaction(this.runtime).execute({
           item: params.item,
           template: resolved.template,
-          theme: resolved.theme,
           resolved,
           normalized: normalized2,
-          templateMeta,
           outputPlan,
           persistencePlan,
           warnings,
@@ -27477,8 +26014,6 @@ class UpdateRecordWorkflow {
         params.item,
         resolved.template,
         normalized2.normalizedFormData,
-        resolved.theme ?? void 0,
-        templateMeta,
         { signal: params.signal, autoRefresh: false }
       );
       const seriesIssue = await this.syncRecurringTaskSeries(params, outputPlan.renderData);
@@ -27519,7 +26054,7 @@ class RecordInputUseCase {
   }
   async submitEnergySnapshot(params) {
     const record = buildEnergySnapshotRecord(params);
-    if (!record.goalId || !record.goalPath) {
+    if (!record.goalPath) {
       return buildValidationErrorResult("create", [{
         code: "energy_goal_required",
         field: "目标",
@@ -27650,42 +26185,28 @@ function createRecordInputUseCase(store, deps) {
 function nowIso() {
   return (/* @__PURE__ */ new Date()).toISOString();
 }
-function ensureGoalSettings(settings) {
+function ensureGoalSettings(settings2) {
   return {
-    goals: [...settings?.goals || []],
-    goalTemplates: [...settings?.goalTemplates || []]
+    goals: [...settings2?.goals || []],
+    goalTemplates: [...settings2?.goalTemplates || []]
   };
 }
 function normalizeGoalInput(input) {
-  const goalPath = requireGoalPath(input.goalPath || input.title);
-  const title = String(input.title || "").trim() || goalPath.split("/").filter(Boolean).pop() || goalPath;
-  if (title.includes("#") || title.includes("＃")) throw new Error("Goal title must not contain # markers.");
+  const path = requireGoalPath(input.path);
   const timestamp2 = nowIso();
   return {
-    id: makeStableGoalIdFromPath(goalPath),
-    title,
-    goalPath,
+    path,
     description: input.description,
     status: input.status || "active",
-    parentGoalId: null,
-    themePath: input.themePath ?? null,
     metrics: [],
     createdAt: timestamp2,
     updatedAt: timestamp2
   };
 }
-function normalizeStoredGoalPath(goal) {
-  return requireGoalPath(goal.goalPath || goal.title);
-}
-function collectGoalCascadeIds(goals, id) {
-  const target = goals.find((goal) => goal.id === id);
-  if (!target) return [];
-  const targetPath = normalizeStoredGoalPath(target);
-  return goals.filter((goal) => {
-    if (goal.id === id) return true;
-    const path = normalizeStoredGoalPath(goal);
-    return !!targetPath && path.startsWith(`${targetPath}/`);
-  }).map((goal) => goal.id);
+function collectGoalCascadePaths(goals, path) {
+  const targetPath = requireGoalPath(path);
+  if (!goals.some((goal) => goal.path === targetPath)) return [];
+  return goals.filter((goal) => goal.path === targetPath || goal.path.startsWith(`${targetPath}/`)).map((goal) => goal.path);
 }
 class GoalUseCase {
   constructor(store) {
@@ -27699,7 +26220,7 @@ class GoalUseCase {
       const goal = normalizeGoalInput(input);
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const exists = draft.goalSettings.goals.some((item) => item.id === goal.id || normalizeStoredGoalPath(item) === goal.goalPath);
+        const exists = draft.goalSettings.goals.some((item) => item.path === goal.path);
         if (!exists) draft.goalSettings.goals.push(goal);
       });
       return goal;
@@ -27708,74 +26229,70 @@ class GoalUseCase {
       throw error;
     }
   }
-  async updateGoal(id, patch) {
+  async updateGoal(path, patch) {
     try {
       const state = this.store.getState();
       if (!state.isInitialized) return;
+      const canonicalPath = requireGoalPath(path);
       const safePatch = { ...patch };
       delete safePatch.granularity;
+      delete safePatch.path;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const target = draft.goalSettings.goals.find((goal) => goal.id === id);
+        const target = draft.goalSettings.goals.find((goal) => goal.path === canonicalPath);
         if (!target) return;
         Object.assign(target, safePatch, { updatedAt: nowIso() });
-        if (safePatch.title !== void 0) {
-          const title = String(target.title || "").trim();
-          if (!title || title.includes("#") || title.includes("＃")) throw new Error("Goal title must not contain # markers.");
-          target.title = title;
-        }
-        if (safePatch.goalPath || safePatch.title) target.goalPath = requireGoalPath(target.goalPath || target.title);
       });
     } catch (error) {
       devError("[GoalUseCase] updateGoal failed:", error);
       throw error;
     }
   }
-  async archiveGoal(id) {
-    await this.updateGoal(id, { status: "archived" });
+  async archiveGoal(path) {
+    await this.updateGoal(path, { status: "archived" });
   }
-  async restoreGoal(id) {
-    await this.updateGoal(id, { status: "active" });
+  async restoreGoal(path) {
+    await this.updateGoal(path, { status: "active" });
   }
-  async updateGoalMetrics(id, metrics) {
-    await this.updateGoal(id, { metrics });
+  async updateGoalMetrics(path, metrics) {
+    await this.updateGoal(path, { metrics });
   }
-  async pauseGoal(id) {
-    await this.updateGoal(id, { status: "paused" });
+  async pauseGoal(path) {
+    await this.updateGoal(path, { status: "paused" });
   }
-  async completeGoal(id) {
-    await this.updateGoal(id, { status: "completed" });
+  async completeGoal(path) {
+    await this.updateGoal(path, { status: "completed" });
   }
-  async deleteGoalsByIds(ids2) {
-    const uniqueIds = Array.from(new Set(ids2.filter(Boolean)));
-    if (!uniqueIds.length) return;
-    const targetIds = new Set(uniqueIds);
+  async deleteGoalsByPaths(paths) {
+    const uniquePaths2 = Array.from(new Set(paths.filter(Boolean).map((path) => requireGoalPath(path))));
+    if (!uniquePaths2.length) return;
+    const targetPaths = new Set(uniquePaths2);
     const state = this.store.getState();
     if (!state.isInitialized) return;
     await state.updateSettings((draft) => {
       draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-      draft.goalSettings.goals = draft.goalSettings.goals.filter((goal) => !targetIds.has(goal.id));
-      for (const targetId of targetIds) {
-        draft.goalSettings = removeGoalTemplatesForGoal(draft.goalSettings, targetId);
+      draft.goalSettings.goals = draft.goalSettings.goals.filter((goal) => !targetPaths.has(goal.path));
+      for (const targetPath of targetPaths) {
+        draft.goalSettings = removeGoalTemplatesForGoal(draft.goalSettings, targetPath);
       }
     });
   }
-  async deleteGoal(id) {
+  async deleteGoal(path) {
     try {
-      await this.deleteGoalsByIds([id]);
+      await this.deleteGoalsByPaths([path]);
     } catch (error) {
       devError("[GoalUseCase] deleteGoal failed:", error);
       throw error;
     }
   }
-  async deleteGoalCascade(id) {
+  async deleteGoalCascade(path) {
     try {
       const state = this.store.getState();
       if (!state.isInitialized) return 0;
       const goalSettings = ensureGoalSettings(state.settings.goalSettings || DEFAULT_GOAL_SETTINGS);
-      const ids2 = collectGoalCascadeIds(goalSettings.goals, id);
-      await this.deleteGoalsByIds(ids2);
-      return ids2.length;
+      const paths = collectGoalCascadePaths(goalSettings.goals, path);
+      await this.deleteGoalsByPaths(paths);
+      return paths.length;
     } catch (error) {
       devError("[GoalUseCase] deleteGoalCascade failed:", error);
       throw error;
@@ -27815,15 +26332,9 @@ class GoalUseCase {
       if (!state.isInitialized) return;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const next2 = {
-          ...template,
-          id: template.id || getGoalTemplateId(template.goalId, template.coreBlockId, template.variantId || "default"),
-          updatedAt: nowIso(),
-          createdAt: template.createdAt || nowIso()
-        };
-        const goal = draft.goalSettings.goals.find((item) => item.id === next2.goalId) || null;
+        const next2 = { ...template, id: getGoalTemplateId(template.goalPath, template.coreBlockId) };
         const coreBlock = getCoreBlockById(draft, next2.coreBlockId);
-        draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, compactGoalTemplateForStorage(next2, { coreBlock, goal }));
+        draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, compactGoalTemplateForStorage(next2, { coreBlock }));
       });
     } catch (error) {
       devError("[GoalUseCase] upsertGoalTemplate failed:", error);
@@ -27831,33 +26342,27 @@ class GoalUseCase {
     }
   }
   async upsertGoalTemplateDraft(input) {
-    const timestamp2 = nowIso();
     await this.upsertGoalTemplate({
-      id: getGoalTemplateId(input.goalId, input.coreBlockId, input.templateVariantId || "default"),
-      goalId: input.goalId,
+      id: getGoalTemplateId(input.goalPath, input.coreBlockId),
+      goalPath: input.goalPath,
       coreBlockId: input.coreBlockId,
-      variantId: input.templateVariantId || "default",
-      name: input.templateName || (input.templateVariantId === "default" || !input.templateVariantId ? "记录预设" : input.templateVariantId),
       description: input.description,
-      sortOrder: input.sortOrder,
       enabled: input.enabled !== false,
       targetFile: input.targetFile?.trim() || void 0,
       appendUnderHeader: input.appendUnderHeader?.trim() || void 0,
       fields: input.fields,
       defaultValues: input.defaultValues || {},
       requiredFields: input.requiredFields || [],
-      periodPolicy: input.periodPolicy,
-      createdAt: timestamp2,
-      updatedAt: timestamp2
+      periodPolicy: input.periodPolicy
     });
   }
-  async deleteGoalTemplate(goalId, coreBlockId, templateVariantId = "default") {
+  async deleteGoalTemplate(goalPath, coreBlockId) {
     try {
       const state = this.store.getState();
       if (!state.isInitialized) return;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        draft.goalSettings = removeGoalTemplateFromSettings(draft.goalSettings, goalId, coreBlockId, templateVariantId);
+        draft.goalSettings = removeGoalTemplateFromSettings(draft.goalSettings, goalPath, coreBlockId);
       });
     } catch (error) {
       devError("[GoalUseCase] deleteGoalTemplate failed:", error);
@@ -27873,7 +26378,6 @@ function createUseCases(store, deps) {
   return {
     settings: createSettingsUseCase(store),
     blocks: createBlocksUseCase(store),
-    theme: createThemeUseCase(store),
     layout: createLayoutUseCase(store),
     viewInstance: createViewInstanceUseCase(store),
     timer: createTimerUseCase(store, deps.timerStateService),
@@ -31432,7 +29936,7 @@ function createStyled2(input = {}) {
       skipSx: inputSkipSx,
       // TODO v6: remove `lowercaseFirstLetter()` in the next major release
       // For more details: https://github.com/mui/material-ui/pull/37908
-      overridesResolver: overridesResolver2 = defaultOverridesResolver(lowercaseFirstLetter(componentSlot)),
+      overridesResolver = defaultOverridesResolver(lowercaseFirstLetter(componentSlot)),
       ...options
     } = inputOptions;
     const layerName = componentName && componentName.startsWith("Mui") || !!componentSlot ? "components" : "custom";
@@ -31480,7 +29984,7 @@ function createStyled2(input = {}) {
       const expressionsBody = expressionsInput.map(transformStyle);
       const expressionsTail = [];
       expressionsHead.push(styleAttachTheme);
-      if (componentName && overridesResolver2) {
+      if (componentName && overridesResolver) {
         expressionsTail.push(function styleThemeOverrides(props) {
           const theme = props.theme;
           const styleOverrides = theme.components?.[componentName]?.styleOverrides;
@@ -31491,7 +29995,7 @@ function createStyled2(input = {}) {
           for (const slotKey in styleOverrides) {
             resolvedStyleOverrides[slotKey] = processStyle(props, styleOverrides[slotKey], props.theme.modularCssLayers ? "theme" : void 0);
           }
-          return overridesResolver2(props, resolvedStyleOverrides);
+          return overridesResolver(props, resolvedStyleOverrides);
         });
       }
       if (componentName && !skipVariantsResolver) {
@@ -34357,7 +32861,7 @@ function getSvgIconUtilityClass(slot) {
   return generateUtilityClass("MuiSvgIcon", slot);
 }
 generateUtilityClasses("MuiSvgIcon", ["root", "colorPrimary", "colorSecondary", "colorAction", "colorError", "colorDisabled", "fontSizeInherit", "fontSizeSmall", "fontSizeMedium", "fontSizeLarge"]);
-const useUtilityClasses$x = (ownerState) => {
+const useUtilityClasses$u = (ownerState) => {
   const {
     color: color2,
     fontSize,
@@ -34496,7 +33000,7 @@ const SvgIcon = /* @__PURE__ */ D(function SvgIcon2(inProps, ref) {
   if (!inheritViewBox) {
     more.viewBox = viewBox;
   }
-  const classes = useUtilityClasses$x(ownerState);
+  const classes = useUtilityClasses$u(ownerState);
   return /* @__PURE__ */ u2(SvgIconRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -35373,312 +33877,11 @@ function useSlot(name, parameters) {
   }, ownerState);
   return [elementType, props];
 }
-function getCollapseUtilityClass(slot) {
-  return generateUtilityClass("MuiCollapse", slot);
-}
-generateUtilityClasses("MuiCollapse", ["root", "horizontal", "vertical", "entered", "hidden", "wrapper", "wrapperInner"]);
-const useUtilityClasses$w = (ownerState) => {
-  const {
-    orientation,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", orientation],
-    entered: ["entered"],
-    hidden: ["hidden"],
-    wrapper: ["wrapper", orientation],
-    wrapperInner: ["wrapperInner", orientation]
-  };
-  return composeClasses(slots, getCollapseUtilityClass, classes);
-};
-const CollapseRoot = styled("div", {
-  name: "MuiCollapse",
-  slot: "Root",
-  overridesResolver: (props, styles2) => {
-    const {
-      ownerState
-    } = props;
-    return [styles2.root, styles2[ownerState.orientation], ownerState.state === "entered" && styles2.entered, ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px" && styles2.hidden];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  height: 0,
-  overflow: "hidden",
-  transition: theme.transitions.create("height"),
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      height: "auto",
-      width: 0,
-      transition: theme.transitions.create("width")
-    }
-  }, {
-    props: {
-      state: "entered"
-    },
-    style: {
-      height: "auto",
-      overflow: "visible"
-    }
-  }, {
-    props: {
-      state: "entered",
-      orientation: "horizontal"
-    },
-    style: {
-      width: "auto"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px",
-    style: {
-      visibility: "hidden"
-    }
-  }]
-})));
-const CollapseWrapper = styled("div", {
-  name: "MuiCollapse",
-  slot: "Wrapper"
-})({
-  // Hack to get children with a negative margin to not falsify the height computation.
-  display: "flex",
-  width: "100%",
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      width: "auto",
-      height: "100%"
-    }
-  }]
-});
-const CollapseWrapperInner = styled("div", {
-  name: "MuiCollapse",
-  slot: "WrapperInner"
-})({
-  width: "100%",
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      width: "auto",
-      height: "100%"
-    }
-  }]
-});
-const Collapse$1 = /* @__PURE__ */ D(function Collapse(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiCollapse"
-  });
-  const {
-    addEndListener,
-    children,
-    className,
-    collapsedSize: collapsedSizeProp = "0px",
-    component,
-    easing: easing2,
-    in: inProp,
-    onEnter,
-    onEntered,
-    onEntering,
-    onExit,
-    onExited,
-    onExiting,
-    orientation = "vertical",
-    slots = {},
-    slotProps = {},
-    style: style2,
-    timeout = duration.standard,
-    // eslint-disable-next-line react/prop-types
-    TransitionComponent = Transition,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    orientation,
-    collapsedSize: collapsedSizeProp
-  };
-  const classes = useUtilityClasses$w(ownerState);
-  const theme = useTheme();
-  const timer = useTimeout();
-  const wrapperRef = A$1(null);
-  const autoTransitionDuration = A$1();
-  const collapsedSize = typeof collapsedSizeProp === "number" ? `${collapsedSizeProp}px` : collapsedSizeProp;
-  const isHorizontal = orientation === "horizontal";
-  const size = isHorizontal ? "width" : "height";
-  const nodeRef = A$1(null);
-  const handleRef = useForkRef(ref, nodeRef);
-  const getWrapperSize = () => wrapperRef.current ? wrapperRef.current[isHorizontal ? "clientWidth" : "clientHeight"] : 0;
-  const handleEnter = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
-    if (wrapperRef.current && isHorizontal) {
-      wrapperRef.current.style.position = "absolute";
-    }
-    node2.style[size] = collapsedSize;
-    if (onEnter) {
-      onEnter(node2, isAppearing);
-    }
-  });
-  const handleEntering = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
-    const wrapperSize = getWrapperSize();
-    if (wrapperRef.current && isHorizontal) {
-      wrapperRef.current.style.position = "";
-    }
-    const {
-      duration: transitionDuration,
-      easing: transitionTimingFunction
-    } = getTransitionProps({
-      style: style2,
-      timeout,
-      easing: easing2
-    }, {
-      mode: "enter"
-    });
-    if (timeout === "auto") {
-      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
-      node2.style.transitionDuration = `${duration2}ms`;
-      autoTransitionDuration.current = duration2;
-    } else {
-      node2.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
-    }
-    node2.style[size] = `${wrapperSize}px`;
-    node2.style.transitionTimingFunction = transitionTimingFunction;
-    if (onEntering) {
-      onEntering(node2, isAppearing);
-    }
-  });
-  const handleEntered = normalizedTransitionCallback(nodeRef, (node2, isAppearing) => {
-    node2.style[size] = "auto";
-    if (onEntered) {
-      onEntered(node2, isAppearing);
-    }
-  });
-  const handleExit = normalizedTransitionCallback(nodeRef, (node2) => {
-    node2.style[size] = `${getWrapperSize()}px`;
-    if (onExit) {
-      onExit(node2);
-    }
-  });
-  const handleExited = normalizedTransitionCallback(nodeRef, onExited);
-  const handleExiting = normalizedTransitionCallback(nodeRef, (node2) => {
-    const wrapperSize = getWrapperSize();
-    const {
-      duration: transitionDuration,
-      easing: transitionTimingFunction
-    } = getTransitionProps({
-      style: style2,
-      timeout,
-      easing: easing2
-    }, {
-      mode: "exit"
-    });
-    if (timeout === "auto") {
-      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
-      node2.style.transitionDuration = `${duration2}ms`;
-      autoTransitionDuration.current = duration2;
-    } else {
-      node2.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
-    }
-    node2.style[size] = collapsedSize;
-    node2.style.transitionTimingFunction = transitionTimingFunction;
-    if (onExiting) {
-      onExiting(node2);
-    }
-  });
-  const handleAddEndListener = (next2) => {
-    if (timeout === "auto") {
-      timer.start(autoTransitionDuration.current || 0, next2);
-    }
-    if (addEndListener) {
-      addEndListener(nodeRef.current, next2);
-    }
-  };
-  const externalForwardedProps = {
-    slots,
-    slotProps,
-    component
-  };
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    ref: handleRef,
-    className: clsx(classes.root, className),
-    elementType: CollapseRoot,
-    externalForwardedProps,
-    ownerState,
-    additionalProps: {
-      style: {
-        [isHorizontal ? "minWidth" : "minHeight"]: collapsedSize,
-        ...style2
-      }
-    }
-  });
-  const [WrapperSlot, wrapperSlotProps] = useSlot("wrapper", {
-    ref: wrapperRef,
-    className: classes.wrapper,
-    elementType: CollapseWrapper,
-    externalForwardedProps,
-    ownerState
-  });
-  const [WrapperInnerSlot, wrapperInnerSlotProps] = useSlot("wrapperInner", {
-    className: classes.wrapperInner,
-    elementType: CollapseWrapperInner,
-    externalForwardedProps,
-    ownerState
-  });
-  return /* @__PURE__ */ u2(TransitionComponent, {
-    in: inProp,
-    onEnter: handleEnter,
-    onEntered: handleEntered,
-    onEntering: handleEntering,
-    onExit: handleExit,
-    onExited: handleExited,
-    onExiting: handleExiting,
-    addEndListener: handleAddEndListener,
-    nodeRef,
-    timeout: timeout === "auto" ? null : timeout,
-    ...other,
-    children: (state, {
-      ownerState: incomingOwnerState,
-      ...restChildProps
-    }) => {
-      const stateOwnerState = {
-        ...ownerState,
-        state
-      };
-      return /* @__PURE__ */ u2(RootSlot, {
-        ...rootSlotProps,
-        className: clsx(rootSlotProps.className, {
-          "entered": classes.entered,
-          "exited": !inProp && collapsedSize === "0px" && classes.hidden
-        }[state]),
-        ownerState: stateOwnerState,
-        ...restChildProps,
-        children: /* @__PURE__ */ u2(WrapperSlot, {
-          ...wrapperSlotProps,
-          ownerState: stateOwnerState,
-          children: /* @__PURE__ */ u2(WrapperInnerSlot, {
-            ...wrapperInnerSlotProps,
-            ownerState: stateOwnerState,
-            children
-          })
-        })
-      });
-    }
-  });
-});
-if (Collapse$1) {
-  Collapse$1.muiSupportAuto = true;
-}
 function getPaperUtilityClass(slot) {
   return generateUtilityClass("MuiPaper", slot);
 }
 generateUtilityClasses("MuiPaper", ["root", "rounded", "outlined", "elevation", "elevation0", "elevation1", "elevation2", "elevation3", "elevation4", "elevation5", "elevation6", "elevation7", "elevation8", "elevation9", "elevation10", "elevation11", "elevation12", "elevation13", "elevation14", "elevation15", "elevation16", "elevation17", "elevation18", "elevation19", "elevation20", "elevation21", "elevation22", "elevation23", "elevation24"]);
-const useUtilityClasses$v = (ownerState) => {
+const useUtilityClasses$t = (ownerState) => {
   const {
     square,
     elevation,
@@ -35729,7 +33932,7 @@ const PaperRoot = styled("div", {
     }
   }]
 })));
-const Paper$1 = /* @__PURE__ */ D(function Paper(inProps, ref) {
+const Paper = /* @__PURE__ */ D(function Paper2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiPaper"
@@ -35750,7 +33953,7 @@ const Paper$1 = /* @__PURE__ */ D(function Paper(inProps, ref) {
     square,
     variant
   };
-  const classes = useUtilityClasses$v(ownerState);
+  const classes = useUtilityClasses$t(ownerState);
   return /* @__PURE__ */ u2(PaperRoot, {
     as: component,
     ownerState,
@@ -36159,7 +34362,7 @@ function getButtonBaseUtilityClass(slot) {
   return generateUtilityClass("MuiButtonBase", slot);
 }
 const buttonBaseClasses = generateUtilityClasses("MuiButtonBase", ["root", "disabled", "focusVisible"]);
-const useUtilityClasses$u = (ownerState) => {
+const useUtilityClasses$s = (ownerState) => {
   const {
     disabled,
     focusVisible,
@@ -36382,7 +34585,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     tabIndex,
     focusVisible
   };
-  const classes = useUtilityClasses$u(ownerState);
+  const classes = useUtilityClasses$s(ownerState);
   return /* @__PURE__ */ u2(ButtonBaseRoot, {
     as: ComponentProp,
     className: clsx(classes.root, className),
@@ -36476,7 +34679,7 @@ const rotateAnimation = typeof circularRotateKeyframe !== "string" ? css`
 const dashAnimation = typeof circularDashKeyframe !== "string" ? css`
         animation: ${circularDashKeyframe} 1.4s ease-in-out infinite;
       ` : null;
-const useUtilityClasses$t = (ownerState) => {
+const useUtilityClasses$r = (ownerState) => {
   const {
     classes,
     variant,
@@ -36610,7 +34813,7 @@ const CircularProgress = /* @__PURE__ */ D(function CircularProgress2(inProps, r
     variant,
     enableTrackSlot
   };
-  const classes = useUtilityClasses$t(ownerState);
+  const classes = useUtilityClasses$r(ownerState);
   const circleStyle = {};
   const rootStyle = {};
   const rootProps = {};
@@ -36664,7 +34867,7 @@ function getIconButtonUtilityClass(slot) {
   return generateUtilityClass("MuiIconButton", slot);
 }
 const iconButtonClasses = generateUtilityClasses("MuiIconButton", ["root", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorError", "colorInfo", "colorSuccess", "colorWarning", "edgeStart", "edgeEnd", "sizeSmall", "sizeMedium", "sizeLarge", "loading", "loadingIndicator", "loadingWrapper"]);
-const useUtilityClasses$s = (ownerState) => {
+const useUtilityClasses$q = (ownerState) => {
   const {
     classes,
     disabled,
@@ -36849,7 +35052,7 @@ const IconButton$1 = /* @__PURE__ */ D(function IconButton(inProps, ref) {
     loadingIndicator,
     size
   };
-  const classes = useUtilityClasses$s(ownerState);
+  const classes = useUtilityClasses$q(ownerState);
   return /* @__PURE__ */ u2(IconButtonRoot, {
     id: loading ? loadingId : idProp,
     className: clsx(classes.root, className),
@@ -36889,7 +35092,7 @@ const v6Colors = {
   textDisabled: true
 };
 const extendSxProp = internal_createExtendSxProp();
-const useUtilityClasses$r = (ownerState) => {
+const useUtilityClasses$p = (ownerState) => {
   const {
     align,
     gutterBottom,
@@ -37029,7 +35232,7 @@ const Typography$1 = /* @__PURE__ */ D(function Typography(inProps, ref) {
     variantMapping
   };
   const Component = component || (paragraph ? "p" : variantMapping[variant] || defaultVariantMapping[variant]) || "span";
-  const classes = useUtilityClasses$r(ownerState);
+  const classes = useUtilityClasses$p(ownerState);
   return /* @__PURE__ */ u2(TypographyRoot, {
     as: Component,
     ref,
@@ -38501,7 +36704,7 @@ function resolveAnchorEl$1(anchorEl) {
 function isHTMLElement$1(element) {
   return element.nodeType !== void 0;
 }
-const useUtilityClasses$q = (ownerState) => {
+const useUtilityClasses$o = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -38618,7 +36821,7 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
   if (TransitionProps !== null) {
     childProps.TransitionProps = TransitionProps;
   }
-  const classes = useUtilityClasses$q(props);
+  const classes = useUtilityClasses$o(props);
   const Root = slots.root ?? "div";
   const rootProps = useSlotProps({
     elementType: Root,
@@ -38636,7 +36839,7 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
     children: typeof children === "function" ? children(childProps) : children
   });
 });
-const Popper$2 = /* @__PURE__ */ D(function Popper(props, forwardedRef) {
+const Popper$1 = /* @__PURE__ */ D(function Popper(props, forwardedRef) {
   const {
     anchorEl,
     children,
@@ -38708,11 +36911,11 @@ const Popper$2 = /* @__PURE__ */ D(function Popper(props, forwardedRef) {
     })
   });
 });
-const PopperRoot = styled(Popper$2, {
+const PopperRoot = styled(Popper$1, {
   name: "MuiPopper",
   slot: "Root"
 })({});
-const Popper$1 = /* @__PURE__ */ D(function Popper2(inProps, ref) {
+const Popper2 = /* @__PURE__ */ D(function Popper3(inProps, ref) {
   const isRtl = useRtl();
   const props = useDefaultProps({
     props: inProps,
@@ -38768,7 +36971,7 @@ function getChipUtilityClass(slot) {
   return generateUtilityClass("MuiChip", slot);
 }
 const chipClasses = generateUtilityClasses("MuiChip", ["root", "sizeSmall", "sizeMedium", "colorDefault", "colorError", "colorInfo", "colorPrimary", "colorSecondary", "colorSuccess", "colorWarning", "disabled", "clickable", "clickableColorPrimary", "clickableColorSecondary", "deletable", "deletableColorPrimary", "deletableColorSecondary", "outlined", "filled", "outlinedPrimary", "outlinedSecondary", "filledPrimary", "filledSecondary", "avatar", "avatarSmall", "avatarMedium", "avatarColorPrimary", "avatarColorSecondary", "icon", "iconSmall", "iconMedium", "iconColorPrimary", "iconColorSecondary", "label", "labelSmall", "labelMedium", "deleteIcon", "deleteIconSmall", "deleteIconMedium", "deleteIconColorPrimary", "deleteIconColorSecondary", "deleteIconOutlinedColorPrimary", "deleteIconOutlinedColorSecondary", "deleteIconFilledColorPrimary", "deleteIconFilledColorSecondary", "focusVisible"]);
-const useUtilityClasses$p = (ownerState) => {
+const useUtilityClasses$n = (ownerState) => {
   const {
     classes,
     disabled,
@@ -39160,7 +37363,7 @@ const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
     clickable,
     variant
   };
-  const classes = useUtilityClasses$p(ownerState);
+  const classes = useUtilityClasses$n(ownerState);
   const moreProps = component === ButtonBase ? {
     component: ComponentProp || "div",
     focusVisibleClassName: classes.focusVisible,
@@ -39473,7 +37676,7 @@ const inputOverridesResolver = (props, styles2) => {
   } = props;
   return [styles2.input, ownerState.size === "small" && styles2.inputSizeSmall, ownerState.multiline && styles2.inputMultiline, ownerState.type === "search" && styles2.inputTypeSearch, ownerState.startAdornment && styles2.inputAdornedStart, ownerState.endAdornment && styles2.inputAdornedEnd, ownerState.hiddenLabel && styles2.inputHiddenLabel];
 };
-const useUtilityClasses$o = (ownerState) => {
+const useUtilityClasses$m = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -39882,7 +38085,7 @@ const InputBase = /* @__PURE__ */ D(function InputBase2(inProps, ref) {
     startAdornment,
     type
   };
-  const classes = useUtilityClasses$o(ownerState);
+  const classes = useUtilityClasses$m(ownerState);
   const Root = slots.root || components.Root || InputBaseRoot;
   const rootProps = slotProps.root || componentsProps.root || {};
   const Input3 = slots.input || components.Input || InputBaseInput;
@@ -40083,7 +38286,7 @@ function getBackdropUtilityClass(slot) {
   return generateUtilityClass("MuiBackdrop", slot);
 }
 generateUtilityClasses("MuiBackdrop", ["root", "invisible"]);
-const useUtilityClasses$n = (ownerState) => {
+const useUtilityClasses$l = (ownerState) => {
   const {
     classes,
     invisible
@@ -40146,7 +38349,7 @@ const Backdrop = /* @__PURE__ */ D(function Backdrop2(inProps, ref) {
     component,
     invisible
   };
-  const classes = useUtilityClasses$n(ownerState);
+  const classes = useUtilityClasses$l(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     root: components.Root,
@@ -40199,7 +38402,7 @@ function getButtonUtilityClass(slot) {
 const buttonClasses = generateUtilityClasses("MuiButton", ["root", "text", "textInherit", "textPrimary", "textSecondary", "textSuccess", "textError", "textInfo", "textWarning", "outlined", "outlinedInherit", "outlinedPrimary", "outlinedSecondary", "outlinedSuccess", "outlinedError", "outlinedInfo", "outlinedWarning", "contained", "containedInherit", "containedPrimary", "containedSecondary", "containedSuccess", "containedError", "containedInfo", "containedWarning", "disableElevation", "focusVisible", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorSuccess", "colorError", "colorInfo", "colorWarning", "textSizeSmall", "textSizeMedium", "textSizeLarge", "outlinedSizeSmall", "outlinedSizeMedium", "outlinedSizeLarge", "containedSizeSmall", "containedSizeMedium", "containedSizeLarge", "sizeMedium", "sizeSmall", "sizeLarge", "fullWidth", "startIcon", "endIcon", "icon", "iconSizeSmall", "iconSizeMedium", "iconSizeLarge", "loading", "loadingWrapper", "loadingIconPlaceholder", "loadingIndicator", "loadingPositionCenter", "loadingPositionStart", "loadingPositionEnd"]);
 const ButtonGroupContext = /* @__PURE__ */ X$1({});
 const ButtonGroupButtonContext = /* @__PURE__ */ X$1(void 0);
-const useUtilityClasses$m = (ownerState) => {
+const useUtilityClasses$k = (ownerState) => {
   const {
     color: color2,
     disableElevation,
@@ -40710,7 +38913,7 @@ const Button$1 = /* @__PURE__ */ D(function Button(inProps, ref) {
     type,
     variant
   };
-  const classes = useUtilityClasses$m(ownerState);
+  const classes = useUtilityClasses$k(ownerState);
   const startIcon = (startIconProp || loading && loadingPosition === "start") && /* @__PURE__ */ u2(ButtonStartIcon, {
     className: classes.startIcon,
     ownerState,
@@ -40765,7 +38968,7 @@ function getSwitchBaseUtilityClass(slot) {
   return generateUtilityClass("PrivateSwitchBase", slot);
 }
 generateUtilityClasses("PrivateSwitchBase", ["root", "checked", "disabled", "input", "edgeStart", "edgeEnd"]);
-const useUtilityClasses$l = (ownerState) => {
+const useUtilityClasses$j = (ownerState) => {
   const {
     classes,
     checked,
@@ -40905,7 +39108,7 @@ const SwitchBase = /* @__PURE__ */ D(function SwitchBase2(props, ref) {
     disableFocusRipple,
     edge
   };
-  const classes = useUtilityClasses$l(ownerState);
+  const classes = useUtilityClasses$j(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -40991,7 +39194,7 @@ function getCheckboxUtilityClass(slot) {
   return generateUtilityClass("MuiCheckbox", slot);
 }
 const checkboxClasses = generateUtilityClasses("MuiCheckbox", ["root", "checked", "disabled", "indeterminate", "colorPrimary", "colorSecondary", "sizeSmall", "sizeMedium"]);
-const useUtilityClasses$k = (ownerState) => {
+const useUtilityClasses$i = (ownerState) => {
   const {
     classes,
     indeterminate,
@@ -41100,7 +39303,7 @@ const Checkbox$1 = /* @__PURE__ */ D(function Checkbox(inProps, ref) {
     indeterminate,
     size
   };
-  const classes = useUtilityClasses$k(ownerState);
+  const classes = useUtilityClasses$i(ownerState);
   const externalInputProps = slotProps.input ?? inputProps;
   const [RootSlot, rootSlotProps] = useSlot("root", {
     ref,
@@ -41136,99 +39339,6 @@ const Checkbox$1 = /* @__PURE__ */ D(function Checkbox(inProps, ref) {
     classes
   });
 });
-function mapEventPropToEvent(eventProp) {
-  return eventProp.substring(2).toLowerCase();
-}
-function clickedRootScrollbar(event, doc) {
-  return doc.documentElement.clientWidth < event.clientX || doc.documentElement.clientHeight < event.clientY;
-}
-function ClickAwayListener$1(props) {
-  const {
-    children,
-    disableReactTree = false,
-    mouseEvent = "onClick",
-    onClickAway,
-    touchEvent = "onTouchEnd"
-  } = props;
-  const movedRef = A$1(false);
-  const nodeRef = A$1(null);
-  const activatedRef = A$1(false);
-  const syntheticEventRef = A$1(false);
-  y(() => {
-    setTimeout(() => {
-      activatedRef.current = true;
-    }, 0);
-    return () => {
-      activatedRef.current = false;
-    };
-  }, []);
-  const handleRef = useForkRef(getReactElementRef(children), nodeRef);
-  const handleClickAway = useEventCallback((event) => {
-    const insideReactTree = syntheticEventRef.current;
-    syntheticEventRef.current = false;
-    const doc = ownerDocument(nodeRef.current);
-    if (!activatedRef.current || !nodeRef.current || "clientX" in event && clickedRootScrollbar(event, doc)) {
-      return;
-    }
-    if (movedRef.current) {
-      movedRef.current = false;
-      return;
-    }
-    let insideDOM;
-    if (event.composedPath) {
-      insideDOM = event.composedPath().includes(nodeRef.current);
-    } else {
-      insideDOM = !contains$1(doc.documentElement, event.target) || contains$1(nodeRef.current, event.target);
-    }
-    if (!insideDOM && (disableReactTree || !insideReactTree)) {
-      onClickAway(event);
-    }
-  });
-  const createHandleSynthetic = (handlerName) => (event) => {
-    syntheticEventRef.current = true;
-    const childrenPropsHandler = children.props[handlerName];
-    if (childrenPropsHandler) {
-      childrenPropsHandler(event);
-    }
-  };
-  const childrenProps = {
-    ref: handleRef
-  };
-  if (touchEvent !== false) {
-    childrenProps[touchEvent] = createHandleSynthetic(touchEvent);
-  }
-  y(() => {
-    if (touchEvent !== false) {
-      const mappedTouchEvent = mapEventPropToEvent(touchEvent);
-      const doc = ownerDocument(nodeRef.current);
-      const handleTouchMove = () => {
-        movedRef.current = true;
-      };
-      doc.addEventListener(mappedTouchEvent, handleClickAway);
-      doc.addEventListener("touchmove", handleTouchMove);
-      return () => {
-        doc.removeEventListener(mappedTouchEvent, handleClickAway);
-        doc.removeEventListener("touchmove", handleTouchMove);
-      };
-    }
-    return void 0;
-  }, [handleClickAway, touchEvent]);
-  if (mouseEvent !== false) {
-    childrenProps[mouseEvent] = createHandleSynthetic(mouseEvent);
-  }
-  y(() => {
-    if (mouseEvent !== false) {
-      const mappedMouseEvent = mapEventPropToEvent(mouseEvent);
-      const doc = ownerDocument(nodeRef.current);
-      doc.addEventListener(mappedMouseEvent, handleClickAway);
-      return () => {
-        doc.removeEventListener(mappedMouseEvent, handleClickAway);
-      };
-    }
-    return void 0;
-  }, [handleClickAway, mouseEvent]);
-  return /* @__PURE__ */ mn(children, childrenProps);
-}
 function getScrollbarSize(win = window) {
   const documentWidth = win.document.documentElement.clientWidth;
   return win.innerWidth - documentWidth;
@@ -41802,7 +39912,7 @@ function getModalUtilityClass(slot) {
   return generateUtilityClass("MuiModal", slot);
 }
 generateUtilityClasses("MuiModal", ["root", "hidden", "backdrop"]);
-const useUtilityClasses$j = (ownerState) => {
+const useUtilityClasses$h = (ownerState) => {
   const {
     open,
     exited,
@@ -41909,7 +40019,7 @@ const Modal$1 = /* @__PURE__ */ D(function Modal(inProps, ref) {
     ...propsWithDefaults,
     exited
   };
-  const classes = useUtilityClasses$j(ownerState);
+  const classes = useUtilityClasses$h(ownerState);
   const childProps = {};
   if (children.props.tabIndex === void 0) {
     childProps.tabIndex = "-1";
@@ -41986,7 +40096,7 @@ const Modal$1 = /* @__PURE__ */ D(function Modal(inProps, ref) {
     })
   });
 });
-const useUtilityClasses$i = (ownerState) => {
+const useUtilityClasses$g = (ownerState) => {
   const {
     classes,
     disableUnderline,
@@ -42265,7 +40375,7 @@ const FilledInput = /* @__PURE__ */ D(function FilledInput2(inProps, ref) {
     multiline,
     type
   };
-  const classes = useUtilityClasses$i(props);
+  const classes = useUtilityClasses$g(props);
   const filledInputComponentsProps = {
     root: {
       ownerState
@@ -42297,7 +40407,7 @@ function getFormControlUtilityClasses(slot) {
   return generateUtilityClass("MuiFormControl", slot);
 }
 generateUtilityClasses("MuiFormControl", ["root", "marginNone", "marginNormal", "marginDense", "fullWidth", "disabled"]);
-const useUtilityClasses$h = (ownerState) => {
+const useUtilityClasses$f = (ownerState) => {
   const {
     classes,
     margin: margin2,
@@ -42387,7 +40497,7 @@ const FormControl = /* @__PURE__ */ D(function FormControl2(inProps, ref) {
     size,
     variant
   };
-  const classes = useUtilityClasses$h(ownerState);
+  const classes = useUtilityClasses$f(ownerState);
   const [adornedStart, setAdornedStart] = d(() => {
     let initialAdornedStart = false;
     if (children) {
@@ -42471,7 +40581,7 @@ function getFormControlLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiFormControlLabel", slot);
 }
 const formControlLabelClasses = generateUtilityClasses("MuiFormControlLabel", ["root", "labelPlacementStart", "labelPlacementTop", "labelPlacementBottom", "disabled", "label", "error", "required", "asterisk"]);
-const useUtilityClasses$g = (ownerState) => {
+const useUtilityClasses$e = (ownerState) => {
   const {
     classes,
     disabled,
@@ -42606,7 +40716,7 @@ const FormControlLabel$1 = /* @__PURE__ */ D(function FormControlLabel(inProps, 
     required: required2,
     error: fcs.error
   };
-  const classes = useUtilityClasses$g(ownerState);
+  const classes = useUtilityClasses$e(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -42647,7 +40757,7 @@ function getFormGroupUtilityClass(slot) {
   return generateUtilityClass("MuiFormGroup", slot);
 }
 generateUtilityClasses("MuiFormGroup", ["root", "row", "error"]);
-const useUtilityClasses$f = (ownerState) => {
+const useUtilityClasses$d = (ownerState) => {
   const {
     classes,
     row,
@@ -42701,7 +40811,7 @@ const FormGroup$1 = /* @__PURE__ */ D(function FormGroup(inProps, ref) {
     row,
     error: fcs.error
   };
-  const classes = useUtilityClasses$f(ownerState);
+  const classes = useUtilityClasses$d(ownerState);
   return /* @__PURE__ */ u2(FormGroupRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -42713,8 +40823,8 @@ function getFormHelperTextUtilityClasses(slot) {
   return generateUtilityClass("MuiFormHelperText", slot);
 }
 const formHelperTextClasses = generateUtilityClasses("MuiFormHelperText", ["root", "error", "disabled", "sizeSmall", "sizeMedium", "contained", "focused", "filled", "required"]);
-var _span$3;
-const useUtilityClasses$e = (ownerState) => {
+var _span$2;
+const useUtilityClasses$c = (ownerState) => {
   const {
     classes,
     contained,
@@ -42809,7 +40919,7 @@ const FormHelperText = /* @__PURE__ */ D(function FormHelperText2(inProps, ref) 
     required: fcs.required
   };
   delete ownerState.ownerState;
-  const classes = useUtilityClasses$e(ownerState);
+  const classes = useUtilityClasses$c(ownerState);
   return /* @__PURE__ */ u2(FormHelperTextRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -42818,7 +40928,7 @@ const FormHelperText = /* @__PURE__ */ D(function FormHelperText2(inProps, ref) 
     ownerState,
     children: children === " " ? (
       // notranslate needed while Google Translate will not fix zero-width space issue
-      _span$3 || (_span$3 = /* @__PURE__ */ u2("span", {
+      _span$2 || (_span$2 = /* @__PURE__ */ u2("span", {
         className: "notranslate",
         "aria-hidden": true,
         children: "​"
@@ -42830,7 +40940,7 @@ function getFormLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiFormLabel", slot);
 }
 const formLabelClasses = generateUtilityClasses("MuiFormLabel", ["root", "colorSecondary", "focused", "disabled", "error", "filled", "required", "asterisk"]);
-const useUtilityClasses$d = (ownerState) => {
+const useUtilityClasses$b = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -42927,7 +41037,7 @@ const FormLabel = /* @__PURE__ */ D(function FormLabel2(inProps, ref) {
     focused: fcs.focused,
     required: fcs.required
   };
-  const classes = useUtilityClasses$d(ownerState);
+  const classes = useUtilityClasses$b(ownerState);
   return /* @__PURE__ */ u2(FormLabelRoot, {
     as: component,
     ownerState,
@@ -43101,7 +41211,7 @@ const Grow = /* @__PURE__ */ D(function Grow2(props, ref) {
 if (Grow) {
   Grow.muiSupportAuto = true;
 }
-const useUtilityClasses$c = (ownerState) => {
+const useUtilityClasses$a = (ownerState) => {
   const {
     classes,
     disableUnderline
@@ -43234,7 +41344,7 @@ const Input = /* @__PURE__ */ D(function Input2(inProps, ref) {
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$c(props);
+  const classes = useUtilityClasses$a(props);
   const ownerState = {
     disableUnderline
   };
@@ -43262,134 +41372,11 @@ const Input = /* @__PURE__ */ D(function Input2(inProps, ref) {
   });
 });
 Input.muiName = "Input";
-function getInputAdornmentUtilityClass(slot) {
-  return generateUtilityClass("MuiInputAdornment", slot);
-}
-const inputAdornmentClasses = generateUtilityClasses("MuiInputAdornment", ["root", "filled", "standard", "outlined", "positionStart", "positionEnd", "disablePointerEvents", "hiddenLabel", "sizeSmall"]);
-var _span$2;
-const overridesResolver$1 = (props, styles2) => {
-  const {
-    ownerState
-  } = props;
-  return [styles2.root, styles2[`position${capitalize(ownerState.position)}`], ownerState.disablePointerEvents === true && styles2.disablePointerEvents, styles2[ownerState.variant]];
-};
-const useUtilityClasses$b = (ownerState) => {
-  const {
-    classes,
-    disablePointerEvents,
-    hiddenLabel,
-    position: position2,
-    size,
-    variant
-  } = ownerState;
-  const slots = {
-    root: ["root", disablePointerEvents && "disablePointerEvents", position2 && `position${capitalize(position2)}`, variant, hiddenLabel && "hiddenLabel", size && `size${capitalize(size)}`]
-  };
-  return composeClasses(slots, getInputAdornmentUtilityClass, classes);
-};
-const InputAdornmentRoot = styled("div", {
-  name: "MuiInputAdornment",
-  slot: "Root",
-  overridesResolver: overridesResolver$1
-})(memoTheme(({
-  theme
-}) => ({
-  display: "flex",
-  maxHeight: "2em",
-  alignItems: "center",
-  whiteSpace: "nowrap",
-  color: (theme.vars || theme).palette.action.active,
-  variants: [{
-    props: {
-      variant: "filled"
-    },
-    style: {
-      [`&.${inputAdornmentClasses.positionStart}&:not(.${inputAdornmentClasses.hiddenLabel})`]: {
-        marginTop: 16
-      }
-    }
-  }, {
-    props: {
-      position: "start"
-    },
-    style: {
-      marginRight: 8
-    }
-  }, {
-    props: {
-      position: "end"
-    },
-    style: {
-      marginLeft: 8
-    }
-  }, {
-    props: {
-      disablePointerEvents: true
-    },
-    style: {
-      pointerEvents: "none"
-    }
-  }]
-})));
-const InputAdornment$1 = /* @__PURE__ */ D(function InputAdornment(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiInputAdornment"
-  });
-  const {
-    children,
-    className,
-    component = "div",
-    disablePointerEvents = false,
-    disableTypography = false,
-    position: position2,
-    variant: variantProp,
-    ...other
-  } = props;
-  const muiFormControl = useFormControl() || {};
-  let variant = variantProp;
-  if (variantProp && muiFormControl.variant) ;
-  if (muiFormControl && !variant) {
-    variant = muiFormControl.variant;
-  }
-  const ownerState = {
-    ...props,
-    hiddenLabel: muiFormControl.hiddenLabel,
-    size: muiFormControl.size,
-    disablePointerEvents,
-    position: position2,
-    variant
-  };
-  const classes = useUtilityClasses$b(ownerState);
-  return /* @__PURE__ */ u2(FormControlContext.Provider, {
-    value: null,
-    children: /* @__PURE__ */ u2(InputAdornmentRoot, {
-      as: component,
-      ownerState,
-      className: clsx(classes.root, className),
-      ref,
-      ...other,
-      children: typeof children === "string" && !disableTypography ? /* @__PURE__ */ u2(Typography$1, {
-        color: "textSecondary",
-        children
-      }) : /* @__PURE__ */ u2(S, {
-        children: [position2 === "start" ? (
-          /* notranslate needed while Google Translate will not fix zero-width space issue */
-          _span$2 || (_span$2 = /* @__PURE__ */ u2("span", {
-            className: "notranslate",
-            "aria-hidden": true,
-            children: "​"
-          }))
-        ) : null, children]
-      })
-    })
-  });
-});
 function getInputLabelUtilityClasses(slot) {
   return generateUtilityClass("MuiInputLabel", slot);
 }
 generateUtilityClasses("MuiInputLabel", ["root", "focused", "disabled", "error", "required", "asterisk", "formControl", "sizeSmall", "shrink", "animated", "standard", "filled", "outlined"]);
-const useUtilityClasses$a = (ownerState) => {
+const useUtilityClasses$9 = (ownerState) => {
   const {
     classes,
     formControl,
@@ -43578,7 +41565,7 @@ const InputLabel = /* @__PURE__ */ D(function InputLabel2(inProps, ref) {
     required: fcs.required,
     focused: fcs.focused
   };
-  const classes = useUtilityClasses$a(ownerState);
+  const classes = useUtilityClasses$9(ownerState);
   return /* @__PURE__ */ u2(InputLabelRoot, {
     "data-shrink": shrink,
     ref,
@@ -43593,7 +41580,7 @@ function getListUtilityClass(slot) {
   return generateUtilityClass("MuiList", slot);
 }
 generateUtilityClasses("MuiList", ["root", "padding", "dense", "subheader"]);
-const useUtilityClasses$9 = (ownerState) => {
+const useUtilityClasses$8 = (ownerState) => {
   const {
     classes,
     disablePadding,
@@ -43636,7 +41623,7 @@ const ListRoot = styled("ul", {
     }
   }]
 });
-const List$1 = /* @__PURE__ */ D(function List(inProps, ref) {
+const List = /* @__PURE__ */ D(function List2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiList"
@@ -43659,7 +41646,7 @@ const List$1 = /* @__PURE__ */ D(function List(inProps, ref) {
     dense,
     disablePadding
   };
-  const classes = useUtilityClasses$9(ownerState);
+  const classes = useUtilityClasses$8(ownerState);
   return /* @__PURE__ */ u2(ListContext.Provider, {
     value: context,
     children: /* @__PURE__ */ u2(ListRoot, {
@@ -43669,178 +41656,6 @@ const List$1 = /* @__PURE__ */ D(function List(inProps, ref) {
       ownerState,
       ...other,
       children: [subheader, children]
-    })
-  });
-});
-function getListItemButtonUtilityClass(slot) {
-  return generateUtilityClass("MuiListItemButton", slot);
-}
-const listItemButtonClasses = generateUtilityClasses("MuiListItemButton", ["root", "focusVisible", "dense", "alignItemsFlexStart", "disabled", "divider", "gutters", "selected"]);
-const overridesResolver = (props, styles2) => {
-  const {
-    ownerState
-  } = props;
-  return [styles2.root, ownerState.dense && styles2.dense, ownerState.alignItems === "flex-start" && styles2.alignItemsFlexStart, ownerState.divider && styles2.divider, !ownerState.disableGutters && styles2.gutters];
-};
-const useUtilityClasses$8 = (ownerState) => {
-  const {
-    alignItems,
-    classes,
-    dense,
-    disabled,
-    disableGutters,
-    divider,
-    selected
-  } = ownerState;
-  const slots = {
-    root: ["root", dense && "dense", !disableGutters && "gutters", divider && "divider", disabled && "disabled", alignItems === "flex-start" && "alignItemsFlexStart", selected && "selected"]
-  };
-  const composedClasses = composeClasses(slots, getListItemButtonUtilityClass, classes);
-  return {
-    ...classes,
-    ...composedClasses
-  };
-};
-const ListItemButtonRoot = styled(ButtonBase, {
-  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
-  name: "MuiListItemButton",
-  slot: "Root",
-  overridesResolver
-})(memoTheme(({
-  theme
-}) => ({
-  display: "flex",
-  flexGrow: 1,
-  justifyContent: "flex-start",
-  alignItems: "center",
-  position: "relative",
-  textDecoration: "none",
-  minWidth: 0,
-  boxSizing: "border-box",
-  textAlign: "left",
-  paddingTop: 8,
-  paddingBottom: 8,
-  transition: theme.transitions.create("background-color", {
-    duration: theme.transitions.duration.shortest
-  }),
-  "&:hover": {
-    textDecoration: "none",
-    backgroundColor: (theme.vars || theme).palette.action.hover,
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: "transparent"
-    }
-  },
-  [`&.${listItemButtonClasses.selected}`]: {
-    backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, (theme.vars || theme).palette.action.selectedOpacity),
-    [`&.${listItemButtonClasses.focusVisible}`]: {
-      backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.focusOpacity}`)
-    }
-  },
-  [`&.${listItemButtonClasses.selected}:hover`]: {
-    backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.hoverOpacity}`),
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: theme.alpha((theme.vars || theme).palette.primary.main, (theme.vars || theme).palette.action.selectedOpacity)
-    }
-  },
-  [`&.${listItemButtonClasses.focusVisible}`]: {
-    backgroundColor: (theme.vars || theme).palette.action.focus
-  },
-  [`&.${listItemButtonClasses.disabled}`]: {
-    opacity: (theme.vars || theme).palette.action.disabledOpacity
-  },
-  variants: [{
-    props: ({
-      ownerState
-    }) => ownerState.divider,
-    style: {
-      borderBottom: `1px solid ${(theme.vars || theme).palette.divider}`,
-      backgroundClip: "padding-box"
-    }
-  }, {
-    props: {
-      alignItems: "flex-start"
-    },
-    style: {
-      alignItems: "flex-start"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !ownerState.disableGutters,
-    style: {
-      paddingLeft: 16,
-      paddingRight: 16
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.dense,
-    style: {
-      paddingTop: 4,
-      paddingBottom: 4
-    }
-  }]
-})));
-const ListItemButton$1 = /* @__PURE__ */ D(function ListItemButton(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiListItemButton"
-  });
-  const {
-    alignItems = "center",
-    autoFocus = false,
-    component = "div",
-    children,
-    dense = false,
-    disableGutters = false,
-    divider = false,
-    focusVisibleClassName,
-    selected = false,
-    className,
-    ...other
-  } = props;
-  const context = x$1(ListContext);
-  const childContext = T$1(() => ({
-    dense: dense || context.dense || false,
-    alignItems,
-    disableGutters
-  }), [alignItems, context.dense, dense, disableGutters]);
-  const listItemRef = A$1(null);
-  useEnhancedEffect(() => {
-    if (autoFocus) {
-      if (listItemRef.current) {
-        listItemRef.current.focus();
-      }
-    }
-  }, [autoFocus]);
-  const ownerState = {
-    ...props,
-    alignItems,
-    dense: childContext.dense,
-    disableGutters,
-    divider,
-    selected
-  };
-  const classes = useUtilityClasses$8(ownerState);
-  const {
-    root,
-    ...forwardedClasses
-  } = classes;
-  const handleRef = useForkRef(listItemRef, ref);
-  return /* @__PURE__ */ u2(ListContext.Provider, {
-    value: childContext,
-    children: /* @__PURE__ */ u2(ListItemButtonRoot, {
-      ref: handleRef,
-      href: other.href || other.to,
-      component: (other.href || other.to) && component === "div" ? "button" : component,
-      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
-      ownerState,
-      className: clsx(classes.root, className),
-      ...other,
-      classes: forwardedClasses,
-      children
     })
   });
 });
@@ -44027,7 +41842,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
     }
     return child;
   });
-  return /* @__PURE__ */ u2(List$1, {
+  return /* @__PURE__ */ u2(List, {
     role: "menu",
     ref: handleRef,
     className,
@@ -44083,7 +41898,7 @@ const PopoverRoot = styled(Modal$1, {
   name: "MuiPopover",
   slot: "Root"
 })({});
-const PopoverPaper = styled(Paper$1, {
+const PopoverPaper = styled(Paper, {
   name: "MuiPopover",
   slot: "Paper"
 })({
@@ -45754,7 +43569,7 @@ const useUtilityClasses$1 = (ownerState) => {
   };
   return composeClasses(slots, getTooltipUtilityClass, classes);
 };
-const TooltipPopper = styled(Popper$1, {
+const TooltipPopper = styled(Popper2, {
   name: "MuiTooltip",
   slot: "Popper",
   overridesResolver: (props, styles2) => {
@@ -46338,7 +44153,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
   });
   return /* @__PURE__ */ u2(S, {
     children: [/* @__PURE__ */ mn(children, childrenProps), /* @__PURE__ */ u2(PopperSlot, {
-      as: PopperComponentProp ?? Popper$1,
+      as: PopperComponentProp ?? Popper2,
       placement,
       anchorEl: followCursor ? {
         getBoundingClientRect: () => ({
@@ -46593,13 +44408,6 @@ const FormControlLabel2 = FormControlLabel$1;
 const FormGroup2 = FormGroup$1;
 const Chip2 = Chip$1;
 const Popover2 = Popover$1;
-const Paper2 = Paper$1;
-const List2 = List$1;
-const ListItemButton2 = ListItemButton$1;
-const Collapse2 = Collapse$1;
-const InputAdornment2 = InputAdornment$1;
-const Popper3 = Popper$1;
-const ClickAwayListener = ClickAwayListener$1;
 const ThemeProvider = ThemeProvider$1;
 function ThinkButton({
   variant = "secondary",
@@ -47107,20 +44915,16 @@ const AddIcon = makeIcon("+", "add");
 const ChatIcon = makeIcon("💬", "chat");
 const CheckCircleIcon = makeIcon("✓", "checked");
 const CheckIcon = makeIcon("✓", "checked");
-const ChevronRightIcon = makeIcon("›", "expand");
-const ClearIcon = makeIcon("×", "clear");
 const CloseIcon = makeIcon("×", "close");
 const ContentCopyIcon = makeIcon("⧉", "copy");
 const DeleteForeverIcon = makeIcon("🗑", "delete");
 const DeleteIcon = makeIcon("−", "delete");
 const DragIndicatorIcon = makeIcon("⋮⋮", "drag");
 const EditIcon = makeIcon("✎", "edit");
-const ExpandMoreIcon = makeIcon("⌄", "expand");
 const IosShareIcon = makeIcon("⇧", "share");
 const PauseIcon = makeIcon("Ⅱ", "pause");
 const PlayArrowIcon = makeIcon("▶", "play");
 const RadioButtonUncheckedIcon = makeIcon("○", "unchecked");
-const SearchIcon = makeIcon("⌕", "search");
 const SendIcon = makeIcon("➤", "send");
 const SmartToyIcon = makeIcon("🤖", "ai");
 const StopIcon = makeIcon("■", "stop");
@@ -47155,44 +44959,6 @@ function ModalHeader({
       ) : null
     ] })
   ] });
-}
-function ThemeTreeNodeLabel({
-  depth,
-  hasChildren,
-  expanded,
-  onToggleExpand,
-  children,
-  indentUnit = 2,
-  basePadding = 1,
-  placeholderWidthPx = 24,
-  sx = {}
-}) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        display: "flex",
-        alignItems: "center",
-        pl: basePadding + depth * indentUnit,
-        ...sx
-      },
-      children: [
-        hasChildren ? /* @__PURE__ */ u2(
-          IconButton2,
-          {
-            size: "small",
-            onClick: (e2) => {
-              e2?.stopPropagation?.();
-              onToggleExpand?.(e2);
-            },
-            sx: { mr: 0.5, p: 0.25 },
-            children: expanded ? /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ChevronRightIcon, { fontSize: "small" })
-          }
-        ) : /* @__PURE__ */ u2(Box, { sx: { width: placeholderWidthPx, mr: 0.5 } }),
-        /* @__PURE__ */ u2(Box, { sx: { flex: 1, display: "flex", alignItems: "center", gap: 1 }, children })
-      ]
-    }
-  );
 }
 const thinkMuiControlComponents = {
   MuiButtonBase: {
@@ -48070,16 +45836,8 @@ function FieldManager({
     ] })
   ] });
 }
-function TagsRenderer({ tags: tags2, allThemes }) {
-  return /* @__PURE__ */ u2("div", { class: "bv-fields-list", children: tags2.map((tag) => /* @__PURE__ */ u2(
-    "span",
-    {
-      class: "tag-pill",
-      title: `标签: ${tag}`,
-      children: tag
-    },
-    tag
-  )) });
+function TagsRenderer({ tags: tags2 }) {
+  return /* @__PURE__ */ u2("div", { class: "bv-fields-list", children: tags2.map((tag) => /* @__PURE__ */ u2("span", { class: "tag-pill", title: `标签: ${tag}`, children: tag }, tag)) });
 }
 function TaskCheckbox({ done, onMarkDone }) {
   const cls = "task-checkbox" + (done ? " done" : "");
@@ -48348,529 +46106,6 @@ function diWarn(...args) {
   if (!isDiDebugEnabled()) return;
   devWarn("[DI]", ...args);
 }
-function parsePath(path) {
-  return buildHierarchyPathSegments(path);
-}
-function getOrder$1(node2) {
-  const raw = node2.theme?.order;
-  return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
-}
-function createNode(theme, path, label, depth, isLeaf, parentNode) {
-  return {
-    id: path,
-    label,
-    path,
-    depth,
-    themeId: isLeaf ? theme.id : null,
-    theme: isLeaf ? theme : null,
-    parentId: parentNode?.id ?? null,
-    children: []
-  };
-}
-function compareThemeTreeNodes(sortBy, a2, b2) {
-  if (sortBy === "label") {
-    return a2.label.localeCompare(b2.label);
-  }
-  if (sortBy === "order") {
-    const ao = getOrder$1(a2);
-    const bo = getOrder$1(b2);
-    if (ao !== null && bo !== null && ao !== bo) return ao - bo;
-    if (ao !== null && bo === null) return -1;
-    if (ao === null && bo !== null) return 1;
-  }
-  return a2.path.localeCompare(b2.path);
-}
-function sortNodes(nodes, sortBy) {
-  nodes.sort((a2, b2) => compareThemeTreeNodes(sortBy, a2, b2));
-  nodes.forEach((node2) => sortNodes(node2.children, sortBy));
-}
-function buildTreeWithVirtualNodes(themes, sortBy) {
-  const roots = [];
-  const nodeMap = /* @__PURE__ */ new Map();
-  const sortedThemes = [...themes].sort((a2, b2) => a2.path.localeCompare(b2.path));
-  for (const theme of sortedThemes) {
-    const parts = theme.path.split("/");
-    let currentPath = "";
-    let parentNode = null;
-    for (let i2 = 0; i2 < parts.length; i2++) {
-      const part = parts[i2];
-      const isLeaf = i2 === parts.length - 1;
-      currentPath = currentPath ? `${currentPath}/${part}` : part;
-      let node2 = nodeMap.get(currentPath);
-      if (!node2) {
-        const newNode = createNode(theme, currentPath, part, i2, isLeaf, parentNode);
-        node2 = newNode;
-        nodeMap.set(currentPath, newNode);
-        if (parentNode) {
-          if (!parentNode.children.some((child) => child.id === newNode.id)) {
-            parentNode.children.push(newNode);
-          }
-        } else if (!roots.some((root) => root.id === newNode.id)) {
-          roots.push(newNode);
-        }
-      } else if (isLeaf) {
-        node2.themeId = theme.id;
-        node2.theme = theme;
-      }
-      parentNode = node2;
-    }
-  }
-  sortNodes(roots, sortBy);
-  return roots;
-}
-function buildTreeWithRealNodesOnly(themes, sortBy) {
-  const themeByPath = /* @__PURE__ */ new Map();
-  for (const theme of themes) themeByPath.set(theme.path, theme);
-  const nodeByPath = /* @__PURE__ */ new Map();
-  for (const theme of themes) {
-    const parts = theme.path.split("/");
-    const label = parts[parts.length - 1] ?? theme.path;
-    nodeByPath.set(theme.path, {
-      id: theme.path,
-      label,
-      path: theme.path,
-      depth: 0,
-      themeId: theme.id,
-      theme,
-      parentId: null,
-      children: []
-    });
-  }
-  const roots = [];
-  const rootIds = /* @__PURE__ */ new Set();
-  for (const theme of themes) {
-    const node2 = nodeByPath.get(theme.path);
-    if (!node2) continue;
-    const parts = theme.path.split("/");
-    let parentPath = null;
-    if (parts.length > 1) {
-      for (let i2 = parts.length - 1; i2 >= 1; i2--) {
-        const candidate = parts.slice(0, i2).join("/");
-        if (themeByPath.has(candidate)) {
-          parentPath = candidate;
-          break;
-        }
-      }
-    }
-    if (parentPath) {
-      const parentNode = nodeByPath.get(parentPath);
-      if (parentNode) {
-        node2.parentId = parentNode.id;
-        if (!parentNode.children.some((child) => child.id === node2.id)) {
-          parentNode.children.push(node2);
-        }
-        continue;
-      }
-    }
-    if (!rootIds.has(node2.id)) {
-      roots.push(node2);
-      rootIds.add(node2.id);
-    }
-  }
-  const setDepth = (nodes, depth) => {
-    for (const node2 of nodes) {
-      node2.depth = depth;
-      if (node2.children.length > 0) setDepth(node2.children, depth + 1);
-    }
-  };
-  setDepth(roots, 0);
-  sortNodes(roots, sortBy);
-  return roots;
-}
-function buildThemeTreeNodes(themes, options = {}) {
-  const { sortBy = "path", createVirtualNodes = true } = options;
-  if (!themes || themes.length === 0) return [];
-  return createVirtualNodes ? buildTreeWithVirtualNodes(themes, sortBy) : buildTreeWithRealNodesOnly(themes, sortBy);
-}
-function flattenThemeTreeNodes(nodes, expandedIds) {
-  const result = [];
-  const traverse = (nodeList, visible = true) => {
-    for (const node2 of nodeList) {
-      const expanded = expandedIds?.has(node2.id) ?? true;
-      result.push({ ...node2, expanded, visible });
-      if (node2.children.length > 0) traverse(node2.children, visible && expanded);
-    }
-  };
-  traverse(nodes);
-  return result;
-}
-function getThemePathFromTree(nodes, themeId) {
-  const search = (nodeList) => {
-    for (const node2 of nodeList) {
-      if (node2.themeId === themeId) return node2.path;
-      const found = search(node2.children);
-      if (found) return found;
-    }
-    return null;
-  };
-  return search(nodes);
-}
-function findThemeTreeNodeByPath(nodes, path) {
-  const parts = path.split("/");
-  let current2;
-  let searchList = nodes;
-  for (const part of parts) {
-    const expectedPath = current2 ? `${current2.path}/${part}` : part;
-    current2 = searchList.find((node2) => node2.path === expectedPath);
-    if (!current2) return null;
-    searchList = current2.children;
-  }
-  return current2 ?? null;
-}
-function findThemeTreeNodeByThemeId(nodes, themeId) {
-  const search = (nodeList) => {
-    for (const node2 of nodeList) {
-      if (node2.themeId === themeId) return node2;
-      const found = search(node2.children);
-      if (found) return found;
-    }
-    return null;
-  };
-  return search(nodes);
-}
-function filterThemeTreeNodes(nodes, predicate) {
-  const filterNodes = (nodeList) => nodeList.map((node2) => {
-    const filteredChildren = filterNodes(node2.children);
-    if (predicate(node2) || filteredChildren.length > 0) {
-      return { ...node2, children: filteredChildren };
-    }
-    return null;
-  }).filter((node2) => node2 !== null);
-  return filterNodes(nodes);
-}
-function searchThemeTreeNodes(nodes, searchTerm) {
-  if (!searchTerm.trim()) return nodes;
-  const term = searchTerm.toLowerCase();
-  return filterThemeTreeNodes(nodes, (node2) => node2.label.toLowerCase().includes(term) || node2.path.toLowerCase().includes(term));
-}
-function getThemeAncestorPaths(path) {
-  const parts = path.split("/");
-  const ancestors = [];
-  let currentPath = "";
-  for (let i2 = 0; i2 < parts.length - 1; i2++) {
-    currentPath = currentPath ? `${currentPath}/${parts[i2]}` : parts[i2];
-    ancestors.push(currentPath);
-  }
-  return ancestors;
-}
-function getThemeDescendantPaths(node2) {
-  const descendants = [];
-  const collect = (current2) => {
-    if (!current2) return;
-    for (const child of current2.children || []) {
-      descendants.push(child.path);
-      collect(child);
-    }
-  };
-  collect(node2);
-  return descendants;
-}
-function getThemeLeafNodes(nodes) {
-  const leaves = [];
-  const collect = (nodeList) => {
-    for (const node2 of nodeList) {
-      if (node2.themeId !== null) leaves.push(node2);
-      collect(node2.children);
-    }
-  };
-  collect(nodes);
-  return leaves;
-}
-class ThemeTreeBuilder {
-  static buildTree(themes, options = {}) {
-    return buildThemeTreeNodes(themes, options);
-  }
-  static flattenTree(nodes, expandedIds) {
-    return flattenThemeTreeNodes(nodes, expandedIds);
-  }
-  static getThemePath(nodes, themeId) {
-    return getThemePathFromTree(nodes, themeId);
-  }
-  static findNodeByPath(nodes, path) {
-    return findThemeTreeNodeByPath(nodes, path);
-  }
-  static findNodeByThemeId(nodes, themeId) {
-    return findThemeTreeNodeByThemeId(nodes, themeId);
-  }
-  static filterTree(nodes, predicate) {
-    return filterThemeTreeNodes(nodes, predicate);
-  }
-  static searchTree(nodes, searchTerm) {
-    return searchThemeTreeNodes(nodes, searchTerm);
-  }
-  static getAncestorPaths(path) {
-    return getThemeAncestorPaths(path);
-  }
-  static getDescendantPaths(node2) {
-    return getThemeDescendantPaths(node2);
-  }
-  static getLeafNodes(nodes) {
-    return getThemeLeafNodes(nodes);
-  }
-}
-function buildThemeTree(themes, options) {
-  return ThemeTreeBuilder.buildTree(themes, options);
-}
-function searchThemeTree(nodes, searchTerm) {
-  return ThemeTreeBuilder.searchTree(nodes, searchTerm);
-}
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-function normalizedCandidatePath(theme) {
-  return String(theme.path || "").trim();
-}
-function findThemePathByPartialMatch(themes, headerText) {
-  if (!headerText || headerText.trim() === "") {
-    return null;
-  }
-  const normalizedHeader = headerText.trim().toLowerCase();
-  const allThemes = themes.map((theme) => ({ path: normalizedCandidatePath(theme), lowerPath: normalizedCandidatePath(theme).toLowerCase() })).filter((theme) => !!theme.path);
-  for (const theme of allThemes) {
-    if (theme.lowerPath === normalizedHeader) {
-      return theme.path;
-    }
-  }
-  for (const theme of allThemes) {
-    const themeName = getThemePathLeaf(theme.path).toLowerCase();
-    if (themeName === normalizedHeader) {
-      return theme.path;
-    }
-  }
-  for (const theme of allThemes) {
-    if (theme.lowerPath.endsWith(`/${normalizedHeader}`)) {
-      return theme.path;
-    }
-  }
-  const segmentPattern = new RegExp(`(^|/)${escapeRegExp(normalizedHeader)}(/|$)`, "i");
-  for (const theme of allThemes) {
-    if (segmentPattern.test(theme.lowerPath)) {
-      return theme.path;
-    }
-  }
-  for (const theme of allThemes) {
-    const themeName = getThemePathLeaf(theme.path).toLowerCase();
-    if (themeName && themeName.includes(normalizedHeader)) {
-      return theme.path;
-    }
-  }
-  return null;
-}
-function createManagedTheme(input) {
-  return {
-    id: input.id,
-    path: input.path,
-    name: getThemePathLeaf(input.path) || input.path,
-    icon: input.icon,
-    parentId: input.parentId,
-    status: input.status,
-    source: input.source,
-    usageCount: input.usageCount,
-    lastUsed: input.lastUsed,
-    order: input.order,
-    originallyPredefined: input.originallyPredefined
-  };
-}
-function findThemeByPath(themes, path) {
-  return Array.from(themes).find((theme) => theme.path === path);
-}
-function findParentThemeId(themes, path) {
-  const parts = path.split("/");
-  if (parts.length <= 1) return null;
-  const parentPath = parts.slice(0, -1).join("/");
-  return findThemeByPath(themes, parentPath)?.id || null;
-}
-function sortActiveThemes(themes) {
-  return Array.from(themes).filter((theme) => theme.status === "active").sort((a2, b2) => {
-    if (a2.usageCount !== b2.usageCount) {
-      return b2.usageCount - a2.usageCount;
-    }
-    if (a2.lastUsed && b2.lastUsed) {
-      return b2.lastUsed - a2.lastUsed;
-    }
-    return a2.order - b2.order;
-  });
-}
-function groupThemesByStatus(themes) {
-  const themeList = Array.from(themes);
-  return {
-    active: themeList.filter((theme) => theme.status === "active"),
-    inactive: themeList.filter((theme) => theme.status === "inactive"),
-    discovered: themeList.filter((theme) => theme.source === "discovered")
-  };
-}
-function extractExplicitThemeFromItem(item) {
-  return item.theme || null;
-}
-function calculateThemeCollectionStats(themes) {
-  const themeList = Array.from(themes);
-  return {
-    total: themeList.length,
-    active: themeList.filter((theme) => theme.status === "active").length,
-    inactive: themeList.filter((theme) => theme.status === "inactive").length,
-    predefined: themeList.filter((theme) => theme.source === "predefined").length,
-    discovered: themeList.filter((theme) => theme.source === "discovered").length
-  };
-}
-function buildThemeHierarchy(themes) {
-  const hierarchy = /* @__PURE__ */ new Map();
-  for (const theme of themes) {
-    const parentId = theme.parentId;
-    if (!hierarchy.has(parentId)) {
-      hierarchy.set(parentId, []);
-    }
-    hierarchy.get(parentId).push(theme);
-  }
-  return hierarchy;
-}
-function updateThemeCounterFromId(themeId, currentCounter) {
-  const idNum = parseInt(themeId.replace("theme_", ""), 10);
-  return !isNaN(idNum) && idNum > currentCounter ? idNum : currentCounter;
-}
-class ThemeManager {
-  themes = /* @__PURE__ */ new Map();
-  themeIdCounter = 0;
-  addDefaultThemes() {
-    this.addPredefinedTheme("工作", "💼");
-    this.addPredefinedTheme("生活", "🏠");
-    this.addPredefinedTheme("学习", "📚");
-    this.addPredefinedTheme("健康", "💪");
-    this.addPredefinedTheme("项目", "📁");
-  }
-  addPredefinedTheme(path, icon) {
-    const existing = findThemeByPath(this.themes.values(), path);
-    if (existing) {
-      existing.icon = icon || existing.icon;
-      existing.source = "predefined";
-      existing.status = "active";
-      existing.originallyPredefined = true;
-      return existing;
-    }
-    const theme = createManagedTheme({
-      id: this.generateThemeId(),
-      path,
-      icon,
-      parentId: this.findParentTheme(path),
-      status: "active",
-      source: "predefined",
-      usageCount: 0,
-      order: this.themes.size,
-      originallyPredefined: true
-    });
-    this.themes.set(theme.id, theme);
-    return theme;
-  }
-  discoverTheme(path) {
-    if (!path || path.trim() === "") {
-      throw new Error("主题路径不能为空");
-    }
-    const existing = findThemeByPath(this.themes.values(), path);
-    if (existing) {
-      existing.usageCount++;
-      existing.lastUsed = Date.now();
-      return existing;
-    }
-    const theme = createManagedTheme({
-      id: this.generateThemeId(),
-      path,
-      parentId: this.findParentTheme(path),
-      status: "inactive",
-      source: "discovered",
-      usageCount: 1,
-      lastUsed: Date.now(),
-      order: this.themes.size
-    });
-    this.themes.set(theme.id, theme);
-    return theme;
-  }
-  activateTheme(path) {
-    const theme = findThemeByPath(this.themes.values(), path);
-    if (theme) {
-      theme.status = "active";
-      if (theme.source === "discovered") {
-        theme.source = "predefined";
-      }
-    }
-  }
-  deactivateTheme(path) {
-    const theme = findThemeByPath(this.themes.values(), path);
-    if (theme && !theme.originallyPredefined) {
-      theme.status = "inactive";
-    }
-  }
-  getActiveThemes() {
-    return sortActiveThemes(this.themes.values());
-  }
-  getAllThemes() {
-    return groupThemesByStatus(this.themes.values());
-  }
-  extractTheme(item) {
-    return extractExplicitThemeFromItem(item);
-  }
-  findThemeByPartialMatch(headerText) {
-    return findThemePathByPartialMatch(Array.from(this.themes.values()), headerText);
-  }
-  scanDataForThemes(items) {
-    const themeSet = /* @__PURE__ */ new Set();
-    for (const item of items) {
-      const theme = this.extractTheme(item);
-      if (theme) themeSet.add(theme);
-    }
-    for (const themePath of themeSet) {
-      this.discoverTheme(themePath);
-    }
-  }
-  getThemeStats() {
-    return calculateThemeCollectionStats(this.themes.values());
-  }
-  removeTheme(path) {
-    const theme = findThemeByPath(this.themes.values(), path);
-    if (theme && !theme.originallyPredefined) {
-      return this.themes.delete(theme.id);
-    }
-    return false;
-  }
-  updateThemeIcon(path, icon) {
-    const theme = findThemeByPath(this.themes.values(), path);
-    if (theme) {
-      theme.icon = icon;
-    }
-  }
-  getThemeHierarchy() {
-    return buildThemeHierarchy(this.themes.values());
-  }
-  clearThemes() {
-    this.themes.clear();
-    this.themeIdCounter = 0;
-  }
-  exportThemes() {
-    return Array.from(this.themes.values());
-  }
-  importThemes(themes) {
-    for (const theme of themes) {
-      if (!this.themes.has(theme.id)) {
-        this.themes.set(theme.id, theme);
-        this.themeIdCounter = updateThemeCounterFromId(theme.id, this.themeIdCounter);
-      }
-    }
-  }
-  getThemeByPath(path) {
-    return findThemeByPath(this.themes.values(), path);
-  }
-  updateThemeUsage(path) {
-    const theme = this.getThemeByPath(path);
-    if (theme) {
-      theme.usageCount++;
-      theme.lastUsed = Date.now();
-    }
-  }
-  generateThemeId() {
-    return `theme_${++this.themeIdCounter}`;
-  }
-  findParentTheme(path) {
-    return findParentThemeId(this.themes.values(), path);
-  }
-}
 function registerSettingsPersistence(plugin) {
   const persistedSettingsGuard = object({
     aiSettings: object({
@@ -48878,8 +46113,8 @@ function registerSettingsPersistence(plugin) {
       persistApiKey: boolean().optional()
     }).passthrough().optional()
   }).passthrough();
-  const sanitizeForPersistence = (settings) => {
-    const cloned = toPersistedThinkSettings(settings);
+  const sanitizeForPersistence = (settings2) => {
+    const cloned = toPersistedThinkSettings(settings2);
     const parsed = persistedSettingsGuard.safeParse(cloned);
     const out = parsed.success ? parsed.data : cloned;
     if (out?.aiSettings && typeof out.aiSettings === "object") {
@@ -48897,28 +46132,26 @@ function registerSettingsPersistence(plugin) {
     async loadData() {
       return await plugin.loadData();
     },
-    async saveData(settings) {
+    async saveData(settings2) {
       if (isDisposed()) return;
-      await plugin.saveData(sanitizeForPersistence(settings));
+      await plugin.saveData(sanitizeForPersistence(settings2));
     }
   };
   instance.register(SETTINGS_PERSISTENCE_TOKEN, {
     useValue: settingsPersistence
   });
   diDebug("after register SettingsPersistence, isRegistered =", instance.isRegistered(SETTINGS_PERSISTENCE_TOKEN));
-  instance.registerSingleton(ThemeManager);
-  instance.register(THEME_MATCHER_TOKEN, { useToken: ThemeManager });
 }
 const ENERGY_RECORD_TYPE_ID$1 = RECORD_TYPE_IDS.ENERGY;
 ({
   ...ENERGY_DEFINITION
 });
 RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.captureMode !== "internal");
-function getEffectiveRecordTypes(settings) {
-  return [...getEffectiveCoreBlocks(settings), ENERGY_DEFINITION];
+function getEffectiveRecordTypes(settings2) {
+  return [...getEffectiveCoreBlocks(settings2), ENERGY_DEFINITION];
 }
-function getRecordTypeById(settings, recordTypeId) {
-  return getEffectiveRecordTypes(settings).find((item) => item.id === recordTypeId) || null;
+function getRecordTypeById(settings2, recordTypeId) {
+  return getEffectiveRecordTypes(settings2).find((item) => item.id === recordTypeId) || null;
 }
 const CONTENT_FIELD_KEY = "content";
 const FULL_DATA_FIELD_KEY = "fullData";
@@ -49043,7 +46276,7 @@ function HierarchySingleSelect({
         className: "think-native-input",
         value: search,
         onInput: (event) => setSearch(event.target.value),
-        placeholder: "搜索目标/主题路径"
+        placeholder: "搜索目标"
       }
     ),
     filtered.length > 0 ? renderLevel(
@@ -49175,8 +46408,8 @@ function QuickInputHierarchyFieldRenderer({
       options,
       selectedValue,
       onSelect: (option) => onUpdate(field.key, option?.value || ""),
-      parentLabel: getTemplateFieldSemantic(field) === "themePath" ? "父主题" : "父级",
-      childLabel: getTemplateFieldSemantic(field) === "themePath" ? "子主题" : "子级",
+      parentLabel: "父级",
+      childLabel: "子级",
       dense,
       allowClear: true,
       searchable: true
@@ -49839,9 +47072,6 @@ function QuickInputEditorView({
   selectedGoalPath,
   onSelectGoal,
   onCreateGoal,
-  templateVariants = [],
-  selectedTemplateVariantId = null,
-  onSelectTemplateVariant,
   template,
   formData,
   fieldValueOptionsByKey,
@@ -49859,7 +47089,7 @@ function QuickInputEditorView({
   if (!template) {
     return /* @__PURE__ */ u2("div", { children: "错误：找不到当前记录类型的默认配置。" });
   }
-  const shouldShowCoreBlockFallbackHint = Boolean(currentGoalPath) && templateSourceType === "core-block" && templateVariants.length === 0;
+  const shouldShowCoreBlockFallbackHint = Boolean(currentGoalPath) && templateSourceType === "core-block";
   const isTaskTemplate2 = String(currentBlockId || template?.coreBlockId || template?.id || "").replace(/^core\./, "") === "task";
   return /* @__PURE__ */ u2("div", { className: `think-quick-input-editor${dense ? " is-dense" : ""}`, children: [
     /* @__PURE__ */ u2("div", { className: "think-quick-input-context-grid", children: [
@@ -49883,21 +47113,7 @@ function QuickInputEditorView({
           }
         ),
         shouldShowCoreBlockFallbackHint && /* @__PURE__ */ u2("div", { className: "think-quick-input-context-hint", children: "当前目标没有此记录类型的专属预设，已使用记录类型默认模板。" })
-      ] }) }),
-      templateVariants.length > 0 && /* @__PURE__ */ u2(QuickInputFormRow, { label: "记录预设", children: /* @__PURE__ */ u2("div", { className: "think-quick-input-pill-row think-quick-input-template-variant-switcher", children: templateVariants.map((variant) => {
-        const isSelected = (selectedTemplateVariantId || "default") === variant.value;
-        return /* @__PURE__ */ u2(
-          SelectablePill,
-          {
-            selected: isSelected,
-            disabled: templateVariants.length <= 1,
-            onClick: () => templateVariants.length > 1 ? onSelectTemplateVariant?.(variant.value) : void 0,
-            title: variant.label,
-            children: variant.label
-          },
-          variant.value
-        );
-      }) }) })
+      ] }) })
     ] }),
     showDivider && !isTaskTemplate2 && /* @__PURE__ */ u2("div", { className: "think-quick-input-context-divider", "aria-hidden": "true" }),
     /* @__PURE__ */ u2("div", { className: "think-quick-input-fields", children: /* @__PURE__ */ u2(
@@ -49922,20 +47138,16 @@ function resolveQuickInputRecordTypeRuntime(input) {
   if (input.isEnergyDirect) {
     return {
       template: null,
-      theme: null,
       goal: input.selectedGoal,
       templateId: null,
       templateSourceType: null,
-      effectiveBlockId: ENERGY_RECORD_TYPE_ID$1,
-      templateVariantId: null
+      effectiveBlockId: ENERGY_RECORD_TYPE_ID$1
     };
   }
   return GoalTemplateResolver.resolve({
     settings: input.settings,
     blockId: input.currentBlockId,
-    goalId: input.selectedGoal?.id || input.selectedGoalId,
-    themeId: input.selectedThemeId || void 0,
-    templateVariantId: input.selectedTemplateVariantId || void 0
+    goalPath: input.selectedGoal?.path || input.selectedGoalPath
   });
 }
 const EMPTY_FORM_DATA = {};
@@ -49961,7 +47173,6 @@ const buildFieldSourceSummary = (sources) => ({
     (v2) => v2 === "invocation_context"
   ).length,
   goal_context: Object.values(sources).filter((v2) => v2 === "goal_context").length,
-  theme_context: Object.values(sources).filter((v2) => v2 === "theme_context").length,
   template_default: Object.values(sources).filter(
     (v2) => v2 === "template_default"
   ).length,
@@ -50007,10 +47218,8 @@ function hydrateQuickInputTemplateDefaults({
   current: current2,
   fieldSources,
   selectedGoal,
-  selectedGoalId,
   currentGoalPath,
   currentGoalTitle,
-  theme,
   currentPeriod,
   timeDirection
 }) {
@@ -50018,12 +47227,9 @@ function hydrateQuickInputTemplateDefaults({
   const dataForParsing = {
     ...context,
     goal: {
-      id: selectedGoal?.id || selectedGoalId || "",
       title: currentGoalTitle || "",
-      path: currentGoalPath || "",
-      themePath: selectedGoal?.themePath || theme?.path || ""
+      path: currentGoalPath || ""
     },
-    goalId: selectedGoal?.id || selectedGoalId || "",
     goalPath: currentGoalPath || "",
     ...currentPeriod ? {
       period: currentPeriod,
@@ -50036,8 +47242,7 @@ function hydrateQuickInputTemplateDefaults({
       cycleId: currentPeriod.id,
       periodId: currentPeriod.id,
       periodLabel: currentPeriod.label
-    } : {},
-    theme: theme ? { path: theme.path, icon: theme.icon || "" } : { path: selectedGoal?.themePath || "", icon: "" }
+    } : {}
   };
   let changed = false;
   const next2 = { ...current2 };
@@ -50109,90 +47314,35 @@ function hydrateQuickInputTemplateDefaults({
 }
 function deriveQuickInputInitialSelection(initialFormData, context) {
   const goalContext = readRecord(context, "__goalContext");
+  const selectedGoalPath = normalizeGoalPath(
+    readFirstString$1(initialFormData, ["goalPath", "目标"]) ?? readFirstString$1(context, ["goalPath", "目标"]) ?? readFirstString$1(goalContext, ["goalPath", "目标"]) ?? ""
+  );
   return {
-    selectedGoalId: readFirstString$1(initialFormData, ["goalId", "目标ID"]) ?? readFirstString$1(context, ["goalId", "目标ID"]) ?? readFirstString$1(goalContext, ["goalId"]) ?? null,
-    selectedGoalPath: normalizeGoalPath(
-      readFirstString$1(initialFormData, ["goalPath", "目标"]) ?? readFirstString$1(context, ["goalPath", "目标"]) ?? readFirstString$1(goalContext, ["goalPath"]) ?? ""
-    ),
-    selectedTemplateVariantId: readFirstString$1(initialFormData, [
-      "templateVariantId",
-      "goalTemplateVariantId",
-      "goalTemplateId",
-      "templateId"
-    ]) ?? readFirstString$1(context, [
-      "templateVariantId",
-      "goalTemplateVariantId",
-      "goalTemplateId",
-      "templateId"
-    ]) ?? readFirstString$1(goalContext, [
-      "templateVariantId",
-      "goalTemplateId",
-      "templateId"
-    ]) ?? null,
+    selectedGoalPath,
     timeDirection: initialFormData?.__timeDirection === "backward" ? "backward" : "forward"
   };
 }
-const splitThemePathParts = (path) => {
-  const parts = splitHierarchyPath(path);
-  return {
-    themePath: parts.path || null,
-    rootTheme: parts.root || null,
-    leafTheme: parts.leaf || null
-  };
-};
-const splitPathParts = (path) => {
-  const parts = splitHierarchyPath(path);
-  return {
-    path: parts.path || null,
-    root: parts.root || null,
-    leaf: parts.leaf || null
-  };
-};
-function getGoalPath(goal) {
-  if (!goal) return null;
-  return normalizeGoalPath(goal.goalPath || goal.title);
-}
-function themeOptions(themes) {
-  return (themes || []).map((theme) => ({
-    value: theme.path,
-    label: getLeafPath(theme.path) || theme.path,
-    icon: theme.icon
-  }));
-}
 function buildQuickInputEditorState(input) {
-  const currentTheme = input.selectedThemeId ? input.themeIdMap.get(input.selectedThemeId) ?? input.theme ?? null : input.theme ?? null;
-  const effectiveThemePath = String(
-    input.formData.themePath ?? input.formData["主题"] ?? currentTheme?.path ?? input.selectedGoal?.themePath ?? ""
-  ).trim();
-  const themeParts = splitThemePathParts(effectiveThemePath || null);
-  const templateVariantId = input.resolvedTemplateVariantId || input.selectedTemplateVariantId || null;
   return {
     blockId: input.blockId,
     coreBlockId: input.effectiveBlockId,
-    goalId: input.selectedGoal?.id || input.selectedGoalId,
     goalPath: input.currentGoalPath,
     goalTitle: input.currentGoalTitle,
     rootGoal: input.currentGoalParts.root,
     leafGoal: input.currentGoalParts.leaf,
     cycleId: input.currentPeriod?.id || null,
-    themeId: input.selectedThemeId,
     formData: {
       ...input.formData,
       templateId: input.templateId || void 0,
       goalTemplateId: input.templateId || void 0,
-      templateVariantId: templateVariantId || void 0,
-      goalTemplateVariantId: templateVariantId || void 0,
       ...input.currentPeriodFields,
       __timeDirection: input.timeDirection
     },
     meta: { timeDirection: input.timeDirection },
     template: input.template,
-    theme: currentTheme,
     templateId: input.templateId,
-    templateVariantId,
     templateSourceType: input.templateSourceType,
     fieldSources: input.fieldSources,
-    ...themeParts,
     fieldSourceSummary: buildFieldSourceSummary(input.fieldSources)
   };
 }
@@ -50301,25 +47451,17 @@ function normalizeTaskFields(fields) {
   const duration2 = { ...TASK_DURATION_FIELD, ...durationExisting || {}, key: "expectedDurationMinutes", label: "时长（分钟）", type: "number", semantic: "duration", min: durationExisting?.min ?? 1 };
   return [status, body, recurrence, recurrenceInterval, start2, end2, duration2, ...normalizedRest];
 }
-function buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, availableThemes, goalFieldOptions) {
+function buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, goalFieldOptions) {
   if (!rawTemplate?.fields?.length) return rawTemplate ?? null;
-  const themeFieldOptions = themeOptions(availableThemes);
   const task = isTaskTemplate(rawTemplate, effectiveBlockId);
   const mappedFields = rawTemplate.fields.map((field) => {
     const semantic = getTemplateFieldSemantic(field);
     if (semantic === "goalPath") return { ...field, options: goalFieldOptions };
-    if (semantic === "themePath") {
-      return {
-        ...field,
-        type: field.type === "path" ? "hierarchicalSingleSelect" : field.type,
-        options: themeFieldOptions
-      };
-    }
     if (task && ["select", "singleSelect", "radio"].includes(field.type) && field.options?.length) {
       return { ...field, autoSelectFirst: true };
     }
     return field;
-  });
+  }).filter(Boolean);
   return {
     ...rawTemplate,
     coreBlockId: effectiveBlockId || rawTemplate.coreBlockId,
@@ -50347,6 +47489,18 @@ function buildQuickInputPeriodUi(currentPeriod) {
       周期: [{ value: currentPeriod.label, label: currentPeriod.label }]
     } : {}
   };
+}
+const splitPathParts = (path) => {
+  const parts = splitHierarchyPath(path);
+  return {
+    path: parts.path || null,
+    root: parts.root || null,
+    leaf: parts.leaf || null
+  };
+};
+function getGoalPath(goal) {
+  if (!goal) return null;
+  return normalizeGoalPath(goal.path);
 }
 const LEGACY_TIME_KEYS = { startKey: "时间", endKey: "结束", durationKey: "时长" };
 const TASK_TIME_KEYS = { startKey: "startAt", endKey: "endAt", durationKey: "expectedDurationMinutes" };
@@ -50399,16 +47553,11 @@ function applyQuickInputFieldUpdate(input) {
   linked.autoKeys.forEach((autoKey) => {
     if (autoKey !== key) nextSources[autoKey] = "system_auto";
   });
-  const nextThemePath = key === "themePath" || key === "主题" ? String(rawValue ?? "").trim() || null : void 0;
   const nextGoalPath = key === "goalPath" || key === "目标" || key === "目标路径" ? normalizeGoalPath(String(rawValue ?? "")) : void 0;
   return {
     formData: linked.formData,
     fieldSources: nextSources,
-    nextThemePath,
-    nextGoalPath,
-    // Goal identity only comes from GoalSelector / GoalDefinition. A manual path
-    // edit invalidates the selected entity instead of fabricating an id from text.
-    nextGoalId: nextGoalPath === void 0 ? void 0 : null
+    nextGoalPath
   };
 }
 function applyQuickInputTimeDirectionChange(input) {
@@ -50435,13 +47584,13 @@ function applyQuickInputTimeDirectionChange(input) {
 function getOrderedGoalIndex(goal, originalIndex) {
   if (!goal) return Number.MAX_SAFE_INTEGER;
   const order2 = readNumber(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
-  return Number.isFinite(order2) ? order2 : originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER;
+  return Number.isFinite(order2) ? order2 : originalIndex.get(goal.path) ?? Number.MAX_SAFE_INTEGER;
 }
 function getGoalByDisplayPath(goals, path) {
   return goals.find((goal) => getGoalPath(goal) === path) || null;
 }
 function sortGoalsLikePresetMatrix(goals) {
-  const originalIndex = new Map(goals.map((goal, index) => [goal.id, index]));
+  const originalIndex = new Map(goals.map((goal, index) => [goal.path, index]));
   return [...goals].sort((left2, right2) => {
     const leftParts = (getGoalPath(left2) || "").split("/").filter(Boolean);
     const rightParts = (getGoalPath(right2) || "").split("/").filter(Boolean);
@@ -50467,13 +47616,14 @@ function sortGoalsLikePresetMatrix(goals) {
       return leftParts.length - rightParts.length;
     const byOrder = getOrderedGoalIndex(left2, originalIndex) - getOrderedGoalIndex(right2, originalIndex);
     if (byOrder !== 0) return byOrder;
-    return (originalIndex.get(left2.id) ?? 0) - (originalIndex.get(right2.id) ?? 0);
+    return (originalIndex.get(left2.path) ?? 0) - (originalIndex.get(right2.path) ?? 0);
   });
 }
 function goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId) {
-  if (!goal?.id || !coreBlockId) return false;
+  const goalPath = normalizeGoalPath(goal?.path);
+  if (!goalPath || !coreBlockId) return false;
   return getGoalTemplates(fullSettings.goalSettings).some(
-    (template) => template.enabled !== false && template.goalId === goal.id && template.coreBlockId === coreBlockId
+    (template) => template.enabled !== false && template.goalPath === goalPath && template.coreBlockId === coreBlockId
   );
 }
 function buildQuickInputGoalOptions(fullSettings, coreBlockId, options = {}) {
@@ -50484,17 +47634,16 @@ function buildQuickInputGoalOptions(fullSettings, coreBlockId, options = {}) {
   ]).filter((goal) => goal.status !== "archived").filter((goal) => !requirePreset || goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId));
   const result = [];
   for (const [index, goal] of sourceGoals.entries()) {
-    const normalized2 = normalizeGoalPath(goal.goalPath || goal.title);
+    const normalized2 = normalizeGoalPath(goal.path);
     if (!normalized2 || seen.has(normalized2)) continue;
     seen.add(normalized2);
-    const leaf2 = normalized2.split("/").filter(Boolean).pop() || normalized2;
+    const leaf = normalized2.split("/").filter(Boolean).pop() || normalized2;
     result.push({
-      id: goal.id,
+      id: normalized2,
       value: normalized2,
-      label: String(goal.title || "").trim() || leaf2,
+      label: leaf,
       order: index,
-      goal,
-      themePath: goal.themePath ?? null
+      goal
     });
   }
   return result;
@@ -50505,10 +47654,8 @@ function resolveQuickInputCoreBlockId(_fullSettings, blockId) {
 function applyQuickInputGoalSelection(params) {
   const { formData, fieldSources, option } = params;
   const goal = option.goal || null;
-  const goalPath = normalizeGoalPath(goal?.goalPath || option.value);
-  const goalId = goal?.id || option.id || null;
-  if (!goalPath || !goalId) throw new Error("QuickInput Goal selection requires a canonical Goal entity.");
-  const themePath = goal?.themePath || option.themePath || null;
+  const goalPath = normalizeGoalPath(goal?.path || option.value);
+  if (!goalPath) throw new Error("QuickInput Goal selection requires a canonical Goal path.");
   const nextFormData = { ...formData };
   const nextFieldSources = { ...fieldSources };
   const assign2 = (key, value, source = "goal_context") => {
@@ -50519,44 +47666,26 @@ function applyQuickInputGoalSelection(params) {
     nextFormData[key] = value;
     nextFieldSources[key] = source;
   };
-  assign2("goalId", goalId);
-  assign2("目标ID", goalId);
   assign2("goalPath", goalPath);
   assign2("目标", goalPath);
   const parts = splitGoalPath(goalPath);
   assign2("rootGoal", parts.rootGoal || "", "goal_context");
   assign2("leafGoal", parts.leafGoal || "", "goal_context");
-  if (themePath) {
-    assign2("themePath", themePath, "goal_context");
-    assign2("主题", themePath, "goal_context");
-  }
   return {
     goal,
-    goalId,
     goalPath,
-    themePath,
     formData: nextFormData,
     fieldSources: nextFieldSources
   };
 }
-function resolveQuickInputEnergyDefaultGoal(goals, defaultGoalId) {
+function resolveQuickInputEnergyDefaultGoal(goals, defaultGoalPath) {
   if (goals.length === 0) return null;
-  const preferredId = String(defaultGoalId || "").trim();
-  if (preferredId) {
-    const preferred = goals.find((option) => option.goal?.id === preferredId || option.id === preferredId);
+  const preferredPath = String(defaultGoalPath || "").trim();
+  if (preferredPath) {
+    const preferred = goals.find((option) => option.value === preferredPath || option.goal?.path === preferredPath);
     if (preferred) return preferred;
   }
   return goals[0] || null;
-}
-function resolveQuickInputEnergyThemePath(params) {
-  const explicitSources = /* @__PURE__ */ new Set(["user", "context", "edit_backfill", "invocation_context"]);
-  const formThemePath = String(params.formThemePath || "").trim();
-  if (formThemePath && params.formThemeSource && explicitSources.has(params.formThemeSource)) return formThemePath;
-  const configured = String(params.defaultThemePath || "").trim();
-  if (configured) return configured;
-  if (formThemePath) return formThemePath;
-  const goalThemePath = String(params.goalThemePath || "").trim();
-  return goalThemePath || null;
 }
 function EnergyQuickCapturePanel({
   blocks,
@@ -50566,9 +47695,7 @@ function EnergyQuickCapturePanel({
   goals,
   selectedGoalPath,
   onSelectGoal,
-  selectedGoalId,
-  defaultGoalId,
-  selectedThemePath,
+  defaultGoalPath,
   onCapture
 }) {
   const [pendingScore, setPendingScore] = d(null);
@@ -50582,8 +47709,8 @@ function EnergyQuickCapturePanel({
   const [showTargetEditor, setShowTargetEditor] = d(false);
   y(() => {
     if (selectedGoalPath || goals.length === 0) return;
-    onSelectGoal(resolveQuickInputEnergyDefaultGoal(goals, defaultGoalId));
-  }, [defaultGoalId, goals, onSelectGoal, selectedGoalPath]);
+    onSelectGoal(resolveQuickInputEnergyDefaultGoal(goals, defaultGoalPath));
+  }, [defaultGoalPath, goals, onSelectGoal, selectedGoalPath]);
   const detailedScore = T$1(
     () => calculateDetailedEnergyScore(brainScore, physicalScore),
     [brainScore, physicalScore]
@@ -50591,18 +47718,16 @@ function EnergyQuickCapturePanel({
   const hasCaptureTime = captureMode2 === "realtime" || Boolean(retrospectiveDate && retrospectiveTime);
   const captureTiming = captureMode2 === "retrospective" ? { captureMode: "retrospective", date: retrospectiveDate, time: retrospectiveTime } : { captureMode: "realtime" };
   const canCapture = Boolean(
-    selectedGoalId && selectedGoalPath && onCapture && hasCaptureTime && pendingScore === null && !isSavingDetailed
+    selectedGoalPath && onCapture && hasCaptureTime && pendingScore === null && !isSavingDetailed
   );
   const captureQuick = async (score) => {
-    if (!selectedGoalId || !selectedGoalPath || !onCapture || !canCapture) return;
+    if (!selectedGoalPath || !onCapture || !canCapture) return;
     setPendingScore(score);
     try {
       await onCapture({
         scoreMode: "quick",
         score,
-        goalId: selectedGoalId,
         goalPath: selectedGoalPath,
-        themePath: selectedThemePath || null,
         ...captureTiming
       });
     } finally {
@@ -50610,16 +47735,14 @@ function EnergyQuickCapturePanel({
     }
   };
   const captureDetailed = async () => {
-    if (!selectedGoalId || !selectedGoalPath || !onCapture || !canCapture) return;
+    if (!selectedGoalPath || !onCapture || !canCapture) return;
     setIsSavingDetailed(true);
     try {
       await onCapture({
         scoreMode: "detailed",
         brainScore: normalizeEnergyScore(brainScore),
         physicalScore: normalizeEnergyScore(physicalScore),
-        goalId: selectedGoalId,
         goalPath: selectedGoalPath,
-        themePath: selectedThemePath || null,
         ...captureTiming
       });
     } finally {
@@ -50644,10 +47767,7 @@ function EnergyQuickCapturePanel({
       /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-target__summary", children: [
         /* @__PURE__ */ u2("div", { children: [
           /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-section__title", children: "记录到" }),
-          /* @__PURE__ */ u2("div", { class: "think-quick-input-context-hint", children: [
-            selectedGoalPath || "未选择目标",
-            selectedThemePath ? ` · ${selectedThemePath}` : ""
-          ] })
+          /* @__PURE__ */ u2("div", { class: "think-quick-input-context-hint", children: selectedGoalPath || "未选择目标" })
         ] }),
         /* @__PURE__ */ u2(
           "button",
@@ -50660,10 +47780,7 @@ function EnergyQuickCapturePanel({
           }
         )
       ] }),
-      showTargetEditor && /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-target__editor", children: [
-        /* @__PURE__ */ u2(GoalSelector, { goals, selectedGoalPath, onSelect: onSelectGoal, dense: true }),
-        /* @__PURE__ */ u2("div", { class: "think-quick-input-context-hint", children: "主题不在这里临时选择；请到“设置 → 数据管理 → 记录类型 → 精力记录默认值”维护默认精力主题。" })
-      ] })
+      showTargetEditor && /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-target__editor", children: /* @__PURE__ */ u2(GoalSelector, { goals, selectedGoalPath, onSelect: onSelectGoal, dense: true }) })
     ] }),
     /* @__PURE__ */ u2("section", { class: "think-quick-input-energy-section", children: [
       /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-section__title", children: "记录时间" }),
@@ -50830,7 +47947,6 @@ function QuickInputEditor({
   getResourcePath,
   initialBlockId,
   context,
-  initialThemeId = null,
   initialFormData,
   recordInputMode = "create",
   allowBlockSwitch = true,
@@ -50842,7 +47958,6 @@ function QuickInputEditor({
   isMobileLike = false
 }) {
   const fullSettings = useSelector(selectSettings);
-  const settings = fullSettings.inputSettings;
   const initialFieldSource = recordInputMode === "create" ? "context" : "edit_backfill";
   const recordInputModeRef = A$1(recordInputMode);
   const [session, dispatchSession] = h(
@@ -50850,7 +47965,6 @@ function QuickInputEditor({
     initializeRecordInputSession({
       mode: recordInputMode,
       initialBlockId,
-      initialThemeId,
       initialFormData: initialFormData ?? EMPTY_FORM_DATA,
       initialFieldSources: buildInitialFieldSources(initialFormData, initialFieldSource),
       initialSelection: deriveQuickInputInitialSelection(initialFormData, context)
@@ -50858,10 +47972,7 @@ function QuickInputEditor({
   );
   const {
     currentBlockId,
-    selectedThemeId,
-    selectedGoalId,
     selectedGoalPath,
-    selectedTemplateVariantId,
     formData,
     fieldSources,
     timeDirection
@@ -50874,13 +47985,12 @@ function QuickInputEditor({
       payload: {
         mode: modeForReset,
         initialBlockId,
-        initialThemeId,
         initialFormData: initialFormData ?? EMPTY_FORM_DATA,
         initialFieldSources: buildInitialFieldSources(initialFormData, sourceForReset),
         initialSelection: deriveQuickInputInitialSelection(initialFormData, context)
       }
     });
-  }, [initialBlockId, initialThemeId, context]);
+  }, [initialBlockId, context]);
   y(() => {
     recordInputModeRef.current = recordInputMode;
     dispatchSession({ type: "setMode", mode: recordInputMode });
@@ -50891,41 +48001,17 @@ function QuickInputEditor({
     [blocks, currentBlockId]
   );
   const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID$1 && currentRecordType.captureMode === "direct";
-  const themes = T$1(() => settings.themes || [], [settings.themes]);
-  const { availableThemes, themeIdMap, pathToIdMap } = T$1(() => {
-    return {
-      availableThemes: themes || [],
-      themeIdMap: new Map((themes || []).map((t3) => [t3.id, t3])),
-      pathToIdMap: new Map((themes || []).map((t3) => [t3.path, t3.id]))
-    };
-  }, [themes]);
   const selectedGoal = T$1(() => {
     const goals = fullSettings.goalSettings?.goals || [];
-    return selectedGoalId ? goals.find((goal) => goal.id === selectedGoalId) || null : null;
-  }, [fullSettings.goalSettings?.goals, selectedGoalId]);
+    return selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) || null : null;
+  }, [fullSettings.goalSettings?.goals, selectedGoalPath]);
   const currentEffectiveBlockIdForTemplates = T$1(
     () => isEnergyDirect ? "" : resolveQuickInputCoreBlockId(fullSettings, currentBlockId),
     [fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks, currentBlockId, isEnergyDirect]
   );
-  const goalTemplateVariants = T$1(() => {
-    const goal = selectedGoal || null;
-    if (!goal || !currentEffectiveBlockIdForTemplates) return [];
-    return getGoalTemplateVariants(fullSettings.goalSettings, goal, currentEffectiveBlockIdForTemplates);
-  }, [fullSettings.goalSettings, selectedGoal, currentEffectiveBlockIdForTemplates]);
-  y(() => {
-    if (!goalTemplateVariants.length) {
-      if (selectedTemplateVariantId) dispatchSession({ type: "selectTemplateVariant", variantId: null });
-      return;
-    }
-    const exists = selectedTemplateVariantId && goalTemplateVariants.some((template2) => template2.variantId === selectedTemplateVariantId || template2.id === selectedTemplateVariantId);
-    if (!exists) {
-      const next2 = goalTemplateVariants[0];
-      dispatchSession({ type: "selectTemplateVariant", variantId: next2?.variantId || "default" });
-    }
-  }, [goalTemplateVariants, selectedTemplateVariantId]);
-  const { template: rawTemplate, theme, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId, templateVariantId: resolvedTemplateVariantId } = T$1(
-    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedThemeId, selectedTemplateVariantId }),
-    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedThemeId, selectedTemplateVariantId]
+  const { template: rawTemplate, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId } = T$1(
+    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath }),
+    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath]
   );
   const goalOptions = T$1(
     () => buildQuickInputGoalOptions(fullSettings, currentEffectiveBlockIdForTemplates, { requirePreset: !isEnergyDirect }),
@@ -50938,9 +48024,9 @@ function QuickInputEditor({
     const stillVisible = goalOptions.some((option) => option.value === selectedPath);
     if (stillVisible) return;
     dispatchSession({ type: "clearGoalContext" });
-  }, [goalOptions, selectedGoal?.goalPath, selectedGoalPath]);
+  }, [goalOptions, selectedGoal?.path, selectedGoalPath]);
   const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
-  const currentGoalTitle = String(selectedGoal?.title || resolvedGoal?.title || "").trim() || (currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null);
+  const currentGoalTitle = currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null;
   const currentGoalParts = splitPathParts(currentGoalPath);
   const currentRecordDate = String(formData["日期"] ?? formData.date ?? dayjs().format("YYYY-MM-DD")).trim();
   const periodPolicy = isEnergyDirect ? null : resolveTemplatePeriodPolicy(rawTemplate);
@@ -50949,8 +48035,8 @@ function QuickInputEditor({
   const currentPeriodFields = currentPeriodUi.fields;
   const currentPeriodOptions = currentPeriodUi.options;
   const template = T$1(
-    () => isEnergyDirect ? null : buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, availableThemes, goalFieldOptions),
-    [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions, isEnergyDirect]
+    () => isEnergyDirect ? null : buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, goalFieldOptions),
+    [rawTemplate, effectiveBlockId, goalFieldOptions, isEnergyDirect]
   );
   const showTimeDirectionControl = T$1(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
   y(() => {
@@ -50961,10 +48047,8 @@ function QuickInputEditor({
       current: formData,
       fieldSources,
       selectedGoal,
-      selectedGoalId,
       currentGoalPath,
       currentGoalTitle,
-      theme,
       currentPeriod,
       timeDirection
     });
@@ -50974,48 +48058,32 @@ function QuickInputEditor({
       formData: hydrated.formData,
       fieldSources: hydrated.fieldSources
     });
-  }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle, formData, fieldSources, isEnergyDirect]);
-  y(() => {
-    const presetThemePath = String(formData.themePath ?? formData["主题"] ?? "").trim();
-    if (!presetThemePath) return;
-    const nextThemeId = pathToIdMap.get(presetThemePath) ?? null;
-    if (nextThemeId && nextThemeId !== selectedThemeId) dispatchSession({ type: "selectTheme", themeId: nextThemeId });
-  }, [formData.themePath, formData["主题"], pathToIdMap, selectedThemeId]);
+  }, [template, context, timeDirection, selectedGoalPath, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle, formData, fieldSources, isEnergyDirect]);
   const makeEditorState = (draftFormData, directionOverride = timeDirection, sourceOverride = fieldSources) => buildQuickInputEditorState({
     blockId: currentBlockId,
     effectiveBlockId: isEnergyDirect ? ENERGY_RECORD_TYPE_ID$1 : effectiveBlockId,
-    selectedGoal,
-    selectedGoalId,
     currentGoalPath,
     currentGoalTitle,
     currentGoalParts,
     currentPeriod,
-    selectedThemeId,
-    themeIdMap,
-    theme,
     formData: draftFormData,
     currentPeriodFields,
     timeDirection: directionOverride,
     template,
     templateId,
-    resolvedTemplateVariantId,
-    selectedTemplateVariantId,
     templateSourceType,
     fieldSources: sourceOverride
   });
   y(() => {
     onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
-  }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme]);
+  }, [currentBlockId, effectiveBlockId, selectedGoalPath, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, formData, timeDirection, template, templateId, templateSourceType, fieldSources]);
   const handleUpdateField = (key, value, isOptionObject2 = false) => {
     const updated = applyQuickInputFieldUpdate({ formData, fieldSources, key, value, isOptionObject: isOptionObject2, timeDirection });
     dispatchSession({
       type: "updateDraft",
       formData: updated.formData,
       fieldSources: updated.fieldSources,
-      selectedThemeId: updated.nextThemePath !== void 0 ? updated.nextThemePath ? pathToIdMap.get(updated.nextThemePath) ?? null : null : void 0,
-      selectedGoalPath: updated.nextGoalPath !== void 0 ? updated.nextGoalPath : void 0,
-      selectedGoalId: updated.nextGoalPath !== void 0 ? updated.nextGoalId ?? null : void 0,
-      selectedTemplateVariantId: updated.nextGoalPath !== void 0 ? null : void 0
+      selectedGoalPath: updated.nextGoalPath !== void 0 ? updated.nextGoalPath : void 0
     });
   };
   const handleTimeDirectionChange = (nextDirection) => {
@@ -51033,15 +48101,13 @@ function QuickInputEditor({
   };
   const handleSelectGoal = (option) => {
     if (!option || !option.value) {
-      dispatchSession({ type: "selectGoal", goalId: null, goalPath: null });
+      dispatchSession({ type: "selectGoal", goalPath: null });
       return;
     }
     const nextSelection = applyQuickInputGoalSelection({ formData, fieldSources, option });
     dispatchSession({
       type: "selectGoal",
-      goalId: nextSelection.goalId,
       goalPath: nextSelection.goalPath,
-      selectedThemeId: nextSelection.themePath ? pathToIdMap.get(nextSelection.themePath) ?? null : void 0,
       formData: nextSelection.formData,
       fieldSources: nextSelection.fieldSources
     });
@@ -51057,9 +48123,7 @@ function QuickInputEditor({
         goals: goalOptions,
         selectedGoalPath: currentGoalPath,
         onSelectGoal: handleSelectGoal,
-        selectedGoalId: selectedGoal?.id || selectedGoalId || null,
-        defaultGoalId: fullSettings.energySettings?.defaultGoalId || null,
-        selectedThemePath: resolveQuickInputEnergyThemePath({ formThemePath: formData.themePath ?? formData["主题"], formThemeSource: fieldSources.themePath ?? fieldSources["主题"], defaultThemePath: fullSettings.energySettings?.defaultThemePath, goalThemePath: selectedGoal?.themePath }),
+        defaultGoalPath: fullSettings.energySettings?.defaultGoalPath || null,
         onCapture: onEnergyCapture
       }
     );
@@ -51076,9 +48140,6 @@ function QuickInputEditor({
       selectedGoalPath: currentGoalPath,
       onSelectGoal: handleSelectGoal,
       onCreateGoal: void 0,
-      templateVariants: goalTemplateVariants.map((template2) => ({ value: template2.variantId || "default", label: template2.name || template2.variantId || "默认模板" })),
-      selectedTemplateVariantId: resolvedTemplateVariantId || selectedTemplateVariantId,
-      onSelectTemplateVariant: (variantId) => dispatchSession({ type: "selectTemplateVariant", variantId }),
       template,
       formData,
       fieldValueOptionsByKey: currentPeriodOptions,
@@ -51329,18 +48390,13 @@ function useQuickInputOutputPlan({
     try {
       return buildRecordOutputPlan({
         template: currentState.template,
-        formData: currentState.formData || {},
-        theme: currentState.theme,
-        templateMeta: {
-          templateId: currentState.templateId ?? void 0,
-          templateSourceType: currentState.templateSourceType ?? void 0
-        }
+        formData: currentState.formData || {}
       });
     } catch (error) {
       diagnosticWarn("[记录调试][保存计划] 计算实时 OutputPlan 失败，回退到初始计划", error);
       return preparedRecord.outputPlan ?? null;
     }
-  }, [currentState.template, currentState.theme, currentState.formData, currentState.templateId, currentState.templateSourceType, preparedRecord.outputPlan]);
+  }, [currentState.template, currentState.formData, preparedRecord.outputPlan]);
   const livePersistencePlan = T$1(() => {
     if (!liveOutputPlan) return preparedRecord.persistencePlan ?? null;
     return buildRecordPersistencePlan({
@@ -51563,7 +48619,6 @@ function QuickInputModalContent({
   getResourcePath,
   initialBlockId,
   context,
-  initialThemeId,
   onSave,
   closeModal,
   allowBlockSwitch,
@@ -51574,7 +48629,7 @@ function QuickInputModalContent({
   onSubmitSuccess,
   showNotice
 }) {
-  const settings = useSelector(selectInputSettings);
+  const settings2 = useSelector(selectInputSettings);
   const fullSettings = useSelector(selectSettings);
   const useCases = useUseCases();
   const dataStore = useDataStore();
@@ -51583,17 +48638,15 @@ function QuickInputModalContent({
       return useCases.recordInput.prepareEditRecord({
         item: editItem,
         blockId: initialBlockId,
-        themeId: initialThemeId ?? null,
         source: "quickinput"
       });
     }
     return useCases.recordInput.prepareCreateRecord({
       blockId: initialBlockId,
-      themeId: initialThemeId ?? null,
       context,
       source: onSave ? "timer" : source ?? "quickinput"
     });
-  }, [useCases, initialBlockId, initialThemeId, context, mode, editItem, onSave, source]);
+  }, [useCases, initialBlockId, context, mode, editItem, onSave, source]);
   const [isRescanningRecoveryPaths, setIsRescanningRecoveryPaths] = d(false);
   const [editOperationMode, setEditOperationMode] = d("edit");
   const [editorResetVersion, setEditorResetVersion] = d(0);
@@ -51602,11 +48655,9 @@ function QuickInputModalContent({
   const outputPlanMode = operationMode === "duplicate" ? "create" : mode;
   const [editorState, setEditorState] = d({
     blockId: preparedRecord.blockId || initialBlockId,
-    themeId: preparedRecord.themeId,
     formData: preparedRecord.initialFormData,
     meta: { timeDirection: "forward" },
     template: null,
-    theme: null,
     templateId: null,
     templateSourceType: null
   });
@@ -51630,7 +48681,7 @@ function QuickInputModalContent({
     });
   }, []);
   const currentState = editorStateRef.current || editorState;
-  const currentBlock = (settings.blocks || []).find((block) => block.id === currentState.blockId);
+  const currentBlock = (settings2.blocks || []).find((block) => block.id === currentState.blockId);
   const currentRecordType = getRecordTypeById(fullSettings, currentState.blockId);
   const currentBlockName = currentRecordType?.name || currentBlock?.name || currentState.template?.name || currentState.blockId;
   const isEnergyDirect = mode === "create" && currentState.blockId === ENERGY_RECORD_TYPE_ID$1;
@@ -51678,9 +48729,7 @@ function QuickInputModalContent({
     const now2 = dayjs();
     const isRetrospective = request.captureMode === "retrospective";
     const common2 = {
-      goalId: request.goalId,
       goalPath: request.goalPath,
-      themePath: request.themePath || void 0,
       date: isRetrospective ? request.date : now2.format("YYYY-MM-DD"),
       time: isRetrospective ? request.time : now2.format("HH:mm"),
       captureMode: request.captureMode,
@@ -51745,7 +48794,6 @@ function QuickInputModalContent({
       {
         getResourcePath,
         initialBlockId: preparedRecord.blockId || initialBlockId,
-        initialThemeId: preparedRecord.themeId,
         initialFormData: preparedRecord.initialFormData,
         context: mode === "edit" ? void 0 : context,
         recordInputMode: editorSessionMode,
@@ -51949,11 +48997,10 @@ function showQuickInputNotice(message, tone = "error") {
   new obsidian.Notice(payload.text, payload.duration);
 }
 class QuickInputModal extends obsidian.Modal {
-  constructor(app, blockId, context, themeId, onSave, allowBlockSwitch = true, options) {
+  constructor(app, blockId, context, onSave, allowBlockSwitch = true, options) {
     super(app);
     this.blockId = blockId;
     this.context = context;
-    this.themeId = themeId;
     this.onSave = onSave;
     this.allowBlockSwitch = allowBlockSwitch;
     this.options = options;
@@ -51961,7 +49008,6 @@ class QuickInputModal extends obsidian.Modal {
   }
   blockId;
   context;
-  themeId;
   onSave;
   allowBlockSwitch;
   options;
@@ -51996,7 +49042,6 @@ class QuickInputModal extends obsidian.Modal {
           getResourcePath: (path) => resolveVaultResourcePath(this.app, path),
           initialBlockId: this.blockId,
           context: this.context,
-          initialThemeId: this.themeId,
           onSave: this.onSave,
           closeModal: () => this.close(),
           allowBlockSwitch: this.allowBlockSwitch,
@@ -52045,7 +49090,7 @@ class QuickInputModal extends obsidian.Modal {
 function openCreateModal(app, config2, source = "view_quick_create", options = {}) {
   if (!config2?.blockId) return false;
   const modalApp = app;
-  new QuickInputModal(modalApp, config2.blockId, config2.context, config2.themeId, void 0, options.allowBlockSwitch ?? true, {
+  new QuickInputModal(modalApp, config2.blockId, config2.context, void 0, options.allowBlockSwitch ?? true, {
     mode: "create",
     source
   }).open();
@@ -52063,7 +49108,6 @@ function openCreateFromViewHeader(params) {
       params.app,
       ENERGY_RECORD_TYPE_ID$1,
       goalPath ? { goalPath } : void 0,
-      void 0,
       void 0,
       true,
       { mode: "create", source: "view_quick_create" }
@@ -52126,17 +49170,6 @@ function buildTimelineCreateConfig(params) {
 function openCreateFromTimeline(params) {
   return openCreateModal(params.app, buildTimelineCreateConfig(params), "view_quick_create", { allowBlockSwitch: false });
 }
-function resolveHeatmapThemeId(themesByPath, themePath, item) {
-  if (!themesByPath) return void 0;
-  if (themePath && themePath !== "__default__") {
-    return themesByPath.get(themePath)?.id;
-  }
-  const itemThemePath = getItemThemePath(item);
-  if (itemThemePath) {
-    return themesByPath.get(itemThemePath)?.id;
-  }
-  return void 0;
-}
 function firstNonEmptyText(...values2) {
   for (const value of values2) {
     if (value === void 0 || value === null) continue;
@@ -52155,11 +49188,8 @@ function buildHeatmapRatingContext(item) {
   if (!item) return {};
   const score = firstNonEmptyText(item.rating, item.extra?.["评分"], item.extra?.rating);
   const visual = firstNonEmptyText(
-    item.pintu,
     item.image,
     item.extra?.["图片"],
-    item.extra?.["评图"],
-    item.extra?.pintu,
     item.extra?.image
   );
   if (!score && !visual) return {};
@@ -52170,65 +49200,30 @@ function buildHeatmapRatingContext(item) {
     }
   };
 }
-function buildGoalContext(params) {
-  if (!params.goalPath && !params.goalId && !params.templateId && !params.templateVariantId) return null;
-  return {
-    ...params.goalPath ? { goalPath: params.goalPath } : {},
-    ...params.goalId ? { goalId: params.goalId } : {},
-    ...params.templateId ? { templateId: params.templateId, goalTemplateId: params.templateId } : {},
-    ...params.templateVariantId ? { templateVariantId: params.templateVariantId, goalTemplateVariantId: params.templateVariantId } : {}
-  };
-}
-function addGoalContextAliases(context, params) {
-  if (params.goalPath) {
-    context["目标"] = params.goalPath;
-    context.goalPath = params.goalPath;
-  }
-  if (params.goalId) {
-    context["目标ID"] = params.goalId;
-    context.goalId = params.goalId;
-  }
-  if (params.templateId) {
-    context["模板ID"] = params.templateId;
-    context.templateId = params.templateId;
-    context.goalTemplateId = params.templateId;
-  }
-  if (params.templateVariantId) {
-    context.templateVariantId = params.templateVariantId;
-    context.goalTemplateVariantId = params.templateVariantId;
-  }
-}
 function buildHeatmapCreateConfig(params) {
-  const resolvedBlockId = params.sourceBlockId || params.item?.templateId || params.item?.categoryKey;
+  const resolvedBlockId = params.sourceBlockId || (params.item?.coreBlock ? `core.${params.item.coreBlock}` : null);
   if (!resolvedBlockId) return null;
-  const themeId = resolveHeatmapThemeId(params.themesByPath, params.themePath, params.item);
-  const themePath = params.themePath && params.themePath !== "__default__" ? params.themePath : getItemThemePath(params.item);
+  const goalPath = firstNonEmptyText(params.goalPath, params.item?.goalPath);
   const context = {
     日期: params.date,
     __recordUiContext: {
       kind: "heatmap_create",
       timeContext: { date: params.date },
-      themeContext: themePath ? { themePath } : null,
-      goalContext: buildGoalContext(params)
+      goalContext: goalPath ? { goalPath } : null
     },
     ...params.item ? { 内容: params.item.content || "" } : {},
     ...buildHeatmapRatingContext(params.item)
   };
-  if (themePath) {
-    context["主题"] = themePath;
-    context.themePath = themePath;
+  if (goalPath) {
+    context["目标"] = goalPath;
+    context.goalPath = goalPath;
   }
-  addGoalContextAliases(context, params);
-  return {
-    blockId: resolvedBlockId,
-    context,
-    themeId
-  };
+  return { blockId: resolvedBlockId, context };
 }
 function openCreateFromHeatmap(params) {
   const config2 = buildHeatmapCreateConfig(params);
   if (!config2) {
-    params.notice?.("当前热力图没有可用于新增的模板，请先为该热力图配置 sourceBlockId，或保证该主题下至少已有一条记录可供推断模板。");
+    params.notice?.("当前热力图没有可用于新增的核心 Block，请先配置 sourceBlockId。");
     return false;
   }
   return openCreateModal(params.app, config2, "view_quick_create");
@@ -52270,7 +49265,7 @@ function resolveStatisticsAnchorDate(cell, fallbackDate) {
       return fallbackDate;
   }
 }
-function buildStatisticsExplicitContext(payload, anchorDate, periodContext, filters, themeId) {
+function buildStatisticsExplicitContext(payload, anchorDate, periodContext, filters2) {
   const cell = payload?.cellIdentifier;
   return {
     __recordUiContext: {
@@ -52287,14 +49282,11 @@ function buildStatisticsExplicitContext(payload, anchorDate, periodContext, filt
       categoryContext: {
         category: cell?.category
       },
-      themeContext: {
-        themeId: themeId ?? null
-      },
       goalContext: payload?.context?.__goalContext || null,
       filterContext: {
         title: payload?.title,
         blocksCount: payload?.blocks?.length ?? 0,
-        filters: filters || []
+        filters: filters2 || []
       }
     },
     ...payload?.context || {}
@@ -52315,8 +49307,7 @@ function buildStatisticsCreateConfig(params) {
         params.payload,
         anchorDate,
         periodContext,
-        params.viewInstance.filters,
-        void 0
+        params.viewInstance.filters
       )
     };
   }
@@ -52329,15 +49320,13 @@ function buildStatisticsCreateConfig(params) {
   if (!base) return null;
   return {
     blockId: base.blockId,
-    themeId: base.themeId,
     context: {
       ...base.context || {},
       ...buildStatisticsExplicitContext(
         params.payload,
         anchorDate,
         periodContext,
-        params.viewInstance.filters,
-        base.themeId
+        params.viewInstance.filters
       )
     }
   };
@@ -52359,7 +49348,6 @@ function deriveEntryContext(item, openedFrom = "unknown") {
     entryId: item.id,
     sourcePath: sourcePath2,
     sourceLine,
-    templateId: item.templateId || null,
     categoryKey: item.categoryKey || null,
     openedFrom: openedFrom || "unknown"
   };
@@ -52372,7 +49360,8 @@ function openEditFromItem(params) {
     }
   };
   const modalApp = params.app;
-  new QuickInputModal(modalApp, params.item.templateId || params.item.categoryKey || "", editContext, void 0, void 0, false, {
+  const blockId = params.item.coreBlock ? `core.${String(params.item.coreBlock).replace(/^core\./, "")}` : "";
+  new QuickInputModal(modalApp, blockId, editContext, void 0, false, {
     mode: "edit",
     editItem: params.item
   }).open();
@@ -52539,8 +49528,7 @@ async function commitExcelCellFromView(params) {
   }
   const prepared = params.useCases.recordInput.prepareEditRecord({
     item: params.item,
-    blockId: params.item.templateId || params.item.categoryKey || "",
-    themeId: null,
+    blockId: params.item.coreBlock ? `core.${String(params.item.coreBlock).replace(/^core\./, "")}` : "",
     source: "quickinput"
   });
   if (!prepared.blockId) {
@@ -52565,7 +49553,6 @@ async function commitExcelCellFromView(params) {
     () => params.useCases.recordInput.submitUpdateRecord({
       item: params.item,
       blockId,
-      themeId: prepared.themeId,
       formData,
       source: "quickinput"
     }),
@@ -52734,42 +49721,19 @@ function AiBatchConfirmFooter({ saved, skipped, onSkip, onSave, onComplete }) {
   ] });
 }
 function resolveGoalForAiTarget(goalSettings, target) {
-  const goals = goalSettings?.goals || [];
-  if (!goals.length) return null;
-  const targetGoalId = String(target.goalId || "").trim();
-  if (targetGoalId) {
-    const byId = goals.find((goal) => goal.id === targetGoalId);
-    if (byId) return byId;
-  }
-  const targetGoalPath = splitGoalPath(String(target.goalPath || "")).goalPath;
-  if (targetGoalPath) {
-    const byPath = goals.find((goal) => splitGoalPath(String(goal.goalPath || goal.title || "")).goalPath === targetGoalPath);
-    if (byPath) return byPath;
-  }
-  return null;
+  const targetPath = normalizeGoalPath(String(target.goalPath || ""));
+  if (!targetPath) return null;
+  return (goalSettings?.goals || []).find(
+    (goal) => normalizeGoalPath(goal.path) === targetPath
+  ) || null;
 }
 function resolvePresetForAiTarget(goalSettings, goal, blockId, target) {
   if (!goal || !blockId) return null;
-  const variants = getGoalTemplateVariants(goalSettings, goal, blockId) || [];
-  if (!variants.length) return null;
-  const exact = String(target.goalTemplateId || "").trim();
-  if (exact) {
-    const matched = variants.find((preset) => preset.id === exact);
-    if (matched) return matched;
-  }
-  const variantId = String(target.templateVariantId || "").trim();
-  if (variantId) {
-    const matched = variants.find((preset) => preset.variantId === variantId || preset.id === variantId || preset.name === variantId);
-    if (matched) return matched;
-  }
-  return variants[0] || null;
-}
-function readPresetThemePath(preset) {
-  const values2 = asUnknownRecord(preset?.defaultValues);
-  const direct = readFirstString$1(values2, ["themePath", "主题"]);
-  if (direct) return direct;
-  const wrapped = asUnknownRecord(values2?.themePath) ?? asUnknownRecord(values2?.["主题"]);
-  return readFirstString$1(wrapped, ["value", "label"]);
+  const resolved = findGoalTemplate(goalSettings, goal, blockId);
+  if (!resolved || resolved.enabled === false) return null;
+  const explicitId = String(target.goalTemplateId || "").trim();
+  if (explicitId && resolved.id !== explicitId) return null;
+  return resolved;
 }
 function shortDisplay(value, fallback = "—", max2 = 32) {
   const text2 = String(value ?? "").trim();
@@ -52777,58 +49741,36 @@ function shortDisplay(value, fallback = "—", max2 = 32) {
   return text2.length > max2 ? `${text2.slice(0, max2 - 1)}…` : text2;
 }
 function presetDisplayName(preset) {
-  if (!preset) return "CoreBlock 默认";
-  return String(preset.name || preset.variantId || "默认预设").trim() || "默认预设";
+  return preset ? "已配置" : "记录类型默认";
 }
 function goalDisplayName(goal, goalPath) {
-  if (goal?.title) return String(goal.title);
-  const normalized2 = splitGoalPath(String(goal?.goalPath || goalPath || "")).leafGoal;
-  return normalized2 || String(goalPath || "未匹配目标");
+  const path = normalizeGoalPath(goal?.path || goalPath || "");
+  return splitGoalPath(path).leafGoal || path || "未匹配目标";
 }
 function buildAiBatchConfirmRecordItems({
   items,
   blocks,
-  themes,
   goalSettings,
   inputSettings
 }) {
   return items.map((cmd, index) => {
     let block = cmd.target.blockId ? blocks.find((entry) => entry.id === cmd.target.blockId) : void 0;
-    if (!block && cmd.target.categoryKey) {
-      block = blocks.find((entry) => entry.categoryKey === cmd.target.categoryKey);
-    }
+    if (!block && cmd.target.categoryKey) block = blocks.find((entry) => entry.categoryKey === cmd.target.categoryKey);
     if (!block && blocks.length > 0) block = blocks[0];
     const goal = resolveGoalForAiTarget(goalSettings, cmd.target);
-    const goalPath = goal ? splitGoalPath(String(goal.goalPath || goal.title || "")).goalPath : splitGoalPath(String(cmd.target.goalPath || "")).goalPath;
-    const goalId = goal?.id || String(cmd.target.goalId || "").trim() || void 0;
+    const goalPath = normalizeGoalPath(goal?.path || cmd.target.goalPath || "");
     const preset = block ? resolvePresetForAiTarget(goalSettings, goal, block.id, cmd.target) : null;
-    const presetThemePath = readPresetThemePath(preset);
-    let themeId;
-    const preferredTheme = presetThemePath || cmd.target.themeId;
-    if (preferredTheme) {
-      const theme = themes.find((entry) => entry.id === preferredTheme || entry.path === preferredTheme);
-      if (theme) themeId = theme.id;
-    }
-    if (!themeId && themes.length > 0) themeId = themes[0].id;
-    const selectedTheme = themeId ? themes.find((entry) => entry.id === themeId) : void 0;
-    const aiThemePath = cmd.target.themeId ? themes.find((entry) => entry.id === cmd.target.themeId || entry.path === cmd.target.themeId)?.path : void 0;
-    const themePath = presetThemePath || selectedTheme?.path || aiThemePath || void 0;
-    const initialTemplate = preset || (block ? getEffectiveTemplate(inputSettings, block.id, themeId).template : void 0);
+    const initialTemplate = preset || (block ? getEffectiveTemplate(inputSettings, block.id).template : void 0);
     const initialFormData = {
       ...cmd.fieldValues || {},
-      ...goalId ? { goalId, "目标ID": goalId } : {},
-      ...goalPath ? { goalPath, "目标": goalPath } : {},
-      ...preset ? { templateVariantId: preset.variantId || "default", goalTemplateVariantId: preset.variantId || "default" } : {},
-      ...themePath ? { themePath, "主题": themePath } : {}
+      ...goalPath ? { goalPath, "目标": goalPath } : {}
     };
     return {
       id: `record-${index}`,
       cmd,
       blockId: block?.id || "",
-      themeId,
-      goalLabel: goalDisplayName(goal, goalPath ?? void 0),
+      goalLabel: goalDisplayName(goal, goalPath || void 0),
       presetLabel: presetDisplayName(preset),
-      themePath,
       formData: normalizeRecordInputFormDataForTemplate(initialTemplate ?? void 0, initialFormData),
       saved: false,
       skipped: false
@@ -52844,11 +49786,7 @@ function findNextPendingAiBatchConfirmIndex(records, currentIndex) {
 function summarizeAiBatchConfirmRecords(records) {
   const savedCount = records.filter((record) => record.saved).length;
   const skippedCount = records.filter((record) => record.skipped).length;
-  return {
-    savedCount,
-    skippedCount,
-    pendingCount: records.length - savedCount - skippedCount
-  };
+  return { savedCount, skippedCount, pendingCount: records.length - savedCount - skippedCount };
 }
 function buildAiBatchConfirmRecordContext(record) {
   return buildRecordDraftContext(record.cmd.fieldValues, record.formData);
@@ -52856,7 +49794,6 @@ function buildAiBatchConfirmRecordContext(record) {
 function buildAiBatchConfirmCreateSubmitParams(record) {
   return {
     blockId: record.blockId,
-    themeId: record.themeId ?? null,
     formData: record.formData,
     context: buildAiBatchConfirmRecordContext(record),
     source: "ai_batch"
@@ -52888,10 +49825,6 @@ function AiBatchConfirmRecordHeader({ title, currentIndex, record, onClose }) {
           /* @__PURE__ */ u2("span", { children: [
             "预设 ",
             shortDisplay(record.presetLabel, "默认")
-          ] }),
-          /* @__PURE__ */ u2("span", { children: [
-            "主题 ",
-            shortDisplay(record.themePath, "未指定")
           ] })
         ] })
       ] }),
@@ -53002,17 +49935,16 @@ function AiBatchConfirmForm({
   onComplete
 }) {
   const fullSettings = useSelector(selectSettings);
-  const settings = fullSettings.inputSettings;
+  const settings2 = fullSettings.inputSettings;
   const goalSettings = fullSettings.goalSettings;
   const useCases = useUseCases();
-  const blocks = settings.blocks || [];
+  const blocks = settings2.blocks || [];
   const [records, setRecords] = d(
     () => buildAiBatchConfirmRecordItems({
       items: initialItems,
       blocks,
-      themes: settings.themes || [],
       goalSettings,
-      inputSettings: settings
+      inputSettings: settings2
     })
   );
   const [currentIndex, setCurrentIndex] = d(0);
@@ -53091,14 +50023,12 @@ function AiBatchConfirmForm({
         {
           getResourcePath: resolveResourcePath,
           initialBlockId: currentRecord.blockId,
-          initialThemeId: currentRecord.themeId || null,
           initialFormData: currentRecord.formData,
           context: buildAiBatchConfirmRecordContext(currentRecord),
           allowBlockSwitch: true,
           dense: true,
           onStateChange: (state) => updateCurrentRecord({
             blockId: state.blockId,
-            themeId: state.themeId || void 0,
             formData: state.formData
           })
         },
@@ -53150,7 +50080,6 @@ function useIsMounted() {
 const selectSettings = (s2) => s2.settings;
 const selectInputSettings = (s2) => s2.settings.inputSettings;
 const selectInputBlocks = (s2) => s2.settings.inputSettings?.blocks ?? [];
-const selectInputThemes = (s2) => s2.settings.inputSettings?.themes ?? [];
 const selectAiSettings = (s2) => s2.settings.aiSettings;
 const selectLayouts = (s2) => s2.settings.layouts;
 const selectViewInstances = (s2) => s2.settings.viewInstances;
@@ -53159,8 +50088,7 @@ const selectFloatingTimerEnabled = (s2) => s2.settings.floatingTimerEnabled;
 const selectDevConsoleStackEnabled = (s2) => !!s2.settings.devConsoleStackEnabled;
 const EMPTY_CATEGORY_COLORS = {};
 const selectCategoryColors = (s2) => s2.settings.categoryColors ?? EMPTY_CATEGORY_COLORS;
-const selectEnergyDefaultGoalId = (s2) => s2.settings.energySettings?.defaultGoalId ?? "";
-const selectEnergyDefaultThemePath = (s2) => s2.settings.energySettings?.defaultThemePath ?? "";
+const selectEnergyDefaultGoalPath = (s2) => s2.settings.energySettings?.defaultGoalPath ?? "";
 let lastTimerEntries = null;
 let lastActiveTimers = [];
 const selectTimers = (s2) => {
@@ -53741,7 +50669,7 @@ function TimerView({ app, actionService, timerService, dataStore }) {
   const handleCreateNewTask = () => {
     const config2 = actionService.getQuickInputConfigForNewTimer();
     if (!config2) return;
-    new QuickInputModal(app, config2.blockId, config2.context, config2.themeId, void 0, false, {
+    new QuickInputModal(app, config2.blockId, config2.context, void 0, false, {
       mode: "create",
       source: "timer",
       onSubmitSuccess: async (result) => {
@@ -53818,8 +50746,8 @@ async function initializeCore(opts) {
       if (savedCategoryColors) {
         updateCategoryColorMap(savedCategoryColors);
       }
-      const unsubscribeSettingsRepo = settingsRepository.subscribe((settings) => {
-        zustandStore.setState({ settings });
+      const unsubscribeSettingsRepo = settingsRepository.subscribe((settings2) => {
+        zustandStore.setState({ settings: settings2 });
       });
       disposables?.add("SettingsRepository.subscribe()", unsubscribeSettingsRepo);
       devLog("[ThinkPlugin] SettingsRepository 订阅已建立（纯同步 settings）");
@@ -58174,7 +55102,7 @@ function normalizeHeatmapConfig(value) {
   return {
     displayMode: v2.displayMode === "habit" || v2.displayMode === "count" ? v2.displayMode : base.displayMode,
     sourceBlockId: typeof v2.sourceBlockId === "string" ? v2.sourceBlockId : base.sourceBlockId,
-    themePaths: Array.isArray(v2.themePaths) ? v2.themePaths.filter((x2) => typeof x2 === "string") : base.themePaths,
+    goalPaths: Array.isArray(v2.goalPaths) ? v2.goalPaths.filter((x2) => typeof x2 === "string") : base.goalPaths,
     maxDailyChecks: typeof v2.maxDailyChecks === "number" ? v2.maxDailyChecks : base.maxDailyChecks,
     allowManualEdit: typeof v2.allowManualEdit === "boolean" ? v2.allowManualEdit : base.allowManualEdit
   };
@@ -58187,7 +55115,7 @@ function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
     () => allBlocks.map((b2) => ({ value: b2.id, label: b2.name })),
     [allBlocks]
   );
-  const handleScanThemes = () => {
+  const handleScanGoals = () => {
     if (!config2.sourceBlockId) {
       ui.notice("请先选择源 Block 模板。");
       return;
@@ -58203,13 +55131,13 @@ function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
       return;
     }
     const items = dataStore.queryItems();
-    const sortedThemes = collectThemePathsForHeatmap({
+    const sortedGoals = collectGoalPathsForHeatmap({
       items,
       dataSource,
       sourceBlock
     });
-    onChange({ themePaths: sortedThemes });
-    ui.notice(`扫描完成！已自动添加 ${sortedThemes.length} 个主题路径（来自分类 "${sourceBlock.name}"）。`);
+    onChange({ goalPaths: sortedGoals });
+    ui.notice(`扫描完成！已自动添加 ${sortedGoals.length} 个目标路径（来自分类 "${sourceBlock.name}"）。`);
   };
   return /* @__PURE__ */ u2(
     ViewEditorShell,
@@ -58232,22 +55160,22 @@ function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
             )
           }
         ) }),
-        /* @__PURE__ */ u2(ConfigSection, { title: "主题范围", children: /* @__PURE__ */ u2(
+        /* @__PURE__ */ u2(ConfigSection, { title: "目标范围", children: /* @__PURE__ */ u2(
           ConfigFieldRow,
           {
-            label: "主题路径",
-            description: "在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。",
+            label: "目标路径",
+            description: "在此处添加的每个目标路径，在周/月视图下都会成为独立的一行。留空则显示所有目标下的打卡。",
             alignItems: "flex-start",
             children: [
               /* @__PURE__ */ u2(
                 ListEditor,
                 {
-                  value: config2.themePaths,
-                  onChange: (val) => onChange({ themePaths: val }),
-                  placeholder: "例如: 生活/健康, 工作/项目"
+                  value: config2.goalPaths,
+                  onChange: (val) => onChange({ goalPaths: val }),
+                  placeholder: "例如: 照顾好自己/健康/睡眠"
                 }
               ),
-              /* @__PURE__ */ u2(ThinkButton, { onClick: handleScanThemes, size: "sm", variant: "secondary", children: "从数据源扫描并添加主题" })
+              /* @__PURE__ */ u2(ThinkButton, { onClick: handleScanGoals, size: "sm", variant: "secondary", children: "从数据源扫描并添加目标" })
             ]
           }
         ) }),
@@ -58557,9 +55485,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, sho
 }
 const DEFAULT_QUICK_FILTER_FIELDS = [
   { field: "goalPath", label: "目标", placeholder: "选择目标" },
-  { field: "goalId", label: "目标ID", placeholder: "输入目标ID" },
   { field: "coreBlock", label: "记录类型", placeholder: "选择记录类型" },
-  { field: "themePath", label: "主题", placeholder: "选择主题" },
   { field: "status", label: "状态", placeholder: "选择状态" },
   { field: "cadence", label: "任务周期", placeholder: "选择任务周期" },
   { field: "priority", label: "优先级", placeholder: "选择优先级" },
@@ -58571,10 +55497,10 @@ const DEFAULT_QUICK_FILTER_FIELD_SET = new Set(
 function isDefaultQuickFilterRule(rule) {
   return rule.op === "in" && DEFAULT_QUICK_FILTER_FIELD_SET.has(normalizeViewFieldKey(rule.field));
 }
-function splitDefaultQuickFilterRules(filters) {
+function splitDefaultQuickFilterRules(filters2) {
   const quickRules = [];
   const advancedRules = [];
-  filters.forEach((rule) => (isDefaultQuickFilterRule(rule) ? quickRules : advancedRules).push(rule));
+  filters2.forEach((rule) => (isDefaultQuickFilterRule(rule) ? quickRules : advancedRules).push(rule));
   return { quickRules, advancedRules };
 }
 function collectFieldValues(items, fields) {
@@ -58610,37 +55536,37 @@ function cleanupRuleLinks(rules) {
     return nextRule;
   });
 }
-function getQuickRule(filters, field) {
+function getQuickRule(filters2, field) {
   const normalizedField = normalizeViewFieldKey(field);
-  return filters.find((rule) => normalizeViewFieldKey(rule.field) === normalizedField && rule.op === "in");
+  return filters2.find((rule) => normalizeViewFieldKey(rule.field) === normalizedField && rule.op === "in");
 }
-function upsertQuickRule(filters, field, values2) {
+function upsertQuickRule(filters2, field, values2) {
   const cleanValues = normalizeViewMultiValue(values2);
   const normalizedField = normalizeViewFieldKey(field);
-  const existingIndex = filters.findIndex((rule) => normalizeViewFieldKey(rule.field) === normalizedField && rule.op === "in");
+  const existingIndex = filters2.findIndex((rule) => normalizeViewFieldKey(rule.field) === normalizedField && rule.op === "in");
   if (cleanValues.length === 0) {
-    if (existingIndex < 0) return cleanupRuleLinks(filters);
-    return cleanupRuleLinks(filters.filter((_2, index) => index !== existingIndex));
+    if (existingIndex < 0) return cleanupRuleLinks(filters2);
+    return cleanupRuleLinks(filters2.filter((_2, index) => index !== existingIndex));
   }
   if (existingIndex >= 0) {
-    return cleanupRuleLinks(filters.map((rule, index) => index === existingIndex ? { ...rule, field: normalizedField, value: cleanValues } : { ...rule }));
+    return cleanupRuleLinks(filters2.map((rule, index) => index === existingIndex ? { ...rule, field: normalizedField, value: cleanValues } : { ...rule }));
   }
   return cleanupRuleLinks([
-    ...filters.map((rule) => ({ ...rule })),
+    ...filters2.map((rule) => ({ ...rule })),
     { field: normalizedField, op: "in", value: cleanValues }
   ]);
 }
-function hasAnyQuickFilter(filters, fields) {
+function hasAnyQuickFilter(filters2, fields) {
   const fieldSet = new Set(fields.map((f2) => normalizeViewFieldKey(f2.field)));
-  return filters.some((rule) => fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === "in" && normalizeViewMultiValue(rule.value).length > 0);
+  return filters2.some((rule) => fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === "in" && normalizeViewMultiValue(rule.value).length > 0);
 }
-function clearQuickFilters(filters, fields) {
+function clearQuickFilters(filters2, fields) {
   const fieldSet = new Set(fields.map((f2) => normalizeViewFieldKey(f2.field)));
-  return cleanupRuleLinks(filters.filter((rule) => !(fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === "in")));
+  return cleanupRuleLinks(filters2.filter((rule) => !(fieldSet.has(normalizeViewFieldKey(rule.field)) && rule.op === "in")));
 }
 function CommonFilterPanel({
   dataStore,
-  filters,
+  filters: filters2,
   onChange,
   items,
   fieldOptions,
@@ -58659,7 +55585,7 @@ function CommonFilterPanel({
     () => collectFieldValues(sourceItems, quickFields.map((config2) => config2.field)),
     [sourceItems, quickFields]
   );
-  const hasQuickFilters = hasAnyQuickFilter(filters, quickFields);
+  const hasQuickFilters = hasAnyQuickFilter(filters2, quickFields);
   if (quickFields.length === 0) return null;
   return /* @__PURE__ */ u2("div", { className: `think-common-filter${compact ? " think-common-filter--compact" : ""}`, children: [
     showHeader && /* @__PURE__ */ u2("div", { className: "think-common-filter__header", children: [
@@ -58670,7 +55596,7 @@ function CommonFilterPanel({
           size: "sm",
           variant: "secondary",
           leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "rotate-ccw" }),
-          onClick: () => onChange(clearQuickFilters(filters, quickFields)),
+          onClick: () => onChange(clearQuickFilters(filters2, quickFields)),
           disabled: !hasQuickFilters,
           className: "think-common-filter__clear",
           children: "清空"
@@ -58679,7 +55605,7 @@ function CommonFilterPanel({
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-common-filter__grid", children: quickFields.map((config2) => {
       const label = config2.label || getFieldLabel(config2.field);
-      const rule = getQuickRule(filters, config2.field);
+      const rule = getQuickRule(filters2, config2.field);
       const values2 = normalizeViewMultiValue(rule?.value);
       return /* @__PURE__ */ u2("div", { className: "think-common-filter__field", children: [
         /* @__PURE__ */ u2("span", { className: "think-common-filter__label", children: label }),
@@ -58688,7 +55614,7 @@ function CommonFilterPanel({
           {
             values: values2,
             options: valueOptions[normalizeViewFieldKey(config2.field)] || [],
-            onChange: (newValues) => onChange(upsertQuickRule(filters, config2.field, newValues)),
+            onChange: (newValues) => onChange(upsertQuickRule(filters2, config2.field, newValues)),
             placeholder: config2.placeholder || `选择${label}`
           }
         )
@@ -59325,16 +56251,16 @@ function describeRule(rule) {
   }
   return `${getFieldLabel(rule.field)} ${rule.op} ${String(rule.value ?? "")}`;
 }
-function DataFilterPanel({ dataStore, filters, items, onChange }) {
+function DataFilterPanel({ dataStore, filters: filters2, items, onChange }) {
   const [open, setOpen] = d(false);
-  const activeCount = filters.length;
+  const activeCount = filters2.length;
   const sourceItems = items ?? dataStore.queryItems();
   const fieldOptions = T$1(() => getAllFields(sourceItems), [sourceItems]);
-  const { quickRules, advancedRules } = T$1(() => splitDefaultQuickFilterRules(filters), [filters]);
+  const { quickRules, advancedRules } = T$1(() => splitDefaultQuickFilterRules(filters2), [filters2]);
   const advancedFilterCount = advancedRules.length;
   const handleOpen = () => setOpen(true);
   const handleClear = () => onChange([]);
-  const handleDeleteRule = (index) => onChange(filters.filter((_2, currentIndex) => currentIndex !== index));
+  const handleDeleteRule = (index) => onChange(filters2.filter((_2, currentIndex) => currentIndex !== index));
   const handleAdvancedChange = (rows) => onChange(normalizeViewFilters([...quickRules, ...rows]));
   return /* @__PURE__ */ u2("div", { class: "tp-toolbar-data-filter", children: [
     /* @__PURE__ */ u2(
@@ -59352,7 +56278,7 @@ function DataFilterPanel({ dataStore, filters, items, onChange }) {
       }
     ),
     activeCount > 0 && /* @__PURE__ */ u2("div", { class: "think-filter-popover__selected-chips", "aria-label": "当前筛选", children: [
-      filters.slice(0, 3).map((rule, index) => /* @__PURE__ */ u2(
+      filters2.slice(0, 3).map((rule, index) => /* @__PURE__ */ u2(
         "button",
         {
           type: "button",
@@ -59366,9 +56292,9 @@ function DataFilterPanel({ dataStore, filters, items, onChange }) {
         },
         `${rule.field}-${rule.op}-${index}`
       )),
-      filters.length > 3 && /* @__PURE__ */ u2("span", { className: "think-chip", children: [
+      filters2.length > 3 && /* @__PURE__ */ u2("span", { className: "think-chip", children: [
         "+",
-        filters.length - 3
+        filters2.length - 3
       ] })
     ] }),
     /* @__PURE__ */ u2(
@@ -59398,7 +56324,7 @@ function DataFilterPanel({ dataStore, filters, items, onChange }) {
             CommonFilterPanel,
             {
               dataStore,
-              filters,
+              filters: filters2,
               items: sourceItems,
               fieldOptions,
               onChange,
@@ -59431,7 +56357,7 @@ function DataFilterPanel({ dataStore, filters, items, onChange }) {
     )
   ] });
 }
-function FieldPill({ item, fieldKey, resolveResourcePath, allThemes, onOpenRecordOrigin }) {
+function FieldPill({ item, fieldKey, resolveResourcePath, onOpenRecordOrigin }) {
   const value = readField(item, fieldKey);
   if (value === null || value === void 0 || value === "" || Array.isArray(value) && value.length === 0) {
     return null;
@@ -59453,9 +56379,9 @@ function FieldPill({ item, fieldKey, resolveResourcePath, allThemes, onOpenRecor
   } : {};
   const originTitle = "Ctrl/⌘+点击打开原文";
   if (fieldKey === "tags") {
-    return /* @__PURE__ */ u2("span", { ...originProps, title: originTitle, children: /* @__PURE__ */ u2(TagsRenderer, { tags: value, allThemes }) });
+    return /* @__PURE__ */ u2("span", { ...originProps, title: originTitle, children: /* @__PURE__ */ u2(TagsRenderer, { tags: value }) });
   }
-  if ((fieldKey === "themePath" || fieldKey === "theme" || fieldKey === "rootTheme" || fieldKey === "leafTheme") && typeof value === "string") {
+  if ((fieldKey === "goalPath" || fieldKey === "rootGoal" || fieldKey === "leafGoal") && typeof value === "string") {
     const fullPath = value;
     const labelText = getLeafPath(fullPath) || fullPath;
     return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${fullPath} · ${originTitle}`, style: { backgroundColor: getCategoryColor(fullPath) }, children: labelText });
@@ -59481,7 +56407,6 @@ function TaskRow({
   onOpenRecordOrigin,
   timerService,
   timer,
-  allThemes,
   showFields = [],
   compact = false,
   displayTitle,
@@ -59516,7 +56441,6 @@ function TaskRow({
           item,
           fieldKey,
           resolveResourcePath,
-          allThemes,
           onOpenRecordOrigin
         },
         fieldKey
@@ -59551,7 +56475,7 @@ function ItemLink({ item, className = "", showIcon = true, onOpenRecord, onOpenR
     }
   );
 }
-const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, allThemes, onOpenRecord }) => {
+const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, onOpenRecord }) => {
   const metadataFields = fields.filter((f2) => f2 !== "title" && f2 !== "content");
   const showTitle = fields.includes("title") && item.title;
   const effectiveContent = item.content && item.content.trim().length > 0 ? item.content : item.title;
@@ -59573,7 +56497,6 @@ const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigin, mess
         item,
         fieldKey,
         resolveResourcePath,
-        allThemes,
         onOpenRecordOrigin
       },
       fieldKey
@@ -59646,7 +56569,6 @@ function BlockViewItemList(props) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     onOpenRecord
   } = props;
   return /* @__PURE__ */ u2(S, { children: items.map((item) => {
@@ -59660,7 +56582,6 @@ function BlockViewItemList(props) {
           onOpenRecordOrigin,
           timerService,
           timer: findBlockViewTimer(timers, item.id),
-          allThemes,
           onOpenRecord,
           showFields: [],
           compact: true,
@@ -59677,7 +56598,6 @@ function BlockViewItemList(props) {
         resolveResourcePath,
         onOpenRecordOrigin,
         messageRenderPort,
-        allThemes,
         onOpenRecord
       },
       item.id
@@ -59696,7 +56616,6 @@ function BlockView(props) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     goals = [],
     onOpenRecord
   } = props;
@@ -59714,7 +56633,6 @@ function BlockView(props) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     onOpenRecord
   };
   if (!renderModel.isGrouped) {
@@ -60495,7 +57413,6 @@ function EventTimelineEventList(props) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     onOpenRecord
   } = props;
   let lastDate = "";
@@ -60520,7 +57437,6 @@ function EventTimelineEventList(props) {
           onOpenRecordOrigin,
           timerService,
           timer: timers.find((timer) => timer.taskId === item.id),
-          allThemes,
           displayTitle: taskDisplayTitle,
           showFields: [],
           onOpenRecord
@@ -60534,7 +57450,6 @@ function EventTimelineEventList(props) {
           resolveResourcePath,
           onOpenRecordOrigin,
           messageRenderPort,
-          allThemes,
           onOpenRecord
         }
       ) })
@@ -60556,7 +57471,6 @@ function EventTimelineViewView(props) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     onOpenRecord
   } = props;
   const renderEventList = (items) => /* @__PURE__ */ u2(
@@ -60574,7 +57488,6 @@ function EventTimelineViewView(props) {
       onMarkDone,
       timerService,
       timers,
-      allThemes,
       onOpenRecord
     }
   );
@@ -60610,7 +57523,6 @@ function EventTimelineView(props) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     goals = [],
     messageRenderPort,
     onOpenRecord
@@ -60644,84 +57556,78 @@ function EventTimelineView(props) {
       onMarkDone,
       timerService,
       timers,
-      allThemes,
       onOpenRecord
     }
   );
 }
-function getThemeLeafLabel(themePath) {
-  if (!themePath || themePath === "__default__") return "未分类";
-  const segments = parsePath(themePath);
-  const leaf2 = segments[segments.length - 1];
-  return leaf2?.name || themePath;
+function getGoalLeafLabel(goalPath) {
+  if (!goalPath || goalPath === "__default__") return "未分类";
+  return splitGoalPath(goalPath).leafGoal || goalPath;
 }
-function getThemeGroupTitle(themePath) {
-  if (!themePath || themePath === "__default__") return "未分类";
-  const segments = parsePath(themePath);
-  return segments[0]?.name || themePath;
+function getGoalGroupTitle(goalPath) {
+  if (!goalPath || goalPath === "__default__") return "未分类";
+  return splitGoalPath(goalPath).rootGoal || goalPath;
 }
 function filterGoalHeatmapGroups(groups) {
   return (groups || []).filter((group) => group && Array.isArray(group.entries) && group.entries.length > 0);
 }
 function normalizeHeatmapBlockId(params) {
   const { candidate, inputSettings, configuredSourceBlockId } = params;
-  const value = String(candidate || "").trim();
-  if (!value) return "";
+  const rawValue = String(candidate || "").trim();
+  if (!rawValue) return "";
+  const value = rawValue.startsWith("core.") ? rawValue : `core.${rawValue}`;
   const byId = inputSettings.blocks.find((block) => block.id === value);
   if (byId) return byId.id;
   const byCore = inputSettings.blocks.find((block) => block.coreBlockId === value);
   if (byCore) return byCore.id;
-  const byCategory = inputSettings.blocks.find((block) => block.categoryKey === value || block.name === value);
-  if (byCategory) return byCategory.id;
-  if (configuredSourceBlockId && value === configuredSourceBlockId) {
+  if (configuredSourceBlockId && (value === configuredSourceBlockId || rawValue === configuredSourceBlockId)) {
     const habit = inputSettings.blocks.find((block) => block.coreBlockId === "core.habit" || block.categoryKey === "打卡" || block.name === "打卡");
     if (habit) return habit.id;
   }
   return value;
 }
-function inferHeatmapBlockIdByTheme(items) {
+function inferHeatmapBlockIdByGoal(items) {
   const result = /* @__PURE__ */ new Map();
   const counts = /* @__PURE__ */ new Map();
   for (const item of items) {
-    const themePath = getItemThemePath(item);
-    const themeKey = themePath || "__default__";
-    const blockId = typeof item?.templateId === "string" && item.templateId.trim().length > 0 ? item.templateId : typeof item?.categoryKey === "string" && item.categoryKey.trim().length > 0 ? item.categoryKey : "";
+    const goalPath = String(item.goalPath || "").trim() || "__default__";
+    const blockId = item.coreBlock ? `core.${String(item.coreBlock).replace(/^core\./, "")}` : "";
     if (!blockId) continue;
-    if (!counts.has(themeKey)) counts.set(themeKey, /* @__PURE__ */ new Map());
-    const themeCounts = counts.get(themeKey);
-    themeCounts.set(blockId, (themeCounts.get(blockId) || 0) + 1);
+    if (!counts.has(goalPath)) counts.set(goalPath, /* @__PURE__ */ new Map());
+    const goalCounts = counts.get(goalPath);
+    goalCounts.set(blockId, (goalCounts.get(blockId) || 0) + 1);
   }
-  counts.forEach((themeCounts, themeKey) => {
+  counts.forEach((goalCounts, goalPath) => {
     let bestBlockId = "";
     let bestCount = -1;
-    themeCounts.forEach((count, blockId) => {
+    goalCounts.forEach((count, blockId) => {
       if (count > bestCount) {
         bestCount = count;
         bestBlockId = blockId;
       }
     });
-    if (bestBlockId) result.set(themeKey, bestBlockId);
+    if (bestBlockId) result.set(goalPath, bestBlockId);
   });
   return result;
 }
 function resolveHeatmapCreateBlockId(params) {
-  const { themePath, item, sourceBlockId, heatmapSourceBlockId, inferredBlockIdByTheme, normalizeBlockId } = params;
+  const { goalPath, item, sourceBlockId, heatmapSourceBlockId, inferredBlockIdByGoal, normalizeBlockId } = params;
   const rowBlock = normalizeBlockId(sourceBlockId);
-  const itemBlock = item?.coreBlock || item?.templateId || item?.categoryKey;
-  return rowBlock || normalizeBlockId(heatmapSourceBlockId) || normalizeBlockId(itemBlock) || normalizeBlockId(themePath ? inferredBlockIdByTheme.get(themePath) : void 0) || normalizeBlockId(inferredBlockIdByTheme.get("__default__")) || "";
+  const itemBlock = item?.coreBlock ? `core.${String(item.coreBlock).replace(/^core\./, "")}` : "";
+  return rowBlock || normalizeBlockId(heatmapSourceBlockId) || normalizeBlockId(itemBlock) || normalizeBlockId(goalPath ? inferredBlockIdByGoal.get(goalPath) : void 0) || normalizeBlockId(inferredBlockIdByGoal.get("__default__")) || "";
 }
-function buildDayThemeGroups(params) {
-  const { themesToTrack, dataByThemeAndDate } = params;
-  const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
+function buildDayGoalGroups(params) {
+  const { goalPathsToTrack, dataByGoalAndDate } = params;
+  const goalsToDisplay = goalPathsToTrack.length > 0 ? goalPathsToTrack : ["__default__"];
   const groups = [];
   const groupMap = /* @__PURE__ */ new Map();
-  themesToDisplay.forEach((themePath) => {
-    const title = getThemeGroupTitle(themePath);
-    const label = getThemeLeafLabel(themePath);
+  goalsToDisplay.forEach((goalPath) => {
+    const title = getGoalGroupTitle(goalPath);
+    const label = getGoalLeafLabel(goalPath);
     const entry = {
-      themePath,
+      goalPath,
       label,
-      dataForTheme: dataByThemeAndDate.get(themePath) || /* @__PURE__ */ new Map()
+      dataForGoal: dataByGoalAndDate.get(goalPath) || /* @__PURE__ */ new Map()
     };
     const existingGroup = groupMap.get(title);
     if (existingGroup) {
@@ -60737,9 +57643,7 @@ function buildDayThemeGroups(params) {
 function createHeatmapPresetContext(entry) {
   return {
     sourceBlockId: entry.sourceBlockId,
-    goalId: entry.goalId,
     templateId: entry.templateId,
-    templateVariantId: entry.templateVariantId,
     ratingOptions: entry.ratingOptions
   };
 }
@@ -60835,8 +57739,8 @@ function HeatmapCell({
 function HeatmapDayView({
   dayDateStr,
   goalGroupsToDisplay,
-  themesToTrack,
-  dataByThemeAndDate,
+  goalPathsToTrack,
+  dataByGoalAndDate,
   config: config2,
   resolveResourcePath,
   onOpenRecordOrigin,
@@ -60856,85 +57760,82 @@ function HeatmapDayView({
       ] }),
       /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: goalGroup.entries.map((entry) => {
         const presetContext = createHeatmapPresetContext(entry);
-        const themeRatingMapping = resolveCellRatingMapping(entry.themePath, presetContext);
-        const dayItems = entry.dataForTheme.get(dayDateStr);
-        return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", title: `${goalGroup.label} · ${entry.label} · ${entry.themePath}`, children: /* @__PURE__ */ u2(
+        const ratingMapping = resolveCellRatingMapping(entry.goalPath, presetContext);
+        const dayItems = entry.dataForGoal.get(dayDateStr);
+        return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", title: `${goalGroup.label} · ${entry.label} · ${entry.goalPath}`, children: /* @__PURE__ */ u2(
           HeatmapCell,
           {
             date: dayDateStr,
             items: dayItems,
             config: config2,
-            ratingMapping: themeRatingMapping,
+            ratingMapping,
             resolveResourcePath,
             onOpenRecordOrigin,
             highlightToday: false,
             emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
-            onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.themePath, goalGroup.goalPath, presetContext)
+            onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.goalPath, presetContext)
           }
-        ) }, `${goalGroup.goalPath}:${entry.presetKey || entry.themePath}`);
+        ) }, `${goalGroup.goalPath}:${entry.presetKey || entry.goalPath}`);
       }) })
     ] }, goalGroup.goalPath)) });
   }
-  const dayGroups = buildDayThemeGroups({ themesToTrack, dataByThemeAndDate });
+  const dayGroups = buildDayGoalGroups({ goalPathsToTrack, dataByGoalAndDate });
   return /* @__PURE__ */ u2("div", { class: "heatmap-day-view", children: dayGroups.map((group) => /* @__PURE__ */ u2("section", { class: "heatmap-day-section", children: [
     /* @__PURE__ */ u2("h3", { class: "heatmap-day-section-title", children: group.title }),
     /* @__PURE__ */ u2("div", { class: "heatmap-day-section-grid", children: group.entries.map((entry) => {
-      const themeRatingMapping = resolveCellRatingMapping(entry.themePath);
-      const dayItems = entry.dataForTheme.get(dayDateStr);
+      const ratingMapping = resolveCellRatingMapping(entry.goalPath);
+      const dayItems = entry.dataForGoal.get(dayDateStr);
       return /* @__PURE__ */ u2("div", { class: "heatmap-day-item", children: /* @__PURE__ */ u2(
         HeatmapCell,
         {
           date: dayDateStr,
           items: dayItems,
           config: config2,
-          ratingMapping: themeRatingMapping,
+          ratingMapping,
           resolveResourcePath,
           onOpenRecordOrigin,
           highlightToday: false,
           emptyLabel: !dayItems || dayItems.length === 0 ? entry.label : void 0,
-          onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.themePath)
+          onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, entry.goalPath)
         }
-      ) }, entry.themePath);
+      ) }, entry.goalPath);
     }) })
   ] }, group.title)) });
 }
-function HeatmapThemeGroup({
+function HeatmapGoalGroup({
   normalizedCurrentView,
-  theme,
-  dataForTheme,
+  goalPath,
+  dataForGoal,
   dateRange,
   config: config2,
   resolveResourcePath,
   onOpenRecordOrigin,
   verticalLayouts,
-  collapsedThemes,
+  collapsedGoals,
   headerRefs,
-  goalPath,
   keyPrefix = "",
   entryKey,
   label,
   presetContext,
-  onToggleThemeCollapsed,
+  onToggleGoalCollapsed,
   onCellClick,
   resolveCellRatingMapping
 }) {
-  const rowKey = `${keyPrefix}${entryKey || theme}`;
+  const rowKey = `${keyPrefix}${entryKey || goalPath}`;
   const isRowLayout = ["周", "月"].includes(normalizedCurrentView);
   const isVertical = normalizedCurrentView === "周" ? false : verticalLayouts.has(rowKey);
-  const isCollapsed = normalizedCurrentView === "年" && collapsedThemes.has(rowKey);
-  const leafLabel2 = label || getThemeLeafLabel(theme);
+  const isCollapsed = normalizedCurrentView === "年" && collapsedGoals.has(rowKey);
+  const leafLabel2 = label || getGoalLeafLabel(goalPath);
   const renderMonthGrid = (monthDate) => {
     const startOfMonth = monthDate.startOf("month");
     const endOfMonth = monthDate.endOf("month");
     const firstWeekday = startOfMonth.isoWeekday();
-    const themeRatingMapping = resolveCellRatingMapping(theme, presetContext);
+    const ratingMapping = resolveCellRatingMapping(goalPath, presetContext);
     const days = [];
-    for (let i2 = 1; i2 < firstWeekday; i2++) {
-      days.push(/* @__PURE__ */ u2("div", { class: "heatmap-cell grid-spacer" }, `spacer-${i2}`));
-    }
+    for (let i2 = 1; i2 < firstWeekday; i2++) days.push(/* @__PURE__ */ u2("div", { class: "heatmap-cell grid-spacer" }, `spacer-${i2}`));
     for (let i2 = 1; i2 <= endOfMonth.date(); i2++) {
       const dateStr = startOfMonth.clone().date(i2).format("YYYY-MM-DD");
-      const dayItems = dataForTheme.get(dateStr);
+      const dayItems = dataForGoal.get(dateStr);
       days.push(
         /* @__PURE__ */ u2(
           HeatmapCell,
@@ -60942,10 +57843,10 @@ function HeatmapThemeGroup({
             date: dateStr,
             items: dayItems,
             config: config2,
-            ratingMapping: themeRatingMapping,
+            ratingMapping,
             resolveResourcePath,
             onOpenRecordOrigin,
-            onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
+            onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, goalPath, presetContext)
           },
           dateStr
         )
@@ -60959,28 +57860,14 @@ function HeatmapThemeGroup({
   const renderHeaderCells = () => {
     const start2 = dayjs(dateRange[0]);
     const end2 = dayjs(dateRange[1]);
-    const themeRatingMapping = resolveCellRatingMapping(theme, presetContext);
+    const ratingMapping = resolveCellRatingMapping(goalPath, presetContext);
     switch (normalizedCurrentView) {
       case "天":
       case "日":
       case "day": {
         const dateStr = start2.format("YYYY-MM-DD");
-        const dayItems = dataForTheme.get(dateStr);
-        return [
-          /* @__PURE__ */ u2(
-            HeatmapCell,
-            {
-              date: dateStr,
-              items: dayItems,
-              config: config2,
-              ratingMapping: themeRatingMapping,
-              resolveResourcePath,
-              onOpenRecordOrigin,
-              onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
-            },
-            dateStr
-          )
-        ];
+        const dayItems = dataForGoal.get(dateStr);
+        return [/* @__PURE__ */ u2(HeatmapCell, { date: dateStr, items: dayItems, config: config2, ratingMapping, resolveResourcePath, onOpenRecordOrigin, onCellClick: (d2, xs) => onCellClick(d2, xs, goalPath, presetContext) }, dateStr)];
       }
       case "周":
       case "月": {
@@ -60989,22 +57876,8 @@ function HeatmapThemeGroup({
         const endDate = normalizedCurrentView === "周" ? start2.endOf("isoWeek") : start2.endOf("month");
         while (currentDate.isSameOrBefore(endDate, "day")) {
           const dateStr = currentDate.format("YYYY-MM-DD");
-          const dayItems = dataForTheme.get(dateStr);
-          cells.push(
-            /* @__PURE__ */ u2(
-              HeatmapCell,
-              {
-                date: dateStr,
-                items: dayItems,
-                config: config2,
-                ratingMapping: themeRatingMapping,
-                resolveResourcePath,
-                onOpenRecordOrigin,
-                onCellClick: (clickedDate, clickedItems) => onCellClick(clickedDate, clickedItems, theme, goalPath, presetContext)
-              },
-              `${theme}-${dateStr}`
-            )
-          );
+          const dayItems = dataForGoal.get(dateStr);
+          cells.push(/* @__PURE__ */ u2(HeatmapCell, { date: dateStr, items: dayItems, config: config2, ratingMapping, resolveResourcePath, onOpenRecordOrigin, onCellClick: (d2, xs) => onCellClick(d2, xs, goalPath, presetContext) }, `${goalPath}-${dateStr}`));
           currentDate = currentDate.add(1, "day");
         }
         return cells;
@@ -61023,34 +57896,32 @@ function HeatmapThemeGroup({
         return [];
     }
   };
-  return /* @__PURE__ */ u2("div", { class: `heatmap-theme-group ${normalizedCurrentView === "年" ? "is-collapsible" : ""}`, children: /* @__PURE__ */ u2(
+  return /* @__PURE__ */ u2("div", { class: `heatmap-goal-group ${normalizedCurrentView === "年" ? "is-collapsible" : ""}`, children: /* @__PURE__ */ u2(
     "div",
     {
-      class: `heatmap-theme-header ${isRowLayout ? "row-inline-layout week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
-      "data-theme": rowKey,
+      class: `heatmap-goal-header ${isRowLayout ? "row-inline-layout week-inline-layout" : ""} ${isVertical ? "vertical-layout" : ""} ${isCollapsed ? "is-collapsed" : ""}`,
+      "data-goal": rowKey,
       ref: (el) => {
-        if (el && theme !== "__default__") {
-          headerRefs.current.set(rowKey, el);
-        }
+        if (el && goalPath !== "__default__") headerRefs.current.set(rowKey, el);
       },
       children: [
-        theme !== "__default__" && /* @__PURE__ */ u2(
+        goalPath !== "__default__" && /* @__PURE__ */ u2(
           "div",
           {
             class: `heatmap-header-info ${normalizedCurrentView === "年" ? "is-clickable" : ""}`,
             role: normalizedCurrentView === "年" ? "button" : void 0,
             tabIndex: normalizedCurrentView === "年" ? 0 : void 0,
             onClick: () => {
-              if (normalizedCurrentView === "年") onToggleThemeCollapsed(rowKey);
+              if (normalizedCurrentView === "年") onToggleGoalCollapsed(rowKey);
             },
             onKeyDown: (event) => {
               if (normalizedCurrentView !== "年" || !isKeyboardActivation(event)) return;
               stopInteractionEvent(event);
-              onToggleThemeCollapsed(rowKey);
+              onToggleGoalCollapsed(rowKey);
             },
             children: /* @__PURE__ */ u2("div", { class: "heatmap-header-info-left", children: [
               normalizedCurrentView === "年" && /* @__PURE__ */ u2("span", { class: `heatmap-collapse-arrow ${isCollapsed ? "is-collapsed" : ""}`, children: "▾" }),
-              /* @__PURE__ */ u2("span", { class: "theme-name", children: leafLabel2 })
+              /* @__PURE__ */ u2("span", { class: "heatmap-goal-name", children: leafLabel2 })
             ] })
           }
         ),
@@ -61068,17 +57939,17 @@ function HeatmapViewContent({
   resolveResourcePath,
   onOpenRecordOrigin,
   goalGroupsToDisplay,
-  themesToTrack,
-  dataByThemeAndDate,
+  goalPathsToTrack,
+  dataByGoalAndDate,
   verticalLayouts,
-  collapsedThemes,
+  collapsedGoals,
   headerRefs,
-  onToggleThemeCollapsed,
+  onToggleGoalCollapsed,
   onCellClick,
   resolveCellRatingMapping
 }) {
-  const renderThemeGroup = (params) => /* @__PURE__ */ u2(
-    HeatmapThemeGroup,
+  const renderGoalRow = (params) => /* @__PURE__ */ u2(
+    HeatmapGoalGroup,
     {
       ...params,
       normalizedCurrentView,
@@ -61087,9 +57958,9 @@ function HeatmapViewContent({
       resolveResourcePath,
       onOpenRecordOrigin,
       verticalLayouts,
-      collapsedThemes,
+      collapsedGoals,
       headerRefs,
-      onToggleThemeCollapsed,
+      onToggleGoalCollapsed,
       onCellClick,
       resolveCellRatingMapping
     }
@@ -61100,8 +57971,8 @@ function HeatmapViewContent({
       {
         dayDateStr: dateRangeStart,
         goalGroupsToDisplay,
-        themesToTrack,
-        dataByThemeAndDate,
+        goalPathsToTrack,
+        dataByGoalAndDate,
         config: config2,
         resolveResourcePath,
         onOpenRecordOrigin,
@@ -61123,51 +57994,44 @@ function HeatmapViewContent({
           " 条记录"
         ] })
       ] }),
-      /* @__PURE__ */ u2("div", { class: "heatmap-goal-theme-list", children: goalGroup.entries.map((entry) => renderThemeGroup({
-        theme: entry.themePath,
-        dataForTheme: entry.dataForTheme,
-        goalPath: goalGroup.goalPath,
+      /* @__PURE__ */ u2("div", { class: "heatmap-goal-list", children: goalGroup.entries.map((entry) => renderGoalRow({
+        goalPath: entry.goalPath,
+        dataForGoal: entry.dataForGoal,
         keyPrefix: `${goalGroup.goalPath}\0`,
-        entryKey: entry.presetKey || entry.themePath,
+        entryKey: entry.presetKey || entry.goalPath,
         label: entry.label,
         presetContext: createHeatmapPresetContext(entry)
       })) })
     ] }, goalGroup.goalPath)) });
   }
-  const themesToDisplay = themesToTrack.length > 0 ? themesToTrack : ["__default__"];
-  return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper ${wrapperClass}`, children: themesToDisplay.map((theme) => renderThemeGroup({
-    theme,
-    dataForTheme: dataByThemeAndDate.get(theme) || /* @__PURE__ */ new Map()
+  const goalsToDisplay = goalPathsToTrack.length > 0 ? goalPathsToTrack : ["__default__"];
+  return /* @__PURE__ */ u2("div", { class: `heatmap-view-wrapper ${wrapperClass}`, children: goalsToDisplay.map((goalPath) => renderGoalRow({
+    goalPath,
+    dataForGoal: dataByGoalAndDate.get(goalPath) || /* @__PURE__ */ new Map()
   })) });
 }
-function shouldSkipHeatmapVerticalLayout(theme, normalizedCurrentView) {
-  if (!theme || theme === "__default__") return true;
+function shouldSkipHeatmapVerticalLayout(goalPath, normalizedCurrentView) {
+  if (!goalPath || goalPath === "__default__") return true;
   if (["年", "季"].includes(normalizedCurrentView)) return true;
   return normalizedCurrentView === "周";
 }
 function resolveHeatmapVerticalLayout(args) {
-  const { theme, normalizedCurrentView, isDayView, containerWidth } = args;
-  if (shouldSkipHeatmapVerticalLayout(theme, normalizedCurrentView)) return null;
+  const { goalPath, normalizedCurrentView, isDayView, containerWidth } = args;
+  if (shouldSkipHeatmapVerticalLayout(goalPath, normalizedCurrentView)) return null;
   const threshold = isDayView ? 320 : 600;
   return containerWidth < threshold;
 }
-function applyHeatmapVerticalLayout(prev2, theme, needsVertical) {
+function applyHeatmapVerticalLayout(prev2, goalPath, needsVertical) {
   const next2 = new Set(prev2);
-  if (needsVertical) next2.add(theme);
-  else next2.delete(theme);
+  if (needsVertical) next2.add(goalPath);
+  else next2.delete(goalPath);
   return next2;
 }
-function toggleHeatmapCollapsedTheme(prev2, theme) {
+function toggleHeatmapCollapsedGoal(prev2, goalPath) {
   const next2 = new Set(prev2);
-  if (next2.has(theme)) next2.delete(theme);
-  else next2.add(theme);
+  if (next2.has(goalPath)) next2.delete(goalPath);
+  else next2.add(goalPath);
   return next2;
-}
-function themeLeaf(path) {
-  const value = String(path || "").trim();
-  if (!value || value === "__default__") return "未设置主题";
-  const parts = value.split("/").map((part) => part.trim()).filter(Boolean);
-  return parts[parts.length - 1] || value;
 }
 function firstText(value) {
   if (Array.isArray(value)) {
@@ -61177,203 +58041,130 @@ function firstText(value) {
     }
     return "";
   }
-  if (value == null) return "";
-  return String(value).trim();
+  return value == null ? "" : String(value).trim();
 }
-function readExtraText(item, key) {
-  return firstText(item.extra?.[key]);
+function dateKeyOf(item) {
+  return String(item.date || "").trim();
 }
-function itemTemplateId(item) {
-  return firstText(item.templateId) || readExtraText(item, "模板ID") || readExtraText(item, "templateId");
-}
-function itemTemplateVariantId(item) {
-  const heatmapItem = item;
-  return firstText(heatmapItem.templateVariantId) || firstText(heatmapItem.goalTemplateVariantId) || readExtraText(item, "templateVariantId") || readExtraText(item, "goalTemplateVariantId") || readExtraText(item, "预设ID");
+function itemGoalPath(item) {
+  return normalizeGoalPath(String(item.goalPath || item.extra?.["目标"] || ""));
 }
 function itemCoreBlock(item) {
-  const raw = firstText(item.coreBlock) || readExtraText(item, "核心Block") || firstText(item.categoryKey) || "";
+  const raw = firstText(item.coreBlock) || firstText(item.categoryKey);
   if (raw === "habit" || raw === "打卡") return "core.habit";
   if (raw === "task" || raw === "任务") return "core.task";
-  if (raw.startsWith("core.")) return raw;
-  return raw;
+  return raw.startsWith("core.") ? raw : raw;
 }
 function extractRatingOptions(template) {
   const fields = Array.isArray(template?.fields) ? template.fields : [];
   const ratingField = fields.find((field) => field?.type === "rating" || field?.semantic === "rating" || field?.key === "评分" || field?.label === "评分");
   return Array.isArray(ratingField?.options) ? ratingField.options.map((option) => ({ value: option?.value, label: option?.label })).filter((option) => option.value !== void 0 || option.label !== void 0) : [];
 }
-function buildPresetLookups(goalSettings, goals) {
-  const goalPathById = /* @__PURE__ */ new Map();
-  const goalLabelById = /* @__PURE__ */ new Map();
-  for (const goal of goals || []) {
-    const normalized2 = splitGoalPath(goal.goalPath || goal.title || goal.id).goalPath || goal.goalPath || goal.title || goal.id;
-    goalPathById.set(goal.id, normalized2);
-    goalLabelById.set(goal.id, goal.title || splitGoalPath(normalized2).leafGoal || normalized2);
-  }
-  const byTemplateId = /* @__PURE__ */ new Map();
-  const byGoalBlockVariant = /* @__PURE__ */ new Map();
-  const byGoalBlockTheme = /* @__PURE__ */ new Map();
-  const allPresets = [];
-  for (const [presetOriginalIndex, raw] of (goalSettings?.goalTemplates || []).entries()) {
+function buildPresetLookups(goalSettings) {
+  const byGoalAndBlock = /* @__PURE__ */ new Map();
+  const allHabits = [];
+  for (const [index, raw] of (goalSettings?.goalTemplates || []).entries()) {
     const template = raw;
-    const id = firstText(template.id);
-    const goalId = firstText(template.goalId);
+    const goalPath = normalizeGoalPath(firstText(template.goalPath));
     const coreBlockId = firstText(template.coreBlockId) || firstText(template.blockId);
-    const variantId = firstText(template.variantId) || "default";
-    const defaults = template.defaultValues || {};
-    const goalPath = goalPathById.get(goalId);
-    if (!goalId || !goalPath) continue;
-    const goalLabel = goalLabelById.get(goalId) || splitGoalPath(goalPath).leafGoal || goalPath;
-    const rawThemePath = firstText(defaults.themePath);
-    const themePath = rawThemePath && !rawThemePath.includes("{{") ? rawThemePath : firstText(defaults["主题"]);
-    const label = firstText(template.name) || themeLeaf(themePath) || variantId;
-    const key = id || `${goalId}:${coreBlockId}:${variantId}`;
-    const ratingOptions = extractRatingOptions(template);
-    const presetSortOrder = Number.isFinite(Number(template.sortOrder)) ? Number(template.sortOrder) : presetOriginalIndex;
-    const meta = { key, id, goalId, goalPath, goalLabel, coreBlockId, variantId, label, themePath, ratingOptions, presetSortOrder, presetOriginalIndex };
-    allPresets.push(meta);
-    if (id) byTemplateId.set(id, meta);
-    if (goalId && coreBlockId && variantId) byGoalBlockVariant.set(`${goalId}\0${coreBlockId}\0${variantId}`, meta);
-    if (goalId && coreBlockId && themePath) byGoalBlockTheme.set(`${goalId}\0${coreBlockId}\0${themePath}`, meta);
+    if (!goalPath || !coreBlockId || template.enabled === false) continue;
+    const id = firstText(template.id) || `${goalPath}\0${coreBlockId}`;
+    const meta = {
+      key: id,
+      id,
+      goalPath,
+      coreBlockId,
+      ratingOptions: extractRatingOptions(template),
+      order: index
+    };
+    byGoalAndBlock.set(`${goalPath}\0${coreBlockId}`, meta);
+    if (coreBlockId === "core.habit") allHabits.push(meta);
   }
-  return { byTemplateId, byGoalBlockVariant, byGoalBlockTheme, goalPathById, goalLabelById, allPresets };
+  return { byGoalAndBlock, allHabits };
 }
-function dateKeyOf(item) {
-  return String(item.date || "").trim();
+function rowLabel(goalPath) {
+  return splitGoalPath(goalPath).leafGoal || goalPath || "未归属";
+}
+function rootPath(goalPath) {
+  return splitGoalPath(goalPath).rootGoal || goalPath || UNASSIGNED_GOAL_KEY;
 }
 function buildHeatmapViewModel(params) {
-  const { items, module: module2, inputSettings, goals = [], goalSettings } = params;
+  const { items, module: module2, goals = [], goalSettings } = params;
   const config2 = module2.viewConfig || {};
-  const themesByPath = buildThemesByPathMap(inputSettings.themes);
-  const inferredThemePaths = (() => {
-    const set2 = /* @__PURE__ */ new Set();
-    for (const it of items) {
-      const themePath = getItemThemePath(it);
-      if (themePath) {
-        set2.add(themePath);
-      }
-    }
-    return Array.from(set2);
-  })();
-  const themesToTrack = Array.isArray(config2.themePaths) && config2.themePaths.length > 0 ? config2.themePaths.map((value) => String(value)).filter(Boolean) : inferredThemePaths;
-  const dataByThemeAndDate = buildThemeDataMap(items, themesToTrack);
-  const trackedThemeSet = new Set(themesToTrack || []);
-  const filterByTheme = trackedThemeSet.size > 0;
-  const goalMap = /* @__PURE__ */ new Map();
-  const lookups = buildPresetLookups(goalSettings, goals);
-  const goalOrder = createGoalOrderIndex(goals);
-  function ensureGoalGroup(goalPath, label) {
-    const normalizedGoalPath = goalPath || UNASSIGNED_GOAL_KEY;
-    let goalGroup = goalMap.get(normalizedGoalPath);
-    if (!goalGroup) {
-      goalGroup = { goalPath: normalizedGoalPath, label: label || normalizedGoalPath, count: 0, entries: [] };
-      goalMap.set(normalizedGoalPath, goalGroup);
-    }
-    return goalGroup;
+  const configured = Array.isArray(config2.goalPaths) ? config2.goalPaths.map((value) => normalizeGoalPath(String(value))).filter(Boolean) : [];
+  const configuredSet = new Set(configured);
+  const inferred = /* @__PURE__ */ new Set();
+  for (const item of items) {
+    const path = itemGoalPath(item);
+    if (path) inferred.add(path);
   }
-  function ensurePresetEntry(goalGroup, meta) {
-    let entry = goalGroup.entries.find((candidate) => candidate.presetKey === meta.presetKey);
+  const goalPathsToTrack = configured.length ? configured : [...inferred];
+  const dataByGoalAndDate = /* @__PURE__ */ new Map();
+  for (const path of goalPathsToTrack) dataByGoalAndDate.set(path, /* @__PURE__ */ new Map());
+  const goalByPath = /* @__PURE__ */ new Map();
+  for (const goal of goals) {
+    const path = normalizeGoalPath(goal.path);
+    if (path) goalByPath.set(path, goal);
+  }
+  const lookups = buildPresetLookups(goalSettings);
+  const groupMap = /* @__PURE__ */ new Map();
+  function ensureGroup(path) {
+    const root = rootPath(path);
+    let group = groupMap.get(root);
+    if (!group) {
+      const goal = goalByPath.get(root);
+      group = { goalPath: root, label: goal?.path ? rowLabel(goal.path) : rowLabel(root), count: 0, entries: [] };
+      groupMap.set(root, group);
+    }
+    return group;
+  }
+  function ensureEntry(path, preset) {
+    const group = ensureGroup(path);
+    let entry = group.entries.find((candidate) => candidate.goalPath === path);
     if (!entry) {
       entry = {
-        presetKey: meta.presetKey,
-        templateId: meta.templateId,
-        templateVariantId: meta.templateVariantId,
-        sourceBlockId: meta.sourceBlockId,
-        goalId: meta.goalId,
-        ratingOptions: meta.ratingOptions || [],
-        themePath: meta.themePath || "__default__",
-        label: meta.label || themeLeaf(meta.themePath),
-        presetSortOrder: meta.presetSortOrder,
-        presetOriginalIndex: meta.presetOriginalIndex,
+        presetKey: preset?.key || `${path}\0core.habit`,
+        templateId: preset?.id || void 0,
+        sourceBlockId: preset?.coreBlockId,
+        ratingOptions: preset?.ratingOptions || [],
+        presetOriginalIndex: preset?.order,
+        goalPath: path,
+        label: rowLabel(path),
         count: 0,
-        dataForTheme: /* @__PURE__ */ new Map()
+        dataForGoal: dataByGoalAndDate.get(path) || /* @__PURE__ */ new Map()
       };
-      goalGroup.entries.push(entry);
+      dataByGoalAndDate.set(path, entry.dataForGoal);
+      group.entries.push(entry);
     }
-    if (meta.templateId && !entry.templateId) entry.templateId = meta.templateId;
-    if (meta.templateVariantId && !entry.templateVariantId) entry.templateVariantId = meta.templateVariantId;
-    if (meta.sourceBlockId && !entry.sourceBlockId) entry.sourceBlockId = meta.sourceBlockId;
-    if (meta.goalId && !entry.goalId) entry.goalId = meta.goalId;
-    if (meta.ratingOptions?.length && (!entry.ratingOptions || entry.ratingOptions.length === 0)) entry.ratingOptions = meta.ratingOptions;
-    if (meta.presetSortOrder !== void 0 && entry.presetSortOrder === void 0) entry.presetSortOrder = meta.presetSortOrder;
-    if (meta.presetOriginalIndex !== void 0 && entry.presetOriginalIndex === void 0) entry.presetOriginalIndex = meta.presetOriginalIndex;
     return entry;
   }
-  for (const preset of lookups.allPresets) {
-    if (preset.coreBlockId !== "core.habit") continue;
-    const goalGroup = ensureGoalGroup(preset.goalPath, preset.goalLabel);
-    ensurePresetEntry(goalGroup, {
-      presetKey: preset.key,
-      templateId: preset.id,
-      templateVariantId: preset.variantId,
-      sourceBlockId: preset.coreBlockId,
-      goalId: preset.goalId,
-      ratingOptions: preset.ratingOptions,
-      presetSortOrder: preset.presetSortOrder,
-      presetOriginalIndex: preset.presetOriginalIndex,
-      themePath: preset.themePath || "__default__",
-      label: preset.label || themeLeaf(preset.themePath)
-    });
+  for (const preset of lookups.allHabits) {
+    if (configuredSet.size && !configuredSet.has(preset.goalPath)) continue;
+    ensureEntry(preset.goalPath, preset);
   }
-  function resolvePresetMeta(item) {
-    const templateId = itemTemplateId(item);
-    if (templateId) {
-      const direct = lookups.byTemplateId.get(templateId);
-      if (direct) return direct;
-    }
-    const goalId = firstText(item.goalId) || readExtraText(item, "目标ID");
-    const coreBlockId = itemCoreBlock(item);
-    const variantId = itemTemplateVariantId(item) || "default";
-    const themePath = getItemThemePath(item);
-    if (goalId && coreBlockId) {
-      return lookups.byGoalBlockVariant.get(`${goalId}\0${coreBlockId}\0${variantId}`) || (themePath ? lookups.byGoalBlockTheme.get(`${goalId}\0${coreBlockId}\0${themePath}`) : null) || lookups.byGoalBlockVariant.get(`${goalId}\0${coreBlockId}\0default`) || null;
-    }
-    return null;
-  }
-  for (const item of items || []) {
+  for (const item of items) {
     const date2 = dateKeyOf(item);
-    if (!date2) continue;
-    const preset = resolvePresetMeta(item);
-    const themePath = preset?.themePath || getItemThemePath(item) || "__default__";
-    if (!preset && filterByTheme && themePath !== "__default__" && !trackedThemeSet.has(themePath)) continue;
-    const explicitGoalPath = getItemGoalKey(item, goals);
-    const goalPath = preset?.goalPath || (explicitGoalPath !== UNASSIGNED_GOAL_KEY ? explicitGoalPath : UNASSIGNED_GOAL_KEY);
-    const goalLabel = preset?.goalLabel || (getItemGoalLabel(item, goals) || goalPath);
-    const goalGroup = ensureGoalGroup(goalPath, goalLabel);
-    goalGroup.count += 1;
-    const presetKey = preset?.key || `${goalPath}\0${themePath}\0${itemCoreBlock(item) || "habit"}`;
-    const label = preset?.label || themeLeaf(themePath);
-    const entry = ensurePresetEntry(goalGroup, {
-      presetKey,
-      templateId: preset?.id,
-      templateVariantId: preset?.variantId,
-      sourceBlockId: preset?.coreBlockId,
-      goalId: preset?.goalId,
-      ratingOptions: preset?.ratingOptions,
-      presetSortOrder: preset?.presetSortOrder,
-      presetOriginalIndex: preset?.presetOriginalIndex,
-      themePath,
-      label
-    });
+    const path = itemGoalPath(item);
+    if (!date2 || !path) continue;
+    if (configuredSet.size && !configuredSet.has(path)) continue;
+    const coreBlockId = itemCoreBlock(item);
+    const preset = lookups.byGoalAndBlock.get(`${path}\0${coreBlockId}`) || null;
+    const entry = ensureEntry(path, preset);
+    const group = ensureGroup(path);
     entry.count += 1;
-    const dayItems = entry.dataForTheme.get(date2) || [];
-    entry.dataForTheme.set(date2, [...dayItems, item]);
+    group.count += 1;
+    const dayItems = entry.dataForGoal.get(date2) || [];
+    entry.dataForGoal.set(date2, [...dayItems, item]);
   }
-  const compareEntriesByPresetOrder = (a2, b2) => {
-    const aHasPresetOrder = a2.presetSortOrder !== void 0 || a2.presetOriginalIndex !== void 0 || Boolean(a2.templateId);
-    const bHasPresetOrder = b2.presetSortOrder !== void 0 || b2.presetOriginalIndex !== void 0 || Boolean(b2.templateId);
-    if (aHasPresetOrder !== bHasPresetOrder) return aHasPresetOrder ? -1 : 1;
-    const byPresetSort = (a2.presetSortOrder ?? Number.MAX_SAFE_INTEGER) - (b2.presetSortOrder ?? Number.MAX_SAFE_INTEGER);
-    if (byPresetSort !== 0) return byPresetSort;
-    const byOriginal = (a2.presetOriginalIndex ?? Number.MAX_SAFE_INTEGER) - (b2.presetOriginalIndex ?? Number.MAX_SAFE_INTEGER);
-    if (byOriginal !== 0) return byOriginal;
-    return a2.label.localeCompare(b2.label, "zh-CN");
-  };
-  const goalGroups = Array.from(goalMap.values()).map((group) => ({
+  const goalOrder = createGoalOrderIndex(goals);
+  const goalGroups = [...groupMap.values()].map((group) => ({
     ...group,
-    entries: group.entries.sort(compareEntriesByPresetOrder)
+    entries: [...group.entries].sort((a2, b2) => {
+      const order2 = (a2.presetOriginalIndex ?? Number.MAX_SAFE_INTEGER) - (b2.presetOriginalIndex ?? Number.MAX_SAFE_INTEGER);
+      return order2 || goalOrder.compareGoalPaths(a2.goalPath, b2.goalPath);
+    })
   })).sort((a2, b2) => goalOrder.compareGoalPaths(a2.goalPath, b2.goalPath));
-  return { themesByPath, themesToTrack, dataByThemeAndDate, goalGroups };
+  return { goalPathsToTrack, dataByGoalAndDate, goalGroups };
 }
 function HeatmapView({
   items,
@@ -61389,23 +58180,13 @@ function HeatmapView({
   goals = [],
   goalSettings
 }) {
-  const config2 = T$1(
-    () => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module2.viewConfig }),
-    [module2.viewConfig]
-  );
+  const config2 = T$1(() => ({ ...HEATMAP_VIEW_DEFAULT_CONFIG, ...module2.viewConfig }), [module2.viewConfig]);
   const ratingMappingsCache = T$1(() => new RatingMappingCache(), []);
   const normalizedCurrentView = currentView === "日" || currentView === "day" ? "天" : currentView;
   const isDayView = normalizedCurrentView === "天";
-  const dataModel = T$1(() => buildHeatmapViewModel({
-    items,
-    module: module2,
-    inputSettings,
-    goals,
-    goalSettings
-  }), [items, module2, inputSettings, goals, goalSettings]);
-  const themesByPath = dataModel.themesByPath;
-  const themesToTrack = dataModel.themesToTrack;
-  const dataByThemeAndDate = dataModel.dataByThemeAndDate;
+  const dataModel = T$1(() => buildHeatmapViewModel({ items, module: module2, goals, goalSettings }), [items, module2, inputSettings, goals, goalSettings]);
+  const goalPathsToTrack = dataModel.goalPathsToTrack;
+  const dataByGoalAndDate = dataModel.dataByGoalAndDate;
   const goalGroupsToDisplay = T$1(() => filterGoalHeatmapGroups(dataModel.goalGroups), [dataModel.goalGroups]);
   const resolveBlockId = (candidate) => normalizeHeatmapBlockId({
     candidate,
@@ -61413,46 +58194,32 @@ function HeatmapView({
     configuredSourceBlockId: config2.sourceBlockId
   });
   const heatmapSourceBlockId = resolveBlockId(config2.sourceBlockId);
-  const resolveCellRatingMapping = (themePath, presetContext) => {
-    if (presetContext?.ratingOptions?.length) {
-      return buildHeatmapRatingMapping(presetContext.ratingOptions);
-    }
-    return ratingMappingsCache.get(
-      inputSettings,
-      heatmapSourceBlockId || "",
-      themePath,
-      themesByPath
-    );
+  const resolveCellRatingMapping = (goalPath, presetContext) => {
+    if (presetContext?.ratingOptions?.length) return buildHeatmapRatingMapping(presetContext.ratingOptions);
+    return ratingMappingsCache.get(inputSettings, heatmapSourceBlockId || "", goalPath);
   };
-  const inferredBlockIdByTheme = T$1(() => inferHeatmapBlockIdByTheme(items), [items]);
-  const resolveCreateBlockId = (themePath, item, sourceBlockId) => {
-    return resolveHeatmapCreateBlockId({
-      themePath,
-      item,
-      sourceBlockId,
-      heatmapSourceBlockId,
-      inferredBlockIdByTheme,
-      normalizeBlockId: resolveBlockId
-    });
-  };
-  const openQuickCreate = (date2, item, themePath, goalPath, presetContext) => {
+  const inferredBlockIdByGoal = T$1(() => inferHeatmapBlockIdByGoal(items), [items]);
+  const resolveCreateBlockId = (goalPath, item, sourceBlockId) => resolveHeatmapCreateBlockId({
+    goalPath,
+    item,
+    sourceBlockId,
+    heatmapSourceBlockId,
+    inferredBlockIdByGoal,
+    normalizeBlockId: resolveBlockId
+  });
+  const openQuickCreate = (date2, item, goalPath, presetContext) => {
     if (!onOpenHeatmapCreate) {
       onNotice?.("未提供创建处理器，无法创建记录");
       return;
     }
     onOpenHeatmapCreate({
-      sourceBlockId: resolveCreateBlockId(themePath, item, presetContext?.sourceBlockId),
+      sourceBlockId: resolveCreateBlockId(goalPath, item, presetContext?.sourceBlockId),
       date: date2,
       item,
-      themePath,
-      goalPath,
-      goalId: presetContext?.goalId,
-      templateId: presetContext?.templateId,
-      templateVariantId: presetContext?.templateVariantId,
-      themesByPath
+      goalPath
     });
   };
-  const openCellRecordManager = (date2, itemsForDay, themePath, goalPath, presetContext) => {
+  const openCellRecordManager = (date2, itemsForDay, goalPath, presetContext) => {
     if (!onOpenCheckinManager) {
       onNotice?.("未提供记录管理处理器，无法打开记录列表");
       return;
@@ -61460,51 +58227,46 @@ function HeatmapView({
     onOpenCheckinManager({
       date: date2,
       items: itemsForDay,
-      onAddRecord: () => openQuickCreate(date2, itemsForDay[itemsForDay.length - 1], themePath, goalPath, presetContext)
+      onAddRecord: () => openQuickCreate(date2, itemsForDay[itemsForDay.length - 1], goalPath, presetContext)
     });
   };
-  const handleCellClick = (date2, dayItems, themePath, goalPath, presetContext) => {
+  const handleCellClick = (date2, dayItems, goalPath, presetContext) => {
     const itemsForDay = dayItems || [];
     if (itemsForDay.length === 0) {
-      openQuickCreate(date2, void 0, themePath, goalPath, presetContext);
+      openQuickCreate(date2, void 0, goalPath, presetContext);
       return;
     }
-    openCellRecordManager(date2, itemsForDay, themePath, goalPath, presetContext);
+    openCellRecordManager(date2, itemsForDay, goalPath, presetContext);
   };
   const [verticalLayouts, setVerticalLayouts] = d(/* @__PURE__ */ new Set());
-  const [collapsedThemes, setCollapsedThemes] = d(/* @__PURE__ */ new Set());
+  const [collapsedGoals, setCollapsedGoals] = d(/* @__PURE__ */ new Set());
   const headerRefs = A$1(/* @__PURE__ */ new Map());
-  const toggleThemeCollapsed = (theme) => {
-    setCollapsedThemes((prev2) => toggleHeatmapCollapsedTheme(prev2, theme));
-  };
-  const checkLayout = (theme, headerElement) => {
+  const toggleGoalCollapsed = (goalPath) => setCollapsedGoals((prev2) => toggleHeatmapCollapsedGoal(prev2, goalPath));
+  const checkLayout = (goalPath, headerElement) => {
     const needsVertical = resolveHeatmapVerticalLayout({
-      theme,
+      goalPath,
       normalizedCurrentView,
       isDayView,
       containerWidth: headerElement?.clientWidth ?? 0
     });
     if (needsVertical === null) return;
-    setVerticalLayouts((prev2) => applyHeatmapVerticalLayout(prev2, theme, needsVertical));
+    setVerticalLayouts((prev2) => applyHeatmapVerticalLayout(prev2, goalPath, needsVertical));
   };
   y(() => {
+    if (typeof ResizeObserver === "undefined") return;
     const resizeObserver = new ResizeObserver((entries) => {
       entries.forEach((entry) => {
         const element = entry.target;
-        const theme = element.dataset.theme;
-        if (theme) {
-          checkLayout(theme, element);
-        }
+        const goalPath = element.dataset.goal;
+        if (goalPath) checkLayout(goalPath, element);
       });
     });
-    headerRefs.current.forEach((element, theme) => {
+    headerRefs.current.forEach((element, goalPath) => {
       resizeObserver.observe(element);
-      checkLayout(theme, element);
+      checkLayout(goalPath, element);
     });
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [themesToTrack, normalizedCurrentView]);
+    return () => resizeObserver.disconnect();
+  }, [goalPathsToTrack, normalizedCurrentView]);
   const dateRangeStart = T$1(() => dayjs(dateRange[0]).format("YYYY-MM-DD"), [dateRange]);
   return /* @__PURE__ */ u2("div", { class: "heatmap-container", children: /* @__PURE__ */ u2(
     HeatmapViewContent,
@@ -61517,12 +58279,12 @@ function HeatmapView({
       resolveResourcePath,
       onOpenRecordOrigin,
       goalGroupsToDisplay,
-      themesToTrack,
-      dataByThemeAndDate,
+      goalPathsToTrack,
+      dataByGoalAndDate,
       verticalLayouts,
-      collapsedThemes,
+      collapsedGoals,
       headerRefs,
-      onToggleThemeCollapsed: toggleThemeCollapsed,
+      onToggleGoalCollapsed: toggleGoalCollapsed,
       onCellClick: handleCellClick,
       resolveCellRatingMapping
     }
@@ -61915,7 +58677,6 @@ function StatisticsViewView({
   yearlyWeekStructure,
   processedData,
   bucketAccessor,
-  goalThemeSummaries = [],
   onOpenRecordOrigin
 }) {
   if (!categories || categories.length === 0) {
@@ -61959,7 +58720,7 @@ function resolveStatisticsYear(startDate) {
   return startDate.year();
 }
 function resolveStatisticsBucketAccessor(goals = []) {
-  return (item) => getItemGoalKey(item, goals);
+  return (item) => getItemRootGoalKey(item, goals);
 }
 function buildYearlyWeekStructure(year, enabled2 = true) {
   if (!enabled2) return [];
@@ -61975,30 +58736,16 @@ function resolveYearlyWeekStructure(input) {
   return buildYearlyWeekStructure(input.year, input.isYearView);
 }
 function buildStatisticsGoalBuckets(args) {
-  const buckets = buildGoalBuckets(args.items, args.goals || [], { includeUnassigned: true, includeKnownGoals: true, themes: args.themes || [] });
+  const buckets = buildGoalBuckets(args.items, args.goals || [], {
+    includeUnassigned: true,
+    includeKnownGoals: true,
+    level: "root"
+  });
   const topN = Math.max(0, Number(args.topN) || 0);
   return topN > 0 ? buckets.slice(0, topN) : buckets;
 }
-function buildStatisticsGoalThemeSummaries(items, categories, goals = []) {
-  const bucketAccessor = resolveStatisticsBucketAccessor(goals);
-  const counts = /* @__PURE__ */ new Map();
-  for (const item of items) {
-    const goalKey = bucketAccessor(item);
-    const themeKey = getItemThemeKey(item);
-    const inner = counts.get(goalKey) || /* @__PURE__ */ new Map();
-    inner.set(themeKey, (inner.get(themeKey) || 0) + 1);
-    counts.set(goalKey, inner);
-  }
-  return categories.map((category) => ({
-    goalPath: category.name,
-    themes: Array.from((counts.get(category.name) || /* @__PURE__ */ new Map()).entries()).map(([themePath, count]) => {
-      const parts = String(themePath || "").split("/").filter(Boolean);
-      return { themePath, label: parts[parts.length - 1] || themePath || "未设置主题", count };
-    }).sort((a2, b2) => b2.count - a2.count || a2.themePath.localeCompare(b2.themePath, "zh-CN")).slice(0, 3)
-  }));
-}
 function buildStatisticsProcessedData(input) {
-  const bucketAccessor = input.bucketAccessor || getItemGoalKey;
+  const bucketAccessor = input.bucketAccessor || getItemRootGoalKey;
   if (!input.isYearView) {
     return {
       yearData: createPeriodData(input.filteredCategories),
@@ -62046,7 +58793,6 @@ function StatisticsView({
   timerService,
   onMarkDone,
   timers,
-  allThemes,
   goals = [],
   inputSettings,
   messageRenderPort,
@@ -62058,11 +58804,9 @@ function StatisticsView({
   const filteredCategories = T$1(() => buildStatisticsGoalBuckets({
     items,
     goals,
-    themes: inputSettings?.themes || [],
     topN: viewConfig.topN
-  }), [items, goals, inputSettings?.themes, viewConfig.topN]);
+  }), [items, goals, viewConfig.topN]);
   const bucketAccessor = T$1(() => resolveStatisticsBucketAccessor(goals), [goals]);
-  const goalThemeSummaries = T$1(() => buildStatisticsGoalThemeSummaries(items, filteredCategories, goals), [items, filteredCategories, goals]);
   const [selectedCell, setSelectedCell] = d(null);
   const [popover, setPopover] = d(null);
   const openLockRef = A$1(false);
@@ -62114,7 +58858,6 @@ function StatisticsView({
       timerService,
       onMarkDone,
       timers,
-      allThemes,
       messageRenderPort,
       onOpenRecord,
       onOpenRecordOrigin,
@@ -62145,7 +58888,6 @@ function StatisticsView({
       yearlyWeekStructure,
       processedData,
       bucketAccessor,
-      goalThemeSummaries,
       onOpenRecordOrigin
     }
   );
@@ -62156,7 +58898,6 @@ function PopoverContent({
   timerService,
   onMarkDone,
   timers,
-  allThemes,
   messageRenderPort,
   onOpenRecord,
   onOpenRecordOrigin,
@@ -62173,7 +58914,6 @@ function PopoverContent({
       onMarkDone,
       timerService,
       timers,
-      allThemes,
       messageRenderPort,
       onOpenRecord
     }
@@ -62197,7 +58937,7 @@ function computeProgression(items, options) {
   } = options;
   const allowed = new Set((includedCategories || []).filter(Boolean));
   const categoryMap = /* @__PURE__ */ new Map();
-  const themeMap = /* @__PURE__ */ new Map();
+  const goalMap = /* @__PURE__ */ new Map();
   let totalPoints = 0;
   let matchedCount = 0;
   for (const item of items) {
@@ -62213,11 +58953,11 @@ function computeProgression(items, options) {
     catRow.points += points;
     catRow.count += 1;
     categoryMap.set(category, catRow);
-    const theme = getItemThemeKey(item);
-    const themeRow = themeMap.get(theme) || { points: 0, count: 0 };
-    themeRow.points += points;
-    themeRow.count += 1;
-    themeMap.set(theme, themeRow);
+    const goalPath = getItemGoalKey(item);
+    const goalRow = goalMap.get(goalPath) || { points: 0, count: 0 };
+    goalRow.points += points;
+    goalRow.count += 1;
+    goalMap.set(goalPath, goalRow);
   }
   const safeLevelStep = Math.max(1, levelStep);
   const level = Math.floor(totalPoints / safeLevelStep) + 1;
@@ -62233,7 +58973,7 @@ function computeProgression(items, options) {
     progressRatio,
     matchedCount,
     categoryBreakdown: toSortedRows(categoryMap, topN),
-    themeBreakdown: toSortedRows(themeMap, topN)
+    goalBreakdown: toSortedRows(goalMap, topN)
   };
 }
 function buildGoalEnergyContext(item, goalItems) {
@@ -62280,7 +59020,7 @@ function buildGoalEnergyEffects(evidenceRecords) {
     mediumConfidencePairCount: effects.mediumConfidencePairCount,
     excludedActivityCount: effects.excludedActivityCount,
     byActivity: mapRows(effects.byActivity),
-    byTheme: mapRows(effects.byTheme),
+    byGoal: mapRows(effects.byGoal),
     byDuration: mapRows(effects.byDuration)
   };
 }
@@ -62405,12 +59145,12 @@ function buildProgressRecentRecords(items, limit = 5) {
   }));
 }
 function buildProgressViewRenderModel(args) {
-  const { items, module: module2, goals = [], themes = [] } = args;
+  const { items, module: module2, goals = [] } = args;
   const config2 = { ...PROGRESS_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {}, mode: "goal", metric: "recordCount" };
-  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
+  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, level: "root" });
   const levelStep = Math.max(1, Number(config2.levelStep) || 20);
   const cards = buckets.map((bucket) => {
-    const goalItems = items.filter((item) => getItemGoalKey(item, goals) === bucket.name);
+    const goalItems = items.filter((item) => getItemRootGoalKey(item, goals) === bucket.name);
     const progressItems = goalItems.filter((item) => !isEnergyItem(item));
     const progression = computeProgression(progressItems, {
       basePoints: config2.basePoints,
@@ -62442,11 +59182,11 @@ function buildProgressViewRenderModel(args) {
       latestDate: dates.length ? dates[dates.length - 1] : null,
       blockCounts,
       categoryBreakdown: progression.categoryBreakdown,
-      themeBreakdown: progression.themeBreakdown,
-      themeRecentRecords: Object.fromEntries(
-        progression.themeBreakdown.map((row) => [
+      goalBreakdown: progression.goalBreakdown,
+      goalRecentRecords: Object.fromEntries(
+        progression.goalBreakdown.map((row) => [
           row.key,
-          buildProgressRecentRecords(progressItems.filter((item) => getItemThemeKey(item) === row.key), 5)
+          buildProgressRecentRecords(progressItems.filter((item) => getItemGoalKey(item, goals) === row.key), 5)
         ])
       ),
       energySummary: buildGoalEnergySummary(goalItems.filter(isEnergyItem), 5, { contextRecords: items, effectRecords: items })
@@ -62489,7 +59229,7 @@ function progressBarWidth(value) {
 }
 function getProgressLeafLabel(path) {
   const parts = String(path || "").split("/").map((part) => part.trim()).filter(Boolean);
-  return parts[parts.length - 1] || path || "未设置主题";
+  return parts[parts.length - 1] || path || "未设置目标";
 }
 function getGoalProgressTitle(card) {
   return card.title || card.goalPath || "未命名目标";
@@ -62502,7 +59242,7 @@ function getProgressLevelMeta(level) {
   return PROGRESS_LEVEL_META[getProgressDisplayLevel(level) - 1] || PROGRESS_LEVEL_META[0];
 }
 function buildProgressSkillRows(card) {
-  return getVisibleProgressThemeBreakdown(card.themeBreakdown).map((row) => {
+  return getVisibleProgressGoalBreakdown(card.goalBreakdown).map((row) => {
     const safeLevelStep = Math.max(1, Number(card.levelStep || 1));
     const level = Math.floor(Number(row.points || 0) / safeLevelStep) + 1;
     const currentLevelPoints = Number(row.points || 0) - (level - 1) * safeLevelStep;
@@ -62514,21 +59254,21 @@ function buildProgressSkillRows(card) {
       level,
       levelMeta: getProgressLevelMeta(level),
       progressRatio: clampProgressRatio(currentLevelPoints / safeLevelStep),
-      recentRecords: card.themeRecentRecords?.[row.key] || []
+      recentRecords: card.goalRecentRecords?.[row.key] || []
     };
   });
 }
-function getVisibleProgressThemeBreakdown(rows) {
+function getVisibleProgressGoalBreakdown(rows) {
   return (rows || []).filter((row) => row.count > 0).slice(0, 8);
 }
 function ExperienceBar({ ratio: ratio2, tone = "goal" }) {
   const style2 = { "--think-progress-ratio": progressBarWidth(ratio2) };
   return /* @__PURE__ */ u2("span", { class: `think-progress-bar think-progress-bar--${tone}`, "aria-label": `进度 ${progressBarWidth(ratio2)}`, children: /* @__PURE__ */ u2("span", { class: "think-progress-bar__fill", style: style2 }) });
 }
-function ThemeRecords({ records, runtime }) {
-  if (!records.length) return /* @__PURE__ */ u2("div", { class: "think-progress-theme-records__empty", children: "该主题暂无记录" });
+function GoalRecords({ records, runtime }) {
+  if (!records.length) return /* @__PURE__ */ u2("div", { class: "think-progress-goal-records__empty", children: "该目标暂无记录" });
   const fields = runtime.module.fields?.length ? runtime.module.fields : ["title", "content"];
-  return /* @__PURE__ */ u2("div", { class: "think-progress-theme-records", "aria-label": "主题记录", children: /* @__PURE__ */ u2(
+  return /* @__PURE__ */ u2("div", { class: "think-progress-goal-records", "aria-label": "目标记录", children: /* @__PURE__ */ u2(
     BlockView,
     {
       items: records.map((record) => record.item),
@@ -62536,7 +59276,6 @@ function ThemeRecords({ records, runtime }) {
       onMarkDone: runtime.onMarkDone,
       timerService: runtime.timerService,
       timers: runtime.timers,
-      allThemes: runtime.allThemes,
       goals: runtime.goals,
       resolveResourcePath: runtime.resolveResourcePath,
       onOpenRecordOrigin: runtime.onOpenRecordOrigin,
@@ -62548,7 +59287,7 @@ function ThemeRecords({ records, runtime }) {
 function SkillList({ card, runtime }) {
   const rows = buildProgressSkillRows(card);
   const [openKey, setOpenKey] = d(null);
-  if (rows.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-empty-skill", children: "暂无主题成长记录" });
+  if (rows.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-empty-skill", children: "暂无子目标成长记录" });
   return /* @__PURE__ */ u2("div", { class: "think-progress-skills", role: "list", children: rows.map((row) => {
     const open = openKey === row.key;
     return /* @__PURE__ */ u2("div", { class: `think-progress-skill-group ${open ? "is-open" : ""}`, role: "listitem", children: [
@@ -62580,7 +59319,7 @@ function SkillList({ card, runtime }) {
           ]
         }
       ),
-      open && /* @__PURE__ */ u2(ThemeRecords, { records: row.recentRecords, runtime })
+      open && /* @__PURE__ */ u2(GoalRecords, { records: row.recentRecords, runtime })
     ] }, row.key);
   }) });
 }
@@ -62597,7 +59336,6 @@ function GoalProgressCard(props) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     goals
   } = props;
   const title = getGoalProgressTitle(card);
@@ -62611,7 +59349,6 @@ function GoalProgressCard(props) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     goals
   };
   return /* @__PURE__ */ u2("section", { class: "think-progress-section think-progress-card", role: "listitem", children: [
@@ -62647,10 +59384,9 @@ function ProgressView({
   messageRenderPort,
   onMarkDone,
   timerService,
-  timers = [],
-  allThemes = []
+  timers = []
 }) {
-  const progressModel = T$1(() => buildProgressViewRenderModel({ items, module: module2, goals, themes: inputSettings?.themes || allThemes }), [items, module2, goals, inputSettings?.themes, allThemes]);
+  const progressModel = T$1(() => buildProgressViewRenderModel({ items, module: module2, goals }), [items, module2, goals]);
   const cards = progressModel.goalCards || [];
   const [collapsedKeys, setCollapsedKeys] = d({});
   if (cards.length === 0) return /* @__PURE__ */ u2("div", { class: "think-progress-view__empty", children: "暂无目标成长记录" });
@@ -62670,7 +59406,6 @@ function ProgressView({
         onMarkDone,
         timerService,
         timers,
-        allThemes,
         goals
       },
       card.key
@@ -62685,15 +59420,14 @@ function taskTitle(item) {
   return raw || text(item.title) || "未命名任务";
 }
 function buildGoalMap(goals) {
-  return new Map((goals || []).map((goal) => [goal.id, goal]));
+  return new Map((goals || []).map((goal) => [text(goal.path), goal]));
 }
-function resolveTaskGoal(item, goalsById) {
-  const goalId = text(item.goalId);
-  if (!goalId) return { key: "__unassigned__", label: "未分目标" };
-  const goal = goalsById.get(goalId);
-  const path = text(goal?.goalPath || item.goalPath) || void 0;
-  const label = text(goal?.title || path) || "未分目标";
-  return { key: goalId, path, label };
+function resolveTaskGoal(item, goalsByPath) {
+  const path = text(item.goalPath);
+  if (!path) return { key: "__unassigned__", label: "未分目标" };
+  const goal = goalsByPath.get(path);
+  const label = text(goal?.path?.split("/").filter(Boolean).pop() || path.split("/").filter(Boolean).pop() || path) || "未分目标";
+  return { key: path, path, label };
 }
 function completionIdentity(item) {
   const seriesId = text(item.seriesId);
@@ -62798,10 +59532,10 @@ function buildEnergyTaskListModel(args) {
     }).sort((left2, right2) => right2.fitScore - left2.fitScore).slice(0, 5);
     for (const row of matchable) energyMatchedIds.add(row.candidate.id);
   }
-  const goalsById = buildGoalMap(goals);
+  const goalsByPath = buildGoalMap(goals);
   const goalBuckets = /* @__PURE__ */ new Map();
   for (const item of visibleItems) {
-    const resolvedGoal = resolveTaskGoal(item, goalsById);
+    const resolvedGoal = resolveTaskGoal(item, goalsByPath);
     const goalPath = resolvedGoal.path;
     const label = resolvedGoal.label;
     const goalKey = resolvedGoal.key;
@@ -63001,7 +59735,7 @@ function itemInRange(item, startDate, endDate) {
   return Boolean(date2 && date2 >= startDate && date2 <= endDate);
 }
 function buildEnergyViewModel(args) {
-  const { items = [], records = items, module: module2, goals = [], themes = [], currentView, dateRange } = args;
+  const { items = [], records = items, module: module2, goals = [], currentView, dateRange } = args;
   const rawConfig = { ...ENERGY_VIEW_DEFAULT_CONFIG, ...module2?.viewConfig || {} };
   const config2 = {
     ...rawConfig,
@@ -63019,7 +59753,7 @@ function buildEnergyViewModel(args) {
   const nowTime = now2.format("HH:mm");
   const displayPeriodLabel = periodLabel(currentView, dateRange);
   const requestedGoal = normalizedGoalFilter(config2.goalPath);
-  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false, themes });
+  const buckets = buildGoalBuckets(items, goals, { includeUnassigned: false, includeKnownGoals: false });
   const panels = [];
   for (const bucket of buckets) {
     const bucketPath = normalizedGoalFilter(bucket.goalPath || bucket.name);
@@ -63748,16 +60482,15 @@ function EmptyEnergyPanel() {
     /* @__PURE__ */ u2("span", { children: "任务仍可直接从下方开始；精力记录可继续使用现有快捷入口。" })
   ] }) });
 }
-function EnergyView({ items, records = items, module: module2, dateRange, currentView, goals = [], inputSettings, timers = [], onOpenRecord, onOpenRecordOrigin, timerService, onEnergyContextChange }) {
+function EnergyView({ items, records = items, module: module2, dateRange, currentView, goals = [], timers = [], onOpenRecord, onOpenRecordOrigin, timerService, onEnergyContextChange }) {
   const energyModel = T$1(() => buildEnergyViewModel({
     items,
     records,
     module: module2,
     dateRange,
     currentView,
-    goals,
-    themes: inputSettings?.themes || []
-  }), [items, records, module2, dateRange, currentView, goals, inputSettings?.themes, timers]);
+    goals
+  }), [items, records, module2, dateRange, currentView, goals, timers]);
   const startTask = async (task) => {
     const baseline = energyModel.taskList.latestEnergy;
     if (baseline && timerService?.startEnergyTask) {
@@ -63827,7 +60560,6 @@ function TableViewCell(props) {
     onOpenRecordOrigin,
     timerService,
     timers,
-    allThemes,
     onOpenRecord
   } = props;
   if (!items.length) return /* @__PURE__ */ u2("td", { class: "empty" });
@@ -63840,13 +60572,12 @@ function TableViewCell(props) {
       onOpenRecordOrigin,
       timerService,
       timer: findTableViewTimer(timers, item.id),
-      allThemes,
       compact: true,
       onOpenRecord
     }
   ) : /* @__PURE__ */ u2(ItemLink, { item, onOpenRecord, onOpenRecordOrigin }) }, item.id)) });
 }
-function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], goals = [], onOpenRecord }) {
+function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, goals = [], onOpenRecord }) {
   const renderModel = buildTableViewRenderModel({ items, rowField, colField, goals });
   if (!renderModel.isConfigured) {
     return /* @__PURE__ */ u2("div", { class: "think-data-grid-empty", children: renderModel.emptyMessage });
@@ -63867,7 +60598,6 @@ function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath,
           onOpenRecordOrigin,
           timerService,
           timers,
-          allThemes,
           onOpenRecord
         },
         col
@@ -65471,534 +62201,6 @@ function ExcelView({
     }
   );
 }
-function ThemeTreeSelectTrigger({
-  open,
-  onToggleOpen,
-  displayText: displayText2,
-  hasSelection,
-  allowClear,
-  disabled,
-  size,
-  onClear,
-  anchorRef
-}) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      ref: anchorRef,
-      onClick: () => !disabled && onToggleOpen(),
-      sx: {
-        display: "flex",
-        alignItems: "center",
-        gap: 0.5,
-        px: 1.5,
-        py: size === "small" ? 0.5 : 1,
-        border: "1px solid var(--background-modifier-border)",
-        borderRadius: 1,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        bgcolor: "background.paper",
-        "&:hover": disabled ? {} : {
-          borderColor: "primary.main"
-        }
-      },
-      children: [
-        /* @__PURE__ */ u2(
-          Typography2,
-          {
-            variant: "body2",
-            sx: {
-              flex: 1,
-              color: hasSelection ? "text.primary" : "text.secondary",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap"
-            },
-            children: displayText2
-          }
-        ),
-        allowClear && hasSelection && !disabled && /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: onClear, sx: { p: 0.25 }, children: /* @__PURE__ */ u2(ClearIcon, { fontSize: "small" }) }),
-        /* @__PURE__ */ u2(IconButton2, { size: "small", sx: { p: 0.25 }, children: open ? /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(ChevronRightIcon, { fontSize: "small" }) })
-      ]
-    }
-  );
-}
-function SearchBox({ value, onChange }) {
-  return /* @__PURE__ */ u2(Box, { sx: { p: 1, borderBottom: "1px solid var(--background-modifier-border)" }, children: /* @__PURE__ */ u2(
-    TextField2,
-    {
-      fullWidth: true,
-      size: "small",
-      placeholder: "搜索主题...",
-      value,
-      onChange: (e2) => onChange(e2.target.value),
-      InputProps: {
-        startAdornment: /* @__PURE__ */ u2(InputAdornment2, { position: "start", children: /* @__PURE__ */ u2(SearchIcon, { fontSize: "small" }) }),
-        endAdornment: value && /* @__PURE__ */ u2(InputAdornment2, { position: "end", children: /* @__PURE__ */ u2(IconButton2, { size: "small", onClick: () => onChange(""), children: /* @__PURE__ */ u2(ClearIcon, { fontSize: "small" }) }) })
-      },
-      onKeyDown: (e2) => e2.stopPropagation()
-    }
-  ) });
-}
-function MultiSelectToolbar({ themeTree, onSelectMultiple }) {
-  return /* @__PURE__ */ u2(
-    Box,
-    {
-      sx: {
-        display: "flex",
-        gap: 1,
-        p: 1,
-        borderBottom: "1px solid var(--background-modifier-border)"
-      },
-      children: [
-        /* @__PURE__ */ u2(
-          Button2,
-          {
-            size: "small",
-            onClick: () => {
-              const allPaths = ThemeTreeBuilder.getLeafNodes(themeTree).map((n2) => n2.path);
-              onSelectMultiple?.(allPaths);
-            },
-            children: "全选"
-          }
-        ),
-        /* @__PURE__ */ u2(Button2, { size: "small", onClick: () => onSelectMultiple?.([]), children: "清空" })
-      ]
-    }
-  );
-}
-function SelectedPathsChips({
-  selectedPaths,
-  onRemovePath,
-  maxVisible = 3
-}) {
-  if (selectedPaths.length === 0) return null;
-  const visible = selectedPaths.slice(0, maxVisible);
-  const restCount = selectedPaths.length - visible.length;
-  return /* @__PURE__ */ u2(Box, { sx: { display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.5 }, children: [
-    visible.map((path) => /* @__PURE__ */ u2(
-      Chip2,
-      {
-        size: "small",
-        label: path.split("/").pop(),
-        onDelete: onRemovePath ? () => {
-          onRemovePath(path);
-        } : void 0,
-        sx: { height: 22 }
-      },
-      path
-    )),
-    restCount > 0 && /* @__PURE__ */ u2(Chip2, { size: "small", label: `+${restCount}`, sx: { height: 22 } })
-  ] });
-}
-function ThemeTreeNodeItem({
-  node: node2,
-  expandedIds,
-  selectedPaths,
-  selectedThemeId,
-  multiSelect,
-  onToggleExpand,
-  onSingleSelect,
-  onMultiSelect,
-  onSelectWithChildren,
-  renderLabel
-}) {
-  if (!node2) return null;
-  const children = node2.children || [];
-  const hasChildren = children.length > 0;
-  const isExpanded = expandedIds.has(node2.id);
-  const isSelected = multiSelect ? selectedPaths.includes(node2.path) : node2.themeId === selectedThemeId;
-  const handleClick = () => {
-    if (multiSelect) {
-      onMultiSelect(node2);
-    } else {
-      if (node2.themeId) {
-        onSingleSelect(node2);
-      } else if (hasChildren) {
-        onToggleExpand(node2.id);
-      }
-    }
-  };
-  return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2(
-      ListItemButton2,
-      {
-        onClick: handleClick,
-        selected: isSelected,
-        sx: {
-          // 缩进逻辑统一下沉到 ThemeTreeNodeLabel
-          pl: 0,
-          py: 0.5,
-          minHeight: 32
-        },
-        children: /* @__PURE__ */ u2(
-          ThemeTreeNodeLabel,
-          {
-            depth: node2.depth,
-            hasChildren,
-            expanded: isExpanded,
-            onToggleExpand: (e2) => onToggleExpand(node2.id, e2),
-            placeholderWidthPx: 24,
-            basePadding: 1,
-            indentUnit: 2,
-            sx: { width: "100%" },
-            children: [
-              multiSelect && /* @__PURE__ */ u2(
-                Checkbox2,
-                {
-                  size: "small",
-                  checked: isSelected,
-                  onClick: (e2) => e2.stopPropagation(),
-                  onChange: () => onMultiSelect(node2),
-                  sx: { p: 0.25, mr: 0.5 }
-                }
-              ),
-              /* @__PURE__ */ u2(
-                Typography2,
-                {
-                  variant: "body2",
-                  sx: {
-                    flex: 1,
-                    fontWeight: node2.themeId ? 400 : 500,
-                    // 虚节点加粗
-                    color: node2.themeId ? "text.primary" : "text.secondary"
-                  },
-                  children: renderLabel ? renderLabel(node2) : node2.label
-                }
-              ),
-              multiSelect && hasChildren && /* @__PURE__ */ u2(
-                IconButton2,
-                {
-                  size: "small",
-                  onClick: (e2) => {
-                    e2.stopPropagation();
-                    onSelectWithChildren(node2);
-                  },
-                  sx: { p: 0.25, opacity: 0.6, "&:hover": { opacity: 1 } },
-                  title: "包含子主题",
-                  children: /* @__PURE__ */ u2(ExpandMoreIcon, { fontSize: "small" })
-                }
-              )
-            ]
-          }
-        )
-      }
-    ),
-    hasChildren && /* @__PURE__ */ u2(Collapse2, { in: isExpanded, children: children.filter(Boolean).map((child) => /* @__PURE__ */ u2(
-      ThemeTreeNodeItem,
-      {
-        node: child,
-        expandedIds,
-        selectedPaths,
-        selectedThemeId,
-        multiSelect,
-        onToggleExpand,
-        onSingleSelect,
-        onMultiSelect,
-        onSelectWithChildren,
-        renderLabel
-      },
-      child.id
-    )) })
-  ] });
-}
-function ThemeTreeSelectPanel({
-  themes,
-  selectedThemeId,
-  selectedPaths = [],
-  onSelect,
-  onSelectMultiple,
-  multiSelect = false,
-  searchable = true,
-  showToolbar = true,
-  showSelectedChips = true,
-  defaultExpandedIds = [],
-  defaultExpandAll = false,
-  expandToSelected = true,
-  renderLabel,
-  maxHeight: maxHeight2 = 300,
-  sx = {},
-  selectChildrenOnCollapsedParent = false,
-  onRequestClose,
-  disabled = false
-}) {
-  const [searchTerm, setSearchTerm] = d("");
-  const [expandedIds, setExpandedIds] = d(() => new Set(defaultExpandedIds));
-  const themeTree = T$1(() => (buildThemeTree(themes || []) || []).filter(Boolean), [themes]);
-  y(() => {
-    if (!expandToSelected) return;
-    const pathsToExpand = [];
-    if (multiSelect && selectedPaths.length > 0) {
-      selectedPaths.forEach((p2) => pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(p2)));
-    } else if (selectedThemeId) {
-      const theme = themes.find((t3) => t3.id === selectedThemeId);
-      if (theme?.path) {
-        pathsToExpand.push(...ThemeTreeBuilder.getAncestorPaths(theme.path));
-      }
-    }
-    if (pathsToExpand.length > 0) {
-      setExpandedIds((prev2) => {
-        const next2 = new Set(prev2);
-        pathsToExpand.forEach((p2) => next2.add(p2));
-        return next2;
-      });
-    }
-  }, [expandToSelected, multiSelect, selectedPaths, selectedThemeId, themes]);
-  y(() => {
-    if (!defaultExpandAll || themeTree.length === 0) return;
-    const allIds = [];
-    const collect = (nodes) => {
-      nodes.forEach((n2) => {
-        if (!n2) return;
-        allIds.push(n2.id);
-        collect(n2.children || []);
-      });
-    };
-    collect(themeTree);
-    setExpandedIds(new Set(allIds));
-  }, [defaultExpandAll, themeTree]);
-  const filteredTree = T$1(() => {
-    if (!searchTerm.trim()) return themeTree;
-    return (searchThemeTree(themeTree, searchTerm) || []).filter(Boolean);
-  }, [themeTree, searchTerm]);
-  const toggleExpand = q$1((nodeId, e2) => {
-    e2?.stopPropagation();
-    setExpandedIds((prev2) => {
-      const next2 = new Set(prev2);
-      if (next2.has(nodeId)) next2.delete(nodeId);
-      else next2.add(nodeId);
-      return next2;
-    });
-  }, []);
-  const handleSingleSelect = q$1(
-    (node2) => {
-      if (disabled) return;
-      if (onSelect) onSelect(node2.themeId, node2.path);
-      onRequestClose?.();
-    },
-    [disabled, onSelect, onRequestClose]
-  );
-  const handleSelectWithChildren = q$1(
-    (node2) => {
-      if (disabled) return;
-      if (!onSelectMultiple) return;
-      const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node2);
-      const allPaths = [node2.path, ...descendantPaths].filter(Boolean);
-      const hasAll = allPaths.every((p2) => selectedPaths.includes(p2));
-      if (hasAll) {
-        const toRemove = new Set(allPaths);
-        onSelectMultiple(selectedPaths.filter((p2) => !toRemove.has(p2)));
-      } else {
-        onSelectMultiple([.../* @__PURE__ */ new Set([...selectedPaths, ...allPaths])]);
-      }
-    },
-    [disabled, onSelectMultiple, selectedPaths]
-  );
-  const handleMultiSelect = q$1(
-    (node2) => {
-      if (disabled) return;
-      if (!onSelectMultiple) return;
-      const hasChildren = (node2.children || []).length > 0;
-      const isCollapsed = hasChildren && !expandedIds.has(node2.id);
-      if (selectChildrenOnCollapsedParent && isCollapsed) {
-        handleSelectWithChildren(node2);
-        return;
-      }
-      const path = node2.path;
-      const isSelected = selectedPaths.includes(path);
-      if (isSelected) {
-        const descendantPaths = ThemeTreeBuilder.getDescendantPaths(node2);
-        const toRemove = /* @__PURE__ */ new Set([path, ...descendantPaths]);
-        onSelectMultiple(selectedPaths.filter((p2) => !toRemove.has(p2)));
-      } else {
-        onSelectMultiple([...selectedPaths, path]);
-      }
-    },
-    [
-      disabled,
-      expandedIds,
-      handleSelectWithChildren,
-      onSelectMultiple,
-      selectedPaths,
-      selectChildrenOnCollapsedParent
-    ]
-  );
-  return /* @__PURE__ */ u2(Box, { sx: { ...sx }, children: [
-    searchable && /* @__PURE__ */ u2(SearchBox, { value: searchTerm, onChange: setSearchTerm }),
-    multiSelect && showToolbar && /* @__PURE__ */ u2(MultiSelectToolbar, { themeTree, onSelectMultiple }),
-    /* @__PURE__ */ u2(Box, { sx: { maxHeight: maxHeight2, overflow: "auto" }, children: filteredTree.length === 0 ? /* @__PURE__ */ u2(Box, { sx: { p: 2, textAlign: "center" }, children: /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", children: themes.length === 0 ? "暂无主题" : "无匹配结果" }) }) : /* @__PURE__ */ u2(List2, { dense: true, disablePadding: true, children: filteredTree.map((node2) => /* @__PURE__ */ u2(
-      ThemeTreeNodeItem,
-      {
-        node: node2,
-        expandedIds,
-        selectedPaths: multiSelect ? selectedPaths : [],
-        selectedThemeId: multiSelect ? null : selectedThemeId,
-        multiSelect,
-        onToggleExpand: toggleExpand,
-        onSingleSelect: handleSingleSelect,
-        onMultiSelect: handleMultiSelect,
-        onSelectWithChildren: handleSelectWithChildren,
-        renderLabel
-      },
-      node2.id
-    )) }) }),
-    multiSelect && showSelectedChips && /* @__PURE__ */ u2(
-      SelectedPathsChips,
-      {
-        selectedPaths,
-        onRemovePath: (path) => onSelectMultiple?.(selectedPaths.filter((p2) => p2 !== path))
-      }
-    )
-  ] });
-}
-function ThemeTreeSelect({
-  themes,
-  selectedThemeId,
-  selectedPaths = [],
-  onSelect,
-  onSelectMultiple,
-  multiSelect = false,
-  allowClear = true,
-  searchable = true,
-  showToolbar = true,
-  showSelectedChips = true,
-  defaultExpandedIds = [],
-  defaultExpandAll = false,
-  expandToSelected = true,
-  renderLabel,
-  placeholder = "选择主题",
-  disabled = false,
-  size = "small",
-  sx = {},
-  maxDropdownHeight = 300,
-  selectChildrenOnCollapsedParent = false
-}) {
-  const [open, setOpen] = d(false);
-  const anchorRef = A$1(null);
-  const hasSelection = multiSelect ? selectedPaths.length > 0 : !!selectedThemeId;
-  const displayText2 = T$1(() => {
-    if (multiSelect) {
-      if (selectedPaths.length === 0) return placeholder;
-      if (selectedPaths.length === 1) {
-        const p2 = selectedPaths[0];
-        return p2.split("/").pop() || p2;
-      }
-      return `${selectedPaths.length} 个主题`;
-    }
-    if (!selectedThemeId) return placeholder;
-    const theme = themes.find((t3) => t3.id === selectedThemeId);
-    if (!theme) return placeholder;
-    const name = theme.path.split("/").pop() || theme.path;
-    return theme.icon ? `${theme.icon} ${name}` : name;
-  }, [multiSelect, placeholder, selectedPaths, selectedThemeId, themes]);
-  const handleClear = q$1(
-    (e2) => {
-      e2.stopPropagation();
-      if (disabled) return;
-      if (multiSelect) {
-        onSelectMultiple?.([]);
-      } else {
-        onSelect?.(null, null);
-      }
-    },
-    [disabled, multiSelect, onSelect, onSelectMultiple]
-  );
-  const handleClose = q$1(() => setOpen(false), []);
-  const panelProps = {
-    themes,
-    selectedThemeId,
-    selectedPaths,
-    onSelect,
-    onSelectMultiple,
-    multiSelect,
-    searchable,
-    showToolbar,
-    showSelectedChips,
-    defaultExpandedIds,
-    defaultExpandAll,
-    expandToSelected,
-    renderLabel,
-    maxHeight: maxDropdownHeight,
-    selectChildrenOnCollapsedParent,
-    disabled,
-    // 单选时：选中即关闭（多选保持打开）
-    onRequestClose: multiSelect ? void 0 : handleClose
-  };
-  return /* @__PURE__ */ u2(Box, { sx: { position: "relative", ...sx }, children: [
-    /* @__PURE__ */ u2(
-      ThemeTreeSelectTrigger,
-      {
-        anchorRef,
-        open,
-        onToggleOpen: () => !disabled && setOpen(!open),
-        displayText: displayText2,
-        hasSelection,
-        allowClear,
-        disabled,
-        size,
-        onClear: handleClear
-      }
-    ),
-    /* @__PURE__ */ u2(
-      Popper3,
-      {
-        open,
-        anchorEl: anchorRef.current,
-        placement: "bottom-start",
-        sx: { zIndex: 1300, minWidth: anchorRef.current?.offsetWidth },
-        children: /* @__PURE__ */ u2(ClickAwayListener, { onClickAway: handleClose, children: /* @__PURE__ */ u2(
-          Paper2,
-          {
-            sx: {
-              mt: 0.5,
-              border: "1px solid var(--background-modifier-border)",
-              boxShadow: 2
-            },
-            children: /* @__PURE__ */ u2(ThemeTreeSelectPanel, { ...panelProps })
-          }
-        ) })
-      }
-    )
-  ] });
-}
-function ThemeFilter({ selectedThemes, onSelectionChange, themes }) {
-  const allThemePaths = T$1(() => themes.map((t3) => t3.path), [themes]);
-  return /* @__PURE__ */ u2(
-    FilterPopover,
-    {
-      label: "主题筛选",
-      popoverTitle: "选择要显示的主题",
-      selectedKeys: selectedThemes,
-      totalCount: allThemePaths.length,
-      getChipLabel: (themePath) => {
-        const theme = themes.find((t3) => t3.path === themePath);
-        return theme ? getLeafPath(theme.path) || theme.path : themePath;
-      },
-      onDeleteKey: (themePath) => {
-        onSelectionChange(selectedThemes.filter((t3) => t3 !== themePath));
-      },
-      onSelectAll: () => onSelectionChange(allThemePaths),
-      onClearAll: () => onSelectionChange([]),
-      isEmpty: themes.length === 0,
-      emptyText: "暂无主题",
-      children: /* @__PURE__ */ u2(
-        ThemeTreeSelectPanel,
-        {
-          themes,
-          selectedPaths: selectedThemes,
-          onSelectMultiple: onSelectionChange,
-          multiSelect: true,
-          searchable: true,
-          showToolbar: false,
-          showSelectedChips: false,
-          maxHeight: 360,
-          selectChildrenOnCollapsedParent: true,
-          sx: { minWidth: 320 }
-        }
-      )
-    }
-  );
-}
 function CategoryFilter({
   selectedCategories,
   onSelectionChange,
@@ -66106,7 +62308,7 @@ function buildViewToolbarDateTargets(currentDate, currentView, today = dayjs()) 
   };
 }
 function shouldRenderViewToolbarFallbackFilters(args) {
-  return !args.hasFilterSlot && (args.canSelectThemes || args.canSelectCategories);
+  return !args.hasFilterSlot && args.canSelectCategories;
 }
 const VIEW_SEGMENTS = VIEW_TOOLBAR_OPTIONS.map((value) => ({ value, label: value }));
 function ViewToolbar({
@@ -66115,12 +62317,9 @@ function ViewToolbar({
   onViewChange,
   onDateChange,
   filterSlot,
-  selectedThemes = [],
   selectedCategories = [],
-  onThemeSelectionChange,
   onCategorySelectionChange,
   viewInstances,
-  themes,
   predefinedCategories,
   hideToolbar = false,
   onLayoutSettingsClick
@@ -66129,7 +62328,6 @@ function ViewToolbar({
   const dateTargets = T$1(() => buildViewToolbarDateTargets(currentDate, currentView), [currentDate, currentView]);
   const fallbackFilters = shouldRenderViewToolbarFallbackFilters({
     hasFilterSlot: Boolean(filterSlot),
-    canSelectThemes: Boolean(onThemeSelectionChange),
     canSelectCategories: Boolean(onCategorySelectionChange)
   });
   if (hideToolbar) return null;
@@ -66145,10 +62343,7 @@ function ViewToolbar({
       }
     ),
     /* @__PURE__ */ u2("span", { class: "tp-toolbar__spacer", "aria-hidden": "true" }),
-    (filterSlot || fallbackFilters) && /* @__PURE__ */ u2("div", { class: "tp-toolbar__filters", children: filterSlot || /* @__PURE__ */ u2(S, { children: [
-      onThemeSelectionChange && /* @__PURE__ */ u2(ThemeFilter, { selectedThemes, onSelectionChange: onThemeSelectionChange, themes }),
-      onCategorySelectionChange && /* @__PURE__ */ u2(CategoryFilter, { selectedCategories, onSelectionChange: onCategorySelectionChange, viewInstances, predefinedCategories })
-    ] }) }),
+    (filterSlot || fallbackFilters) && /* @__PURE__ */ u2("div", { class: "tp-toolbar__filters", children: filterSlot || /* @__PURE__ */ u2(S, { children: onCategorySelectionChange && /* @__PURE__ */ u2(CategoryFilter, { selectedCategories, onSelectionChange: onCategorySelectionChange, viewInstances, predefinedCategories }) }) }),
     onLayoutSettingsClick && /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", className: "tp-toolbar-layout-settings", label: "布局设置", icon: /* @__PURE__ */ u2(ThinkIcon, { name: "settings" }), onClick: onLayoutSettingsClick })
   ] });
 }
@@ -66167,7 +62362,7 @@ const DashboardViewComponents = VIEW_REGISTRY;
 function useLayoutItems({ dataStore, layout }) {
   const [allItems, setAllItems] = d(() => dataStore.queryItems());
   y(() => {
-    const readAllItems = () => {
+    const listener = () => {
       const startedAt = performance.now();
       const nextItems = dataStore.queryItems();
       const durationMs2 = Math.round((performance.now() - startedAt) * 100) / 100;
@@ -66179,16 +62374,11 @@ function useLayoutItems({ dataStore, layout }) {
       });
       setAllItems(nextItems);
     };
-    const listener = () => readAllItems();
     dataStore.subscribe(listener);
-    readAllItems();
     return () => dataStore.unsubscribe(listener);
   }, [dataStore, layout.id, layout.viewInstanceIds.length]);
   return allItems;
 }
-const INITIAL_RENDERED_EXPANDED_VIEWS = 3;
-const EXPANDED_VIEW_RENDER_BATCH_SIZE = 2;
-const EXPANDED_VIEW_RENDER_DELAY_MS = 80;
 function useExpandedViewRendering({
   layout,
   allViews
@@ -66198,85 +62388,42 @@ function useExpandedViewRendering({
   y(() => {
     const initialState = {};
     layout.viewInstanceIds.forEach((viewId) => {
-      const view = allViews.find((v2) => v2.id === viewId);
-      if (view) {
-        initialState[viewId] = !view.collapsed;
-      }
+      const view = allViews.find((candidate) => candidate.id === viewId);
+      if (view) initialState[viewId] = !view.collapsed;
     });
     setExpandedState(initialState);
     setIsStateInitialized(true);
   }, [layout.id]);
   y(() => {
     if (!isStateInitialized) return;
-    setExpandedState((prevState) => {
-      const newState = { ...prevState };
-      layout.viewInstanceIds.forEach((viewId) => {
-        const view = allViews.find((v2) => v2.id === viewId);
-        if (view && !(viewId in prevState)) {
-          newState[viewId] = !view.collapsed;
-        }
-      });
-      return newState;
+    setExpandedState((previous) => {
+      let changed = false;
+      const next2 = { ...previous };
+      for (const viewId of layout.viewInstanceIds) {
+        if (viewId in next2) continue;
+        const view = allViews.find((candidate) => candidate.id === viewId);
+        if (!view) continue;
+        next2[viewId] = !view.collapsed;
+        changed = true;
+      }
+      return changed ? next2 : previous;
     });
   }, [allViews, isStateInitialized, layout.viewInstanceIds]);
-  const expandedViewIds = T$1(() => {
-    if (!isStateInitialized) return [];
-    return layout.viewInstanceIds.filter((viewId) => !!expandedState[viewId]);
-  }, [expandedState, isStateInitialized, layout.viewInstanceIds]);
-  const expandedViewSignature = expandedViewIds.join("|");
-  const [renderedExpandedCount, setRenderedExpandedCount] = d(INITIAL_RENDERED_EXPANDED_VIEWS);
-  const renderedBatchLayoutIdRef = A$1(null);
-  y(() => {
-    setRenderedExpandedCount((current2) => {
-      const firstBatchSize = Math.min(expandedViewIds.length, INITIAL_RENDERED_EXPANDED_VIEWS);
-      if (renderedBatchLayoutIdRef.current !== layout.id) {
-        renderedBatchLayoutIdRef.current = layout.id;
-        return firstBatchSize;
-      }
-      return Math.min(expandedViewIds.length, Math.max(current2, INITIAL_RENDERED_EXPANDED_VIEWS));
-    });
-  }, [expandedViewSignature, expandedViewIds.length, layout.id]);
-  y(() => {
-    if (renderedExpandedCount >= expandedViewIds.length) return;
-    const requestIdle = window.requestIdleCallback;
-    const cancelIdle = window.cancelIdleCallback;
-    let timeoutId = null;
-    let idleHandle = null;
-    const renderNextBatch = () => {
-      setRenderedExpandedCount((current2) => Math.min(
-        expandedViewIds.length,
-        current2 + EXPANDED_VIEW_RENDER_BATCH_SIZE
-      ));
-    };
-    if (requestIdle) {
-      idleHandle = requestIdle(renderNextBatch, { timeout: EXPANDED_VIEW_RENDER_DELAY_MS * 2 });
-    } else {
-      timeoutId = setTimeout(renderNextBatch, EXPANDED_VIEW_RENDER_DELAY_MS);
-    }
-    return () => {
-      if (idleHandle !== null && cancelIdle) cancelIdle(idleHandle);
-      if (timeoutId !== null) clearTimeout(timeoutId);
-    };
-  }, [expandedViewIds.length, expandedViewSignature, renderedExpandedCount]);
   const handleToggle = q$1((viewId, event) => {
     const isToggleAll = event?.metaKey || event?.ctrlKey;
     if (isToggleAll) {
       setExpandedState((currentState) => {
         const shouldExpandAll = !currentState[viewId];
-        const newState = {};
-        for (const id in currentState) {
-          newState[id] = shouldExpandAll;
-        }
-        return newState;
+        const next2 = {};
+        for (const id of layout.viewInstanceIds) next2[id] = shouldExpandAll;
+        return next2;
       });
-    } else {
-      setExpandedState((prev2) => ({ ...prev2, [viewId]: !prev2[viewId] }));
+      return;
     }
-  }, []);
+    setExpandedState((previous) => ({ ...previous, [viewId]: !previous[viewId] }));
+  }, [layout.viewInstanceIds]);
   return {
     expandedState,
-    expandedViewIds,
-    renderedExpandedCount,
     isStateInitialized,
     handleToggle
   };
@@ -66292,7 +62439,7 @@ function useViewData({
   useFieldGranularity = false,
   layoutFilters = []
 }) {
-  const filters = viewInstance?.filters || [];
+  const filters2 = viewInstance?.filters || [];
   const sort = viewInstance?.sort || [];
   const sourceName = viewInstance?.title || "未知视图";
   const [localItems, setLocalItems] = d(() => sourceItems ?? dataStore.queryItems());
@@ -66314,7 +62461,7 @@ function useViewData({
     const finalResult = queryViewRecords({
       items: allItems,
       layoutFilters,
-      viewFilters: filters,
+      viewFilters: filters2,
       sort,
       keyword,
       dateRange,
@@ -66324,7 +62471,7 @@ function useViewData({
     });
     devTimeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
     return finalResult;
-  }, [allItems, layoutFilters, filters, sort, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, sourceName, viewInstance]);
+  }, [allItems, layoutFilters, filters2, sort, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, sourceName, viewInstance]);
   return processedItems;
 }
 const AnyIconButton = IconButton2;
@@ -66381,7 +62528,6 @@ const openStatisticsPopover = (request) => {
           timerService: request.timerService,
           onMarkDone: request.onMarkDone,
           timers: request.timers,
-          allThemes: request.allThemes,
           messageRenderPort: request.messageRenderPort,
           onOpenRecord: request.onOpenRecord,
           onOpenRecordOrigin: request.onOpenRecordOrigin,
@@ -66400,6 +62546,7 @@ function useViewRuntimeHandlers({
   excelAvailableFields
 }) {
   const useCases = useUseCases();
+  const dataStore = useDataStore();
   const ui = useUiPort();
   const modal = useModalPort();
   const onUpdateTaskTime = q$1(
@@ -66434,11 +62581,13 @@ function useViewRuntimeHandlers({
     void useCases.settings.updateCategoryColors(nextColors);
   }, [useCases.settings]);
   const onOpenRecord = q$1((item) => {
-    openEditFromItem({ app, item });
-  }, [app]);
+    const canonicalItem = dataStore.getRecordById(item.id) ?? item;
+    openEditFromItem({ app, item: canonicalItem });
+  }, [app, dataStore]);
   const onOpenRecordOrigin = q$1((item) => {
-    openRecordOrigin({ app, item });
-  }, [app]);
+    const canonicalItem = dataStore.getRecordById(item.id) ?? item;
+    openRecordOrigin({ app, item: canonicalItem });
+  }, [app, dataStore]);
   const resolveResourcePath = q$1((path) => {
     return resolveVaultResourcePath(app, path);
   }, [app]);
@@ -66459,12 +62608,7 @@ function useViewRuntimeHandlers({
       sourceBlockId: request.sourceBlockId,
       date: request.date,
       item: request.item,
-      themePath: request.themePath,
       goalPath: request.goalPath,
-      goalId: request.goalId,
-      templateId: request.templateId,
-      templateVariantId: request.templateVariantId,
-      themesByPath: request.themesByPath,
       notice: (message) => ui.notice(message)
     });
   }, [app, ui]);
@@ -66538,7 +62682,6 @@ function buildViewProps({
   onCloseStatisticsPopover,
   timerService,
   timers,
-  allThemes,
   inputSettings,
   goals = [],
   selectedLayoutCategories,
@@ -66581,7 +62724,6 @@ function buildViewProps({
     onCellCommit: viewType === "ExcelView" ? handlers.onExcelCellCommit : void 0,
     timerService,
     timers,
-    allThemes,
     inputSettings,
     goals,
     goalSettings,
@@ -66603,7 +62745,6 @@ function ViewContent({
   actionService,
   timerService,
   timers,
-  allThemes,
   allItems,
   allRecords,
   inputSettings,
@@ -66611,7 +62752,7 @@ function ViewContent({
 }) {
   const messageRenderPort = useMessageRenderPort();
   const categoryColors = useSelector(selectCategoryColors);
-  const settings = useSelector(selectSettings);
+  const settings2 = useSelector(selectSettings);
   const normalizedViewInstance = viewInstance;
   const viewItems = useViewData({
     dataStore,
@@ -66664,17 +62805,70 @@ function ViewContent({
     onCloseStatisticsPopover: closeStatisticsPopover,
     timerService,
     timers,
-    allThemes,
     inputSettings,
-    goals: settings.goalSettings?.goals || [],
+    goals: settings2.goalSettings?.goals || [],
     selectedLayoutCategories,
     categoryColors,
     messageRenderPort,
     allItems,
     allRecords,
-    goalSettings: settings.goalSettings
+    goalSettings: settings2.goalSettings
   });
   return /* @__PURE__ */ u2(ViewComponent, { ...viewProps });
+}
+const DEFAULT_HEIGHT_BY_VIEW = {
+  TableView: 420,
+  BlockView: 420,
+  ExcelView: 420,
+  TimelineView: 520,
+  EventTimelineView: 420,
+  StatisticsView: 320,
+  HeatmapView: 360,
+  ProgressView: 360,
+  EnergyView: 440
+};
+function ViewportDeferredView({ viewType, children }) {
+  const hostRef = A$1(null);
+  const [nearViewport, setNearViewport] = d(false);
+  const [measuredHeight, setMeasuredHeight] = d(DEFAULT_HEIGHT_BY_VIEW[viewType] || 320);
+  y(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setNearViewport(true);
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry) setNearViewport(entry.isIntersecting);
+    }, {
+      root: null,
+      rootMargin: "320px 0px",
+      threshold: 0
+    });
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [viewType]);
+  y(() => {
+    if (!nearViewport) return;
+    const host = hostRef.current;
+    if (!host || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver((entries) => {
+      const height2 = Math.ceil(entries[0]?.contentRect.height || 0);
+      if (height2 > 40) setMeasuredHeight(height2);
+    });
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [nearViewport]);
+  return /* @__PURE__ */ u2(
+    "div",
+    {
+      ref: hostRef,
+      className: `think-view-viewport-gate${nearViewport ? " is-active" : " is-deferred"}`,
+      style: nearViewport ? void 0 : { minHeight: `${measuredHeight}px` },
+      children: nearViewport ? children : /* @__PURE__ */ u2("div", { className: "module-deferred-placeholder", children: "滚动到附近时加载视图" })
+    }
+  );
 }
 function useLayoutModuleActions({
   app,
@@ -66740,9 +62934,9 @@ function useLayoutModuleActions({
     if (!window.confirm(`确认删除视图“${view?.title || viewInstanceId}”吗？它会从配置和所有布局中移除。`)) return;
     void useCases.viewInstance.deleteView(viewInstanceId);
   }, [allViews, useCases.viewInstance]);
-  const handleGlobalFiltersChange = q$1((filters) => {
+  const handleGlobalFiltersChange = q$1((filters2) => {
     void useCases.layout.updateLayout(layout.id, {
-      globalFilters: filters
+      globalFilters: filters2
     });
   }, [layout.id, useCases.layout]);
   return {
@@ -67294,13 +63488,10 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
   );
   const inputSettings = useSelector(selectInputSettings);
   const timers = useSelector(selectTimers);
-  const allThemes = inputSettings.themes;
   const allItems = useLayoutItems({ dataStore, layout });
   const allRecords = dataStore.queryRecords();
   const {
     expandedState,
-    expandedViewIds,
-    renderedExpandedCount,
     isStateInitialized,
     handleToggle
   } = useExpandedViewRendering({ layout, allViews });
@@ -67387,8 +63578,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
     ] });
     const hasLayoutCollapseOverride = typeof freeformProps?.placement.collapsed === "boolean";
     const isExpanded = hasLayoutCollapseOverride ? !freeformProps?.placement.collapsed : !!expandedState[viewId];
-    const expandedIndex = isExpanded ? expandedViewIds.indexOf(viewId) : -1;
-    const shouldRenderContent = isExpanded && (freeformProps ? expandedIndex < 0 || expandedIndex < renderedExpandedCount : expandedIndex >= 0 && expandedIndex < renderedExpandedCount);
+    const shouldRenderContent = isExpanded;
     const handlePanelToggle = (event) => {
       if (freeformProps) {
         freeformProps.onToggleCollapsed();
@@ -67414,7 +63604,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
         onLayoutBringToFront: freeformProps?.onBringToFront,
         onLayoutToggleLock: freeformProps?.onToggleLocked,
         onLayoutToggleCollapsed: freeformProps?.onToggleCollapsed,
-        children: shouldRenderContent ? /* @__PURE__ */ u2(
+        children: shouldRenderContent ? /* @__PURE__ */ u2(ViewportDeferredView, { viewType: viewInstance.viewType, children: /* @__PURE__ */ u2(
           ViewContent,
           {
             viewInstance,
@@ -67430,7 +63620,6 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
             actionService,
             timerService,
             timers,
-            allThemes,
             allItems,
             allRecords,
             inputSettings,
@@ -67438,7 +63627,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
               modulesDataCache.current[viewInstance.id] = items;
             }
           }
-        ) : isExpanded ? /* @__PURE__ */ u2("div", { class: "module-deferred-placeholder", children: "正在加载视图..." }) : null
+        ) }) : null
       },
       viewId
     );
@@ -67465,8 +63654,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
         ),
         viewInstances: layout.viewInstanceIds.map((id) => allViewsById.get(id)).filter(Boolean),
         hideToolbar: layout.hideToolbar,
-        onLayoutSettingsClick: () => openLayoutSettingsWidget(layout.id),
-        themes: allThemes
+        onLayoutSettingsClick: () => openLayoutSettingsWidget(layout.id)
       }
     ),
     isFreeform && /* @__PURE__ */ u2(
@@ -67586,9 +63774,9 @@ class RendererService {
   }
   register(container, layout) {
     this.unregister(container);
-    const settings = getZustandState(this.store, (state) => state.settings);
-    const latestLayout = settings.layouts.find((candidate) => candidate.id === layout.id) ?? layout;
-    const signature = createLayoutRenderSignature(latestLayout, settings.viewInstances);
+    const settings2 = getZustandState(this.store, (state) => state.settings);
+    const latestLayout = settings2.layouts.find((candidate) => candidate.id === layout.id) ?? layout;
+    const signature = createLayoutRenderSignature(latestLayout, settings2.viewInstances);
     this.renderLayout(container, latestLayout);
     this.activeLayouts.push({
       container,
@@ -67607,17 +63795,17 @@ class RendererService {
     container.empty();
     this.activeLayouts.splice(index, 1);
   }
-  rerenderChangedLayouts(settings) {
+  rerenderChangedLayouts(settings2) {
     if (!this.isInitialized) return;
     for (const activeLayout of [...this.activeLayouts]) {
-      const nextLayout = settings.layouts.find((layout) => layout.id === activeLayout.layoutId);
+      const nextLayout = settings2.layouts.find((layout) => layout.id === activeLayout.layoutId);
       if (!nextLayout) {
         const { container, layoutName } = activeLayout;
         this.unregister(container);
         container.createDiv({ text: `布局配置 "${layoutName}" 已被删除。` });
         continue;
       }
-      const nextSignature = createLayoutRenderSignature(nextLayout, settings.viewInstances);
+      const nextSignature = createLayoutRenderSignature(nextLayout, settings2.viewInstances);
       if (nextSignature === activeLayout.signature) continue;
       this.renderLayout(activeLayout.container, nextLayout);
       activeLayout.layoutName = nextLayout.name;
@@ -67892,8 +64080,8 @@ async function loadTimerServices(opts) {
       });
       await services.useCases.timer.setInitialTimersFromDisk();
       devLog("[ThinkPlugin] Zustand Timers Loaded:", services.useCases.timer.getTimers());
-      const settings = services.settingsRepository.getSettings();
-      if (settings.floatingTimerEnabled) {
+      const settings2 = services.settingsRepository.getSettings();
+      if (settings2.floatingTimerEnabled) {
         services.timerWidget = new FloatingTimerWidget(plugin);
         services.timerWidget.load();
       }
@@ -68360,9 +64548,9 @@ class NamePromptModal extends obsidian.Modal {
 function FiltersBar({
   enableRetrieval,
   setEnableRetrieval,
-  themes,
-  selectedThemes,
-  setSelectedThemes,
+  goals,
+  selectedGoalPath,
+  setSelectedGoalPath,
   selectedType,
   setSelectedType,
   blocks,
@@ -68374,6 +64562,10 @@ function FiltersBar({
     { value: "", label: "全部类型" },
     { value: "task", label: "任务" },
     { value: "block", label: "记录" }
+  ];
+  const goalOptions = [
+    { value: "", label: "全部目标" },
+    ...goals.map((path) => ({ value: path, label: path }))
   ];
   const blockOptions = [
     { value: "", label: "全部记录" },
@@ -68389,18 +64581,16 @@ function FiltersBar({
         label: "引用上下文"
       }
     ),
-    enableRetrieval && themes.length > 0 ? /* @__PURE__ */ u2("div", { className: "think-ai-chat-filters__theme", children: /* @__PURE__ */ u2(
-      ThemeTreeSelect,
+    enableRetrieval && goals.length > 0 ? /* @__PURE__ */ u2(
+      SimpleSelect,
       {
-        themes,
-        selectedPaths: selectedThemes,
-        onSelectMultiple: setSelectedThemes,
-        multiSelect: true,
-        searchable: true,
-        placeholder: "主题",
-        size: "small"
+        className: "think-ai-chat-filters__select",
+        value: selectedGoalPath,
+        options: goalOptions,
+        onChange: setSelectedGoalPath,
+        placeholder: "全部目标"
       }
-    ) }) : null,
+    ) : null,
     enableRetrieval ? /* @__PURE__ */ u2(
       SimpleSelect,
       {
@@ -68563,9 +64753,9 @@ function AiChatModalView(props) {
     onDeleteSession,
     enableRetrieval,
     setEnableRetrieval,
-    themes,
-    selectedThemes,
-    setSelectedThemes,
+    goals,
+    selectedGoalPath,
+    setSelectedGoalPath,
     selectedType,
     setSelectedType,
     blocks,
@@ -68611,9 +64801,9 @@ function AiChatModalView(props) {
         {
           enableRetrieval,
           setEnableRetrieval,
-          themes,
-          selectedThemes,
-          setSelectedThemes,
+          goals,
+          selectedGoalPath,
+          setSelectedGoalPath,
           selectedType,
           setSelectedType,
           blocks,
@@ -68651,8 +64841,9 @@ function AiChatModalView(props) {
 function AiChatModalContainer({ closeModal, services }) {
   const aiSettings = useSelector(selectAiSettings);
   const inputSettings = useSelector(selectInputSettings);
-  const themes = inputSettings?.themes ?? [];
+  const settings2 = useSelector(selectSettings);
   const blocks = inputSettings?.blocks ?? [];
+  const goals = (settings2.goalSettings?.goals ?? []).map((goal) => String(goal.path || "").trim()).filter(Boolean).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
   const { chatService, retrievalService, sessionStore } = services;
   const [sessions, setSessions] = d([]);
   const [currentSessionId, setCurrentSessionId] = d(null);
@@ -68663,7 +64854,7 @@ function AiChatModalContainer({ closeModal, services }) {
   const isMountedRef = useIsMounted();
   const takeLatestRef = A$1(createTakeLatest());
   const [enableRetrieval, setEnableRetrieval] = d(true);
-  const [selectedThemes, setSelectedThemes] = d([]);
+  const [selectedGoalPath, setSelectedGoalPath] = d("");
   const [selectedType, setSelectedType] = d("");
   const [selectedBlockId, setSelectedBlockId] = d("");
   const messagesEndRef = A$1(null);
@@ -68702,11 +64893,11 @@ function AiChatModalContainer({ closeModal, services }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   const handleNewSession = async () => {
-    const filters = {};
-    if (selectedThemes.length > 0) filters.themePaths = selectedThemes;
-    if (selectedType) filters.coreBlocks = [selectedType];
-    if (selectedBlockId) filters.blockTemplateIds = [selectedBlockId];
-    const session = await sessionStore.createSession(void 0, filters);
+    const filters2 = {};
+    if (selectedGoalPath) filters2.goalPaths = [selectedGoalPath];
+    if (selectedType) filters2.coreBlocks = [selectedType];
+    if (selectedBlockId) filters2.coreBlocks = [String(selectedBlockId).replace(/^core\./, "")];
+    const session = await sessionStore.createSession(void 0, filters2);
     setCurrentSessionId(session.id);
     setInputText("");
     setError(null);
@@ -68716,9 +64907,9 @@ function AiChatModalContainer({ closeModal, services }) {
     setError(null);
     const session = sessionStore.getSession(sessionId);
     if (session?.filters) {
-      setSelectedThemes(session.filters.themePaths ?? []);
+      setSelectedGoalPath(session.filters.goalPaths?.[0] ?? "");
       setSelectedType(session.filters.coreBlocks?.[0] ?? "");
-      setSelectedBlockId(session.filters.blockTemplateIds?.[0] ?? "");
+      setSelectedBlockId(session.filters.coreBlocks?.[0] ? `core.${String(session.filters.coreBlocks[0]).replace(/^core\./, "")}` : "");
     }
   };
   const handleDeleteSession = async (sessionId, e2) => {
@@ -68745,17 +64936,17 @@ function AiChatModalContainer({ closeModal, services }) {
     try {
       const currentMessages = sessionStore.getMessages(sessionId);
       const history = currentMessages.filter((m2) => m2.role !== "system").slice(0, -1).map((m2) => ({ role: m2.role, content: m2.content }));
-      const filters = {};
-      if (selectedThemes.length > 0) filters.themePaths = selectedThemes;
-      if (selectedType) filters.coreBlocks = [selectedType];
-      if (selectedBlockId) filters.blockTemplateIds = [selectedBlockId];
+      const filters2 = {};
+      if (selectedGoalPath) filters2.goalPaths = [selectedGoalPath];
+      if (selectedType) filters2.coreBlocks = [selectedType];
+      if (selectedBlockId) filters2.coreBlocks = [String(selectedBlockId).replace(/^core\./, "")];
       const response = await takeLatestRef.current.run(
         (signal) => chatService.chat(
           {
             userMessage,
             history,
             enableRetrieval,
-            retrievalFilters: filters,
+            retrievalFilters: filters2,
             retrievalLimit: 5e3
           },
           signal
@@ -68780,7 +64971,7 @@ function AiChatModalContainer({ closeModal, services }) {
     } finally {
       if (isMountedRef.current) setIsLoading(false);
     }
-  }, [inputText, isLoading, currentSessionId, selectedThemes, selectedType, selectedBlockId, enableRetrieval]);
+  }, [inputText, isLoading, currentSessionId, selectedGoalPath, selectedType, selectedBlockId, enableRetrieval]);
   const handleKeyDown = (e2) => {
     if (e2.key === "Enter" && !e2.shiftKey) {
       e2.preventDefault();
@@ -68812,9 +65003,9 @@ function AiChatModalContainer({ closeModal, services }) {
       onDeleteSession: handleDeleteSession,
       enableRetrieval,
       setEnableRetrieval,
-      themes,
-      selectedThemes,
-      setSelectedThemes,
+      goals,
+      selectedGoalPath,
+      setSelectedGoalPath,
       selectedType,
       setSelectedType,
       blocks,
@@ -69349,67 +65540,67 @@ function GeneralSettings() {
     ] })
   ] });
 }
-function AiAdvancedSettingsSection({ settings, onUpdate }) {
+function AiAdvancedSettingsSection({ settings: settings2, onUpdate }) {
   return /* @__PURE__ */ u2(S, { children: [
     /* @__PURE__ */ u2(ThinkDisclosure, { title: "多结果设置", children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "多条结果" }),
-        /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings.allowMultipleResults, onChange: (e2) => onUpdate({ allowMultipleResults: e2.currentTarget.checked }), label: "允许" }) })
+        /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings2.allowMultipleResults, onChange: (e2) => onUpdate({ allowMultipleResults: e2.currentTarget.checked }), label: "允许" }) })
       ] }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "最大数量" }),
-        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: settings.maxResults, disabled: !settings.allowMultipleResults, onInput: (e2) => onUpdate({ maxResults: parseInt(e2.currentTarget.value, 10) || 5 }) })
+        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: settings2.maxResults, disabled: !settings2.allowMultipleResults, onInput: (e2) => onUpdate({ maxResults: parseInt(e2.currentTarget.value, 10) || 5 }) })
       ] }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "确认模式" }),
-        /* @__PURE__ */ u2(SimpleSelect, { value: settings.confirmMode, options: [{ value: "single", label: "单条确认" }, { value: "batch", label: "批量确认" }], onChange: (confirmMode) => onUpdate({ confirmMode }) })
+        /* @__PURE__ */ u2(SimpleSelect, { value: settings2.confirmMode, options: [{ value: "single", label: "单条确认" }, { value: "batch", label: "批量确认" }], onChange: (confirmMode) => onUpdate({ confirmMode }) })
       ] })
     ] }) }),
     /* @__PURE__ */ u2(ThinkDisclosure, { title: "性能设置", children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "预加载" }),
-        /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings.preloadConfigOnStartup, onChange: (e2) => onUpdate({ preloadConfigOnStartup: e2.currentTarget.checked }), label: "启动时加载配置" }) })
+        /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings2.preloadConfigOnStartup, onChange: (e2) => onUpdate({ preloadConfigOnStartup: e2.currentTarget.checked }), label: "启动时加载配置" }) })
       ] }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "缓存 TTL" }),
-        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings.configCacheTTLSeconds, onInput: (e2) => onUpdate({ configCacheTTLSeconds: parseInt(e2.currentTarget.value, 10) || 300 }) })
+        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings2.configCacheTTLSeconds, onInput: (e2) => onUpdate({ configCacheTTLSeconds: parseInt(e2.currentTarget.value, 10) || 300 }) })
       ] })
     ] }) })
   ] });
 }
-function AiApiConfigSection({ settings, onUpdate, readiness, apiKeyPersistenceMessage, testStatus, testMessage, onTestConnection }) {
+function AiApiConfigSection({ settings: settings2, onUpdate, readiness, apiKeyPersistenceMessage, testStatus, testMessage, onTestConnection }) {
   return /* @__PURE__ */ u2(ThinkDisclosure, { title: "API 配置", open: true, children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "API 端点" }),
-      /* @__PURE__ */ u2(ThinkInput, { value: settings.apiEndpoint, placeholder: "https://api.openai.com/v1", onInput: (e2) => onUpdate({ apiEndpoint: e2.currentTarget.value }) })
+      /* @__PURE__ */ u2(ThinkInput, { value: settings2.apiEndpoint, placeholder: "https://api.openai.com/v1", onInput: (e2) => onUpdate({ apiEndpoint: e2.currentTarget.value }) })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "API 密钥" }),
-      /* @__PURE__ */ u2(ThinkInput, { type: "password", value: settings.apiKey, onInput: (e2) => onUpdate({ apiKey: e2.currentTarget.value }) })
+      /* @__PURE__ */ u2(ThinkInput, { type: "password", value: settings2.apiKey, onInput: (e2) => onUpdate({ apiKey: e2.currentTarget.value }) })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "保存密钥" }),
-      /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings.persistApiKey === true, onChange: (e2) => onUpdate({ persistApiKey: e2.currentTarget.checked }), label: "持久化到设置" }) })
+      /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings2.persistApiKey === true, onChange: (e2) => onUpdate({ persistApiKey: e2.currentTarget.checked }), label: "持久化到设置" }) })
     ] }),
-    settings.persistApiKey && /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: apiKeyPersistenceMessage }),
+    settings2.persistApiKey && /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: apiKeyPersistenceMessage }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "模型" }),
-      /* @__PURE__ */ u2(ThinkInput, { value: settings.model, placeholder: "gpt-4", onInput: (e2) => onUpdate({ model: e2.currentTarget.value }) })
+      /* @__PURE__ */ u2(ThinkInput, { value: settings2.model, placeholder: "gpt-4", onInput: (e2) => onUpdate({ model: e2.currentTarget.value }) })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: [
         "温度 ",
-        settings.temperature
+        settings2.temperature
       ] }),
-      /* @__PURE__ */ u2(ThinkRange, { value: settings.temperature, onInput: (e2) => onUpdate({ temperature: Number(e2.currentTarget.value) }), min: 0, max: 2, step: 0.1 })
+      /* @__PURE__ */ u2(ThinkRange, { value: settings2.temperature, onInput: (e2) => onUpdate({ temperature: Number(e2.currentTarget.value) }), min: 0, max: 2, step: 0.1 })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "最大 Token" }),
-      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings.maxTokens, onInput: (e2) => onUpdate({ maxTokens: parseInt(e2.currentTarget.value, 10) || 4096 }) })
+      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings2.maxTokens, onInput: (e2) => onUpdate({ maxTokens: parseInt(e2.currentTarget.value, 10) || 4096 }) })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "超时毫秒" }),
-      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings.requestTimeoutMs, onInput: (e2) => onUpdate({ requestTimeoutMs: parseInt(e2.currentTarget.value, 10) || 3e4 }) })
+      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings2.requestTimeoutMs, onInput: (e2) => onUpdate({ requestTimeoutMs: parseInt(e2.currentTarget.value, 10) || 3e4 }) })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "连接" }),
@@ -69421,38 +65612,29 @@ function AiApiConfigSection({ settings, onUpdate, readiness, apiKeyPersistenceMe
     ] })
   ] }) });
 }
-function AiPromptRulesSection({ settings, onUpdate, onInsertExample }) {
+function AiPromptRulesSection({ settings: settings2, onUpdate, onInsertExample }) {
   return /* @__PURE__ */ u2(ThinkDisclosure, { title: "个性化规则", open: true, children: /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
     /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "自定义提示词" }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-settings-stack think-settings-stack--tight", children: [
-      /* @__PURE__ */ u2(ThinkTextarea, { rows: 8, placeholder: CUSTOM_PROMPT_EXAMPLES, value: settings.customPrompt ?? "", onInput: (e2) => onUpdate({ customPrompt: e2.currentTarget.value }) }),
+      /* @__PURE__ */ u2(ThinkTextarea, { rows: 8, placeholder: CUSTOM_PROMPT_EXAMPLES, value: settings2.customPrompt ?? "", onInput: (e2) => onUpdate({ customPrompt: e2.currentTarget.value }) }),
       /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onInsertExample, children: "插入示例" }) })
     ] })
   ] }) });
 }
-function AiScopeSection({ settings, blocks, themes, onUpdate, staleEnabledBlockIds = [], onInitAllBlocks, onClearStaleBlockIds, onToggleBlock }) {
-  return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2(ThinkDisclosure, { title: "Block 参与范围", children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
-      /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: [
-        /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onInitAllBlocks, children: "全部记录类型" }),
-        staleEnabledBlockIds.length > 0 && onClearStaleBlockIds && /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onClearStaleBlockIds, children: "清理旧 Block ID" })
-      ] }),
-      staleEnabledBlockIds.length > 0 && /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: [
-        "AI 范围中有 ",
-        staleEnabledBlockIds.length,
-        " 个已失效 Block ID。"
-      ] }),
-      /* @__PURE__ */ u2("div", { className: "think-ai-scope-list", children: blocks.map((block) => /* @__PURE__ */ u2(ThinkCheckbox, { checked: (settings.enabledBlockIds ?? []).length === 0 || (settings.enabledBlockIds ?? []).includes(block.id), onChange: () => onToggleBlock(block.id), label: block.name, compact: true }, block.id)) }),
-      blocks.length === 0 && /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "暂无 Block 模板。" })
-    ] }) }),
-    /* @__PURE__ */ u2(ThinkDisclosure, { title: "默认主题", children: /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "主题" }),
-      /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-settings-stack think-settings-stack--tight", children: [
-        /* @__PURE__ */ u2(SimpleSelect, { value: settings.defaultThemeId ?? "", options: [{ value: "", label: "不设置" }, ...themes.map((theme) => ({ value: theme.path, label: theme.path }))], onChange: (defaultThemeId) => onUpdate({ defaultThemeId: defaultThemeId || void 0 }), fullWidth: true }),
-        themes.length === 0 && /* @__PURE__ */ u2(ThinkNotice, { children: "暂无主题。" })
-      ] })
-    ] }) })
-  ] });
+function AiScopeSection({ settings: settings2, blocks, onUpdate: _onUpdate, staleEnabledBlockIds = [], onInitAllBlocks, onClearStaleBlockIds, onToggleBlock }) {
+  return /* @__PURE__ */ u2(ThinkDisclosure, { title: "Block 参与范围", children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
+    /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: [
+      /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onInitAllBlocks, children: "全部记录类型" }),
+      staleEnabledBlockIds.length > 0 && onClearStaleBlockIds && /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onClearStaleBlockIds, children: "清理旧 Block ID" })
+    ] }),
+    staleEnabledBlockIds.length > 0 && /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: [
+      "AI 范围中有 ",
+      staleEnabledBlockIds.length,
+      " 个已失效 Block ID。"
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-ai-scope-list", children: blocks.map((block) => /* @__PURE__ */ u2(ThinkCheckbox, { checked: (settings2.enabledBlockIds ?? []).length === 0 || (settings2.enabledBlockIds ?? []).includes(block.id), onChange: () => onToggleBlock(block.id), label: block.name, compact: true }, block.id)) }),
+    blocks.length === 0 && /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "暂无 Block 模板。" })
+  ] }) });
 }
 function AiSettingsFooter({ hasChanges, isSaving, saveStatusMessage, saveStatusSeverity, onSave }) {
   return /* @__PURE__ */ u2("div", { className: "think-ai-settings-footer", children: [
@@ -69463,11 +65645,11 @@ function AiSettingsFooter({ hasChanges, isSaving, saveStatusMessage, saveStatusS
     ] })
   ] });
 }
-function getAiSettingsReadiness(settings) {
+function getAiSettingsReadiness(settings2) {
   const missingFields = [];
-  if (!settings.apiEndpoint?.trim()) missingFields.push("API 端点");
-  if (!settings.apiKey?.trim()) missingFields.push("API 密钥");
-  if (!settings.model?.trim()) missingFields.push("模型名称");
+  if (!settings2.apiEndpoint?.trim()) missingFields.push("API 端点");
+  if (!settings2.apiKey?.trim()) missingFields.push("API 密钥");
+  if (!settings2.model?.trim()) missingFields.push("模型名称");
   if (missingFields.length === 0) {
     return {
       ready: true,
@@ -69481,8 +65663,8 @@ function getAiSettingsReadiness(settings) {
     message: `AI 还不能使用：请先填写 ${missingFields.join("、")}。`
   };
 }
-function getApiKeyPersistenceMessage(settings) {
-  if (settings.persistApiKey) {
+function getApiKeyPersistenceMessage(settings2) {
+  if (settings2.persistApiKey) {
     return "API 密钥会随插件设置明文保存；如果开启 Obsidian Sync 或第三方同步，也可能被同步。";
   }
   return "API 密钥只保留在当前设置页内存中；保存设置时不会写入插件数据。关闭或重载 Obsidian 后需要重新输入。";
@@ -69502,7 +65684,6 @@ function AiSettings(_props) {
   const aiSettings = useSelector(selectAiSettings) ?? DEFAULT_AI_SETTINGS;
   const inputSettings = useSelector(selectInputSettings);
   const blocks = inputSettings?.blocks ?? [];
-  const themes = inputSettings?.themes ?? [];
   const [localSettings, setLocalSettings] = d(aiSettings);
   const [testStatus, setTestStatus] = d("idle");
   const [testMessage, setTestMessage] = d("");
@@ -69640,7 +65821,6 @@ function AiSettings(_props) {
         settings: localSettings,
         onUpdate: updateLocal,
         blocks,
-        themes,
         staleEnabledBlockIds,
         onInitAllBlocks: handleInitAllBlocks,
         onClearStaleBlockIds: handleClearStaleBlockIds,
@@ -70020,24 +66200,15 @@ function FieldsEditor({ fields = [], disabled = false, onChange }) {
   ] });
 }
 function EnergyRecordTypeSettings() {
-  const settings = useSelector(selectSettings);
-  const themes = useSelector(selectInputThemes);
-  const defaultGoalId = useSelector(selectEnergyDefaultGoalId);
-  const defaultThemePath = useSelector(selectEnergyDefaultThemePath);
+  const settings2 = useSelector(selectSettings);
+  const defaultGoalPath = useSelector(selectEnergyDefaultGoalPath);
   const useCases = useUseCases();
-  const goals = (settings.goalSettings?.goals || []).filter((goal) => goal.status !== "archived");
-  const goalOptions = [{ value: "", label: "自动选择第一个活跃目标" }, ...goals.map((goal) => ({ value: goal.id, label: goal.goalPath || goal.title }))];
-  const themeOptions2 = [{ value: "", label: "不指定默认主题" }, ...themes.filter((theme) => theme.status !== "inactive").map((theme) => ({ value: theme.path, label: `${theme.icon || "•"} ${theme.path}` }))];
-  return /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
-    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "默认目标" }),
-      /* @__PURE__ */ u2(SimpleSelect, { value: defaultGoalId, options: goalOptions, onChange: (value) => void useCases.settings.setEnergyDefaultGoalId(value || null), fullWidth: true })
-    ] }),
-    /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "默认主题" }),
-      /* @__PURE__ */ u2(SimpleSelect, { value: defaultThemePath, options: themeOptions2, onChange: (value) => void useCases.settings.setEnergyDefaultThemePath(value || null), fullWidth: true })
-    ] })
-  ] });
+  const goals = (settings2.goalSettings?.goals || []).filter((goal) => goal.status !== "archived");
+  const goalOptions = [{ value: "", label: "自动选择第一个活跃目标" }, ...goals.map((goal) => ({ value: goal.path, label: goal.path }))];
+  return /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
+    /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "默认目标" }),
+    /* @__PURE__ */ u2(SimpleSelect, { value: defaultGoalPath, options: goalOptions, onChange: (value) => void useCases.settings.setEnergyDefaultGoalPath(value || null), fullWidth: true })
+  ] }) });
 }
 function SortableBlockItem({ block, openId, setOpenId, handleDelete, handleDuplicate, useCases }) {
   const { attributes, listeners, setNodeRef, transform: transform2, transition } = useSortable({ id: block.id });
@@ -70075,11 +66246,11 @@ function BlockEditor({ block, useCases }) {
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "目标文件" }),
-      /* @__PURE__ */ u2(ThinkInput, { value: localBlock.targetFile, onInput: (e2) => setLocalBlock((current2) => ({ ...current2, targetFile: e2.currentTarget.value })), onBlur: () => handleBlur("targetFile"), placeholder: "{{themePath}}/{{标题.value}}.md" })
+      /* @__PURE__ */ u2(ThinkInput, { value: localBlock.targetFile, onInput: (e2) => setLocalBlock((current2) => ({ ...current2, targetFile: e2.currentTarget.value })), onBlur: () => handleBlur("targetFile"), placeholder: "{{goalPath}}/{{标题.value}}.md" })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "追加标题" }),
-      /* @__PURE__ */ u2(ThinkInput, { value: localBlock.appendUnderHeader || "", onInput: (e2) => setLocalBlock((current2) => ({ ...current2, appendUnderHeader: e2.currentTarget.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "## {{themePath}}" })
+      /* @__PURE__ */ u2(ThinkInput, { value: localBlock.appendUnderHeader || "", onInput: (e2) => setLocalBlock((current2) => ({ ...current2, appendUnderHeader: e2.currentTarget.value })), onBlur: () => handleBlur("appendUnderHeader"), placeholder: "## {{goalPath}}" })
     ] }),
     /* @__PURE__ */ u2("section", { className: "think-settings-section think-settings-section--flat", children: [
       /* @__PURE__ */ u2("h3", { className: "think-settings-subheading", children: "表单字段" }),
@@ -70129,23 +66300,20 @@ function BlockManager() {
     ] })
   ] });
 }
-function GoalTemplateModeSwitch({ mode, blockName, disabled, onInherit, onOverride }) {
-  const value = mode === "disabled" ? "disabled" : mode;
+function GoalTemplateModeSwitch({ mode, blockName, onChange }) {
   return /* @__PURE__ */ u2("div", { className: "think-settings-row think-goal-template-mode-row", children: [
     /* @__PURE__ */ u2("div", { className: "think-settings-row__label", children: "预设模式" }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(
       ThinkSegmentedControl,
       {
         label: `${blockName} 预设模式`,
-        value,
+        value: mode,
         options: [
-          { value: "inherit", label: "继承", disabled },
-          { value: "override", label: "覆盖", disabled }
+          { value: "inherit", label: "默认" },
+          { value: "override", label: "自定义" },
+          { value: "disabled", label: "隐藏" }
         ],
-        onChange: (next2) => {
-          if (next2 === "inherit") onInherit();
-          if (next2 === "override") onOverride();
-        }
+        onChange: (next2) => onChange(next2)
       }
     ) })
   ] });
@@ -70215,72 +66383,6 @@ const presetGranularityOptions = [
   { value: "quarter", label: "季度" },
   { value: "year", label: "年" }
 ];
-function cloneValue$1(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-function readOptionText(value) {
-  if (value === void 0 || value === null) return "";
-  const record = asUnknownRecord(value);
-  if (record && "value" in record) return compactText(record.value);
-  return compactText(value);
-}
-function cleanDisplayThemePath(path) {
-  return normalizeThemePath(path) || compactText(path);
-}
-function themeLeafLabel(path, fallback = "") {
-  return getThemePathLeaf(path) || fallback;
-}
-function readThemePathFromFields(fields) {
-  for (const field of fields || []) {
-    if (!isThemeTemplateField(field)) continue;
-    const value = readOptionText(field.defaultValue);
-    if (value && value !== "{{goal.themePath}}") return normalizeThemePath(value);
-  }
-  return "";
-}
-function readThemePathFromTemplate(template) {
-  return normalizeThemePath(readGoalTemplateThemePath$1(template));
-}
-function ensureThemeField(fields, themePath) {
-  const normalizedThemePath = normalizeThemePath(themePath);
-  let touched = false;
-  const next2 = (fields || []).map((field) => {
-    if (!isThemeTemplateField(field)) return field;
-    touched = true;
-    return { ...field, defaultValue: normalizedThemePath || field.defaultValue || "{{goal.themePath}}" };
-  });
-  if (!touched && normalizedThemePath) {
-    next2.push({
-      id: "themePath",
-      key: "themePath",
-      label: "主题",
-      type: "path",
-      semanticType: "themePath",
-      defaultValue: normalizedThemePath
-    });
-  }
-  return next2;
-}
-function mergeDefaultValues(draft, themeIcon) {
-  const result = { ...draft.defaultValues || {} };
-  const themePath = normalizeThemePath(draft.themePath) || readThemePathFromFields(draft.fields);
-  if (themePath) {
-    result.themePath = themePath;
-  }
-  const icon = compactText(themeIcon) || readIconFromFields(draft.fields);
-  if (icon) {
-    result.icon = icon;
-  }
-  return result;
-}
-function readIconFromFields(fields) {
-  for (const field of fields || []) {
-    if (!isIconTemplateField(field)) continue;
-    const value = readOptionText(field.defaultValue);
-    if (value && value !== "{{theme.icon}}") return value;
-  }
-  return "";
-}
 function deriveRequiredFields(fields) {
   return (fields || []).filter((field) => field.required === true).map((field) => compactText(field.key || field.label)).filter(Boolean);
 }
@@ -70336,18 +66438,8 @@ function getFieldDefaultMap(fields) {
   }
   return result;
 }
-function makeVariantId(label) {
-  const text2 = compactText(label);
-  if (!text2) return `variant-${Date.now()}`;
-  return text2.replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-").replace(/^-+|-+$/g, "") || `variant-${Date.now()}`;
-}
-function isGeneratedPresetName$1(value) {
-  return isGeneratedGoalTemplateName(value);
-}
-function inferTemplateDisplayName(template, themePath = "") {
-  const displayName = getGoalTemplateDisplayName$1(template, null, "记录预设");
-  if (displayName && !isGeneratedPresetName$1(displayName)) return displayName;
-  return themeLeafLabel(themePath, displayName || "记录预设");
+function cloneValue(value) {
+  return JSON.parse(JSON.stringify(value));
 }
 function readPeriodGranularity(template, block) {
   return normalizePeriodPolicyGranularity(
@@ -70358,63 +66450,30 @@ function buildDraftPeriodPolicy(block, draft) {
   if (!block || !isPeriodAwareCoreBlock(block.id)) return void 0;
   return { enabled: true, granularity: normalizePeriodPolicyGranularity(draft.granularity) };
 }
-function makeDraftFromTemplate(template, block, variants) {
-  const variantId = template?.variantId || "default";
-  const index = Math.max(0, variants.findIndex((item) => (item.variantId || "default") === variantId));
-  const themePath = readThemePathFromTemplate(template) || readThemePathFromFields(block?.fields);
-  const fields = ensureThemeField(cloneValue$1(template?.fields || block?.fields || []), themePath);
+function makeDraftFromTemplate(template, block) {
+  const fields = cloneValue(template?.fields || block?.fields || []);
   return {
-    variantId,
-    name: inferTemplateDisplayName(template, themePath),
     description: template?.description || "",
     granularity: readPeriodGranularity(template, block),
-    sortOrder: template?.sortOrder ?? index * 10,
     fields,
     targetFile: template?.targetFile || block?.targetFile || "",
     appendUnderHeader: template?.appendUnderHeader || block?.appendUnderHeader || "## {{goalPath}}",
-    requiredFields: cloneValue$1(template?.requiredFields || []),
-    defaultValues: cloneValue$1(template?.defaultValues || {}),
-    themePath
+    requiredFields: cloneValue(template?.requiredFields || deriveRequiredFields(fields)),
+    defaultValues: cloneValue(template?.defaultValues || {})
   };
 }
-function makeNewDraft(goal, block, variants, themes) {
-  const base = makeDraftFromTemplate(null, block, variants);
-  const usedVariantIds = new Set(variants.map((item) => String(item.variantId || "default")));
-  const usedThemePaths = new Set(variants.map((item) => normalizeThemePath(readThemePathFromTemplate(item))).filter(Boolean));
-  const preferredTheme = normalizeThemePath(goal?.themePath) || normalizeThemePath(base.themePath);
-  const firstUnusedTheme = themes.map((theme) => normalizeThemePath(theme.path)).find((path) => path && !usedThemePaths.has(path));
-  const themePath = preferredTheme && !usedThemePaths.has(preferredTheme) ? preferredTheme : firstUnusedTheme || preferredTheme || "";
-  const label = themeLeafLabel(themePath, block?.name || "记录预设");
-  let variantId = makeVariantId(label || `preset-${variants.length + 1}`);
-  if (usedVariantIds.has(variantId)) {
-    let index = 2;
-    while (usedVariantIds.has(`${variantId}-${index}`)) index += 1;
-    variantId = `${variantId}-${index}`;
-  }
-  const fields = ensureThemeField(base.fields || [], themePath);
-  return {
-    ...base,
-    variantId,
-    name: label || "记录预设",
-    sortOrder: variants.length * 10,
-    themePath,
-    fields,
-    defaultValues: mergeDefaultValues(
-      { ...base, themePath, fields },
-      themes.find((theme) => normalizeThemePath(theme.path) === themePath)?.icon
-    )
-  };
+function makeNewDraft(block) {
+  return makeDraftFromTemplate(null, block);
 }
 function buildInheritedDraft(previous, block) {
-  const baseFields = ensureThemeField(cloneValue$1(block?.fields || []), previous.themePath);
-  const requiredFields = deriveRequiredFields(baseFields);
+  const fields = cloneValue(block?.fields || []);
   return {
     ...previous,
-    fields: baseFields,
+    fields,
     targetFile: block?.targetFile || "",
     appendUnderHeader: block?.appendUnderHeader || "## {{goalPath}}",
-    requiredFields,
-    defaultValues: mergeDefaultValues({ ...previous, fields: baseFields })
+    requiredFields: deriveRequiredFields(fields),
+    defaultValues: {}
   };
 }
 function switchDraftToOverride(previous, block) {
@@ -70427,84 +66486,40 @@ function switchDraftToOverride(previous, block) {
     requiredFields: previous.requiredFields?.length ? previous.requiredFields : base.requiredFields
   };
 }
-function cleanDefaultValuesOverride(draft, block, goal, themeIcon) {
-  const merged = mergeDefaultValues(draft, themeIcon);
+const FORBIDDEN_CONTEXT_KEYS = /* @__PURE__ */ new Set([
+  "goalPath",
+  "目标",
+  "目标路径",
+  "rootGoal",
+  "leafGoal",
+  "templateId",
+  "模板ID",
+  "templateSourceType",
+  "模板来源"
+]);
+function cleanDefaultValuesOverride(draft, block) {
   const baseDefaults = getFieldDefaultMap(block?.fields);
   const result = {};
-  const allowSystemDefault = /* @__PURE__ */ new Set(["themePath", "icon"]);
-  const forbiddenKeys = /* @__PURE__ */ new Set([
-    "legacyOverrideId",
-    "legacyThemePath",
-    "goalId",
-    "目标ID",
-    "goalPath",
-    "目标",
-    "templateId",
-    "模板ID",
-    "templateSourceType",
-    "模板来源",
-    "templateVariantId",
-    "goalTemplateVariantId",
-    "变体ID",
-    "记录预设",
-    "period",
-    "periodId",
-    "cycleId",
-    "周期",
-    "周期ID",
-    "周期粒度",
-    "goalGranularity"
-  ]);
-  const goalThemePath = normalizeThemePath(goal?.themePath);
-  Object.entries(merged).forEach(([key, raw]) => {
-    if (forbiddenKeys.has(key)) return;
+  Object.entries(draft.defaultValues || {}).forEach(([key, raw]) => {
+    if (FORBIDDEN_CONTEXT_KEYS.has(key) || isSystemRecordContextField(key)) return;
     const value = compactText(raw);
     if (!value) return;
-    if (isSystemRecordContextField(key) && !allowSystemDefault.has(key)) return;
-    if (key === "themePath" && value === goalThemePath) return;
-    if (key === "themePath" && value === "{{goal.themePath}}") return;
     if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
-    result[key] = value;
+    result[key] = raw;
   });
-  if (draft.themePath && draft.themePath !== goalThemePath) {
-    result.themePath = draft.themePath;
-  }
-  if (themeIcon && draft.themePath && draft.themePath !== goalThemePath) {
-    result.icon = themeIcon;
-  }
   return Object.keys(result).length ? result : void 0;
 }
-function inferTemplateEditMode(template, block, goal) {
-  return inferGoalTemplateEditMode(template, block, goal);
-}
-function buildInheritedTemplatePatchFromDraft(params) {
-  const { goal, block, draft, selectedTemplate, themeIcon } = params;
-  const variantId = draft.variantId || "default";
-  const defaultValues = cleanDefaultValuesOverride({ ...draft, fields: [] }, block, goal, themeIcon);
-  const rawPatch = {
-    id: getGoalTemplateId(goal.id, block.id, variantId),
-    goalId: goal.id,
-    coreBlockId: block.id,
-    variantId,
-    name: draft.name || (variantId === "default" ? "记录预设" : variantId),
-    description: draft.description || void 0,
-    periodPolicy: buildDraftPeriodPolicy(block, draft),
-    sortOrder: Number.isFinite(draft.sortOrder) ? draft.sortOrder : 0,
-    enabled: true,
-    defaultValues,
-    createdAt: selectedTemplate?.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
-    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-  };
-  return compactGoalTemplateForStorage(rawPatch, { coreBlock: block, goal });
+function inferTemplateEditMode(template) {
+  if (!template) return "inherit";
+  return template.enabled === false ? "disabled" : "override";
 }
 function buildTemplatePatchFromDraft(params) {
-  const { goal, block, draft, selectedTemplate, themeIcon } = params;
-  const variantId = draft.variantId || "default";
-  const draftFields = ensureThemeField(draft.fields || [], draft.themePath);
+  const { goal, block, draft } = params;
+  const goalPath = goal.path;
+  const draftFields = draft.fields || [];
   const baseFields = block.fields;
   const requiredFields = deriveRequiredFields(draftFields);
   const baseRequiredFields = deriveRequiredFields(baseFields || []);
-  const defaultValues = cleanDefaultValuesOverride(draft, block, goal, themeIcon);
   const sameFields = fieldsHaveSameStructure(draftFields, baseFields);
   const sameRequired = equalStringSet(requiredFields, baseRequiredFields);
   const targetFile = compactText(draft.targetFile);
@@ -70512,112 +66527,47 @@ function buildTemplatePatchFromDraft(params) {
   const baseTargetFile = compactText(block.targetFile);
   const baseAppendUnderHeader = compactText(block.appendUnderHeader);
   const rawPatch = {
-    id: getGoalTemplateId(goal.id, block.id, variantId),
-    goalId: goal.id,
+    id: getGoalTemplateId(goalPath, block.id),
+    goalPath,
     coreBlockId: block.id,
-    variantId,
-    name: draft.name || (variantId === "default" ? "记录预设" : variantId),
     description: draft.description || void 0,
     periodPolicy: buildDraftPeriodPolicy(block, draft),
-    sortOrder: Number.isFinite(draft.sortOrder) ? draft.sortOrder : 0,
     enabled: true,
     fields: sameFields ? void 0 : draftFields,
     targetFile: targetFile && targetFile !== baseTargetFile ? targetFile : void 0,
     appendUnderHeader: appendUnderHeader2 && appendUnderHeader2 !== baseAppendUnderHeader ? appendUnderHeader2 : void 0,
     requiredFields: sameRequired ? void 0 : requiredFields,
-    defaultValues,
-    createdAt: selectedTemplate?.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
-    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    defaultValues: cleanDefaultValuesOverride(draft, block)
   };
-  return compactGoalTemplateForStorage(rawPatch, { coreBlock: block, goal });
+  return compactGoalTemplateForStorage(rawPatch, { coreBlock: block });
 }
-function buildDraftDiffSummary(goal, block, draft, themeIcon) {
+function buildDisabledTemplate(goal, block) {
+  const goalPath = goal.path;
+  return {
+    id: getGoalTemplateId(goalPath, block.id),
+    goalPath,
+    coreBlockId: block.id,
+    enabled: false
+  };
+}
+function buildDraftDiffSummary(goal, block, draft) {
   if (!block || !goal) return [];
-  const patch = buildTemplatePatchFromDraft({ goal, block, draft, selectedTemplate: null, themeIcon });
-  return describeGoalTemplateStorageDiff(patch);
+  return describeGoalTemplateStorageDiff(buildTemplatePatchFromDraft({ goal, block, draft }));
 }
-function nextCopyVariantId(existing, sourceVariantId) {
-  const base = `${sourceVariantId}-copy`;
-  const used = new Set(existing.map((item) => String(item.variantId || "default")));
-  if (!used.has(base)) return base;
-  let index = 2;
-  while (used.has(`${base}-${index}`)) index += 1;
-  return `${base}-${index}`;
-}
-function sortGoalTemplateVariants(variants) {
-  return variants.map((template, index) => ({ template, index })).sort((left2, right2) => {
-    const bySort = (left2.template.sortOrder ?? 9999) - (right2.template.sortOrder ?? 9999);
-    if (bySort !== 0) return bySort;
-    return left2.index - right2.index;
-  }).map(({ template }) => template);
-}
-function buildThemeOptions(themes) {
-  return [
-    { value: "", label: "不指定主题" },
-    ...(themes || []).map((theme) => ({
-      value: theme.path,
-      label: `${theme.icon ? `${theme.icon} ` : ""}${cleanDisplayThemePath(theme.path)}`
-    }))
-  ];
-}
-function buildThemeByPath(themes) {
-  return new Map((themes || []).map((theme) => [String(theme.path || ""), theme]));
-}
-function applyThemePathToDraft(draft, themePath, themeIcon) {
-  const normalizedThemePath = normalizeThemePath(themePath);
-  const fields = ensureThemeField(draft.fields || [], normalizedThemePath);
-  return {
-    ...draft,
-    themePath: normalizedThemePath,
-    fields,
-    defaultValues: mergeDefaultValues({ ...draft, themePath: normalizedThemePath, fields }, themeIcon)
-  };
-}
-function createCopiedDraft(currentDraft, selectedTemplate, sortedVariants) {
-  const sourceVariantId = currentDraft.variantId || selectedTemplate?.variantId || "default";
-  const variantId = nextCopyVariantId(sortedVariants, sourceVariantId);
-  return {
-    ...currentDraft,
-    variantId,
-    name: `${currentDraft.name || selectedTemplate?.name || sourceVariantId} 副本`,
-    sortOrder: sortedVariants.length * 10
-  };
-}
-function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, initialVariantId = null, useCases }) {
+function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template, useCases }) {
   const ui = useUiPort();
-  const settings = useSelector(selectSettings);
-  const themes = settings.inputSettings?.themes || [];
-  const themeOptions2 = T$1(() => buildThemeOptions(themes), [themes]);
-  const themeByPath = T$1(() => buildThemeByPath(themes), [themes]);
-  const sortedVariants = T$1(() => sortGoalTemplateVariants(variants), [variants]);
   const [mode, setMode] = d("inherit");
-  const [selectedVariantId, setSelectedVariantId] = d("default");
-  const [draft, setDraft] = d(() => makeDraftFromTemplate(null, block, sortedVariants));
+  const [draft, setDraft] = d(() => makeNewDraft(block));
   const draftRef = A$1(draft);
-  const selectedTemplate = T$1(
-    () => sortedVariants.find((template) => (template.variantId || "default") === selectedVariantId) || null,
-    [sortedVariants, selectedVariantId]
-  );
   y(() => {
     if (!isOpen) return;
-    const initial = initialVariantId ? sortedVariants.find((template) => (template.variantId || "default") === initialVariantId || template.id === initialVariantId) || null : null;
-    if (initial) {
-      const nextVariantId2 = initial.variantId || "default";
-      const nextMode = inferTemplateEditMode(initial, block, goal);
-      const baseDraft = makeDraftFromTemplate(initial, block, sortedVariants);
-      const nextDraft2 = nextMode === "inherit" ? buildInheritedDraft(baseDraft, block) : baseDraft;
-      setMode(nextMode);
-      setSelectedVariantId(nextVariantId2);
-      draftRef.current = nextDraft2;
-      setDraft(nextDraft2);
-      return;
-    }
-    const nextDraft = buildInheritedDraft(makeNewDraft(goal, block, sortedVariants, themes), block);
-    setMode("inherit");
-    setSelectedVariantId(nextDraft.variantId);
+    const nextMode = inferTemplateEditMode(template);
+    const baseDraft = makeDraftFromTemplate(template && template.enabled !== false ? template : null, block);
+    const nextDraft = nextMode === "inherit" ? buildInheritedDraft(baseDraft, block) : baseDraft;
+    setMode(nextMode);
     draftRef.current = nextDraft;
     setDraft(nextDraft);
-  }, [isOpen, goal?.id, goal?.themePath, block?.id, initialVariantId, sortedVariants.length, themes.length]);
+  }, [isOpen, goal?.path, block?.id, template?.id, template?.enabled]);
   y(() => {
     draftRef.current = draft;
   }, [draft]);
@@ -70628,110 +66578,65 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, initi
       return next2;
     });
   };
-  const updateThemePath = (themePath) => {
-    setDraft((previous) => {
-      const next2 = applyThemePathToDraft(previous, themePath, themeByPath.get(String(themePath || ""))?.icon);
-      draftRef.current = next2;
-      return next2;
-    });
-  };
-  const currentTheme = themeByPath.get(String(draft.themePath || ""));
-  const isExistingTemplate = !!selectedTemplate;
-  const diffSummary = T$1(() => buildDraftDiffSummary(goal, block, draft, currentTheme?.icon), [goal, block, draft, currentTheme?.icon]);
   const supportsPeriod = !!block && isPeriodAwareCoreBlock(block.id);
-  const metadataDisabled = mode === "disabled";
-  const inheritedMode = mode === "inherit";
   const fieldEditDisabled = mode !== "override";
-  const switchToInherit = () => {
-    setMode("inherit");
-    setDraft((previous) => {
-      const next2 = buildInheritedDraft(previous, block);
-      draftRef.current = next2;
-      return next2;
-    });
-  };
-  const switchToOverride = () => {
-    setMode("override");
-    setDraft((previous) => {
-      const next2 = switchDraftToOverride(previous, block);
-      draftRef.current = next2;
-      return next2;
-    });
-  };
-  const handleCopyVariant = async () => {
-    if (!goal || !block) return;
-    const nextDraft = createCopiedDraft(draftRef.current, selectedTemplate, sortedVariants);
-    await useCases.goal.upsertGoalTemplate({
-      ...buildTemplatePatchFromDraft({
-        goal,
-        block,
-        draft: nextDraft,
-        selectedTemplate: null,
-        themeIcon: themeByPath.get(String(nextDraft.themePath || ""))?.icon
-      }),
-      sortOrder: nextDraft.sortOrder,
-      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-    });
-    setMode("override");
-    setSelectedVariantId(nextDraft.variantId);
-    draftRef.current = nextDraft;
-    setDraft(nextDraft);
-    ui.notice("已复制记录预设");
-  };
-  const deleteCellTemplates = async () => {
-    if (!goal || !block) return;
-    await Promise.all(sortedVariants.map((template) => useCases.goal.deleteGoalTemplate(goal.id, block.id, template.variantId || "default")));
+  const diffSummary = T$1(() => buildDraftDiffSummary(goal, block, draft), [goal, block, draft]);
+  const handleModeChange = (nextMode) => {
+    setMode(nextMode);
+    if (nextMode === "inherit") {
+      setDraft((previous) => {
+        const next2 = buildInheritedDraft(previous, block);
+        draftRef.current = next2;
+        return next2;
+      });
+      return;
+    }
+    if (nextMode === "override") {
+      setDraft((previous) => {
+        const next2 = switchDraftToOverride(previous, block);
+        draftRef.current = next2;
+        return next2;
+      });
+    }
   };
   const handleSave = async () => {
     if (!goal || !block) return;
+    const goalPath2 = goal.path;
     const activeElement2 = document.activeElement;
     if (activeElement2 && typeof activeElement2.blur === "function") activeElement2.blur();
     await new Promise((resolve) => window.setTimeout(resolve, 0));
-    const currentDraft = draftRef.current;
     try {
       if (mode === "inherit") {
-        await useCases.goal.upsertGoalTemplate(buildInheritedTemplatePatchFromDraft({ goal, block, draft: currentDraft, selectedTemplate, themeIcon: themeByPath.get(String(currentDraft.themePath || ""))?.icon }));
-        ui.notice(`已保存继承预设：${currentDraft.name || block.name}`);
+        await useCases.goal.deleteGoalTemplate(goalPath2, block.id);
+        ui.notice(`已恢复默认模板：${goalPath2} / ${block.name}`);
         onClose();
         return;
       }
       if (mode === "disabled") {
-        await deleteCellTemplates();
-        await useCases.goal.upsertGoalTemplate({
-          id: getGoalTemplateId(goal.id, block.id, "default"),
-          goalId: goal.id,
-          coreBlockId: block.id,
-          variantId: "default",
-          name: "隐藏",
-          description: "该目标下隐藏此记录类型",
-          sortOrder: 0,
-          enabled: false,
-          createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-          updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-        });
-        ui.notice(`已隐藏 ${goal.goalPath || goal.title} / ${block.name}`);
+        await useCases.goal.upsertGoalTemplate(buildDisabledTemplate(goal, block));
+        ui.notice(`已隐藏：${goalPath2} / ${block.name}`);
         onClose();
         return;
       }
-      await useCases.goal.upsertGoalTemplate(buildTemplatePatchFromDraft({ goal, block, draft: currentDraft, selectedTemplate, themeIcon: themeByPath.get(String(currentDraft.themePath || ""))?.icon }));
-      ui.notice(`已保存记录预设：${goal.goalPath || goal.title} / ${block.name}`);
+      await useCases.goal.upsertGoalTemplate(buildTemplatePatchFromDraft({ goal, block, draft: draftRef.current }));
+      ui.notice(`已保存字段预设：${goalPath2} / ${block.name}`);
       onClose();
     } catch (error) {
       diagnosticError("[GoalTemplateEditorModal] save failed", error);
-      ui.notice("保存记录预设失败，请查看控制台日志");
+      ui.notice("保存字段预设失败，请查看控制台日志");
     }
   };
   if (!isOpen || !goal || !block) return null;
-  const titleTheme = draft.themePath ? cleanDisplayThemePath(draft.themePath) : "新预设";
-  const currentPresetTitle = draft.name || titleTheme || "记录预设";
+  const goalPath = goal.path;
   return /* @__PURE__ */ u2(
     FloatingPanel,
     {
-      id: `goal-template-editor-${goal.id}-${block.id}`,
+      id: `goal-template-editor-${goal.path}-${block.id}`,
       title: /* @__PURE__ */ u2("span", { children: [
         "字段预设：",
-        /* @__PURE__ */ u2("strong", { children: currentPresetTitle })
+        /* @__PURE__ */ u2("strong", { children: goalPath }),
+        " / ",
+        block.name
       ] }),
       onClose,
       defaultPosition: { x: Math.max(24, window.innerWidth / 2 - 380), y: 72 },
@@ -70748,326 +66653,62 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, variants, initi
       bodyPadding: 0,
       bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
       children: /* @__PURE__ */ u2("div", { className: "think-os--settings think-goal-template-editor", children: /* @__PURE__ */ u2("div", { className: "think-goal-template-editor__stack", children: [
-        /* @__PURE__ */ u2("header", { className: "think-editor-header", children: [
-          /* @__PURE__ */ u2("div", { className: "think-goal-template-editor__identity", children: [
-            /* @__PURE__ */ u2("div", { className: "think-settings-title-strong", children: [
-              currentTheme?.icon ? `${currentTheme.icon} ` : "",
-              titleTheme
-            ] }),
-            /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: [
-              goal.goalPath || goal.title,
-              " / ",
-              block.name
-            ] })
+        /* @__PURE__ */ u2("header", { className: "think-editor-header", children: /* @__PURE__ */ u2("div", { className: "think-goal-template-editor__identity", children: [
+          /* @__PURE__ */ u2("div", { className: "think-settings-title-strong", children: [
+            goal.icon ? `${goal.icon} ` : "",
+            goalPath
           ] }),
-          /* @__PURE__ */ u2("div", { className: "think-settings-actions", children: /* @__PURE__ */ u2(ThinkButton, { size: "sm", disabled: !selectedTemplate || metadataDisabled, onClick: handleCopyVariant, children: "复制为新预设" }) })
-        ] }),
+          /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "每个目标 × 记录类型只有一个字段预设，不再存在第二层分类或预设变体。" }),
+          /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "Goal Template 只定义字段、默认值与保存位置，不覆盖存储 grammar。" })
+        ] }) }),
         mode === "disabled" ? /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: [
           "「",
           block.name,
-          "」当前已隐藏。保存前请切回普通预设或删除隐藏规则。"
+          "」在这个目标下不会出现在普通录入入口。"
         ] }) : null,
-        /* @__PURE__ */ u2(GoalTemplateModeSwitch, { mode, blockName: block.name, disabled: metadataDisabled, onInherit: switchToInherit, onOverride: switchToOverride }),
+        /* @__PURE__ */ u2(GoalTemplateModeSwitch, { mode, blockName: block.name, onChange: handleModeChange }),
         /* @__PURE__ */ u2("section", { className: "think-goal-template-editor__fields", children: [
-          /* @__PURE__ */ u2(NativeTextInput, { label: "名字", value: draft.name, onInput: (value) => updateDraft({ name: value }), disabled: metadataDisabled, placeholder: "例如：心情" }),
-          isExistingTemplate ? /* @__PURE__ */ u2(NativeTextInput, { label: "主题", value: currentTheme?.icon ? `${currentTheme.icon} ${cleanDisplayThemePath(draft.themePath)}` : cleanDisplayThemePath(draft.themePath) || "未指定主题", onInput: () => void 0, disabled: true }) : /* @__PURE__ */ u2(NativeSelectInput2, { label: "主题", value: draft.themePath || "", options: themeOptions2, onChange: (value) => {
-            const themePath = String(value || "");
-            updateThemePath(themePath);
-            const label = themeLeafLabel(themePath);
-            if (label && isGeneratedPresetName$1(draftRef.current.name)) updateDraft({ name: label, variantId: makeVariantId(label) });
-          }, disabled: metadataDisabled }),
-          supportsPeriod ? /* @__PURE__ */ u2(NativeSelectInput2, { label: "周期", value: draft.granularity, options: presetGranularityOptions, onChange: (value) => updateDraft({ granularity: value }), disabled: metadataDisabled }) : null,
+          supportsPeriod ? /* @__PURE__ */ u2(
+            NativeSelectInput2,
+            {
+              label: "周期",
+              value: draft.granularity,
+              options: presetGranularityOptions,
+              onChange: (value) => updateDraft({ granularity: value }),
+              disabled: mode === "disabled"
+            }
+          ) : null,
           /* @__PURE__ */ u2(NativeTextInput, { label: "保存文件", value: draft.targetFile, onInput: (value) => updateDraft({ targetFile: value }), disabled: fieldEditDisabled, placeholder: "例如：01/目标打卡.md" }),
           /* @__PURE__ */ u2(NativeTextInput, { label: "标题", value: draft.appendUnderHeader, onInput: (value) => updateDraft({ appendUnderHeader: value }), disabled: fieldEditDisabled, placeholder: "## {{goalPath}}" }),
-          /* @__PURE__ */ u2(NativeTextInput, { label: "说明", value: draft.description, onInput: (value) => updateDraft({ description: value }), disabled: metadataDisabled, placeholder: "可选" }),
-          diffSummary.length ? /* @__PURE__ */ u2("div", { className: "think-editor-diff-list", children: diffSummary.map((item) => /* @__PURE__ */ u2("span", { className: "think-editor-diff-chip", children: item }, item)) }) : null
+          /* @__PURE__ */ u2(NativeTextInput, { label: "说明", value: draft.description, onInput: (value) => updateDraft({ description: value }), disabled: mode === "disabled", placeholder: "可选" }),
+          mode === "override" && diffSummary.length ? /* @__PURE__ */ u2("div", { className: "think-editor-diff-list", children: diffSummary.map((item) => /* @__PURE__ */ u2("span", { className: "think-editor-diff-chip", children: item }, item)) }) : null
         ] }),
         /* @__PURE__ */ u2("section", { className: fieldEditDisabled ? "think-settings-muted-disabled think-goal-template-editor__form-fields" : "think-goal-template-editor__form-fields", children: [
           /* @__PURE__ */ u2("div", { className: "think-goal-template-editor__section-heading", children: "表单字段" }),
-          inheritedMode ? /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "继承模式下字段只读；切换到“覆盖”后可单独修改。" }) : null,
-          /* @__PURE__ */ u2(FieldsEditor, { fields: draft.fields || [], disabled: fieldEditDisabled, onChange: (fields) => updateDraft({ fields, themePath: readThemePathFromFields(fields) || draft.themePath }) })
+          mode === "inherit" ? /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "默认模式直接使用记录类型模板；切换到“自定义”后才保存目标专属字段。" }) : null,
+          mode === "disabled" ? /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "隐藏模式不保存字段覆盖。" }) : null,
+          /* @__PURE__ */ u2(FieldsEditor, { fields: draft.fields || [], disabled: fieldEditDisabled, onChange: (fields) => updateDraft({ fields }) })
         ] }),
         /* @__PURE__ */ u2("footer", { className: "think-settings-sticky-actions", children: [
           /* @__PURE__ */ u2(ThinkButton, { onClick: onClose, children: "取消" }),
-          /* @__PURE__ */ u2(ThinkButton, { onClick: handleSave, variant: "primary", disabled: metadataDisabled, children: "保存" })
+          /* @__PURE__ */ u2(ThinkButton, { onClick: handleSave, variant: "primary", children: "保存" })
         ] })
       ] }) })
     }
   );
 }
-const GOAL_TEMPLATE_BLOCK_ORDER = ["打卡", "任务", "事件", "思考", "总结", "计划", "阻碍项", "里程碑"];
-const GOAL_TEMPLATE_BLOCK_ID_ORDER = ["core.habit", "core.task", "core.evidence", "core.thought", "core.review", "core.plan", "core.blocker", "core.milestone"];
-function cloneValue(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-function normalizeDefault(value) {
-  const text2 = compactText(value);
-  if (!text2 || text2 === "{{goal.themePath}}") return "";
-  return text2;
-}
-function safeVariantPart(value) {
-  const text2 = String(value ?? "").trim() || "preset";
-  return text2.replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "preset";
-}
-function readFieldDefault(fields, predicate) {
-  for (const field of fields || []) {
-    if (!predicate(field)) continue;
-    const value = normalizeDefault(field.defaultValue);
-    if (value) return value;
-  }
-  return "";
-}
-function orderGoalTemplateBlocks(blocks) {
-  const order2 = /* @__PURE__ */ new Map();
-  GOAL_TEMPLATE_BLOCK_ORDER.forEach((name, index) => order2.set(name, index));
-  GOAL_TEMPLATE_BLOCK_ID_ORDER.forEach((id, index) => order2.set(id, index));
-  return [...blocks].sort((left2, right2) => {
-    const leftRank = order2.get(left2.id) ?? order2.get(left2.name) ?? 999;
-    const rightRank = order2.get(right2.id) ?? order2.get(right2.name) ?? 999;
-    if (leftRank !== rightRank) return leftRank - rightRank;
-    return String(left2.name || left2.id).localeCompare(String(right2.name || right2.id), "zh-CN");
-  });
-}
-function getGoalTemplateDisplayName(template) {
-  const name = String(template.name || "").trim();
-  if (name) return name;
-  const variantId = String(template.variantId || "").trim();
-  if (variantId) return variantId;
-  return "未命名预设";
-}
-function readGoalTemplateThemePath(template, goal) {
-  const values2 = template?.defaultValues || {};
-  return normalizeThemePath(normalizeDefault(values2.themePath) || normalizeDefault(values2["主题"]) || readFieldDefault(template?.fields, isThemeTemplateField) || normalizeDefault(goal?.themePath));
-}
-function readGoalTemplateIcon(template, themeIcon) {
-  const values2 = template?.defaultValues || {};
-  return String(normalizeDefault(values2.icon) || normalizeDefault(values2["图标"]) || normalizeDefault(values2["theme.icon"]) || readFieldDefault(template?.fields, isIconTemplateField) || themeIcon || "").trim();
-}
-function findExistingTemplateForTheme(templates, goal, targetBlock, sourceTemplate) {
-  const sourceThemePath = readGoalTemplateThemePath(sourceTemplate, goal);
-  const sourceName = getGoalTemplateDisplayName(sourceTemplate);
-  return templates.find((template) => {
-    if (template.goalId !== goal.id || template.coreBlockId !== targetBlock.id || template.enabled === false) return false;
-    const targetThemePath = readGoalTemplateThemePath(template, goal);
-    if (sourceThemePath && targetThemePath && sourceThemePath === targetThemePath) return true;
-    if (!sourceThemePath && getGoalTemplateDisplayName(template) === sourceName) return true;
-    return false;
-  }) || null;
-}
-function nextVariantId(goal, targetBlock, templates, baseLabel) {
-  const sameCell = templates.filter((template) => template.goalId === goal.id && template.coreBlockId === targetBlock.id);
-  const used = new Set(sameCell.map((template) => String(template.variantId || "default")));
-  const base = safeVariantPart(baseLabel);
-  if (!used.has(base)) return base;
-  for (let index = 2; index < 1e3; index += 1) {
-    const candidate = `${base}-${index}`;
-    if (!used.has(candidate)) return candidate;
-  }
-  return `${base}-${Date.now()}`;
-}
-function buildTargetFields(block, goal, themePath, icon) {
-  return cloneValue(block.fields || []).map((field) => {
-    if (isThemeTemplateField(field)) return { ...field, defaultValue: themePath || field.defaultValue || "{{goal.themePath}}" };
-    if (isIconTemplateField(field)) return { ...field, defaultValue: icon || field.defaultValue || "" };
-    if (isGoalPathTemplateField(field)) return { ...field, defaultValue: goal.goalPath || goal.title || goal.id };
-    return field;
-  });
-}
-function buildRetargetedGoalTemplate(input) {
-  const { sourceTemplate, sourceBlock, targetBlock, sourceGoal, targetGoal, templates, themeIcon, reason = "copy" } = input;
-  const themePath = readGoalTemplateThemePath(sourceTemplate, sourceGoal);
-  const icon = readGoalTemplateIcon(sourceTemplate, themeIcon);
-  const name = getGoalTemplateDisplayName(sourceTemplate);
-  const label = themePath ? getThemePathLeaf(themePath) : name;
-  const variantId = nextVariantId(targetGoal, targetBlock, templates, label || name || targetBlock.name);
-  const goalPath = targetGoal.goalPath || targetGoal.title || targetGoal.id;
-  const defaultValues = {
-    themePath,
-    "主题": themePath,
-    goalId: targetGoal.id,
-    goalPath,
-    "目标": goalPath
-  };
-  if (icon) {
-    defaultValues.icon = icon;
-    defaultValues["图标"] = icon;
-  }
-  const fields = buildTargetFields(targetBlock, targetGoal, themePath, icon);
-  const now2 = (/* @__PURE__ */ new Date()).toISOString();
-  return {
-    id: getGoalTemplateId(targetGoal.id, targetBlock.id, variantId),
-    goalId: targetGoal.id,
-    coreBlockId: targetBlock.id,
-    variantId,
-    name,
-    description: reason === "move" ? `由「${sourceGoal.goalPath || sourceGoal.title} / ${sourceBlock.name}」移动到「${targetGoal.goalPath || targetGoal.title} / ${targetBlock.name}」` : `由「${sourceBlock.name}」预设复制到「${targetBlock.name}」`,
-    periodPolicy: isPeriodAwareCoreBlock(targetBlock.id) ? { enabled: true, granularity: normalizePeriodPolicyGranularity(sourceTemplate.periodPolicy?.granularity || targetBlock.periodPolicy?.granularity) } : void 0,
-    sortOrder: templates.filter((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id).length * 10,
-    enabled: sourceTemplate.enabled !== false,
-    fields,
-    targetFile: targetBlock.targetFile,
-    appendUnderHeader: targetBlock.appendUnderHeader,
-    requiredFields: fields.filter((field) => field.required).map((field) => field.key).filter(Boolean),
-    defaultValues,
-    createdAt: reason === "move" ? sourceTemplate.createdAt || now2 : now2,
-    updatedAt: now2
-  };
-}
-function buildCopiedGoalTemplate(input) {
-  return buildRetargetedGoalTemplate({
-    sourceTemplate: input.sourceTemplate,
-    sourceBlock: input.sourceBlock,
-    targetBlock: input.targetBlock,
-    sourceGoal: input.goal,
-    targetGoal: input.goal,
-    templates: input.templates,
-    themeIcon: input.themeIcon,
-    reason: "copy"
-  });
-}
-function MenuItem({ label, meta, danger = false, disabled = false, emphasized = false, onClick }) {
+function GoalPresetCard({ templateKey, icon, onOpen }) {
   return /* @__PURE__ */ u2(
     "button",
     {
       type: "button",
-      className: [
-        "think-goal-template-menu__item",
-        danger ? "is-danger" : "",
-        emphasized ? "is-emphasized" : ""
-      ].filter(Boolean).join(" "),
-      disabled,
-      onClick,
-      children: [
-        /* @__PURE__ */ u2("span", { children: label }),
-        meta ? /* @__PURE__ */ u2("span", { className: "think-goal-template-menu__meta", children: meta }) : null
-      ]
-    }
-  );
-}
-function GoalTemplateContextMenu({ state, blocks, templates, onClose, onOpenBlock, onCopyToBlock, onCopyMissingBlocks, onDeleteTemplate }) {
-  y(() => {
-    if (!state) return void 0;
-    const onKey = (event) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [state, onClose]);
-  if (!state || typeof document === "undefined") return null;
-  const display = getGoalTemplateDisplayInfo(state.template, state.goal);
-  const themePath = display.themePath || readGoalTemplateThemePath(state.template, state.goal);
-  const title = display.name;
-  const missingCount = blocks.filter((block) => block.id !== state.block.id && !findExistingTemplateForTheme(templates, state.goal, block, state.template)).length;
-  const left2 = Math.min(state.x, Math.max(12, window.innerWidth - 340));
-  const top2 = Math.min(state.y, Math.max(12, window.innerHeight - 420));
-  const menu = /* @__PURE__ */ u2("div", { className: "think-os think-os--settings think-goal-template-menu-layer", children: [
-    /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__backdrop", onMouseDown: onClose, onContextMenu: (event) => {
-      event.preventDefault();
-      onClose();
-    } }),
-    /* @__PURE__ */ u2(
-      "div",
-      {
-        className: "think-goal-template-menu",
-        style: { left: left2, top: top2 },
-        onMouseDown: (event) => event.stopPropagation(),
-        onClick: (event) => event.stopPropagation(),
-        onContextMenu: (event) => event.preventDefault(),
-        children: [
-          /* @__PURE__ */ u2("header", { className: "think-goal-template-menu__header", children: [
-            /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__title", children: [
-              "记录预设：",
-              title
-            ] }),
-            /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__description", children: [
-              themePath || "未设置主题",
-              " · ",
-              state.block.name
-            ] })
-          ] }),
-          /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__group", children: [
-            /* @__PURE__ */ u2(MenuItem, { label: "编辑字段预设", meta: "当前", onClick: () => {
-              onOpenBlock(state.goal, state.block, state.template);
-              onClose();
-            } }),
-            /* @__PURE__ */ u2(MenuItem, { label: "补齐全部缺失记录类型", meta: missingCount > 0 ? `创建 ${missingCount}` : "已补齐", emphasized: true, disabled: missingCount <= 0, onClick: () => {
-              onCopyMissingBlocks();
-              onClose();
-            } })
-          ] }),
-          onDeleteTemplate ? /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__group", children: /* @__PURE__ */ u2(MenuItem, { label: "删除当前预设", meta: "仅此主题", danger: true, onClick: () => {
-            onDeleteTemplate(state.goal, state.block, state.template);
-            onClose();
-          } }) }) : null,
-          /* @__PURE__ */ u2("div", { className: "think-goal-template-menu__group", children: blocks.map((block) => {
-            const isCurrent = block.id === state.block.id;
-            const existing = isCurrent ? state.template : findExistingTemplateForTheme(templates, state.goal, block, state.template);
-            return /* @__PURE__ */ u2(
-              MenuItem,
-              {
-                label: block.name,
-                meta: isCurrent ? "当前" : existing ? "已存在，打开" : "创建",
-                disabled: false,
-                onClick: () => {
-                  if (isCurrent) onOpenBlock(state.goal, block, state.template);
-                  else if (existing) onOpenBlock(state.goal, block, existing);
-                  else onCopyToBlock(block);
-                  onClose();
-                }
-              },
-              block.id
-            );
-          }) })
-        ]
-      }
-    )
-  ] });
-  return $(menu, document.body);
-}
-function GoalPresetCard({
-  templateKey,
-  name,
-  icon,
-  themePath,
-  isDragging = false,
-  onOpen,
-  onContextMenu,
-  onDragStart,
-  onDragEnd
-}) {
-  return /* @__PURE__ */ u2(
-    "div",
-    {
       "data-goal-template-key": templateKey,
-      className: `think-goal-preset${isDragging ? " is-dragging" : ""}`,
-      role: "button",
-      tabIndex: 0,
-      title: `${name}${themePath ? ` · ${themePath}` : ""}
-左键编辑；右键更多；拖动排序或移动`,
+      className: "think-goal-preset",
+      title: "编辑这个目标与记录类型的字段预设",
       onClick: onOpen,
-      onKeyDown: (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onOpen();
-        }
-      },
-      onContextMenu,
       children: [
-        /* @__PURE__ */ u2(
-          "span",
-          {
-            className: "think-goal-preset__drag",
-            draggable: true,
-            onMouseDown: (event) => event.stopPropagation(),
-            onClick: (event) => event.stopPropagation(),
-            onDragStart,
-            onDragEnd,
-            title: "拖动预设排序或移动",
-            children: /* @__PURE__ */ u2(ThinkIcon, { name: "grip-vertical" })
-          }
-        ),
         /* @__PURE__ */ u2("span", { className: "think-goal-preset__icon", children: icon || "◇" }),
-        /* @__PURE__ */ u2("span", { className: "think-goal-preset__name", children: name })
+        /* @__PURE__ */ u2("span", { className: "think-goal-preset__name", children: "已配置" })
       ]
     },
     templateKey
@@ -71077,19 +66718,17 @@ function cleanPathSegment(value) {
   return value.trim();
 }
 function getGoalDisplayPath(goal) {
-  return getGoalOrderPath(goal) || cleanPathSegment(goal.id);
+  return getGoalOrderPath(goal) || cleanPathSegment(goal.path);
 }
 function getGoalDisplayName(goal) {
-  return getGoalOrderLabel(goal) || cleanPathSegment(goal.title || goal.id);
+  return getGoalOrderLabel(goal) || cleanPathSegment(goal.path);
 }
 function getGoalParentPath(goal) {
   const parts = getGoalDisplayPath(goal).split("/").filter(Boolean);
   return parts.slice(0, -1).join("/");
 }
 function getGoalDepth(goal) {
-  const path = getGoalDisplayPath(goal);
-  const parts = path.split("/").filter(Boolean);
-  return Math.max(0, parts.length - 1);
+  return Math.max(0, getGoalDisplayPath(goal).split("/").filter(Boolean).length - 1);
 }
 function goalHasChildren(goal, goals) {
   const path = getGoalDisplayPath(goal);
@@ -71108,25 +66747,15 @@ function sortGoalsForMatrix(goals) {
   return sortGoalsBySettingsOrder(goals);
 }
 function buildGoalTemplateCell(goal, block, templates) {
-  const cellTemplates = templates.filter((template) => template.goalId === goal.id && template.coreBlockId === block.id);
-  const enabledTemplates = cellTemplates.filter((template) => template.enabled !== false);
-  let status = "inherit";
-  let label = "添加";
-  let description = "点击添加此目标的 Block 预设";
-  if (cellTemplates.length > 0 && enabledTemplates.length === 0) {
-    status = "disabled";
-    label = "隐藏";
-    description = "该目标下隐藏此 Block";
-  } else if (enabledTemplates.length > 1) {
-    status = "multi";
-    label = `选项 ${enabledTemplates.length}`;
-    description = "该目标下有多个记录预设选项";
-  } else if (enabledTemplates.length === 1) {
-    status = "override";
-    label = "有预设";
-    description = enabledTemplates[0].name || enabledTemplates[0].variantId || "目标专属预设";
+  const goalPath = getGoalDisplayPath(goal);
+  const template = templates.find((item) => item.goalPath === goalPath && item.coreBlockId === block.id) || null;
+  if (!template) {
+    return { goal, block, template: null, status: "inherit", label: "", description: "使用记录类型默认模板" };
   }
-  return { goal, block, templates: cellTemplates, enabledTemplates, status, label, description };
+  if (template.enabled === false) {
+    return { goal, block, template, status: "disabled", label: "隐藏", description: "该目标下隐藏此记录类型" };
+  }
+  return { goal, block, template, status: "override", label: "已配置", description: "该目标有专属字段预设" };
 }
 function normalizeSearchText(value) {
   return String(value || "").toLowerCase().trim();
@@ -71134,51 +66763,29 @@ function normalizeSearchText(value) {
 function cleanDisplayText(value) {
   return String(value ?? "").trim();
 }
-function isGeneratedPresetName(value) {
-  const text2 = String(value ?? "").trim();
-  return !text2 || /^预设\s*\d+$/i.test(text2) || /^preset[-_\s]*\d+$/i.test(text2) || text2 === "记录预设" || text2 === "未命名预设";
-}
-function getPresetCardName(template, goal) {
-  const raw = getGoalTemplateDisplayName(template);
-  if (!isGeneratedPresetName(raw)) return raw;
-  return cleanDisplayText(getThemePathLeaf(readGoalTemplateThemePath(template, goal))) || raw;
-}
 function goalTemplateKey(template) {
-  return template.id || `${template.goalId}:${template.coreBlockId}:${template.variantId || "default"}`;
+  return template.id || `${template.goalPath}:${template.coreBlockId}`;
 }
-function goalTemplateVariantId(template) {
-  return String(template.variantId || "default").trim() || "default";
-}
-function sortPresets(items, goals = []) {
-  return sortGoalTemplatesBySettingsOrder(items, goals);
-}
-function buildThemeIconMap(settings) {
-  const map = /* @__PURE__ */ new Map();
-  for (const theme of settings.inputSettings?.themes || []) {
-    if (theme?.path) map.set(String(theme.path), String(theme.icon || ""));
-  }
-  return map;
+function goalTemplateIcon(template, goal) {
+  return readGoalTemplateIcon(template, goal.icon) || goal.icon || "◇";
 }
 function presetSearchText(template, goal) {
-  return `${getPresetCardName(template, goal)} ${readGoalTemplateThemePath(template, goal)} ${readGoalTemplateIcon(template)}`.toLowerCase();
+  return `${getGoalDisplayPath(goal)} ${template.coreBlockId} ${template.description || ""}`.toLowerCase();
 }
 function getEventDropPosition(event, target) {
-  const element = target || event.currentTarget;
+  const element = event.currentTarget;
   if (!element) return "after";
   const rect = element.getBoundingClientRect();
   return event.clientY < rect.top + rect.height / 2 ? "before" : "after";
 }
-function isSameCell(left2, goal, block) {
-  return left2.goalId === goal.id && left2.blockId === block.id;
-}
 function filterVisibleGoalTemplateMatrixGoals(input) {
   const q2 = normalizeSearchText(input.query);
   return input.goals.filter((goal) => {
-    if (!isGoalVisibleByExpandedState(goal, input.expandedPaths)) return false;
-    if (!q2) return true;
-    const goalText = `${getGoalDisplayName(goal)} ${getGoalDisplayPath(goal)} ${goal.themePath || ""}`.toLowerCase();
+    if (!q2) return isGoalVisibleByExpandedState(goal, input.expandedPaths);
+    const goalText = `${getGoalDisplayName(goal)} ${getGoalDisplayPath(goal)}`.toLowerCase();
     if (goalText.includes(q2)) return true;
-    return input.templates.some((template) => template.goalId === goal.id && presetSearchText(template, goal).includes(q2));
+    const path = getGoalDisplayPath(goal);
+    return input.templates.some((template) => template.goalPath === path && presetSearchText(template, goal).includes(q2));
   });
 }
 function splitGoalsByRoot(goals) {
@@ -71197,156 +66804,67 @@ function splitGoalsByRoot(goals) {
   if (current2.length > 0) groups.push(current2);
   return groups;
 }
-function addAllGoalPaths(previous, allGoalPaths) {
-  const next2 = new Set(previous);
-  allGoalPaths.forEach((path) => next2.add(path));
-  return next2;
-}
 function toggleGoalPath(previous, path) {
   const next2 = new Set(previous);
   if (next2.has(path)) next2.delete(path);
   else next2.add(path);
   return next2;
 }
-function toggleGoalCollapsed(previous, goalId) {
-  const next2 = new Set(previous);
-  if (next2.has(goalId)) next2.delete(goalId);
-  else next2.add(goalId);
-  return next2;
-}
 function orderDraggedGoalSiblings(input) {
-  if (input.dragGoalId === input.targetGoalId) return null;
-  const dragged = input.goals.find((goal) => goal.id === input.dragGoalId);
-  const target = input.goals.find((goal) => goal.id === input.targetGoalId);
+  if (input.dragGoalPath === input.targetGoalPath) return null;
+  const dragged = input.goals.find((goal) => goal.path === input.dragGoalPath);
+  const target = input.goals.find((goal) => goal.path === input.targetGoalPath);
   if (!dragged || !target) return null;
   const draggedParent = getGoalParentPath(dragged);
   const targetParent = getGoalParentPath(target);
   if (draggedParent !== targetParent) return null;
   const siblings = sortGoalsForMatrix(input.goals.filter((goal) => getGoalParentPath(goal) === draggedParent));
-  const next2 = siblings.filter((goal) => goal.id !== dragged.id);
-  const targetIndex = next2.findIndex((goal) => goal.id === target.id);
+  const next2 = siblings.filter((goal) => goal.path !== dragged.path);
+  const targetIndex = next2.findIndex((goal) => goal.path === target.path);
   if (targetIndex < 0) return null;
   next2.splice(input.position === "before" ? targetIndex : targetIndex + 1, 0, dragged);
   return next2;
 }
-function reorderPresetTemplatesInCell(input) {
-  const cellTemplates = sortPresets(input.templates.filter((template) => template.goalId === input.drag.goalId && template.coreBlockId === input.drag.blockId && template.enabled !== false), input.goals);
-  const dragged = cellTemplates.find((template) => goalTemplateKey(template) === input.drag.templateKey);
-  if (!dragged) return null;
-  const next2 = cellTemplates.filter((template) => goalTemplateKey(template) !== input.drag.templateKey);
-  if (input.targetTemplateKey) {
-    const targetIndex = next2.findIndex((template) => goalTemplateKey(template) === input.targetTemplateKey);
-    if (targetIndex >= 0) next2.splice(input.position === "before" ? targetIndex : targetIndex + 1, 0, dragged);
-    else next2.push(dragged);
-  } else {
-    next2.push(dragged);
-  }
-  return next2.map((template, index) => ({ ...template, sortOrder: index * 10 }));
-}
-function PresetCard(props) {
-  const { goal, block, template, themeIconByPath, draggingPreset, setDraggingPreset, setPresetDropCell, openEditor, openPresetContextMenu } = props;
-  const themePath = readGoalTemplateThemePath(template, goal);
-  const icon = readGoalTemplateIcon(template, themeIconByPath.get(themePath));
-  const name = getPresetCardName(template, goal);
-  const key = goalTemplateKey(template);
-  return /* @__PURE__ */ u2(
-    GoalPresetCard,
-    {
-      goal,
-      block,
-      template,
-      templateKey: key,
-      name,
-      icon,
-      themePath,
-      isDragging: draggingPreset?.templateKey === key,
-      onOpen: () => openEditor(goal, block, template),
-      onContextMenu: (event) => openPresetContextMenu(event, goal, block, template),
-      onDragStart: (event) => {
-        event.stopPropagation();
-        if (event.dataTransfer) {
-          event.dataTransfer.effectAllowed = "move";
-          event.dataTransfer.setData("text/plain", key);
-        }
-        setDraggingPreset({ goalId: goal.id, blockId: block.id, templateKey: key });
-      },
-      onDragEnd: () => {
-        setDraggingPreset(null);
-        setPresetDropCell(null);
-      }
-    }
-  );
-}
-function GoalTemplateMatrixCell(props) {
-  const {
-    goal,
-    block,
-    goals,
-    templates,
-    themeIconByPath,
-    collapsed,
-    draggingPreset,
-    presetDropCell,
-    setDraggingPreset,
-    setPresetDropCell,
-    handlePresetDropOnCell,
-    openEditor,
-    openPresetContextMenu
-  } = props;
+function GoalTemplateMatrixCell({ goal, block, templates, openEditor }) {
   const cell = buildGoalTemplateCell(goal, block, templates);
-  const presets = sortPresets(cell.enabledTemplates, goals);
-  const isDropCell = presetDropCell?.goalId === goal.id && presetDropCell.blockId === block.id;
+  const template = cell.template;
+  if (template && template.enabled !== false) {
+    return /* @__PURE__ */ u2("div", { className: "think-goal-template-matrix__preset-cell", children: /* @__PURE__ */ u2(
+      GoalPresetCard,
+      {
+        goal,
+        block,
+        template,
+        templateKey: goalTemplateKey(template),
+        icon: goalTemplateIcon(template, goal),
+        onOpen: () => openEditor(goal, block, template)
+      }
+    ) });
+  }
+  if (template && template.enabled === false) {
+    return /* @__PURE__ */ u2(
+      "button",
+      {
+        type: "button",
+        className: "think-goal-template-matrix__preset-cell is-disabled",
+        title: "该目标下已隐藏此记录类型，点击修改",
+        onClick: () => openEditor(goal, block, template),
+        children: /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__disabled-label", children: "隐藏" })
+      }
+    );
+  }
   return /* @__PURE__ */ u2(
-    "div",
+    "button",
     {
-      className: `think-goal-template-matrix__preset-cell${isDropCell ? " is-drop-target" : ""}`,
-      title: "添加、编辑或拖动记录预设",
-      onDragEnter: (event) => {
-        if (!draggingPreset) return;
-        event.preventDefault();
-        event.stopPropagation();
-        if (!presetDropCell || presetDropCell.goalId !== goal.id || presetDropCell.blockId !== block.id) setPresetDropCell({ goalId: goal.id, blockId: block.id });
-      },
-      onDragOver: (event) => {
-        if (!draggingPreset) return;
-        event.preventDefault();
-      },
-      onDrop: (event) => handlePresetDropOnCell(event, goal, block),
-      children: [
-        !collapsed && presets.map((template) => /* @__PURE__ */ u2(
-          PresetCard,
-          {
-            goal,
-            block,
-            template,
-            themeIconByPath,
-            draggingPreset,
-            setDraggingPreset,
-            setPresetDropCell,
-            openEditor,
-            openPresetContextMenu
-          },
-          goalTemplateKey(template)
-        )),
-        /* @__PURE__ */ u2(
-          ThinkButton,
-          {
-            size: "sm",
-            variant: "ghost",
-            className: "think-goal-template-matrix__add",
-            leadingIcon: /* @__PURE__ */ u2(ThinkIcon, { name: "plus" }),
-            onClick: (event) => {
-              event.stopPropagation();
-              openEditor(goal, block);
-            },
-            children: "添加"
-          }
-        )
-      ]
+      type: "button",
+      className: "think-goal-template-matrix__preset-cell is-empty",
+      title: "点击创建这个目标的字段预设",
+      onClick: () => openEditor(goal, block, null),
+      children: /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__empty-add", "aria-hidden": "true", children: "+" })
     }
   );
 }
-function GoalDragHandle({ goal, setDraggingGoalId, setGoalDrop }) {
+function GoalDragHandle({ goal, setDraggingGoalPath, setGoalDrop }) {
   return /* @__PURE__ */ u2(
     "span",
     {
@@ -71358,12 +66876,12 @@ function GoalDragHandle({ goal, setDraggingGoalId, setGoalDrop }) {
         event.stopPropagation();
         if (event.dataTransfer) {
           event.dataTransfer.effectAllowed = "move";
-          event.dataTransfer.setData("text/plain", goal.id);
+          event.dataTransfer.setData("text/plain", goal.path);
         }
-        setDraggingGoalId(goal.id);
+        setDraggingGoalPath(goal.path);
       },
       onDragEnd: () => {
-        setDraggingGoalId(null);
+        setDraggingGoalPath(null);
         setGoalDrop(null);
       },
       title: "拖动目标排序",
@@ -71388,7 +66906,7 @@ function TreeToggle({ hasChildren, expanded, path, toggleTreePath }) {
   );
 }
 function GoalPathCell(props) {
-  const { goal, goals, expandedPaths, collapsed, setDraggingGoalId, setGoalDrop, toggleGoalRow, toggleTreePath, handleDeleteGoal } = props;
+  const { goal, goals, expandedPaths, setDraggingGoalPath, setGoalDrop, toggleTreePath, handleDeleteGoal } = props;
   const path = getGoalDisplayPath(goal);
   const depth = getGoalDepth(goal);
   const hasChildren = goalHasChildren(goal, goals);
@@ -71398,13 +66916,11 @@ function GoalPathCell(props) {
     "div",
     {
       className: `think-goal-template-matrix__goal${isRoot ? " is-root" : ""}`,
-      onClick: () => toggleGoalRow(goal.id),
-      title: "单击折叠/展开本目标；拖动排序",
+      title: hasChildren ? "使用箭头展开/折叠子目标；拖动排序" : "拖动排序",
       children: [
         /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__indent", style: { "--think-goal-depth": depth } }),
-        /* @__PURE__ */ u2(GoalDragHandle, { goal, setDraggingGoalId, setGoalDrop }),
+        /* @__PURE__ */ u2(GoalDragHandle, { goal, setDraggingGoalPath, setGoalDrop }),
         /* @__PURE__ */ u2(TreeToggle, { hasChildren, expanded, path, toggleTreePath }),
-        /* @__PURE__ */ u2(ThinkIcon, { className: "think-goal-template-matrix__collapse-state", name: collapsed ? "chevron-right" : "chevron-down" }),
         /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__goal-name", children: cleanDisplayText(getGoalDisplayName(goal)) }),
         /* @__PURE__ */ u2(
           ThinkIconButton,
@@ -71423,31 +66939,30 @@ function GoalPathCell(props) {
   ) });
 }
 function GoalTemplateMatrixGoalRow(props) {
-  const { goal, goals, visibleBlocks, templates, themeIconByPath, expandedPaths, collapsedGoalIds, draggingGoalId, goalDrop, draggingPreset, presetDropCell, setDraggingGoalId, setGoalDrop, setDraggingPreset, setPresetDropCell, toggleGoalRow, toggleTreePath, reorderGoalSiblings, handleDeleteGoal, handlePresetDropOnCell, openEditor, openPresetContextMenu } = props;
-  const collapsed = collapsedGoalIds.has(goal.id);
-  const dropActive = goalDrop?.goalId === goal.id;
+  const { goal, goals, visibleBlocks, templates, expandedPaths, draggingGoalPath, goalDrop, setDraggingGoalPath, setGoalDrop, toggleTreePath, reorderGoalSiblings, handleDeleteGoal, openEditor } = props;
+  const dropActive = goalDrop?.goalPath === getGoalDisplayPath(goal);
   return /* @__PURE__ */ u2(
     "tr",
     {
       className: dropActive ? `think-goal-template-matrix__goal-row is-drop-${goalDrop?.position}` : "think-goal-template-matrix__goal-row",
       onDragEnter: (event) => {
-        if (!draggingGoalId || draggingGoalId === goal.id) return;
+        if (!draggingGoalPath || draggingGoalPath === goal.path) return;
         event.preventDefault();
-        setGoalDrop({ goalId: goal.id, position: getEventDropPosition(event) });
+        setGoalDrop({ goalPath: getGoalDisplayPath(goal), position: getEventDropPosition(event) });
       },
       onDragOver: (event) => {
-        if (!draggingGoalId || draggingGoalId === goal.id) return;
+        if (!draggingGoalPath || draggingGoalPath === goal.path) return;
         event.preventDefault();
       },
       onDrop: async (event) => {
-        if (!draggingGoalId || !goalDrop) return;
+        if (!draggingGoalPath || !goalDrop) return;
         event.preventDefault();
-        await reorderGoalSiblings(draggingGoalId, goalDrop.goalId, goalDrop.position);
-        setDraggingGoalId(null);
+        await reorderGoalSiblings(draggingGoalPath, goals.find((item) => getGoalDisplayPath(item) === goalDrop.goalPath)?.path || goal.path, goalDrop.position);
+        setDraggingGoalPath(null);
         setGoalDrop(null);
       },
       onDragEnd: () => {
-        setDraggingGoalId(null);
+        setDraggingGoalPath(null);
         setGoalDrop(null);
       },
       children: [
@@ -71457,35 +66972,16 @@ function GoalTemplateMatrixGoalRow(props) {
             goal,
             goals,
             expandedPaths,
-            collapsed,
-            setDraggingGoalId,
+            setDraggingGoalPath,
             setGoalDrop,
-            toggleGoalRow,
             toggleTreePath,
             handleDeleteGoal
           }
         ),
-        visibleBlocks.map((block) => /* @__PURE__ */ u2("td", { className: "think-goal-template-matrix__block-cell", children: /* @__PURE__ */ u2(
-          GoalTemplateMatrixCell,
-          {
-            goal,
-            block,
-            goals,
-            templates,
-            themeIconByPath,
-            collapsed,
-            draggingPreset,
-            presetDropCell,
-            setDraggingPreset,
-            setPresetDropCell,
-            handlePresetDropOnCell,
-            openEditor,
-            openPresetContextMenu
-          }
-        ) }, block.id))
+        visibleBlocks.map((block) => /* @__PURE__ */ u2("td", { className: "think-goal-template-matrix__block-cell", children: /* @__PURE__ */ u2(GoalTemplateMatrixCell, { goal, block, templates, openEditor }) }, block.id))
       ]
     },
-    goal.id
+    goal.path
   );
 }
 function GoalTemplateMatrixGroupRows(props) {
@@ -71495,7 +66991,7 @@ function GoalTemplateMatrixGroupRows(props) {
       /* @__PURE__ */ u2("tr", { className: "think-goal-template-matrix__spacer-row", children: /* @__PURE__ */ u2("td", { colSpan: props.visibleBlockCount + 1 }) }, `spacer-${props.groupIndex}`)
     );
   }
-  props.group.forEach((goal) => rows.push(/* @__PURE__ */ u2(GoalTemplateMatrixGoalRow, { ...props, goal }, goal.id)));
+  props.group.forEach((goal) => rows.push(/* @__PURE__ */ u2(GoalTemplateMatrixGoalRow, { ...props, goal }, goal.path)));
   return rows;
 }
 function GoalTemplateMatrixHeader({ visibleBlocks }) {
@@ -71512,216 +67008,147 @@ function GoalTemplateMatrixTable(props) {
     /* @__PURE__ */ u2("tbody", { children: activeGroups.length > 0 ? activeGroups.flatMap((group, groupIndex) => GoalTemplateMatrixGroupRows({ ...props, group, groupIndex, visibleBlockCount: visibleBlocks.length })) : /* @__PURE__ */ u2("tr", { children: /* @__PURE__ */ u2("td", { colSpan: visibleBlocks.length + 1, className: "think-goal-template-matrix__empty", children: "暂无匹配目标" }) }) })
   ] }) });
 }
+const GOAL_TEMPLATE_BLOCK_ORDER = ["打卡", "任务", "事件", "思考", "总结", "计划", "阻碍项", "里程碑"];
+const GOAL_TEMPLATE_BLOCK_ID_ORDER = ["core.habit", "core.task", "core.evidence", "core.thought", "core.review", "core.plan", "core.blocker", "core.milestone"];
+function orderGoalTemplateBlocks(blocks) {
+  const order2 = /* @__PURE__ */ new Map();
+  GOAL_TEMPLATE_BLOCK_ORDER.forEach((name, index) => order2.set(name, index));
+  GOAL_TEMPLATE_BLOCK_ID_ORDER.forEach((id, index) => order2.set(id, index));
+  return [...blocks].sort((left2, right2) => {
+    const leftRank = order2.get(left2.id) ?? order2.get(left2.name) ?? 999;
+    const rightRank = order2.get(right2.id) ?? order2.get(right2.name) ?? 999;
+    if (leftRank !== rightRank) return leftRank - rightRank;
+    return String(left2.name || left2.id).localeCompare(String(right2.name || right2.id), "zh-CN");
+  });
+}
 function GoalTemplateMatrix() {
-  const settings = useSelector(selectSettings);
+  const settings2 = useSelector(selectSettings);
   const useCases = useUseCases();
   const ui = useUiPort();
-  const goals = T$1(() => sortGoalsForMatrix((settings.goalSettings?.goals || []).filter((goal) => goal.status !== "archived")), [settings.goalSettings?.goals]);
-  const templates = T$1(() => getGoalTemplates(settings.goalSettings), [settings.goalSettings]);
-  const coreBlocks = T$1(() => orderGoalTemplateBlocks(getEffectiveCoreBlocks(settings)), [settings]);
-  const themeIconByPath = T$1(() => buildThemeIconMap(settings), [settings.inputSettings?.themes]);
+  const goals = T$1(
+    () => sortGoalsForMatrix((settings2.goalSettings?.goals || []).filter((goal) => goal.status !== "archived")),
+    [settings2.goalSettings?.goals]
+  );
+  const templates = T$1(() => getGoalTemplates(settings2.goalSettings), [settings2.goalSettings]);
+  const coreBlocks = T$1(() => orderGoalTemplateBlocks(getEffectiveCoreBlocks(settings2)), [settings2]);
   const allGoalPaths = T$1(() => new Set(goals.map(getGoalDisplayPath)), [goals]);
-  const [expandedPaths, setExpandedPaths] = d(() => new Set(Array.from(allGoalPaths)));
-  const [collapsedGoalIds, setCollapsedGoalIds] = d(() => /* @__PURE__ */ new Set());
+  const [expandedPaths, setExpandedPaths] = d(() => /* @__PURE__ */ new Set());
   const [query, setQuery] = d("");
   const [selected, setSelected] = d(null);
-  const [contextMenu, setContextMenu] = d(null);
-  const [draggingGoalId, setDraggingGoalId] = d(null);
+  const [draggingGoalPath, setDraggingGoalPath] = d(null);
   const [goalDrop, setGoalDrop] = d(null);
-  const [draggingPreset, setDraggingPreset] = d(null);
-  const [presetDropCell, setPresetDropCell] = d(null);
   y(() => {
-    setExpandedPaths((previous) => addAllGoalPaths(previous, allGoalPaths));
+    setExpandedPaths((previous) => new Set(Array.from(previous).filter((path) => allGoalPaths.has(path))));
   }, [allGoalPaths]);
-  const visibleBlocks = coreBlocks;
-  const visibleGoals = T$1(() => filterVisibleGoalTemplateMatrixGoals({ goals, expandedPaths, query, templates }), [goals, expandedPaths, query, templates]);
+  const visibleGoals = T$1(
+    () => filterVisibleGoalTemplateMatrixGoals({ goals, expandedPaths, query, templates }),
+    [goals, expandedPaths, query, templates]
+  );
   const toggleTreePath = (path) => setExpandedPaths((previous) => toggleGoalPath(previous, path));
-  const toggleGoalRow = (goalId) => setCollapsedGoalIds((previous) => toggleGoalCollapsed(previous, goalId));
-  const expandAll = () => {
-    setExpandedPaths(new Set(Array.from(allGoalPaths)));
-    setCollapsedGoalIds(/* @__PURE__ */ new Set());
+  const expandAll = () => setExpandedPaths(new Set(Array.from(allGoalPaths)));
+  const showRootsOnly = () => setExpandedPaths(/* @__PURE__ */ new Set());
+  const openEditor = (goal, block, template) => {
+    setSelected({ goal, block, template: template || null });
   };
-  const collapseAll = () => setCollapsedGoalIds(new Set(goals.map((goal) => goal.id)));
-  const selectedVariants = selected ? templates.filter((template) => template.goalId === selected.goal.id && template.coreBlockId === selected.block.id) : [];
-  const openEditor = (goal, block, template) => setSelected({ goal, block, variantId: template ? goalTemplateVariantId(template) : null });
-  const openPresetContextMenu = (event, goal, block, template) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setContextMenu({ x: event.clientX, y: event.clientY, goal, block, template });
-  };
-  const deletePresetTemplate = async (goal, block, template) => {
-    const name = getPresetCardName(template, goal);
-    const ok = window.confirm(`删除记录预设「${name}」？
-
-只删除 ${cleanDisplayText(goal.goalPath || goal.title)} / ${block.name} 下的这个主题预设，不会删除已经写入的 Markdown 记录。`);
-    if (!ok) return;
-    await useCases.goal.deleteGoalTemplate(goal.id, block.id, goalTemplateVariantId(template));
-    ui.notice(`已删除记录预设：${name}`);
-  };
-  const copyContextTemplateToBlock = async (targetBlock) => {
-    if (!contextMenu) return;
-    const existing = findExistingTemplateForTheme(templates, contextMenu.goal, targetBlock, contextMenu.template);
-    if (existing) {
-      openEditor(contextMenu.goal, targetBlock, existing);
-      ui.notice(`已存在 ${targetBlock.name} 预设，已打开编辑`);
-      return;
-    }
-    const themePath = readGoalTemplateThemePath(contextMenu.template, contextMenu.goal);
-    const copied = buildCopiedGoalTemplate({
-      sourceTemplate: contextMenu.template,
-      sourceBlock: contextMenu.block,
-      targetBlock,
-      goal: contextMenu.goal,
-      templates,
-      themeIcon: themeIconByPath.get(themePath)
-    });
-    await useCases.goal.upsertGoalTemplate(copied);
-    ui.notice(`已创建：${targetBlock.name} / ${getPresetCardName(copied, contextMenu.goal)}`);
-  };
-  const copyContextTemplateToMissingBlocks = async () => {
-    if (!contextMenu) return;
-    let created = 0;
-    let skipped = 0;
-    let nextTemplates = [...templates];
-    const themePath = readGoalTemplateThemePath(contextMenu.template, contextMenu.goal);
-    for (const targetBlock of coreBlocks) {
-      if (targetBlock.id === contextMenu.block.id) continue;
-      const existing = findExistingTemplateForTheme(nextTemplates, contextMenu.goal, targetBlock, contextMenu.template);
-      if (existing) {
-        skipped += 1;
-        continue;
-      }
-      const copied = buildCopiedGoalTemplate({
-        sourceTemplate: contextMenu.template,
-        sourceBlock: contextMenu.block,
-        targetBlock,
-        goal: contextMenu.goal,
-        templates: nextTemplates,
-        themeIcon: themeIconByPath.get(themePath)
-      });
-      await useCases.goal.upsertGoalTemplate(copied);
-      nextTemplates = [...nextTemplates, copied];
-      created += 1;
-    }
-    ui.notice(`补齐完成：创建 ${created} 个，跳过 ${skipped} 个`);
-  };
-  const reorderGoalSiblings = async (dragGoalId, targetGoalId, position2) => {
-    const next2 = orderDraggedGoalSiblings({ goals, dragGoalId, targetGoalId, position: position2 });
+  const reorderGoalSiblings = async (dragGoalPath, targetGoalPath, position2) => {
+    const next2 = orderDraggedGoalSiblings({ goals, dragGoalPath, targetGoalPath, position: position2 });
     if (!next2) {
-      const dragged = goals.find((goal) => goal.id === dragGoalId);
-      const target = goals.find((goal) => goal.id === targetGoalId);
+      const dragged = goals.find((goal) => goal.path === dragGoalPath);
+      const target = goals.find((goal) => goal.path === targetGoalPath);
       if (dragged && target && getGoalParentPath(dragged) !== getGoalParentPath(target)) ui.notice("当前只支持同级目标拖动排序");
       return;
     }
-    await Promise.all(next2.map((goal, index) => useCases.goal.updateGoal(goal.id, { sortOrder: index * 10 })));
+    await Promise.all(next2.map((goal, index) => useCases.goal.updateGoal(goal.path, { sortOrder: index * 10 })));
     ui.notice("目标排序已保存");
-  };
-  const reorderPresetsInCell = async (drag, targetTemplateKey, position2) => {
-    const normalized2 = reorderPresetTemplatesInCell({ templates, goals, drag, targetTemplateKey, position: position2 });
-    if (!normalized2) return;
-    await Promise.all(normalized2.map((template) => useCases.goal.upsertGoalTemplate(template)));
-    ui.notice("预设排序已保存");
-  };
-  const movePresetToCell = async (drag, targetGoal, targetBlock, targetTemplateKey, position2) => {
-    const sourceTemplate = templates.find((template) => goalTemplateKey(template) === drag.templateKey);
-    const sourceGoal = goals.find((goal) => goal.id === drag.goalId);
-    const sourceBlock = coreBlocks.find((block) => block.id === drag.blockId);
-    if (!sourceTemplate || !sourceGoal || !sourceBlock) return;
-    if (isSameCell(drag, targetGoal, targetBlock)) {
-      await reorderPresetsInCell(drag, targetTemplateKey, position2);
-      return;
-    }
-    const existing = findExistingTemplateForTheme(templates, targetGoal, targetBlock, sourceTemplate);
-    if (existing) {
-      ui.notice("目标格里已有相同主题预设，未移动，避免重复");
-      return;
-    }
-    const sourceThemePath = readGoalTemplateThemePath(sourceTemplate, sourceGoal);
-    const moved = buildRetargetedGoalTemplate({
-      sourceTemplate,
-      sourceBlock,
-      targetBlock,
-      sourceGoal,
-      targetGoal,
-      templates,
-      themeIcon: themeIconByPath.get(sourceThemePath),
-      reason: "move"
-    });
-    const targetTemplates = sortPresets(templates.filter((template) => template.goalId === targetGoal.id && template.coreBlockId === targetBlock.id && template.enabled !== false), goals);
-    const reorderedTarget = targetTemplates.slice();
-    if (targetTemplateKey) {
-      const targetIndex = reorderedTarget.findIndex((template) => goalTemplateKey(template) === targetTemplateKey);
-      if (targetIndex >= 0) reorderedTarget.splice(position2 === "before" ? targetIndex : targetIndex + 1, 0, moved);
-      else reorderedTarget.push(moved);
-    } else {
-      reorderedTarget.push(moved);
-    }
-    const normalizedTarget = reorderedTarget.map((template, index) => ({ ...template, sortOrder: index * 10 }));
-    await useCases.goal.deleteGoalTemplate(sourceTemplate.goalId, sourceTemplate.coreBlockId, goalTemplateVariantId(sourceTemplate));
-    await Promise.all(normalizedTarget.map((template) => useCases.goal.upsertGoalTemplate(template)));
-    ui.notice(`已移动到：${cleanDisplayText(targetGoal.goalPath || targetGoal.title)} / ${targetBlock.name}`);
-  };
-  const handlePresetDropOnCell = async (event, goal, block) => {
-    if (!draggingPreset) return;
-    event.preventDefault();
-    event.stopPropagation();
-    const target = event.target;
-    const targetCard = target?.closest?.("[data-goal-template-key]");
-    const targetTemplateKey = targetCard?.dataset?.goalTemplateKey || null;
-    const position2 = targetCard ? getEventDropPosition(event, targetCard) : "after";
-    await movePresetToCell(draggingPreset, goal, block, targetTemplateKey, position2);
-    setDraggingPreset(null);
-    setPresetDropCell(null);
   };
   const handleDeleteGoal = async (event, goal) => {
     event.preventDefault();
     event.stopPropagation();
     const path = getGoalDisplayPath(goal);
-    const descendants = goals.filter((item) => item.id !== goal.id && getGoalDisplayPath(item).startsWith(`${path}/`));
+    const descendants = goals.filter((item) => item.path !== goal.path && getGoalDisplayPath(item).startsWith(`${path}/`));
     const targets = [goal, ...descendants];
     const suffix = descendants.length > 0 ? `
 同时删除 ${descendants.length} 个子目标。` : "";
     const ok = window.confirm(`删除目标「${cleanDisplayText(path)}」？${suffix}
 
-会删除目标配置、该目标下的记录预设和目标关系；不会删除已经写入的 Markdown 记录。`);
+会删除目标配置和该目标下的字段预设；不会删除已经写入的 Markdown 记录。`);
     if (!ok) return;
-    const count = typeof useCases.goal.deleteGoalCascade === "function" ? await useCases.goal.deleteGoalCascade(goal.id) : (await Promise.all(targets.map((target) => useCases.goal.deleteGoal(target.id))), targets.length);
+    const count = typeof useCases.goal.deleteGoalCascade === "function" ? await useCases.goal.deleteGoalCascade(goal.path) : (await Promise.all(targets.map((target) => useCases.goal.deleteGoal(target.path))), targets.length);
     ui.notice(descendants.length > 0 ? `已删除目标及子目标：${count} 个` : `已删除目标：${cleanDisplayText(path)}`);
   };
   return /* @__PURE__ */ u2("div", { className: "think-goal-template-matrix", children: [
     /* @__PURE__ */ u2("div", { className: "think-management-toolbar think-goal-template-matrix__toolbar", children: [
-      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-search", placeholder: "搜索目标", value: query, onInput: (event) => setQuery(event.currentTarget.value), "aria-label": "搜索目标" }),
-      /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: collapsedGoalIds.size === goals.length && goals.length > 0 ? expandAll : collapseAll, children: collapsedGoalIds.size === goals.length && goals.length > 0 ? "全部展开" : "全部收起" })
+      /* @__PURE__ */ u2(
+        ThinkInput,
+        {
+          className: "think-settings-search",
+          placeholder: "搜索目标",
+          value: query,
+          onInput: (event) => setQuery(event.currentTarget.value),
+          "aria-label": "搜索目标"
+        }
+      ),
+      /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", onClick: expandedPaths.size > 0 ? showRootsOnly : expandAll, children: expandedPaths.size > 0 ? "只看根目标" : "全部展开" })
     ] }),
     goals.length === 0 ? /* @__PURE__ */ u2(ThinkNotice, { children: "还没有目标。" }) : coreBlocks.length === 0 ? /* @__PURE__ */ u2(ThinkNotice, { children: "还没有启用的记录类型。" }) : /* @__PURE__ */ u2(
       GoalTemplateMatrixTable,
       {
         visibleGoals,
         goals,
-        visibleBlocks,
+        visibleBlocks: coreBlocks,
         templates,
-        themeIconByPath,
         expandedPaths,
-        collapsedGoalIds,
-        draggingGoalId,
+        draggingGoalPath,
         goalDrop,
-        draggingPreset,
-        presetDropCell,
-        setDraggingGoalId,
+        setDraggingGoalPath,
         setGoalDrop,
-        setDraggingPreset,
-        setPresetDropCell,
-        toggleGoalRow,
         toggleTreePath,
         reorderGoalSiblings,
         handleDeleteGoal,
-        handlePresetDropOnCell,
-        openEditor,
-        openPresetContextMenu
+        openEditor
       }
     ),
-    /* @__PURE__ */ u2(GoalTemplateContextMenu, { state: contextMenu, blocks: coreBlocks, templates, onClose: () => setContextMenu(null), onOpenBlock: openEditor, onCopyToBlock: copyContextTemplateToBlock, onCopyMissingBlocks: copyContextTemplateToMissingBlocks, onDeleteTemplate: deletePresetTemplate }),
-    /* @__PURE__ */ u2(GoalTemplateEditorModal, { isOpen: !!selected, onClose: () => setSelected(null), goal: selected?.goal || null, block: selected?.block || null, variants: selectedVariants, initialVariantId: selected?.variantId || null, useCases })
+    /* @__PURE__ */ u2(
+      GoalTemplateEditorModal,
+      {
+        isOpen: !!selected,
+        onClose: () => setSelected(null),
+        goal: selected?.goal || null,
+        block: selected?.block || null,
+        template: selected?.template || null,
+        useCases
+      }
+    )
+  ] });
+}
+function GoalManager() {
+  const settings2 = useSelector(selectSettings);
+  const useCases = useUseCases();
+  const goals = settings2.goalSettings?.goals || [];
+  const [goalPath, setGoalPath] = d("");
+  const [message, setMessage] = d("");
+  const handleAddGoal = async () => {
+    const path = goalPath.trim();
+    if (!path) return;
+    const alreadyExists = goals.some((goal2) => goal2.path === path);
+    const goal = await useCases.goal.addGoal({ path });
+    setMessage(alreadyExists ? `目标已存在：${path}` : goal ? `已添加：${goal.path}` : "目标未添加");
+    if (goal && !alreadyExists) {
+      setGoalPath("");
+    }
+  };
+  return /* @__PURE__ */ u2("div", { className: "think-goal-manager", children: [
+    /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top think-goal-manager__create-row", children: [
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "新增目标" }),
+      /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: [
+        /* @__PURE__ */ u2("div", { className: "think-goal-manager__create", children: [
+          /* @__PURE__ */ u2(ThinkInput, { "aria-label": "目标路径", value: goalPath, onInput: (event) => setGoalPath(event.currentTarget.value), placeholder: "目标路径，例如 了解自我/情绪" }),
+          /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleAddGoal, disabled: !goalPath.trim(), children: "添加" })
+        ] }),
+        message && /* @__PURE__ */ u2("div", { className: "think-settings-caption think-goal-manager__status", role: "status", children: message })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2(GoalTemplateMatrix, {})
   ] });
 }
 const metricDirectionOptions = [
@@ -71730,9 +67157,6 @@ const metricDirectionOptions = [
   { value: "maintain", label: "维持目标值" },
   { value: "boolean", label: "是否达成" }
 ];
-function pathLeaf(path) {
-  return String(path || "").split("/").filter(Boolean).pop() || path;
-}
 function metricPresetKey(label) {
   const text2 = label.toLowerCase();
   if (/完成|done|complete/.test(text2)) return "task.done";
@@ -71745,57 +67169,24 @@ function metricPresetKey(label) {
   if (/计划|plan/.test(text2)) return "plan.count";
   return label.trim() || "goal.metric";
 }
-function GoalManager() {
-  const settings = useSelector(selectSettings);
-  const useCases = useUseCases();
-  const goals = settings.goalSettings?.goals || [];
-  const [goalPath, setGoalPath] = d("");
-  const [goalThemePath, setGoalThemePath] = d("");
-  const [message, setMessage] = d("");
-  const handleAddGoal = async () => {
-    const path = goalPath.trim();
-    if (!path) return;
-    const alreadyExists = goals.some((goal2) => String(goal2.goalPath || goal2.title || "").trim() === path);
-    const goal = await useCases.goal.addGoal({ title: pathLeaf(path), goalPath: path, themePath: goalThemePath.trim() || null });
-    setMessage(alreadyExists ? `目标已存在：${path}` : goal ? `已添加：${goal.goalPath || goal.title}` : "目标未添加");
-    if (goal && !alreadyExists) {
-      setGoalPath("");
-      setGoalThemePath("");
-    }
-  };
-  return /* @__PURE__ */ u2("div", { className: "think-goal-manager", children: [
-    /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top think-goal-manager__create-row", children: [
-      /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "新增目标" }),
-      /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: [
-        /* @__PURE__ */ u2("div", { className: "think-goal-manager__create", children: [
-          /* @__PURE__ */ u2(ThinkInput, { "aria-label": "目标路径", value: goalPath, onInput: (event) => setGoalPath(event.currentTarget.value), placeholder: "目标路径，例如 了解自我/情绪" }),
-          /* @__PURE__ */ u2(ThinkInput, { "aria-label": "目标主题", value: goalThemePath, onInput: (event) => setGoalThemePath(event.currentTarget.value), placeholder: "主题（可选）" }),
-          /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleAddGoal, disabled: !goalPath.trim(), children: "添加" })
-        ] }),
-        message && /* @__PURE__ */ u2("div", { className: "think-settings-caption think-goal-manager__status", role: "status", children: message })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2(GoalTemplateMatrix, {})
-  ] });
-}
 function GoalMetricSection() {
-  const settings = useSelector(selectSettings);
+  const settings2 = useSelector(selectSettings);
   const useCases = useUseCases();
-  const goals = settings.goalSettings?.goals || [];
-  const activeGoalOptions = goals.filter((goal) => goal.status !== "archived").map((goal) => ({ value: goal.id, label: goal.goalPath || goal.title || goal.id }));
+  const goals = settings2.goalSettings?.goals || [];
+  const activeGoalOptions = goals.filter((goal) => goal.status !== "archived").map((goal) => ({ value: goal.path, label: goal.path }));
   const [message, setMessage] = d("");
-  const [metricGoalId, setMetricGoalId] = d(activeGoalOptions[0]?.value || "");
-  const selectedMetricGoal = goals.find((goal) => goal.id === metricGoalId) || null;
+  const [metricGoalPath, setMetricGoalPath] = d(activeGoalOptions[0]?.value || "");
+  const selectedMetricGoal = goals.find((goal) => goal.path === metricGoalPath) || null;
   const selectedMetrics = selectedMetricGoal?.metrics || [];
   const [metricKey, setMetricKey] = d("task.done");
   const [metricLabel, setMetricLabel] = d("完成任务");
   const [metricDirection, setMetricDirection] = d("increase");
   const [metricTargetValue, setMetricTargetValue] = d("10");
   const [metricUnit, setMetricUnit] = d("个");
-  const syncMetricDraft = (goalId) => {
-    const goal = goals.find((item) => item.id === goalId) || null;
+  const syncMetricDraft = (goalPath) => {
+    const goal = goals.find((item) => item.path === goalPath) || null;
     const first2 = goal?.metrics?.[0];
-    setMetricGoalId(goalId);
+    setMetricGoalPath(goalPath);
     if (first2) {
       setMetricKey(first2.key);
       setMetricLabel(first2.label);
@@ -71812,16 +67203,16 @@ function GoalMetricSection() {
     setMetricUnit(metric.unit || "");
   };
   const handleSaveMetric = async () => {
-    if (!metricGoalId) return;
+    if (!metricGoalPath) return;
     const key = metricKey.trim() || metricPresetKey(metricLabel);
     const label = metricLabel.trim() || key;
     const metric = { key, label, direction: metricDirection, targetValue: metricTargetValue.trim() === "" ? void 0 : Number(metricTargetValue), unit: metricUnit.trim() || void 0 };
-    await useCases.goal.updateGoalMetrics(metricGoalId, [...selectedMetrics.filter((item) => item.key !== key), metric]);
+    await useCases.goal.updateGoalMetrics(metricGoalPath, [...selectedMetrics.filter((item) => item.key !== key), metric]);
     setMessage(`已保存：${label}`);
   };
   const handleRemoveMetric = async (key) => {
-    if (!metricGoalId) return;
-    await useCases.goal.updateGoalMetrics(metricGoalId, selectedMetrics.filter((metric) => metric.key !== key));
+    if (!metricGoalPath) return;
+    await useCases.goal.updateGoalMetrics(metricGoalPath, selectedMetrics.filter((metric) => metric.key !== key));
     setMessage("已删除指标");
   };
   return /* @__PURE__ */ u2("section", { className: "think-settings-section think-goal-metrics", children: [
@@ -71829,7 +67220,7 @@ function GoalMetricSection() {
     /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "目标" }),
-        /* @__PURE__ */ u2(SimpleSelect, { value: metricGoalId, options: activeGoalOptions, onChange: syncMetricDraft, placeholder: "选择目标", fullWidth: true })
+        /* @__PURE__ */ u2(SimpleSelect, { value: metricGoalPath, options: activeGoalOptions, onChange: syncMetricDraft, placeholder: "选择目标", fullWidth: true })
       ] }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "指标名称" }),
@@ -71856,7 +67247,7 @@ function GoalMetricSection() {
         /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", value: metricUnit, onInput: (event) => setMetricUnit(event.currentTarget.value) })
       ] })
     ] }),
-    /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleSaveMetric, disabled: !metricGoalId || !metricLabel.trim(), children: "保存指标" }) }),
+    /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleSaveMetric, disabled: !metricGoalPath || !metricLabel.trim(), children: "保存指标" }) }),
     /* @__PURE__ */ u2("div", { className: "think-goal-metrics__items", children: selectedMetrics.length > 0 ? selectedMetrics.map((metric) => /* @__PURE__ */ u2("button", { type: "button", className: "think-chip", onClick: () => loadMetricDraft(metric), title: "点击编辑；双击删除", onDblClick: () => handleRemoveMetric(metric.key), children: [
       /* @__PURE__ */ u2("span", { className: "think-chip__label", children: [
         metric.label,
@@ -71868,155 +67259,9 @@ function GoalMetricSection() {
     ] }, metric.key)) : /* @__PURE__ */ u2("span", { className: "think-settings-caption", children: "当前目标没有指标" }) })
   ] });
 }
-const statusOptions = [
-  { value: "active", label: "启用" },
-  { value: "inactive", label: "停用" }
-];
-function inheritedIconInfo(themes, path) {
-  const byPath = new Map(themes.map((theme) => [String(theme.path || ""), theme]));
-  for (const candidate of getThemePathCandidates(path)) {
-    const matched = byPath.get(candidate);
-    if (matched && String(matched.icon || "").trim()) {
-      return { icon: String(matched.icon || "").trim(), sourcePath: matched.path };
-    }
-  }
-  return { icon: "", sourcePath: "" };
-}
-function ThemeMetadataManager() {
-  const settings = useSelector(selectSettings);
-  const useCases = useUseCases();
-  const themes = settings.inputSettings?.themes || [];
-  const [path, setPath] = d("");
-  const [icon, setIcon] = d("");
-  const [message, setMessage] = d("");
-  const [query, setQuery] = d("");
-  y(() => {
-    if (!message) return void 0;
-    const timer = window.setTimeout(() => setMessage(""), 2200);
-    return () => window.clearTimeout(timer);
-  }, [message]);
-  const sortedThemes = T$1(() => {
-    const q2 = query.trim().toLowerCase();
-    return [...themes].filter((theme) => !q2 || theme.path.toLowerCase().includes(q2) || String(theme.icon || "").includes(q2)).sort((a2, b2) => (a2.path || "").localeCompare(b2.path || "", "zh-Hans-CN"));
-  }, [themes, query]);
-  const previewThemePath = path.trim() || sortedThemes[0]?.path || "";
-  const previewMetadata = T$1(
-    () => ThemeMetadataResolver.resolve(settings, previewThemePath),
-    [settings, previewThemePath]
-  );
-  const previewIconInfo = T$1(
-    () => inheritedIconInfo(themes, previewThemePath),
-    [themes, previewThemePath]
-  );
-  const previewIcon = previewMetadata.icon || previewIconInfo.icon || "🎯";
-  const handleAddTheme = async () => {
-    const normalizedPath = normalizeThemePath(path);
-    if (!normalizedPath) return;
-    const existing = themes.find((theme) => theme.path === normalizedPath);
-    if (existing) {
-      await useCases.theme.updateTheme(existing.id, {
-        icon: icon.trim() || existing.icon,
-        status: existing.status || "active"
-      });
-      setMessage(`已更新：${normalizedPath}`);
-    } else {
-      const created = await useCases.theme.addTheme(normalizedPath);
-      if (created && icon.trim()) {
-        await useCases.theme.updateTheme(created.id, { icon: icon.trim(), status: "active" });
-      }
-      setMessage(created ? `已添加：${normalizedPath}` : "主题未添加");
-    }
-    setPath("");
-    setIcon("");
-  };
-  const updateThemePath = async (id, nextPath) => {
-    const normalizedPath = normalizeThemePath(nextPath);
-    if (!normalizedPath) return;
-    await useCases.theme.updateTheme(id, { path: normalizedPath });
-    setMessage(`已更新路径：${normalizedPath}`);
-  };
-  const updateThemeIcon = async (id, nextIcon) => {
-    await useCases.theme.updateTheme(id, { icon: nextIcon.trim() || void 0 });
-    setMessage("已更新图标");
-  };
-  const updateThemeStatus = async (id, status) => {
-    await useCases.theme.updateTheme(id, { status });
-    setMessage(status === "active" ? "已启用" : "已停用");
-  };
-  const handleDelete = async (id) => {
-    await useCases.theme.deleteTheme(id);
-    setMessage("已删除主题");
-  };
-  return /* @__PURE__ */ u2("div", { className: "think-theme-metadata think-settings-stack", children: [
-    /* @__PURE__ */ u2("div", { className: "think-management-toolbar", children: [
-      /* @__PURE__ */ u2("span", { className: "think-settings-caption", role: "status", children: message || `${themes.length} 个主题` }),
-      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-search", value: query, onInput: (event) => setQuery(event.currentTarget.value), placeholder: "搜索主题", "aria-label": "搜索主题" })
-    ] }),
-    /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
-      /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "新增主题" }),
-      /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-settings-stack think-settings-stack--tight", children: [
-        /* @__PURE__ */ u2("div", { className: "think-editor-grid think-editor-grid--metadata", children: [
-          /* @__PURE__ */ u2(ThinkInput, { "aria-label": "主题路径", value: path, onInput: (event) => setPath(event.currentTarget.value), placeholder: "主题路径，例如 电脑/记录系统" }),
-          /* @__PURE__ */ u2(ThinkInput, { "aria-label": "图标", value: icon, onInput: (event) => setIcon(event.currentTarget.value), placeholder: "图标" }),
-          /* @__PURE__ */ u2(ThinkButton, { variant: "primary", onClick: handleAddTheme, disabled: !path.trim(), children: "保存" })
-        ] }),
-        previewThemePath && /* @__PURE__ */ u2("div", { className: "think-editor-inline think-editor-inline--wrap think-settings-caption", role: "status", "aria-live": "polite", children: [
-          /* @__PURE__ */ u2("span", { className: "think-theme-metadata__ellipsis", children: previewThemePath }),
-          /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "→" }),
-          /* @__PURE__ */ u2("span", { className: "think-theme-metadata__preview-icon", children: previewIcon }),
-          /* @__PURE__ */ u2("span", { children: previewIconInfo.sourcePath ? `来源 ${previewIconInfo.sourcePath}` : "默认图标" })
-        ] })
-      ] })
-    ] }),
-    /* @__PURE__ */ u2("section", { className: "think-settings-section think-settings-section--flat think-theme-metadata__section", children: [
-      /* @__PURE__ */ u2("div", { className: "think-theme-metadata__columns", "aria-hidden": "true", children: [
-        /* @__PURE__ */ u2("span", { children: "图标" }),
-        /* @__PURE__ */ u2("span", { children: "路径" }),
-        /* @__PURE__ */ u2("span", { children: "图标来源" }),
-        /* @__PURE__ */ u2("span", { children: "状态" }),
-        /* @__PURE__ */ u2("span", {})
-      ] }),
-      /* @__PURE__ */ u2("div", { className: "think-theme-metadata__entries", children: sortedThemes.length ? sortedThemes.map((theme) => {
-        const info = inheritedIconInfo(themes, theme.path);
-        const inherited = Boolean(info.sourcePath && info.sourcePath !== theme.path);
-        return /* @__PURE__ */ u2("div", { className: "think-theme-metadata__entry think-object-frame think-object-frame--compact", children: [
-          /* @__PURE__ */ u2(ThinkInput, { className: "think-theme-metadata__icon-field", value: theme.icon || "", onInput: (event) => updateThemeIcon(theme.id, event.currentTarget.value), placeholder: info.icon || "🎯", "aria-label": `${theme.path} 图标` }),
-          /* @__PURE__ */ u2(ThinkInput, { value: theme.path || "", onChange: (event) => updateThemePath(theme.id, event.currentTarget.value), "aria-label": `${theme.path} 路径` }),
-          /* @__PURE__ */ u2("span", { className: "think-theme-metadata__source", children: [
-            info.icon || "🎯",
-            " ",
-            inherited ? `继承 ${info.sourcePath}` : "本主题"
-          ] }),
-          /* @__PURE__ */ u2(
-            SimpleSelect,
-            {
-              className: "think-theme-metadata__status",
-              value: theme.status || "active",
-              options: statusOptions,
-              onChange: (value) => updateThemeStatus(theme.id, value),
-              fullWidth: true
-            }
-          ),
-          /* @__PURE__ */ u2(
-            ThinkIconButton,
-            {
-              className: "think-theme-metadata__delete",
-              size: "sm",
-              tone: "danger",
-              label: `删除主题 ${theme.path}`,
-              icon: /* @__PURE__ */ u2(ThinkIcon, { name: "trash-2" }),
-              onClick: () => handleDelete(theme.id)
-            }
-          )
-        ] }, theme.id);
-      }) : /* @__PURE__ */ u2("div", { className: "think-theme-metadata__empty", children: "没有匹配的主题" }) })
-    ] })
-  ] });
-}
 const sections = [
   { value: "recordTypes", label: "记录类型" },
   { value: "goals", label: "目标" },
-  { value: "themes", label: "主题" },
   { value: "metrics", label: "指标" }
 ];
 function DataManagementSettings() {
@@ -72036,7 +67281,6 @@ function DataManagementSettings() {
     /* @__PURE__ */ u2("div", { className: "think-data-management__content", children: [
       section === "recordTypes" && /* @__PURE__ */ u2(BlockManager, {}),
       section === "goals" && /* @__PURE__ */ u2(GoalManager, {}),
-      section === "themes" && /* @__PURE__ */ u2(ThemeMetadataManager, {}),
       section === "metrics" && /* @__PURE__ */ u2(GoalMetricSection, {})
     ] })
   ] });
@@ -72094,8 +67338,8 @@ function SettingsRoot({ app, variant = "workspace" }) {
 }
 const THINK_SETTINGS_VIEW_TYPE = "think-os-settings-view";
 class ThinkSettingsView extends obsidian.ItemView {
-  constructor(leaf2, plugin) {
-    super(leaf2);
+  constructor(leaf, plugin) {
+    super(leaf);
     this.plugin = plugin;
     this.services = createServices();
   }
@@ -72123,15 +67367,15 @@ class ThinkSettingsView extends obsidian.ItemView {
 function registerThinkSettingsWorkspaceView(plugin) {
   plugin.registerView(
     THINK_SETTINGS_VIEW_TYPE,
-    (leaf2) => new ThinkSettingsView(leaf2, plugin)
+    (leaf) => new ThinkSettingsView(leaf, plugin)
   );
 }
 async function openThinkSettingsWorkspaceView(plugin) {
   const workspace = plugin.app.workspace;
   const existingLeaf = workspace.getLeavesOfType(THINK_SETTINGS_VIEW_TYPE)[0];
-  const leaf2 = existingLeaf || workspace.getLeaf("tab");
-  await leaf2.setViewState({ type: THINK_SETTINGS_VIEW_TYPE, active: true });
-  workspace.revealLeaf(leaf2);
+  const leaf = existingLeaf || workspace.getLeaf("tab");
+  await leaf.setViewState({ type: THINK_SETTINGS_VIEW_TYPE, active: true });
+  workspace.revealLeaf(leaf);
 }
 function SettingsLauncher({ onOpenWorkspace }) {
   const deviceProfileAttrs = getThinkDeviceProfileAttributes();
@@ -72263,10 +67507,10 @@ function registerEnergyProtocolHandler(plugin, deps) {
       new obsidian.Notice(`Think OS: ${parsed.message}`, 5e3);
       return;
     }
-    const settings = deps.getSettings();
+    const settings2 = deps.getSettings();
     const goal = resolveEnergyCaptureGoal(
-      settings.goalSettings?.goals || [],
-      settings.energySettings?.defaultGoalId
+      settings2.goalSettings?.goals || [],
+      settings2.energySettings?.defaultGoalPath
     );
     if (!goal) {
       new obsidian.Notice("Think OS: 没有可用于精力记录的目标，请先在设置中创建/选择默认精力目标。", 6e3);
@@ -72274,9 +67518,7 @@ function registerEnergyProtocolHandler(plugin, deps) {
     }
     const now2 = dayjs();
     const common2 = {
-      goalId: goal.id,
-      goalPath: goal.goalPath || goal.title,
-      themePath: goal.themePath || void 0,
+      goalPath: goal.path,
       date: now2.format("YYYY-MM-DD"),
       time: now2.format("HH:mm"),
       captureMode: "realtime",
@@ -72378,8 +67620,8 @@ class CodeblockEmbedder {
           el.createDiv({ text: "代码块内容解析失败，请检查语法。应为布局名称或JSON。" });
           return;
         }
-        const settings = this.getSettings();
-        const allLayouts = settings.layouts;
+        const settings2 = this.getSettings();
+        const allLayouts = settings2.layouts;
         if (!layoutName && allLayouts.length > 0) {
           layoutName = allLayouts[0].name;
           this.uiPort.notice(`Think Plugin: 未指定布局，已自动选择第一个布局 "${layoutName}"。`);
@@ -72420,12 +67662,12 @@ function registerDashboardFeature(registry2, deps) {
 }
 function registerQuickInputCommands(plugin) {
   const { zustandStore: store } = createServices();
-  const settings = getZustandState(store, (s2) => s2.settings.inputSettings);
-  if (!settings || !settings.blocks || settings.blocks.length === 0) {
+  const settings2 = getZustandState(store, (s2) => s2.settings.inputSettings);
+  if (!settings2 || !settings2.blocks || settings2.blocks.length === 0) {
     devWarn("ThinkPlugin: No Block Templates found to register commands.");
     return;
   }
-  const { blocks } = settings;
+  const { blocks } = settings2;
   blocks.forEach((block) => {
     plugin.addCommand({
       id: `think-quick-input-unified-${block.id}`,
@@ -72476,9 +67718,9 @@ function summarizeEndpointHost(endpoint) {
 }
 function readAiRuntimeConfig(store, traceId) {
   const readSettingsStart = nowMs();
-  const settings = getZustandState(store, (s2) => s2.settings);
-  const ai = settings.aiSettings;
-  const blocks = settings.inputSettings?.blocks ?? [];
+  const settings2 = getZustandState(store, (s2) => s2.settings);
+  const ai = settings2.aiSettings;
+  const blocks = settings2.inputSettings?.blocks ?? [];
   logAiInputStep(traceId, "读取 settings 完成", readSettingsStart, {
     aiEnabled: !!ai?.enabled,
     hasEndpoint: !!ai?.apiEndpoint,
@@ -72490,7 +67732,7 @@ function readAiRuntimeConfig(store, traceId) {
     maxResults: ai?.maxResults,
     timeoutMs: ai?.requestTimeoutMs ?? 3e4
   });
-  return { settings, ai, blocks };
+  return { settings: settings2, ai, blocks };
 }
 function validateAiRuntimeConfig(ui, traceId, ai, blocks) {
   if (!ai?.enabled) {
@@ -73085,10 +68327,10 @@ class CapabilityRegistry {
   keys() {
     return [...this.factories.keys()];
   }
-  createAll(app, settings, deps) {
+  createAll(app, settings2, deps) {
     const out = {};
     for (const [key, factory] of this.factories.entries()) {
-      out[String(key)] = factory(app, settings, deps);
+      out[String(key)] = factory(app, settings2, deps);
     }
     return out;
   }
@@ -73150,8 +68392,8 @@ function createDefaultCapabilityRegistry() {
   registerCapabilityContributions(registry2);
   return registry2;
 }
-function createCapabilities(app, settings, deps, registry2 = createDefaultCapabilityRegistry()) {
-  return registry2.createAll(app, settings, deps);
+function createCapabilities(app, settings2, deps, registry2 = createDefaultCapabilityRegistry()) {
+  return registry2.createAll(app, settings2, deps);
 }
 ensureReflectMetadata();
 devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
@@ -73173,10 +68415,10 @@ class ThinkPlugin extends obsidian.Plugin {
       async () => {
         setDefaultAiHttpTransportFactory(() => new ObsidianAiHttpTransport());
         devLog("[ThinkPlugin][BOOT] before loadSettings");
-        const settings = await this.loadSettings();
-        devLog("[ThinkPlugin][BOOT] after loadSettings", settings);
+        const settings2 = await this.loadSettings();
+        devLog("[ThinkPlugin][BOOT] after loadSettings", settings2);
         devLog("[ThinkPlugin][BOOT] before setupCoreContainer");
-        setupCoreContainer(this.app, settings);
+        setupCoreContainer(this.app, settings2);
         devLog("[ThinkPlugin][BOOT] before platform registrations");
         instance.register(VAULT_PORT_TOKEN, { useClass: ObsidianVaultPort });
         instance.register(UI_PORT_TOKEN, { useClass: ObsidianUiPort });
@@ -73193,7 +68435,7 @@ class ThinkPlugin extends obsidian.Plugin {
         const capabilityRegistry = createDefaultCapabilityRegistry();
         const runtime = buildRuntime(instance);
         this.modalPort = runtime.modalPort;
-        this.capabilities = createCapabilities(this.app, settings, {
+        this.capabilities = createCapabilities(this.app, settings2, {
           modalPort: runtime.modalPort,
           timerService: this.serviceManager.timerService
         }, capabilityRegistry);
@@ -73271,8 +68513,8 @@ class ThinkPlugin extends obsidian.Plugin {
   async loadSettings() {
     return toCurrentThinkSettings(await this.loadData());
   }
-  sanitizeSettingsForPersistence(settings) {
-    const cloned = toPersistedThinkSettings(settings);
+  sanitizeSettingsForPersistence(settings2) {
+    const cloned = toPersistedThinkSettings(settings2);
     const aiSettings = cloned.aiSettings;
     if (aiSettings && typeof aiSettings === "object" && aiSettings.persistApiKey !== true) {
       aiSettings.apiKey = "";

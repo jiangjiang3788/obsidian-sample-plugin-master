@@ -1,14 +1,11 @@
 // src/core/utils/inputTemplateUtils.ts
-// 单人版收敛：输入模板工具只做 block 默认模板读取。
-// 新建记录主链必须使用 GoalTemplateResolver；此文件仅给 AI/Heatmap 等辅助场景读取 block fallback。
+// Single-user Goal-only capture helpers: resolve only CoreBlock fallback templates.
 
 import type { InputSettings, RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
-import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 import { DEFAULT_CORE_BLOCKS } from '@/core/blocks';
 
 export interface TemplateResolveResult {
     template: RecordCaptureTemplate | null;
-    theme: ThemeDefinition | null;
     templateId: string | null;
     templateSourceType: 'core-block' | null;
 }
@@ -16,14 +13,15 @@ export interface TemplateResolveResult {
 export function getEffectiveTemplate(
     settings: InputSettings,
     blockId: string,
-    themeId?: string
 ): TemplateResolveResult {
-    const templates = [...(settings.blocks || []), ...DEFAULT_CORE_BLOCKS.filter((block) => !(settings.blocks || []).some((existing) => existing.id === block.id))];
-    const template = templates.find((block) => block.id === blockId) ?? null;
-    const theme = themeId ? settings.themes.find((candidate) => candidate.id === themeId) ?? null : null;
+    const configured = settings.blocks || [];
+    const templates = [
+        ...configured,
+        ...DEFAULT_CORE_BLOCKS.filter((block) => !configured.some((existing) => existing.id === block.id)),
+    ];
+    const template = templates.find((block) => block.id === blockId || block.coreBlockId === blockId) ?? null;
     return {
         template,
-        theme,
         templateId: template?.id ?? null,
         templateSourceType: template ? 'core-block' : null,
     };
@@ -32,7 +30,6 @@ export function getEffectiveTemplate(
 export function getEffectiveTemplateOnly(
     settings: InputSettings,
     blockId: string,
-    themeId?: string
 ): RecordCaptureTemplate | null {
-    return getEffectiveTemplate(settings, blockId, themeId).template;
+    return getEffectiveTemplate(settings, blockId).template;
 }

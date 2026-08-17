@@ -21,5 +21,4 @@ export * from './hooks/public';
 export * from './debug/inputDiagnostics';
 export * from './patterns/ModalSavePattern';
 export * from './ui/public';
-// ui/components 已统一出口（ThemeTreeNodeLabel 等）
 export * from './components/public';

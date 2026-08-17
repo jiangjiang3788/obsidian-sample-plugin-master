@@ -3,7 +3,7 @@ import type { RecordSubmitResult, SubmitCreateRecordParams } from '@core/recordI
 
 import { mapSubmitError } from '../error';
 import { buildRefreshPlan, getFileItemsByPath } from '../paths';
-import { getTemplateExecutionMeta, prepareTemplateSubmit } from '../templateSubmit';
+import { prepareTemplateSubmit } from '../templateSubmit';
 import { throwIfAborted } from '../submitPipeline';
 import type { RecordInputWorkflowRuntime } from './types';
 
@@ -15,7 +15,6 @@ export class CreateRecordWorkflow {
       kernel: this.runtime.getKernel(),
       operation: 'create',
       blockId: params.blockId,
-      themeId: params.themeId ?? null,
       formData: params.formData,
       context: params.context,
       normalizeMode: params.source === 'ai_batch' ? 'ai_batch' : 'create',
@@ -27,19 +26,14 @@ export class CreateRecordWorkflow {
 
     try {
       throwIfAborted(params.signal);
-      const templateMeta = getTemplateExecutionMeta(resolved, resolved.template);
       const preview = this.runtime.deps.inputService.previewTemplateExecution(
         resolved.template,
         normalized.normalizedFormData,
-        resolved.theme ?? undefined,
-        templateMeta,
       );
       if (!preview.recordId) throw new Error('record_id_required_before_create');
       const path = await this.runtime.deps.inputService.executeTemplate(
         resolved.template,
         normalized.normalizedFormData,
-        resolved.theme ?? undefined,
-        templateMeta,
         { signal: params.signal, recordId: preview.recordId || undefined },
       );
 

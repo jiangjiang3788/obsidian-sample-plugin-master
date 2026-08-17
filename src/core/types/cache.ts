@@ -1,13 +1,10 @@
-// DataStore cache for Record Foundation v2.
+// DataStore cache for the current Record runtime.
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 export interface CachedItem {
   id: string;
-  schemaVersion?: number;
   coreBlock?: string;
   status?: string;
-  templateId?: string;
-  templateSourceType?: 'core-block' | 'goal-template';
   filePath: string;
   startLine?: number;
   endLine?: number;
@@ -16,12 +13,7 @@ export interface CachedItem {
   content: string;
   rawSource?: string;
   tags: string[];
-  goalId?: string;
   goalPath?: string;
-  theme?: string;
-  themePath?: string;
-  rootTheme?: string;
-  leafTheme?: string;
   categoryKey: string;
   recurrenceInfo?: RecordViewItem['recurrenceInfo'];
   priority?: RecordViewItem['priority'];
@@ -86,7 +78,6 @@ export interface CacheV1 {
   indexes?: {
     byDateSorted?: Array<[number, string]>;
     byTag?: Record<string, string[]>;
-    byTheme?: Record<string, string[]>;
   };
 }
 
@@ -96,11 +87,8 @@ export const CURRENT_CACHE_SCHEMA_VERSION = 15;
 export function toCachedItem(it: RecordViewItem): CachedItem {
   return {
     id: it.id,
-    schemaVersion: it.schemaVersion,
     coreBlock: it.coreBlock,
     status: it.status,
-    templateId: it.templateId,
-    templateSourceType: it.templateSourceType,
     filePath: it.file?.path || it.source?.path || '',
     startLine: it.source?.startLine ?? it.file?.line,
     endLine: it.source?.endLine ?? it.file?.line,
@@ -109,12 +97,7 @@ export function toCachedItem(it: RecordViewItem): CachedItem {
     content: it.content || '',
     rawSource: it.rawSource,
     tags: [...(it.tags || [])],
-    goalId: it.goalId,
     goalPath: it.goalPath,
-    theme: it.theme,
-    themePath: it.themePath,
-    rootTheme: it.rootTheme,
-    leafTheme: it.leafTheme,
     categoryKey: it.categoryKey,
     recurrenceInfo: it.recurrenceInfo,
     priority: it.priority,
@@ -171,21 +154,13 @@ export function fromCachedItem(c: CachedItem): RecordViewItem {
   const folder = c.filePath.split('/').slice(0, -1).pop() || '';
   const it: RecordViewItem & Record<string, any> = {
     id: c.id,
-    schemaVersion: c.schemaVersion ?? 2,
     coreBlock: c.coreBlock || '',
     status: c.status,
-    templateId: c.templateId,
-    templateSourceType: c.templateSourceType,
     title: c.title || '',
     content: c.content || '',
     rawSource: c.rawSource,
     tags: [...(c.tags || [])],
-    goalId: c.goalId,
     goalPath: c.goalPath,
-    theme: c.theme,
-    themePath: c.themePath,
-    rootTheme: c.rootTheme,
-    leafTheme: c.leafTheme,
     categoryKey: c.categoryKey,
     recurrenceInfo: c.recurrenceInfo,
     priority: c.priority,

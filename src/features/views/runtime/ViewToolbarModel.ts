@@ -28,8 +28,7 @@ export function buildViewToolbarDateTargets(currentDate: dayjs.Dayjs, currentVie
 
 export function shouldRenderViewToolbarFallbackFilters(args: {
   hasFilterSlot: boolean;
-  canSelectThemes: boolean;
   canSelectCategories: boolean;
 }): boolean {
-  return !args.hasFilterSlot && (args.canSelectThemes || args.canSelectCategories);
+  return !args.hasFilterSlot && args.canSelectCategories;
 }

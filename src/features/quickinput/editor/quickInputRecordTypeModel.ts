@@ -8,29 +8,23 @@ export interface ResolveQuickInputRecordTypeRuntimeInput {
   isEnergyDirect: boolean;
   currentBlockId: string;
   selectedGoal: GoalDefinition | null;
-  selectedGoalId: string | null;
-  selectedThemeId: string | null;
-  selectedTemplateVariantId: string | null;
+  selectedGoalPath: string | null;
 }
 
 export function resolveQuickInputRecordTypeRuntime(input: ResolveQuickInputRecordTypeRuntimeInput) {
   if (input.isEnergyDirect) {
     return {
       template: null,
-      theme: null,
       goal: input.selectedGoal,
       templateId: null,
       templateSourceType: null,
       effectiveBlockId: ENERGY_RECORD_TYPE_ID,
-      templateVariantId: null,
     };
   }
 
   return GoalTemplateResolver.resolve({
     settings: input.settings,
     blockId: input.currentBlockId,
-    goalId: input.selectedGoal?.id || input.selectedGoalId,
-    themeId: input.selectedThemeId || undefined,
-    templateVariantId: input.selectedTemplateVariantId || undefined,
+    goalPath: input.selectedGoal?.path || input.selectedGoalPath,
   });
 }

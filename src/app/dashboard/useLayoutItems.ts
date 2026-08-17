@@ -7,7 +7,10 @@ export function useLayoutItems({ dataStore, layout }: { dataStore: DataStore; la
   const [allItems, setAllItems] = useState<RecordViewItem[]>(() => dataStore.queryItems());
 
   useEffect(() => {
-    const readAllItems = () => {
+    // The state initializer above already performs the first shared query. Re-querying
+    // immediately from the effect duplicated the full RecordViewItem projection on every
+    // layout mount. From this point on we only refresh when DataStore actually changes.
+    const listener = () => {
       const startedAt = performance.now();
       const nextItems = dataStore.queryItems();
       const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
@@ -22,9 +25,7 @@ export function useLayoutItems({ dataStore, layout }: { dataStore: DataStore; la
       setAllItems(nextItems);
     };
 
-    const listener = () => readAllItems();
     dataStore.subscribe(listener);
-    readAllItems();
     return () => dataStore.unsubscribe(listener);
   }, [dataStore, layout.id, layout.viewInstanceIds.length]);
 

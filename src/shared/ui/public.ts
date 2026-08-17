@@ -22,7 +22,6 @@ export * from './utils/interaction';
 export * from './components/FilterPopover';
 export * from './components/IconAction';
 export * from './components/ModalHeader';
-export * from './components/ThemeTreeNodeLabel';
 export * from './components/ThinkMuiThemeProvider';
 export * from './icons';
 export * from './composites/SimpleSelect';

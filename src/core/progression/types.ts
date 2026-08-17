@@ -12,5 +12,5 @@ export interface ProgressResult {
   progressRatio: number;
   matchedCount: number;
   categoryBreakdown: ProgressBreakdownRow[];
-  themeBreakdown: ProgressBreakdownRow[];
+  goalBreakdown: ProgressBreakdownRow[];
 }

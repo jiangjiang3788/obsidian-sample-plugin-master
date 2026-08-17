@@ -23,7 +23,6 @@ interface EventTimelineViewViewProps {
   onMarkDone?: MarkDoneHandler;
   timerService: TimerController;
   timers: any[];
-  allThemes: any[];
   onOpenRecord?: OpenRecordHandler;
 }
 
@@ -42,7 +41,6 @@ export function EventTimelineViewView(props: EventTimelineViewViewProps) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     onOpenRecord,
   } = props;
 
@@ -60,7 +58,6 @@ export function EventTimelineViewView(props: EventTimelineViewViewProps) {
       onMarkDone={onMarkDone}
       timerService={timerService}
       timers={timers}
-      allThemes={allThemes}
       onOpenRecord={onOpenRecord}
     />
   );

@@ -11,6 +11,6 @@ describe('category path field rendering', () => {
 
     expect(renderTemplate('分类:: {{思考分类.value}}', formData)).toBe('分类:: 闪念/事件');
     expect(renderTemplate('分类标签:: {{思考分类.label}}', formData)).toBe('分类标签:: 事件');
-    expect(renderTemplate('评分:: {{评分.label}}\n评图:: {{评分.value}}', formData)).toBe('评分:: 3\n评图:: DJ/RELITU/03.png');
+    expect(renderTemplate('评分:: {{评分.label}}\n图片:: {{评分.value}}', formData)).toBe('评分:: 3\n图片:: DJ/RELITU/03.png');
   });
 });

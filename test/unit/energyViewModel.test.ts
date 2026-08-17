@@ -14,7 +14,7 @@ function energy(id: string, goalPath: string, date: string, time: string, score:
 }
 
 function task(id: string, goalPath: string): RecordViewItem {
-  return base({ id, goalPath, title: '写代码', content: '写代码', coreBlock: 'task', status: 'open', themePath: '工作/开发' });
+  return base({ id, goalPath, title: '写代码', content: '写代码', coreBlock: 'task', status: 'open' });
 }
 
 function session(id: string, taskId: string, date: string, start: string, end: string, duration: number, beforeId?: string, afterId?: string): RecordViewItem {
@@ -27,8 +27,8 @@ function session(id: string, taskId: string, date: string, start: string, end: s
 
 describe('buildEnergyViewModel', () => {
   const goals = [
-    { id: 'goal.a', title: 'A', goalPath: 'A', status: 'active' },
-    { id: 'goal.b', title: 'B', goalPath: 'B', status: 'active' },
+    { path: 'A', status: 'active', createdAt: '', updatedAt: '' },
+    { path: 'B', status: 'active', createdAt: '', updatedAt: '' },
   ] as GoalDefinition[];
 
   const module = {

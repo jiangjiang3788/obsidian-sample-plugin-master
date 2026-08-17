@@ -146,7 +146,7 @@ export function isMultiValueTemplateFieldType(type: unknown): boolean {
  *
  * UI 层只暴露“字段名称 + 字段类型”，因此这里会删除用户不需要理解的内部字段：
  * semantic / cardinality / hierarchical / storage / aliases。
- * 分类、主题、标签等核心能力仍由插件内置字段系统提供，不通过自定义字段伪装。
+ * 分类、目标、标签等核心能力仍由插件内置字段系统提供，不通过自定义字段伪装。
  */
 export function sanitizeTemplateField(field: Partial<TemplateField>, index = 1): TemplateField {
   const type = normalizeTemplateFieldType(field.type);

@@ -55,7 +55,7 @@ export interface FloatingPanelProps {
      * - floating: fixed 定位、可拖拽，可作为真正悬浮窗。
      * - inline: 作为设置页内部面板渲染，宽度跟随父容器，不拖拽、不使用 fixed。
      *
-     * 主题模板编辑器应使用 inline，避免 body portal/fixed 面板和 Obsidian Settings/Tabs 焦点管理冲突，
+     * 目标模板编辑器应使用 inline，避免 body portal/fixed 面板和 Obsidian Settings/Tabs 焦点管理冲突，
      * 也避免手机端超出设置页宽高。
      */
     placement?: 'floating' | 'inline';

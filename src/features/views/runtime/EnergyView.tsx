@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import type { CurrentView, RecordViewItem, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { CurrentView, RecordViewItem, ViewInstance } from '@core/types/public';
 import type { OpenRecordOriginHandler, TimerController } from '@shared/types/public';
 import type { GoalDefinition } from '@core/goal/public';
 import { buildEnergyViewModel, type EnergyViewRenderModel } from '../models/energyViewModel';
@@ -18,7 +18,6 @@ interface EnergyViewProps {
   dateRange: [Date, Date];
   currentView: CurrentView;
   goals?: GoalDefinition[];
-  inputSettings: { themes?: ThemeDefinition[] };
   timers?: any[];
   onOpenRecord?: (item: RecordViewItem) => void;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
@@ -73,7 +72,7 @@ function EmptyEnergyPanel() {
 }
 
 
-export function EnergyView({ items, records = items, module, dateRange, currentView, goals = [], inputSettings, timers = [], onOpenRecord, onOpenRecordOrigin, timerService, onEnergyContextChange }: EnergyViewProps) {
+export function EnergyView({ items, records = items, module, dateRange, currentView, goals = [], timers = [], onOpenRecord, onOpenRecordOrigin, timerService, onEnergyContextChange }: EnergyViewProps) {
   const energyModel = useMemo(() => buildEnergyViewModel({
     items,
     records,
@@ -81,9 +80,8 @@ export function EnergyView({ items, records = items, module, dateRange, currentV
     dateRange,
     currentView,
     goals,
-    themes: inputSettings?.themes || [],
     timers,
-  }), [items, records, module, dateRange, currentView, goals, inputSettings?.themes, timers]);
+  }), [items, records, module, dateRange, currentView, goals, timers]);
 
   const startTask = async (task: EnergyTaskListItemVM) => {
     const baseline = energyModel.taskList.latestEnergy;

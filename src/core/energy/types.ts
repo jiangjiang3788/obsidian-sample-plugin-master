@@ -8,15 +8,12 @@ export type EnergyPeriod = '上午' | '下午' | '晚上' | '夜间' | string;
 export type EnergyAggregateMethod = 'arithmetic-mean-v1';
 
 export interface EnergySettings {
-  /** direct capture 没有当前 Goal 上下文时使用。空值表示自动回退到第一个活跃目标。 */
-  defaultGoalId?: string;
-  /** Energy 快捷记录没有显式主题上下文时使用。主题只作为记录元数据，不参与模板解析。 */
-  defaultThemePath?: string;
+  /** direct capture 没有当前 Goal 上下文时使用。完整目标路径既是身份也是显示值。 */
+  defaultGoalPath?: string;
 }
 
 export const DEFAULT_ENERGY_SETTINGS: EnergySettings = {
-  defaultGoalId: '',
-  defaultThemePath: '',
+  defaultGoalPath: '',
 };
 
 export type EnergyProtocolMode = 'quick' | 'detailed';
@@ -26,9 +23,7 @@ export type EnergyProtocolPayload =
   | { version: 1; mode: 'detailed'; brainScore: number; physicalScore: number };
 
 export interface EnergySnapshotBaseInput {
-  goalId?: string;
   goalPath?: string;
-  themePath?: string;
   date: string;
   time?: string;
   period?: EnergyPeriod;

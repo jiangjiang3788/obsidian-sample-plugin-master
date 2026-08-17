@@ -32,9 +32,7 @@ interface CommonFilterPanelProps {
 
 export const DEFAULT_QUICK_FILTER_FIELDS: QuickFilterField[] = [
   { field: 'goalPath', label: '目标', placeholder: '选择目标' },
-  { field: 'goalId', label: '目标ID', placeholder: '输入目标ID' },
   { field: 'coreBlock', label: '记录类型', placeholder: '选择记录类型' },
-  { field: 'themePath', label: '主题', placeholder: '选择主题' },
   { field: 'status', label: '状态', placeholder: '选择状态' },
   { field: 'cadence', label: '任务周期', placeholder: '选择任务周期' },
   { field: 'priority', label: '优先级', placeholder: '选择优先级' },

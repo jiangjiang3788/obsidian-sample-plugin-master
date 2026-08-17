@@ -47,7 +47,7 @@
 
   /* View shell hierarchy: framed workspace panel, not accent-filled card. */
   --think-panel-bg: var(--think-bg-canvas);
-  --think-panel-header-bg: var(--think-surface-subtle);
+  --think-panel-header-bg: var(--background-secondary, var(--think-bg-canvas));
   --think-panel-header-hover-bg: var(--background-modifier-hover, var(--think-panel-header-bg));
   --think-panel-header-border: var(--think-border-divider);
   --think-panel-header-accent: var(--interactive-accent);

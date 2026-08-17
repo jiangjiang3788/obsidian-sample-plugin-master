@@ -22,7 +22,7 @@ export interface CoreInputFieldPreset {
   /** 推荐的基础字段类型。用户仍然可以在 UI 里改类型。 */
   type: FieldInputType;
   /** 内部核心字段目标。只用于归一化和模板渲染，不暴露成 UI 配置项。 */
-  target: 'themePath' | 'categoryKey' | 'recordSubtype' | 'tags' | 'goalPath' | 'image' | 'title' | 'content' | 'date' | 'rating' | 'startTime' | 'endTime' | 'duration';
+  target: 'categoryKey' | 'recordSubtype' | 'tags' | 'goalPath' | 'image' | 'title' | 'content' | 'date' | 'rating' | 'startTime' | 'endTime' | 'duration';
   description: string;
 }
 
@@ -30,7 +30,6 @@ const CORE_FIELD_GUIDE_KEYS = [
   'title',
   'content',
   'categoryKey',
-  'themePath',
   'tags',
   'goalPath',
   'date',
@@ -49,7 +48,7 @@ const BUILT_IN_FIELD_GUIDE_GROUPS: BuiltInFieldGuideGroup[] = [
   {
     category: 'core',
     label: '插件核心字段',
-    description: '由插件内置维护。分类、主题、标签、目标等可以作为表单输入字段使用，但不会落到 extra。',
+    description: '由插件内置维护。分类、标签、目标等可以作为表单输入字段使用，但不会落到 extra。',
     fields: CORE_FIELD_GUIDE_KEYS
       .map(key => FIELD_REGISTRY[key])
       .filter(Boolean)
@@ -78,11 +77,9 @@ const BUILT_IN_FIELD_GUIDE_GROUPS: BuiltInFieldGuideGroup[] = [
 
 const CORE_INPUT_FIELD_PRESETS: CoreInputFieldPreset[] = [
   { label: '记录子类型', type: 'singleSelect', target: 'recordSubtype', description: 'Record 内部子类型；Thought 推荐使用 感受/思考。' },
-  { label: '分类', type: 'path', target: 'categoryKey', description: '历史兼容输入。Canonical Record 新写入不再把分类作为类型真源。' },
-  { label: '主题', type: 'path', target: 'themePath', description: '写入显式主题路径；不会从 heading 推导主题。' },
   { label: '标签', type: 'multiTag', target: 'tags', description: '多标签字段，可填写多个标签。' },
   { label: '目标', type: 'hierarchicalSingleSelect', target: 'goalPath', description: '单值目标路径。Goal 是独立实体，不使用标签语义。' },
-  { label: '图片', type: 'image', target: 'image', description: '通用图片字段，兼容旧 pintu/评图。' },
+  { label: '图片', type: 'image', target: 'image', description: '通用图片字段。' },
   { label: '内容', type: 'textarea', target: 'content', description: '记录正文输入字段。' },
   { label: '标题', type: 'text', target: 'title', description: '记录标题输入字段。' },
   { label: '日期', type: 'date', target: 'date', description: '记录日期字段。' },
@@ -90,36 +87,18 @@ const CORE_INPUT_FIELD_PRESETS: CoreInputFieldPreset[] = [
 ];
 
 const CORE_INPUT_ALIAS_TARGETS: Record<string, CoreInputFieldPreset['target']> = {
-  // 主题
-  theme: 'themePath',
-  themepath: 'themePath',
-  '主题': 'themePath',
-  '主题路径': 'themePath',
-  '完整主题': 'themePath',
   // Record 子类型
   recordsubtype: 'recordSubtype',
-  subtype: 'recordSubtype',
   '记录子类型': 'recordSubtype',
   // 分类
-  category: 'categoryKey',
-  categorykey: 'categoryKey',
-  categorypath: 'categoryKey',
-  '分类': 'categoryKey',
-  '类别': 'categoryKey',
-  '分类路径': 'categoryKey',
   // 标签
-  tag: 'tags',
   tags: 'tags',
   '标签': 'tags',
   // 目标：只支持中文字段名，不开放 goal/target 等别名。
   '目标': 'goalPath',
   // 图片
   image: 'image',
-  pic: 'image',
-  photo: 'image',
-  pintu: 'image',
   '图片': 'image',
-  '评图': 'image',
   // 正文 / 标题
   title: 'title',
   name: 'title',
@@ -169,10 +148,6 @@ const RESERVED_NON_INPUT_FIELD_NAMES = [
   '所在章节',
   'header',
   'folder',
-  'rootTheme',
-  '根主题',
-  'leafTheme',
-  '叶主题',
   'baseCategory',
   'rootCategory',
   '根分类',
@@ -229,7 +204,7 @@ export function getReservedCustomFieldNames(): string[] {
 
 export function makeSafeCustomFieldName(name: unknown, fallback = '新字段'): string {
   const trimmed = String(name ?? '').trim() || fallback;
-  // 分类/主题/标签/内容等是“核心输入字段”，允许在表单中存在；保存后通过内部映射写入核心字段，不落 extra。
+  // 分类/目标/标签/内容等是“核心输入字段”，允许在表单中存在；保存后通过内部映射写入核心字段，不落 extra。
   if (isCoreInputFieldName(trimmed)) return trimmed;
   if (!isReservedCustomFieldName(trimmed)) return trimmed;
   const candidates = [`${trimmed}字段`, `自定义${trimmed}`, `${trimmed}备注`, fallback];

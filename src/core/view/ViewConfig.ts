@@ -26,8 +26,6 @@ export type ViewName = (typeof VIEW_OPTIONS)[number];
 export interface ViewInstance extends Groupable {
   title: string;
   viewType: ViewName;
-  /** Legacy persisted setting. New views do not use dataSourceId. */
-  dataSourceId?: string;
   collapsed?: boolean;
   fields?: string[];
   group?: string;

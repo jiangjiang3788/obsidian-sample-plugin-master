@@ -25,9 +25,7 @@ export interface EnergyQuickCapturePanelProps {
   goals: GoalSelectorOption[];
   selectedGoalPath: string | null;
   onSelectGoal: (goal: GoalSelectorOption | null) => void;
-  selectedGoalId: string | null;
-  defaultGoalId?: string | null;
-  selectedThemePath?: string | null;
+  defaultGoalPath?: string | null;
   onCapture?: (request: QuickInputEnergyCaptureRequest) => Promise<void> | void;
 }
 
@@ -39,9 +37,7 @@ export function EnergyQuickCapturePanel({
   goals,
   selectedGoalPath,
   onSelectGoal,
-  selectedGoalId,
-  defaultGoalId,
-  selectedThemePath,
+  defaultGoalPath,
   onCapture,
 }: EnergyQuickCapturePanelProps) {
   const [pendingScore, setPendingScore] = useState<EnergyQuickLevel | null>(null);
@@ -56,8 +52,8 @@ export function EnergyQuickCapturePanel({
 
   useEffect(() => {
     if (selectedGoalPath || goals.length === 0) return;
-    onSelectGoal(resolveQuickInputEnergyDefaultGoal(goals, defaultGoalId));
-  }, [defaultGoalId, goals, onSelectGoal, selectedGoalPath]);
+    onSelectGoal(resolveQuickInputEnergyDefaultGoal(goals, defaultGoalPath));
+  }, [defaultGoalPath, goals, onSelectGoal, selectedGoalPath]);
 
   const detailedScore = useMemo(
     () => calculateDetailedEnergyScore(brainScore, physicalScore),
@@ -70,8 +66,7 @@ export function EnergyQuickCapturePanel({
     : { captureMode: 'realtime' as const };
 
   const canCapture = Boolean(
-    selectedGoalId
-    && selectedGoalPath
+    selectedGoalPath
     && onCapture
     && hasCaptureTime
     && pendingScore === null
@@ -79,15 +74,13 @@ export function EnergyQuickCapturePanel({
   );
 
   const captureQuick = async (score: EnergyQuickLevel) => {
-    if (!selectedGoalId || !selectedGoalPath || !onCapture || !canCapture) return;
+    if (!selectedGoalPath || !onCapture || !canCapture) return;
     setPendingScore(score);
     try {
       await onCapture({
         scoreMode: 'quick',
         score,
-        goalId: selectedGoalId,
         goalPath: selectedGoalPath,
-        themePath: selectedThemePath || null,
         ...captureTiming,
       });
     } finally {
@@ -96,16 +89,14 @@ export function EnergyQuickCapturePanel({
   };
 
   const captureDetailed = async () => {
-    if (!selectedGoalId || !selectedGoalPath || !onCapture || !canCapture) return;
+    if (!selectedGoalPath || !onCapture || !canCapture) return;
     setIsSavingDetailed(true);
     try {
       await onCapture({
         scoreMode: 'detailed',
         brainScore: normalizeEnergyScore(brainScore),
         physicalScore: normalizeEnergyScore(physicalScore),
-        goalId: selectedGoalId,
         goalPath: selectedGoalPath,
-        themePath: selectedThemePath || null,
         ...captureTiming,
       });
     } finally {
@@ -134,7 +125,7 @@ export function EnergyQuickCapturePanel({
           <div>
             <div class="think-quick-input-energy-section__title">记录到</div>
             <div class="think-quick-input-context-hint">
-              {selectedGoalPath || '未选择目标'}{selectedThemePath ? ` · ${selectedThemePath}` : ''}
+              {selectedGoalPath || '未选择目标'}
             </div>
           </div>
           <button
@@ -149,7 +140,6 @@ export function EnergyQuickCapturePanel({
         {showTargetEditor && (
           <div class="think-quick-input-energy-target__editor">
             <GoalSelector goals={goals} selectedGoalPath={selectedGoalPath} onSelect={onSelectGoal} dense />
-            <div class="think-quick-input-context-hint">主题不在这里临时选择；请到“设置 → 数据管理 → 记录类型 → 精力记录默认值”维护默认精力主题。</div>
           </div>
         )}
       </section>

@@ -120,7 +120,6 @@ function AiBatchConfirmForm({
     buildAiBatchConfirmRecordItems({
       items: initialItems,
       blocks,
-      themes: settings.themes || [],
       goalSettings,
       inputSettings: settings,
     })
@@ -216,7 +215,6 @@ function AiBatchConfirmForm({
             key={currentRecord.id}
             getResourcePath={resolveResourcePath}
             initialBlockId={currentRecord.blockId}
-            initialThemeId={currentRecord.themeId || null}
             initialFormData={currentRecord.formData}
             context={buildAiBatchConfirmRecordContext(currentRecord)}
             allowBlockSwitch={true}
@@ -224,7 +222,6 @@ function AiBatchConfirmForm({
             onStateChange={(state) =>
               updateCurrentRecord({
                 blockId: state.blockId,
-                themeId: state.themeId || undefined,
                 formData: state.formData,
               })
             }

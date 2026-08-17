@@ -57,7 +57,7 @@ const SYSTEM_PROMPT = `你是一个个人工作记录助手，帮助用户查询
 你的职责：
 1. 根据用户的问题，从提供的上下文中找到相关信息并回答
 2. 回答时要简洁明了，使用中文
-3. 如果引用了某条记录，请提及其标题、日期或主题
+3. 如果引用了某条记录，请提及其标题、日期或目标
 4. 如果上下文中没有相关信息，诚实地说明
 5. 可以对记录进行分析、统计或总结
 
@@ -116,12 +116,12 @@ export class AiChatService {
         for (const item of items) {
             // 格式化单条记录
             const date = item.dateMs ? dayjs(item.dateMs).format('YYYY-MM-DD') : '未知日期';
-            const theme = item.theme || '无主题';
+            const goalPath = item.goalPath || '未归属目标';
             const title = item.title || '无标题';
             const content = (item.content || '').slice(0, 5000); // 提高单条内容长度限制
             const type = item.coreBlock === 'task' ? '任务' : '记录';
 
-            const entry = `- ${type} | ${date} | ${theme} | ${title}${content ? ': ' + content : ''}`;
+            const entry = `- ${type} | ${date} | ${goalPath} | ${title}${content ? ': ' + content : ''}`;
             
             // 检查长度限制
             if (totalLength + entry.length > MAX_CONTEXT_LENGTH) {
@@ -171,23 +171,7 @@ export class AiChatService {
         if (request.enableRetrieval) {
             const retrievalService = this.retrievalService;
             
-            // 处理过滤条件：将 blockTemplateIds 映射为 blockTemplateNames
             const filters = { ...request.retrievalFilters };
-            if (filters.blockTemplateIds && filters.blockTemplateIds.length > 0) {
-                const blocks = this.getBlocks();
-                const blockTemplateNames: string[] = [];
-                for (const id of filters.blockTemplateIds) {
-                    const block = blocks.find((b: any) => b.id === id);
-                    if (block && block.name) {
-                        blockTemplateNames.push(block.name);
-                    }
-                }
-                if (blockTemplateNames.length > 0) {
-                    filters.blockTemplateNames = blockTemplateNames;
-                }
-                // 删除 blockTemplateIds，使用 blockTemplateNames 进行过滤
-                delete filters.blockTemplateIds;
-            }
 
             const searchResult = retrievalService.search(request.userMessage, {
                 ...filters,

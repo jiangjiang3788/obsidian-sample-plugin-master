@@ -172,7 +172,7 @@ function formatBlockItem(item: RecordViewItem, index: number, config: ExportView
 
         // 根据字段渲染配置决定展示方式
         if (renderCfg?.type === 'emojiOrLink') {
-            // 评图字段规则：如果是纯 emoji，则直接显示；否则转为 ![[ ]] 图片链接（除非已是图片语法）
+            // 图片字段规则：如果是纯 emoji，则直接显示；否则转为 ![[ ]] 图片链接（除非已是图片语法）
             const isEmojiOnly = /^[\p{Emoji}\p{Emoji_Presentation}\p{Extended_Pictographic}\s]*$/u.test(displayValue)
                 && displayValue.trim().length <= 8
                 && !displayValue.includes('.');
@@ -213,9 +213,7 @@ function formatTaskItem(item: RecordViewItem): string {
     const fields: Array<[string, unknown]> = [
         ['记录ID', item.id],
         ['状态', status],
-        ['目标ID', item.goalId],
         ['目标', item.goalPath],
-        ['主题', item.themePath || item.theme],
         ['优先级', item.priority],
         ['预计时长', item.expectedDurationMinutes ?? item.duration],
         ['计划时间', item.scheduledAt],

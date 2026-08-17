@@ -9,10 +9,7 @@ import { DEFAULT_ENERGY_SETTINGS } from '@/core/energy/types';
 import type { InputSettings } from '@/core/recordInput/CaptureTemplate';
 import type { Group, Layout, ViewInstance } from '@/core/view/ViewConfig';
 
-export const THINK_SETTINGS_SCHEMA_VERSION = 5;
-
 export interface ThinkSettings {
-  schemaVersion: number;
   groups: Group[];
   viewInstances: ViewInstance[];
   layouts: Layout[];
@@ -21,23 +18,20 @@ export interface ThinkSettings {
   coreBlockSettings?: CoreBlockSettings;
   energySettings?: EnergySettings;
   floatingTimerEnabled: boolean;
-  activeThemePaths?: string[];
   aiSettings?: AiSettings;
   devConsoleStackEnabled?: boolean;
   categoryColors?: Record<string, string>;
 }
 
 export const DEFAULT_SETTINGS: ThinkSettings = {
-  schemaVersion: THINK_SETTINGS_SCHEMA_VERSION,
   groups: [],
   viewInstances: [],
   layouts: [],
-  inputSettings: { blocks: [], themes: [] },
+  inputSettings: { blocks: [] },
   goalSettings: DEFAULT_GOAL_SETTINGS,
   coreBlockSettings: DEFAULT_CORE_BLOCK_SETTINGS,
   energySettings: DEFAULT_ENERGY_SETTINGS,
   floatingTimerEnabled: true,
-  activeThemePaths: [],
   aiSettings: DEFAULT_AI_SETTINGS,
   devConsoleStackEnabled: false,
 };

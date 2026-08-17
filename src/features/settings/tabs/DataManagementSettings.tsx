@@ -5,13 +5,11 @@ import { SettingsNavigation } from '@features/settings/components/SettingsNaviga
 import { BlockManager } from '@features/settings/input/BlockManager';
 import { GoalManager } from '@features/settings/input/GoalManager';
 import { GoalMetricSection } from '@features/settings/input/goalManager/GoalMetricSection';
-import { ThemeMetadataManager } from '@features/settings/data/ThemeMetadataManager';
 
-type DataSection = 'recordTypes' | 'goals' | 'themes' | 'metrics';
+type DataSection = 'recordTypes' | 'goals' | 'metrics';
 const sections: Array<{ value: DataSection; label: string }> = [
   { value: 'recordTypes', label: '记录类型' },
   { value: 'goals', label: '目标' },
-  { value: 'themes', label: '主题' },
   { value: 'metrics', label: '指标' },
 ];
 
@@ -30,7 +28,6 @@ export function DataManagementSettings() {
       <div className="think-data-management__content">
         {section === 'recordTypes' && <BlockManager />}
         {section === 'goals' && <GoalManager />}
-        {section === 'themes' && <ThemeMetadataManager />}
         {section === 'metrics' && <GoalMetricSection />}
       </div>
     </div>

@@ -16,7 +16,6 @@ export * from './date';
 export * from './devLogger';
 export * from './exportUtils';
 export * from './heatmap';
-export * from './heatmapAggregation';
 export * from './heatmapTemplate';
 export * from './heatmapVisual';
 export * from './inputTemplateUtils';

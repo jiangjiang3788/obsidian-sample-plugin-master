@@ -173,8 +173,7 @@ export async function commitExcelCellFromView(params: CommitExcelCellFromViewPar
 
   const prepared = params.useCases.recordInput.prepareEditRecord({
     item: params.item,
-    blockId: params.item.templateId || params.item.categoryKey || '',
-    themeId: null,
+    blockId: params.item.coreBlock ? `core.${String(params.item.coreBlock).replace(/^core\./, '')}` : '',
     source: 'quickinput',
   });
 
@@ -203,7 +202,6 @@ export async function commitExcelCellFromView(params: CommitExcelCellFromViewPar
     () => params.useCases.recordInput.submitUpdateRecord({
       item: params.item,
       blockId,
-      themeId: prepared.themeId,
       formData,
       source: 'quickinput',
     }),

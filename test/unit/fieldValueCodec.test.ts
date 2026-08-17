@@ -7,9 +7,9 @@ import {
 } from '../../src/core/records/codec/FieldValueCodec';
 
 describe('FieldValueCodec', () => {
-  it('解码多标签和层级路径', () => {
+  it('decodes tags while Goal uses its own canonical path codec', () => {
     expect(decodeMarkdownFieldValue('#项目/插件, 地点/家', FIELD_CODEC_PRESETS.tags)).toEqual(['项目/插件', '地点/家']);
-    expect(decodeMarkdownFieldValue('生活 / 健康 / 睡眠', FIELD_CODEC_PRESETS.themePath)).toBe('生活/健康/睡眠');
+    expect(decodeMarkdownFieldValue('照顾好自己 / 健康 / 睡眠', FIELD_CODEC_PRESETS.goalPath)).toBe('照顾好自己/健康/睡眠');
   });
 
   it('解码图片字段并写回稳定路径', () => {
@@ -28,11 +28,11 @@ describe('FieldValueCodec', () => {
     expect(decodeUnknownMarkdownKvValue('42')).toBe(42);
     expect(decodeUnknownMarkdownKvValue('项目/插件')).toBe('项目/插件');
   });
-});
 
-it('keeps Goal path separate from Tag syntax', () => {
-  expect(decodeMarkdownFieldValue('照顾好自己/睡眠', FIELD_CODEC_PRESETS.goalPath)).toBe('照顾好自己/睡眠');
-  expect(decodeMarkdownFieldValue('#照顾好自己', FIELD_CODEC_PRESETS.goalPath)).toBeUndefined();
-  expect(encodeFieldValueForMarkdown('照顾好自己', FIELD_CODEC_PRESETS.goalPath)).toBe('照顾好自己');
-  expect(() => encodeFieldValueForMarkdown('#照顾好自己', FIELD_CODEC_PRESETS.goalPath)).toThrow(/Goal is not Tag/);
+  it('keeps Goal path separate from Tag syntax', () => {
+    expect(decodeMarkdownFieldValue('照顾好自己/睡眠', FIELD_CODEC_PRESETS.goalPath)).toBe('照顾好自己/睡眠');
+    expect(decodeMarkdownFieldValue('#照顾好自己', FIELD_CODEC_PRESETS.goalPath)).toBeUndefined();
+    expect(encodeFieldValueForMarkdown('照顾好自己', FIELD_CODEC_PRESETS.goalPath)).toBe('照顾好自己');
+    expect(() => encodeFieldValueForMarkdown('#照顾好自己', FIELD_CODEC_PRESETS.goalPath)).toThrow(/Goal is not Tag/);
+  });
 });

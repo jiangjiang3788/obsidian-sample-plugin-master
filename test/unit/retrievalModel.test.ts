@@ -31,19 +31,19 @@ describe('retrieval model helpers', () => {
     expect(tokenizeRetrievalText('英语听力')).toEqual(expect.arrayContaining(['英', '英语', '听', '听力']));
   });
 
-  it('indexes extra KV values but excludes legacy content aliases', () => {
+  it('indexes extra KV values while excluding reserved body aliases', () => {
     const extraText = collectSearchableExtraText(item({ extra: { 地点: '办公室', 正文: '隐藏正文' } }));
     expect(extraText).toContain('地点 办公室');
     expect(extraText).not.toContain('隐藏正文');
   });
 
-  it('applies theme/type/template/category filters through the shared helper', () => {
+  it('applies Goal and CoreBlock filters through the shared helper', () => {
     const indexed = new Map<string, RecordViewItem>([
-      ['a', item({ id: 'a', themePath: '学习/英语', templateId: 'tpl-a', categoryKey: '打卡/听力' })],
-      ['b', item({ id: 'b', themePath: '健康/运动', templateId: 'tpl-b', categoryKey: '总结' })],
+      ['a', item({ id: 'a', goalPath: '武装大脑/学习/英语', coreBlock: 'task', categoryKey: '任务' })],
+      ['b', item({ id: 'b', goalPath: '照顾好自己/健康/运动', coreBlock: 'habit', categoryKey: '打卡' })],
     ]);
     const results = [searchResult('a'), searchResult('b')];
 
-    expect(applyRetrievalFilters(results, { themePaths: ['学习'], types: ['task'], blockTemplateIds: ['tpl-a'], blockTemplateNames: ['打卡'] }, indexed).map((result) => result.id)).toEqual(['a']);
+    expect(applyRetrievalFilters(results, { goalPaths: ['武装大脑/学习'], coreBlocks: ['task'] }, indexed).map((result) => result.id)).toEqual(['a']);
   });
 });

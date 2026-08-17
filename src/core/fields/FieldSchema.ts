@@ -31,7 +31,6 @@ export interface FieldSchema {
   aliases?: string[];
   storage?: FieldStoragePolicy;
   description?: string;
-  deprecated?: boolean;
   hiddenByDefault?: boolean;
   required?: boolean;
   defaultValue?: string;
@@ -42,8 +41,8 @@ export interface FieldSchema {
 
 /**
  * Persisted user/template configuration DTO.
- * `type` is retained in settings for compatibility and represents input capability,
- * not storage grammar. Runtime code must resolve this DTO into FieldSchema first.
+ * `type` is the persisted input capability, not storage grammar.
+ * Runtime code resolves this DTO into FieldSchema before use.
  */
 export interface CaptureFieldConfig {
   id: string;

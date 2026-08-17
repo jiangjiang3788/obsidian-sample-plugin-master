@@ -12,7 +12,7 @@ import { mapSubmitError } from '../error';
 import { getItemFilePath } from '../locator';
 import { buildPlanConsistencyIssues } from '../planGuard';
 import { buildRefreshPlan } from '../paths';
-import { getTemplateExecutionMeta, prepareTemplateSubmit } from '../templateSubmit';
+import { prepareTemplateSubmit } from '../templateSubmit';
 import { RecordMigrationTransaction } from './RecordMigrationTransaction';
 import type { RecordInputWorkflowRuntime } from './types';
 
@@ -57,9 +57,7 @@ function boolValue(value: unknown): boolean {
 function taskSeriesDefaults(renderData: Record<string, unknown>) {
   return {
     content: optionScalar(renderData['任务内容'] ?? renderData['内容'] ?? renderData.content),
-    goalId: nullableText(renderData.goalId ?? renderData['目标ID']),
     goalPath: nullableText(renderData.goalPath ?? renderData['目标']),
-    themePath: nullableText(renderData.themePath ?? renderData['主题']),
     priority: nullableText(renderData['优先级'] ?? renderData.priority) as any,
     expectedDurationMinutes: durationValue(renderData['预计时长'] ?? renderData.expectedDurationMinutes),
     energyDemand: nullableText(renderData['精力要求'] ?? renderData.energyDemand) as any,
@@ -95,7 +93,6 @@ export class UpdateRecordWorkflow {
       kernel: this.runtime.getKernel(),
       operation: 'update',
       blockId: params.blockId,
-      themeId: params.themeId ?? null,
       item: params.item,
       formData: { ...params.formData, seriesId: params.item.seriesId },
       normalizeMode: 'edit',
@@ -104,12 +101,9 @@ export class UpdateRecordWorkflow {
     if (!prepared.ok) return prepared.result;
 
     const { resolved, normalized, warnings } = prepared.submit;
-    const templateMeta = getTemplateExecutionMeta(resolved, resolved.template);
     const outputPlan = buildRecordOutputPlan({
       template: resolved.template,
       formData: normalized.normalizedFormData,
-      theme: resolved.theme ?? undefined,
-      templateMeta,
       recordId: params.item.id,
     });
     const persistencePlan = buildRecordPersistencePlan({
@@ -133,11 +127,9 @@ export class UpdateRecordWorkflow {
         const result = await new RecordMigrationTransaction(this.runtime).execute({
           item: params.item,
           template: resolved.template,
-          theme: resolved.theme,
           resolved,
           normalized,
-          templateMeta,
-          outputPlan,
+              outputPlan,
           persistencePlan,
           warnings,
           signal: params.signal,
@@ -160,9 +152,7 @@ export class UpdateRecordWorkflow {
         params.item,
         resolved.template,
         normalized.normalizedFormData,
-        resolved.theme ?? undefined,
-        templateMeta,
-        { signal: params.signal, autoRefresh: false },
+          { signal: params.signal, autoRefresh: false },
       );
       const seriesIssue = await this.syncRecurringTaskSeries(params, outputPlan.renderData);
       const nextWarnings = seriesIssue ? [...warnings, seriesIssue] : warnings;

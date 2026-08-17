@@ -219,7 +219,9 @@ function check_generic_record_codec_r4_gate() {
 
   requireText('src/core/records/codec/MarkdownRecordCodec.ts', 'export function encodeRecordDraft');
 
-  requireText('src/core/records/codec/MarkdownRecordCodec.ts', "['记录子类型', 'recordsubtype', 'subtype']");
+  requireText('src/core/records/codec/MarkdownRecordCodec.ts', "key === '记录子类型'");
+  forbidText('src/core/records/codec/MarkdownRecordCodec.ts', 'recordsubtype');
+  forbidText('src/core/records/codec/MarkdownRecordCodec.ts', 'subtype].includes');
   requireText('src/core/utils/parser.ts', 'recordSubtype: parsed.recordSubtype');
   requireText('src/core/utils/parser.ts', '`闪念/${parsed.recordSubtype}`');
   forbidText('src/core/goal/templateMode.ts', 'patch.outputTemplate');
@@ -274,7 +276,7 @@ function check_field_system_r5_gate() {
 
   for (const marker of [
     'buildCustomCaptureFields(',
-    'captureFields?: readonly TemplateField[]',
+    'captureFields: readonly TemplateField[]',
     "schema.capabilities.customFields",
     'Template freedom wins',
     'isSafeMarkdownFieldKey(markdownKey)',

@@ -27,7 +27,6 @@ import type { ThinkSettings } from '@core/types/public';
 import type { SettingsRepository } from '@core/services/public';
 import { createSliceMeta } from '@core/types/public';
 import { devError } from '@core/utils/public';
-import { createThemeSlice, type ThemeSlice } from './slices/theme.slice';
 import { createLayoutSlice, type LayoutSlice } from './slices/layout.slice';
 import { createSettingsSlice, type SettingsSlice } from './slices/settings.slice';
 import { createBlocksSlice, type BlocksSlice } from './slices/blocks.slice';
@@ -62,7 +61,6 @@ export interface ZustandAppCoreActions {
 // 组合所有 slices 的类型
 export type ZustandAppStore = ZustandAppCoreState &
     ZustandAppCoreActions &
-    ThemeSlice &
     LayoutSlice &
     SettingsSlice &
     BlocksSlice &
@@ -139,9 +137,6 @@ export function createAppStore(settingsRepository: SettingsRepository) {
             setLoading: (loading: boolean) => {
                 set({ isLoading: loading });
             },
-
-            // ============== Theme Slice ==============
-            ...createThemeSlice(settingsRepository)(set, get, store),
 
             // ============== Layout Slice ==============
             ...createLayoutSlice(settingsRepository)(set, get, store),

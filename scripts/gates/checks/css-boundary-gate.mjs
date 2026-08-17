@@ -270,7 +270,6 @@ const v4Contracts = [
   ['src/features/views/runtime/ProgressView.tsx', 'think-progress-view'],
   ['src/app/dashboard/ModulePanel.tsx', 'ThinkIconButton'],
   ['src/features/views/runtime/components/heatmap/HeatmapCell.tsx', 'heatmap-cell-image'],
-  ['src/features/views/runtime/StatisticsView/StatisticsGoalThemeSummaryStrip.tsx', 'sv-goal-summary-strip'],
 ];
 for (const [file, contract] of v4Contracts) {
   const full = path.join(ROOT, file);

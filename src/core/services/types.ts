@@ -22,5 +22,4 @@ export const SettingsProviderToken: InjectionToken<ISettingsProvider> = "Setting
 export interface QuickInputConfig {
     blockId: string;
     context?: Record<string, unknown>;
-    themeId?: string;
 }

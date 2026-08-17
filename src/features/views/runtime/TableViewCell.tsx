@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { RecordViewItem, ThemeDefinition } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '@shared/types/public';
 import { TaskRow } from './components/items/TaskRow';
 import { ItemLink } from './components/items/ItemLink';
@@ -13,7 +13,6 @@ export interface TableViewCellProps {
   onOpenRecordOrigin?: OpenRecordOriginHandler;
   timerService: TimerController;
   timers: any[];
-  allThemes: ThemeDefinition[];
   onOpenRecord?: OpenRecordHandler;
 }
 
@@ -25,7 +24,6 @@ export function TableViewCell(props: TableViewCellProps) {
     onOpenRecordOrigin,
     timerService,
     timers,
-    allThemes,
     onOpenRecord,
   } = props;
 
@@ -43,7 +41,6 @@ export function TableViewCell(props: TableViewCellProps) {
               onOpenRecordOrigin={onOpenRecordOrigin}
               timerService={timerService}
               timer={findTableViewTimer(timers, item.id)}
-              allThemes={allThemes}
               compact={true}
               onOpenRecord={onOpenRecord}
             />

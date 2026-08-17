@@ -72,7 +72,7 @@ export function createBlocksSlice(
                 // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
                 await settingsRepository.update(draft => {
                     if (!draft.inputSettings) {
-                        draft.inputSettings = { blocks: [], themes: [] };
+                        draft.inputSettings = { blocks: [] };
                     }
                     if (!draft.inputSettings.blocks) {
                         draft.inputSettings.blocks = [];

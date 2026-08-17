@@ -1,18 +1,13 @@
 # Goal / Period / Record 最小领域契约
 
-本目录只放“目标闭环”的核心类型合同，不做 UI、不做 Obsidian 写入、不替换现有 Item / Block / View 主链。
+当前单人数据模型只保留一份 Goal 路径。Goal path 同时是人类可读文本和运行时分类身份，不维护第二份独立身份，也不使用第二套归属层级。
 
-当前定位：
+核心约束：
 
-- Goal：长期目标或阶段性目标；它是独立实体层级，不是 Tag，也不使用 `#` 语法。
-- Period：由记录预设 `periodPolicy` 和记录日期运行时推导出的周、月、季度或年度周期。
-- Record：当前系统已有 Item / Block 记录，通过单值 `goalId` 关联目标；`goalPath` 只是可读快照，`coreBlock / period.*` 表示记录类型与周期。
-
-设计约束：
-
-1. `core/goal` 只能依赖纯 TypeScript 类型。
-2. 外层只能通过 `@core/public` 使用这些类型。
-3. 单人版不再维护手动 Cycle 表或显式 GoalRecordRelation 表。
-4. `goalId` 是 Goal 身份真源；不得通过标签、`#` 字符串、`goalPath` 猜身份。
-5. `goalPath` 只接受 `/` 分层文本；任何层级包含 `#` / `＃` 都视为非法。
-6. QuickInput / Statistics / Retrieval 从当前 GoalDefinition + Record 的 `goalId` 推导目标上下文。
+1. Goal 使用 `/` 表达层级，例如 `照顾好自己/健康/睡眠`。
+2. Record 只持久化 `目标:: <完整 Goal path>`。
+3. Goal path 不允许 `#` / `＃`；Tag 与 Goal 始终是两个概念。
+4. 父级、根级、叶级都由完整路径运行时推导，不持久化第二份身份。
+5. GoalTemplate 以 `Goal path × CoreBlock` 唯一定位；没有模板变体或第二分类上下文。
+6. QuickInput、Timeline、Statistics、Energy、Retrieval 等消费者读取同一个 Goal path，不允许从文件名或标题猜归属。
+7. Period 仍由模板 periodPolicy 与记录日期推导，与 Goal 身份无关。

@@ -16,7 +16,6 @@ export interface BuildViewPropsParams {
   onCloseStatisticsPopover: CloseStatisticsPopoverHandler;
   timerService: TimerController;
   timers: any[];
-  allThemes: any[];
   inputSettings: any;
   goals?: any[];
   selectedLayoutCategories: string[];
@@ -40,7 +39,6 @@ export function buildViewProps({
   onCloseStatisticsPopover,
   timerService,
   timers,
-  allThemes,
   inputSettings,
   goals = [],
   selectedLayoutCategories,
@@ -84,8 +82,7 @@ export function buildViewProps({
     onCellCommit: viewType === 'ExcelView' ? handlers.onExcelCellCommit : undefined,
     timerService,
     timers,
-    allThemes,
-    inputSettings,
+      inputSettings,
     goals,
     goalSettings,
     selectedCategories: selectedLayoutCategories,

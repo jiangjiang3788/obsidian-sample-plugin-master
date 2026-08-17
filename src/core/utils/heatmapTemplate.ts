@@ -1,80 +1,39 @@
 // src/core/utils/heatmapTemplate.ts
-// Heatmap 模板相关工具函数
-//
-// 单人版收敛：Heatmap 只读取 block fallback；新建记录主链使用 GoalTemplateResolver。
+// Heatmap fallback-template helpers in the Goal-only model.
 
 import type { RecordCaptureTemplate, InputSettings } from '@/core/recordInput/CaptureTemplate';
-import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 
-/**
- * 获取有效的模板配置
- * 
- * 保持原有返回类型 RecordCaptureTemplate | null
- * 
- * @param settings InputSettings 配置
- * @param blockId Block 模板 ID
- * @param themeId 可选的主题 ID
- * @returns RecordCaptureTemplate 或 null
- */
-// NOTE:
-// 这里原本导出名为 getEffectiveTemplate，与 inputTemplateUtils.ts 的同名导出冲突。
-// core/utils/index.ts 会把两者都 re-export，Vite/Rollup 会报 "Conflicting namespaces"，
-// 并导致其中一个导出被忽略，最终出现 @core/public 无法稳定导出 getEffectiveTemplate 的问题。
-//
-// 为了让 @core/public 的 API 形状稳定：
-// - inputTemplateUtils.ts 保留 getEffectiveTemplate（返回 {template, theme}）
-// - heatmapTemplate.ts 改名为 getEffectiveHeatmapTemplate（返回 RecordCaptureTemplate | null）
 export function getEffectiveHeatmapTemplate(
-    settings: InputSettings, 
-    blockId: string, 
-    themeId?: string
+    settings: InputSettings,
+    blockId: string,
 ): RecordCaptureTemplate | null {
-    void themeId;
-    return settings.blocks.find((block) => block.id === blockId) ?? null;
+    return settings.blocks.find((block) => block.id === blockId || block.coreBlockId === blockId) ?? null;
 }
 
-/**
- * 构建评分映射
- */
 export function buildRatingMapping(
-    inputSettings: InputSettings, 
-    blockId: string, 
-    themeId?: string
+    inputSettings: InputSettings,
+    blockId: string,
 ): Map<string, string> {
-    const effectiveTemplate = getEffectiveHeatmapTemplate(inputSettings, blockId, themeId);
-    const ratingField = effectiveTemplate?.fields.find(f => f.type === 'rating');
-    
+    const effectiveTemplate = getEffectiveHeatmapTemplate(inputSettings, blockId);
+    const ratingField = effectiveTemplate?.fields.find((field) => field.type === 'rating');
     return new Map<string, string>(
-        ratingField?.options?.filter(opt => opt.value).map(opt => [opt.label || '', opt.value as string]) || []
+        ratingField?.options?.filter((option) => option.value).map((option) => [option.label || '', option.value as string]) || [],
     );
 }
 
-/**
- * 评分映射缓存管理器
- */
+/** Rating mapping depends on Goal × Block, not Theme metadata. */
 export class RatingMappingCache {
     private cache = new Map<string, Map<string, string>>();
-    
+
     clear(): void {
         this.cache.clear();
     }
-    
-    get(
-        inputSettings: InputSettings,
-        blockId: string,
-        themePath?: string,
-        themesByPath?: Map<string, ThemeDefinition>
-    ): Map<string, string> {
-        const themeId = themePath && themePath !== '__default__' && themesByPath 
-            ? themesByPath.get(themePath)?.id 
-            : undefined;
-        const cacheKey = `${blockId}:${themePath || 'default'}`;
-        
-        if (this.cache.has(cacheKey)) {
-            return this.cache.get(cacheKey)!;
-        }
-        
-        const mapping = buildRatingMapping(inputSettings, blockId, themeId);
+
+    get(inputSettings: InputSettings, blockId: string, goalPath?: string): Map<string, string> {
+        const cacheKey = `${blockId}:${goalPath || 'default'}`;
+        const cached = this.cache.get(cacheKey);
+        if (cached) return cached;
+        const mapping = buildRatingMapping(inputSettings, blockId);
         this.cache.set(cacheKey, mapping);
         return mapping;
     }

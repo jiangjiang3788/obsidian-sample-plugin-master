@@ -22,26 +22,18 @@ export class RecordInputKernel {
   prepareCreate(params: PrepareCreateRecordParams): PreparedCreateRecord {
     const resolved = this.resolveMissingDependencies({
       blockId: params.blockId ?? null,
-      themeId: params.themeId ?? null,
       context: params.context ?? null,
     });
 
     const snapshot = buildEditableRecordSnapshot({
       mode: 'create',
       blockId: resolved.blockId,
-      themeId: resolved.themeId,
       fields: {},
       template: resolved.template,
-      theme: resolved.theme,
-      templateMeta: {
-        templateId: resolved.meta.templateId ?? resolved.template?.id ?? null,
-        templateSourceType: resolved.meta.templateSourceType ?? 'core-block',
-      },
     });
 
     return {
       blockId: resolved.blockId,
-      themeId: resolved.themeId,
       template: resolved.template,
       initialFormData: {},
       snapshot,
@@ -56,20 +48,17 @@ export class RecordInputKernel {
       settings: this.settings,
       item: params.item,
       preferredBlockId: params.blockId ?? null,
-      preferredThemeId: params.themeId ?? null,
     });
   }
 
   resolveMissingDependencies(params: {
     blockId?: string | null;
-    themeId?: string | null;
     item?: PrepareEditRecordParams['item'] | null;
     context?: Record<string, unknown> | null;
   }): ResolveDependenciesResult {
     return resolveRecordDependencies({
       settings: this.settings,
       blockId: params.blockId ?? null,
-      themeId: params.themeId ?? null,
       item: params.item ?? null,
       context: params.context ?? null,
     });

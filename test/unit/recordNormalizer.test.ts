@@ -3,7 +3,6 @@ import { normalizeRecordItem } from '../../src/core/records/RecordNormalizer';
 
 const baseItem = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   id: 'task.01J00000000000000000000003',
-  schemaVersion: 2,
   coreBlock: 'task',
   status: 'open',
   title: '任务',
@@ -39,38 +38,14 @@ describe('RecordNormalizer', () => {
     expect((item as any).titleLower).toBe('任务');
   });
 
-  it('header 永远不会生成 themePath', () => {
-    const item = normalizeRecordItem(baseItem(), {
-      filePath: 'Notes/daily.md',
-      fileName: 'daily',
-      parentFolder: 'Notes',
-      created: 1,
-      modified: 2,
-      line: 3,
-      header: '健康/睡眠',
-    });
 
-    expect(item.header).toBe('健康/睡眠');
-    expect(item.theme).toBeUndefined();
-    expect(item.themePath).toBeUndefined();
-    expect(item.rootTheme).toBeUndefined();
-    expect(item.leafTheme).toBeUndefined();
+
+
+  it('Goal hierarchy derives root/leaf only from goalPath', () => {
+    const item = normalizeRecordItem(baseItem({ goalPath: '照顾好自己/健康/睡眠', header: '错误/标题' }), { filePath: 'x.md' } as any);
+    expect(item.goalPath).toBe('照顾好自己/健康/睡眠');
+    expect(item.rootGoal).toBe('照顾好自己');
+    expect(item.leafGoal).toBe('睡眠');
   });
 
-  it('显式 theme 才派生 themePath/rootTheme/leafTheme', () => {
-    const item = normalizeRecordItem(baseItem({ theme: '健康/睡眠' }), {
-      filePath: 'Notes/daily.md',
-      fileName: 'daily',
-      parentFolder: 'Notes',
-      created: 1,
-      modified: 2,
-      line: 3,
-      header: '只是章节',
-    });
-
-    expect(item.theme).toBe('健康/睡眠');
-    expect(item.themePath).toBe('健康/睡眠');
-    expect(item.rootTheme).toBe('健康');
-    expect(item.leafTheme).toBe('睡眠');
-  });
 });

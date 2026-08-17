@@ -1,5 +1,5 @@
 import type { RecordViewItem } from '../types';
-import { getItemThemeKey } from '../goal/itemGoalGrouping';
+import { getItemGoalKey } from '../goal/itemGoalGrouping';
 import type { ProgressResult, ProgressBreakdownRow } from './types';
 
 export interface ProgressComputationOptions {
@@ -35,7 +35,7 @@ export function computeProgression(items: RecordViewItem[], options: ProgressCom
 
   const allowed = new Set((includedCategories || []).filter(Boolean));
   const categoryMap = new Map<string, { points: number; count: number }>();
-  const themeMap = new Map<string, { points: number; count: number }>();
+  const goalMap = new Map<string, { points: number; count: number }>();
 
   let totalPoints = 0;
   let matchedCount = 0;
@@ -57,11 +57,11 @@ export function computeProgression(items: RecordViewItem[], options: ProgressCom
     catRow.count += 1;
     categoryMap.set(category, catRow);
 
-    const theme = getItemThemeKey(item);
-    const themeRow = themeMap.get(theme) || { points: 0, count: 0 };
-    themeRow.points += points;
-    themeRow.count += 1;
-    themeMap.set(theme, themeRow);
+    const goalPath = getItemGoalKey(item);
+    const goalRow = goalMap.get(goalPath) || { points: 0, count: 0 };
+    goalRow.points += points;
+    goalRow.count += 1;
+    goalMap.set(goalPath, goalRow);
   }
 
   const safeLevelStep = Math.max(1, levelStep);
@@ -79,6 +79,6 @@ export function computeProgression(items: RecordViewItem[], options: ProgressCom
     progressRatio,
     matchedCount,
     categoryBreakdown: toSortedRows(categoryMap, topN),
-    themeBreakdown: toSortedRows(themeMap, topN),
+    goalBreakdown: toSortedRows(goalMap, topN),
   };
 }

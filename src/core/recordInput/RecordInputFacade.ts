@@ -14,7 +14,6 @@ import { findMatchingOption, isOptionLikeValue, readOptionText } from '@/core/se
 
 export interface RecordInputEditorStateLike {
   blockId?: string | null;
-  themeId?: string | null;
   formData?: Record<string, unknown> | null;
   template?: {
     fields?: TemplateField[];
@@ -78,7 +77,6 @@ export function buildRecordCreateDraftFromEditorState({
 }: BuildRecordCreateDraftParams): QuickInputSaveData {
   return {
     blockId: state.blockId || undefined,
-    themeId: state.themeId ?? null,
     formData: { ...(state.formData || {}) },
     context,
     meta: state.meta,
@@ -94,7 +92,6 @@ export function buildCreateRecordSubmitParamsFromEditorState({
 }: BuildCreateRecordSubmitParamsInput): SubmitCreateRecordParams {
   return {
     blockId: String(state.blockId || ''),
-    themeId: state.themeId ?? null,
     formData: { ...(state.formData || {}) },
     context,
     meta: state.meta,
@@ -114,7 +111,6 @@ export function buildUpdateRecordSubmitParamsFromEditorState({
   return {
     item,
     blockId: String(state.blockId || ''),
-    themeId: state.themeId ?? null,
     formData: { ...(state.formData || {}) },
     meta: state.meta,
     expectedOutputPlan: expectedOutputPlan ?? null,

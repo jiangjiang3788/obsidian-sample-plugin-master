@@ -12,7 +12,7 @@ import {
   getGoalDisplayPath,
   goalHasChildren,
 } from './goalTemplateMatrixModel';
-import type { GoalDropState, PresetDragState, PresetDropCellState } from './goalTemplateMatrixModel';
+import type { GoalDropState } from './goalTemplateMatrixModel';
 
 export interface GoalTemplateMatrixGroupRowsProps {
   group: GoalDefinition[];
@@ -20,30 +20,21 @@ export interface GoalTemplateMatrixGroupRowsProps {
   goals: GoalDefinition[];
   visibleBlocks: CoreBlockDefinition[];
   templates: GoalTemplate[];
-  themeIconByPath: Map<string, string>;
   visibleBlockCount: number;
   expandedPaths: Set<string>;
-  collapsedGoalIds: Set<string>;
-  draggingGoalId: string | null;
+  draggingGoalPath: string | null;
   goalDrop: GoalDropState;
-  draggingPreset: PresetDragState | null;
-  presetDropCell: PresetDropCellState;
-  setDraggingGoalId: (value: string | null) => void;
+  setDraggingGoalPath: (value: string | null) => void;
   setGoalDrop: (value: GoalDropState) => void;
-  setDraggingPreset: (value: PresetDragState | null) => void;
-  setPresetDropCell: (value: PresetDropCellState) => void;
-  toggleGoalRow: (goalId: string) => void;
   toggleTreePath: (path: string) => void;
-  reorderGoalSiblings: (dragGoalId: string, targetGoalId: string, position: 'before' | 'after') => Promise<void>;
+  reorderGoalSiblings: (dragGoalPath: string, targetGoalPath: string, position: 'before' | 'after') => Promise<void>;
   handleDeleteGoal: (event: MouseEvent, goal: GoalDefinition) => Promise<void>;
-  handlePresetDropOnCell: (event: DragEvent, goal: GoalDefinition, block: CoreBlockDefinition) => Promise<void>;
   openEditor: (goal: GoalDefinition, block: CoreBlockDefinition, template?: GoalTemplate | null) => void;
-  openPresetContextMenu: (event: MouseEvent, goal: GoalDefinition, block: CoreBlockDefinition, template: GoalTemplate) => void;
 }
 
-function GoalDragHandle({ goal, setDraggingGoalId, setGoalDrop }: {
+function GoalDragHandle({ goal, setDraggingGoalPath, setGoalDrop }: {
   goal: GoalDefinition;
-  setDraggingGoalId: (value: string | null) => void;
+  setDraggingGoalPath: (value: string | null) => void;
   setGoalDrop: (value: GoalDropState) => void;
 }) {
   return (
@@ -56,12 +47,12 @@ function GoalDragHandle({ goal, setDraggingGoalId, setGoalDrop }: {
         event.stopPropagation();
         if (event.dataTransfer) {
           event.dataTransfer.effectAllowed = 'move';
-          event.dataTransfer.setData('text/plain', goal.id);
+          event.dataTransfer.setData('text/plain', goal.path);
         }
-        setDraggingGoalId(goal.id);
+        setDraggingGoalPath(goal.path);
       }}
       onDragEnd={() => {
-        setDraggingGoalId(null);
+        setDraggingGoalPath(null);
         setGoalDrop(null);
       }}
       title="拖动目标排序"
@@ -96,14 +87,12 @@ function GoalPathCell(props: {
   goal: GoalDefinition;
   goals: GoalDefinition[];
   expandedPaths: Set<string>;
-  collapsed: boolean;
-  setDraggingGoalId: (value: string | null) => void;
+  setDraggingGoalPath: (value: string | null) => void;
   setGoalDrop: (value: GoalDropState) => void;
-  toggleGoalRow: (goalId: string) => void;
   toggleTreePath: (path: string) => void;
   handleDeleteGoal: (event: MouseEvent, goal: GoalDefinition) => Promise<void>;
 }) {
-  const { goal, goals, expandedPaths, collapsed, setDraggingGoalId, setGoalDrop, toggleGoalRow, toggleTreePath, handleDeleteGoal } = props;
+  const { goal, goals, expandedPaths, setDraggingGoalPath, setGoalDrop, toggleTreePath, handleDeleteGoal } = props;
   const path = getGoalDisplayPath(goal);
   const depth = getGoalDepth(goal);
   const hasChildren = goalHasChildren(goal, goals);
@@ -114,13 +103,11 @@ function GoalPathCell(props: {
     <td className="think-goal-template-matrix__path-cell">
       <div
         className={`think-goal-template-matrix__goal${isRoot ? ' is-root' : ''}`}
-        onClick={() => toggleGoalRow(goal.id)}
-        title="单击折叠/展开本目标；拖动排序"
+        title={hasChildren ? '使用箭头展开/折叠子目标；拖动排序' : '拖动排序'}
       >
         <span className="think-goal-template-matrix__indent" style={{ '--think-goal-depth': depth } as any} />
-        <GoalDragHandle goal={goal} setDraggingGoalId={setDraggingGoalId} setGoalDrop={setGoalDrop} />
+        <GoalDragHandle goal={goal} setDraggingGoalPath={setDraggingGoalPath} setGoalDrop={setGoalDrop} />
         <TreeToggle hasChildren={hasChildren} expanded={expanded} path={path} toggleTreePath={toggleTreePath} />
-        <ThinkIcon className="think-goal-template-matrix__collapse-state" name={collapsed ? 'chevron-right' : 'chevron-down'} />
         <span className="think-goal-template-matrix__goal-name">{cleanDisplayText(getGoalDisplayName(goal))}</span>
         <ThinkIconButton
           className="think-goal-template-matrix__delete"
@@ -137,32 +124,31 @@ function GoalPathCell(props: {
 }
 
 function GoalTemplateMatrixGoalRow(props: GoalTemplateMatrixGroupRowsProps & { goal: GoalDefinition }) {
-  const { goal, goals, visibleBlocks, templates, themeIconByPath, expandedPaths, collapsedGoalIds, draggingGoalId, goalDrop, draggingPreset, presetDropCell, setDraggingGoalId, setGoalDrop, setDraggingPreset, setPresetDropCell, toggleGoalRow, toggleTreePath, reorderGoalSiblings, handleDeleteGoal, handlePresetDropOnCell, openEditor, openPresetContextMenu } = props;
-  const collapsed = collapsedGoalIds.has(goal.id);
-  const dropActive = goalDrop?.goalId === goal.id;
+  const { goal, goals, visibleBlocks, templates, expandedPaths, draggingGoalPath, goalDrop, setDraggingGoalPath, setGoalDrop, toggleTreePath, reorderGoalSiblings, handleDeleteGoal, openEditor } = props;
+  const dropActive = goalDrop?.goalPath === getGoalDisplayPath(goal);
 
   return (
     <tr
-      key={goal.id}
+      key={goal.path}
       className={dropActive ? `think-goal-template-matrix__goal-row is-drop-${goalDrop?.position}` : 'think-goal-template-matrix__goal-row'}
       onDragEnter={(event: DragEvent) => {
-        if (!draggingGoalId || draggingGoalId === goal.id) return;
+        if (!draggingGoalPath || draggingGoalPath === goal.path) return;
         event.preventDefault();
-        setGoalDrop({ goalId: goal.id, position: getEventDropPosition(event) });
+        setGoalDrop({ goalPath: getGoalDisplayPath(goal), position: getEventDropPosition(event) });
       }}
       onDragOver={(event: DragEvent) => {
-        if (!draggingGoalId || draggingGoalId === goal.id) return;
+        if (!draggingGoalPath || draggingGoalPath === goal.path) return;
         event.preventDefault();
       }}
       onDrop={async (event: DragEvent) => {
-        if (!draggingGoalId || !goalDrop) return;
+        if (!draggingGoalPath || !goalDrop) return;
         event.preventDefault();
-        await reorderGoalSiblings(draggingGoalId, goalDrop.goalId, goalDrop.position);
-        setDraggingGoalId(null);
+        await reorderGoalSiblings(draggingGoalPath, goals.find((item) => getGoalDisplayPath(item) === goalDrop.goalPath)?.path || goal.path, goalDrop.position);
+        setDraggingGoalPath(null);
         setGoalDrop(null);
       }}
       onDragEnd={() => {
-        setDraggingGoalId(null);
+        setDraggingGoalPath(null);
         setGoalDrop(null);
       }}
     >
@@ -170,30 +156,14 @@ function GoalTemplateMatrixGoalRow(props: GoalTemplateMatrixGroupRowsProps & { g
         goal={goal}
         goals={goals}
         expandedPaths={expandedPaths}
-        collapsed={collapsed}
-        setDraggingGoalId={setDraggingGoalId}
+        setDraggingGoalPath={setDraggingGoalPath}
         setGoalDrop={setGoalDrop}
-        toggleGoalRow={toggleGoalRow}
         toggleTreePath={toggleTreePath}
         handleDeleteGoal={handleDeleteGoal}
       />
       {visibleBlocks.map((block) => (
         <td key={block.id} className="think-goal-template-matrix__block-cell">
-          <GoalTemplateMatrixCell
-            goal={goal}
-            block={block}
-            goals={goals}
-            templates={templates}
-            themeIconByPath={themeIconByPath}
-            collapsed={collapsed}
-            draggingPreset={draggingPreset}
-            presetDropCell={presetDropCell}
-            setDraggingPreset={setDraggingPreset}
-            setPresetDropCell={setPresetDropCell}
-            handlePresetDropOnCell={handlePresetDropOnCell}
-            openEditor={openEditor}
-            openPresetContextMenu={openPresetContextMenu}
-          />
+          <GoalTemplateMatrixCell goal={goal} block={block} templates={templates} openEditor={openEditor} />
         </td>
       ))}
     </tr>
@@ -209,6 +179,6 @@ export function GoalTemplateMatrixGroupRows(props: GoalTemplateMatrixGroupRowsPr
       </tr>,
     );
   }
-  props.group.forEach((goal) => rows.push(<GoalTemplateMatrixGoalRow key={goal.id} {...props} goal={goal} />));
+  props.group.forEach((goal) => rows.push(<GoalTemplateMatrixGoalRow key={goal.path} {...props} goal={goal} />));
   return rows;
 }

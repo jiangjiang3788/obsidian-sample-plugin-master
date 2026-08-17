@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { RecordViewItem, ThemeDefinition } from '@core/types/public';
+import { RecordViewItem } from '@core/types/public';
 import { FieldPill } from './FieldPill';
 import { ItemLink } from './ItemLink';
 import type { MessageRenderPort } from '@core/ports/public';
@@ -14,11 +14,10 @@ interface BlockItemProps {
     resolveResourcePath?: ResolveResourcePathHandler;
     onOpenRecordOrigin?: OpenRecordOriginHandler;
     messageRenderPort?: MessageRenderPort;
-    allThemes: ThemeDefinition[];
     onOpenRecord?: OpenRecordHandler;
 }
 
-export const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, allThemes, onOpenRecord }: BlockItemProps) => {
+export const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, onOpenRecord }: BlockItemProps) => {
     const metadataFields = fields.filter(f => f !== 'title' && f !== 'content');
     const showTitle = fields.includes('title') && item.title;
     const effectiveContent = (item.content && item.content.trim().length > 0) ? item.content : item.title;
@@ -46,8 +45,7 @@ export const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigi
                             item={item} 
                             fieldKey={fieldKey} 
                             resolveResourcePath={resolveResourcePath} 
-                            allThemes={allThemes}
-                            onOpenRecordOrigin={onOpenRecordOrigin}
+                                          onOpenRecordOrigin={onOpenRecordOrigin}
                         />
                     ))}
                 </div>

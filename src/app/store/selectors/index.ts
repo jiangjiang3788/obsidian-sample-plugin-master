@@ -7,7 +7,6 @@ export const selectInputSettings = (s: ZustandAppStore) => s.settings.inputSetti
 
 // inputSettings helpers (avoid repeating nullish checks in UI)
 export const selectInputBlocks = (s: ZustandAppStore) => s.settings.inputSettings?.blocks ?? [];
-export const selectInputThemes = (s: ZustandAppStore) => s.settings.inputSettings?.themes ?? [];
 
 export const selectAiSettings = (s: ZustandAppStore) => s.settings.aiSettings;
 
@@ -29,8 +28,7 @@ export const selectDevConsoleStackEnabled = (s: ZustandAppStore) => !!s.settings
 const EMPTY_CATEGORY_COLORS: Record<string, string> = {};
 export const selectCategoryColors = (s: ZustandAppStore) => s.settings.categoryColors ?? EMPTY_CATEGORY_COLORS;
 
-export const selectEnergyDefaultGoalId = (s: ZustandAppStore) => s.settings.energySettings?.defaultGoalId ?? '';
-export const selectEnergyDefaultThemePath = (s: ZustandAppStore) => s.settings.energySettings?.defaultThemePath ?? '';
+export const selectEnergyDefaultGoalPath = (s: ZustandAppStore) => s.settings.energySettings?.defaultGoalPath ?? '';
 import { isActiveTimerState } from '@core/types/public';
 import type { TimerState } from '@core/types/public';
 

@@ -4,7 +4,6 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 function makeItem(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: 'rec.01J00000000000000000000061',
-    schemaVersion: 2,
     coreBlock: 'thought',
     title: '标题',
     content: '内容',
@@ -18,24 +17,19 @@ function makeItem(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
 }
 
 describe('FieldValueResolver', () => {
-  it('keeps readField compatibility while resolving through canonical field keys', () => {
-    const item = makeItem({ startTime: '09:30', file: { path: 'daily/note.md', basename: 'note', folder: 'daily' } });
+  it('resolves current UI labels through canonical field keys', () => {
+    const item = makeItem({ startAt: '2026-08-15T09:30', file: { path: 'daily/note.md', basename: 'note', folder: 'daily' } });
 
-    expect(normalizeFieldKey('开始时间')).toBe('startTime');
-    expect(readFieldValue(item, '开始时间')).toBe('09:30');
+    expect(normalizeFieldKey('开始时间')).toBe('startAt');
+    expect(readFieldValue(item, '开始时间')).toBe('2026-08-15T09:30');
     expect(readFieldValue(item, '文件名')).toBe('note');
-    expect(readFieldValue(item, 'filename')).toBe('note');
   });
 
-  it('resolves themePath/rootTheme/leafTheme from explicit theme only, never from header', () => {
-    const withHeaderOnly = makeItem({ header: '工作/错误标题' });
-    const withExplicitTheme = makeItem({ header: '工作/错误标题', theme: '学习/英语/听力' });
-
-    expect(readFieldValue(withHeaderOnly, 'themePath')).toBeUndefined();
-    expect(readFieldValue(withHeaderOnly, '主题')).toBeUndefined();
-    expect(readFieldValue(withExplicitTheme, '主题')).toBe('学习/英语/听力');
-    expect(readFieldValue(withExplicitTheme, 'rootTheme')).toBe('学习');
-    expect(readFieldValue(withExplicitTheme, 'leafTheme')).toBe('听力');
+  it('resolves Goal hierarchy through goalPath only', () => {
+    const item = makeItem({ goalPath: '学习/英语/听力', header: '工作/错误标题' });
+    expect(readFieldValue(item, 'goalPath')).toBe('学习/英语/听力');
+    expect(readFieldValue(item, 'rootGoal')).toBe('学习');
+    expect(readFieldValue(item, 'leafGoal')).toBe('听力');
   });
 
   it('returns resolution metadata for field source and derived state', () => {
@@ -51,8 +45,8 @@ describe('FieldValueResolver', () => {
     expect(base.derived).toBe(true);
   });
 
-  it('supports semantic image alias without exposing pintu as the default field', () => {
-    const item = makeItem({ pintu: 'attachments/a.png' });
+  it('resolves the canonical image field', () => {
+    const item = makeItem({ image: 'attachments/a.png' });
     const image = readFieldValue(item, '图片') as { src: string } | undefined;
 
     expect(normalizeFieldKey('图片')).toBe('image');

@@ -24,7 +24,6 @@
 import type { InjectionToken } from 'tsyringe';
 import { SettingsUseCase, createSettingsUseCase } from './settings.usecase';
 import { BlocksUseCase, createBlocksUseCase } from './blocks.usecase';
-import { ThemeUseCase, createThemeUseCase } from './theme.usecase';
 import { LayoutUseCase, createLayoutUseCase } from './layout.usecase';
 import { ViewInstanceUseCase, createViewInstanceUseCase } from './viewinstance.usecase';
 import { TimerUseCase, createTimerUseCase } from './timer.usecase';
@@ -44,7 +43,6 @@ import type { AppStoreApi } from './AppStoreApi';
 export interface UseCases {
     settings: SettingsUseCase;
     blocks: BlocksUseCase;
-    theme: ThemeUseCase;
     layout: LayoutUseCase;
     viewInstance: ViewInstanceUseCase;
     timer: TimerUseCase;
@@ -85,7 +83,6 @@ export function createUseCases(store: AppStoreApi, deps: UseCaseDeps): UseCases 
     return {
         settings: createSettingsUseCase(store),
         blocks: createBlocksUseCase(store),
-        theme: createThemeUseCase(store),
         layout: createLayoutUseCase(store),
         viewInstance: createViewInstanceUseCase(store),
         timer: createTimerUseCase(store, deps.timerStateService),
@@ -101,7 +98,6 @@ export function createUseCases(store: AppStoreApi, deps: UseCaseDeps): UseCases 
 // 导出具体的 UseCase 类型
 export { SettingsUseCase } from './settings.usecase';
 export { BlocksUseCase } from './blocks.usecase';
-export { ThemeUseCase } from './theme.usecase';
 export { LayoutUseCase } from './layout.usecase';
 export { ViewInstanceUseCase } from './viewinstance.usecase';
 export { TimerUseCase } from './timer.usecase';

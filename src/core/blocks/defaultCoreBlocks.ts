@@ -14,7 +14,7 @@ export const CORE_BLOCK_IDS: Record<Uppercase<CoreBlockKey>, string> = {
 
 /**
  * Derived template-capture catalog. The authoritative type/schema metadata lives
- * in RECORD_SCHEMA_DEFINITIONS; this list exists only for legacy settings/UI APIs.
+ * in RECORD_SCHEMA_DEFINITIONS; this list is the current template-capture catalog.
  */
 export const DEFAULT_CORE_BLOCKS: CoreBlockDefinition[] = RECORD_SCHEMA_DEFINITIONS
   .filter((definition) => definition.captureMode === 'template') as CoreBlockDefinition[];

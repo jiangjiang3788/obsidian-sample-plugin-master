@@ -13,7 +13,7 @@ function energy(id: string, date: string, time: string, score: number, brainScor
 }
 
 function task(id: string): RecordViewItem {
-  return base({ id, title: '写代码', content: '写代码', goalPath: '生活', coreBlock: 'task', status: 'open', themePath: '工作/开发' });
+  return base({ id, title: '写代码', content: '写代码', goalPath: '生活', coreBlock: 'task', status: 'open' });
 }
 
 function session(id: string, taskId: string, date: string, start: string, end: string, duration: number, beforeId?: string, afterId?: string): RecordViewItem {

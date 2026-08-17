@@ -77,12 +77,12 @@ describe('Energy recommendation candidate adapter', () => {
   });
 
   it('learns duration only from the same TaskSeries instead of borrowing Goal/Theme sessions', () => {
-    const base = { goalId: 'goal.a', themePath: '电脑/记录系统', seriesId: 'taskseries.same' };
+    const base = { goalPath: '爱好能力/电脑/记录系统', seriesId: 'taskseries.same' };
     const open = task('open', '新任务', base);
     const h1 = task('h1', '历史1', { ...base, status: 'done' });
     const h2 = task('h2', '历史2', { ...base, status: 'done' });
     const h3 = task('h3', '历史3', { ...base, status: 'done' });
-    const unrelated = task('other', '同主题但不同任务', { goalId: 'goal.a', themePath: '电脑/记录系统', status: 'done' });
+    const unrelated = task('other', '同主题但不同任务', { goalPath: '爱好能力/电脑/记录系统', status: 'done' });
     const history = [
       open, h1, h2, h3, unrelated,
       session('s1', h1.id, 1, '2026-08-01T09:00:00.000Z'),

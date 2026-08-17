@@ -25,7 +25,7 @@ export function registerEnergyProtocolHandler(plugin: Plugin, deps: EnergyProtoc
     const settings = deps.getSettings();
     const goal = resolveEnergyCaptureGoal(
       settings.goalSettings?.goals || [],
-      settings.energySettings?.defaultGoalId,
+      settings.energySettings?.defaultGoalPath,
     );
     if (!goal) {
       new Notice('Think OS: 没有可用于精力记录的目标，请先在设置中创建/选择默认精力目标。', 6000);
@@ -34,9 +34,7 @@ export function registerEnergyProtocolHandler(plugin: Plugin, deps: EnergyProtoc
 
     const now = dayjs();
     const common = {
-      goalId: goal.id,
-      goalPath: goal.goalPath || goal.title,
-      themePath: goal.themePath || undefined,
+      goalPath: goal.path,
       date: now.format('YYYY-MM-DD'),
       time: now.format('HH:mm'),
       captureMode: 'realtime' as const,

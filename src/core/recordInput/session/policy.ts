@@ -6,8 +6,6 @@ import type {
 } from './types';
 
 export const RECORD_INPUT_GOAL_CONTEXT_KEYS = [
-  'goalId',
-  '目标ID',
   'goalPath',
   '目标',
   'rootGoal',
@@ -18,26 +16,11 @@ export const RECORD_INPUT_GOAL_CONTEXT_KEYS = [
   '周期粒度',
   'templateId',
   'goalTemplateId',
-  'templateVariantId',
-  'goalTemplateVariantId',
 ] as const;
 
 export const RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS = [
-  '内容',
-  'content',
-  '日期',
-  'date',
-  '时间',
-  'time',
-  '备注',
-  'note',
-  'description',
-  '目标',
-  '目标ID',
-  'goalId',
-  'goalPath',
-  'themePath',
-  '主题',
+  '内容', 'content', '日期', 'date', '时间', 'time', '备注', 'note', 'description',
+  '目标', 'goalPath',
 ] as const;
 
 export function isRecordInputMeaningfulValue(value: unknown): boolean {
@@ -61,8 +44,7 @@ export function isRecordInputRefreshableSource(source?: RecordInputFieldSource):
   return source === undefined
     || source === 'template_default'
     || source === 'system_auto'
-    || source === 'goal_context'
-    || source === 'theme_context';
+    || source === 'goal_context';
 }
 
 export function clearRecordInputGoalContext(

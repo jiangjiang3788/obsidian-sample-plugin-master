@@ -7,13 +7,13 @@ function base(overrides: Partial<RecordViewItem>): RecordViewItem {
 
 function energy(id: string, date: string, time: string, score: number, brain?: number, physical?: number): RecordViewItem {
   return base({
-    id, goalId: 'goal.demo', goalPath: '精力研究示例', date, startTime: time, coreBlock: 'energy', categoryKey: '精力',
+    id, goalPath: '精力研究示例', date, startTime: time, coreBlock: 'energy', categoryKey: '精力',
     extra: { 核心Block: 'energy', 精力值: score, 精力档位: Math.max(20, Math.round(score / 20) * 20), 时间: time, 日期: date, 评分模式: brain != null || physical != null ? 'detailed' : 'quick', ...(brain != null ? { 脑力精力: brain } : {}), ...(physical != null ? { 体力精力: physical } : {}) },
   });
 }
 
 function task(id: string, title: string): RecordViewItem {
-  return base({ id, goalId: 'goal.demo', goalPath: '精力研究示例', title, content: title, coreBlock: 'task', status: 'open', themePath: /散步|午睡/.test(title) ? '生活/恢复' : '工作/开发' });
+  return base({ id, goalPath: '精力研究示例', title, content: title, coreBlock: 'task', status: 'open' });
 }
 
 function session(id: string, taskId: string, date: string, startTime: string, endTime: string, duration: number, beforeId: string, afterId: string): RecordViewItem {

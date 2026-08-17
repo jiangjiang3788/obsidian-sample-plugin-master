@@ -29,10 +29,10 @@ function session(id: string, taskId: string, seriesId: string, delta: number, da
 describe('Task v2 consumer convergence', () => {
   it('inherits Energy learning through stable Series identity across Task instances', () => {
     const seriesId = 'taskseries.weekly';
-    const old1 = task('task.old1', { seriesId, status: 'done', themePath: '工作/开发' });
-    const old2 = task('task.old2', { seriesId, status: 'done', themePath: '工作/开发' });
-    const old3 = task('task.old3', { seriesId, status: 'done', themePath: '工作/开发' });
-    const current = task('task.current', { seriesId, themePath: '工作/开发' });
+    const old1 = task('task.old1', { seriesId, status: 'done', goalPath: '工作/开发' });
+    const old2 = task('task.old2', { seriesId, status: 'done', goalPath: '工作/开发' });
+    const old3 = task('task.old3', { seriesId, status: 'done', goalPath: '工作/开发' });
+    const current = task('task.current', { seriesId, goalPath: '工作/开发' });
     const records = [
       old1, old2, old3, current,
       session('session.1', old1.id, seriesId, -10, '2026-08-01'),

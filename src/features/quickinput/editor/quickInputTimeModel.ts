@@ -98,10 +98,6 @@ export function applyQuickInputFieldUpdate(
     if (autoKey !== key) nextSources[autoKey] = "system_auto";
   });
 
-  const nextThemePath =
-    key === "themePath" || key === "主题"
-      ? String(rawValue ?? "").trim() || null
-      : undefined;
   const nextGoalPath =
     key === "goalPath" || key === "目标" || key === "目标路径"
       ? normalizeGoalPath(String(rawValue ?? ""))
@@ -110,11 +106,7 @@ export function applyQuickInputFieldUpdate(
   return {
     formData: linked.formData,
     fieldSources: nextSources,
-    nextThemePath,
     nextGoalPath,
-    // Goal identity only comes from GoalSelector / GoalDefinition. A manual path
-    // edit invalidates the selected entity instead of fabricating an id from text.
-    nextGoalId: nextGoalPath === undefined ? undefined : null,
   };
 }
 

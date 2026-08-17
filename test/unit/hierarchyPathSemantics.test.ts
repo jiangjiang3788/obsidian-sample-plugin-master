@@ -8,8 +8,6 @@ import {
 } from '@/core/semantics/path';
 import { normalizeGoalPath, requireGoalPath, splitGoalPath } from '@/core/goal/path';
 import { splitHierarchyPath } from '@/core/fields/pathSemantics';
-import { splitThemePath } from '@/core/theme/themeSemantics';
-
 
 describe('hierarchy path semantics', () => {
   it('normalizes generic hierarchy paths without stripping semantic markers by default', () => {
@@ -40,13 +38,13 @@ describe('hierarchy path semantics', () => {
     });
   });
 
-  it('keeps theme path wrapper explicit and null-safe', () => {
-    expect(splitThemePath(' 工作 / 插件 ')).toEqual({
-      themePath: '工作/插件',
-      rootTheme: '工作',
-      leafTheme: '插件',
+  it('uses Goal path as the only classified hierarchy wrapper', () => {
+    expect(splitGoalPath(' 工作 / 插件 ')).toEqual({
+      goalPath: '工作/插件',
+      rootGoal: '工作',
+      leafGoal: '插件',
     });
-    expect(splitThemePath(null)).toEqual({ themePath: null, rootTheme: null, leafTheme: null });
+    expect(splitGoalPath(null)).toEqual({ goalPath: null, rootGoal: null, leafGoal: null });
   });
 
   it('builds hierarchy segments, parent lists and relative paths from one source of truth', () => {

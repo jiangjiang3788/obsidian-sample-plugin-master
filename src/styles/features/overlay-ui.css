@@ -28,7 +28,6 @@
 
 .think-ai-chat-filters { display: flex; align-items: center; gap: var(--think-space-3); min-width: 0; padding: var(--think-space-3) var(--think-space-5); border-bottom: 1px solid var(--think-border-subtle); overflow-x: auto; scrollbar-width: thin; }
 .think-ai-chat-filters__toggle { flex: 0 0 auto; }
-.think-ai-chat-filters__theme { width: 170px; flex: 0 0 170px; }
 .think-ai-chat-filters__select { width: 118px; flex: 0 0 118px; }
 .think-ai-chat-filters__select--block { width: 148px; flex-basis: 148px; }
 .think-ai-chat-filters__index { flex: 0 0 auto; color: var(--think-text-secondary); font-size: var(--think-font-size-xs); white-space: nowrap; }

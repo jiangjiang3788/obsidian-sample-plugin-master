@@ -1,2 +1,2 @@
-// Compatibility export. R5 makes FieldSchema the canonical runtime field description.
+// Public naming alias; FieldSchema remains the sole runtime field description.
 export type { FieldSchema as FieldDefinition } from './FieldSchema';

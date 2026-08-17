@@ -31,7 +31,6 @@ export interface QuickInputModalContentProps {
   getResourcePath: (path: string) => string;
   initialBlockId: string;
   context?: Record<string, unknown>;
-  initialThemeId?: string;
   onSave?: (data: QuickInputSaveData) => void;
   closeModal: () => void;
   allowBlockSwitch: boolean;
@@ -47,7 +46,6 @@ export function QuickInputModalContent({
   getResourcePath,
   initialBlockId,
   context,
-  initialThemeId,
   onSave,
   closeModal,
   allowBlockSwitch,
@@ -68,18 +66,16 @@ export function QuickInputModalContent({
       return useCases.recordInput.prepareEditRecord({
         item: editItem,
         blockId: initialBlockId,
-        themeId: initialThemeId ?? null,
         source: 'quickinput',
       });
     }
 
     return useCases.recordInput.prepareCreateRecord({
       blockId: initialBlockId,
-      themeId: initialThemeId ?? null,
       context,
       source: onSave ? 'timer' : (source ?? 'quickinput'),
     });
-  }, [useCases, initialBlockId, initialThemeId, context, mode, editItem, onSave, source]);
+  }, [useCases, initialBlockId, context, mode, editItem, onSave, source]);
 
   const [isRescanningRecoveryPaths, setIsRescanningRecoveryPaths] = useState(false);
   const [editOperationMode, setEditOperationMode] = useState<Extract<QuickInputOperationMode, 'edit' | 'convert' | 'duplicate'>>('edit');
@@ -89,11 +85,9 @@ export function QuickInputModalContent({
   const outputPlanMode: 'create' | 'edit' = operationMode === 'duplicate' ? 'create' : mode;
   const [editorState, setEditorState] = useState<QuickInputEditorState>({
     blockId: preparedRecord.blockId || initialBlockId,
-    themeId: preparedRecord.themeId,
     formData: preparedRecord.initialFormData,
     meta: { timeDirection: 'forward' },
     template: null,
-    theme: null,
     templateId: null,
     templateSourceType: null,
   });
@@ -173,9 +167,7 @@ export function QuickInputModalContent({
     const now = dayjs();
     const isRetrospective = request.captureMode === 'retrospective';
     const common = {
-      goalId: request.goalId,
       goalPath: request.goalPath,
-      themePath: request.themePath || undefined,
       date: isRetrospective ? request.date : now.format('YYYY-MM-DD'),
       time: isRetrospective ? request.time : now.format('HH:mm'),
       captureMode: request.captureMode,
@@ -241,7 +233,6 @@ export function QuickInputModalContent({
           key={`${editorResetVersion}:${editItem?.id ?? 'create'}`}
           getResourcePath={getResourcePath}
           initialBlockId={preparedRecord.blockId || initialBlockId}
-          initialThemeId={preparedRecord.themeId}
           initialFormData={preparedRecord.initialFormData}
           context={mode === 'edit' ? undefined : context}
           recordInputMode={editorSessionMode}

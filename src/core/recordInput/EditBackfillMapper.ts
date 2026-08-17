@@ -16,7 +16,6 @@ import { parseTagList } from '@/core/fields/tagSemantics';
 import { normalizeFieldToken } from '@/core/fields/fieldTokenSemantics';
 import { normalizeImageValue } from '@/core/fields/imageSemantics';
 import { findMatchingOption, readOptionText } from '@/core/semantics/option';
-import { getHierarchyPathLeaf, normalizeHierarchyPathValue } from '@/core/semantics/path';
 
 function isPresent(value: unknown): boolean {
   if (value === undefined || value === null) return false;
@@ -31,7 +30,7 @@ function fieldCodecDefinition(field: TemplateField): FieldCodecDefinition {
   return {
     valueType: semantic === 'tags'
       ? 'tags'
-      : semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'goalPath' || inputType === 'path' || inputType === 'multiPath'
+      : semantic === 'categoryPath' || semantic === 'goalPath' || inputType === 'path' || inputType === 'multiPath'
         ? 'path'
         : semantic === 'image' || inputType === 'image' || inputType === 'multiImage'
           ? 'image'
@@ -41,7 +40,7 @@ function fieldCodecDefinition(field: TemplateField): FieldCodecDefinition {
     inputType,
     semantic,
     cardinality: field.cardinality || (['multiSelect', 'multiPath', 'multiTag', 'multiImage'].includes(inputType) ? 'multi' : 'single'),
-    hierarchical: field.hierarchical || semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'goalPath' || semantic === 'tags',
+    hierarchical: field.hierarchical || semantic === 'categoryPath' || semantic === 'goalPath' || semantic === 'tags',
   };
 }
 
@@ -58,27 +57,10 @@ function readExtraByAlias(item: RecordViewItem, aliases: unknown[]): unknown {
   return undefined;
 }
 
-function readPeriodFromLegacyCategory(field: TemplateField, item: RecordViewItem, snapshot: ParsedRecordSnapshot): string | undefined {
-  const candidates = [snapshot.semantic.categoryKey, item.categoryKey];
-  const options = field.options || [];
-  for (const candidate of candidates) {
-    const raw = String(candidate || '').trim();
-    if (!raw) continue;
-    const leaf = getHierarchyPathLeaf(raw) || raw;
-    const matched = findMatchingOption(options, raw, { normalize: (value) => normalizeHierarchyPathValue(value), matchLeaf: true })
-      || findMatchingOption(options, leaf);
-    if (matched) {
-      const text = readOptionText(matched);
-      return text.value || text.label || raw;
-    }
-  }
-  return undefined;
-}
-
 function buildRatingPairOption(field: TemplateField, item: RecordViewItem, snapshot: ParsedRecordSnapshot): unknown {
   const options = field.options || [];
   const score = String(item.rating ?? '');
-  const image = String((item as any).image ?? item.pintu ?? item.extra?.['评图'] ?? item.extra?.['pintu'] ?? item.extra?.['图片'] ?? '');
+  const image = String((item as any).image ?? item.extra?.['图片'] ?? item.extra?.['image'] ?? '');
 
   let matched = options.find((opt: any) => String(opt.label ?? '') === score && (!image || String(opt.value || '') === image));
   if (!matched && score) matched = findMatchingOption(options, score);
@@ -106,11 +88,9 @@ function readSemanticFieldValue(field: TemplateField, item: RecordViewItem, snap
     case 'date':
       return snapshot.semantic.date;
     case 'period':
-      return snapshot.semantic.period || readPeriodFromLegacyCategory(field, item, snapshot);
+      return snapshot.semantic.period;
     case 'tags':
       return parseTagList(snapshot.semantic.tags);
-    case 'goalId':
-      return snapshot.semantic.goalId;
     case 'goalPath':
       return snapshot.semantic.goalPath;
     case 'startTime':
@@ -119,15 +99,13 @@ function readSemanticFieldValue(field: TemplateField, item: RecordViewItem, snap
       return snapshot.semantic.endTime;
     case 'duration':
       return snapshot.semantic.duration;
-    case 'themePath':
-      return snapshot.semantic.themePath;
     case 'categoryPath':
       return snapshot.semantic.categoryKey;
     case 'rating':
       if (isTemplateRatingPairField(field)) return buildRatingPairOption(field, item, snapshot);
       return item.rating;
     case 'image':
-      return normalizeImageValue((item as any).image ?? item.pintu ?? item.extra?.['图片'] ?? item.extra?.['image'] ?? item.extra?.['评图'] ?? item.extra?.['pintu'])?.src;
+      return normalizeImageValue((item as any).image ?? item.extra?.['图片'] ?? item.extra?.['image'])?.src;
     case 'icon':
       return item.icon;
     case 'priority':
@@ -162,12 +140,6 @@ function normalizeBackfillValue(field: TemplateField, rawValue: unknown): unknow
   if (isTemplateRatingPairField(field) && isOptionObject(rawValue)) return rawValue;
 
   const decoded = decodeMarkdownFieldValue(rawValue, fieldCodecDefinition(field));
-  // Historical text tag fields were persisted as compact comma-separated text.
-  // Keep that representation only at the edit-backfill boundary; canonical multiTag
-  // fields continue to use arrays everywhere else.
-  if (getTemplateFieldSemantic(field) === 'tags' && getTemplateFieldInputType(field) === 'text') {
-    return parseTagList(decoded).join(',');
-  }
   const normalized = normalizeTemplateFieldValue(field, decoded);
   return matchTemplateFieldOptionValue(field, normalized);
 }

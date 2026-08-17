@@ -37,7 +37,7 @@ export function buildHeatmapRatingMapping(options?: HeatmapRatingOptionLike[] | 
     const label = firstNonEmptyText(option?.label, option?.value, option);
     if (!value && !label) continue;
     // 评分字段通常写 label，例如 `评分:: 1`；视觉字段通常写 value，例如 `图片:: ♨️`。
-    // 两者都映射到视觉值，保证有无 `图片/评图` 字段时显示一致。
+    // 评分 label 和 图片 value 都映射到统一视觉值。
     if (label) mapping.set(label, value || label);
     if (value) mapping.set(value, value);
   }
@@ -56,11 +56,8 @@ export function readHeatmapRatingText(item: RecordViewItem | undefined): string 
 export function readHeatmapVisualText(item: RecordViewItem | undefined): string {
   if (!item) return '';
   return firstNonEmptyText(
-    (item as any).pintu,
     (item as any).image,
     readExtra(item, '图片'),
-    readExtra(item, '评图'),
-    readExtra(item, 'pintu'),
     readExtra(item, 'image')
   );
 }

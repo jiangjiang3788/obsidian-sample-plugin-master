@@ -9,7 +9,6 @@ import type { CategoryColorMap, CloseStatisticsPopoverHandler, MarkDoneHandler, 
 import { StatisticsViewView } from './StatisticsViewView';
 import {
   buildStatisticsGoalBuckets,
-  buildStatisticsGoalThemeSummaries,
   buildStatisticsProcessedData,
   buildStatisticsViewConfig,
   getStatisticsPopoverWidgetId,
@@ -38,7 +37,6 @@ interface StatisticsViewProps {
   timerService: TimerController;
   onMarkDone: MarkDoneHandler;
   timers: any[];
-  allThemes: any[];
   goals?: GoalDefinition[];
   inputSettings?: InputSettings;
   messageRenderPort?: MessageRenderPort;
@@ -67,7 +65,6 @@ export function StatisticsView({
   timerService,
   onMarkDone,
   timers,
-  allThemes,
   goals = [],
   inputSettings,
   messageRenderPort,
@@ -79,11 +76,9 @@ export function StatisticsView({
   const filteredCategories = useMemo(() => buildStatisticsGoalBuckets({
     items,
     goals,
-    themes: inputSettings?.themes || [],
     topN: viewConfig.topN,
-  }), [items, goals, inputSettings?.themes, viewConfig.topN]);
+  }), [items, goals, viewConfig.topN]);
   const bucketAccessor = useMemo(() => resolveStatisticsBucketAccessor(goals), [goals]);
-  const goalThemeSummaries = useMemo(() => buildStatisticsGoalThemeSummaries(items, filteredCategories, goals), [items, filteredCategories, goals]);
   const [selectedCell, setSelectedCell] = useState<any>(null);
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const openLockRef = useRef(false);
@@ -142,8 +137,7 @@ export function StatisticsView({
       timerService,
       onMarkDone,
       timers,
-      allThemes,
-      messageRenderPort,
+        messageRenderPort,
       onOpenRecord,
       onOpenRecordOrigin,
       resolveResourcePath,
@@ -174,7 +168,6 @@ export function StatisticsView({
       yearlyWeekStructure={yearlyWeekStructure}
       processedData={processedData}
       bucketAccessor={bucketAccessor}
-      goalThemeSummaries={goalThemeSummaries}
       onOpenRecordOrigin={onOpenRecordOrigin}
     />
   );

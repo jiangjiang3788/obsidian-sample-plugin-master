@@ -34,17 +34,12 @@ export function useQuickInputOutputPlan({
       return buildRecordOutputPlan({
         template: currentState.template as any,
         formData: currentState.formData || {},
-        theme: currentState.theme as any,
-        templateMeta: {
-          templateId: currentState.templateId ?? undefined,
-          templateSourceType: currentState.templateSourceType ?? undefined,
-        },
       });
     } catch (error) {
       diagnosticWarn('[记录调试][保存计划] 计算实时 OutputPlan 失败，回退到初始计划', error);
       return preparedRecord.outputPlan ?? null;
     }
-  }, [currentState.template, currentState.theme, currentState.formData, currentState.templateId, currentState.templateSourceType, preparedRecord.outputPlan]);
+  }, [currentState.template, currentState.formData, preparedRecord.outputPlan]);
 
   const livePersistencePlan = useMemo(() => {
     if (!liveOutputPlan) return preparedRecord.persistencePlan ?? null;

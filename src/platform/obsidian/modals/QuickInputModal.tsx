@@ -43,7 +43,6 @@ export class QuickInputModal extends Modal {
     app: App,
     private blockId: string,
     private context?: Record<string, unknown>,
-    private themeId?: string,
     private onSave?: (data: QuickInputSaveData) => void,
     private allowBlockSwitch: boolean = true,
     private options?: QuickInputEditOptions,
@@ -80,7 +79,6 @@ export class QuickInputModal extends Modal {
         getResourcePath={(path) => resolveVaultResourcePath(this.app, path)}
         initialBlockId={this.blockId}
         context={this.context}
-        initialThemeId={this.themeId}
         onSave={this.onSave}
         closeModal={() => this.close()}
         allowBlockSwitch={this.allowBlockSwitch}

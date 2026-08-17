@@ -1,7 +1,7 @@
 {
   "aiSettings": {
-    "apiKey": "sk-2SPzXePSCl9BISBoGzqQoBTd2BDv0mmoRZ3KoSZiMPFWyryn",
-    "persistApiKey": true,
+    "apiKey": "",
+    "persistApiKey": false,
     "enabled": true,
     "provider": "openai_compat",
     "apiEndpoint": "https://api.ricardochat.cn/v1",
@@ -17,7 +17,6 @@
     "configCacheTTLSeconds": 300,
     "customPrompt": "完成的任务状态使用 done\n未开始的任务状态使用 open；如果表达开始日期，写入开始日期\n未完成的任务状态使用 open；有截止日期时写入截止日期\n上午8点到12点工作 其中9点到十点写总结 这个应该断成三节 十点到九点工作 九点到十点写总结 十点到十二点工作\n时长只能是分钟为单位，只记录数字\n\n“通勤15分钟中午吃饭45分钟玩手机70分钟 睡觉20分钟”认为是一件事接着一件事记录时间"
   },
-  "schemaVersion": 5,
   "groups": [
     {
       "id": "group_memc1a9ofen88",
@@ -135,23 +134,23 @@
             "color": "#e5bf8a"
           }
         ],
-        "themePaths": [
-          "健康/粑粑",
-          "健康/喝水",
-          "健康/身体",
-          "健康/睡眠",
-          "健康/心情",
-          "健康/姨妈",
-          "健康/运动",
-          "生活/车车",
-          "思考/读书",
-          "思考/专注",
-          "健康/卫生"
-        ],
         "sourceBlockId": "core.habit",
         "groupBy": "goalPreset",
         "goalFirst": true,
-        "presetFirst": false
+        "presetFirst": false,
+        "goalPaths": [
+          "照顾好自己/健康/粑粑",
+          "照顾好自己/健康/喝水",
+          "照顾好自己/健康/身体",
+          "照顾好自己/健康/睡眠",
+          "照顾好自己/健康/心情",
+          "照顾好自己/健康/姨妈",
+          "照顾好自己/健康/运动",
+          "我若安好便是晴天/生活/车车",
+          "武装大脑/思考/读书",
+          "照顾好自己/思考/专注",
+          "仪容仪表/健康/卫生"
+        ]
       },
       "fields": [
         "date"
@@ -197,10 +196,10 @@
           }
         ],
         "rowField": "coreBlock",
-        "colField": "themePath"
+        "colField": "goalPath"
       },
       "fields": [
-        "themePath",
+        "goalPath",
         "image",
         "date",
         "content",
@@ -234,7 +233,7 @@
         "colField": "rootGoal"
       },
       "fields": [
-        "themePath",
+        "goalPath",
         "date",
         "image",
         "content"
@@ -363,7 +362,7 @@
       "id": "vi_mpi3dydfsejfio8",
       "parentId": null,
       "title": "事件时间线",
-      "viewType": "TimelineView",
+      "viewType": "EventTimelineView",
       "viewConfig": {
         "categories": [
           {
@@ -391,16 +390,15 @@
           "columnWidths": {
             "title": 597,
             "content": 307,
-            "themePath": 80
+            "goalPath": 80
           },
           "contentDisplayMode": "previewText"
         }
       },
       "fields": [
         "coreBlock",
-        "themePath",
-        "content",
         "goalPath",
+        "content",
         "date",
         "icon"
       ],
@@ -412,7 +410,7 @@
           "dir": "asc"
         },
         {
-          "field": "themePath",
+          "field": "goalPath",
           "dir": "asc"
         },
         {
@@ -501,430 +499,426 @@
         "vi_mpi3dydfsejfio8"
       ],
       "displayMode": "list",
-      "initialView": "天",
+      "initialView": "季",
       "initialDateFollowsNow": true,
       "parentId": null,
       "globalFilters": []
     }
   ],
-  "inputSettings": {
-    "themes": [
-      {
-        "id": "thm_mejsim4o4c2mw",
-        "path": "思考",
-        "icon": "🧠",
-        "order": 0
-      },
-      {
-        "id": "thm_mejswaiozga40",
-        "path": "思考/时间整理",
-        "icon": "🧠",
-        "order": 9
-      },
-      {
-        "id": "thm_mejswh9v0jpsi",
-        "path": "思考/复盘整理",
-        "icon": "🧠",
-        "order": 8
-      },
-      {
-        "id": "thm_mejswmjkpyrzg",
-        "path": "思考/思路整理",
-        "icon": "🧠",
-        "order": 10
-      },
-      {
-        "id": "thm_mejsl0rd9ggip",
-        "path": "思考/读书",
-        "icon": "📚",
-        "order": 7
-      },
-      {
-        "id": "thm_mejsj5pzfonlh",
-        "path": "思考/自我",
-        "icon": "🐈",
-        "order": 0
-      },
-      {
-        "id": "thm_mejsjh81u5lyz",
-        "path": "思考/垚垚",
-        "icon": "👶",
-        "order": 1
-      },
-      {
-        "id": "thm_mejsjpvsuflrj",
-        "path": "思考/阳阳",
-        "icon": "👨",
-        "order": 2
-      },
-      {
-        "id": "thm_mejsk4s9spuik",
-        "path": "思考/婆婆",
-        "icon": "🧓",
-        "order": 3
-      },
-      {
-        "id": "thm_mejskaj1enucn",
-        "path": "思考/芦苇",
-        "icon": "🔆",
-        "order": 5
-      },
-      {
-        "id": "thm_mejskeoadmnaj",
-        "path": "思考/家庭",
-        "icon": "👪",
-        "order": 4
-      },
-      {
-        "id": "thm_mejsl7i17il4q",
-        "path": "生活",
-        "icon": "✨",
-        "order": 2
-      },
-      {
-        "id": "thm_mg1ytgzlrkbv8",
-        "path": "生活/高级生活",
-        "icon": "🔆",
-        "order": 0
-      },
-      {
-        "id": "thm_mejslgmvm2yym",
-        "path": "生活/娱乐",
-        "icon": "📺",
-        "order": 1
-      },
-      {
-        "id": "thm_mejsmps6gropq",
-        "path": "生活/垚垚",
-        "icon": "👶",
-        "order": 4
-      },
-      {
-        "id": "thm_mejsn748ryfip",
-        "path": "生活/家务",
-        "icon": "🧹",
-        "order": 6
-      },
-      {
-        "id": "thm_mejsnf4dp61nq",
-        "path": "生活/整理",
-        "icon": "📦",
-        "order": 5
-      },
-      {
-        "id": "thm_mejsmcngeij2y",
-        "path": "生活/车车",
-        "icon": "🚗",
-        "order": 3
-      },
-      {
-        "id": "thm_mejsnu4ekns46",
-        "path": "健康",
-        "icon": "💤",
-        "order": 1
-      },
-      {
-        "id": "thm_mejso10pwthbr",
-        "path": "健康/卫生",
-        "icon": "🛁",
-        "order": 10
-      },
-      {
-        "id": "thm_mejso80owbe8a",
-        "path": "健康/睡眠",
-        "icon": "💤",
-        "order": 6
-      },
-      {
-        "id": "thm_mejsosvgm4lcp",
-        "path": "健康/身体",
-        "icon": "🔋",
-        "order": 7
-      },
-      {
-        "id": "thm_mejsoxh023r2m",
-        "path": "健康/习惯",
-        "icon": "🥛",
-        "order": 3
-      },
-      {
-        "id": "thm_mejsp0lukfkh0",
-        "path": "健康/运动",
-        "icon": "💪",
-        "order": 5
-      },
-      {
-        "id": "thm_mejspgfly30j8",
-        "path": "健康/粑粑",
-        "icon": "💩",
-        "order": 4
-      },
-      {
-        "id": "thm_mejspn5ocowew",
-        "path": "健康/早餐",
-        "icon": "🥚",
-        "order": 0
-      },
-      {
-        "id": "thm_mejspwp4h6de9",
-        "path": "健康/午餐",
-        "icon": "🍱",
-        "order": 1
-      },
-      {
-        "id": "thm_mejst90wwyoyn",
-        "path": "健康/晚餐",
-        "icon": "🥣",
-        "order": 2
-      },
-      {
-        "id": "thm_mejstnaohdg8t",
-        "path": "健康/心情",
-        "icon": "😄",
-        "order": 8
-      },
-      {
-        "id": "thm_mewzwlmjw8b7r",
-        "path": "健康/姨妈",
-        "icon": "🩸",
-        "order": 9
-      },
-      {
-        "id": "thm_mewzx8x1h4g1r",
-        "path": "健康/剪头发",
-        "icon": "✂",
-        "order": 11
-      },
-      {
-        "id": "thm_mewzx1twrayjd",
-        "path": "健康/剪指甲",
-        "icon": "✋",
-        "order": 12
-      },
-      {
-        "id": "thm_mejstzgoiocwm",
-        "path": "电脑",
-        "icon": "🖥",
-        "order": 3
-      },
-      {
-        "id": "thm_mejsuv5sylsi0",
-        "path": "电脑/ob基础",
-        "icon": "🎚",
-        "order": 0
-      },
-      {
-        "id": "thm_mejsvgb4hlukj",
-        "path": "电脑/笔记系统",
-        "icon": "📕",
-        "order": 2
-      },
-      {
-        "id": "thm_mejsvlfjaerh5",
-        "path": "电脑/记录系统",
-        "icon": "🎴",
-        "order": 3
-      },
-      {
-        "id": "thm_mejsvz19l0804",
-        "path": "电脑/整理",
-        "icon": "✒",
-        "order": 1
-      },
-      {
-        "id": "thm_mejsx2qu3g8fi",
-        "path": "工作",
-        "icon": "🖥",
-        "order": 4
-      },
-      {
-        "id": "thm_mejsxbyuursnz",
-        "path": "工作/设计",
-        "icon": "🖥",
-        "order": 2
-      },
-      {
-        "id": "thm_mejsxl0soxhxz",
-        "path": "工作/投标",
-        "icon": "🎟",
-        "order": 3
-      },
-      {
-        "id": "thm_mejsxtufpvqd3",
-        "path": "工作/手续、对账",
-        "icon": "📋",
-        "order": 4
-      },
-      {
-        "id": "thm_mejsy9nvsnd0q",
-        "path": "工作/其他",
-        "icon": "📋",
-        "order": 5
-      },
-      {
-        "id": "thm_mejsye15uvbzi",
-        "path": "工作/老板任务",
-        "icon": "💥",
-        "order": 1
-      },
-      {
-        "id": "thm_mfj17uymay4u6",
-        "path": "工作/通勤",
-        "icon": "🛵",
-        "order": 0
-      },
-      {
-        "path": "思考/专注",
-        "icon": "⏰",
-        "id": "thm_mi2zaftrvxtv2",
-        "order": 6
-      },
-      {
-        "id": "thm_mo29hj7oy3rooy8",
-        "path": "生活/小手机",
-        "icon": "🍓",
-        "order": 2
-      },
-      {
-        "id": "thm_auto_AI",
-        "path": "电脑/AI",
-        "icon": "🤖",
-        "order": 99
-      }
-    ]
-  },
+  "inputSettings": {},
   "goalSettings": {
     "goals": [
       {
-        "id": "goal.照顾好自己",
-        "title": "照顾好自己",
-        "goalPath": "照顾好自己",
+        "path": "了解世界",
         "status": "active",
-        "parentGoalId": null,
-        "themePath": null,
-        "metrics": [],
-        "createdAt": "2026-06-07T09:11:18.850Z",
-        "updatedAt": "2026-06-07T09:11:18.850Z",
-        "order": 2,
-        "sortOrder": 2
-      },
-      {
-        "id": "goal.我若安好便是晴天",
-        "title": "我若安好便是晴天",
-        "goalPath": "我若安好便是晴天",
-        "status": "active",
-        "parentGoalId": null,
-        "themePath": null,
-        "metrics": [],
-        "createdAt": "2026-06-07T09:11:18.850Z",
-        "updatedAt": "2026-06-07T09:11:18.850Z",
-        "order": 3,
-        "sortOrder": 3
-      },
-      {
-        "id": "goal.仪容仪表",
-        "title": "仪容仪表",
-        "goalPath": "仪容仪表",
-        "status": "active",
-        "parentGoalId": null,
-        "themePath": null,
-        "metrics": [],
-        "createdAt": "2026-06-07T09:11:18.850Z",
-        "updatedAt": "2026-06-07T09:11:18.850Z",
-        "order": 4,
-        "sortOrder": 4
-      },
-      {
-        "id": "goal.了解自我",
-        "title": "了解自我",
-        "goalPath": "了解自我",
-        "status": "active",
-        "parentGoalId": null,
-        "themePath": null,
-        "metrics": [],
-        "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-07T09:28:22.587Z",
-        "order": 6,
-        "sortOrder": 6
-      },
-      {
-        "id": "goal.了解世界",
-        "title": "了解世界",
-        "goalPath": "了解世界",
-        "status": "active",
-        "parentGoalId": null,
-        "themePath": null,
-        "metrics": [],
-        "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-07T09:28:22.587Z",
-        "order": 7,
         "sortOrder": 7
       },
       {
-        "id": "goal.工作能力",
-        "title": "工作能力",
-        "goalPath": "工作能力",
+        "path": "了解自我",
         "status": "active",
-        "parentGoalId": null,
-        "themePath": null,
-        "metrics": [],
-        "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "order": 8,
+        "sortOrder": 6
+      },
+      {
+        "path": "仪容仪表",
+        "status": "active",
+        "sortOrder": 4
+      },
+      {
+        "path": "工作能力",
+        "status": "active",
         "sortOrder": 8
       },
       {
-        "id": "goal.爱好能力",
-        "title": "爱好能力",
-        "goalPath": "爱好能力",
+        "path": "我若安好便是晴天",
         "status": "active",
-        "parentGoalId": null,
-        "themePath": null,
-        "metrics": [],
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "order": 9,
+        "sortOrder": 3
+      },
+      {
+        "path": "未归属",
+        "status": "active"
+      },
+      {
+        "path": "武装大脑",
+        "status": "active",
+        "sortOrder": 10
+      },
+      {
+        "path": "照顾好自己",
+        "status": "active",
+        "sortOrder": 2
+      },
+      {
+        "path": "爱好能力",
+        "status": "active",
         "sortOrder": 9
       },
       {
-        "id": "goal.武装大脑",
-        "title": "武装大脑",
-        "goalPath": "武装大脑",
+        "path": "了解世界/思考",
         "status": "active",
-        "parentGoalId": null,
-        "themePath": null,
-        "metrics": [],
-        "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z",
-        "order": 10,
+        "icon": "🧠",
+        "sortOrder": 0
+      },
+      {
+        "path": "了解世界/生活",
+        "status": "active",
+        "icon": "✨",
+        "sortOrder": 2
+      },
+      {
+        "path": "了解自我/思考",
+        "status": "active",
+        "icon": "🧠",
+        "sortOrder": 0
+      },
+      {
+        "path": "仪容仪表/健康",
+        "status": "active",
+        "icon": "💤",
+        "sortOrder": 1
+      },
+      {
+        "path": "工作能力/工作",
+        "status": "active",
+        "icon": "🖥",
+        "sortOrder": 4
+      },
+      {
+        "path": "我若安好便是晴天/生活",
+        "status": "active",
+        "icon": "✨",
+        "sortOrder": 2
+      },
+      {
+        "path": "武装大脑/思考",
+        "status": "active",
+        "icon": "🧠",
+        "sortOrder": 0
+      },
+      {
+        "path": "照顾好自己/健康",
+        "status": "active",
+        "icon": "💤",
+        "sortOrder": 1
+      },
+      {
+        "path": "照顾好自己/思考",
+        "status": "active",
+        "icon": "🧠",
+        "sortOrder": 0
+      },
+      {
+        "path": "爱好能力/电脑",
+        "status": "active",
+        "icon": "🖥",
+        "sortOrder": 3
+      },
+      {
+        "path": "了解世界/思考/垚垚",
+        "status": "active",
+        "icon": "👶",
+        "sortOrder": 1
+      },
+      {
+        "path": "了解世界/思考/婆婆",
+        "status": "active",
+        "icon": "🧓",
+        "sortOrder": 3
+      },
+      {
+        "path": "了解世界/思考/家庭",
+        "status": "active",
+        "icon": "👪",
+        "sortOrder": 4
+      },
+      {
+        "path": "了解世界/思考/时间整理",
+        "status": "active",
+        "icon": "🧠",
+        "sortOrder": 9
+      },
+      {
+        "path": "了解世界/思考/芦苇",
+        "status": "active",
+        "icon": "🔆",
+        "sortOrder": 5
+      },
+      {
+        "path": "了解世界/思考/阳阳",
+        "status": "active",
+        "icon": "👨",
+        "sortOrder": 2
+      },
+      {
+        "path": "了解世界/生活/垚垚",
+        "status": "active",
+        "icon": "👶",
+        "sortOrder": 4
+      },
+      {
+        "path": "了解自我/思考/自我",
+        "status": "active",
+        "icon": "🐈",
+        "sortOrder": 0
+      },
+      {
+        "path": "仪容仪表/健康/剪头发",
+        "status": "active",
+        "icon": "✂",
+        "sortOrder": 11
+      },
+      {
+        "path": "仪容仪表/健康/剪指甲",
+        "status": "active",
+        "icon": "✋",
+        "sortOrder": 12
+      },
+      {
+        "path": "仪容仪表/健康/卫生",
+        "status": "active",
+        "icon": "🛁",
         "sortOrder": 10
+      },
+      {
+        "path": "仪容仪表/健康/洗澡",
+        "status": "active"
+      },
+      {
+        "path": "工作能力/工作/其他",
+        "status": "active",
+        "icon": "📋",
+        "sortOrder": 5
+      },
+      {
+        "path": "工作能力/工作/手续、对账",
+        "status": "active",
+        "icon": "📋",
+        "sortOrder": 4
+      },
+      {
+        "path": "工作能力/工作/投标",
+        "status": "active",
+        "icon": "🎟",
+        "sortOrder": 3
+      },
+      {
+        "path": "工作能力/工作/老板任务",
+        "status": "active",
+        "icon": "💥",
+        "sortOrder": 1
+      },
+      {
+        "path": "工作能力/工作/设计",
+        "status": "active",
+        "icon": "🖥",
+        "sortOrder": 2
+      },
+      {
+        "path": "工作能力/工作/通勤",
+        "status": "active",
+        "icon": "🛵",
+        "sortOrder": 0
+      },
+      {
+        "path": "我若安好便是晴天/生活/娱乐",
+        "status": "active",
+        "icon": "📺",
+        "sortOrder": 1
+      },
+      {
+        "path": "我若安好便是晴天/生活/家务",
+        "status": "active",
+        "icon": "🧹",
+        "sortOrder": 6
+      },
+      {
+        "path": "我若安好便是晴天/生活/小手机",
+        "status": "active",
+        "icon": "🍓",
+        "sortOrder": 2
+      },
+      {
+        "path": "我若安好便是晴天/生活/开车",
+        "status": "active"
+      },
+      {
+        "path": "我若安好便是晴天/生活/收纳",
+        "status": "active"
+      },
+      {
+        "path": "我若安好便是晴天/生活/整理",
+        "status": "active",
+        "icon": "📦",
+        "sortOrder": 5
+      },
+      {
+        "path": "我若安好便是晴天/生活/车车",
+        "status": "active",
+        "icon": "🚗",
+        "sortOrder": 3
+      },
+      {
+        "path": "我若安好便是晴天/生活/高级生活",
+        "status": "active",
+        "icon": "🔆",
+        "sortOrder": 0
+      },
+      {
+        "path": "武装大脑/思考/复盘整理",
+        "status": "active",
+        "icon": "🧠",
+        "sortOrder": 8
+      },
+      {
+        "path": "武装大脑/思考/思路整理",
+        "status": "active",
+        "icon": "🧠",
+        "sortOrder": 10
+      },
+      {
+        "path": "武装大脑/思考/整理复盘",
+        "status": "active"
+      },
+      {
+        "path": "武装大脑/思考/整理笔记",
+        "status": "active"
+      },
+      {
+        "path": "武装大脑/思考/读书",
+        "status": "active",
+        "icon": "📚",
+        "sortOrder": 7
+      },
+      {
+        "path": "照顾好自己/健康/三餐",
+        "status": "active"
+      },
+      {
+        "path": "照顾好自己/健康/习惯",
+        "status": "active",
+        "icon": "🥛",
+        "sortOrder": 3
+      },
+      {
+        "path": "照顾好自己/健康/午餐",
+        "status": "active",
+        "icon": "🍱",
+        "sortOrder": 1
+      },
+      {
+        "path": "照顾好自己/健康/喝水",
+        "status": "active"
+      },
+      {
+        "path": "照顾好自己/健康/姨妈",
+        "status": "active",
+        "icon": "🩸",
+        "sortOrder": 9
+      },
+      {
+        "path": "照顾好自己/健康/心情",
+        "status": "active",
+        "icon": "😄",
+        "sortOrder": 8
+      },
+      {
+        "path": "照顾好自己/健康/早餐",
+        "status": "active",
+        "icon": "🥚",
+        "sortOrder": 0
+      },
+      {
+        "path": "照顾好自己/健康/晚餐",
+        "status": "active",
+        "icon": "🥣",
+        "sortOrder": 2
+      },
+      {
+        "path": "照顾好自己/健康/瑜伽",
+        "status": "active"
+      },
+      {
+        "path": "照顾好自己/健康/睡眠",
+        "status": "active",
+        "icon": "💤",
+        "sortOrder": 6
+      },
+      {
+        "path": "照顾好自己/健康/粑粑",
+        "status": "active",
+        "icon": "💩",
+        "sortOrder": 4
+      },
+      {
+        "path": "照顾好自己/健康/身体",
+        "status": "active",
+        "icon": "🔋",
+        "sortOrder": 7
+      },
+      {
+        "path": "照顾好自己/健康/运动",
+        "status": "active",
+        "icon": "💪",
+        "sortOrder": 5
+      },
+      {
+        "path": "照顾好自己/思考/专注",
+        "status": "active",
+        "icon": "⏰",
+        "sortOrder": 6
+      },
+      {
+        "path": "照顾好自己/思考/健康",
+        "status": "active"
+      },
+      {
+        "path": "爱好能力/电脑/AI",
+        "status": "active",
+        "icon": "🤖",
+        "sortOrder": 99
+      },
+      {
+        "path": "爱好能力/电脑/MediaPro",
+        "status": "active"
+      },
+      {
+        "path": "爱好能力/电脑/ob基础",
+        "status": "active",
+        "icon": "🎚",
+        "sortOrder": 0
+      },
+      {
+        "path": "爱好能力/电脑/整理",
+        "status": "active",
+        "icon": "✒",
+        "sortOrder": 1
+      },
+      {
+        "path": "爱好能力/电脑/点读",
+        "status": "active"
+      },
+      {
+        "path": "爱好能力/电脑/笔记系统",
+        "status": "active",
+        "icon": "📕",
+        "sortOrder": 2
+      },
+      {
+        "path": "爱好能力/电脑/记录系统",
+        "status": "active",
+        "icon": "🎴",
+        "sortOrder": 3
       }
     ],
     "goalTemplates": [
       {
-        "id": "goal-template.goal.照顾好自己.core.plan.健康",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康",
         "coreBlockId": "core.plan",
-        "variantId": "健康",
-        "name": "健康",
-        "description": "按历史 md 主题补齐的目标预设：健康（历史记录 37 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 10,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -947,36 +941,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康",
           "icon": "💤"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.plan.身体",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/身体",
         "coreBlockId": "core.plan",
-        "variantId": "身体",
-        "name": "身体",
-        "description": "按历史 md 主题补齐的目标预设：健康/身体（历史记录 16 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 20,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/身体"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -999,36 +975,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/身体",
           "icon": "🔋"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.plan.睡眠",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/睡眠",
         "coreBlockId": "core.plan",
-        "variantId": "睡眠",
-        "name": "睡眠",
-        "description": "按历史 md 主题补齐的目标预设：健康/睡眠（历史记录 5 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 30,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/睡眠"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -1051,36 +1009,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/睡眠",
           "icon": "💤"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.plan.瑜伽",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/瑜伽",
         "coreBlockId": "core.plan",
-        "variantId": "瑜伽",
-        "name": "瑜伽",
-        "description": "按历史 md 主题补齐的目标预设：健康/瑜伽（历史记录 2 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 40,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/瑜伽"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -1103,36 +1043,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/瑜伽",
           "icon": "🧘"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.plan.运动",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/运动",
         "coreBlockId": "core.plan",
-        "variantId": "运动",
-        "name": "运动",
-        "description": "按历史 md 主题补齐的目标预设：健康/运动（历史记录 1 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 50,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/运动"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -1155,36 +1077,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/运动",
           "icon": "💪"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.review.健康",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康",
         "coreBlockId": "core.review",
-        "variantId": "健康",
-        "name": "健康",
-        "description": "按历史 md 主题补齐的目标预设：健康（历史记录 37 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 10,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -1207,36 +1111,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康",
           "icon": "💤"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.review.身体",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/身体",
         "coreBlockId": "core.review",
-        "variantId": "身体",
-        "name": "身体",
-        "description": "按历史 md 主题补齐的目标预设：健康/身体（历史记录 18 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 20,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/身体"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -1259,36 +1145,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/身体",
           "icon": "🔋"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.review.睡眠",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/睡眠",
         "coreBlockId": "core.review",
-        "variantId": "睡眠",
-        "name": "睡眠",
-        "description": "按历史 md 主题补齐的目标预设：健康/睡眠（历史记录 3 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 30,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/睡眠"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -1311,36 +1179,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/睡眠",
           "icon": "💤"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.review.三餐",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/三餐",
         "coreBlockId": "core.review",
-        "variantId": "三餐",
-        "name": "三餐",
-        "description": "按历史 md 主题补齐的目标预设：健康/三餐（历史记录 1 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 40,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/三餐"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -1363,36 +1213,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/三餐",
           "icon": "🍱"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.review.瑜伽",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/瑜伽",
         "coreBlockId": "core.review",
-        "variantId": "瑜伽",
-        "name": "瑜伽",
-        "description": "按历史 md 主题补齐的目标预设：健康/瑜伽（历史记录 1 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 50,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/瑜伽"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -1415,36 +1247,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/瑜伽",
           "icon": "🧘"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.review.运动",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/运动",
         "coreBlockId": "core.review",
-        "variantId": "运动",
-        "name": "运动",
-        "description": "按历史 md 主题补齐的目标预设：健康/运动（历史记录 1 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 60,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/运动"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -1467,20 +1281,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/运动",
           "icon": "💪"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.心情",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/心情",
         "coreBlockId": "core.habit",
-        "variantId": "心情",
-        "name": "心情",
-        "description": "由主题收敛为记录预设：健康/心情",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
           {
@@ -1526,16 +1332,6 @@
             "auxKey": "image"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/心情"
-          },
-          {
             "id": "field_mewk7o3j",
             "key": "日期",
             "label": "日期",
@@ -1557,20 +1353,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/心情",
           "icon": "😄"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-22T07:30:33.724Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.身体",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/身体",
         "coreBlockId": "core.habit",
-        "variantId": "身体",
-        "name": "身体",
-        "description": "由主题收敛为记录预设：健康/身体",
-        "sortOrder": 20,
         "enabled": true,
         "fields": [
           {
@@ -1604,16 +1392,6 @@
             "auxKey": "image"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/身体"
-          },
-          {
             "id": "field_mewk7o3j",
             "key": "日期",
             "label": "日期",
@@ -1635,20 +1413,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/身体",
           "icon": "🔋"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-22T07:30:33.724Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.manual-mqowbbeg-h9wm",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/思考/专注",
         "coreBlockId": "core.habit",
-        "variantId": "manual-mqowbbeg-h9wm",
-        "name": "专注",
-        "description": "由主题收敛为记录预设：思考/专注",
-        "sortOrder": 30,
         "enabled": true,
         "fields": [
           {
@@ -1664,16 +1434,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考/专注"
           },
           {
             "id": "field_mewk7o3j",
@@ -1697,20 +1457,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "思考/专注",
           "icon": "⏰"
-        },
-        "createdAt": "2026-06-22T07:30:14.776Z",
-        "updatedAt": "2026-06-22T07:30:33.724Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.睡眠",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/睡眠",
         "coreBlockId": "core.habit",
-        "variantId": "睡眠",
-        "name": "睡眠",
-        "description": "由主题收敛为记录预设：健康/睡眠",
-        "sortOrder": 40,
         "enabled": true,
         "fields": [
           {
@@ -1756,16 +1508,6 @@
             "auxKey": "image"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/睡眠"
-          },
-          {
             "id": "field_mewk7o3j",
             "key": "日期",
             "label": "日期",
@@ -1787,20 +1529,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/睡眠",
           "icon": "💤"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-22T07:30:33.724Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.早餐",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/早餐",
         "coreBlockId": "core.habit",
-        "variantId": "早餐",
-        "name": "早餐",
-        "description": "由主题收敛为记录预设：健康/早餐",
-        "sortOrder": 50,
         "enabled": true,
         "fields": [
           {
@@ -1816,16 +1550,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/早餐"
           },
           {
             "id": "field_mewk7o3j",
@@ -1849,20 +1573,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/早餐",
           "icon": "🥚"
-        },
-        "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-22T07:30:33.724Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.午餐",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/午餐",
         "coreBlockId": "core.habit",
-        "variantId": "午餐",
-        "name": "午餐",
-        "description": "由主题收敛为记录预设：健康/午餐",
-        "sortOrder": 60,
         "enabled": true,
         "fields": [
           {
@@ -1878,16 +1594,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/午餐"
           },
           {
             "id": "field_mewk7o3j",
@@ -1911,20 +1617,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/午餐",
           "icon": "🍱"
-        },
-        "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-22T07:30:33.724Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.晚餐",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/晚餐",
         "coreBlockId": "core.habit",
-        "variantId": "晚餐",
-        "name": "晚餐",
-        "description": "由主题收敛为记录预设：健康/晚餐",
-        "sortOrder": 70,
         "enabled": true,
         "fields": [
           {
@@ -1940,16 +1638,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/晚餐"
           },
           {
             "id": "field_mewk7o3j",
@@ -1973,20 +1661,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/晚餐",
           "icon": "🥣"
-        },
-        "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-22T07:30:33.724Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.姨妈",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/姨妈",
         "coreBlockId": "core.habit",
-        "variantId": "姨妈",
-        "name": "姨妈",
-        "description": "由主题收敛为记录预设：健康/姨妈",
-        "sortOrder": 80,
         "enabled": true,
         "fields": [
           {
@@ -2002,16 +1682,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/姨妈"
           },
           {
             "id": "field_mewk7o3j",
@@ -2035,20 +1705,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/姨妈",
           "icon": "🩸"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-22T07:30:33.724Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.粑粑",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/粑粑",
         "coreBlockId": "core.habit",
-        "variantId": "粑粑",
-        "name": "粑粑",
-        "description": "由主题收敛为记录预设：健康/粑粑",
-        "sortOrder": 90,
         "enabled": true,
         "fields": [
           {
@@ -2078,16 +1740,6 @@
             "type": "date"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/粑粑"
-          },
-          {
             "id": "field_mewjqtxg",
             "key": "内容",
             "label": "内容",
@@ -2103,20 +1755,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/粑粑",
           "icon": "💩"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-22T07:30:33.724Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.运动",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/运动",
         "coreBlockId": "core.habit",
-        "variantId": "运动",
-        "name": "运动",
-        "description": "由主题收敛为记录预设：健康/运动",
-        "sortOrder": 100,
         "enabled": true,
         "fields": [
           {
@@ -2146,16 +1790,6 @@
             "type": "date"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/运动"
-          },
-          {
             "id": "field_mewjqtxg",
             "key": "内容",
             "label": "内容",
@@ -2171,20 +1805,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/运动",
           "icon": "💪"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-22T07:30:33.724Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.habit.喝水",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/喝水",
         "coreBlockId": "core.habit",
-        "variantId": "喝水",
-        "name": "喝水",
-        "description": "按历史 md 主题补齐的目标预设：健康/喝水（历史记录 43 条）",
-        "sortOrder": 110,
         "enabled": true,
         "fields": [
           {
@@ -2198,13 +1824,6 @@
                 "label": "1"
               }
             ]
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "主题",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "defaultValue": "健康/喝水"
           },
           {
             "id": "field_mewk7o3j",
@@ -2227,196 +1846,108 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/喝水",
           "icon": "💧"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-26T01:46:24.467Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.身体",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/身体",
         "coreBlockId": "core.task",
-        "variantId": "身体",
-        "name": "身体",
-        "description": "由主题收敛为记录预设：健康/身体",
-        "sortOrder": 10,
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "themePath": "健康/身体",
           "icon": "🔋"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.专注",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/思考/专注",
         "coreBlockId": "core.task",
-        "variantId": "专注",
-        "name": "专注",
-        "description": "由主题收敛为记录预设：思考/专注",
-        "sortOrder": 20,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考/专注",
           "icon": "⏰"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.睡眠",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/睡眠",
         "coreBlockId": "core.task",
-        "variantId": "睡眠",
-        "name": "睡眠",
-        "description": "由主题收敛为记录预设：健康/睡眠",
-        "sortOrder": 30,
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "themePath": "健康/睡眠",
           "icon": "💤",
           "任务内容": "睡觉"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.早餐",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/早餐",
         "coreBlockId": "core.task",
-        "variantId": "早餐",
-        "name": "早餐",
-        "description": "由主题收敛为记录预设：健康/早餐",
-        "sortOrder": 40,
         "enabled": true,
         "targetFile": "01/2-2三餐.md",
         "defaultValues": {
-          "themePath": "健康/早餐",
           "icon": "🥚",
           "任务内容": "早餐"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.午餐",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/午餐",
         "coreBlockId": "core.task",
-        "variantId": "午餐",
-        "name": "午餐",
-        "description": "由主题收敛为记录预设：健康/午餐",
-        "sortOrder": 50,
         "enabled": true,
         "targetFile": "01/2-2三餐.md",
         "defaultValues": {
-          "themePath": "健康/午餐",
           "icon": "🍱",
           "任务内容": "午餐"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.晚餐",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/晚餐",
         "coreBlockId": "core.task",
-        "variantId": "晚餐",
-        "name": "晚餐",
-        "description": "由主题收敛为记录预设：健康/晚餐",
-        "sortOrder": 60,
         "enabled": true,
         "targetFile": "01/2-2三餐.md",
         "defaultValues": {
-          "themePath": "健康/晚餐",
           "icon": "🥣",
           "任务内容": "晚餐"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.健康",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/思考/健康",
         "coreBlockId": "core.task",
-        "variantId": "健康",
-        "name": "健康",
-        "description": "按历史 md 主题补齐的目标预设：思考/健康（历史记录 1 条）",
-        "sortOrder": 110,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考/健康",
           "icon": "🔋"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.粑粑",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/粑粑",
         "coreBlockId": "core.task",
-        "variantId": "粑粑",
-        "name": "粑粑",
-        "description": "由主题收敛为记录预设：健康/粑粑",
-        "sortOrder": 80,
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "themePath": "健康/粑粑",
           "icon": "💩",
           "任务内容": "拉粑粑"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.运动",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/运动",
         "coreBlockId": "core.task",
-        "variantId": "运动",
-        "name": "运动",
-        "description": "由主题收敛为记录预设：健康/运动",
-        "sortOrder": 90,
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "themePath": "健康/运动",
           "icon": "💪",
           "任务内容": "八段锦"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.task.习惯",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/习惯",
         "coreBlockId": "core.task",
-        "variantId": "习惯",
-        "name": "习惯",
-        "description": "按历史 md 主题补齐的目标预设：健康/习惯（历史记录 62 条）",
-        "sortOrder": 100,
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "themePath": "健康/习惯",
           "icon": "💊"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.thought.身体",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/身体",
         "coreBlockId": "core.thought",
-        "variantId": "身体",
-        "name": "身体",
-        "description": "按历史 md 主题补齐的目标预设：健康/身体（历史记录 127 条）",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
           {
@@ -2435,16 +1966,6 @@
               }
             ],
             "semantic": "recordSubtype"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/身体"
           },
           {
             "id": "field_mewjlypl",
@@ -2463,20 +1984,12 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "健康/身体",
           "icon": "🔋"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.thought.睡眠",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/睡眠",
         "coreBlockId": "core.thought",
-        "variantId": "睡眠",
-        "name": "睡眠",
-        "description": "按历史 md 主题补齐的目标预设：健康/睡眠（历史记录 28 条）",
-        "sortOrder": 20,
         "enabled": true,
         "fields": [
           {
@@ -2495,16 +2008,6 @@
               }
             ],
             "semantic": "recordSubtype"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/睡眠"
           },
           {
             "id": "field_mewjlypl",
@@ -2523,20 +2026,12 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "健康/睡眠",
           "icon": "💤"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.thought.瑜伽",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/瑜伽",
         "coreBlockId": "core.thought",
-        "variantId": "瑜伽",
-        "name": "瑜伽",
-        "description": "按历史 md 主题补齐的目标预设：健康/瑜伽（历史记录 20 条）",
-        "sortOrder": 30,
         "enabled": true,
         "fields": [
           {
@@ -2555,16 +2050,6 @@
               }
             ],
             "semantic": "recordSubtype"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/瑜伽"
           },
           {
             "id": "field_mewjlypl",
@@ -2583,20 +2068,12 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "健康/瑜伽",
           "icon": "🧘"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.thought.健康",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康",
         "coreBlockId": "core.thought",
-        "variantId": "健康",
-        "name": "健康",
-        "description": "按历史 md 主题补齐的目标预设：健康（历史记录 1 条）",
-        "sortOrder": 40,
         "enabled": true,
         "fields": [
           {
@@ -2615,16 +2092,6 @@
               }
             ],
             "semantic": "recordSubtype"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康"
           },
           {
             "id": "field_mewjlypl",
@@ -2643,20 +2110,12 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "健康",
           "icon": "💤"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.thought.习惯",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/习惯",
         "coreBlockId": "core.thought",
-        "variantId": "习惯",
-        "name": "习惯",
-        "description": "按历史 md 主题补齐的目标预设：健康/习惯（历史记录 1 条）",
-        "sortOrder": 50,
         "enabled": true,
         "fields": [
           {
@@ -2675,16 +2134,6 @@
               }
             ],
             "semantic": "recordSubtype"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/习惯"
           },
           {
             "id": "field_mewjlypl",
@@ -2703,20 +2152,12 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "健康/习惯",
           "icon": "💊"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.thought.心情",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/心情",
         "coreBlockId": "core.thought",
-        "variantId": "心情",
-        "name": "心情",
-        "description": "按历史 md 主题补齐的目标预设：健康/心情（历史记录 1 条）",
-        "sortOrder": 60,
         "enabled": true,
         "fields": [
           {
@@ -2737,16 +2178,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/心情"
-          },
-          {
             "id": "field_mewjlypl",
             "key": "内容",
             "label": "内容",
@@ -2763,32 +2194,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "健康/心情",
           "icon": "😄"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.evidence.身体",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/身体",
         "coreBlockId": "core.evidence",
-        "variantId": "身体",
-        "name": "身体",
-        "description": "按历史 md 主题补齐的目标预设：健康/身体（历史记录 93 条）",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/身体"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -2806,32 +2219,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "健康/身体",
           "icon": "🔋"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.evidence.瑜伽",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/瑜伽",
         "coreBlockId": "core.evidence",
-        "variantId": "瑜伽",
-        "name": "瑜伽",
-        "description": "按历史 md 主题补齐的目标预设：健康/瑜伽（历史记录 20 条）",
-        "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/瑜伽"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -2849,32 +2244,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "健康/瑜伽",
           "icon": "🧘"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.evidence.睡眠",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/睡眠",
         "coreBlockId": "core.evidence",
-        "variantId": "睡眠",
-        "name": "睡眠",
-        "description": "按历史 md 主题补齐的目标预设：健康/睡眠（历史记录 7 条）",
-        "sortOrder": 30,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/睡眠"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -2892,32 +2269,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "健康/睡眠",
           "icon": "💤"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.evidence.运动",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康/运动",
         "coreBlockId": "core.evidence",
-        "variantId": "运动",
-        "name": "运动",
-        "description": "按历史 md 主题补齐的目标预设：健康/运动（历史记录 2 条）",
-        "sortOrder": 40,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/运动"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -2935,32 +2294,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "健康/运动",
           "icon": "💪"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.照顾好自己.core.evidence.健康",
-        "goalId": "goal.照顾好自己",
+        "goalPath": "照顾好自己/健康",
         "coreBlockId": "core.evidence",
-        "variantId": "健康",
-        "name": "健康",
-        "description": "按历史 md 主题补齐的目标预设：健康（历史记录 1 条）",
-        "sortOrder": 50,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -2978,36 +2319,18 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "健康",
           "icon": "💤"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.plan.生活",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活",
         "coreBlockId": "core.plan",
-        "variantId": "生活",
-        "name": "生活",
-        "description": "按历史 md 主题补齐的目标预设：生活（历史记录 48 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 10,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "生活"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -3030,36 +2353,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "生活",
           "icon": "✨"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.review.生活",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活",
         "coreBlockId": "core.review",
-        "variantId": "生活",
-        "name": "生活",
-        "description": "按历史 md 主题补齐的目标预设：生活（历史记录 60 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 10,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "生活"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -3082,20 +2387,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "生活",
           "icon": "✨"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.habit.车车",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活/车车",
         "coreBlockId": "core.habit",
-        "variantId": "车车",
-        "name": "车车",
-        "description": "由主题收敛为记录预设：生活/车车",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
           {
@@ -3115,16 +2412,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "生活/车车"
           },
           {
             "id": "field_mewk7o3j",
@@ -3148,178 +2435,98 @@
           }
         ],
         "defaultValues": {
-          "themePath": "生活/车车",
           "icon": "🚗"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.生活",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活",
         "coreBlockId": "core.task",
-        "variantId": "生活",
-        "name": "生活",
-        "description": "由主题收敛为记录预设：生活",
-        "sortOrder": 10,
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "themePath": "生活",
           "icon": "✨"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.娱乐",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活/娱乐",
         "coreBlockId": "core.task",
-        "variantId": "娱乐",
-        "name": "娱乐",
-        "description": "由主题收敛为记录预设：生活/娱乐",
-        "sortOrder": 20,
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "themePath": "生活/娱乐",
           "icon": "📺",
           "任务内容": "玩手机"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.车车",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活/车车",
         "coreBlockId": "core.task",
-        "variantId": "车车",
-        "name": "车车",
-        "description": "由主题收敛为记录预设：生活/车车",
-        "sortOrder": 30,
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "themePath": "生活/车车",
           "icon": "🚗",
           "任务内容": "听小说"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.高级生活",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活/高级生活",
         "coreBlockId": "core.task",
-        "variantId": "高级生活",
-        "name": "高级生活",
-        "description": "由主题收敛为记录预设：生活/高级生活",
-        "sortOrder": 40,
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "themePath": "生活/高级生活",
           "icon": "🔆"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.小手机",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活/小手机",
         "coreBlockId": "core.task",
-        "variantId": "小手机",
-        "name": "小手机",
-        "description": "由主题收敛为记录预设：生活/小手机",
-        "sortOrder": 50,
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "themePath": "生活/小手机",
           "icon": "🍓",
           "任务内容": "小手机"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.家务",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活/家务",
         "coreBlockId": "core.task",
-        "variantId": "家务",
-        "name": "家务",
-        "description": "由主题收敛为记录预设：生活/家务",
-        "sortOrder": 60,
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "themePath": "生活/家务",
           "icon": "🧹",
           "任务内容": "打扫卫生"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.整理",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活/整理",
         "coreBlockId": "core.task",
-        "variantId": "整理",
-        "name": "整理",
-        "description": "由主题收敛为记录预设：生活/整理",
-        "sortOrder": 70,
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "themePath": "生活/整理",
           "icon": "📦",
           "任务内容": "整理家"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.收纳",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活/收纳",
         "coreBlockId": "core.task",
-        "variantId": "收纳",
-        "name": "收纳",
-        "description": "按历史 md 主题补齐的目标预设：生活/收纳（历史记录 28 条）",
-        "sortOrder": 80,
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "themePath": "生活/收纳",
           "icon": "📦"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.task.开车",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活/开车",
         "coreBlockId": "core.task",
-        "variantId": "开车",
-        "name": "开车",
-        "description": "按历史 md 主题补齐的目标预设：生活/开车（历史记录 6 条）",
-        "sortOrder": 90,
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "themePath": "生活/开车",
           "icon": "🚗"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.thought.生活",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活",
         "coreBlockId": "core.thought",
-        "variantId": "生活",
-        "name": "生活",
-        "description": "按历史 md 主题补齐的目标预设：生活（历史记录 9 条）",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
           {
@@ -3340,16 +2547,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "生活"
-          },
-          {
             "id": "field_mewjlypl",
             "key": "内容",
             "label": "内容",
@@ -3366,33 +2563,15 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "生活",
           "icon": "✨"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.我若安好便是晴天.core.evidence.生活",
-        "goalId": "goal.我若安好便是晴天",
+        "goalPath": "我若安好便是晴天/生活",
         "coreBlockId": "core.evidence",
-        "variantId": "生活",
-        "name": "生活",
-        "description": "按历史 md 主题补齐的目标预设：生活（历史记录 7 条）",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "生活"
-          },
-          {
             "id": "field_mewjlypl",
             "key": "内容",
             "label": "内容",
@@ -3409,20 +2588,12 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "生活",
           "icon": "✨"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.habit.剪指甲",
-        "goalId": "goal.仪容仪表",
+        "goalPath": "仪容仪表/健康/剪指甲",
         "coreBlockId": "core.habit",
-        "variantId": "剪指甲",
-        "name": "剪指甲",
-        "description": "由主题收敛为记录预设：健康/剪指甲",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
           {
@@ -3442,16 +2613,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/剪指甲"
           },
           {
             "id": "field_mewk7o3j",
@@ -3475,20 +2636,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/剪指甲",
           "icon": "✋"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-22T07:13:09.089Z"
+        }
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.habit.剪头发",
-        "goalId": "goal.仪容仪表",
+        "goalPath": "仪容仪表/健康/剪头发",
         "coreBlockId": "core.habit",
-        "variantId": "剪头发",
-        "name": "剪头发",
-        "description": "由主题收敛为记录预设：健康/剪头发",
-        "sortOrder": 20,
         "enabled": true,
         "fields": [
           {
@@ -3504,16 +2657,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/剪头发"
           },
           {
             "id": "field_mewk7o3j",
@@ -3537,20 +2680,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/剪头发",
           "icon": "✂"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-22T07:13:09.089Z"
+        }
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.habit.卫生",
-        "goalId": "goal.仪容仪表",
+        "goalPath": "仪容仪表/健康/卫生",
         "coreBlockId": "core.habit",
-        "variantId": "卫生",
-        "name": "卫生",
-        "description": "由主题收敛为记录预设：健康/卫生",
-        "sortOrder": 30,
         "enabled": true,
         "fields": [
           {
@@ -3566,16 +2701,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/卫生"
           },
           {
             "id": "field_mewk7o3j",
@@ -3599,20 +2724,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/卫生",
           "icon": "🛁"
-        },
-        "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-22T07:13:09.089Z"
+        }
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.habit.洗澡",
-        "goalId": "goal.仪容仪表",
+        "goalPath": "仪容仪表/健康/洗澡",
         "coreBlockId": "core.habit",
-        "variantId": "洗澡",
-        "name": "洗澡",
-        "description": "按历史 md 主题补齐的目标预设：健康/洗澡（历史记录 6 条）",
-        "sortOrder": 40,
         "enabled": true,
         "fields": [
           {
@@ -3628,16 +2745,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "健康/洗澡"
           },
           {
             "id": "field_mewk7o3j",
@@ -3661,105 +2768,56 @@
           }
         ],
         "defaultValues": {
-          "themePath": "健康/洗澡",
           "icon": "🛁"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.task.剪指甲",
-        "goalId": "goal.仪容仪表",
+        "goalPath": "仪容仪表/健康/剪指甲",
         "coreBlockId": "core.task",
-        "variantId": "剪指甲",
-        "name": "剪指甲",
-        "description": "由主题收敛为记录预设：健康/剪指甲",
-        "sortOrder": 10,
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "themePath": "健康/剪指甲",
           "icon": "✋"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.task.剪头发",
-        "goalId": "goal.仪容仪表",
+        "goalPath": "仪容仪表/健康/剪头发",
         "coreBlockId": "core.task",
-        "variantId": "剪头发",
-        "name": "剪头发",
-        "description": "由主题收敛为记录预设：健康/剪头发",
-        "sortOrder": 20,
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "themePath": "健康/剪头发",
           "icon": "✂"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.task.卫生",
-        "goalId": "goal.仪容仪表",
+        "goalPath": "仪容仪表/健康/卫生",
         "coreBlockId": "core.task",
-        "variantId": "卫生",
-        "name": "卫生",
-        "description": "由主题收敛为记录预设：健康/卫生",
-        "sortOrder": 30,
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "themePath": "健康/卫生",
           "icon": "🛁",
           "任务内容": "洗漱"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.仪容仪表.core.task.洗澡",
-        "goalId": "goal.仪容仪表",
+        "goalPath": "仪容仪表/健康/洗澡",
         "coreBlockId": "core.task",
-        "variantId": "洗澡",
-        "name": "洗澡",
-        "description": "按历史 md 主题补齐的目标预设：健康/洗澡（历史记录 1 条）",
-        "sortOrder": 40,
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "themePath": "健康/洗澡",
           "icon": "🛁"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解自我.core.review.manual-mqovsmg2-6mei",
-        "goalId": "goal.了解自我",
+        "goalPath": "了解自我/思考/自我",
         "coreBlockId": "core.review",
-        "variantId": "manual-mqovsmg2-6mei",
-        "name": "自我",
         "description": "手动新增",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 10,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考/自我"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -3782,37 +2840,21 @@
           }
         ],
         "defaultValues": {
-          "themePath": "思考/自我",
           "icon": "🐈"
-        },
-        "createdAt": "2026-06-22T07:15:42.626Z",
-        "updatedAt": "2026-06-22T07:15:42.626Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解自我.core.task.自我",
-        "goalId": "goal.了解自我",
+        "goalPath": "了解自我/思考/自我",
         "coreBlockId": "core.task",
-        "variantId": "自我",
-        "name": "自我",
-        "description": "由主题收敛为记录预设：思考/自我",
-        "sortOrder": 0,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考/自我",
           "icon": "🐈"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解自我.core.thought.自我",
-        "goalId": "goal.了解自我",
+        "goalPath": "了解自我/思考/自我",
         "coreBlockId": "core.thought",
-        "variantId": "自我",
-        "name": "自我",
-        "description": "按历史 md 主题补齐的目标预设：思考/自我（历史记录 23 条）",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
           {
@@ -3833,16 +2875,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考/自我"
-          },
-          {
             "id": "field_mewjlypl",
             "key": "内容",
             "label": "内容",
@@ -3859,33 +2891,15 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "思考/自我",
           "icon": "🐈"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解自我.core.evidence.自我",
-        "goalId": "goal.了解自我",
+        "goalPath": "了解自我/思考/自我",
         "coreBlockId": "core.evidence",
-        "variantId": "自我",
-        "name": "自我",
-        "description": "按历史 md 主题补齐的目标预设：思考/自我（历史记录 47 条）",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考/自我"
-          },
-          {
             "id": "field_mewjlypl",
             "key": "内容",
             "label": "内容",
@@ -3902,510 +2916,284 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "思考/自我",
           "icon": "🐈"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解自我.core.blocker.manual-mqovqqya-bzy6",
-        "goalId": "goal.了解自我",
+        "goalPath": "了解自我/思考/自我",
         "coreBlockId": "core.blocker",
-        "variantId": "manual-mqovqqya-bzy6",
-        "name": "自我",
         "description": "手动新增",
-        "sortOrder": 10,
         "enabled": true,
         "targetFile": "01/计划.md",
         "appendUnderHeader": "## {goalPath}",
         "defaultValues": {
-          "themePath": "思考/自我",
           "icon": "🐈"
-        },
-        "createdAt": "2026-06-22T07:14:15.154Z",
-        "updatedAt": "2026-06-22T07:14:15.154Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解自我.core.milestone.manual-mqovrwef-91b7",
-        "goalId": "goal.了解自我",
+        "goalPath": "了解自我/思考/自我",
         "coreBlockId": "core.milestone",
-        "variantId": "manual-mqovrwef-91b7",
-        "name": "自我",
         "description": "手动新增",
-        "sortOrder": 10,
         "enabled": true,
         "appendUnderHeader": "## {goalPath}",
         "defaultValues": {
-          "themePath": "思考/自我",
           "icon": "🐈"
-        },
-        "createdAt": "2026-06-22T07:15:08.871Z",
-        "updatedAt": "2026-06-22T07:15:08.871Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.plan.婆婆",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/婆婆",
         "coreBlockId": "core.plan",
-        "variantId": "婆婆",
-        "name": "婆婆",
         "description": "由「任务」预设复制到「计划」",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
         },
-        "sortOrder": 0,
-        "enabled": true,
         "defaultValues": {
-          "themePath": "思考/婆婆",
           "icon": "🧓"
-        },
-        "createdAt": "2026-06-25T09:00:24.047Z",
-        "updatedAt": "2026-06-25T09:00:24.048Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.plan.垚垚",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/垚垚",
         "coreBlockId": "core.plan",
-        "variantId": "垚垚",
-        "name": "垚垚",
-        "description": "按历史 md 主题补齐的目标预设：思考/垚垚（历史记录 3 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
         },
-        "sortOrder": 10,
-        "enabled": true,
         "defaultValues": {
-          "themePath": "思考/垚垚",
           "icon": "👶"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.plan.芦苇",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/芦苇",
         "coreBlockId": "core.plan",
-        "variantId": "芦苇",
-        "name": "芦苇",
-        "description": "按历史 md 主题补齐的目标预设：思考/芦苇（历史记录 1 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
         },
-        "sortOrder": 20,
-        "enabled": true,
         "defaultValues": {
-          "themePath": "思考/芦苇",
           "icon": "🌿"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.review.婆婆",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/婆婆",
         "coreBlockId": "core.review",
-        "variantId": "婆婆",
-        "name": "婆婆",
         "description": "由「任务」预设复制到「总结」",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
         },
-        "sortOrder": 0,
-        "enabled": true,
         "defaultValues": {
-          "themePath": "思考/婆婆",
           "icon": "🧓"
-        },
-        "createdAt": "2026-06-25T09:00:21.051Z",
-        "updatedAt": "2026-06-25T09:00:21.051Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.review.阳阳",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/阳阳",
         "coreBlockId": "core.review",
-        "variantId": "阳阳",
-        "name": "阳阳",
-        "description": "按历史 md 主题补齐的目标预设：思考/阳阳（历史记录 3 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
         },
-        "sortOrder": 10,
-        "enabled": true,
         "defaultValues": {
-          "themePath": "思考/阳阳",
           "icon": "👨"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.review.垚垚",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/垚垚",
         "coreBlockId": "core.review",
-        "variantId": "垚垚",
-        "name": "垚垚",
-        "description": "按历史 md 主题补齐的目标预设：思考/垚垚（历史记录 2 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
         },
-        "sortOrder": 20,
-        "enabled": true,
         "defaultValues": {
-          "themePath": "思考/垚垚",
           "icon": "👶"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.review.家庭",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/家庭",
         "coreBlockId": "core.review",
-        "variantId": "家庭",
-        "name": "家庭",
-        "description": "按历史 md 主题补齐的目标预设：思考/家庭（历史记录 1 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
         },
-        "sortOrder": 30,
-        "enabled": true,
         "defaultValues": {
-          "themePath": "思考/家庭",
           "icon": "👪"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.review.芦苇",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/芦苇",
         "coreBlockId": "core.review",
-        "variantId": "芦苇",
-        "name": "芦苇",
-        "description": "按历史 md 主题补齐的目标预设：思考/芦苇（历史记录 1 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
         },
-        "sortOrder": 40,
-        "enabled": true,
         "defaultValues": {
-          "themePath": "思考/芦苇",
           "icon": "🌿"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.task.时间整理",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/时间整理",
         "coreBlockId": "core.task",
-        "variantId": "时间整理",
-        "name": "时间整理",
-        "description": "由主题收敛为记录预设：思考/时间整理",
-        "sortOrder": 10,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考/时间整理",
           "icon": "🧠",
           "任务内容": "时间整理"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.task.垚垚",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/生活/垚垚",
         "coreBlockId": "core.task",
-        "variantId": "垚垚",
-        "name": "垚垚",
-        "description": "由主题收敛为记录预设：生活/垚垚",
-        "sortOrder": 20,
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "themePath": "生活/垚垚",
           "icon": "👶",
           "任务内容": "和垚垚玩"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.task.阳阳",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/阳阳",
         "coreBlockId": "core.task",
-        "variantId": "阳阳",
-        "name": "阳阳",
-        "description": "由主题收敛为记录预设：思考/阳阳",
-        "sortOrder": 30,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考/阳阳",
           "icon": "👨"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.task.婆婆",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/婆婆",
         "coreBlockId": "core.task",
-        "variantId": "婆婆",
-        "name": "婆婆",
-        "description": "由主题收敛为记录预设：思考/婆婆",
-        "sortOrder": 40,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考/婆婆",
           "icon": "🧓"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.task.家庭",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/家庭",
         "coreBlockId": "core.task",
-        "variantId": "家庭",
-        "name": "家庭",
-        "description": "由主题收敛为记录预设：思考/家庭",
-        "sortOrder": 50,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考/家庭",
           "icon": "👪"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.thought.婆婆",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/婆婆",
         "coreBlockId": "core.thought",
-        "variantId": "婆婆",
-        "name": "婆婆",
         "description": "由「任务」预设复制到「思考」",
-        "sortOrder": 0,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/婆婆",
           "icon": "🧓"
-        },
-        "createdAt": "2026-06-25T09:00:17.897Z",
-        "updatedAt": "2026-06-25T09:00:17.897Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.thought.阳阳",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/阳阳",
         "coreBlockId": "core.thought",
-        "variantId": "阳阳",
-        "name": "阳阳",
-        "description": "按历史 md 主题补齐的目标预设：思考/阳阳（历史记录 13 条）",
-        "sortOrder": 10,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/阳阳",
           "icon": "👨"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.thought.家庭",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/家庭",
         "coreBlockId": "core.thought",
-        "variantId": "家庭",
-        "name": "家庭",
-        "description": "按历史 md 主题补齐的目标预设：思考/家庭（历史记录 8 条）",
-        "sortOrder": 20,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/家庭",
           "icon": "👪"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.thought.芦苇",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/芦苇",
         "coreBlockId": "core.thought",
-        "variantId": "芦苇",
-        "name": "芦苇",
-        "description": "按历史 md 主题补齐的目标预设：思考/芦苇（历史记录 8 条）",
-        "sortOrder": 30,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/芦苇",
           "icon": "🌿"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.thought.垚垚",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/垚垚",
         "coreBlockId": "core.thought",
-        "variantId": "垚垚",
-        "name": "垚垚",
-        "description": "按历史 md 主题补齐的目标预设：思考/垚垚（历史记录 6 条）",
-        "sortOrder": 40,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/垚垚",
           "icon": "👶"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.evidence.婆婆",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/婆婆",
         "coreBlockId": "core.evidence",
-        "variantId": "婆婆",
-        "name": "婆婆",
         "description": "由「任务」预设复制到「事件」",
-        "sortOrder": 0,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/婆婆",
           "icon": "🧓"
-        },
-        "createdAt": "2026-06-25T09:00:14.867Z",
-        "updatedAt": "2026-06-25T09:00:14.868Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.evidence.垚垚",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/生活/垚垚",
         "coreBlockId": "core.evidence",
-        "variantId": "垚垚",
-        "name": "垚垚",
-        "description": "按历史 md 主题补齐的目标预设：生活/垚垚（历史记录 3 条）",
-        "sortOrder": 40,
         "enabled": true,
         "defaultValues": {
-          "themePath": "生活/垚垚",
           "icon": "👶"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.evidence.阳阳",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/阳阳",
         "coreBlockId": "core.evidence",
-        "variantId": "阳阳",
-        "name": "阳阳",
-        "description": "按历史 md 主题补齐的目标预设：思考/阳阳（历史记录 37 条）",
-        "sortOrder": 20,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/阳阳",
           "icon": "👨"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.evidence.芦苇",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/芦苇",
         "coreBlockId": "core.evidence",
-        "variantId": "芦苇",
-        "name": "芦苇",
-        "description": "按历史 md 主题补齐的目标预设：思考/芦苇（历史记录 5 条）",
-        "sortOrder": 30,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/芦苇",
           "icon": "🌿"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.evidence.时间整理",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/时间整理",
         "coreBlockId": "core.evidence",
-        "variantId": "时间整理",
-        "name": "时间整理",
-        "description": "按历史 md 主题补齐的目标预设：思考/时间整理（历史记录 1 条）",
-        "sortOrder": 50,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/时间整理",
           "icon": "🧠"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.blocker.婆婆",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/婆婆",
         "coreBlockId": "core.blocker",
-        "variantId": "婆婆",
-        "name": "婆婆",
         "description": "由「任务」预设复制到「阻碍项」",
-        "sortOrder": 0,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/婆婆",
           "icon": "🧓"
-        },
-        "createdAt": "2026-06-25T09:00:27.034Z",
-        "updatedAt": "2026-06-25T09:00:27.034Z"
+        }
       },
       {
-        "id": "goal-template.goal.了解世界.core.milestone.婆婆",
-        "goalId": "goal.了解世界",
+        "goalPath": "了解世界/思考/婆婆",
         "coreBlockId": "core.milestone",
-        "variantId": "婆婆",
-        "name": "婆婆",
         "description": "由「任务」预设复制到「里程碑」",
-        "sortOrder": 0,
         "enabled": true,
         "defaultValues": {
-          "themePath": "思考/婆婆",
           "icon": "🧓"
-        },
-        "createdAt": "2026-06-25T09:00:29.998Z",
-        "updatedAt": "2026-06-25T09:00:29.998Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.plan.其他",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/其他",
         "coreBlockId": "core.plan",
-        "variantId": "其他",
-        "name": "其他",
-        "description": "由主题收敛为记录预设：工作/其他",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 10,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/其他"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -4428,36 +3216,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作/其他",
           "icon": "📋"
-        },
-        "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.plan.手续-对账",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/手续、对账",
         "coreBlockId": "core.plan",
-        "variantId": "手续-对账",
-        "name": "手续、对账",
-        "description": "由主题收敛为记录预设：工作/手续、对账",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 20,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/手续、对账"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -4480,36 +3250,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作/手续、对账",
           "icon": "📋"
-        },
-        "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.plan.投标",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/投标",
         "coreBlockId": "core.plan",
-        "variantId": "投标",
-        "name": "投标",
-        "description": "由主题收敛为记录预设：工作/投标",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 30,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/投标"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -4532,36 +3284,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作/投标",
           "icon": "🎟"
-        },
-        "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.plan.设计",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/设计",
         "coreBlockId": "core.plan",
-        "variantId": "设计",
-        "name": "设计",
-        "description": "由主题收敛为记录预设：工作/设计",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 40,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/设计"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -4584,36 +3318,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作/设计",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-07T09:28:22.587Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.plan.通勤",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/通勤",
         "coreBlockId": "core.plan",
-        "variantId": "通勤",
-        "name": "通勤",
-        "description": "由主题收敛为记录预设：工作/通勤",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
         },
-        "sortOrder": 90,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/通勤"
-          },
           {
             "id": "core.field.icon",
             "key": "icon",
@@ -4624,36 +3340,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作/通勤",
           "icon": "🛵"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.plan.工作",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作",
         "coreBlockId": "core.plan",
-        "variantId": "工作",
-        "name": "工作",
-        "description": "按历史 md 主题补齐的目标预设：工作（历史记录 48 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 100,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -4676,36 +3374,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.review.设计",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/设计",
         "coreBlockId": "core.review",
-        "variantId": "设计",
-        "name": "设计",
-        "description": "由主题收敛为记录预设：工作/设计",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 40,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/设计"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -4728,36 +3408,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作/设计",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.review.投标",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/投标",
         "coreBlockId": "core.review",
-        "variantId": "投标",
-        "name": "投标",
-        "description": "由主题收敛为记录预设：工作/投标",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 50,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/投标"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -4780,36 +3442,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作/投标",
           "icon": "🎟"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.review.手续-对账",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/手续、对账",
         "coreBlockId": "core.review",
-        "variantId": "手续-对账",
-        "name": "手续、对账",
-        "description": "由主题收敛为记录预设：工作/手续、对账",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 60,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/手续、对账"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -4832,36 +3476,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作/手续、对账",
           "icon": "📋"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.review.其他",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/其他",
         "coreBlockId": "core.review",
-        "variantId": "其他",
-        "name": "其他",
-        "description": "由主题收敛为记录预设：工作/其他",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 70,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/其他"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -4884,36 +3510,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作/其他",
           "icon": "📋"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.review.通勤",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/通勤",
         "coreBlockId": "core.review",
-        "variantId": "通勤",
-        "name": "通勤",
-        "description": "由主题收敛为记录预设：工作/通勤",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
         },
-        "sortOrder": 90,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/通勤"
-          },
           {
             "id": "core.field.icon",
             "key": "icon",
@@ -4924,36 +3532,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作/通勤",
           "icon": "🛵"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.review.工作",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作",
         "coreBlockId": "core.review",
-        "variantId": "工作",
-        "name": "工作",
-        "description": "按历史 md 主题补齐的目标预设：工作（历史记录 48 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 100,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -4976,143 +3566,79 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.task.老板任务",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/老板任务",
         "coreBlockId": "core.task",
-        "variantId": "老板任务",
-        "name": "老板任务",
-        "description": "由主题收敛为记录预设：工作/老板任务",
-        "sortOrder": 0,
         "enabled": true,
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
-          "themePath": "工作/老板任务",
           "icon": "💥"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.task.其他",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/其他",
         "coreBlockId": "core.task",
-        "variantId": "其他",
-        "name": "其他",
-        "description": "由主题收敛为记录预设：工作/其他",
-        "sortOrder": 10,
         "enabled": true,
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
-          "themePath": "工作/其他",
           "icon": "📋"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.task.手续-对账",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/手续、对账",
         "coreBlockId": "core.task",
-        "variantId": "手续-对账",
-        "name": "手续、对账",
-        "description": "由主题收敛为记录预设：工作/手续、对账",
-        "sortOrder": 20,
         "enabled": true,
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
-          "themePath": "工作/手续、对账",
           "icon": "📋"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.task.投标",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/投标",
         "coreBlockId": "core.task",
-        "variantId": "投标",
-        "name": "投标",
-        "description": "由主题收敛为记录预设：工作/投标",
-        "sortOrder": 30,
         "enabled": true,
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
-          "themePath": "工作/投标",
           "icon": "🎟"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.task.设计",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/设计",
         "coreBlockId": "core.task",
-        "variantId": "设计",
-        "name": "设计",
-        "description": "由主题收敛为记录预设：工作/设计",
-        "sortOrder": 40,
         "enabled": true,
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
-          "themePath": "工作/设计",
           "icon": "🖥",
           "任务内容": "设计"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.task.工作",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作",
         "coreBlockId": "core.task",
-        "variantId": "工作",
-        "name": "工作",
-        "description": "由主题收敛为记录预设：工作",
-        "sortOrder": 50,
         "enabled": true,
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
-          "themePath": "工作",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.task.通勤",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/通勤",
         "coreBlockId": "core.task",
-        "variantId": "通勤",
-        "name": "通勤",
-        "description": "由主题收敛为记录预设：工作/通勤",
-        "sortOrder": 110,
         "enabled": true,
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
-          "themePath": "工作/通勤",
           "icon": "🛵",
           "任务内容": "通勤",
           "时长": "15",
           "expectedDurationMinutes": "15"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.thought.设计",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/设计",
         "coreBlockId": "core.thought",
-        "variantId": "设计",
-        "name": "设计",
-        "description": "由主题收敛为记录预设：工作/设计",
-        "sortOrder": 0,
         "enabled": true,
         "fields": [
           {
@@ -5131,16 +3657,6 @@
               }
             ],
             "semantic": "recordSubtype"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/设计"
           },
           {
             "id": "field_mewjlypl",
@@ -5159,20 +3675,12 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "工作/设计",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.thought.投标",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/投标",
         "coreBlockId": "core.thought",
-        "variantId": "投标",
-        "name": "投标",
-        "description": "由主题收敛为记录预设：工作/投标",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
           {
@@ -5191,16 +3699,6 @@
               }
             ],
             "semantic": "recordSubtype"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/投标"
           },
           {
             "id": "field_mewjlypl",
@@ -5219,20 +3717,12 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "工作/投标",
           "icon": "🎟"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.thought.手续-对账",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/手续、对账",
         "coreBlockId": "core.thought",
-        "variantId": "手续-对账",
-        "name": "手续、对账",
-        "description": "由主题收敛为记录预设：工作/手续、对账",
-        "sortOrder": 20,
         "enabled": true,
         "fields": [
           {
@@ -5253,16 +3743,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/手续、对账"
-          },
-          {
             "id": "field_mewjlypl",
             "key": "内容",
             "label": "内容",
@@ -5279,20 +3759,12 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "工作/手续、对账",
           "icon": "📋"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.thought.其他",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/其他",
         "coreBlockId": "core.thought",
-        "variantId": "其他",
-        "name": "其他",
-        "description": "由主题收敛为记录预设：工作/其他",
-        "sortOrder": 30,
         "enabled": true,
         "fields": [
           {
@@ -5313,16 +3785,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/其他"
-          },
-          {
             "id": "field_mewjlypl",
             "key": "内容",
             "label": "内容",
@@ -5339,32 +3801,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "工作/其他",
           "icon": "📋"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.thought.通勤",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/通勤",
         "coreBlockId": "core.thought",
-        "variantId": "通勤",
-        "name": "通勤",
-        "description": "由主题收敛为记录预设：工作/通勤",
-        "sortOrder": 50,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/通勤"
-          },
           {
             "id": "core.field.icon",
             "key": "icon",
@@ -5375,20 +3819,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "工作/通勤",
           "icon": "🛵"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.thought.工作",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作",
         "coreBlockId": "core.thought",
-        "variantId": "工作",
-        "name": "工作",
-        "description": "按历史 md 主题补齐的目标预设：工作（历史记录 49 条）",
-        "sortOrder": 60,
         "enabled": true,
         "fields": [
           {
@@ -5409,15 +3845,30 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon",
+            "defaultValue": "🖥"
+          }
+        ],
+        "targetFile": "01/闪念.md",
+        "defaultValues": {
+          "icon": "🖥"
+        }
+      },
+      {
+        "goalPath": "工作能力/工作/设计",
+        "coreBlockId": "core.evidence",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -5435,75 +3886,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "工作",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.evidence.设计",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/投标",
         "coreBlockId": "core.evidence",
-        "variantId": "设计",
-        "name": "设计",
-        "description": "由主题收敛为记录预设：工作/设计",
-        "sortOrder": 0,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/设计"
-          },
-          {
-            "id": "field_mewjlypl",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
-          }
-        ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "themePath": "工作/设计",
-          "icon": "🖥"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
-      },
-      {
-        "id": "goal-template.goal.工作能力.core.evidence.投标",
-        "goalId": "goal.工作能力",
-        "coreBlockId": "core.evidence",
-        "variantId": "投标",
-        "name": "投标",
-        "description": "由主题收敛为记录预设：工作/投标",
-        "sortOrder": 10,
-        "enabled": true,
-        "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/投标"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -5521,32 +3911,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "工作/投标",
           "icon": "🎟"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.evidence.手续-对账",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/手续、对账",
         "coreBlockId": "core.evidence",
-        "variantId": "手续-对账",
-        "name": "手续、对账",
-        "description": "由主题收敛为记录预设：工作/手续、对账",
-        "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/手续、对账"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -5564,32 +3936,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "工作/手续、对账",
           "icon": "📋"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.evidence.老板任务",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作/老板任务",
         "coreBlockId": "core.evidence",
-        "variantId": "老板任务",
-        "name": "老板任务",
-        "description": "由主题收敛为记录预设：工作/老板任务",
-        "sortOrder": 40,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作/老板任务"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -5607,32 +3961,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "工作/老板任务",
           "icon": "💥"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.工作能力.core.evidence.工作",
-        "goalId": "goal.工作能力",
+        "goalPath": "工作能力/工作",
         "coreBlockId": "core.evidence",
-        "variantId": "工作",
-        "name": "工作",
-        "description": "按历史 md 主题补齐的目标预设：工作（历史记录 31 条）",
-        "sortOrder": 50,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "工作"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -5650,36 +3986,18 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "工作",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.plan.ob基础",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/ob基础",
         "coreBlockId": "core.plan",
-        "variantId": "ob基础",
-        "name": "ob基础",
-        "description": "由主题收敛为记录预设：电脑/ob基础",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 50,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/ob基础"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -5702,36 +4020,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "电脑/ob基础",
           "icon": "🎚"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.plan.笔记系统",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/笔记系统",
         "coreBlockId": "core.plan",
-        "variantId": "笔记系统",
-        "name": "笔记系统",
-        "description": "由主题收敛为记录预设：电脑/笔记系统",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 60,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/笔记系统"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -5754,36 +4054,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "电脑/笔记系统",
           "icon": "📕"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.plan.记录系统",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/记录系统",
         "coreBlockId": "core.plan",
-        "variantId": "记录系统",
-        "name": "记录系统",
-        "description": "由主题收敛为记录预设：电脑/记录系统",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 70,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/记录系统"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -5806,36 +4088,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "电脑/记录系统",
           "icon": "🎴"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.plan.整理",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/整理",
         "coreBlockId": "core.plan",
-        "variantId": "整理",
-        "name": "整理",
-        "description": "由主题收敛为记录预设：电脑/整理",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 80,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/整理"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -5858,36 +4122,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "电脑/整理",
           "icon": "✒"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.plan.电脑",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑",
         "coreBlockId": "core.plan",
-        "variantId": "电脑",
-        "name": "电脑",
-        "description": "按历史 md 主题补齐的目标预设：电脑（历史记录 46 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 90,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑"
-          },
           {
             "id": "field_mer94wbx",
             "key": "日期",
@@ -5910,36 +4156,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "电脑",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.review.整理",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/整理",
         "coreBlockId": "core.review",
-        "variantId": "整理",
-        "name": "整理",
-        "description": "由主题收敛为记录预设：电脑/整理",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 0,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/整理"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -5962,36 +4190,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "电脑/整理",
           "icon": "✒"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.review.记录系统",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/记录系统",
         "coreBlockId": "core.review",
-        "variantId": "记录系统",
-        "name": "记录系统",
-        "description": "由主题收敛为记录预设：电脑/记录系统",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 10,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/记录系统"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -6014,36 +4224,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "电脑/记录系统",
           "icon": "🎴"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.review.笔记系统",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/笔记系统",
         "coreBlockId": "core.review",
-        "variantId": "笔记系统",
-        "name": "笔记系统",
-        "description": "由主题收敛为记录预设：电脑/笔记系统",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 20,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/笔记系统"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -6066,36 +4258,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "电脑/笔记系统",
           "icon": "📕"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.review.ob基础",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/ob基础",
         "coreBlockId": "core.review",
-        "variantId": "ob基础",
-        "name": "ob基础",
-        "description": "由主题收敛为记录预设：电脑/ob基础",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 30,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/ob基础"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -6118,36 +4292,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "电脑/ob基础",
           "icon": "🎚"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.review.电脑",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑",
         "coreBlockId": "core.review",
-        "variantId": "电脑",
-        "name": "电脑",
-        "description": "按历史 md 主题补齐的目标预设：电脑（历史记录 45 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 40,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -6170,36 +4326,18 @@
           }
         ],
         "defaultValues": {
-          "themePath": "电脑",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.review.AI",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/AI",
         "coreBlockId": "core.review",
-        "variantId": "AI",
-        "name": "AI",
-        "description": "按历史 md 主题补齐的目标预设：电脑/AI（历史记录 1 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 50,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/AI"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -6222,159 +4360,88 @@
           }
         ],
         "defaultValues": {
-          "themePath": "电脑/AI",
           "icon": "🤖"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.task.电脑",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑",
         "coreBlockId": "core.task",
-        "variantId": "电脑",
-        "name": "电脑",
-        "description": "由主题收敛为记录预设：电脑",
-        "sortOrder": 60,
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "themePath": "电脑",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.task.ob基础",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/ob基础",
         "coreBlockId": "core.task",
-        "variantId": "ob基础",
-        "name": "ob基础",
-        "description": "由主题收敛为记录预设：电脑/ob基础",
-        "sortOrder": 70,
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "themePath": "电脑/ob基础",
           "icon": "🎚",
           "任务内容": "ob"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.task.笔记系统",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/笔记系统",
         "coreBlockId": "core.task",
-        "variantId": "笔记系统",
-        "name": "笔记系统",
-        "description": "由主题收敛为记录预设：电脑/笔记系统",
-        "sortOrder": 80,
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "themePath": "电脑/笔记系统",
           "icon": "📕",
           "任务内容": "笔记系统"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.task.记录系统",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/记录系统",
         "coreBlockId": "core.task",
-        "variantId": "记录系统",
-        "name": "记录系统",
-        "description": "由主题收敛为记录预设：电脑/记录系统",
-        "sortOrder": 90,
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "themePath": "电脑/记录系统",
           "icon": "🎴",
           "任务内容": "插件"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.task.整理",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/整理",
         "coreBlockId": "core.task",
-        "variantId": "整理",
-        "name": "整理",
-        "description": "由主题收敛为记录预设：电脑/整理",
-        "sortOrder": 100,
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "themePath": "电脑/整理",
           "icon": "✒"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.task.AI",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/AI",
         "coreBlockId": "core.task",
-        "variantId": "AI",
-        "name": "AI",
         "description": "由旧记录补充迁移：电脑/AI",
-        "sortOrder": 999,
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "themePath": "电脑/AI",
           "icon": "🤖"
-        },
-        "createdAt": "2026-06-07T12:30:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.task.MediaPro",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/MediaPro",
         "coreBlockId": "core.task",
-        "variantId": "MediaPro",
-        "name": "MediaPro",
-        "description": "按历史 md 主题补齐的目标预设：电脑/MediaPro（历史记录 24 条）",
-        "sortOrder": 1009,
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "themePath": "电脑/MediaPro",
           "icon": "📢"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.task.点读",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/点读",
         "coreBlockId": "core.task",
-        "variantId": "点读",
-        "name": "点读",
-        "description": "按历史 md 主题补齐的目标预设：电脑/点读（历史记录 7 条）",
-        "sortOrder": 1019,
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "themePath": "电脑/点读",
           "icon": "🔊"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.thought.电脑",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑",
         "coreBlockId": "core.thought",
-        "variantId": "电脑",
-        "name": "电脑",
-        "description": "按历史 md 主题补齐的目标预设：电脑（历史记录 15 条）",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
           {
@@ -6393,16 +4460,6 @@
               }
             ],
             "semantic": "recordSubtype"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑"
           },
           {
             "id": "field_mewjlypl",
@@ -6421,20 +4478,12 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "电脑",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.thought.AI",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/AI",
         "coreBlockId": "core.thought",
-        "variantId": "AI",
-        "name": "AI",
-        "description": "按历史 md 主题补齐的目标预设：电脑/AI（历史记录 3 条）",
-        "sortOrder": 20,
         "enabled": true,
         "fields": [
           {
@@ -6453,16 +4502,6 @@
               }
             ],
             "semantic": "recordSubtype"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/AI"
           },
           {
             "id": "field_mewjlypl",
@@ -6481,20 +4520,12 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "电脑/AI",
           "icon": "🤖"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.thought.记录系统",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/记录系统",
         "coreBlockId": "core.thought",
-        "variantId": "记录系统",
-        "name": "记录系统",
-        "description": "按历史 md 主题补齐的目标预设：电脑/记录系统（历史记录 2 条）",
-        "sortOrder": 30,
         "enabled": true,
         "fields": [
           {
@@ -6515,16 +4546,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/记录系统"
-          },
-          {
             "id": "field_mewjlypl",
             "key": "内容",
             "label": "内容",
@@ -6541,32 +4562,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "电脑/记录系统",
           "icon": "🎴"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.evidence.电脑",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑",
         "coreBlockId": "core.evidence",
-        "variantId": "电脑",
-        "name": "电脑",
-        "description": "按历史 md 主题补齐的目标预设：电脑（历史记录 14 条）",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -6584,32 +4587,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "电脑",
           "icon": "🖥"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.evidence.记录系统",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/记录系统",
         "coreBlockId": "core.evidence",
-        "variantId": "记录系统",
-        "name": "记录系统",
-        "description": "按历史 md 主题补齐的目标预设：电脑/记录系统（历史记录 3 条）",
-        "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/记录系统"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -6627,32 +4612,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "电脑/记录系统",
           "icon": "🎴"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.爱好能力.core.evidence.AI",
-        "goalId": "goal.爱好能力",
+        "goalPath": "爱好能力/电脑/AI",
         "coreBlockId": "core.evidence",
-        "variantId": "AI",
-        "name": "AI",
-        "description": "按历史 md 主题补齐的目标预设：电脑/AI（历史记录 1 条）",
-        "sortOrder": 30,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "电脑/AI"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -6670,76 +4637,43 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "电脑/AI",
           "icon": "🤖"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.plan.思路整理",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考/思路整理",
         "coreBlockId": "core.plan",
-        "variantId": "思路整理",
-        "name": "思路整理",
         "description": "由旧记录补充迁移：思考/思路整理",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 999,
-        "enabled": true,
         "defaultValues": {
-          "themePath": "思考/思路整理",
           "icon": "🧠"
-        },
-        "createdAt": "2026-06-07T12:30:00.000Z",
-        "updatedAt": "2026-06-07T12:30:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.plan.思考",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考",
         "coreBlockId": "core.plan",
-        "variantId": "思考",
-        "name": "思考",
-        "description": "按历史 md 主题补齐的目标预设：思考（历史记录 23 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
         },
-        "sortOrder": 1009,
-        "enabled": true,
         "defaultValues": {
-          "themePath": "思考",
           "icon": "🧠"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.review.思考",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考",
         "coreBlockId": "core.review",
-        "variantId": "思考",
-        "name": "思考",
-        "description": "按历史 md 主题补齐的目标预设：思考（历史记录 30 条）",
+        "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "year"
         },
-        "sortOrder": 10,
-        "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考"
-          },
           {
             "id": "field_mer983il",
             "key": "日期",
@@ -6762,20 +4696,12 @@
           }
         ],
         "defaultValues": {
-          "themePath": "思考",
           "icon": "🧠"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.habit.读书",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考/读书",
         "coreBlockId": "core.habit",
-        "variantId": "读书",
-        "name": "读书",
-        "description": "由主题收敛为记录预设：思考/读书",
-        "sortOrder": 20,
         "enabled": true,
         "fields": [
           {
@@ -6791,16 +4717,6 @@
             ],
             "semanticType": "ratingPair",
             "auxKey": "image"
-          },
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考/读书"
           },
           {
             "id": "field_mewk7o3j",
@@ -6824,126 +4740,70 @@
           }
         ],
         "defaultValues": {
-          "themePath": "思考/读书",
           "icon": "📚"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-07T09:28:22.588Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.task.思路整理",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考/思路整理",
         "coreBlockId": "core.task",
-        "variantId": "思路整理",
-        "name": "思路整理",
-        "description": "由主题收敛为记录预设：思考/思路整理",
-        "sortOrder": 10,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考/思路整理",
           "icon": "🧠",
           "任务内容": "思路整理"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.task.复盘整理",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考/复盘整理",
         "coreBlockId": "core.task",
-        "variantId": "复盘整理",
-        "name": "复盘整理",
-        "description": "由主题收敛为记录预设：思考/复盘整理",
-        "sortOrder": 20,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考/复盘整理",
           "icon": "🧠",
           "任务内容": "复盘整理"
-        },
-        "createdAt": "2026-06-07T09:28:22.588Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.task.读书",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考/读书",
         "coreBlockId": "core.task",
-        "variantId": "读书",
-        "name": "读书",
-        "description": "由主题收敛为记录预设：思考/读书",
-        "sortOrder": 30,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考/读书",
           "icon": "📚"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.task.思考",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考",
         "coreBlockId": "core.task",
-        "variantId": "思考",
-        "name": "思考",
-        "description": "由主题收敛为记录预设：思考",
-        "sortOrder": 40,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考",
           "icon": "🧠"
-        },
-        "createdAt": "2026-06-07T09:28:22.589Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.task.整理笔记",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考/整理笔记",
         "coreBlockId": "core.task",
-        "variantId": "整理笔记",
-        "name": "整理笔记",
-        "description": "按历史 md 主题补齐的目标预设：思考/整理笔记（历史记录 78 条）",
-        "sortOrder": 50,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考/整理笔记",
           "icon": "🧠",
           "任务内容": "思路整理"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.task.整理复盘",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考/整理复盘",
         "coreBlockId": "core.task",
-        "variantId": "整理复盘",
-        "name": "整理复盘",
-        "description": "按历史 md 主题补齐的目标预设：思考/整理复盘（历史记录 11 条）",
-        "sortOrder": 60,
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "themePath": "思考/整理复盘",
           "icon": "🧠",
           "任务内容": "思路整理"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T09:47:01.117Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.thought.思考",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考",
         "coreBlockId": "core.thought",
-        "variantId": "思考",
-        "name": "思考",
-        "description": "按历史 md 主题补齐的目标预设：思考（历史记录 20 条）",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
           {
@@ -6964,16 +4824,6 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考"
-          },
-          {
             "id": "field_mewjlypl",
             "key": "内容",
             "label": "内容",
@@ -6990,20 +4840,12 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "思考",
           "icon": "🧠"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.thought.思路整理",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考/思路整理",
         "coreBlockId": "core.thought",
-        "variantId": "思路整理",
-        "name": "思路整理",
-        "description": "按历史 md 主题补齐的目标预设：思考/思路整理（历史记录 2 条）",
-        "sortOrder": 20,
         "enabled": true,
         "fields": [
           {
@@ -7024,15 +4866,30 @@
             "semantic": "recordSubtype"
           },
           {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考/思路整理"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon",
+            "defaultValue": "🧠"
+          }
+        ],
+        "targetFile": "01/闪念.md",
+        "defaultValues": {
+          "icon": "🧠"
+        }
+      },
+      {
+        "goalPath": "武装大脑/思考",
+        "coreBlockId": "core.evidence",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -7050,32 +4907,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "思考/思路整理",
           "icon": "🧠"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.evidence.思考",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考/思路整理",
         "coreBlockId": "core.evidence",
-        "variantId": "思考",
-        "name": "思考",
-        "description": "按历史 md 主题补齐的目标预设：思考（历史记录 22 条）",
-        "sortOrder": 10,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -7093,75 +4932,14 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "思考",
           "icon": "🧠"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       },
       {
-        "id": "goal-template.goal.武装大脑.core.evidence.思路整理",
-        "goalId": "goal.武装大脑",
+        "goalPath": "武装大脑/思考/读书",
         "coreBlockId": "core.evidence",
-        "variantId": "思路整理",
-        "name": "思路整理",
-        "description": "按历史 md 主题补齐的目标预设：思考/思路整理（历史记录 1 条）",
-        "sortOrder": 20,
         "enabled": true,
         "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考/思路整理"
-          },
-          {
-            "id": "field_mewjlypl",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🧠"
-          }
-        ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "themePath": "思考/思路整理",
-          "icon": "🧠"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
-      },
-      {
-        "id": "goal-template.goal.武装大脑.core.evidence.读书",
-        "goalId": "goal.武装大脑",
-        "coreBlockId": "core.evidence",
-        "variantId": "读书",
-        "name": "读书",
-        "description": "按历史 md 主题补齐的目标预设：思考/读书（历史记录 1 条）",
-        "sortOrder": 30,
-        "enabled": true,
-        "fields": [
-          {
-            "id": "core.field.themePath",
-            "key": "themePath",
-            "label": "主题",
-            "type": "hierarchicalSingleSelect",
-            "semantic": "themePath",
-            "semanticType": "path",
-            "hierarchical": true,
-            "defaultValue": "思考/读书"
-          },
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -7179,11 +4957,8 @@
         ],
         "targetFile": "01/闪念.md",
         "defaultValues": {
-          "themePath": "思考/读书",
           "icon": "📚"
-        },
-        "createdAt": "2026-06-25T00:00:00.000Z",
-        "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
       }
     ]
   },
@@ -7201,59 +4976,9 @@
     "patches": []
   },
   "energySettings": {
-    "defaultGoalId": "goal.我若安好便是晴天",
-    "defaultThemePath": ""
+    "defaultGoalPath": "我若安好便是晴天"
   },
   "floatingTimerEnabled": true,
-  "activeThemePaths": [
-    "思考",
-    "思考/时间整理",
-    "思考/复盘整理",
-    "思考/思路整理",
-    "思考/读书",
-    "思考/自我",
-    "思考/垚垚",
-    "思考/阳阳",
-    "思考/婆婆",
-    "思考/芦苇",
-    "思考/家庭",
-    "生活",
-    "生活/高级生活",
-    "生活/娱乐",
-    "生活/垚垚",
-    "生活/家务",
-    "生活/整理",
-    "生活/车车",
-    "健康",
-    "健康/卫生",
-    "健康/睡眠",
-    "健康/身体",
-    "健康/习惯",
-    "健康/运动",
-    "健康/粑粑",
-    "健康/早餐",
-    "健康/午餐",
-    "健康/晚餐",
-    "健康/心情",
-    "健康/姨妈",
-    "健康/剪头发",
-    "健康/剪指甲",
-    "电脑",
-    "电脑/ob基础",
-    "电脑/笔记系统",
-    "电脑/记录系统",
-    "电脑/整理",
-    "工作",
-    "工作/设计",
-    "工作/投标",
-    "工作/手续、对账",
-    "工作/其他",
-    "工作/老板任务",
-    "工作/通勤",
-    "思考/专注",
-    "生活/小手机",
-    "1"
-  ],
   "devConsoleStackEnabled": false,
   "categoryColors": {
     "总结": "#e5bf8a",

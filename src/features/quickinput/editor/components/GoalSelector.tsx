@@ -7,7 +7,6 @@ import { HierarchySingleSelect, type HierarchySingleSelectOption } from './Hiera
 
 export interface GoalSelectorOption extends HierarchySingleSelectOption {
   goal?: GoalDefinition | null;
-  themePath?: string | null;
 }
 
 export interface GoalSelectorProps {

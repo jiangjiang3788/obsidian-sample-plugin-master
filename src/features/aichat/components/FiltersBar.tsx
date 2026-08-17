@@ -1,16 +1,14 @@
 /** @jsxImportSource preact */
 import { SimpleSelect, ThinkToggle } from '@shared/ui/public';
-import { ThemeTreeSelect } from '@shared/components/public';
-import type { ThemeDefinition } from '@core/types/public';
 
 export interface BlockDefinition { id: string; name: string }
 
 export interface FiltersBarProps {
     enableRetrieval: boolean;
     setEnableRetrieval: (enabled: boolean) => void;
-    themes: ThemeDefinition[];
-    selectedThemes: string[];
-    setSelectedThemes: (themes: string[]) => void;
+    goals: string[];
+    selectedGoalPath: string;
+    setSelectedGoalPath: (path: string) => void;
     selectedType: string;
     setSelectedType: (t: string) => void;
     blocks: BlockDefinition[];
@@ -22,9 +20,9 @@ export interface FiltersBarProps {
 export function FiltersBar({
     enableRetrieval,
     setEnableRetrieval,
-    themes,
-    selectedThemes,
-    setSelectedThemes,
+    goals,
+    selectedGoalPath,
+    setSelectedGoalPath,
     selectedType,
     setSelectedType,
     blocks,
@@ -36,6 +34,10 @@ export function FiltersBar({
         { value: '', label: '全部类型' },
         { value: 'task', label: '任务' },
         { value: 'block', label: '记录' },
+    ];
+    const goalOptions = [
+        { value: '', label: '全部目标' },
+        ...goals.map((path) => ({ value: path, label: path })),
     ];
     const blockOptions = [
         { value: '', label: '全部记录' },
@@ -51,18 +53,14 @@ export function FiltersBar({
                 label="引用上下文"
             />
 
-            {enableRetrieval && themes.length > 0 ? (
-                <div className="think-ai-chat-filters__theme">
-                    <ThemeTreeSelect
-                        themes={themes}
-                        selectedPaths={selectedThemes}
-                        onSelectMultiple={setSelectedThemes}
-                        multiSelect
-                        searchable
-                        placeholder="主题"
-                        size="small"
-                    />
-                </div>
+            {enableRetrieval && goals.length > 0 ? (
+                <SimpleSelect
+                    className="think-ai-chat-filters__select"
+                    value={selectedGoalPath}
+                    options={goalOptions}
+                    onChange={setSelectedGoalPath}
+                    placeholder="全部目标"
+                />
             ) : null}
 
             {enableRetrieval ? (

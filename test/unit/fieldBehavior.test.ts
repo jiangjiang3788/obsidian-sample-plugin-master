@@ -38,15 +38,15 @@ describe('FieldBehavior', () => {
     expect(matchTemplateFieldOptionValue(status, '完成')).toEqual({ value: 'done', label: '完成' });
   });
 
-  it('keeps path values normalized and displayable for edit backfill', () => {
-    const theme = field({
-      key: '主题',
+  it('keeps generic hierarchy values normalized and displayable for edit backfill', () => {
+    const hierarchy = field({
+      key: '位置',
       type: 'path',
       options: [{ value: '生活/健康', label: '健康' }],
     });
 
-    expect(getTemplateFieldBehaviorKind(theme)).toBe('path');
-    expect(normalizeBackfilledTemplateFieldValue(theme, '生活 / 健康')).toEqual({ value: '生活/健康', label: '健康' });
+    expect(getTemplateFieldBehaviorKind(hierarchy)).toBe('path');
+    expect(normalizeBackfilledTemplateFieldValue(hierarchy, '生活 / 健康')).toEqual({ value: '生活/健康', label: '健康' });
   });
 
   it('normalizes multi path and tag fields without route-specific if/switches', () => {

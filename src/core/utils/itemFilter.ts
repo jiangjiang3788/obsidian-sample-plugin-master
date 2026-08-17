@@ -114,8 +114,8 @@ function matchRule(item: RecordViewItem, rule: FilterRule): boolean {
   } else if (canonicalField === 'content') {
     v1 = readString(itemRecord, 'contentLower') ?? String(v1 ?? '').toLowerCase();
     v2 = String(v2 ?? '').toLowerCase();
-  } else if (['themePath', 'rootTheme', 'leafTheme', 'goalPath', 'rootGoal', 'leafGoal'].includes(canonicalField)) {
-    // 目标/主题是迁移后的两条主维度：统一大小写，并支持 in/notIn 多值筛选。
+  } else if (['goalPath', 'rootGoal', 'leafGoal'].includes(canonicalField)) {
+    // Goal hierarchy uses one canonical path: normalize case and support in/notIn filters.
     v1 = String(v1 ?? '').toLowerCase();
     if (rule.op === 'in' || rule.op === 'notIn') {
       v2 = normalizeListValue(v2).map(value => String(value ?? '').toLowerCase());
@@ -244,7 +244,7 @@ export function filterByKeyword(items: RecordViewItem[], kw: string) {
     const contentLower = readString(itemRecord, 'contentLower') ?? (it.content || '').toLowerCase();
     const fullDataLower = readString(itemRecord, 'fullDataLower') ?? (it.fullData || it.rawSource || '').toLowerCase();
     const tagsLower = (it.tags || []).join(' ').toLowerCase();
-    const semanticText = [it.goalPath, it.themePath, it.coreBlock, it.status].filter(Boolean).join(' ').toLowerCase();
+    const semanticText = [it.goalPath, it.coreBlock, it.status].filter(Boolean).join(' ').toLowerCase();
     // Global keyword search is intentionally broader than the canonical `content` field:
     // it may discover explicit Record KV/custom fields through fullData without polluting clean content semantics.
     return (titleLower + ' ' + contentLower + ' ' + fullDataLower + ' ' + tagsLower + ' ' + semanticText).includes(s);

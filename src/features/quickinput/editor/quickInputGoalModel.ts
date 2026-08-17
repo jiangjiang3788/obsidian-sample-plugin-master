@@ -16,7 +16,7 @@ function getOrderedGoalIndex(
   const order = readNumber(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
   return Number.isFinite(order)
     ? order
-    : (originalIndex.get(goal.id) ?? Number.MAX_SAFE_INTEGER);
+    : (originalIndex.get(goal.path) ?? Number.MAX_SAFE_INTEGER);
 }
 
 function getGoalByDisplayPath(
@@ -27,7 +27,7 @@ function getGoalByDisplayPath(
 }
 
 function sortGoalsLikePresetMatrix(goals: GoalDefinition[]): GoalDefinition[] {
-  const originalIndex = new Map(goals.map((goal, index) => [goal.id, index]));
+  const originalIndex = new Map(goals.map((goal, index) => [goal.path, index]));
   return [...goals].sort((left, right) => {
     const leftParts = (getGoalPath(left) || "").split("/").filter(Boolean);
     const rightParts = (getGoalPath(right) || "").split("/").filter(Boolean);
@@ -56,7 +56,7 @@ function sortGoalsLikePresetMatrix(goals: GoalDefinition[]): GoalDefinition[] {
       getOrderedGoalIndex(right, originalIndex);
     if (byOrder !== 0) return byOrder;
     return (
-      (originalIndex.get(left.id) ?? 0) - (originalIndex.get(right.id) ?? 0)
+      (originalIndex.get(left.path) ?? 0) - (originalIndex.get(right.path) ?? 0)
     );
   });
 }
@@ -66,11 +66,12 @@ function goalHasDirectEnabledPreset(
   goal: GoalDefinition,
   coreBlockId: string,
 ): boolean {
-  if (!goal?.id || !coreBlockId) return false;
+  const goalPath = normalizeGoalPath(goal?.path);
+  if (!goalPath || !coreBlockId) return false;
   return getGoalTemplates(fullSettings.goalSettings).some(
     (template) =>
       template.enabled !== false &&
-      template.goalId === goal.id &&
+      template.goalPath === goalPath &&
       template.coreBlockId === coreBlockId,
   );
 }
@@ -90,17 +91,16 @@ export function buildQuickInputGoalOptions(
 
   const result: GoalSelectorOption[] = [];
   for (const [index, goal] of sourceGoals.entries()) {
-    const normalized = normalizeGoalPath(goal.goalPath || goal.title);
+    const normalized = normalizeGoalPath(goal.path);
     if (!normalized || seen.has(normalized)) continue;
     seen.add(normalized);
     const leaf = normalized.split("/").filter(Boolean).pop() || normalized;
     result.push({
-      id: goal.id,
+      id: normalized,
       value: normalized,
-      label: String(goal.title || '').trim() || leaf,
+      label: leaf,
       order: index,
       goal,
-      themePath: goal.themePath ?? null,
     });
   }
   return result;
@@ -120,10 +120,8 @@ export function applyQuickInputGoalSelection(params: {
 }) {
   const { formData, fieldSources, option } = params;
   const goal = option.goal || null;
-  const goalPath = normalizeGoalPath(goal?.goalPath || option.value);
-  const goalId = goal?.id || option.id || null;
-  if (!goalPath || !goalId) throw new Error('QuickInput Goal selection requires a canonical Goal entity.');
-  const themePath = goal?.themePath || option.themePath || null;
+  const goalPath = normalizeGoalPath(goal?.path || option.value);
+  if (!goalPath) throw new Error('QuickInput Goal selection requires a canonical Goal path.');
   const nextFormData = { ...formData };
   const nextFieldSources: QuickInputFieldSourceMap = { ...fieldSources };
   const assign = (
@@ -140,23 +138,14 @@ export function applyQuickInputGoalSelection(params: {
     nextFieldSources[key] = source;
   };
 
-  assign("goalId", goalId);
-  assign("目标ID", goalId);
   assign("goalPath", goalPath);
   assign("目标", goalPath);
   const parts = splitGoalPath(goalPath);
   assign("rootGoal", parts.rootGoal || "", "goal_context");
   assign("leafGoal", parts.leafGoal || "", "goal_context");
-  if (themePath) {
-    assign("themePath", themePath, "goal_context");
-    assign("主题", themePath, "goal_context");
-  }
-
   return {
     goal,
-    goalId,
     goalPath,
-    themePath,
     formData: nextFormData,
     fieldSources: nextFieldSources,
   };
@@ -164,30 +153,14 @@ export function applyQuickInputGoalSelection(params: {
 
 export function resolveQuickInputEnergyDefaultGoal(
   goals: GoalSelectorOption[],
-  defaultGoalId?: string | null,
+  defaultGoalPath?: string | null,
 ): GoalSelectorOption | null {
   if (goals.length === 0) return null;
-  const preferredId = String(defaultGoalId || '').trim();
-  if (preferredId) {
-    const preferred = goals.find((option) => option.goal?.id === preferredId || option.id === preferredId);
+  const preferredPath = String(defaultGoalPath || '').trim();
+  if (preferredPath) {
+    const preferred = goals.find((option) => option.value === preferredPath || option.goal?.path === preferredPath);
     if (preferred) return preferred;
   }
   return goals[0] || null;
 }
 
-
-export function resolveQuickInputEnergyThemePath(params: {
-  formThemePath?: unknown;
-  formThemeSource?: QuickInputFieldSource;
-  defaultThemePath?: string | null;
-  goalThemePath?: string | null;
-}): string | null {
-  const explicitSources = new Set<QuickInputFieldSource>(['user', 'context', 'edit_backfill', 'invocation_context']);
-  const formThemePath = String(params.formThemePath || '').trim();
-  if (formThemePath && params.formThemeSource && explicitSources.has(params.formThemeSource)) return formThemePath;
-  const configured = String(params.defaultThemePath || '').trim();
-  if (configured) return configured;
-  if (formThemePath) return formThemePath;
-  const goalThemePath = String(params.goalThemePath || '').trim();
-  return goalThemePath || null;
-}

@@ -11,7 +11,6 @@ const data = read('src/features/settings/tabs/DataManagementSettings.tsx');
 const blockManager = read('src/features/settings/input/BlockManager.tsx');
 const goalManager = read('src/features/settings/input/GoalManager.tsx');
 const goalMatrix = read('src/features/settings/goalTemplates/GoalTemplateMatrix.tsx');
-const themeManager = read('src/features/settings/data/ThemeMetadataManager.tsx');
 const metrics = read('src/features/settings/input/goalManager/GoalMetricSection.tsx');
 
 if (!root.includes('think-settings-workspace__rail') || !root.includes('SettingsNavigation')) {
@@ -49,9 +48,6 @@ if (goalMatrix.includes('think-goal-template-matrix__block-filter') || goalMatri
 }
 if (!goalMatrix.includes('think-management-toolbar')) {
   failures.push('Goal matrix search/collapse controls must use the management-toolbar pattern.');
-}
-if (themeManager.includes('>主题管理<') || themeManager.includes('>主题列表<')) {
-  failures.push('Theme page must not repeat the active secondary navigation as nested management titles.');
 }
 if (metrics.includes('>目标指标<')) {
   failures.push('Metrics page must not repeat the active secondary navigation as a page heading.');

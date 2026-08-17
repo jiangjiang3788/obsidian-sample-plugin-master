@@ -17,7 +17,7 @@ export interface EnergyRecommendationLearningModel {
   byTaskId: Map<string, EnergyActionHistoricalEffect>;
   bySeriesId: Map<string, EnergyActionHistoricalEffect>;
   byActivity: Map<string, EnergyActionHistoricalEffect>;
-  byTheme: Map<string, EnergyActionHistoricalEffect>;
+  byGoal: Map<string, EnergyActionHistoricalEffect>;
   recoveryActivities: EnergyRecoveryLibraryEntry[];
   depletionActivities: EnergyRecoveryLibraryEntry[];
 }
@@ -26,7 +26,7 @@ interface FeedbackRow {
   taskId: string;
   seriesId?: string;
   activity: string;
-  theme?: string;
+  goalPath?: string;
   delta: number;
   brainDelta?: number;
   physicalDelta?: number;
@@ -78,13 +78,13 @@ function buildFeedbackRows(items: RecordViewItem[]): FeedbackRow[] {
     const delta = finiteNumber(session.energyDelta);
     if (delta == null) continue;
     const task = byId.get(session.taskId);
-    const theme = text(session.themePath || task?.themePath || task?.theme) || undefined;
-    const activity = task ? classifyEnergyActivity(task) : (theme || '未分类活动');
+    const goalPath = text(session.goalPath || task?.goalPath) || undefined;
+    const activity = task ? classifyEnergyActivity(task) : (goalPath || '未分类活动');
     rows.push({
       taskId: session.taskId,
       seriesId: session.seriesId || task?.seriesId,
       activity,
-      theme,
+      goalPath,
       delta,
       brainDelta: finiteNumber(session.brainDelta),
       physicalDelta: finiteNumber(session.physicalDelta),
@@ -112,14 +112,14 @@ export function buildEnergyRecommendationLearning(items: RecordViewItem[]): Ener
   const byTaskId = aggregate(rows, (row) => row.taskId);
   const bySeriesId = aggregate(rows.filter((row) => !!row.seriesId), (row) => row.seriesId || '');
   const byActivity = aggregate(rows, (row) => row.activity);
-  const byTheme = aggregate(rows.filter((row) => !!row.theme), (row) => row.theme || '');
+  const byGoal = aggregate(rows.filter((row) => !!row.goalPath), (row) => row.goalPath || '');
   return {
     feedbackSampleCount: rows.length,
     pairedActivityCount: rows.length,
     byTaskId,
     bySeriesId,
     byActivity,
-    byTheme,
+    byGoal,
     recoveryActivities: recoveryEntries(byActivity, 'recovery'),
     depletionActivities: recoveryEntries(byActivity, 'depletion'),
   };
@@ -132,11 +132,11 @@ export function attachEnergyRecommendationLearning(
   return candidates.map((candidate) => {
     const taskEffect = learning.byTaskId.get(normalized(candidate.id));
     const seriesEffect = candidate.seriesId ? learning.bySeriesId.get(normalized(candidate.seriesId)) : undefined;
-    const themeEffect = candidate.theme ? learning.byTheme.get(normalized(candidate.theme)) : undefined;
+    const goalEffect = candidate.goalPath ? learning.byGoal.get(normalized(candidate.goalPath)) : undefined;
     const activityEffect = candidate.activityLabel ? learning.byActivity.get(normalized(candidate.activityLabel)) : undefined;
     const historicalEffect = taskEffect && taskEffect.sampleCount >= 3 ? taskEffect
       : seriesEffect && seriesEffect.sampleCount >= 3 ? seriesEffect
-      : themeEffect && themeEffect.sampleCount >= 3 ? themeEffect
+      : goalEffect && goalEffect.sampleCount >= 3 ? goalEffect
       : activityEffect && activityEffect.sampleCount >= 3 ? activityEffect
       : undefined;
     return historicalEffect ? { ...candidate, historicalEffect } : candidate;

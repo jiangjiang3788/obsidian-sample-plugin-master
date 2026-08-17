@@ -46,13 +46,19 @@ export function getGoalPathCandidates(path?: string | null): string[] {
   return result;
 }
 
-export function makeStableGoalIdFromPath(path: string): string {
-  const normalized = requireGoalPath(path);
-  const safe = normalized
-    .toLowerCase()
-    .replace(/[\/\s]+/g, '-')
-    .replace(/[^a-z0-9\-_.\u4e00-\u9fa5]/gi, '')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-  return `goal.${safe || 'untitled'}`;
+export function getParentGoalPath(path?: string | null): string | null {
+  const normalized = normalizeGoalPath(path);
+  if (!normalized) return null;
+  const parts = normalized.split('/').filter(Boolean);
+  return parts.length > 1 ? parts.slice(0, -1).join('/') : null;
+}
+
+export function getGoalLeaf(path?: string | null): string {
+  return splitGoalPath(path).leafGoal || '';
+}
+
+export function isGoalPathDescendant(path?: string | null, ancestor?: string | null): boolean {
+  const child = normalizeGoalPath(path);
+  const parent = normalizeGoalPath(ancestor);
+  return Boolean(child && parent && child !== parent && child.startsWith(`${parent}/`));
 }

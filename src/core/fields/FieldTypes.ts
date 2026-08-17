@@ -8,7 +8,7 @@
  * - text / path / tag / image 等为单值
  * - multiSelect / multiPath / multiTag / multiImage 等为多值
  *
- * themePath / categoryPath / tags 这类系统语义保留为内部能力，
+ * categoryPath / tags / goalPath 这类系统语义保留为内部能力，
  * 但不再作为普通字段设置项暴露给用户选择。
  */
 
@@ -17,7 +17,7 @@ export type FieldCategory =
   | 'file'
   | 'custom';
 
-export type FieldSource = 'item' | 'file' | 'derived' | 'custom' | 'extra' | 'legacy';
+export type FieldSource = 'item' | 'file' | 'derived' | 'custom' | 'extra';
 
 export type FieldInputType =
   | 'text'
@@ -62,9 +62,7 @@ export type FieldSemantic =
   | 'title'
   | 'body'
   | 'categoryPath'
-  | 'themePath'
   | 'tags'
-  | 'goalId'
   | 'goalPath'
   | 'cycleId'
   | 'coreBlock'
@@ -87,13 +85,13 @@ export type FieldSemantic =
 
 export type FieldCardinality = 'single' | 'multi';
 
-export type FieldStorageScope = 'core' | 'file' | 'derived' | 'custom' | 'extra' | 'legacy';
+export type FieldStorageScope = 'core' | 'file' | 'derived' | 'custom' | 'extra';
 
 export interface FieldStoragePolicy {
   scope: FieldStorageScope;
   /** Markdown 写入时使用的字段名；为空时使用 key。 */
   markdownKey?: string;
-  /** 读取旧数据时允许识别的历史字段名。 */
+  /** 当前模板允许使用的等价字段名。 */
   aliases?: string[];
 }
 

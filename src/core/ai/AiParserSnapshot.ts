@@ -1,89 +1,60 @@
 export interface AiSnapshotField {
-    key?: string;
-    label?: string;
-    type?: string;
+  key?: string;
+  label?: string;
+  type?: string;
 }
 
 export interface AiSnapshotBlock {
-    id?: string;
-    name?: string;
-    categoryKey?: string;
-    fields?: AiSnapshotField[];
+  id?: string;
+  name?: string;
+  categoryKey?: string;
+  fields?: AiSnapshotField[];
 }
 
-export interface AiSnapshotTheme {
-    id?: string;
-    path?: string;
-}
 
 export interface AiSnapshotGoal {
-    id?: string;
-    path?: string;
-    title?: string;
-    goalPath?: string;
-    themePath?: string | null;
+  path?: string;
 }
 
 export interface AiSnapshotPreset {
-    id?: string;
-    goalTemplateId?: string;
-    variantId?: string;
-    goalId?: string;
-    goalPath?: string;
-    blockId?: string;
-    categoryKey?: string;
-    name?: string;
-    themePath?: string;
+  id?: string;
+  goalTemplateId?: string;
+  goalPath?: string;
+  blockId?: string;
+  categoryKey?: string;
 }
 
 export interface AiParserSnapshot {
-    blocks?: AiSnapshotBlock[];
-    themes?: AiSnapshotTheme[];
-    goals?: AiSnapshotGoal[];
-    goalPresets?: AiSnapshotPreset[];
+  blocks?: AiSnapshotBlock[];
+  goals?: AiSnapshotGoal[];
+  goalPresets?: AiSnapshotPreset[];
 }
 
 export interface CompactAiParserSnapshot {
-    blocks: Array<{ id?: string; name?: string; categoryKey?: string; fields: AiSnapshotField[] }>;
-    themes: Array<{ path?: string }>;
-    goals: Array<{ path?: string }>;
-    goalPresets: Array<{
-        goalPath?: string;
-        blockId?: string;
-        categoryKey?: string;
-        variantId?: string;
-        goalTemplateId?: string;
-        name?: string;
-        themePath?: string;
-    }>;
+  blocks: Array<{ id?: string; name?: string; categoryKey?: string; fields: AiSnapshotField[] }>;
+  goals: Array<{ path?: string }>;
+  goalPresets: Array<{
+    goalPath?: string;
+    blockId?: string;
+    categoryKey?: string;
+    goalTemplateId?: string;
+  }>;
 }
 
 export function compactSnapshotForFastMode(snapshot: AiParserSnapshot): CompactAiParserSnapshot {
-    return {
-        blocks: (snapshot.blocks ?? []).map((block) => ({
-            id: block.id,
-            name: block.name,
-            categoryKey: block.categoryKey,
-            fields: (block.fields ?? []).map((field) => ({
-                key: field.key,
-                label: field.label,
-                type: field.type,
-            })),
-        })),
-        themes: (snapshot.themes ?? []).map((theme) => ({
-            path: theme.path,
-        })),
-        goals: (snapshot.goals ?? []).map((goal) => ({
-            path: goal.path,
-        })),
-        goalPresets: (snapshot.goalPresets ?? []).map((preset) => ({
-            goalPath: preset.goalPath,
-            blockId: preset.blockId,
-            categoryKey: preset.categoryKey,
-            variantId: preset.variantId,
-            goalTemplateId: preset.goalTemplateId || preset.id,
-            name: preset.name,
-            themePath: preset.themePath,
-        })),
-    };
+  return {
+    blocks: (snapshot.blocks ?? []).map((block) => ({
+      id: block.id,
+      name: block.name,
+      categoryKey: block.categoryKey,
+      fields: (block.fields ?? []).map((field) => ({ key: field.key, label: field.label, type: field.type })),
+    })),
+    goals: (snapshot.goals ?? []).map((goal) => ({ path: goal.path })),
+    goalPresets: (snapshot.goalPresets ?? []).map((preset) => ({
+      goalPath: preset.goalPath,
+      blockId: preset.blockId,
+      categoryKey: preset.categoryKey,
+      goalTemplateId: preset.goalTemplateId || preset.id,
+    })),
+  };
 }

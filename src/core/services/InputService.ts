@@ -3,7 +3,6 @@ import { singleton, inject } from 'tsyringe';
 import type { VaultPort } from '@core/ports/VaultPort';
 import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
 import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
-import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { DataStore } from '@core/services/DataStore';
 import { resolveRecordBlockRangeById } from '@core/recordInput/mutationLocator';
@@ -29,13 +28,11 @@ export class InputService {
   previewTemplateExecution(
     template: RecordCaptureTemplate,
     formData: Record<string, any>,
-    theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null },
     recordId?: string,
   ): { recordId?: string | null; renderData: Record<string, any>; outputContent: string; targetFilePath: string; header: string | null } {
     if (!template) throw new Error('传入了无效的模板对象。');
 
-    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta, recordId });
+    const outputPlan = buildRecordOutputPlan({ template, formData, recordId });
     return {
       recordId: outputPlan.recordId,
       renderData: outputPlan.renderData,
@@ -48,13 +45,11 @@ export class InputService {
   async executeTemplate(
     template: RecordCaptureTemplate,
     formData: Record<string, any>,
-    theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null },
     options: RecordWriteOptions = {},
   ): Promise<string> {
     const signal = options.signal;
     this.throwIfAborted(signal);
-    const preview = this.previewTemplateExecution(template, formData, theme, templateMeta, options.recordId);
+    const preview = this.previewTemplateExecution(template, formData, options.recordId);
     const { outputContent, targetFilePath, header } = preview;
 
     if (!targetFilePath) throw new Error('模板未定义目标文件路径 (targetFile)。');
@@ -100,19 +95,15 @@ export class InputService {
   async createRecordAtPlannedLocation(
     template: RecordCaptureTemplate,
     formData: Record<string, any>,
-    theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null },
     options: RecordWriteOptions = {},
   ): Promise<string> {
-    return this.executeTemplate(template, formData, theme, templateMeta, options);
+    return this.executeTemplate(template, formData, options);
   }
 
   async updateExistingRecord(
     item: RecordViewItem,
     template: RecordCaptureTemplate,
     formData: Record<string, any>,
-    theme?: ThemeDefinition,
-    templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null },
     options: RecordWriteOptions = {},
   ): Promise<string> {
     const signal = options.signal;
@@ -127,7 +118,7 @@ export class InputService {
     if (existingContent == null) throw createRecordConflictError('record_path_missing', `找不到文件: ${path}`);
     this.throwIfAborted(signal);
 
-    const outputPlan = buildRecordOutputPlan({ template, formData, theme, templateMeta, recordId: item.id });
+    const outputPlan = buildRecordOutputPlan({ template, formData, recordId: item.id });
     const nextText = outputPlan.outputContent.trim();
     if (!nextText) throw new Error('编辑后的输出内容为空，已取消保存。');
 

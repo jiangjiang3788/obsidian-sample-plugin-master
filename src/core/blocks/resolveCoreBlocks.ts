@@ -1,4 +1,3 @@
-import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { DEFAULT_CORE_BLOCKS, DEFAULT_CORE_BLOCK_SETTINGS } from './defaultCoreBlocks';
 import type { CoreBlockDefinition, CoreBlockPatch, CoreBlockSettings } from './types';
@@ -15,7 +14,7 @@ function applyPatch(block: CoreBlockDefinition, patch?: CoreBlockPatch): CoreBlo
   };
 }
 
-export function normalizeCoreBlockSettings(settings?: Partial<CoreBlockSettings> | null, _legacyBlocks: RecordCaptureTemplate[] = []): CoreBlockSettings {
+export function normalizeCoreBlockSettings(settings?: Partial<CoreBlockSettings> | null): CoreBlockSettings {
   return {
     enabledCoreBlockIds: settings?.enabledCoreBlockIds?.length ? settings.enabledCoreBlockIds : DEFAULT_CORE_BLOCK_SETTINGS.enabledCoreBlockIds,
     patches: settings?.patches || [],
@@ -23,7 +22,7 @@ export function normalizeCoreBlockSettings(settings?: Partial<CoreBlockSettings>
 }
 
 export function getEffectiveCoreBlocks(settings: Pick<ThinkSettings, 'coreBlockSettings' | 'inputSettings'>): CoreBlockDefinition[] {
-  const coreSettings = normalizeCoreBlockSettings(settings.coreBlockSettings, settings.inputSettings?.blocks || []);
+  const coreSettings = normalizeCoreBlockSettings(settings.coreBlockSettings);
   const patchesById = new Map(coreSettings.patches.map((patch) => [patch.blockId, patch]));
   const enabled = new Set(coreSettings.enabledCoreBlockIds);
   return DEFAULT_CORE_BLOCKS

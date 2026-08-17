@@ -23,9 +23,7 @@ export function buildEnergySnapshotRecord(input: EnergySnapshotInput): EnergySna
   return {
     ...input,
     recordId: createRecordId('energy'),
-    goalId: clean(input.goalId) || undefined,
     goalPath: clean(input.goalPath) || undefined,
-    themePath: clean(input.themePath) || undefined,
     time: clean(input.time) || undefined,
     period: clean(input.period) || undefined,
     recordedAt: clean(input.recordedAt) || undefined,
@@ -45,8 +43,8 @@ export function buildEnergySnapshotRecord(input: EnergySnapshotInput): EnergySna
 }
 
 /**
- * Energy Snapshot uses the universal Record v2 envelope.
- * 故意不写 模板ID / 模板来源：Energy 是 Goal-bound，但不是 Template-bound。
+ * Energy Snapshot is Goal-bound but not Template-bound.
+ * Goal path is the only persisted ownership identity.
  */
 export function buildEnergySnapshotMarkdown(input: EnergySnapshotInput | EnergySnapshotRecord): string {
   const record = 'coreBlock' in input ? input : buildEnergySnapshotRecord(input);
@@ -55,12 +53,10 @@ export function buildEnergySnapshotMarkdown(input: EnergySnapshotInput | EnergyS
     coreBlock: 'energy',
     fields: {
       '记录子类型': 'snapshot',
-      '目标ID': record.goalId,
       '目标': record.goalPath,
       '日期': record.date,
       '时间': record.time,
       '时段': record.period,
-      '主题': record.themePath,
       '精力值': record.score,
       '脑力精力': record.brainScore,
       '体力精力': record.physicalScore,

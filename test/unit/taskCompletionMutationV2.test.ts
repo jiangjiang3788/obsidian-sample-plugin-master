@@ -7,7 +7,6 @@ const seriesId = 'taskseries.01J00000000000000000000000';
 function openTask(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: taskId,
-    schemaVersion: 2,
     coreBlock: 'task',
     status: 'open',
     title: 'Current',
@@ -25,7 +24,6 @@ function openTask(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
 function activeSeries(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: seriesId,
-    schemaVersion: 2,
     coreBlock: 'task-series',
     status: 'active',
     title: 'Weekly',
@@ -38,7 +36,6 @@ function activeSeries(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
     created: 0,
     modified: 0,
     extra: {},
-    goalId: 'goal.series',
     goalPath: 'Series',
     expectedDurationMinutes: 1,
     energyDemand: 'low',
@@ -87,7 +84,6 @@ describe('TaskCompletionMutation v2', () => {
     const task = openTask({
       seriesId,
       scheduledDate: '2026-08-11',
-      goalId: 'goal.old',
       goalPath: 'Old',
       content: 'Old instance text',
     });
@@ -101,7 +97,7 @@ describe('TaskCompletionMutation v2', () => {
     expect(createNext.kind).toBe('create');
     expect(createNext.record.fields.seriesId).toBe(seriesId);
     expect(createNext.record.fields.scheduledDate).toBe('2026-08-18');
-    expect(createNext.record.fields.goalId).toBe('goal.series');
+    expect(createNext.record.fields.goalPath).toBe('Series');
     expect(createNext.record.fields.content).toBe('Series default');
     expect(createNext.record.fields.priority).toBe('high');
     expect(createNext.record.fields.expectedDurationMinutes).toBe(1);
@@ -138,7 +134,7 @@ describe('TaskCompletionMutation v2', () => {
     const { mutation, batches } = harness(task, activeSeries());
     await mutation.updateSeries(seriesId, {
       recurrence: { interval: 2 },
-      goalId: 'goal.future',
+      goalPath: 'Future',
       priority: 'highest',
       expectedDurationMinutes: 2,
       brainDemand: 'high',
@@ -150,9 +146,9 @@ describe('TaskCompletionMutation v2', () => {
     expect(batches[0][0]).toMatchObject({
       kind: 'update',
       recordId: seriesId,
-      patch: { recurrenceUnit: 'week', recurrenceInterval: 2, recurrenceAnchor: 'scheduled', goalId: 'goal.future', priority: 'highest', expectedDurationMinutes: 2, brainDemand: 'high', availabilityContexts: ['work'], recoveryIntent: false },
+      patch: { recurrenceUnit: 'week', recurrenceInterval: 2, recurrenceAnchor: 'scheduled', goalPath: 'Future', priority: 'highest', expectedDurationMinutes: 2, brainDemand: 'high', availabilityContexts: ['work'], recoveryIntent: false },
     });
-    expect(batches[0][1]).toMatchObject({ kind: 'update', recordId: taskId, patch: { goalId: 'goal.future', priority: 'highest', expectedDurationMinutes: 2, brainDemand: 'high', availabilityContexts: ['work'], recoveryIntent: false } });
+    expect(batches[0][1]).toMatchObject({ kind: 'update', recordId: taskId, patch: { goalPath: 'Future', priority: 'highest', expectedDurationMinutes: 2, brainDemand: 'high', availabilityContexts: ['work'], recoveryIntent: false } });
   });
   it('completes a one-time Task and creates its TaskSession in one batch', async () => {
     const { mutation, updates, batches } = harness(openTask());

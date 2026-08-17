@@ -1,4 +1,4 @@
-import type { InputSettings, RecordCaptureTemplate, TemplateField } from '@/core/recordInput/CaptureTemplate';
+import type { RecordCaptureTemplate, TemplateField } from '@/core/recordInput/CaptureTemplate';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import type { PreparedEditRecord } from "@/core/types/recordInput";
@@ -7,8 +7,6 @@ import { buildEditableRecordSnapshot } from "@/core/recordInput/snapshot/EditSna
 import { buildParsedRecordSnapshot } from "@/core/types/recordSnapshot";
 import { recordDebugLog } from "@/core/recordInput/debug";
 import {
-  findThemeIdByPath,
-  normalizeRecordInputSettingsEnvelope,
   resolveRecordDependencies,
 } from "./dependencyResolver";
 import { buildInitialEditFormData } from "./EditBackfillMapper";
@@ -17,10 +15,9 @@ import { asUnknownRecord, readFirstString } from "@/core/utils/unknownRecord";
 import { normalizeFieldToken } from "@/core/fields/fieldTokenSemantics";
 
 export interface BuildEditStateInput {
-  settings: ThinkSettings | InputSettings;
+  settings: ThinkSettings;
   item: RecordViewItem;
   preferredBlockId?: string | null;
-  preferredThemeId?: string | null;
 }
 
 
@@ -32,11 +29,9 @@ function getItemSemanticTokens(item: RecordViewItem): Set<string> {
   };
 
   push(item.categoryKey);
-  push(item.theme);
   push(item.file?.basename);
   push(item.fileName);
   push(item.header);
-  push(item.templateId);
 
   Object.keys(item.extra || {}).forEach((key) => push(key));
 
@@ -70,7 +65,6 @@ function scoreTemplateForItem(block: RecordCaptureTemplate, item: RecordViewItem
   const recordBlock = itemCoreBlock(item);
   const candidateBlock = templateCoreBlock(block);
 
-  if (item.templateId && normalizeFieldToken(item.templateId) === blockId) score += 100;
   if (recordBlock && candidateBlock === recordBlock) score += 80;
   if (categoryKey && categoryKey === blockCategory) score += 30;
   if (categoryKey && categoryKey === blockName) score += 20;
@@ -115,7 +109,6 @@ function resolveBlockForEdit(
   if (!Array.isArray(blocks) || blocks.length === 0) {
     return {
       blockId: preferredBlockId ?? null,
-      themeIdFromTemplateHint: null as string | null,
       resolvedBy: "fallback" as const,
       usedFallbackBlock: true,
       debugReason: "没有可用 block，只能使用 preferredBlockId。",
@@ -132,24 +125,9 @@ function resolveBlockForEdit(
     if (block) {
       return {
         blockId: block.id,
-        themeIdFromTemplateHint: null as string | null,
         resolvedBy: "exact" as const,
         usedFallbackBlock: false,
         debugReason: `根据记录中的核心Block ${coreBlockHint} 精确还原 block=${block.id}`,
-      };
-    }
-  }
-
-  // 单人版收敛：不再读取 theme-template legacy；模板ID 只允许命中当前 block/core block。
-  if (item.templateId) {
-    const exact = blocks.find((block) => block.id === item.templateId);
-    if (exact) {
-      return {
-        blockId: exact.id,
-        themeIdFromTemplateHint: null as string | null,
-        resolvedBy: "exact" as const,
-        usedFallbackBlock: false,
-        debugReason: `根据 block 模板ID ${item.templateId} 精确命中。`,
       };
     }
   }
@@ -166,7 +144,6 @@ function resolveBlockForEdit(
     if (typeMatches) {
       return {
         blockId: preferred.id,
-        themeIdFromTemplateHint: null as string | null,
         resolvedBy: "exact" as const,
         usedFallbackBlock: false,
         debugReason: `preferredBlockId 类型匹配，使用 ${preferred.id}。`,
@@ -189,7 +166,6 @@ function resolveBlockForEdit(
   if (top && top.score > 0) {
     return {
       blockId: top.block.id,
-      themeIdFromTemplateHint: null as string | null,
       resolvedBy: "inferred" as const,
       usedFallbackBlock: false,
       debugReason: `按记录类型护栏后推断命中 ${top.block.id}，score=${top.score}。`,
@@ -203,7 +179,6 @@ function resolveBlockForEdit(
 
   return {
     blockId: sameTypeFallback?.id ?? blocks[0]?.id ?? null,
-    themeIdFromTemplateHint: null as string | null,
     resolvedBy: "fallback" as const,
     usedFallbackBlock: true,
     debugReason: `无法精确/推断命中，使用同类型 fallback=${sameTypeFallback?.id || blocks[0]?.id || ""}。`,
@@ -220,14 +195,23 @@ function buildInitialFormData(
   // 初始表单值统一交给 EditBackfillMapper。
   // 该 mapper 按 semantic -> registered field -> explicit extra 的顺序读取，
   // 并复用 FieldValueCodec / TemplateFieldAdapter 归一化 path、tag、image、multi 值。
-  return buildInitialEditFormData({ template, item, snapshot });
+  const formData = buildInitialEditFormData({ template, item, snapshot });
+  // Goal is Record context, not a template field. Always restore it from the
+  // canonical Record snapshot so Timeline/Table/etc. cannot lose Goal simply
+  // because the current template does not render a Goal field.
+  const goalPath = snapshot.semantic.goalPath;
+  if (goalPath) {
+    formData.goalPath = goalPath;
+    formData['目标'] = goalPath;
+  }
+  return formData;
 }
 
 export function buildEditRecordState(
   input: BuildEditStateInput,
 ): PreparedEditRecord {
-  const { settings, item, preferredBlockId, preferredThemeId } = input;
-  const fullSettings = normalizeRecordInputSettingsEnvelope(settings);
+  const { settings, item, preferredBlockId } = input;
+  const fullSettings = settings;
   const inputSettings = fullSettings.inputSettings;
   const canonicalBlocks = getEffectiveCoreBlocks(fullSettings);
   // Current-only V5: edit discovery uses canonical CoreBlock definitions only.
@@ -237,27 +221,18 @@ export function buildEditRecordState(
     item,
     preferredBlockId,
   );
-  const resolvedThemeId =
-    resolvedBlock.themeIdFromTemplateHint ??
-    findThemeIdByPath(inputSettings, item.theme) ??
-    preferredThemeId ??
-    undefined;
   recordDebugLog("编辑模板解析", "任务/块模板选择", {
     coreBlock: item.coreBlock,
     itemTitle: item.title,
     itemEditableText: item.editableText,
-    templateId: item.templateId,
-    templateSourceType: item.templateSourceType,
     preferredBlockId,
     resolvedBlockId: resolvedBlock.blockId,
-    resolvedThemeId,
     resolvedBy: resolvedBlock.resolvedBy,
     reason: resolvedBlock.debugReason,
   });
   const resolvedDependencies = resolveRecordDependencies({
     settings: fullSettings,
     blockId: resolvedBlock.blockId,
-    themeId: resolvedThemeId,
     item,
   });
 
@@ -278,18 +253,8 @@ export function buildEditRecordState(
         mode: "edit",
         item,
         blockId: resolvedDependencies.blockId,
-        themeId: resolvedDependencies.themeId,
         fields: initialFormData,
         template: resolvedDependencies.template,
-        theme: resolvedDependencies.theme,
-        templateMeta: {
-          templateId:
-            resolvedDependencies.meta.templateId ??
-            resolvedDependencies.template?.id ??
-            null,
-          templateSourceType:
-            resolvedDependencies.meta.templateSourceType ?? "core-block",
-        },
       })
     : null;
 
@@ -297,14 +262,12 @@ export function buildEditRecordState(
   if (snapshot?.persistencePlan.pathChanged) {
     warnings.push({
       code: "record_target_path_changed",
-      message: `当前模板/主题推导出的目标文件为 ${snapshot.outputPlan.targetFilePath}，与原文件 ${snapshot.persistencePlan.originalPath} 不同。当前仍按原位置更新；后续步骤会接入迁移保存。`,
-      field: "themeId",
+      message: `当前字段预设推导出的目标文件为 ${snapshot.outputPlan.targetFilePath}，与原文件 ${snapshot.persistencePlan.originalPath} 不同。当前仍按原位置更新；后续步骤会接入迁移保存。`,
     });
   }
 
   return {
     blockId: resolvedDependencies.blockId,
-    themeId: resolvedDependencies.themeId,
     template: resolvedDependencies.template,
     initialFormData,
     snapshot,
@@ -312,9 +275,7 @@ export function buildEditRecordState(
     persistencePlan: snapshot?.persistencePlan,
     inferred: {
       usedFallbackBlock: resolvedBlock.usedFallbackBlock,
-      usedFallbackTheme: resolvedDependencies.meta.usedFallbackTheme,
       canonicalBlockId: resolvedDependencies.meta.canonicalBlockId,
-      compatibilityMode: resolvedDependencies.meta.compatibilityMode,
       templateSourceType: resolvedDependencies.meta.templateSourceType,
       resolvedBy: resolvedBlock.resolvedBy,
     },

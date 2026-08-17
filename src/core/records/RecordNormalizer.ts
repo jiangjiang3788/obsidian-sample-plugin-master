@@ -1,7 +1,6 @@
 // src/core/records/RecordNormalizer.ts
 import type { RecordEntity } from './RecordEntity';
 import { toRecordViewItem } from './RecordEntity';
-import { applyExplicitThemeViewFields, normalizeExplicitTheme } from '@/core/theme/themeSemantics';
 import { normalizeItemDates } from '@/core/utils/normalize';
 import type { RecordNormalizeContext } from './RecordEntity';
 import { normalizeGoalPath, splitGoalPath } from '@/core/goal';
@@ -27,7 +26,6 @@ type SearchIndexedItem = RecordEntity & {
 /**
  * 为视图/筛选/搜索补齐运行时派生字段。
  *
- * 注意：这里明确只从显式 theme 派生 themePath/rootTheme/leafTheme，header 永远只表示章节位置。
  */
 export function normalizeRecordItem(item: RecordEntity, context: RecordNormalizeContext): RecordEntity {
   const line = context.line;
@@ -49,19 +47,14 @@ export function normalizeRecordItem(item: RecordEntity, context: RecordNormalize
   }
 
   item.tags = unique([...(context.sectionTags || []), ...(item.tags || [])]);
-  item.goalId = String(item.goalId || '').trim() || undefined;
   const rawGoalPath = String(item.goalPath || '').trim();
   const canonicalGoalPath = rawGoalPath ? normalizeGoalPath(rawGoalPath) : null;
   if (rawGoalPath && !canonicalGoalPath) throw new Error(`invalid_record_goal_path:${item.id}`);
   item.goalPath = canonicalGoalPath || undefined;
-  if (Boolean(item.goalId) !== Boolean(item.goalPath)) throw new Error(`invalid_record_goal_identity:${item.id}`);
   const goalParts = splitGoalPath(item.goalPath || null);
   item.rootGoal = goalParts.rootGoal || undefined;
   item.leafGoal = goalParts.leafGoal || undefined;
 
-  // 主题只允许来自显式元数据。normalizeExplicitTheme 只做清洗/匹配，不会读取 header。
-  item.theme = normalizeExplicitTheme(item.theme, context.themeMatcher);
-  applyExplicitThemeViewFields(toRecordViewItem(item));
 
   if (!item.extra) item.extra = {};
   if (!item.categoryKey) item.categoryKey = item.coreBlock === 'task' ? '任务' : context.parentFolder;

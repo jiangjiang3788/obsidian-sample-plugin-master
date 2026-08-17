@@ -1,4 +1,4 @@
-import type { ThemeDefinition, ThinkSettings } from '@core/public';
+import type { ThinkSettings } from '@core/public';
 import {
   addLayoutSettingsDraft,
   addLayoutSettingsViewInstance,
@@ -7,24 +7,18 @@ import {
   updateLayoutSettingsViewPlacement,
 } from '@/app/store/mutations/layoutSettingsMutations';
 import {
-  addActiveThemePathDraft,
-  removeActiveThemePathDraft,
+  patchInputSettingsDraft,
+  patchSettingsDraft,
+  setFloatingTimerEnabledDraft,
 } from '@/app/store/mutations/generalSettingsMutations';
-import {
-  batchSetThemeSettingsStatus,
-  makeThemeSettingsDraft,
-  normalizeThemeSettingsPath,
-  themeSettingsPathExists,
-} from '@/app/store/mutations/themeSettingsMutations';
 
 function createSettingsDraft(): ThinkSettings {
   return {
-    inputSettings: {
-      themes: [],
-      blocks: [],
-    },
+    groups: [],
+    viewInstances: [],
     layouts: [],
-    activeThemePaths: [],
+    inputSettings: { blocks: [] },
+    floatingTimerEnabled: true,
   } as unknown as ThinkSettings;
 }
 
@@ -52,32 +46,17 @@ describe('store settings mutations', () => {
     expect(draft.layouts?.[0]?.viewPlacements?.['view-1']).toBeUndefined();
   });
 
-  it('normalizes theme paths and guards duplicates', () => {
-    const themes: ThemeDefinition[] = [];
-    const normalized = normalizeThemeSettingsPath(' 学习 // 英语 / 听力 ');
-    const theme = makeThemeSettingsDraft(normalized, themes);
-    themes.push(theme);
-
-    expect(normalized).toBe('学习/英语/听力');
-    expect(themeSettingsPathExists(themes, '学习/英语/听力')).toBe(true);
-    expect(themeSettingsPathExists(themes, '学习/英语/听力', theme.id)).toBe(false);
+  it('patches current Goal-only input settings without a second classification store', () => {
+    const draft = createSettingsDraft();
+    patchInputSettingsDraft(draft, { blocks: [{ id: 'core.task' } as any] });
+    expect(draft.inputSettings.blocks).toEqual([{ id: 'core.task' }]);
   });
 
-  it('updates active theme paths from general and theme mutations', () => {
+  it('applies generic settings mutations', () => {
     const draft = createSettingsDraft();
-    const theme = makeThemeSettingsDraft('工作/插件', []);
-    draft.inputSettings.themes = [theme];
-
-    addActiveThemePathDraft(draft, '工作/插件');
-    expect(draft.activeThemePaths).toEqual(['工作/插件']);
-
-    batchSetThemeSettingsStatus(draft, [theme.id], 'inactive');
-    expect(draft.activeThemePaths).toEqual([]);
-
-    batchSetThemeSettingsStatus(draft, [theme.id], 'active');
-    expect(draft.activeThemePaths).toEqual(['工作/插件']);
-
-    removeActiveThemePathDraft(draft, '工作/插件');
-    expect(draft.activeThemePaths).toEqual([]);
+    setFloatingTimerEnabledDraft(draft, false);
+    patchSettingsDraft(draft, { devConsoleStackEnabled: true });
+    expect(draft.floatingTimerEnabled).toBe(false);
+    expect(draft.devConsoleStackEnabled).toBe(true);
   });
 });

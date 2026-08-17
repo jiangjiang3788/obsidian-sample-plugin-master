@@ -49,7 +49,8 @@
     "gate:ui-runtime": "node scripts/gates/ui-runtime-gate.mjs",
     "gate:quality": "node scripts/gates/quality-gate.mjs",
     "gate:stability": "node scripts/gates/stability-gate.mjs",
-    "typecheck:e2e": "tsc -p tsconfig.e2e.json --noEmit"
+    "typecheck:e2e": "tsc -p tsconfig.e2e.json --noEmit",
+    "gate:goal-only": "node scripts/gates/goal-only-gate.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

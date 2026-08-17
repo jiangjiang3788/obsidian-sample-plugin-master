@@ -144,6 +144,46 @@ function applyDateConstraint(items: RecordViewItem[], constraint?: RecordQueryDa
   return applyStandardDateConstraint(items, constraint);
 }
 
+// Layout dashboards often render several views over the same immutable RecordViewItem[]
+// snapshot. Date filtering is the expensive shared part because it parses thousands of
+// date values. Cache it by source-array identity + date policy so sibling views reuse the
+// same period selection instead of repeating the full scan.
+const dateConstraintCache = new WeakMap<RecordViewItem[], Map<string, RecordViewItem[]>>();
+const MAX_DATE_CACHE_ENTRIES_PER_SNAPSHOT = 48;
+
+function buildDateConstraintCacheKey(constraint: RecordQueryDateConstraint): string {
+  const [start, end] = constraint.range;
+  return JSON.stringify({
+    start: start?.getTime?.() ?? Number(start),
+    end: end?.getTime?.() ?? Number(end),
+    field: constraint.field || 'date',
+    mode: constraint.mode || '',
+    granularity: constraint.granularity || '',
+    useFieldGranularity: !!constraint.useFieldGranularity,
+    periodValue: constraint.periodValue == null ? '' : String(constraint.periodValue),
+    precision: constraint.precision || 'day',
+  });
+}
+
+function applyDateConstraintCached(items: RecordViewItem[], constraint?: RecordQueryDateConstraint): RecordViewItem[] {
+  if (!constraint) return items;
+  let byConstraint = dateConstraintCache.get(items);
+  if (!byConstraint) {
+    byConstraint = new Map<string, RecordViewItem[]>();
+    dateConstraintCache.set(items, byConstraint);
+  }
+  const key = buildDateConstraintCacheKey(constraint);
+  const cached = byConstraint.get(key);
+  if (cached) return cached;
+  const filtered = applyDateConstraint(items, constraint);
+  byConstraint.set(key, filtered);
+  if (byConstraint.size > MAX_DATE_CACHE_ENTRIES_PER_SNAPSHOT) {
+    const oldestKey = byConstraint.keys().next().value as string | undefined;
+    if (oldestKey) byConstraint.delete(oldestKey);
+  }
+  return filtered;
+}
+
 /**
  * Canonical Record query engine.
  *
@@ -152,14 +192,16 @@ function applyDateConstraint(items: RecordViewItem[], constraint?: RecordQueryDa
  * Record filtering rules.
  */
 export function executeRecordQuery(items: RecordViewItem[], spec: RecordQuerySpec = {}): RecordQueryResult {
-  let result = items;
+  // Date, rule and keyword filters are all pure selections, so their order does not
+  // change the result. Apply the shared date selection first so dashboard sibling views
+  // can reuse it through the source-array cache above.
+  let result = applyDateConstraintCached(items, spec.date);
 
   for (const group of spec.filterGroups || []) {
     if (group.length) result = filterByRules(result, [...group]);
   }
 
   if (spec.keyword) result = filterByKeyword(result, spec.keyword);
-  result = applyDateConstraint(result, spec.date);
   if (spec.sort?.length) result = sortItems(result, [...spec.sort]);
 
   const groupFields = (spec.groupBy || []).filter(Boolean);

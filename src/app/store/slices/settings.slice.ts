@@ -13,11 +13,8 @@ import type { AiSettings, InputSettings, ThinkSettings } from '@core/types/publi
 import type { SettingsRepository } from '@core/services/public';
 import { createSettingsMutationRunner } from '../mutations/settingsMutationRunner';
 import {
-    addActiveThemePathDraft,
     patchInputSettingsDraft,
     patchSettingsDraft,
-    removeActiveThemePathDraft,
-    replaceActiveThemePathsDraft,
     replaceAiSettingsDraft,
     setFloatingTimerEnabledDraft,
 } from '../mutations/generalSettingsMutations';
@@ -31,13 +28,9 @@ export interface SettingsSliceActions {
     setFloatingTimerEnabled: (enabled: boolean) => Promise<void>;
     updateInputSettings: (updates: Partial<InputSettings>) => Promise<void>;
     updateAiSettings: (aiSettings: AiSettings) => Promise<void>;
-    updateActiveThemePaths: (paths: string[]) => Promise<void>;
-    addActiveThemePath: (path: string) => Promise<void>;
-    removeActiveThemePath: (path: string) => Promise<void>;
     updateSettings: (mutator: (draft: ThinkSettings) => void) => Promise<void>;
     batchUpdateSettings: (updates: Partial<ThinkSettings>) => Promise<void>;
     getFloatingTimerEnabled: () => boolean;
-    getActiveThemePaths: () => string[];
     getInputSettings: () => InputSettings | undefined;
     getAiSettings: () => AiSettings | undefined;
     setSettingsError: (error: string | null) => void;
@@ -89,30 +82,6 @@ export function createSettingsSlice(
                 });
             },
 
-            updateActiveThemePaths: async (paths: string[]): Promise<void> => {
-                await runSettingsMutation({
-                    action: 'settings.updateActiveThemePaths',
-                    fallbackError: '更新活跃主题路径失败',
-                    mutate: (draft) => replaceActiveThemePathsDraft(draft, paths),
-                });
-            },
-
-            addActiveThemePath: async (path: string): Promise<void> => {
-                await runSettingsMutation({
-                    action: 'settings.addActiveThemePath',
-                    fallbackError: '添加活跃主题路径失败',
-                    mutate: (draft) => addActiveThemePathDraft(draft, path),
-                });
-            },
-
-            removeActiveThemePath: async (path: string): Promise<void> => {
-                await runSettingsMutation({
-                    action: 'settings.removeActiveThemePath',
-                    fallbackError: '移除活跃主题路径失败',
-                    mutate: (draft) => removeActiveThemePathDraft(draft, path),
-                });
-            },
-
             updateSettings: async (mutator: (draft: ThinkSettings) => void): Promise<void> => {
                 await runSettingsMutation({
                     action: 'settings.updateSettings',
@@ -130,7 +99,6 @@ export function createSettingsSlice(
             },
 
             getFloatingTimerEnabled: (): boolean => get().settings.floatingTimerEnabled ?? false,
-            getActiveThemePaths: (): string[] => get().settings.activeThemePaths || [],
             getInputSettings: (): InputSettings | undefined => get().settings.inputSettings,
             getAiSettings: (): AiSettings | undefined => get().settings.aiSettings,
 

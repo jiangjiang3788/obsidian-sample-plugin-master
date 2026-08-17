@@ -28,7 +28,7 @@ const text = (partial: Omit<FieldSchema, 'valueType'> & { valueType?: FieldSchem
 
 /**
  * 字段注册表：字段定义的单一入口。
- * 注意：分类、主题、标签是插件内置核心字段；普通用户字段只需要配置名称和类型。
+ * 注意：分类、目标、标签是插件内置核心字段；普通用户字段只需要配置名称和类型。
  */
 export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   // --- 核心字段 ---
@@ -40,9 +40,8 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   fullData: text({ key: 'fullData', label: '完整数据', category: 'core', source: 'derived', semantic: 'body', inputType: 'textarea', aliases: ['完整数据', '原始数据', '源数据', '完整源文本', '原始源文本', 'rawsource', 'rawData', 'sourceText', 'fullData', 'originalData'], description: '原始完整 Record Block，仅用于调试/导出，不作为业务语义真源。' }),
 
   // --- 内置核心业务字段 ---
-  categoryKey: text({ key: 'categoryKey', label: '分类路径', valueType: 'path', inputType: 'path', category: 'core', source: 'item', semantic: 'categoryPath', hierarchical: true, aliases: ['categoryPath', '分类', '类别', '分类路径'], description: '完整分类路径，例如 闪念/感受' }),
-  tags: { key: 'tags', label: '标签', valueType: 'tags', inputType: 'multiTag', category: 'core', source: 'item', semantic: 'tags', cardinality: 'multi', hierarchical: true, aliases: ['标签', 'tag', 'tags'], description: '多值层级标签，例如 项目/插件、地点/家', formatter: (v) => Array.isArray(v) ? v.join(', ') : String(v ?? '') },
-  goalId: text({ key: 'goalId', label: '目标ID', category: 'core', source: 'item', semantic: 'goalId', inputType: 'text', aliases: ['目标ID', 'goalId'] }),
+  categoryKey: text({ key: 'categoryKey', label: '分类路径', valueType: 'path', inputType: 'path', category: 'core', source: 'item', semantic: 'categoryPath', hierarchical: true, aliases: ['分类路径', 'categoryKey'], description: '完整分类路径，例如 闪念/感受' }),
+  tags: { key: 'tags', label: '标签', valueType: 'tags', inputType: 'multiTag', category: 'core', source: 'item', semantic: 'tags', cardinality: 'multi', hierarchical: true, aliases: ['标签', 'tags'], description: '多值层级标签，例如 项目/插件、地点/家', formatter: (v) => Array.isArray(v) ? v.join(', ') : String(v ?? '') },
   goalPath: text({ key: 'goalPath', label: '目标', valueType: 'path', inputType: 'hierarchicalSingleSelect', category: 'core', source: 'item', semantic: 'goalPath', hierarchical: true, aliases: ['目标', '目标路径', 'goalPath'], description: '单值 Goal 路径；Goal 是独立实体，不使用 Tag 语义。' }),
   rootGoal: text({ key: 'rootGoal', label: '根目标', valueType: 'path', category: 'core', source: 'derived', semantic: 'goalPath', hierarchical: true, aliases: ['根目标'] }),
   leafGoal: text({ key: 'leafGoal', label: '叶目标', valueType: 'path', category: 'core', source: 'derived', semantic: 'goalPath', hierarchical: true, aliases: ['叶目标'] }),
@@ -51,7 +50,7 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   'period.label': text({ key: 'period.label', label: '周期', category: 'core', source: 'derived', semantic: 'period', inputType: 'text', aliases: ['周期', 'periodLabel'] }),
   'period.granularity': text({ key: 'period.granularity', label: '周期粒度', category: 'core', source: 'derived', semantic: 'period', inputType: 'text', hiddenByDefault: true, aliases: ['周期粒度', 'periodGranularity'] }),
   coreBlock: text({ key: 'coreBlock', label: '核心Block', category: 'core', source: 'item', semantic: 'coreBlock', inputType: 'text', aliases: ['核心Block', 'coreBlock'] }),
-  recordSubtype: text({ key: 'recordSubtype', label: '记录子类型', category: 'core', source: 'item', semantic: 'recordSubtype', inputType: 'singleSelect', aliases: ['记录子类型', 'subtype', 'recordSubtype'], description: 'Record 类型内部的可选子类型，例如 Thought 的 感受/思考。' }),
+  recordSubtype: text({ key: 'recordSubtype', label: '记录子类型', category: 'core', source: 'item', semantic: 'recordSubtype', inputType: 'singleSelect', aliases: ['记录子类型', 'recordSubtype'], description: 'Record 类型内部的可选子类型，例如 Thought 的 感受/思考。' }),
   status: text({ key: 'status', label: '状态', category: 'core', source: 'item', semantic: 'status', inputType: 'singleSelect', aliases: ['状态', 'status'], description: '实体显式状态；Task 使用 open/done/cancelled/skipped。' }),
   cadence: text({ key: 'cadence', label: '任务周期', category: 'core', source: 'derived', semantic: 'recurrence', inputType: 'singleSelect', aliases: ['任务周期', 'cadence'], description: '由 Task Series 结构化 recurrence 派生：routine/day/week/month/quarter/year。' }),
   date: { key: 'date', label: '日期', valueType: 'date', inputType: 'date', category: 'core', source: 'item', semantic: 'date', aliases: ['日期', 'date'], description: '记录的主要日期' },
@@ -61,7 +60,7 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   period: text({ key: 'period', label: '字段粒度', category: 'core', source: 'item', semantic: 'period', inputType: 'singleSelect', description: '时间粒度：年/季/月/周/天' }),
   startTime: { key: 'startTime', label: '开始时间', valueType: 'time', inputType: 'time', category: 'core', source: 'item', semantic: 'startTime', aliases: ['时间', 'time', 'start'] },
   endTime: { key: 'endTime', label: '结束时间', valueType: 'time', inputType: 'time', category: 'core', source: 'item', semantic: 'endTime', aliases: ['结束', 'end'] },
-  expectedDurationMinutes: { key: 'expectedDurationMinutes', label: '预计时长', valueType: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['预计时长', 'expectedDuration', 'expectedDurationMinutes'], description: 'Task 的用户声明时长；可与开始时间组成手工时间段，存在 TaskSession 时仍优先使用 Session 历史。' },
+  expectedDurationMinutes: { key: 'expectedDurationMinutes', label: '预计时长', valueType: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['预计时长', 'expectedDurationMinutes'], description: 'Task 的用户声明时长；可与开始时间组成手工时间段，存在 TaskSession 时仍优先使用 Session 历史。' },
   scheduledAt: { key: 'scheduledAt', label: '计划时间', valueType: 'datetime', inputType: 'datetime', category: 'core', source: 'item', semantic: 'date', aliases: ['计划时间', 'scheduledAt'] },
   startAt: { key: 'startAt', label: '开始时间', valueType: 'datetime', inputType: 'datetime', category: 'core', source: 'item', semantic: 'date', aliases: ['开始时间', 'startAt'] },
   endAt: { key: 'endAt', label: '结束时间', valueType: 'datetime', inputType: 'datetime', category: 'core', source: 'item', semantic: 'date', aliases: ['结束时间', 'endAt'] },
@@ -78,14 +77,9 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
     { value: 'any', label: '任意' }, { value: 'work', label: '工作' }, { value: 'home', label: '家' }, { value: 'commute', label: '通勤' }, { value: 'out', label: '外出' },
   ], description: '任务实际可执行的场景；留空或任意表示不限制。' },
   recoveryIntent: { key: 'recoveryIntent', label: '恢复意图', valueType: 'boolean', inputType: 'boolean', category: 'core', source: 'item', semantic: 'none', aliases: ['恢复意图', 'recoveryIntent'], description: '标记散步、休息等主动恢复类任务。' },
-  duration: { key: 'duration', label: '时长', valueType: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['时长', 'duration'], hiddenByDefault: true, description: '通用/历史时长字段；Task 应使用 expectedDurationMinutes；多段计时历史使用 TaskSession。' },
+  duration: { key: 'duration', label: '时长', valueType: 'number', inputType: 'number', category: 'core', source: 'item', semantic: 'duration', aliases: ['时长', 'duration'], hiddenByDefault: true, description: '通用视图时长投影；Task 声明时长使用 expectedDurationMinutes，多段执行时长来自 TaskSession。' },
   rating: { key: 'rating', label: '评分', valueType: 'number', inputType: 'rating', category: 'core', source: 'item', semantic: 'rating', aliases: ['评分', 'rating'] },
-  image: { key: 'image', label: '图片', valueType: 'image', inputType: 'image', category: 'core', source: 'item', semantic: 'image', aliases: ['图片', 'image', '评图', 'pintu'], description: '通用图片字段；当前兼容读取旧 pintu/评图 数据' },
-
-  // --- 主题语义：只从显式 theme 派生，header 永不参与 ---
-  themePath: text({ key: 'themePath', label: '主题路径', valueType: 'path', inputType: 'hierarchicalSingleSelect', category: 'core', source: 'item', semantic: 'themePath', hierarchical: true, aliases: ['主题', '主题路径', '完整主题', 'theme', 'themePath'], description: '主题已降级为用户可配置层级单选字段；筛选/分组仍默认使用此字段' }),
-  rootTheme: text({ key: 'rootTheme', label: '根主题', valueType: 'path', category: 'core', source: 'derived', semantic: 'themePath', hierarchical: true, aliases: ['根主题', 'themeRoot'] }),
-  leafTheme: text({ key: 'leafTheme', label: '叶主题', valueType: 'path', category: 'core', source: 'derived', semantic: 'themePath', hierarchical: true, aliases: ['叶主题', 'themeLeaf'] }),
+  image: { key: 'image', label: '图片', valueType: 'image', inputType: 'image', category: 'core', source: 'item', semantic: 'image', aliases: ['图片', 'image'], description: '通用图片字段' },
 
   // --- 分类派生 ---
   baseCategory: text({ key: 'baseCategory', label: '根分类', valueType: 'path', category: 'core', source: 'derived', semantic: 'categoryPath', hierarchical: true, aliases: ['根分类', 'rootCategory', '分类根'] }),
@@ -97,7 +91,7 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   'file.name': text({ key: 'file.name', label: '文件名', category: 'file', source: 'file', semantic: 'fileName', hiddenByDefault: true }),
   'file.folder': text({ key: 'file.folder', label: '文件夹', category: 'file', source: 'file', semantic: 'fileFolder', aliases: ['文件夹'] }),
   folder: text({ key: 'folder', label: '父文件夹', category: 'file', source: 'file', semantic: 'fileFolder', aliases: ['父文件夹'] }),
-  header: text({ key: 'header', label: '所在标题/章节', category: 'file', source: 'file', semantic: 'heading', aliases: ['所在标题', '所在章节'], description: 'Markdown 所在章节，只表示位置，绝不作为主题' }),
+  header: text({ key: 'header', label: '所在标题/章节', category: 'file', source: 'file', semantic: 'heading', aliases: ['所在标题', '所在章节'], description: 'Markdown 所在章节，只表示文件位置，不参与 Goal 归属' }),
 
   // --- 时间/统计派生 ---
   startISO: { key: 'startISO', label: '开始日期', valueType: 'date', category: 'core', source: 'derived', semantic: 'date' },
@@ -122,7 +116,6 @@ export const VIEW_FIELD_PICKER_KEYS = new Set([
   'date', 'scheduledAt', 'startAt', 'endAt', 'dueAt', 'scheduledDate', 'startDate', 'dueDate', 'completedAt',
   'priority', 'expectedDurationMinutes', 'energyDemand', 'brainDemand', 'physicalDemand', 'availabilityContexts', 'recoveryIntent',
   'rating', 'image', 'icon',
-  'themePath', 'rootTheme', 'leafTheme',
   'period.label', 'recurrence',
   'file.path', 'file.basename', 'file.folder', 'header',
 ] as const);
@@ -233,7 +226,7 @@ export function getFieldCategory(key: string): FieldCategory {
   if (!def) {
     if (key.startsWith('file.')) return 'file';
     // Unknown fields are user/custom surface by default. Treating an unknown raw key
-    // as core is what caused legacy/custom entries to split the picker into repeated groups.
+    // Treating inferred custom entries as core would split the picker into repeated groups.
     return 'custom';
   }
   return (FIELD_CATEGORY_ORDER.includes(def.category) ? def.category : 'custom') as FieldCategory;
@@ -303,12 +296,8 @@ const FIELD_LABEL_ALIASES: Record<string, string> = {
   filepath: '文件路径',
   filePath: '文件路径',
   path: '路径',
-  themeRoot: '根主题',
-  themeLeaf: '叶主题',
   rootCategory: '根分类',
   leafCategory: '叶分类',
-  主题路径: '主题路径',
-  完整主题: '主题路径',
 };
 
 export function getFieldLabel(key: string): string {

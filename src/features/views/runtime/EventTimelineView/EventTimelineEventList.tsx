@@ -22,7 +22,6 @@ interface EventTimelineEventListProps {
   onMarkDone?: MarkDoneHandler;
   timerService: TimerController;
   timers: any[];
-  allThemes: any[];
   onOpenRecord?: OpenRecordHandler;
 }
 
@@ -40,7 +39,6 @@ export function EventTimelineEventList(props: EventTimelineEventListProps) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     onOpenRecord,
   } = props;
 
@@ -81,8 +79,7 @@ export function EventTimelineEventList(props: EventTimelineEventListProps) {
                   onOpenRecordOrigin={onOpenRecordOrigin}
                   timerService={timerService}
                   timer={timers.find((timer) => timer.taskId === item.id)}
-                  allThemes={allThemes}
-                  displayTitle={taskDisplayTitle}
+                              displayTitle={taskDisplayTitle}
                   showFields={[]}
                   onOpenRecord={onOpenRecord}
                 />
@@ -94,8 +91,7 @@ export function EventTimelineEventList(props: EventTimelineEventListProps) {
                   resolveResourcePath={resolveResourcePath}
                   onOpenRecordOrigin={onOpenRecordOrigin}
                   messageRenderPort={messageRenderPort}
-                  allThemes={allThemes}
-                  onOpenRecord={onOpenRecord}
+                              onOpenRecord={onOpenRecord}
                 />
               )}
             </div>

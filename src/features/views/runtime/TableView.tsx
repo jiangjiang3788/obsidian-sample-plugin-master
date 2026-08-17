@@ -3,7 +3,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { GoalDefinition } from '@core/goal/public';
-import type { RecordViewItem, ThemeDefinition } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '@shared/types/public';
 import { TableViewCell } from './TableViewCell';
 import { buildTableViewRenderModel } from './TableViewModel';
@@ -17,12 +17,11 @@ interface TableViewProps {
     onOpenRecordOrigin?: OpenRecordOriginHandler;
     timerService: TimerController;
     timers: any[];
-    allThemes?: ThemeDefinition[];
     goals?: GoalDefinition[];
     onOpenRecord?: OpenRecordHandler;
 }
 
-export function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, allThemes = [], goals = [], onOpenRecord }: TableViewProps) {
+export function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath, onOpenRecordOrigin, timerService, timers, goals = [], onOpenRecord }: TableViewProps) {
     const renderModel = buildTableViewRenderModel({ items, rowField, colField, goals });
 
     if (!renderModel.isConfigured) {
@@ -51,8 +50,7 @@ export function TableView({ items, rowField, colField, onMarkDone, resolveResour
                                     onOpenRecordOrigin={onOpenRecordOrigin}
                                     timerService={timerService}
                                     timers={timers}
-                                    allThemes={allThemes}
-                                    onOpenRecord={onOpenRecord}
+                                                          onOpenRecord={onOpenRecord}
                                 />
                             ))}
                         </tr>

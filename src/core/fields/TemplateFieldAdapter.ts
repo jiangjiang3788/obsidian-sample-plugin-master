@@ -21,9 +21,7 @@ const KNOWN_SEMANTICS = new Set<FieldSemantic>([
   'title',
   'body',
   'categoryPath',
-  'themePath',
   'tags',
-  'goalId',
   'goalPath',
   'cycleId',
   'coreBlock',
@@ -61,21 +59,17 @@ export function getTemplateFieldSemantic(field: Partial<TemplateField> | null | 
   const semanticType = normalizeFieldToken(field.semanticType);
   if (semanticType === 'ratingpair') return 'rating';
   if (semanticType === 'path') {
-    if (templateFieldMatches(field, ['主题', 'theme', 'themePath', '完整主题', '主题路径'])) return 'themePath';
-    if (templateFieldMatches(field, ['分类', '类别', '思考分类', '闪念分类', 'category', 'categoryPath', '分类路径'])) return 'categoryPath';
+    if (templateFieldMatches(field, ['目标', '目标路径', 'goalPath'])) return 'goalPath';
     return 'none';
   }
 
   if (templateFieldMatches(field, ['标题', 'title', '名称', 'name'])) return 'title';
   if (templateFieldMatches(field, ['正文', '内容', '任务内容', '记录内容', 'body', 'content', 'text'])) return 'body';
-  if (templateFieldMatches(field, ['主题', 'theme', 'themePath', '完整主题', '主题路径'])) return 'themePath';
-  if (templateFieldMatches(field, ['分类', '类别', '思考分类', '闪念分类', 'category', 'categoryPath', '分类路径'])) return 'categoryPath';
-  if (templateFieldMatches(field, ['标签', 'tag', 'tags'])) return 'tags';
-  if (templateFieldMatches(field, ['目标ID', 'goalId'])) return 'goalId';
+  if (templateFieldMatches(field, ['标签', 'tags'])) return 'tags';
   if (templateFieldMatches(field, ['目标路径', 'goalPath'])) return 'goalPath';
   if (templateFieldMatches(field, ['周期ID', 'cycleId'])) return 'cycleId';
   if (templateFieldMatches(field, ['核心Block', 'coreBlock'])) return 'coreBlock';
-  if (templateFieldMatches(field, ['记录子类型', 'recordSubtype', 'subtype'])) return 'recordSubtype';
+  if (templateFieldMatches(field, ['记录子类型', 'recordSubtype'])) return 'recordSubtype';
   if (templateFieldMatches(field, ['目标'])) return 'goalPath';
   if (templateFieldMatches(field, ['状态', 'status'])) return 'status';
   if (templateFieldMatches(field, ['日期', 'date'])) return 'date';
@@ -83,7 +77,7 @@ export function getTemplateFieldSemantic(field: Partial<TemplateField> | null | 
   if (templateFieldMatches(field, ['结束', '结束时间', 'end', 'endTime'])) return 'endTime';
   if (templateFieldMatches(field, ['时长', 'duration', 'minutes', '持续时间'])) return 'duration';
   if (templateFieldMatches(field, ['评分', 'rating'])) return 'rating';
-  if (templateFieldMatches(field, ['图片', 'image', 'pic', 'photo', '评图', 'pintu'])) return 'image';
+  if (templateFieldMatches(field, ['图片', 'image'])) return 'image';
   if (templateFieldMatches(field, ['图标', 'icon'])) return 'icon';
   if (templateFieldMatches(field, ['重复', 'recurrence', 'repeat'])) return 'recurrence';
   if (templateFieldMatches(field, ['周期', '粒度', 'period'])) return 'period';
@@ -95,7 +89,7 @@ export function getTemplateFieldInputType(field: Partial<TemplateField> | null |
   if (type) return type;
   const semantic = getTemplateFieldSemantic(field);
   if (semantic === 'body') return 'textarea';
-  if (semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'goalPath') return 'hierarchicalSingleSelect';
+  if (semantic === 'categoryPath' || semantic === 'goalPath') return 'hierarchicalSingleSelect';
   if (semantic === 'tags') return 'multiTag';
   if (semantic === 'image') return 'image';
   if (semantic === 'rating') return 'rating';
@@ -121,7 +115,7 @@ export function isTemplateOptionField(field: Partial<TemplateField> | null | und
 export function isTemplatePathField(field: Partial<TemplateField> | null | undefined): boolean {
   const inputType = getTemplateFieldInputType(field);
   const semantic = getTemplateFieldSemantic(field);
-  return inputType === 'path' || inputType === 'hierarchicalSingleSelect' || inputType === 'multiPath' || semantic === 'themePath' || semantic === 'categoryPath' || semantic === 'goalPath' || normalizeFieldToken(field?.semanticType) === 'path';
+  return inputType === 'path' || inputType === 'hierarchicalSingleSelect' || inputType === 'multiPath' || semantic === 'categoryPath' || semantic === 'goalPath' || normalizeFieldToken(field?.semanticType) === 'path';
 }
 
 export function isTemplateTagField(field: Partial<TemplateField> | null | undefined): boolean {
@@ -137,7 +131,7 @@ export function isTemplateImageField(field: Partial<TemplateField> | null | unde
 
 export function isTemplateMultiValueField(field: Partial<TemplateField> | null | undefined): boolean {
   const inputType = getTemplateFieldInputType(field);
-  // 新配置中，值数量只由字段类型决定；cardinality 只作为旧配置兼容兜底。
+  // 值数量由字段类型决定；显式 cardinality 仅作为模板字段的声明覆盖。
   return isMultiValueTemplateFieldType(inputType) || field?.cardinality === 'multi';
 }
 
@@ -228,21 +222,6 @@ function setIfMeaningful(data: Record<string, unknown>, key: string, value: unkn
 
 function applyCoreTemplateAliases(data: Record<string, unknown>, field: Partial<TemplateField>, value: unknown): void {
   const semantic = getTemplateFieldSemantic(field);
-  if (semantic === 'themePath') {
-    const path = normalizeHierarchyPath(singleTemplateValueToString(value));
-    if (!path) return;
-    const parts = splitHierarchyPath(path);
-    data.themePath = path;
-    data.rootTheme = parts.root || '';
-    data.leafTheme = parts.leaf || '';
-    data.theme = {
-      ...(data.theme && typeof data.theme === 'object' ? data.theme as Record<string, unknown> : {}),
-      path,
-      root: parts.root || '',
-      leaf: parts.leaf || '',
-    };
-    return;
-  }
 
   if (semantic === 'categoryPath') {
     const path = normalizeHierarchyPath(singleTemplateValueToString(value));
@@ -262,13 +241,6 @@ function applyCoreTemplateAliases(data: Record<string, unknown>, field: Partial<
     return;
   }
 
-  if (semantic === 'goalId') {
-    const goalId = singleTemplateValueToString(value);
-    if (goalId) {
-      data.goalId = goalId;
-    }
-    return;
-  }
 
   if (semantic === 'goalPath') {
     const path = normalizeGoalPath(singleTemplateValueToString(value));
@@ -299,14 +271,12 @@ function applyCoreTemplateAliases(data: Record<string, unknown>, field: Partial<
       if (images.length) {
         data.image = images[0];
         data.images = images;
-        data.pintu = images[0];
       }
       return;
     }
     const image = normalizeImageValue(value)?.src ?? singleTemplateValueToString(value);
     if (image) {
       data.image = image;
-      data.pintu = image;
     }
     return;
   }
@@ -338,7 +308,7 @@ export function normalizeTemplateRenderData(template: Pick<RecordCaptureTemplate
       const obj = isOptionObject(raw) ? normalizeOptionObject(field, raw) : { value: raw, label: raw };
       normalizedData[field.key] = obj;
       if (field.label && field.label !== field.key) normalizedData[field.label] = obj;
-      const auxKey = field.auxKey || '评图';
+      const auxKey = field.auxKey || 'image';
       if ((obj as any).value !== undefined) normalizedData[auxKey] = (obj as any).value;
       applyCoreTemplateAliases(normalizedData, field, obj);
       continue;

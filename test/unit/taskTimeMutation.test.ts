@@ -3,7 +3,6 @@ import { TaskTimeMutation } from '@/core/services/item/TaskTimeMutation';
 function taskRecord(overrides: Record<string, unknown> = {}) {
   return {
     id: 'task.01KZZQ6G798KJN54XBGKJVH7YA',
-    schemaVersion: 2,
     coreBlock: 'task',
     status: 'done',
     title: '个地方官方',

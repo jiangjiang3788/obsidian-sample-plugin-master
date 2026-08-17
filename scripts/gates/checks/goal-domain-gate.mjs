@@ -25,8 +25,8 @@ const srcFiles = walk(path.join(root, 'src'));
 for (const full of srcFiles) {
   const rel = path.relative(root, full).replaceAll('\\', '/');
   const text = fs.readFileSync(full, 'utf8');
-  if (/\.(goalPaths|goalIds)\b/.test(text) || /['"]goalPaths['"]/.test(text) || /['"]goalIds['"]/.test(text)) {
-    failures.push(`${rel}: plural Goal compatibility fields are forbidden`);
+  if (/\.goalIds\b/.test(text) || /['"]goalIds['"]/.test(text)) {
+    failures.push(`${rel}: opaque/plural Goal ID compatibility fields are forbidden`);
   }
   if (/stripLeadingHashes/.test(text)) failures.push(`${rel}: hierarchy paths must not contain hash-stripping compatibility`);
   if (/semantic\s*(?:===|:)\s*['"]goals['"]/.test(text)) {
@@ -41,12 +41,12 @@ requireText('src/core/goal/invariants.ts', 'GoalTemplate', 'Goal settings invari
 
 requireText('src/core/services/SettingsRepository.ts', 'assertCanonicalGoalSettings(newSettings.goalSettings)', 'Settings writes must validate canonical Goal settings before persistence');
 requireText('src/core/recordInput/snapshot/OutputPlanner.ts', 'requireGoalPath(rawGoalPath)', 'Record writes must reject non-canonical Goal paths');
-requireText('src/core/records/RecordNormalizer.ts', 'invalid_record_goal_identity', 'Record reads must enforce paired goalId + goalPath');
-requireText('src/core/services/GoalTemplateResolver.ts', 'findGoal(settings.goalSettings, input.goalId)', 'GoalTemplate resolution must use goalId identity');
+requireText('src/core/records/RecordNormalizer.ts', 'invalid_record_goal_path', 'Record reads must enforce one canonical Goal path');
+requireText('src/core/services/GoalTemplateResolver.ts', 'findGoal(settings.goalSettings, input.goalPath)', 'GoalTemplate resolver must resolve directly from the canonical Goal path');
 
 if (failures.length) {
   console.error('[goal-domain-gate] FAILED');
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exit(1);
 }
-console.log('[goal-domain-gate] PASS (Goal is single-valued entity hierarchy; Tag owns # syntax)');
+console.log('[goal-domain-gate] PASS (Goal path is the single persisted identity; Tag owns # syntax)');

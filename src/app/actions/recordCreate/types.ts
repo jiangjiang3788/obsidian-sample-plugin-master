@@ -1,6 +1,6 @@
 import type { RecordInputSource } from '@core/recordInput/public';
 import type { ActionService } from '@core/services/public';
-import type { RecordViewItem, TaskBlock, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { RecordViewItem, TaskBlock, ViewInstance } from '@core/types/public';
 import type { Dayjs } from '@core/utils/public';
 import type { UiPort } from '@core/ports/public';
 
@@ -50,12 +50,7 @@ export interface HeatmapCreateParams {
   sourceBlockId?: string | null;
   date: string;
   item?: RecordViewItem;
-  themePath?: string;
   goalPath?: string;
-  goalId?: string;
-  templateId?: string;
-  templateVariantId?: string;
-  themesByPath?: Map<string, ThemeDefinition>;
   notice?: (message: string) => void;
 }
 

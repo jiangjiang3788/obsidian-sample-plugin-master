@@ -1,5 +1,4 @@
 // src/core/fields/FieldValueResolver.ts
-import { readExplicitThemeParts } from '@/core/theme/themeSemantics';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { getCanonicalFieldKey, getFieldDefinition } from './FieldRegistry';
 import type { FieldSource } from './FieldTypes';
@@ -23,8 +22,6 @@ export interface FieldValueResolution {
   source: FieldValueSource;
   /** Whether the value is computed from another field. */
   derived: boolean;
-  /** Whether this key is kept only for backwards compatibility. */
-  legacy: boolean;
 }
 
 export function normalizeFieldKey(field: string): string {
@@ -58,7 +55,7 @@ function readLeafCategory(item: RecordViewItem): string | undefined {
 }
 
 function readImageField(item: RecordViewItem): unknown {
-  return normalizeImageValue(item.image ?? item.pintu ?? item.extra?.['图片'] ?? item.extra?.['image'] ?? item.extra?.['评图'] ?? item.extra?.['pintu']);
+  return normalizeImageValue(item.image ?? item.extra?.['图片'] ?? item.extra?.['image']);
 }
 
 function readCanonicalField(item: RecordViewItem, canonicalField: string): unknown {
@@ -68,6 +65,16 @@ function readCanonicalField(item: RecordViewItem, canonicalField: string): unkno
 
   if (canonicalField.startsWith('file.')) {
     return readFileField(item, canonicalField);
+  }
+
+  if (canonicalField === 'goalPath') {
+    return splitHierarchyPath(item.goalPath).path;
+  }
+  if (canonicalField === 'rootGoal') {
+    return item.rootGoal || splitHierarchyPath(item.goalPath).root;
+  }
+  if (canonicalField === 'leafGoal') {
+    return item.leafGoal || splitHierarchyPath(item.goalPath).leaf;
   }
 
   if (canonicalField === 'categoryKey') {
@@ -80,17 +87,6 @@ function readCanonicalField(item: RecordViewItem, canonicalField: string): unkno
     return readLeafCategory(item);
   }
 
-  // Theme view fields are derived from explicit theme data only.
-  // header/heading is intentionally excluded from this resolver.
-  if (canonicalField === 'themePath') {
-    return readExplicitThemeParts(item).themePath ?? undefined;
-  }
-  if (canonicalField === 'rootTheme') {
-    return readExplicitThemeParts(item).rootTheme ?? undefined;
-  }
-  if (canonicalField === 'leafTheme') {
-    return readExplicitThemeParts(item).leafTheme ?? undefined;
-  }
 
   if (canonicalField === 'status') return item.status;
   if (canonicalField === 'cadence') return item.coreBlock === 'task' ? getTaskCadence(item) : undefined;
@@ -125,10 +121,6 @@ function readCanonicalField(item: RecordViewItem, canonicalField: string): unkno
   if (canonicalField === 'filename' || canonicalField === 'fileName') {
     return item.file?.basename ?? item.fileName ?? item.filename;
   }
-  if (canonicalField === 'pintu') {
-    return item.pintu;
-  }
-
   return readUnknown(asUnknownRecord(item), canonicalField);
 }
 
@@ -149,11 +141,10 @@ export function resolveFieldValue(item: RecordViewItem, field: string): FieldVal
     value,
     source,
     derived: source === 'derived',
-    legacy: source === 'legacy' || !!def?.deprecated,
   };
 }
 
-/** Compatibility helper for existing code paths. */
+/** Read a field through the canonical field resolver. */
 export function readFieldValue(item: RecordViewItem, field: string): unknown {
   return resolveFieldValue(item, field).value;
 }

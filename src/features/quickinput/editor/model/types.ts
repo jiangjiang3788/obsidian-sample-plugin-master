@@ -1,4 +1,4 @@
-import type { RecordCaptureTemplate, TemplateField, ThemeDefinition } from '@core/types/public';
+import type { RecordCaptureTemplate, TemplateField } from '@core/types/public';
 import type { GoalDefinition } from '@core/goal/public';
 import type { RecordInputMeta, RecordInputSessionMode } from '@core/recordInput/public';
 import type { EnergyCaptureMode, EnergyQuickLevel } from '@core/energy/public';
@@ -14,7 +14,6 @@ export interface QuickInputOptionLike {
 export type QuickInputTemplateLike = Partial<RecordCaptureTemplate> & {
   fields?: TemplateField[];
   coreBlockId?: string | null;
-  variantId?: string | null;
 };
 
 export interface QuickInputPeriodLike {
@@ -33,7 +32,7 @@ export type TimeDirection = 'forward' | 'backward';
  * 字段值来源分层：
  * - user: 用户手动输入
  * - context/edit_backfill/invocation_context: 外部上下文或编辑态回填
- * - goal_context/theme_context: 目标或主题上下文推导
+ * - goal_context: 目标上下文推导
  * - template_default/system_auto: 模板默认值或系统自动值
  */
 export type QuickInputFieldSource =
@@ -42,7 +41,6 @@ export type QuickInputFieldSource =
   | 'edit_backfill'
   | 'invocation_context'
   | 'goal_context'
-  | 'theme_context'
   | 'template_default'
   | 'system_auto';
 
@@ -51,27 +49,17 @@ export type QuickInputFieldSourceMap = Record<string, QuickInputFieldSource>;
 export interface QuickInputEditorState {
   blockId: string;
   coreBlockId?: string | null;
-  goalId?: string | null;
   goalPath?: string | null;
   goalTitle?: string | null;
   rootGoal?: string | null;
   leafGoal?: string | null;
   cycleId?: string | null;
-  themeId: string | null;
   formData: QuickInputFormData;
   template: QuickInputTemplateLike | null;
-  theme: ThemeDefinition | null;
   templateId: string | null;
-  templateVariantId?: string | null;
   templateSourceType: 'core-block' | 'goal-template' | null;
   fieldSources?: QuickInputFieldSourceMap;
   meta?: RecordInputMeta;
-  /** 完整路径主题，例如：学习/英语/听力。 */
-  themePath?: string | null;
-  /** 根主题，例如：学习。 */
-  rootTheme?: string | null;
-  /** 叶主题，例如：听力。 */
-  leafTheme?: string | null;
   fieldSourceSummary?: Record<QuickInputFieldSource, number>;
 }
 
@@ -80,9 +68,7 @@ type QuickInputEnergyCaptureTiming =
   | { captureMode: Extract<EnergyCaptureMode, 'retrospective'>; date: string; time: string };
 
 type QuickInputEnergyCaptureContext = {
-  goalId: string;
   goalPath: string;
-  themePath?: string | null;
 };
 
 export type QuickInputEnergyCaptureRequest = QuickInputEnergyCaptureTiming & QuickInputEnergyCaptureContext & (
@@ -102,7 +88,6 @@ export interface QuickInputEditorProps {
   getResourcePath: (path: string) => string;
   initialBlockId: string;
   context?: QuickInputContext;
-  initialThemeId?: string | null;
   initialFormData?: QuickInputFormData;
   recordInputMode?: RecordInputSessionMode;
   allowBlockSwitch?: boolean;
@@ -136,17 +121,13 @@ export interface HydrateQuickInputTemplateDefaultsInput {
   current: QuickInputFormData;
   fieldSources: QuickInputFieldSourceMap;
   selectedGoal?: GoalDefinition | null;
-  selectedGoalId?: string | null;
   currentGoalPath?: string | null;
   currentGoalTitle?: string | null;
-  theme?: ThemeDefinition | null;
   currentPeriod?: QuickInputPeriodLike | null;
   timeDirection: TimeDirection;
 }
 
 export interface QuickInputInitialSelection {
-  selectedGoalId: string | null;
   selectedGoalPath: string | null;
-  selectedTemplateVariantId: string | null;
   timeDirection: TimeDirection;
 }

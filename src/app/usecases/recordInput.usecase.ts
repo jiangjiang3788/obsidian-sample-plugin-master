@@ -59,7 +59,7 @@ export class RecordInputUseCase {
 
   async submitEnergySnapshot(params: EnergySnapshotInput & { signal?: AbortSignal }): Promise<RecordSubmitResult> {
     const record = buildEnergySnapshotRecord(params);
-    if (!record.goalId || !record.goalPath) {
+    if (!record.goalPath) {
       return buildValidationErrorResult('create', [{
         code: 'energy_goal_required',
         field: '目标',

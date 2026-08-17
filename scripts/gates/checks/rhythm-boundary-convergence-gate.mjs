@@ -14,8 +14,6 @@ const dataGrid = read('src/styles/components/data-grid.css');
 const moduleCss = read('src/styles/features/view-shell.modules.css');
 const layoutCss = read('src/styles/features/layout-editor.css');
 const layoutView = read('src/features/settings/tabs/LayoutSettings.tsx');
-const themeCss = read('src/styles/features/settings-editors.theme-metadata.css');
-const themeView = read('src/features/settings/data/ThemeMetadataManager.tsx');
 const blockSettings = read('src/styles/features/settings-editors.block-editor.css');
 const progress = read('src/styles/features/progress.css');
 const energy = read('src/styles/features/energy-view.css');
@@ -65,9 +63,6 @@ if (!moduleCss.includes('margin-bottom: var(--think-object-gap)')) {
 }
 if (!layoutView.includes('think-layout-list__item think-object-frame') || !layoutCss.includes('gap: var(--think-object-gap)')) {
   failures.push('Saved Layouts are independent objects and must use the shared frame + object gap.');
-}
-if (!themeView.includes('think-theme-metadata__entry think-object-frame think-object-frame--compact') || /think-theme-metadata__entry[\s\S]{0,120}border-bottom/.test(themeCss)) {
-  failures.push('Theme management rows must use one compact object frame instead of divider-only rows.');
 }
 if (/think-block-manager__list[^}]*border-top|think-block-accordion[^}]*border-bottom/.test(blockSettings)) {
   failures.push('Record Type management must separate siblings with rhythm, not repeated horizontal dividers.');

@@ -3,59 +3,29 @@ import type { FilterRule, SortRule, ViewInstance } from '@/core/view/ViewConfig'
 /**
  * View domain field policy
  * -----------------------------------------------------------------------------
- * Goal × Block is the primary view axis. This module keeps view configuration
- * from drifting back toward old category / cycle / template-source fields.
+ * Goal × Block is the primary view axis. View configs use canonical field keys;
+ * only current user-facing labels are normalized at the UI boundary.
  */
 export const VIEW_PRIMARY_FIELD_KEYS = [
   'goalPath',
-  'goalId',
   'coreBlock',
-  'themePath',
   'date',
   'content',
   'title',
 ] as const;
 
-export const VIEW_LEGACY_FIELD_ALIASES: Record<string, string> = {
-  category: 'coreBlock',
-  categoryPath: 'coreBlock',
-  categoryKey: 'coreBlock',
-  baseCategory: 'coreBlock',
-  leafCategory: 'coreBlock',
-  分类: 'coreBlock',
-  类别: 'coreBlock',
-  分类路径: 'coreBlock',
-  根类别: 'coreBlock',
-  block: 'coreBlock',
-  blockId: 'coreBlock',
-  coreBlockId: 'coreBlock',
-  cycleId: 'period.id',
-  周期ID: 'period.id',
-  periodId: 'period.id',
-  period: 'period.label',
-  周期: 'period.label',
-  granularity: 'period.granularity',
-  周期粒度: 'period.granularity',
-  repeat: 'recurrence',
-  重复: 'recurrence',
-  templateSourceType: 'templateSource',
-  模板来源: 'templateSource',
-  模板ID: 'templateId',
+export const VIEW_FIELD_ALIASES: Record<string, string> = {
   目标: 'goalPath',
-  目标ID: 'goalId',
-  主题: 'themePath',
   核心Block: 'coreBlock',
   日期: 'date',
+  内容: 'content',
+  状态: 'status',
 };
 
-const TEMPLATE_SOURCE_FIELDS = new Set(['templateSource', 'templateSourceType']);
 const PERIOD_VIEW_FIELDS = new Set(['period.id', 'period.label', 'period.granularity']);
 
 /** Fields that may exist in parsed records, but should not be used as default visible columns. */
 export const VIEW_NOISY_DISPLAY_FIELDS = new Set<string>([
-  'templateSource',
-  'templateSourceType',
-  'templateId',
   'period.id',
   'period.label',
   'period.granularity',
@@ -64,15 +34,11 @@ export const VIEW_NOISY_DISPLAY_FIELDS = new Set<string>([
 export function normalizeViewFieldKey(field: string): string {
   const raw = String(field || '').trim();
   if (!raw) return '';
-  return VIEW_LEGACY_FIELD_ALIASES[raw] || raw;
+  return VIEW_FIELD_ALIASES[raw] || raw;
 }
 
 export function isNoisyViewDisplayField(field: string): boolean {
   return VIEW_NOISY_DISPLAY_FIELDS.has(normalizeViewFieldKey(field));
-}
-
-export function isTemplateSourceViewField(field: string): boolean {
-  return TEMPLATE_SOURCE_FIELDS.has(normalizeViewFieldKey(field));
 }
 
 export function isPeriodViewField(field: string): boolean {
@@ -106,7 +72,7 @@ export function normalizeViewFilters(filters: readonly FilterRule[] | undefined)
   for (const rule of filters || []) {
     const rawField = String(rule.field || '').trim();
     const field = normalizeViewFieldKey(rawField);
-    if (!field || isTemplateSourceViewField(field)) continue;
+    if (!field) continue;
 
     result.push({ ...rule, field, value: normalizeRuleValue(field, rule.value) });
   }
@@ -123,7 +89,7 @@ export function normalizeViewSort(sort: readonly SortRule[] | undefined): SortRu
   const result: SortRule[] = [];
   for (const rule of sort || []) {
     const field = normalizeViewFieldKey(rule.field);
-    if (!field || isTemplateSourceViewField(field) || seen.has(field)) continue;
+    if (!field || seen.has(field)) continue;
     seen.add(field);
     result.push({ ...rule, field });
   }
@@ -135,7 +101,7 @@ export function normalizeViewGroupFields(groupFields: readonly string[] | undefi
   const result: string[] = [];
   for (const field of groupFields || []) {
     const key = normalizeViewFieldKey(field);
-    if (!key || isTemplateSourceViewField(key) || isNoisyViewDisplayField(key) || seen.has(key)) continue;
+    if (!key || isNoisyViewDisplayField(key) || seen.has(key)) continue;
     seen.add(key);
     result.push(key);
   }
@@ -151,7 +117,7 @@ export function normalizeViewConfigDomain(viewConfig: Record<string, any> | unde
   }
   if (next.groupBy === 'category' || next.groupBy === 'categoryKey') next.groupBy = 'coreBlock';
   if (Array.isArray(next.categories) && next.categories.length === 0) delete next.categories;
-  if (Array.isArray(next.themePaths) && next.themePaths.length === 0) delete next.themePaths;
+  if (Array.isArray(next.goalPaths) && next.goalPaths.length === 0) delete next.goalPaths;
   return next;
 }
 

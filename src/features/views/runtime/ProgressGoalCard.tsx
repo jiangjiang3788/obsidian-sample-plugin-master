@@ -4,7 +4,7 @@ import type { JSX } from 'preact';
 import { useState } from 'preact/hooks';
 import type { GoalDefinition } from '@core/goal/public';
 import type { MessageRenderPort } from '@core/ports/public';
-import type { RecordViewItem, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { RecordViewItem, ViewInstance } from '@core/types/public';
 import type {
   MarkDoneHandler,
   OpenRecordHandler,
@@ -34,7 +34,6 @@ interface ProgressRecordRuntimeProps {
   onMarkDone: MarkDoneHandler;
   timerService: TimerController;
   timers: any[];
-  allThemes: ThemeDefinition[];
   goals: GoalDefinition[];
 }
 
@@ -53,21 +52,20 @@ function ExperienceBar({ ratio, tone = 'goal' }: { ratio: number; tone?: 'goal' 
   );
 }
 
-function ThemeRecords({ records, runtime }: {
+function GoalRecords({ records, runtime }: {
   records: ProgressRecentRecordModel[];
   runtime: ProgressRecordRuntimeProps;
 }) {
-  if (!records.length) return <div class="think-progress-theme-records__empty">该主题暂无记录</div>;
+  if (!records.length) return <div class="think-progress-goal-records__empty">该目标暂无记录</div>;
   const fields = runtime.module.fields?.length ? runtime.module.fields : ['title', 'content'];
   return (
-    <div class="think-progress-theme-records" aria-label="主题记录">
+    <div class="think-progress-goal-records" aria-label="目标记录">
       <BlockView
         items={records.map((record) => record.item)}
         fields={fields}
         onMarkDone={runtime.onMarkDone}
         timerService={runtime.timerService}
         timers={runtime.timers}
-        allThemes={runtime.allThemes}
         goals={runtime.goals}
         resolveResourcePath={runtime.resolveResourcePath}
         onOpenRecordOrigin={runtime.onOpenRecordOrigin}
@@ -81,7 +79,7 @@ function ThemeRecords({ records, runtime }: {
 function SkillList({ card, runtime }: { card: GoalProgressCardModel; runtime: ProgressRecordRuntimeProps }) {
   const rows = buildProgressSkillRows(card);
   const [openKey, setOpenKey] = useState<string | null>(null);
-  if (rows.length === 0) return <div class="think-progress-empty-skill">暂无主题成长记录</div>;
+  if (rows.length === 0) return <div class="think-progress-empty-skill">暂无子目标成长记录</div>;
 
   return (
     <div class="think-progress-skills" role="list">
@@ -105,7 +103,7 @@ function SkillList({ card, runtime }: { card: GoalProgressCardModel; runtime: Pr
                 <span class="think-progress-skill__chevron" aria-hidden="true"><ThinkIcon name={open ? 'chevron-down' : 'chevron-right'} /></span>
               </span>
             </button>
-            {open && <ThemeRecords records={row.recentRecords} runtime={runtime} />}
+            {open && <GoalRecords records={row.recentRecords} runtime={runtime} />}
           </div>
         );
       })}
@@ -126,7 +124,6 @@ export function GoalProgressCard(props: GoalProgressCardProps) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     goals,
   } = props;
   const title = getGoalProgressTitle(card);
@@ -140,7 +137,6 @@ export function GoalProgressCard(props: GoalProgressCardProps) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     goals,
   };
 

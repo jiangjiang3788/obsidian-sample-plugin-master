@@ -45,7 +45,7 @@ export const EXCEL_VIEW_DEFAULT_CONFIG: ExcelViewConfig = {
 };
 
 export const HEATMAP_VIEW_DEFAULT_CONFIG: HeatmapViewConfig = {
-  displayMode: 'habit', sourceBlockId: '', themePaths: [], maxDailyChecks: 10, allowManualEdit: true,
+  displayMode: 'habit', sourceBlockId: '', goalPaths: [], maxDailyChecks: 10, allowManualEdit: true,
 };
 
 export const PROGRESS_VIEW_DEFAULT_CONFIG: ProgressViewConfig = {
@@ -57,7 +57,7 @@ export const PROGRESS_VIEW_DEFAULT_CONFIG: ProgressViewConfig = {
   includedCategories: [],
   ratingBonusThreshold: 4,
   ratingBonusPoints: 1,
-  showThemeBreakdown: true,
+  showGoalBreakdown: true,
   showCategoryBreakdown: true,
   topN: 5,
 };

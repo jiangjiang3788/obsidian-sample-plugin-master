@@ -19,7 +19,7 @@ function energy(overrides: Record<string, unknown> = {}) {
     id: 'energy-1',
     coreBlock: 'energy',
     categoryKey: '精力',
-    goalId: 'goal.self',
+    goalPath: '照顾好自己',
     date: '2026-08-10',
     startTime: '15:38',
     extra: { 精力值: 20, 精力档位: 20, 时间: '15:38' },
@@ -27,8 +27,8 @@ function energy(overrides: Record<string, unknown> = {}) {
   });
 }
 
-function task(id: string, goalId = 'goal.self', title = '写 Think OS 代码') {
-  return makeItem({ id, coreBlock: 'task', status: 'open', goalId, title, content: title });
+function task(id: string, goalPath = '照顾好自己', title = '写 Think OS 代码') {
+  return makeItem({ id, coreBlock: 'task', status: 'open', goalPath, title, content: title });
 }
 
 function session(id: string, taskId: string, start: string, end: string, duration: number, extra: Record<string, unknown> = {}) {
@@ -79,9 +79,9 @@ describe('Energy context resolver', () => {
 
   it('does not suppress TaskSession context when Task Goal differs from Energy Goal', () => {
     const rows = [
-      task('same-goal', 'goal.self', '自己的任务'),
+      task('same-goal', '照顾好自己', '自己的任务'),
       session('session-same', 'same-goal', '15:00', '15:20', 20),
-      task('other-goal', 'goal.work', '别的目标'),
+      task('other-goal', '工作能力', '别的目标'),
       session('session-other', 'other-goal', '15:20', '15:37', 17),
     ];
     const context = resolveEnergyContext(energy(), rows);
@@ -90,9 +90,9 @@ describe('Energy context resolver', () => {
   });
 
   it('adds same-day sleep/body/exercise check-ins as background signals', () => {
-    const sleep = makeItem({ id: 'sleep', coreBlock: 'habit', categoryKey: '打卡', goalId: 'goal.self', date: '2026-08-10', title: '睡眠', rating: 40 });
-    const body = makeItem({ id: 'body', coreBlock: 'habit', categoryKey: '打卡', goalId: 'goal.self', date: '2026-08-10', title: '身体状态', rating: 60 });
-    const exercise = makeItem({ id: 'exercise', coreBlock: 'habit', categoryKey: '打卡', goalId: 'goal.self', date: '2026-08-10', title: '八段锦', rating: 1 });
+    const sleep = makeItem({ id: 'sleep', coreBlock: 'habit', categoryKey: '打卡', goalPath: '照顾好自己', date: '2026-08-10', title: '睡眠', rating: 40 });
+    const body = makeItem({ id: 'body', coreBlock: 'habit', categoryKey: '打卡', goalPath: '照顾好自己', date: '2026-08-10', title: '身体状态', rating: 60 });
+    const exercise = makeItem({ id: 'exercise', coreBlock: 'habit', categoryKey: '打卡', goalPath: '照顾好自己', date: '2026-08-10', title: '八段锦', rating: 1 });
     const context = resolveEnergyContext(energy(), [sleep, body, exercise]);
     expect(context?.dailySignals.map((signal) => [signal.kind, signal.value])).toEqual([
       ['sleep', 40],

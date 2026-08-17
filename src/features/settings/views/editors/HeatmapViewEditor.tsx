@@ -11,7 +11,7 @@ import type { ViewEditorProps } from './ViewEditorProps';
 import { useSelector, selectInputBlocks, useUiPort } from '@/app/public';
 import { useMemo } from 'preact/hooks';
 import { HEATMAP_VIEW_DEFAULT_CONFIG, type HeatmapViewConfig } from '@core/view/public';
-import { collectThemePathsForHeatmap } from '@core/utils/public';
+import { collectGoalPathsForHeatmap } from '@core/utils/public';
 import type { RecordCaptureTemplate, ViewInstance } from '@core/types/public';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
@@ -25,9 +25,9 @@ function normalizeHeatmapConfig(value: Record<string, any> | undefined): Heatmap
     return {
         displayMode: v.displayMode === 'habit' || v.displayMode === 'count' ? v.displayMode : base.displayMode,
         sourceBlockId: typeof v.sourceBlockId === 'string' ? v.sourceBlockId : base.sourceBlockId,
-        themePaths: Array.isArray(v.themePaths)
-            ? v.themePaths.filter((x): x is string => typeof x === 'string')
-            : base.themePaths,
+        goalPaths: Array.isArray(v.goalPaths)
+            ? v.goalPaths.filter((x): x is string => typeof x === 'string')
+            : base.goalPaths,
         maxDailyChecks: typeof v.maxDailyChecks === 'number' ? v.maxDailyChecks : base.maxDailyChecks,
         allowManualEdit: typeof v.allowManualEdit === 'boolean' ? v.allowManualEdit : base.allowManualEdit,
     };
@@ -43,7 +43,7 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
         [allBlocks]
     );
 
-    const handleScanThemes = () => {
+    const handleScanGoals = () => {
         if (!config.sourceBlockId) {
             ui.notice('请先选择源 Block 模板。');
             return;
@@ -64,14 +64,14 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
 
         const items = dataStore.queryItems();
 
-        const sortedThemes = collectThemePathsForHeatmap({
+        const sortedGoals = collectGoalPathsForHeatmap({
             items,
             dataSource,
             sourceBlock,
         });
 
-        onChange({ themePaths: sortedThemes });
-        ui.notice(`扫描完成！已自动添加 ${sortedThemes.length} 个主题路径（来自分类 "${sourceBlock.name}"）。`);
+        onChange({ goalPaths: sortedGoals });
+        ui.notice(`扫描完成！已自动添加 ${sortedGoals.length} 个目标路径（来自分类 "${sourceBlock.name}"）。`);
     };
 
     return (
@@ -92,18 +92,18 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
                 </ConfigFieldRow>
             </ConfigSection>
 
-            <ConfigSection title="主题范围">
+            <ConfigSection title="目标范围">
                 <ConfigFieldRow
-                    label="主题路径"
-                    description="在此处添加的每个主题路径，在周/月视图下都会成为独立的一行。留空则显示所有打卡。"
+                    label="目标路径"
+                    description="在此处添加的每个目标路径，在周/月视图下都会成为独立的一行。留空则显示所有目标下的打卡。"
                     alignItems="flex-start"
                 >
                     <ListEditor
-                        value={config.themePaths}
-                        onChange={val => onChange({ themePaths: val })}
-                        placeholder="例如: 生活/健康, 工作/项目"
+                        value={config.goalPaths}
+                        onChange={val => onChange({ goalPaths: val })}
+                        placeholder="例如: 照顾好自己/健康/睡眠"
                     />
-                    <ThinkButton onClick={handleScanThemes} size="sm" variant="secondary">从数据源扫描并添加主题</ThinkButton>
+                    <ThinkButton onClick={handleScanGoals} size="sm" variant="secondary">从数据源扫描并添加目标</ThinkButton>
                 </ConfigFieldRow>
             </ConfigSection>
 

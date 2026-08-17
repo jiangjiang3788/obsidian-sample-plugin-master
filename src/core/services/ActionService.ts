@@ -25,7 +25,6 @@ export class ActionService {
     ) {}
 
     private getRuntimeBlocks(): RecordCaptureTemplate[] {
-        const settings = this.settingsProvider.getSettings();
         return getEffectiveCoreBlocks(settings);
     }
 
@@ -52,7 +51,6 @@ export class ActionService {
     }
 
     public getQuickInputConfigForView(viewInstance: ViewInstance, dateContext: dayjs.Dayjs, periodContext: string): QuickInputConfig | null {
-        const settings = this.settingsProvider.getSettings();
 
         if (viewInstance.viewType === 'StatisticsView') {
             return this.getQuickInputConfigForStatisticsView(viewInstance, dateContext, periodContext);
@@ -70,16 +68,6 @@ export class ActionService {
         if (!targetBlock) {
             this.ui.notice(`快捷输入失败：找不到核心 Block 为 "${coreBlock}" 的模板。`);
             return null;
-        }
-
-        let preselectedThemeId: string | undefined;
-        const themeFilter = filters.find((f) => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
-        if (themeFilter) {
-            const themePath = themeFilter.value;
-            const matchedTheme = settings.inputSettings.themes.find(t => t.path === themePath);
-            if (matchedTheme) {
-                preselectedThemeId = matchedTheme.id;
-            }
         }
 
         const context: Record<string, unknown> = {
@@ -102,7 +90,6 @@ export class ActionService {
         return {
             blockId: targetBlock.id,
             context,
-            themeId: preselectedThemeId,
         };
     }
 
@@ -114,7 +101,7 @@ export class ActionService {
 
         if (field.type === 'rating') {
             const score = item.rating ?? item.extra?.['评分'] ?? item.extra?.['rating'];
-            const visual = item.pintu ?? item.extra?.['评图'] ?? item.extra?.['pintu'];
+            const visual = item.image ?? item.extra?.['图片'] ?? item.extra?.image;
             if (field.options?.length) {
                 const scoreStr = score !== undefined && score !== null ? String(score) : '';
                 const matched = field.options.find((opt) =>
@@ -200,17 +187,6 @@ export class ActionService {
             return null;
         }
 
-        let preselectedThemeId: string | undefined;
-        const filters = viewInstance.filters || [];
-        const themeFilter = filters.find((f) => f.field === 'tags' && f.op === 'includes' && typeof f.value === 'string');
-        if (themeFilter) {
-            const themePath = themeFilter.value;
-            const matchedTheme = settings.inputSettings.themes.find(t => t.path === themePath);
-            if (matchedTheme) {
-                preselectedThemeId = matchedTheme.id;
-            }
-        }
-
         const context: Record<string, unknown> = {
             '日期': dateContext.format('YYYY-MM-DD'),
             '周期': periodContext,
@@ -229,7 +205,6 @@ export class ActionService {
         return {
             blockId: targetBlock.id,
             context,
-            themeId: preselectedThemeId,
         };
     }
 

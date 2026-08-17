@@ -28,10 +28,6 @@ export const RECORD_TYPE_IDS = {
   TASK_SESSION: 'internal.task-session',
 } as const;
 
-const themeField: TemplateField = {
-  id: 'core.field.themePath', key: 'themePath', label: '主题', type: 'hierarchicalSingleSelect', semantic: 'themePath',
-  semanticType: 'path', hierarchical: true, defaultValue: '{{goal.themePath}}',
-};
 const dateField: TemplateField = { id: 'core.field.date', key: '日期', label: '日期', type: 'date', semantic: 'date' };
 const iconField: TemplateField = { id: 'core.field.icon', key: 'icon', label: '图标', type: 'text', semantic: 'icon' };
 const contentField: TemplateField = { id: 'core.field.content', key: '内容', label: '内容', type: 'textarea', semantic: 'body' };
@@ -51,7 +47,7 @@ function define(
 
 const TASK_FIELDS: TemplateField[] = [
   { id: 'core.task.status', key: 'status', label: '状态', type: 'singleSelect', semantic: 'status', defaultValue: 'open', autoSelectFirst: true, options: [
-    { value: 'open', label: '未完成' }, { value: 'done', label: '已完成' }, { value: 'cancelled', label: '已取消' }, { value: 'skipped', label: '已跳过' },
+    { value: 'open', label: '未完成' }, { value: 'done', label: '已完成' },
   ] },
   { id: 'core.task.content', key: '任务内容', label: '内容', type: 'text', semantic: 'body' },
   { id: 'core.task.recurrenceUnit', key: 'recurrenceUnit', label: '重复', type: 'singleSelect', semantic: 'recurrence', defaultValue: 'none', autoSelectFirst: true, options: [
@@ -59,12 +55,11 @@ const TASK_FIELDS: TemplateField[] = [
   ] },
   { id: 'core.task.recurrenceInterval', key: 'recurrenceInterval', label: '重复间隔', type: 'number', min: 1, defaultValue: '1' },
 
-  // 主题属于 GoalTemplate / Goal 上下文：保留为隐藏系统字段参与模板默认值和持久化，不在任务创建表单中直接选择。
-  themeField,
 
   // 时间是任务主字段，与状态互相独立；填写结束时间不会自动完成任务。其余需求/场景字段由 UI 放入“更多选项”。
   { id: 'core.task.startAt', key: 'startAt', label: '开始/预计时间', type: 'datetime', semantic: 'date' },
   { id: 'core.task.endAt', key: 'endAt', label: '结束时间', type: 'datetime', semantic: 'date' },
+  { id: 'core.task.expectedDurationMinutes', key: 'expectedDurationMinutes', label: '时长（分钟）', type: 'number', semantic: 'duration', min: 1 },
   { id: 'core.task.priority', key: 'priority', label: '优先级', type: 'singleSelect', autoSelectFirst: true, options: [
     { value: 'lowest', label: '最低' }, { value: 'low', label: '低' }, { value: 'medium', label: '中' }, { value: 'high', label: '高' }, { value: 'highest', label: '最高' },
   ] },
@@ -96,7 +91,7 @@ function genericTemplate(
   return define(contract, {
     id: input.id, name: input.name, categoryKey: input.categoryKey, captureMode: 'template', coreBlockId: input.id,
     description: input.description,
-    fields: [contentField, themeField, dateField, ...(input.extraFields || []), iconField],
+    fields: [contentField, dateField, ...(input.extraFields || []), iconField],
     periodPolicy: input.period ? { enabled: true, granularity: 'week' } : undefined,
     targetFile: input.targetFile,
     appendUnderHeader: '## {{goalPath}}',

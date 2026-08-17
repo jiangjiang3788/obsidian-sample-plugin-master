@@ -17,37 +17,35 @@ describe('QuickInputEditorModel', () => {
 
   it('lists active goals without GoalTemplate requirements for direct record types', () => {
     const settings = {
-      schemaVersion: 2,
       groups: [],
       viewInstances: [],
       layouts: [],
-      inputSettings: { blocks: [], themes: [] },
+      inputSettings: { blocks: [] },
       goalSettings: {
         goals: [
-          { id: 'goal-a', title: '生活', goalPath: '生活', status: 'active', createdAt: '', updatedAt: '' },
-          { id: 'goal-b', title: '归档', goalPath: '归档', status: 'archived', createdAt: '', updatedAt: '' },
+          { path: '生活', status: 'active', createdAt: '', updatedAt: '' },
+          { path: '归档', status: 'archived', createdAt: '', updatedAt: '' },
         ],
         goalTemplates: [],
       },
       floatingTimerEnabled: true,
     } as any;
 
-    expect(buildQuickInputGoalOptions(settings, '', { requirePreset: false }).map((goal) => goal.id)).toEqual(['goal-a']);
+    expect(buildQuickInputGoalOptions(settings, '', { requirePreset: false }).map((goal) => goal.id)).toEqual(['生活']);
     expect(buildQuickInputGoalOptions(settings, 'core.plan').map((goal) => goal.id)).toEqual([]);
   });
 
 
   it('derives initial goal/template selection from form data before invocation context', () => {
     const selection = deriveQuickInputInitialSelection(
-      { goalId: 'goal-form', goalPath: '学习/英语', templateVariantId: 'preset-a', __timeDirection: 'backward' },
-      { goalId: 'goal-context', goalPath: '工作' },
+      { goalPath: '学习/英语', __timeDirection: 'backward' },
+      { goalPath: '工作' },
     );
     expect(selection).toMatchObject({
-      selectedGoalId: 'goal-form',
       selectedGoalPath: '学习/英语',
-      selectedTemplateVariantId: 'preset-a',
       timeDirection: 'backward',
     });
+    expect((selection as any).selectedTemplateVariantId).toBeUndefined();
   });
 
   it('marks meaningful initial fields as context sources and skips editor meta fields', () => {
@@ -71,7 +69,7 @@ describe('QuickInputEditorModel', () => {
       },
       current: { 内容: '用户输入' },
       fieldSources: { 内容: 'user' },
-      selectedGoal: { id: 'goal-1', title: '学习', goalPath: '学习' } as any,
+      selectedGoal: { path: '学习' } as any,
       currentGoalPath: '学习',
       currentGoalTitle: '学习',
       timeDirection: 'forward',
@@ -113,7 +111,7 @@ describe('QuickInputEditorModel', () => {
   });
 
 
-  it('updates a user field and returns goal/theme selection side effects', () => {
+  it('updates a user Goal field and returns the canonical Goal path', () => {
     const updated = applyQuickInputFieldUpdate({
       formData: { 内容: '旧内容' },
       fieldSources: { 内容: 'context' } as any,
@@ -124,7 +122,6 @@ describe('QuickInputEditorModel', () => {
     expect(updated.formData['目标']).toBe('学习/英语');
     expect(updated.fieldSources['目标']).toBe('user');
     expect(updated.nextGoalPath).toBe('学习/英语');
-    expect(updated.nextGoalId).toBe('goal:学习/英语');
   });
 
   it('applies backward time direction defaults inside the model layer', () => {
@@ -170,10 +167,8 @@ describe('QuickInputEditorModel', () => {
         日期: '2026-06-30',
         时间: '09:00',
         自定义: '删除',
-        goalId: 'goal-1',
-        themePath: '学习',
+        goalPath: '学习/英语',
         templateId: 'old-template',
-        templateVariantId: 'old-variant',
         周期: '旧周期',
       },
       {
@@ -181,54 +176,47 @@ describe('QuickInputEditorModel', () => {
         日期: 'context',
         时间: 'context',
         自定义: 'user',
-        goalId: 'goal_context',
-        themePath: 'goal_context',
+        goalPath: 'goal_context',
         templateId: 'system_auto',
-        templateVariantId: 'system_auto',
         周期: 'system_auto',
       } as any,
     );
-    expect(preserved.formData).toEqual({ 内容: '继续保留', 日期: '2026-06-30', 时间: '09:00', goalId: 'goal-1', themePath: '学习' });
-    expect(preserved.fieldSources).toEqual({ 内容: 'user', 日期: 'context', 时间: 'context', goalId: 'goal_context', themePath: 'goal_context' });
+    expect(preserved.formData).toEqual({ 内容: '继续保留', 日期: '2026-06-30', 时间: '09:00', goalPath: '学习/英语' });
+    expect(preserved.fieldSources).toEqual({ 内容: 'user', 日期: 'context', 时间: 'context', goalPath: 'goal_context' });
   });
 
   it('applies goal selection without overwriting user-owned fields', () => {
     const selected = applyQuickInputGoalSelection({
       formData: { 目标: '用户选择', 内容: '记录' },
       fieldSources: { 目标: 'user', 内容: 'user' } as any,
-      option: { id: 'goal-1', value: '学习/英语', label: '英语', goal: { id: 'goal-1', title: '英语', goalPath: '学习/英语', themePath: '学习' } as any, themePath: '学习' },
+      option: { id: '学习/英语', value: '学习/英语', label: '英语', goal: { path: '学习/英语' } as any },
     });
-    expect(selected.goalId).toBe('goal-1');
     expect(selected.formData.目标).toBe('用户选择');
     expect(selected.formData.goalPath).toBe('学习/英语');
-    expect(selected.formData.themePath).toBe('学习');
   });
 
-  it('builds QuickInput state with theme path summary and period fields', () => {
+  it('builds QuickInput state with Goal path summary and period fields', () => {
     const periodUi = buildQuickInputPeriodUi({ id: '2026-W01', label: '2026 第 1 周', granularity: 'week' });
     const state = buildQuickInputEditorState({
       blockId: 'event',
       effectiveBlockId: 'event',
-      selectedGoal: { id: 'goal-1', title: '英语', goalPath: '学习/英语', themePath: '学习/英语' } as any,
+      selectedGoal: { path: '学习/英语' } as any,
       currentGoalPath: '学习/英语',
       currentGoalTitle: '英语',
       currentGoalParts: { root: '学习', leaf: '英语' },
       currentPeriod: { id: '2026-W01', label: '2026 第 1 周' },
-      selectedThemeId: 'theme-1',
-      themeIdMap: new Map([['theme-1', { id: 'theme-1', path: '学习/英语', icon: '📘' } as any]]),
       formData: { 内容: '听力' },
       currentPeriodFields: periodUi.fields,
       timeDirection: 'forward',
       template: { fields: [] },
       templateId: 'tpl-1',
-      resolvedTemplateVariantId: 'preset-1',
       templateSourceType: 'goal-template',
       fieldSources: { 内容: 'user' } as any,
     });
     expect(state.formData.goalTemplateId).toBe('tpl-1');
     expect(state.formData['周期']).toBe('2026 第 1 周');
-    expect(state.rootTheme).toBe('学习');
-    expect(state.leafTheme).toBe('英语');
+    expect(state.rootGoal).toBe('学习');
+    expect(state.leafGoal).toBe('英语');
     expect(state.fieldSourceSummary?.user).toBe(1);
   });
 });

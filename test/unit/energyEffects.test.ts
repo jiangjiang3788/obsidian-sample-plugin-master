@@ -6,9 +6,9 @@ function makeItem(overrides: Record<string, unknown> = {}) {
   } as any;
 }
 
-function energy(id: string, date: string, time: string, score: number, extra: Record<string, unknown> = {}, goalId = 'goal.self') {
+function energy(id: string, date: string, time: string, score: number, extra: Record<string, unknown> = {}, goalPath = '照顾好自己') {
   return makeItem({
-    id, coreBlock: 'energy', categoryKey: '精力', goalId, date, startTime: time,
+    id, coreBlock: 'energy', categoryKey: '精力', goalPath, date, startTime: time,
     extra: {
       精力值: score,
       精力档位: score <= 30 ? 20 : score <= 50 ? 40 : score <= 70 ? 60 : score <= 90 ? 80 : 100,
@@ -21,7 +21,7 @@ function energy(id: string, date: string, time: string, score: number, extra: Re
 
 function task(id: string, overrides: Record<string, unknown> = {}) {
   return makeItem({
-    id, coreBlock: 'task', status: 'open', goalId: 'goal.self', title: '写 Think OS 代码', content: '写 Think OS 代码', themePath: '工作/开发', ...overrides,
+    id, coreBlock: 'task', status: 'open', goalPath: '工作/开发', title: '写 Think OS 代码', content: '写 Think OS 代码', ...overrides,
   });
 }
 
@@ -67,7 +67,7 @@ describe('Energy activity effects', () => {
     expect(model?.samples[0]).toMatchObject({
       activityItemId: 'session-coding',
       activityLabel: '代码 / 开发',
-      themeLabel: '工作/开发',
+      goalLabel: '工作/开发',
       durationBucket: '90–119min',
       beforeGapMinutes: 10,
       afterGapMinutes: 10,
@@ -118,7 +118,7 @@ describe('Energy activity effects', () => {
   it('keeps person-level Session feedback valid even when Energy Goal differs from Task Goal', () => {
     const model = buildEnergyEffects(linkedActivity({
       id: 'coding', date: '2026-08-10', start: '14:00', end: '15:00', duration: 60, beforeScore: 80, afterScore: 40,
-      beforeGoal: 'goal.other', afterGoal: 'goal.other',
+      beforeGoal: '其他目标', afterGoal: '其他目标',
     }));
     expect(model?.pairedActivityCount).toBe(1);
   });

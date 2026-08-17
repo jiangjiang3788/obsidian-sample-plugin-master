@@ -25,7 +25,7 @@ function blockRecordId(lines: string[], startIndex: number, endIndex: number): s
 }
 
 /**
- * The only Record Foundation v2 mutation locator: stable recordId -> verified block range.
+ * The canonical Record mutation locator: stable recordId -> verified block range.
  * expectedStartIndex is merely a fast-path hint; it never acts as identity.
  */
 export function resolveRecordBlockRangeById(

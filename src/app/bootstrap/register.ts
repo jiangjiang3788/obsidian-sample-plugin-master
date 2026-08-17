@@ -3,19 +3,16 @@ import type { PluginHost } from '@core/ports/public';
 import { z } from 'zod';
 
 import { SETTINGS_PERSISTENCE_TOKEN, type ISettingsPersistence } from '@core/services/public';
-import { THEME_MATCHER_TOKEN } from '@core/types/public';
 import { devWarn } from '@core/utils/public';
 import { toPersistedThinkSettings } from '@core/types/public';
 
 import { diDebug } from '@/app/diagnostics/diDiagnostics';
 
-import { ThemeManager } from '@core/theme/public';
 import { isDisposed } from '@/app/runtime/lifecycleState';
 
 /**
  * Step 0: 注册 app 层需要补充的 DI 绑定
  * - SettingsPersistence（封装 plugin.loadData/saveData）
- * - Theme matcher（ThemeManager）
  */
 export function registerSettingsPersistence(plugin: PluginHost): void {
     // 持久化前对设置做可选脱敏（AI apiKey）。
@@ -68,9 +65,4 @@ export function registerSettingsPersistence(plugin: PluginHost): void {
 
     // DI diagnostics (dev only, opt-in)
     diDebug('after register SettingsPersistence, isRegistered =', container.isRegistered(SETTINGS_PERSISTENCE_TOKEN));
-
-    // 注册 ThemeManager 并绑定到 THEME_MATCHER_TOKEN
-    // 这样 core 层的 DataStore 可以通过接口依赖 ThemeManager
-    container.registerSingleton(ThemeManager);
-    container.register(THEME_MATCHER_TOKEN, { useToken: ThemeManager });
 }

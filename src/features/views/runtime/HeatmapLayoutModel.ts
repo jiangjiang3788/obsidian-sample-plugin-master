@@ -1,31 +1,31 @@
-export function shouldSkipHeatmapVerticalLayout(theme: string | undefined, normalizedCurrentView: string): boolean {
-    if (!theme || theme === '__default__') return true;
+export function shouldSkipHeatmapVerticalLayout(goalPath: string | undefined, normalizedCurrentView: string): boolean {
+    if (!goalPath || goalPath === '__default__') return true;
     if (['年', '季'].includes(normalizedCurrentView)) return true;
     return normalizedCurrentView === '周';
 }
 
 export function resolveHeatmapVerticalLayout(args: {
-    theme?: string;
+    goalPath?: string;
     normalizedCurrentView: string;
     isDayView: boolean;
     containerWidth: number;
 }): boolean | null {
-    const { theme, normalizedCurrentView, isDayView, containerWidth } = args;
-    if (shouldSkipHeatmapVerticalLayout(theme, normalizedCurrentView)) return null;
+    const { goalPath, normalizedCurrentView, isDayView, containerWidth } = args;
+    if (shouldSkipHeatmapVerticalLayout(goalPath, normalizedCurrentView)) return null;
     const threshold = isDayView ? 320 : 600;
     return containerWidth < threshold;
 }
 
-export function applyHeatmapVerticalLayout(prev: Set<string>, theme: string, needsVertical: boolean): Set<string> {
+export function applyHeatmapVerticalLayout(prev: Set<string>, goalPath: string, needsVertical: boolean): Set<string> {
     const next = new Set(prev);
-    if (needsVertical) next.add(theme);
-    else next.delete(theme);
+    if (needsVertical) next.add(goalPath);
+    else next.delete(goalPath);
     return next;
 }
 
-export function toggleHeatmapCollapsedTheme(prev: Set<string>, theme: string): Set<string> {
+export function toggleHeatmapCollapsedGoal(prev: Set<string>, goalPath: string): Set<string> {
     const next = new Set(prev);
-    if (next.has(theme)) next.delete(theme);
-    else next.add(theme);
+    if (next.has(goalPath)) next.delete(goalPath);
+    else next.add(goalPath);
     return next;
 }

@@ -1,8 +1,8 @@
-// Record Foundation v2 parser: runtime reads Markdown Record Blocks only.
+// Current-only Record parser: runtime reads Markdown Record Blocks only.
 import type { RecordEntity, RecordViewItem } from '@/core/records/RecordEntity';
 import { getPeriodCount, dayjs } from './date';
 import { decodeRecordContentLines } from '@/core/records/codec';
-import { RECORD_SCHEMA_VERSION, isStableRecordId } from '@/core/records/RecordId';
+import { isStableRecordId } from '@/core/records/RecordId';
 import { normalizeRecurrenceInfo } from '@/core/records/task/taskRecurrence';
 import { normalizeTaskSessionDurationMinutes } from '@/core/records/task/taskSession';
 import { getRecordSchemaDefinition } from '@/core/records/schema';
@@ -32,7 +32,6 @@ export function parseRecordBlock(
   const contentLines = lines.slice(startIdx + 1, endIdx);
   const parsed = decodeRecordContentLines(contentLines, parentFolder);
   if (!parsed.recordId || !isStableRecordId(parsed.recordId)) return null;
-  if (parsed.schemaVersion !== RECORD_SCHEMA_VERSION) return null;
   if (!parsed.coreBlock) return null;
 
   const isTask = parsed.coreBlock === 'task';
@@ -56,10 +55,9 @@ export function parseRecordBlock(
   const derivedCategory = parsed.coreBlock === 'thought' && parsed.recordSubtype
     ? `闪念/${parsed.recordSubtype}`
     : (schema?.categoryKey || parentFolder);
-  const categoryKey = parsed.categoryKey || derivedCategory;
+  const categoryKey = derivedCategory;
   const item: RecordViewItem = {
     id: parsed.recordId,
-    schemaVersion: parsed.schemaVersion,
     title: parsed.title || '',
     content: parsed.content,
     rawSource: lines.slice(startIdx, endIdx + 1).join('\n'),
@@ -73,7 +71,6 @@ export function parseRecordBlock(
     extra: parsed.extra,
     categoryKey,
     folder: parentFolder,
-    theme: parsed.theme,
     coreBlock: parsed.coreBlock,
     priority: parsed.priority,
     createdAt: parsed.createdAt,
@@ -114,15 +111,9 @@ export function parseRecordBlock(
     date: canonicalDate,
   };
 
-  if (parsed.goalId) item.goalId = parsed.goalId;
-  if (parsed.cycleId) item.cycleId = parsed.cycleId;
-  if (parsed.templateId) item.templateId = parsed.templateId;
-  if (parsed.templateSourceType) item.templateSourceType = parsed.templateSourceType;
   if (parsed.icon) item.icon = parsed.icon;
-  if (parsed.period) item.period = parsed.period;
   if (parsed.rating !== undefined) item.rating = parsed.rating;
   if (parsed.image) item.image = parsed.image;
-  if (parsed.pintu) item.pintu = parsed.pintu;
   if (parsed.seriesId) item.extra['系列ID'] = parsed.seriesId;
   if (parsed.expectedDurationMinutes !== undefined) {
     item.expectedDurationMinutes = parsed.expectedDurationMinutes;

@@ -87,7 +87,6 @@ describe('recordUiActions', () => {
         __recordUiContext: expect.objectContaining({ kind: 'timeline_create' }),
       }),
       undefined,
-      undefined,
       false,
       expect.objectContaining({ mode: 'create', source: 'view_quick_create' }),
     );
@@ -105,7 +104,7 @@ describe('recordUiActions', () => {
 
     expect(opened).toBe(false);
     expect(QuickInputModal).not.toHaveBeenCalled();
-    expect(notice).toHaveBeenCalledWith(expect.stringContaining('当前热力图没有可用于新增的模板'));
+    expect(notice).toHaveBeenCalledWith(expect.stringContaining('当前热力图没有可用于新增的核心 Block'));
   });
 
   it('opens edit mode with item context', () => {
@@ -134,7 +133,6 @@ describe('recordUiActions', () => {
           }),
         }),
       }),
-      undefined,
       undefined,
       false,
       expect.objectContaining({ mode: 'edit', editItem: item }),

@@ -50,8 +50,6 @@ export const buildFieldSourceSummary = (
   ).length,
   goal_context: Object.values(sources).filter((v) => v === 'goal_context')
     .length,
-  theme_context: Object.values(sources).filter((v) => v === 'theme_context')
-    .length,
   template_default: Object.values(sources).filter(
     (v) => v === 'template_default',
   ).length,

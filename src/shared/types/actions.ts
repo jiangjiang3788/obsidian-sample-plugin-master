@@ -5,7 +5,7 @@
  * 这些 handler 由 feature 层桥接（例如 LayoutRenderer）。
  */
 
-import type { EnergyTaskExecutionStart, RecordViewItem, TaskBlock, ThemeDefinition, ViewInstance } from '@core/types/public';
+import type { EnergyTaskExecutionStart, RecordViewItem, TaskBlock, ViewInstance } from '@core/types/public';
 import type { MessageRenderPort } from '@core/ports/public';
 
 export type MarkDoneHandler = (id: string) => void;
@@ -25,7 +25,6 @@ export interface StatisticsPopoverRequest {
   timerService: TimerController;
   onMarkDone: MarkDoneHandler;
   timers: any[];
-  allThemes: ThemeDefinition[];
   messageRenderPort?: MessageRenderPort;
   onOpenRecord?: OpenRecordHandler;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
@@ -61,12 +60,7 @@ export interface HeatmapCreateRequest {
   sourceBlockId: string;
   date: string;
   item?: RecordViewItem;
-  themePath?: string;
   goalPath?: string;
-  goalId?: string;
-  templateId?: string;
-  templateVariantId?: string;
-  themesByPath: Map<string, ThemeDefinition>;
 }
 
 export type OpenHeatmapCreateHandler = (request: HeatmapCreateRequest) => void;

@@ -20,6 +20,7 @@ import { detectThinkDeviceProfile, getThinkDeviceProfileAttributes, isThinkMobil
 import { useLayoutItems } from './useLayoutItems';
 import { useExpandedViewRendering } from './useExpandedViewRendering';
 import { ViewContent } from './ViewContent';
+import { ViewportDeferredView } from './ViewportDeferredView';
 import { useLayoutModuleActions } from '@/app/dashboard/useLayoutModuleActions';
 import { FreeformCanvas } from './FreeformCanvas';
 import { FreeformLayoutToolbar } from './FreeformLayoutToolbar';
@@ -63,14 +64,11 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
   );
   const inputSettings = useSelector(selectInputSettings);
   const timers = useSelector(selectTimers);
-  const allThemes = inputSettings.themes;
 
   const allItems = useLayoutItems({ dataStore, layout });
   const allRecords = dataStore.queryRecords();
   const {
     expandedState,
-    expandedViewIds,
-    renderedExpandedCount,
     isStateInitialized,
     handleToggle,
   } = useExpandedViewRendering({ layout, allViews });
@@ -176,12 +174,11 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
     const isExpanded = hasLayoutCollapseOverride
       ? !freeformProps?.placement.collapsed
       : !!expandedState[viewId];
-    const expandedIndex = isExpanded ? expandedViewIds.indexOf(viewId) : -1;
-    const shouldRenderContent = isExpanded && (
-      freeformProps
-        ? (expandedIndex < 0 || expandedIndex < renderedExpandedCount)
-        : (expandedIndex >= 0 && expandedIndex < renderedExpandedCount)
-    );
+    // Expanded panels always mount a lightweight viewport gate. The heavy ViewContent
+    // inside that gate mounts only when the panel approaches the viewport. This avoids
+    // compressing off-screen panels into tiny placeholders and then eagerly loading them
+    // in timed batches.
+    const shouldRenderContent = isExpanded;
 
     const handlePanelToggle = (event: MouseEvent | KeyboardEvent) => {
       if (freeformProps) {
@@ -213,28 +210,27 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
         onLayoutToggleCollapsed={freeformProps?.onToggleCollapsed}
       >
         {shouldRenderContent ? (
-          <ViewContent
-            viewInstance={viewInstance}
-            dataStore={dataStore}
-            dateRange={dateRangeForView}
-            keyword=""
-            layoutView={layoutView}
-            isOverviewMode={false}
-            useFieldGranularity={false}
-            layoutFilters={globalFilters}
-            app={app}
-            onMarkDone={handleMarkItemDone}
-            actionService={actionService}
-            timerService={timerService}
-            timers={timers}
-            allThemes={allThemes}
-            allItems={allItems}
-            allRecords={allRecords}
-            inputSettings={inputSettings}
-            onDataLoaded={(items) => { modulesDataCache.current[viewInstance.id] = items; }}
-          />
-        ) : isExpanded ? (
-          <div class="module-deferred-placeholder">正在加载视图...</div>
+          <ViewportDeferredView viewType={viewInstance.viewType}>
+            <ViewContent
+              viewInstance={viewInstance}
+              dataStore={dataStore}
+              dateRange={dateRangeForView}
+              keyword=""
+              layoutView={layoutView}
+              isOverviewMode={false}
+              useFieldGranularity={false}
+              layoutFilters={globalFilters}
+              app={app}
+              onMarkDone={handleMarkItemDone}
+              actionService={actionService}
+              timerService={timerService}
+              timers={timers}
+              allItems={allItems}
+              allRecords={allRecords}
+              inputSettings={inputSettings}
+              onDataLoaded={(items) => { modulesDataCache.current[viewInstance.id] = items; }}
+            />
+          </ViewportDeferredView>
         ) : null}
       </ModulePanel>
     );
@@ -265,7 +261,6 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
         viewInstances={layout.viewInstanceIds.map((id: string) => allViewsById.get(id)).filter(Boolean)}
         hideToolbar={layout.hideToolbar}
         onLayoutSettingsClick={() => openLayoutSettingsWidget(layout.id)}
-        themes={allThemes}
       />
 
       {isFreeform && (

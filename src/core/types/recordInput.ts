@@ -1,5 +1,4 @@
 import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
-import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { EditableRecordSnapshot, RecordOutputPlan, RecordPersistencePlan } from './recordSnapshot';
 import type { TaskSessionCreateInput } from './timer';
@@ -57,7 +56,6 @@ export interface RecordSubmitResult {
   warnings?: RecordSubmitIssue[];
 }
 
-
 export type EntryKind = 'task' | 'block';
 
 export interface EntryContext {
@@ -65,14 +63,12 @@ export interface EntryContext {
   entryId: string;
   sourcePath?: string | null;
   sourceLine?: number | null;
-  templateId?: string | null;
   categoryKey?: string | null;
   openedFrom?: 'list' | 'detail' | 'search' | 'timeline' | 'quickinput' | 'timer' | 'unknown';
 }
 
 export interface PrepareCreateRecordParams {
   blockId?: string | null;
-  themeId?: string | null;
   context?: Record<string, unknown>;
   source?: RecordInputSource;
 }
@@ -80,13 +76,11 @@ export interface PrepareCreateRecordParams {
 export interface PrepareEditRecordParams {
   item: RecordViewItem;
   blockId?: string | null;
-  themeId?: string | null;
   source?: Extract<RecordInputSource, 'quickinput' | 'timer' | 'unknown'>;
 }
 
 export interface PreparedCreateRecord {
   blockId: string | null;
-  themeId: string | null;
   template: RecordCaptureTemplate | null;
   initialFormData: Record<string, unknown>;
   snapshot?: EditableRecordSnapshot | null;
@@ -97,7 +91,6 @@ export interface PreparedCreateRecord {
 
 export interface PreparedEditRecord {
   blockId: string | null;
-  themeId: string | null;
   template: RecordCaptureTemplate | null;
   initialFormData: Record<string, unknown>;
   snapshot?: EditableRecordSnapshot | null;
@@ -105,10 +98,7 @@ export interface PreparedEditRecord {
   persistencePlan?: RecordPersistencePlan;
   inferred: {
     usedFallbackBlock: boolean;
-    usedFallbackTheme: boolean;
-    /** Canonical Record identity after any legacy-template compatibility projection. */
     canonicalBlockId?: string | null;
-    compatibilityMode?: 'legacy-template' | null;
     templateSourceType?: 'core-block' | 'goal-template' | null;
     resolvedBy?: 'exact' | 'inferred' | 'fallback';
   };
@@ -117,7 +107,6 @@ export interface PreparedEditRecord {
 
 export interface SubmitCreateRecordParams {
   blockId: string;
-  themeId?: string | null;
   formData: Record<string, unknown>;
   context?: Record<string, unknown>;
   meta?: {
@@ -130,16 +119,10 @@ export interface SubmitCreateRecordParams {
 export interface SubmitUpdateRecordParams {
   item: RecordViewItem;
   blockId: string;
-  themeId?: string | null;
   formData: Record<string, unknown>;
   meta?: {
     timeDirection?: 'forward' | 'backward';
   };
-  /**
-   * 主线收口：提交前根据编辑器状态计算出的输出计划快照。
-   * usecase 会再次计算实际输出计划；如果二者不一致，说明前后保存链路已经漂移，
-   * 必须阻止本次保存，避免写入到错误位置。
-   */
   expectedOutputPlan?: Pick<RecordOutputPlan, 'targetFilePath' | 'targetHeader'> | null;
   expectedPersistencePlan?: Pick<RecordPersistencePlan, 'originalPath' | 'pathChanged' | 'writeMode'> | null;
   signal?: AbortSignal;
@@ -154,7 +137,6 @@ export interface SubmitDeleteRecordParams {
 
 export interface SubmitCompleteRecordParams {
   itemId: string;
-  /** When completion comes from Timer, Session creation and Task lifecycle commit atomically. */
   session?: TaskSessionCreateInput;
   options?: {
     duration?: number;
@@ -189,19 +171,14 @@ export interface SubmitUpdateRecordTimeParams {
 
 export interface ResolveDependenciesResult {
   blockId: string | null;
-  themeId: string | null;
   template: RecordCaptureTemplate | null;
-  theme: ThemeDefinition | null;
   warnings: RecordSubmitIssue[];
   errors: RecordSubmitIssue[];
   meta: {
     templateId?: string | null;
     templateSourceType?: 'core-block' | 'goal-template' | null;
     usedFallbackBlock: boolean;
-    usedFallbackTheme: boolean;
-    /** Canonical Record identity after any legacy-template compatibility projection. */
     canonicalBlockId?: string | null;
-    compatibilityMode?: 'legacy-template' | null;
   };
 }
 

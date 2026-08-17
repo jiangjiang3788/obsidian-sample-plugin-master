@@ -3,8 +3,6 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { FilterRule, SortRule } from '@/core/view/ViewConfig';
 import { toRecordViewItem, type RecordEntity } from '@/core/records/RecordEntity';
 import { throttle } from '@core/utils/timing';
-import type { IThemeMatcher } from '@core/types/theme';
-import { THEME_MATCHER_TOKEN } from '@core/types/theme';
 import type { IPluginStorage } from '@core/services/StorageService';
 import { STORAGE_TOKEN } from '@core/services/StorageService';
 import { devWarn, devError } from '../utils/devLogger';
@@ -36,11 +34,10 @@ export class DataStore {
     @inject(VAULT_PORT_TOKEN) private vault: VaultPort,
     @inject(METADATA_PORT_TOKEN) private metadata: MetadataPort,
     @inject(FILESTAT_PORT_TOKEN) private fileStat: FileStatPort,
-    @inject(THEME_MATCHER_TOKEN) private themeMatcher: IThemeMatcher,
     @inject(STORAGE_TOKEN) private storage: IPluginStorage
   ) {
     this.cacheStore = new DataStoreCache(this.storage, () => this._assertNotDisposed());
-    this.fileScanner = new DataStoreFileScanner(this.vault, this.metadata, this.fileStat, this.themeMatcher);
+    this.fileScanner = new DataStoreFileScanner(this.vault, this.metadata, this.fileStat);
   }
 
   /**

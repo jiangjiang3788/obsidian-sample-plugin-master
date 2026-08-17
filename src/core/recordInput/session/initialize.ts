@@ -7,10 +7,7 @@ import type {
 
 function copyDraft(draft: RecordInputDraftSnapshot): RecordInputDraftSnapshot {
   return {
-    selectedGoalId: draft.selectedGoalId,
     selectedGoalPath: draft.selectedGoalPath,
-    selectedTemplateVariantId: draft.selectedTemplateVariantId,
-    selectedThemeId: draft.selectedThemeId,
     timeDirection: draft.timeDirection,
     formData: { ...draft.formData },
     fieldSources: { ...draft.fieldSources },
@@ -22,10 +19,7 @@ export function createRecordInputDraftSnapshot(
 ): RecordInputDraftSnapshot {
   const selection: Partial<RecordInputSessionSelection> = input.initialSelection || {};
   return {
-    selectedGoalId: selection.selectedGoalId ?? null,
     selectedGoalPath: selection.selectedGoalPath ?? null,
-    selectedTemplateVariantId: selection.selectedTemplateVariantId ?? null,
-    selectedThemeId: selection.selectedThemeId ?? input.initialThemeId ?? null,
     timeDirection: selection.timeDirection ?? 'forward',
     formData: { ...(input.initialFormData || {}) },
     fieldSources: { ...(input.initialFieldSources || {}) },
@@ -42,9 +36,7 @@ export function initializeRecordInputSession(
     currentBlockId: initialBlockId,
     originBlockId: initialBlockId,
     ...copyDraft(draft),
-    draftByBlockId: {
-      [initialBlockId]: copyDraft(draft),
-    },
+    draftByBlockId: { [initialBlockId]: copyDraft(draft) },
     dirty: false,
     revision: 0,
   };

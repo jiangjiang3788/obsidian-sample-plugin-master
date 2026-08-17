@@ -5,12 +5,11 @@ import { buildInitialEditFormData } from '../../src/core/recordInput/EditBackfil
 
 const baseItem = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   id: 'task.01J00000000000000000000004',
-  schemaVersion: 2,
   coreBlock: 'task',
   status: 'open',
   title: '默认标题',
   content: '默认标题',
-  rawSource: '<!-- start -->\n记录ID:: task.01J00000000000000000000004\n记录版本:: 2\n核心Block:: task\n状态:: open\n内容:: 默认标题\n<!-- end -->',
+  rawSource: '<!-- start -->\n记录ID:: task.01J00000000000000000000004\n核心Block:: task\n状态:: open\n内容:: 默认标题\n<!-- end -->',
   tags: [],
   created: 0,
   modified: 0,
@@ -24,32 +23,15 @@ function template(fields: RecordCaptureTemplate['fields']): Pick<RecordCaptureTe
 }
 
 describe('EditBackfillMapper', () => {
-  it('主题字段只从显式 theme/themePath 回填，不从 header 回填', () => {
-    const item = baseItem({ header: '健康/睡眠' });
+  it('category fields backfill from canonical categoryKey without using Goal context', () => {
+    const item = baseItem({ categoryKey: '闪念/感受', goalPath: '了解自我/记录感受' });
     const snapshot = buildParsedRecordSnapshot(item);
     const data = buildInitialEditFormData({
-      template: template([
-        { id: 'f1', key: 'myTheme', label: '我的主题', type: 'path', semantic: 'themePath' },
-      ]),
+      template: template([{ id: 'f1', key: '思考分类', label: '思考分类', type: 'path', semantic: 'categoryPath' }]),
       item,
       snapshot,
     });
-
-    expect(data.myTheme).toBeUndefined();
-  });
-
-  it('显式主题路径可回填到任意 key 的 themePath 语义字段', () => {
-    const item = baseItem({ theme: '学习/英语/听力' });
-    const snapshot = buildParsedRecordSnapshot(item);
-    const data = buildInitialEditFormData({
-      template: template([
-        { id: 'f1', key: 'topic', label: '主题选择', type: 'path', semantic: 'themePath' },
-      ]),
-      item,
-      snapshot,
-    });
-
-    expect(data.topic).toEqual({ value: '学习/英语/听力', label: '听力' });
+    expect(data['思考分类']).toEqual({ value: '闪念/感受', label: '感受' });
   });
 
   it('任务正文回填使用 canonical content 并保留正文内部空格', () => {

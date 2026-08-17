@@ -4,9 +4,7 @@ export type RecordConflictCode =
   | 'record_block_boundary_invalid'
   | 'record_item_missing'
   | 'record_locator_invalid'
-  | 'record_id_duplicate'
-  | 'record_legacy_task_line_disabled'
-  | 'record_legacy_block_locator_disabled';
+  | 'record_id_duplicate';
 
 export class RecordConflictError extends Error {
   override name = 'RecordConflictError';

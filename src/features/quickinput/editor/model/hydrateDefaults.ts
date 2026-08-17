@@ -78,10 +78,8 @@ export function hydrateQuickInputTemplateDefaults({
   current,
   fieldSources,
   selectedGoal,
-  selectedGoalId,
   currentGoalPath,
   currentGoalTitle,
-  theme,
   currentPeriod,
   timeDirection,
 }: HydrateQuickInputTemplateDefaultsInput) {
@@ -90,12 +88,9 @@ export function hydrateQuickInputTemplateDefaults({
   const dataForParsing = {
     ...context,
     goal: {
-      id: selectedGoal?.id || selectedGoalId || '',
       title: currentGoalTitle || '',
       path: currentGoalPath || '',
-      themePath: selectedGoal?.themePath || theme?.path || '',
     },
-    goalId: selectedGoal?.id || selectedGoalId || '',
     goalPath: currentGoalPath || '',
     ...(currentPeriod
       ? {
@@ -111,9 +106,6 @@ export function hydrateQuickInputTemplateDefaults({
           periodLabel: currentPeriod.label,
         }
       : {}),
-    theme: theme
-      ? { path: theme.path, icon: theme.icon || '' }
-      : { path: selectedGoal?.themePath || '', icon: '' },
   };
 
   let changed = false;

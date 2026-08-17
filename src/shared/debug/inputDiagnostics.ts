@@ -108,7 +108,7 @@ export function logRenderDiagnostic(
 }
 
 export function installTemplateEditorInputDiagnostics(
-  label = "主题模板编辑器",
+  label = "目标模板编辑器",
 ) {
   const eventTypes = [
     "pointerdown",

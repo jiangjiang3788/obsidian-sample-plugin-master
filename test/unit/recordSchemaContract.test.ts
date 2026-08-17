@@ -2,7 +2,7 @@ import {
   RECORD_SCHEMA_CONTRACTS,
   canonicalRecordFieldKey,
   getRecordFieldContract,
-  getRecordSchemaContract,
+  getRecordSchemaDefinition,
   getTargetPersistedRecordFields,
 } from '@/core/records/schema';
 
@@ -58,8 +58,8 @@ describe('Record Schema Contract R10 current-only', () => {
   });
 
   it('drives RecordType capabilities from the same contract vocabulary', () => {
-    expect(getRecordSchemaContract('plan')?.capabilities.periodAware).toBe(true);
-    expect(getRecordSchemaContract('thought')?.capabilities.subtypeAware).toBe(true);
-    expect(getRecordSchemaContract('task-session')?.capabilities.userVisible).toBe(false);
+    expect(getRecordSchemaDefinition('plan')?.capabilities.periodAware).toBe(true);
+    expect(getRecordSchemaDefinition('thought')?.capabilities.subtypeAware).toBe(true);
+    expect(getRecordSchemaDefinition('task-session')?.capabilities.userVisible).toBe(false);
   });
 });

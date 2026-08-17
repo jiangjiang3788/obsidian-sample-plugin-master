@@ -22,18 +22,17 @@ function leafGoalLabel(value: unknown): string {
 /** 目标在所有视图里的规范显示路径：canonical slash path。 */
 export function getGoalOrderPath(goal: GoalDefinition | null | undefined): string {
   if (!goal) return '';
-  return normalizeOrderPath(goal.goalPath || goal.title || goal.id);
+  return normalizeOrderPath(goal.path);
 }
 
 /** 目标在所有视图里的规范显示名：取目标路径叶子。 */
 export function getGoalOrderLabel(goal: GoalDefinition | null | undefined): string {
   if (!goal) return '';
-  return leafGoalLabel(goal.title || goal.goalPath || goal.id);
+  return leafGoalLabel(goal.path);
 }
 
 export interface GoalOrderIndex {
   byPath: Map<string, number>;
-  byId: Map<string, number>;
   originalIndexByPath: Map<string, number>;
   orderedPaths: string[];
   rankOfPath: (path?: string | null) => number;
@@ -50,35 +49,64 @@ export interface GoalOrderIndex {
  * - 未配置目标排在已知目标后；未归属目标永远最后。
  */
 export function createGoalOrderIndex(goals: GoalDefinition[] = []): GoalOrderIndex {
-  const descriptors = (goals || [])
+  const rawDescriptors = (goals || [])
     .map((goal, originalIndex) => {
       const path = getGoalOrderPath(goal);
+      const parts = path.split('/').filter(Boolean);
       return {
-        id: goal.id,
         path,
+        parentPath: parts.slice(0, -1).join('/'),
         order: finiteNumber((goal as any)?.sortOrder, originalIndex),
         originalIndex,
       };
     })
     .filter((entry) => Boolean(entry.path));
 
-  descriptors.sort((left, right) => {
+  // Goal order is hierarchical, not a flat global sort. Sort siblings by sortOrder,
+  // then walk the tree depth-first so a parent is always adjacent to its descendants.
+  // This keeps settings matrices and all Goal-aware views from showing repeated leaf
+  // labels detached from their parent paths.
+  const descriptorByPath = new Map<string, (typeof rawDescriptors)[number]>();
+  for (const entry of rawDescriptors) {
+    if (!descriptorByPath.has(entry.path)) descriptorByPath.set(entry.path, entry);
+  }
+
+  const childrenByParent = new Map<string, Array<(typeof rawDescriptors)[number]>>();
+  const rootEntries: Array<(typeof rawDescriptors)[number]> = [];
+  for (const entry of descriptorByPath.values()) {
+    if (!entry.parentPath || !descriptorByPath.has(entry.parentPath)) {
+      rootEntries.push(entry);
+      continue;
+    }
+    const siblings = childrenByParent.get(entry.parentPath) || [];
+    siblings.push(entry);
+    childrenByParent.set(entry.parentPath, siblings);
+  }
+
+  const sortSiblings = (items: Array<(typeof rawDescriptors)[number]>) => items.sort((left, right) => {
     if (left.order !== right.order) return left.order - right.order;
-    return left.originalIndex - right.originalIndex;
+    if (left.originalIndex !== right.originalIndex) return left.originalIndex - right.originalIndex;
+    return left.path.localeCompare(right.path, 'zh-CN');
   });
 
+  sortSiblings(rootEntries);
+  childrenByParent.forEach(sortSiblings);
+
+  const descriptors: Array<(typeof rawDescriptors)[number]> = [];
+  const visit = (entry: (typeof rawDescriptors)[number]) => {
+    descriptors.push(entry);
+    for (const child of childrenByParent.get(entry.path) || []) visit(child);
+  };
+  rootEntries.forEach(visit);
+
   const byPath = new Map<string, number>();
-  const byId = new Map<string, number>();
   const originalIndexByPath = new Map<string, number>();
   const orderedPaths: string[] = [];
 
   descriptors.forEach((entry, index) => {
-    if (!byPath.has(entry.path)) {
-      byPath.set(entry.path, index);
-      originalIndexByPath.set(entry.path, entry.originalIndex);
-      orderedPaths.push(entry.path);
-    }
-    if (entry.id && !byId.has(entry.id)) byId.set(entry.id, index);
+    byPath.set(entry.path, index);
+    originalIndexByPath.set(entry.path, entry.originalIndex);
+    orderedPaths.push(entry.path);
   });
 
   const rankOfPath = (path?: string | null): number => {
@@ -100,13 +128,10 @@ export function createGoalOrderIndex(goals: GoalDefinition[] = []): GoalOrderInd
   const compareGoals = <T extends GoalDefinition>(left: T, right: T): number => {
     const byPathOrder = compareGoalPaths(getGoalOrderPath(left), getGoalOrderPath(right));
     if (byPathOrder !== 0) return byPathOrder;
-    const leftIndex = (left.id && byId.has(left.id)) ? byId.get(left.id)! : UNKNOWN_GOAL_RANK;
-    const rightIndex = (right.id && byId.has(right.id)) ? byId.get(right.id)! : UNKNOWN_GOAL_RANK;
-    if (leftIndex !== rightIndex) return leftIndex - rightIndex;
-    return String(left.id || '').localeCompare(String(right.id || ''), 'zh-CN');
+    return left.path.localeCompare(right.path, 'zh-CN');
   };
 
-  return { byPath, byId, originalIndexByPath, orderedPaths, rankOfPath, compareGoalPaths, compareGoals };
+  return { byPath, originalIndexByPath, orderedPaths, rankOfPath, compareGoalPaths, compareGoals };
 }
 
 export function sortGoalsBySettingsOrder<T extends GoalDefinition>(goals: T[] = []): T[] {
@@ -123,28 +148,16 @@ export function sortGoalPathsBySettingsOrder(paths: string[] = [], goals: GoalDe
   return [...paths].sort(order.compareGoalPaths);
 }
 
-function templateSortValue(template: GoalTemplate, fallback: number): number {
-  return finiteNumber((template as any)?.sortOrder, fallback);
-}
-
-/**
- * 预设排序入口。
- *
- * 用于“目标 × 预设”视图：先按目标设置顺序，再按同一目标 / 同一 coreBlock 内预设 sortOrder。
- */
+/** Sort the one template owned by each Goal x CoreBlock cell. */
 export function sortGoalTemplatesBySettingsOrder<T extends GoalTemplate>(templates: T[] = [], goals: GoalDefinition[] = []): T[] {
   const goalOrder = createGoalOrderIndex(goals);
   const originalIndex = new Map<T, number>();
   templates.forEach((template, index) => originalIndex.set(template, index));
   return [...templates].sort((left, right) => {
-    const leftGoalPath = goals.find((goal) => goal.id === left.goalId)?.goalPath || left.goalId;
-    const rightGoalPath = goals.find((goal) => goal.id === right.goalId)?.goalPath || right.goalId;
-    const byGoal = goalOrder.compareGoalPaths(leftGoalPath, rightGoalPath);
+    const byGoal = goalOrder.compareGoalPaths(left.goalPath, right.goalPath);
     if (byGoal !== 0) return byGoal;
     const byBlock = String(left.coreBlockId || '').localeCompare(String(right.coreBlockId || ''), 'zh-CN');
     if (byBlock !== 0) return byBlock;
-    const byTemplateOrder = templateSortValue(left, originalIndex.get(left) ?? 0) - templateSortValue(right, originalIndex.get(right) ?? 0);
-    if (byTemplateOrder !== 0) return byTemplateOrder;
     return (originalIndex.get(left) ?? 0) - (originalIndex.get(right) ?? 0);
   });
 }

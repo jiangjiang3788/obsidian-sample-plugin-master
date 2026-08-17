@@ -119,3 +119,16 @@
         padding: var(--think-space-3);
     }
 }
+
+/* Expanded dashboard views are viewport-gated so a long layout does not execute every
+ * heavy view model at once. The placeholder keeps layout geometry stable until the
+ * panel approaches the viewport. */
+.think-os .think-view-viewport-gate.is-deferred {
+  display: block;
+  contain: layout paint style;
+}
+.think-os .think-view-viewport-gate.is-deferred .module-deferred-placeholder {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+}

@@ -17,7 +17,6 @@
  * - ❌ 禁止把 “export-star from 某个深层实现文件” 当捷径（除非它本身就是模块级 public barrel）
  *
  * 命名约定：
- * - ThemeMatrix 运行时模块已移除；主题树 API 只保留 ThemePathTree 前缀。
  */
 
 //
@@ -25,7 +24,6 @@
 //
 export * from './types';
 export type {
-    GoalId,
     GoalStatus,
     CycleGranularity,
     GoalMetricDirection,
@@ -34,11 +32,8 @@ export type {
       GoalTemplateStorageRow,
     GoalSettings,
 } from './goal';
-export { DEFAULT_GOAL_SETTINGS, assertCanonicalGoalSettings, normalizeGoalPath, requireGoalPath, splitGoalPath, getGoalOrderPath, getGoalOrderLabel, createGoalOrderIndex, sortGoalsBySettingsOrder, compareGoalPathsBySettingsOrder, sortGoalPathsBySettingsOrder, sortGoalTemplatesBySettingsOrder, makeStableGoalIdFromPath, resolveDerivedPeriod, normalizePeriodGranularity, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, resolveTemplatePeriodPolicy, DEFAULT_TEMPLATE_VARIANT_ID, SYSTEM_RECORD_CONTEXT_FIELD_KEYS, isSystemRecordContextField, normalizeTemplateVariantId, isDefaultTemplateVariant, getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalIds, getGoalTemplateVariants, findGoalTemplate, normalizeGoalTemplateStorageRow, toGoalTemplateStorageRow, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage, getGoalTemplateDisplayInfo, getGoalTemplateDisplayName, isGeneratedGoalTemplateName, readGoalTemplateIcon, readGoalTemplateThemePath, goalTemplateHasCustomOverrides, inferGoalTemplateEditMode, compactGoalTemplateForStorage, describeGoalTemplateStorageDiff, UNASSIGNED_GOAL_KEY, getItemGoalKey, getItemGoalLabel, getItemThemeKey, getItemThemeLabel, buildGoalThemeBreakdown, buildGoalBuckets } from './goal';
-export type { GoalPathParts, GoalOrderIndex, DerivedPeriod, TemplateVariantId, TemplateVariantIdentity, GoalTemplate, PeriodGranularity, PeriodPolicy, GoalBucket, GoalThemeBreakdownRow, CompactGoalTemplateOptions, GoalTemplateDisplayInfo, GoalTemplateEditMode } from './goal';
-
-export { ThemeMetadataResolver } from './themeMetadata';
-export type { ThemeMetadata } from './themeMetadata';
+export { DEFAULT_GOAL_SETTINGS, assertCanonicalGoalSettings, normalizeGoalPath, requireGoalPath, splitGoalPath, getParentGoalPath, getGoalLeaf, isGoalPathDescendant, getGoalOrderPath, getGoalOrderLabel, createGoalOrderIndex, sortGoalsBySettingsOrder, compareGoalPathsBySettingsOrder, sortGoalPathsBySettingsOrder, sortGoalTemplatesBySettingsOrder, resolveDerivedPeriod, normalizePeriodGranularity, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, resolveTemplatePeriodPolicy, SYSTEM_RECORD_CONTEXT_FIELD_KEYS, isSystemRecordContextField, getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalPaths, findGoalTemplate, findDirectGoalTemplate, normalizeGoalTemplateStorageRow, toGoalTemplateStorageRow, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage, getGoalTemplateDisplayInfo, getGoalTemplateDisplayName, isGeneratedGoalTemplateName, readGoalTemplateIcon, goalTemplateHasCustomOverrides, inferGoalTemplateEditMode, compactGoalTemplateForStorage, describeGoalTemplateStorageDiff, UNASSIGNED_GOAL_KEY, getItemGoalKey, getItemGoalLabel, buildGoalBuckets } from './goal';
+export type { GoalPathParts, GoalOrderIndex, DerivedPeriod, GoalTemplate, PeriodGranularity, PeriodPolicy, GoalBucket, CompactGoalTemplateOptions, GoalTemplateDisplayInfo, GoalTemplateEditMode } from './goal';
 
 //
 // -------------------- Utils（可复用纯能力） --------------------
@@ -84,11 +79,9 @@ export {
 export type { NormalizeDisplayFieldsOptions } from './view-config/displayFields';
 export {
     VIEW_PRIMARY_FIELD_KEYS,
-    VIEW_LEGACY_FIELD_ALIASES,
     VIEW_NOISY_DISPLAY_FIELDS,
     isNoisyViewDisplayField,
     isPeriodViewField,
-    isTemplateSourceViewField,
     normalizeViewFieldKey,
     normalizeViewFilters,
     normalizeViewGroupFields,
@@ -179,24 +172,6 @@ export type {
 // 注意：AI 子模块本身已经有 index.ts 作为 public barrel
 //
 export * from './ai/public';
-
-// -------------------- Theme Tree (Unified) --------------------
-// 说明：这是“主题路径树/选择器”用的统一实现（core/theme）。
-// ThemeMatrix 运行时模块已在单人版收敛中移除，主题只保留为路径/图标/颜色元数据。
-export {
-    ThemeTreeBuilder as ThemePathTreeBuilder,
-    buildThemeTree as buildThemePathTree,
-    flattenThemeTree as flattenThemePathTree,
-    searchThemeTree as searchThemePathTree,
-} from './theme/ThemeTreeBuilder';
-export type {
-    ThemeTreeNode as ThemePathTreeNode,
-    FlatThemeTreeNode as ThemePathTreeFlatNode,
-} from './theme/ThemeTreeBuilder';
-
-export { parsePath } from './theme/themePathParser';
-
-//
 
 // -------------------- Records（记录标准化/Codec） --------------------
 export { normalizeRecordItem, normalizeRecordItems } from './records/public';

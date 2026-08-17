@@ -1,7 +1,6 @@
-import type { TemplateField, ThemeDefinition } from '@core/types/public';
+import type { TemplateField } from '@core/types/public';
 import { getTemplateFieldSemantic } from '@core/fields/public';
 
-import { themeOptions } from '../quickInputPathModel';
 import type { QuickInputPeriodLike, QuickInputFormData, QuickInputTemplateLike } from './types';
 
 const TASK_STATUS_FIELD: TemplateField = {
@@ -70,7 +69,6 @@ function normalizeTaskFields(fields: TemplateField[]): TemplateField[] {
     };
   });
 
-  // themePath 继续留在模板里作为系统上下文字段，Fields 层会统一隐藏。这样 GoalTemplate 的主题默认值仍能进入 formData/最终记录。
   // Task 状态的录入语义只暴露“未完成 / 已完成”；取消/跳过仍由底层记录模型兼容历史数据与其他工作流。
   const status: TemplateField = {
     ...TASK_STATUS_FIELD,
@@ -105,28 +103,19 @@ function normalizeTaskFields(fields: TemplateField[]): TemplateField[] {
 export function buildQuickInputDisplayTemplate(
   rawTemplate: QuickInputTemplateLike | null | undefined,
   effectiveBlockId: string | null | undefined,
-  availableThemes: ThemeDefinition[],
   goalFieldOptions: Array<{ value: string; label: string }>,
 ): QuickInputTemplateLike | null {
   if (!rawTemplate?.fields?.length) return rawTemplate ?? null;
-  const themeFieldOptions = themeOptions(availableThemes);
   const task = isTaskTemplate(rawTemplate, effectiveBlockId);
 
   const mappedFields = rawTemplate.fields.map((field: TemplateField) => {
     const semantic = getTemplateFieldSemantic(field);
     if (semantic === 'goalPath') return { ...field, options: goalFieldOptions };
-    if (semantic === 'themePath') {
-      return {
-        ...field,
-        type: field.type === 'path' ? 'hierarchicalSingleSelect' : field.type,
-        options: themeFieldOptions,
-      };
-    }
     if (task && ['select', 'singleSelect', 'radio'].includes(field.type) && field.options?.length) {
       return { ...field, autoSelectFirst: true };
     }
     return field;
-  });
+  }).filter(Boolean) as TemplateField[];
 
   return {
     ...rawTemplate,

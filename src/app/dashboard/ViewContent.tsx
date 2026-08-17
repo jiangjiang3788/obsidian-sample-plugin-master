@@ -32,7 +32,6 @@ export interface ViewContentProps {
   actionService: ActionService;
   timerService: TimerController;
   timers: any[];
-  allThemes: any[];
   allItems: RecordViewItem[];
   allRecords: RecordViewItem[];
   inputSettings: InputSettings;
@@ -54,7 +53,6 @@ export function ViewContent({
   actionService,
   timerService,
   timers,
-  allThemes,
   allItems,
   allRecords,
   inputSettings,
@@ -118,8 +116,7 @@ export function ViewContent({
     onCloseStatisticsPopover: closeStatisticsPopover,
     timerService,
     timers,
-    allThemes,
-    inputSettings,
+      inputSettings,
     goals: settings.goalSettings?.goals || [],
     selectedLayoutCategories,
     categoryColors,

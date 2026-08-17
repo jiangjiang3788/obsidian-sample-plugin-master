@@ -1,5 +1,4 @@
 // src/core/records/RecordEntity.ts
-import type { IThemeMatcher } from '@/core/types/theme';
 import type { RecurrenceInfo } from './task/RecurrenceTypes';
 
 /** Current Markdown storage location. Location is mutable metadata, never identity. */
@@ -19,7 +18,6 @@ export interface RecordSourceLocation {
  */
 export interface RecordEntity {
   id: string;
-  schemaVersion: number;
   coreBlock: string;
 
   title: string;
@@ -29,22 +27,12 @@ export interface RecordEntity {
   fullData?: string;
   tags: string[];
 
-  /** Transitional creation provenance. R10 removes it from persisted generic records. */
-  templateId?: string;
-  templateSourceType?: 'core-block' | 'goal-template';
 
-  goalId?: string;
   goalPath?: string;
   rootGoal?: string;
   leafGoal?: string;
 
-  /** Historical theme snapshot plus derived theme view fields. */
-  theme?: string;
-  themePath?: string;
-  rootTheme?: string;
-  leafTheme?: string;
-
-  /** Transitional human category label; never a Record type discriminator. */
+  /** Human-facing category label derived from the canonical Record type. */
   categoryKey: string;
 
   date?: string;
@@ -72,7 +60,7 @@ export interface RecordEntity {
     folder?: string;
   };
 
-  /** Transitional generic time/display fields. R5/R6 decide their final query projection. */
+  /** Generic view projection fields; never persisted as Task storage aliases. */
   startTime?: string;
   endTime?: string;
   duration?: number;
@@ -89,7 +77,7 @@ export interface GenericRecord extends RecordEntity {
 
 export interface ThoughtRecord extends RecordEntity {
   coreBlock: 'thought';
-  /** Canonical target field; old 分类 values remain transitional until R10. */
+  /** Canonical thought subtype. */
   recordSubtype?: '感受' | '思考';
 }
 
@@ -97,8 +85,6 @@ export interface HabitRecord extends RecordEntity {
   coreBlock: 'habit';
   rating?: number;
   image?: string;
-  /** Transitional image alias; R10 converges it to image. */
-  pintu?: string;
   displayCount?: number;
   levelCount?: number;
   countForLevel?: boolean;
@@ -187,10 +173,9 @@ export type AnyRecordEntity =
   | RecordEntity;
 
 /**
- * Consumer projection used by existing View/Search/Field surfaces during R2-R6.
+ * Consumer projection used by View/Search/Field surfaces.
  *
- * This is intentionally NOT the persistence/domain model. It is the explicit compatibility
- * surface that replaces the old mega universal projection. Domain code should narrow RecordEntity with
+ * This is intentionally NOT the persistence/domain model. Domain code should narrow RecordEntity with
  * asTaskRecord/asTaskSeriesRecord/asTaskSessionRecord/asHabitRecord instead.
  */
 export interface RecordViewItem extends RecordEntity {
@@ -239,7 +224,6 @@ export interface RecordViewItem extends RecordEntity {
   recordSubtype?: '感受' | '思考' | string;
   rating?: number;
   image?: string;
-  pintu?: string;
   displayCount?: number;
   levelCount?: number;
   countForLevel?: boolean;
@@ -274,5 +258,4 @@ export interface RecordLocationContext {
 }
 
 export interface RecordNormalizeContext extends RecordFileContext, RecordLocationContext {
-  themeMatcher?: IThemeMatcher;
 }

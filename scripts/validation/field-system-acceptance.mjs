@@ -10,15 +10,16 @@ const defaultDataPath = path.resolve(rootDir, 'data.json');
 const exampleDataPath = path.resolve(rootDir, 'data.example.json');
 const dataPath = requestedExample || !fs.existsSync(defaultDataPath) ? exampleDataPath : defaultDataPath;
 
-const LEGACY_FIELD_TARGETS = new Map([
-  ['theme', 'themePath'],
-  ['主题', 'themePath'],
-  ['pintu', 'image'],
-  ['评图', 'image'],
-  ['tag', 'tags'],
-  ['标签', 'tags'],
-  ['category', 'categoryKey'],
-  ['分类', 'categoryKey'],
+const FORBIDDEN_REMOVED_FIELDS = new Map([
+  ['theme', 'Theme 已删除；归属请使用 goalPath'],
+  ['themePath', 'Theme 已删除；归属请使用 goalPath'],
+  ['themeId', 'Theme 已删除；归属请使用 goalPath'],
+  ['rootTheme', 'Theme 已删除；根层级请从 goalPath 推导 rootGoal'],
+  ['leafTheme', 'Theme 已删除；叶层级请从 goalPath 推导 leafGoal'],
+  ['主题', 'Theme 已删除；归属请使用目标'],
+  ['pintu', '使用 image / 图片'],
+  ['tag', '使用 tags / 标签'],
+  ['category', '使用 categoryKey / 分类'],
 ]);
 
 const POLLUTED_EXTRA_ALIASES = new Set(['extra.正文', 'extra.内容', 'extra.任务内容', 'extra.记录内容', 'extra.editableText']);
@@ -41,14 +42,14 @@ function normalizeFieldName(value) {
 function checkViewField(value, where, issues) {
   const field = normalizeFieldName(value);
   if (!field) return;
-  if (LEGACY_FIELD_TARGETS.has(field)) {
+  if (FORBIDDEN_REMOVED_FIELDS.has(field)) {
     addIssue(
       issues,
       'error',
-      'legacy-view-field',
-      `视图字段仍在使用旧字段 ${field}`,
+      'removed-view-field',
+      `视图字段仍在使用已删除或非当前字段 ${field}`,
       where,
-      `改为 ${LEGACY_FIELD_TARGETS.get(field)}`,
+      FORBIDDEN_REMOVED_FIELDS.get(field),
     );
   }
   if (POLLUTED_EXTRA_ALIASES.has(field)) {
@@ -66,14 +67,14 @@ function checkViewField(value, where, issues) {
 function checkTemplate(template, where, issues) {
   const source = String(template ?? '');
   if (!source) return;
-  if (source.includes('{{theme}}')) {
+  if (/\{\{(?:theme|themePath|themeId|rootTheme|leafTheme|主题)\}\}/i.test(source) || /^\s*(?:主题|theme|themePath|themeId)\s*::/im.test(source)) {
     addIssue(
       issues,
-      'warn',
-      'template-uses-theme-alias',
-      '模板仍在使用 {{theme}} 别名',
+      'error',
+      'template-uses-removed-theme',
+      '模板仍在使用已经删除的 Theme 字段或变量',
       where,
-      '建议改为 {{themePath}}；{{theme}} 仍兼容，但不推荐继续写新模板',
+      '删除 Theme 变量；记录归属只使用目标 / goalPath',
     );
   }
   if (/^\s*分类::\s*[^\n]*\n\s*分类::/m.test(source)) {
@@ -89,11 +90,11 @@ function checkTemplate(template, where, issues) {
   if (/\bpintu\s*::/i.test(source)) {
     addIssue(
       issues,
-      'warn',
+      'error',
       'template-uses-pintu-alias',
-      '模板仍在使用旧图片字段 pintu::',
+      '模板仍在使用已删除的图片字段 pintu::',
       where,
-      '建议改为 图片:: {{图片}} 或 图片:: {{评分.value}}',
+      '改为 图片:: {{图片}} 或 图片:: {{评分.value}}',
     );
   }
 }
@@ -115,24 +116,17 @@ function checkFieldDefinition(field, where, issues) {
       '文件字段由插件自动生成，不需要放入表单',
     );
   }
-  if ((key === '标签' || key === 'tags' || key === 'tag') && type === 'text') {
+  if (FORBIDDEN_REMOVED_FIELDS.has(key)) {
+    addIssue(issues, 'error', 'removed-input-field', `表单字段仍在使用已删除或非当前字段 ${key}`, where, FORBIDDEN_REMOVED_FIELDS.get(key));
+  }
+  if ((key === '标签' || key === 'tags') && type === 'text') {
     addIssue(
       issues,
       'warn',
       'tag-field-as-text',
       '标签字段仍是普通文本类型',
       where,
-      '建议改为 multiTag，仍兼容文本输入',
-    );
-  }
-  if ((key === '主题' || key === 'theme' || key === 'themePath') && type === 'text') {
-    addIssue(
-      issues,
-      'warn',
-      'theme-field-as-text',
-      '主题字段仍是普通文本类型',
-      where,
-      '建议改为 path，仍兼容文本输入',
+      '建议改为 multiTag',
     );
   }
   if ((key === '分类' || key === 'categoryKey' || key === 'categoryPath') && type === 'text') {
@@ -142,7 +136,7 @@ function checkFieldDefinition(field, where, issues) {
       'category-field-as-text',
       '分类字段仍是普通文本类型',
       where,
-      '建议改为 path，仍兼容文本输入',
+      '建议改为 path',
     );
   }
 }
@@ -151,7 +145,6 @@ function checkBlock(block, where, issues) {
   if (!block?.id) addIssue(issues, 'error', 'block-id-missing', 'Block 缺少 id', where, '补齐 id');
   if (!String(block?.name ?? '').trim()) addIssue(issues, 'error', 'block-name-missing', 'Block 缺少名称', where, '填写 Block 名称');
   if (!String(block?.categoryKey ?? '').trim()) addIssue(issues, 'warn', 'block-category-missing', 'Block 缺少默认分类 categoryKey', where, '建议填写默认分类');
-  checkTemplate(block?.outputTemplate, `${where}.outputTemplate`, issues);
   checkTemplate(block?.appendUnderHeader, `${where}.appendUnderHeader`, issues);
   (block?.fields || []).forEach((field, index) => checkFieldDefinition(field, `${where}.fields[${index}]`, issues));
 }

@@ -14,7 +14,6 @@ const field = (key: string, type: TemplateField['type'] = 'text'): TemplateField
 describe('R5 template field freedom', () => {
   it('lets the template omit optional canonical fields and preserves declared order', () => {
     const draft = buildGenericRecordDraft('thought', {
-      goalId: 'goal.self',
       goalPath: '了解自我',
       日期: '2026-08-11',
       记录子类型: '思考',
@@ -23,7 +22,6 @@ describe('R5 template field freedom', () => {
     }, [field('记录子类型', 'singleSelect'), field('情绪', 'singleSelect'), field('内容', 'textarea')]);
 
     expect(draft.fields).toEqual({
-      目标ID: 'goal.self',
       目标: '了解自我',
       记录子类型: '思考',
       情绪: 'calm',

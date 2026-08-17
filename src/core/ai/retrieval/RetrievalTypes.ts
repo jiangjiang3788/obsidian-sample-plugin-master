@@ -1,17 +1,11 @@
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 export interface RetrievalFilters {
-    /** 主题路径过滤，明确使用 item.themePath 语义，不再使用 legacy item.theme */
-    themePaths?: string[];
+    /** Goal subtree filter. Goal path is both identity and human-readable hierarchy. */
+    goalPaths?: string[];
     /** Canonical business type filter (RecordViewItem.coreBlock). */
     coreBlocks?: string[];
-    /** @deprecated R6 compatibility alias. New callers use coreBlocks. */
-    types?: string[];
-    /** Block 模板 ID 过滤（通过 item.templateId/templateId 匹配） */
-    blockTemplateIds?: string[];
-    /** Block 模板名称过滤（通过 categoryKey/root category 匹配） */
-    blockTemplateNames?: string[];
-    /** 结果数量限制 */
+    /** Result limit. */
     limit?: number;
 }
 
@@ -34,14 +28,13 @@ export interface SearchIndexDocument {
     editableText: string;
     fullData: string;
     tags: string;
-    themePath: string;
-    rootTheme: string;
-    leafTheme: string;
+    goalPath: string;
+    rootGoal: string;
+    leafGoal: string;
     categoryKey: string;
     baseCategory: string;
     leafCategory: string;
     coreBlock: string;
-    templateId: string;
     fileName: string;
     folder: string;
     header: string;
@@ -58,9 +51,9 @@ export const SEARCH_FIELDS: Array<keyof SearchIndexDocument> = [
     'content',
     'editableText',
     'tags',
-    'themePath',
-    'rootTheme',
-    'leafTheme',
+    'goalPath',
+    'rootGoal',
+    'leafGoal',
     'categoryKey',
     'baseCategory',
     'leafCategory',
@@ -77,14 +70,13 @@ export const STORE_FIELDS: Array<keyof SearchIndexDocument> = [
     'editableText',
     'fullData',
     'tags',
-    'themePath',
-    'rootTheme',
-    'leafTheme',
+    'goalPath',
+    'rootGoal',
+    'leafGoal',
     'categoryKey',
     'baseCategory',
     'leafCategory',
     'coreBlock',
-    'templateId',
     'fileName',
     'folder',
     'header',

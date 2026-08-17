@@ -7,7 +7,6 @@ export const CORE_PUBLIC_FACADES = [
   { specifier: '@core/fields/public', file: 'src/core/fields/public.ts', scope: 'module' },
   { specifier: '@core/recordInput/public', file: 'src/core/recordInput/public.ts', scope: 'module' },
   { specifier: '@core/layout/public', file: 'src/core/layout/public.ts', scope: 'module' },
-  { specifier: '@core/theme/public', file: 'src/core/theme/public.ts', scope: 'module' },
   { specifier: '@core/semantics/public', file: 'src/core/semantics/public.ts', scope: 'module' },
   { specifier: '@core/utils/public', file: 'src/core/utils/public.ts', scope: 'module' },
   { specifier: '@core/types/public', file: 'src/core/types/public.ts', scope: 'module' },

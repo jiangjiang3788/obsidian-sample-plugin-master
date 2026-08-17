@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { ThinkButton } from '@shared/ui/public';
-import { selectAiSettings, selectInputSettings, useSelector } from '@/app/public';
+import { selectAiSettings, selectInputSettings, selectSettings, useSelector } from '@/app/public';
 import type { OpenAIChatMessage, ChatMessage, ChatSession, SessionFilters } from '@core/ai/public';
 import { devError, devLog } from '@core/utils/public';
 import type { ChatResponse } from '@core/ai/public';
@@ -20,8 +20,12 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
     // P0: 使用 Zustand store 作为 SSOT
     const aiSettings = useSelector(selectAiSettings);
     const inputSettings = useSelector(selectInputSettings);
-    const themes = inputSettings?.themes ?? [];
+    const settings = useSelector(selectSettings);
     const blocks = inputSettings?.blocks ?? [];
+    const goals = (settings.goalSettings?.goals ?? [])
+        .map((goal) => String(goal.path || '').trim())
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, 'zh-CN'));
     // 从 props 获取服务（已在 composition root 中 resolve）
     const { chatService, retrievalService, sessionStore } = services;
     const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -39,7 +43,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
 
     // 过滤器状态
     const [enableRetrieval, setEnableRetrieval] = useState(true);
-    const [selectedThemes, setSelectedThemes] = useState<string[]>([]); // 多选主题
+    const [selectedGoalPath, setSelectedGoalPath] = useState<string>('');
     const [selectedType, setSelectedType] = useState<string>(''); // 'task' | '' (全部)
     const [selectedBlockId, setSelectedBlockId] = useState<string>(''); // Block 模板 ID
 
@@ -94,9 +98,9 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
     // 创建新会话
     const handleNewSession = async () => {
         const filters: SessionFilters = {};
-        if (selectedThemes.length > 0) filters.themePaths = selectedThemes;
+        if (selectedGoalPath) filters.goalPaths = [selectedGoalPath];
         if (selectedType) filters.coreBlocks = [selectedType];
-        if (selectedBlockId) filters.blockTemplateIds = [selectedBlockId];
+        if (selectedBlockId) filters.coreBlocks = [String(selectedBlockId).replace(/^core\./, '')];
 
         const session = await sessionStore.createSession(undefined, filters);
         setCurrentSessionId(session.id);
@@ -112,9 +116,9 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
         // 恢复会话的过滤器
         const session = sessionStore.getSession(sessionId);
         if (session?.filters) {
-            setSelectedThemes(session.filters.themePaths ?? []);
+            setSelectedGoalPath(session.filters.goalPaths?.[0] ?? '');
             setSelectedType(session.filters.coreBlocks?.[0] ?? '');
-            setSelectedBlockId(session.filters.blockTemplateIds?.[0] ?? '');
+            setSelectedBlockId(session.filters.coreBlocks?.[0] ? `core.${String(session.filters.coreBlocks[0]).replace(/^core\./, '')}` : '');
         }
     };
 
@@ -158,9 +162,9 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
 
             // 构建过滤器
             const filters: any = {};
-            if (selectedThemes.length > 0) filters.themePaths = selectedThemes;
+            if (selectedGoalPath) filters.goalPaths = [selectedGoalPath];
             if (selectedType) filters.coreBlocks = [selectedType];
-            if (selectedBlockId) filters.blockTemplateIds = [selectedBlockId];
+            if (selectedBlockId) filters.coreBlocks = [String(selectedBlockId).replace(/^core\./, '')];
 
             // 发送请求
             const response: ChatResponse = await takeLatestRef.current.run((signal) =>
@@ -198,7 +202,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
         } finally {
             if (isMountedRef.current) setIsLoading(false);
         }
-    }, [inputText, isLoading, currentSessionId, selectedThemes, selectedType, selectedBlockId, enableRetrieval]);
+    }, [inputText, isLoading, currentSessionId, selectedGoalPath, selectedType, selectedBlockId, enableRetrieval]);
 
     // 处理按键
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -239,9 +243,9 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
             onDeleteSession={handleDeleteSession}
             enableRetrieval={enableRetrieval}
             setEnableRetrieval={setEnableRetrieval}
-            themes={themes}
-            selectedThemes={selectedThemes}
-            setSelectedThemes={setSelectedThemes}
+            goals={goals}
+            selectedGoalPath={selectedGoalPath}
+            setSelectedGoalPath={setSelectedGoalPath}
             selectedType={selectedType}
             setSelectedType={setSelectedType}
             blocks={blocks}

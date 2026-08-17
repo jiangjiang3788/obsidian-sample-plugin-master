@@ -1,7 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import { getTemplateFieldSemantic } from '@core/fields/public';
 import { HierarchySingleSelect, type HierarchySingleSelectOption } from '../components/HierarchySingleSelect';
 
 import { QuickInputFieldFrame } from './FieldFrame';
@@ -39,8 +38,8 @@ export function QuickInputHierarchyFieldRenderer({
       options={options}
       selectedValue={selectedValue}
       onSelect={(option) => onUpdate(field.key, option?.value || '')}
-      parentLabel={getTemplateFieldSemantic(field) === 'themePath' ? '父主题' : '父级'}
-      childLabel={getTemplateFieldSemantic(field) === 'themePath' ? '子主题' : '子级'}
+      parentLabel="父级"
+      childLabel="子级"
       dense={dense}
       allowClear
       searchable

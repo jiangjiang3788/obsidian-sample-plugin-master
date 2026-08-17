@@ -1,7 +1,6 @@
 import type { RecordEntity } from '@/core/records/RecordEntity';
 import { parseRecordBlock } from '@core/utils/parser';
 import { normalizeRecordItem } from '@/core/records/RecordNormalizer';
-import type { IThemeMatcher } from '@core/types/theme';
 import type { VaultPort } from '@core/ports/VaultPort';
 import type { MetadataPort } from '@core/ports/MetadataPort';
 import type { FileStat, FileStatPort } from '@core/ports/FileStatPort';
@@ -27,8 +26,7 @@ export class DataStoreFileScanner {
   constructor(
     private vault: VaultPort,
     private metadata: MetadataPort,
-    private fileStat: FileStatPort,
-    private themeMatcher: IThemeMatcher
+    private fileStat: FileStatPort
   ) {}
 
   async scan(filePathOrFile: FilePathInput): Promise<ScannedMarkdownFile | null> {
@@ -126,7 +124,6 @@ export class DataStoreFileScanner {
       line,
       header: currentHeader || undefined,
       sectionTags: currentSectionTags,
-      themeMatcher: this.themeMatcher,
     });
     item.source = { path: filePath, startLine: line, endLine, modified: stat.mtime };
     if (item.file) item.file.line = line;

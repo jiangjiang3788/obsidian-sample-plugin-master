@@ -9,7 +9,6 @@ import type { RecordViewItem } from '@core/types/public';
 function task(status: string, seriesId?: string): RecordViewItem {
   return {
     id: 'task.01J00000000000000000000000',
-    schemaVersion: 2,
     coreBlock: 'task',
     status,
     seriesId,

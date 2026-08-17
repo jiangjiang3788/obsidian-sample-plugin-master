@@ -1,0 +1,28 @@
+/* Goal settings extensions. */
+.think-os--settings .think-goal-template-editor__section-heading {
+  margin-bottom: var(--think-space-3);
+  font-size: var(--think-type-section-size);
+  font-weight: var(--think-type-section-weight);
+}
+
+.think-os--settings .think-goal-manager,
+.think-os--settings .think-goal-metrics {
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  display: grid;
+  gap: var(--think-rhythm-section);
+}
+.think-os--settings .think-goal-manager__create {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: var(--think-space-3);
+  align-items: center;
+}
+.think-os--settings .think-goal-metrics__items { display: flex; flex-wrap: wrap; gap: var(--think-space-2); }
+.think-os--settings .think-goal-manager__create-row { padding-bottom: var(--think-rhythm-related); }
+.think-os--settings .think-goal-manager__status { margin-top: var(--think-rhythm-inline); }
+.think-os--settings .think-goal-template-matrix__toolbar { margin-bottom: var(--think-rhythm-related); }
+@container think-settings (max-width: 720px) {
+  .think-os--settings .think-goal-manager__create { grid-template-columns: 1fr; }
+}

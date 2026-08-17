@@ -53,7 +53,7 @@ function assertDoesNotContain(relativePath, snippets, reason) {
 
 const requiredExtractionFiles = [
   ['src/features/views/runtime/HeatmapViewModel.ts', 'Heatmap data helpers extracted in MVP12'],
-  ['src/features/views/runtime/HeatmapThemeGroup.tsx', 'Heatmap theme row extracted in MVP12'],
+  ['src/features/views/runtime/HeatmapGoalGroup.tsx', 'Heatmap Goal row extracted in the Goal-only view model'],
   ['src/features/views/runtime/HeatmapDayView.tsx', 'Heatmap day view extracted in MVP12'],
   ['src/features/views/runtime/HeatmapViewContent.tsx', 'Heatmap content dispatcher extracted in MVP21'],
   ['src/features/views/runtime/HeatmapLayoutModel.ts', 'Heatmap layout state extracted in MVP21'],
@@ -78,7 +78,6 @@ const requiredExtractionFiles = [
   ['src/features/views/runtime/excel-view/ExcelColumnToolbarModel.ts', 'Excel column toolbar model extracted in MVP18'],
   ['src/features/views/runtime/excel-view/ExcelColumnChipList.tsx', 'Excel column chip list extracted in MVP18'],
   ['src/features/views/runtime/StatisticsView/StatisticsViewModel.ts', 'Statistics container model extracted in MVP14'],
-  ['src/features/views/runtime/StatisticsView/StatisticsGoalThemeSummaryStrip.tsx', 'Statistics summary strip extracted in MVP20'],
   ['src/features/views/runtime/StatisticsView/views/MonthStatisticsViewModel.ts', 'Month statistics model extracted in MVP20'],
   ['src/features/views/runtime/StatisticsView/views/QuarterStatisticsViewModel.ts', 'Quarter statistics model extracted in MVP20'],
   ['src/features/views/runtime/StatisticsView/views/YearStatisticsViewModel.ts', 'Year statistics model extracted in MVP20'],
@@ -90,7 +89,7 @@ for (const [relativePath, reason] of requiredExtractionFiles) assertExists(relat
 const viewLineLimits = [
   ['src/features/views/runtime/HeatmapView.tsx', 260, 'Heatmap container should remain orchestration only'],
   ['src/features/views/runtime/HeatmapViewContent.tsx', 140, 'Heatmap content dispatcher should stay lightweight'],
-  ['src/features/views/runtime/HeatmapThemeGroup.tsx', 220, 'Heatmap theme group should stay a bounded presentation component'],
+  ['src/features/views/runtime/HeatmapGoalGroup.tsx', 220, 'Heatmap Goal group should stay a bounded presentation component'],
   ['src/features/views/runtime/HeatmapDayView.tsx', 140, 'Heatmap day view should stay a bounded presentation component'],
   ['src/features/views/runtime/ProgressView.tsx', 80, 'Progress root should stay a composition shell'],
   ['src/features/views/runtime/TimelineView/TimelineViewContainer.tsx', 120, 'Timeline container should stay a render-model shell'],
@@ -118,7 +117,6 @@ const intentionallyUnsplittedSmallViews = [
   ['src/features/timer/TimerView.tsx', 80, ['src/features/timer/TimerViewModel.ts', 'src/features/timer/TimerViewHeader.tsx']],
   ['src/features/timer/TimerViewView.tsx', 90, ['src/features/timer/TimerViewViewModel.ts']],
   ['src/features/views/runtime/CategoryFilter.tsx', 80, ['src/features/views/runtime/CategoryFilterModel.ts']],
-  ['src/features/views/runtime/ThemeFilter.tsx', 80, ['src/features/views/runtime/ThemeFilterModel.ts']],
   ['src/features/views/runtime/StatisticsView/views/DayStatisticsView.tsx', 70, ['src/features/views/runtime/StatisticsView/views/DayStatisticsViewModel.ts']],
   ['src/features/views/runtime/StatisticsView/views/WeekStatisticsView.tsx', 70, ['src/features/views/runtime/StatisticsView/views/WeekStatisticsViewModel.ts']],
 ];
@@ -131,7 +129,7 @@ for (const [relativePath, maxLines, forbiddenSplitFiles] of intentionallyUnsplit
 }
 
 const localRegressionChecks = [
-  ['src/features/views/runtime/HeatmapView.tsx', ['<HeatmapCell', 'const renderContent =', 'const renderThemeGroup ='], 'Heatmap rendering should stay delegated'],
+  ['src/features/views/runtime/HeatmapView.tsx', ['<HeatmapCell', 'const renderContent =', 'const renderGoalGroup ='], 'Heatmap rendering should stay delegated'],
   ['src/features/views/runtime/TimelineView/TimelineViewView.tsx', ['timeline-daily-summary-column', 'timeline-time-axis'], 'Timeline daily internals should stay delegated'],
   ['src/features/views/runtime/excel-view/ExcelGrid.tsx', ['function parseClipboardText', 'function buildFillRange', 'function buildPastePlan'], 'Excel grid planning should stay in ExcelGridModel'],
   ['src/features/views/runtime/excel-view/ExcelCell.tsx', ['function buildCellClassName', 'function getTypedInputProps', 'function isMarkdownInteractiveTarget'], 'Excel cell helper logic should stay in ExcelCellModel'],

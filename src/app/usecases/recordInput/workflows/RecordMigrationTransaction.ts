@@ -1,5 +1,5 @@
 import { applyRecordRefreshPlan, buildSuccessResult, finalizeRecordSubmitResult } from '@core/recordInput/public';
-import type { RecordCaptureTemplate, RecordViewItem, ThemeDefinition } from '@core/types/public';
+import type { RecordCaptureTemplate, RecordViewItem } from '@core/types/public';
 import type {
   NormalizeRecordInputResult,
   RecordOutputPlan,
@@ -12,16 +12,13 @@ import { mapSubmitError } from '../error';
 import { issue, toArray } from '../issues';
 import { getItemFilePath } from '../locator';
 import { buildRefreshPlan, getFileItemsByPath } from '../paths';
-import type { TemplateExecutionMeta } from '../templateSubmit';
 import type { RecordInputWorkflowRuntime } from './types';
 
 export interface RecordMigrationTransactionParams {
   item: RecordViewItem;
   template: RecordCaptureTemplate;
-  theme?: ThemeDefinition | null;
   resolved: ResolveDependenciesResult;
   normalized: NormalizeRecordInputResult;
-  templateMeta: TemplateExecutionMeta;
   outputPlan: RecordOutputPlan;
   persistencePlan: RecordPersistencePlan;
   warnings: RecordSubmitResult['warnings'];
@@ -44,8 +41,6 @@ export class RecordMigrationTransaction {
     const createdPath = await this.runtime.deps.inputService.createRecordAtPlannedLocation(
       params.template,
       params.normalized.normalizedFormData,
-      params.theme ?? undefined,
-      params.templateMeta,
       { signal: params.signal, autoRefresh: false, recordId: params.item.id },
     );
 

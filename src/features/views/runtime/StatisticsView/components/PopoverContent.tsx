@@ -11,7 +11,6 @@ export function PopoverContent({
   timerService,
   onMarkDone,
   timers,
-  allThemes,
   messageRenderPort,
   onOpenRecord,
   onOpenRecordOrigin,
@@ -22,7 +21,6 @@ export function PopoverContent({
   timerService: TimerController;
   onMarkDone: MarkDoneHandler;
   timers: any[];
-  allThemes: any[];
   messageRenderPort?: MessageRenderPort;
   onOpenRecord?: OpenRecordHandler;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
@@ -42,8 +40,7 @@ export function PopoverContent({
           onMarkDone={onMarkDone}
           timerService={timerService}
           timers={timers}
-          allThemes={allThemes}
-          messageRenderPort={messageRenderPort}
+              messageRenderPort={messageRenderPort}
           onOpenRecord={onOpenRecord}
         />
       )}

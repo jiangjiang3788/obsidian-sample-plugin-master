@@ -67,9 +67,6 @@
       "@core/layout/public": [
         "src/core/layout/public.ts"
       ],
-      "@core/theme/public": [
-        "src/core/theme/public.ts"
-      ],
       "@core/semantics/public": [
         "src/core/semantics/public.ts"
       ],

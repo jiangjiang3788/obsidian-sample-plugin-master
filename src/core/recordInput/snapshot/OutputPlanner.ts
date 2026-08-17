@@ -1,12 +1,10 @@
 import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
-import type { ThemeDefinition } from '@/core/theme/ThemeDefinition';
 import type { RecordOutputPlan, RecordPersistencePlan } from '@/core/types/recordSnapshot';
-import { splitThemePath } from '@/core/types/recordSnapshot';
 import { renderTemplate } from '@/core/utils/templateUtils';
 import { normalizeTemplateRenderData } from '@/core/fields/TemplateFieldAdapter';
 import { requireGoalPath, resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@/core/goal';
 import { readOptionText } from '@/core/semantics/option';
-import { createRecordId, RECORD_SCHEMA_VERSION } from '@/core/records/RecordId';
+import { createRecordId } from '@/core/records/RecordId';
 import { encodeRecordBlock, encodeRecordDraft } from '@/core/records/codec';
 import { buildCustomCaptureFields, buildGenericRecordDraft } from '@/core/records/RecordDraft';
 import { getRecordSchemaDefinition } from '@/core/records/schema';
@@ -63,23 +61,14 @@ function readStructuredTaskRecurrence(renderData: Record<string, unknown>): { un
 function buildRenderData(
   template: RecordCaptureTemplate,
   formData: Record<string, unknown>,
-  theme?: ThemeDefinition | null,
-  templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null },
 ): Record<string, unknown> {
   const normalizedData = normalizeTemplateRenderData(template, formData);
-  const normalizedTheme = normalizedData.theme && typeof normalizedData.theme === 'object' ? normalizedData.theme as Record<string, unknown> : null;
-  const explicitThemePath = String(normalizedData.themePath ?? normalizedTheme?.path ?? '').trim();
-  const themeParts = splitThemePath(explicitThemePath || theme?.path || null);
   const categoryPartsValue = splitHierarchyPathValue(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? null);
   const categoryPath = categoryPartsValue.path || '';
   const categoryParts = categoryPartsValue.parts;
   const rawGoalPath = String(normalizedData.goalPath ?? normalizedData['目标'] ?? '').trim();
   const goalPath = rawGoalPath ? requireGoalPath(rawGoalPath) : '';
   const goalParts = goalPath ? goalPath.split('/').filter(Boolean) : [];
-  const goalId = String(normalizedData.goalId ?? normalizedData['目标ID'] ?? '').trim();
-  if ((goalId && !goalPath) || (!goalId && goalPath)) {
-    throw new Error('Goal context must contain both goalId and canonical goalPath, or neither.');
-  }
   const coreBlock = String(normalizedData.coreBlock ?? normalizedData['核心Block'] ?? (template as any).coreBlockId ?? template.id ?? '').trim();
   const recordDate = String(normalizedData['日期'] ?? normalizedData.date ?? '').trim();
   const periodPolicy = resolveTemplatePeriodPolicy(template as any);
@@ -95,25 +84,12 @@ function buildRenderData(
     baseCategory: categoryParts[0] || '',
     rootCategory: categoryParts[0] || '',
     leafCategory: categoryParts.length ? categoryParts[categoryParts.length - 1] : '',
-    theme: {
-      ...(normalizedTheme || {}),
-      path: themeParts.themePath,
-      root: themeParts.rootTheme,
-      leaf: themeParts.leafTheme,
-      icon: theme?.icon || String(normalizedData.icon ?? normalizedData['图标'] ?? normalizedTheme?.icon ?? ''),
-    },
-    themePath: themeParts.themePath,
-    rootTheme: themeParts.rootTheme,
-    leafTheme: themeParts.leafTheme,
     goal: {
-      id: goalId,
       title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
       path: goalPath,
       root: goalParts[0] || '',
       leaf: goalParts.length ? goalParts[goalParts.length - 1] : '',
-      themePath: themeParts.themePath,
     },
-    goalId,
     goalPath,
     rootGoal: goalParts[0] || '',
     leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : '',
@@ -127,8 +103,6 @@ function buildRenderData(
     '周期粒度': derivedPeriod ? derivedPeriod.granularity : '',
     '周期ID': derivedPeriod ? cycleId || derivedPeriod.id : '',
     '周期': derivedPeriod ? cycleTitle || derivedPeriod.label : '',
-    templateId: templateMeta?.templateId || template.id,
-    templateSourceType: templateMeta?.templateSourceType || 'core-block',
   };
 }
 
@@ -143,30 +117,26 @@ function buildRenderData(
 export function buildRecordOutputPlan(input: {
   template: RecordCaptureTemplate | null;
   formData: Record<string, unknown>;
-  theme?: ThemeDefinition | null;
-  templateMeta?: { templateId?: string | null; templateSourceType?: 'core-block' | 'goal-template' | null };
   recordId?: string | null;
 }): RecordOutputPlan {
   if (!input.template) {
     return {
       recordId: null,
-      schemaVersion: null,
       coreBlock: null,
       targetFilePath: null,
       targetHeader: null,
       outputContent: '',
       renderData: {},
-      themeParts: splitThemePath(null),
     };
   }
 
-  const renderData = buildRenderData(input.template, input.formData, input.theme, input.templateMeta);
+  const renderData = buildRenderData(input.template, input.formData);
   const explicitCoreBlockId = String((input.template as any).coreBlockId || '').trim();
   const systemCoreBlockId = String(input.template.id || '').trim().startsWith('core.') ? String(input.template.id || '').trim() : '';
   const trustedCoreBlock = (explicitCoreBlockId || systemCoreBlockId).replace(/^core\./, '');
   const hintedCoreBlock = String(renderData.coreBlock || input.template.id || '').trim().replace(/^core\./, '');
   const coreBlock = trustedCoreBlock || hintedCoreBlock;
-  if (!coreBlock) throw new Error('Record Foundation v2 要求每条记录都有核心Block。');
+  if (!coreBlock) throw new Error('每条记录都必须有核心Block。');
   const schema = getRecordSchemaDefinition(coreBlock);
   if (!schema) throw new Error(`unknown_record_schema:${coreBlock}`);
   const recordId = String(input.recordId || '').trim() || createRecordId(coreBlock);
@@ -194,9 +164,7 @@ export function buildRecordOutputPlan(input: {
     const taskFields = {
       status,
       content: renderData['任务内容'] ?? renderData['内容'] ?? renderData.content,
-      goalId: renderData.goalId,
       goalPath: renderData.goalPath,
-      themePath: renderData.themePath,
       priority: renderData['优先级'] ?? renderData.priority,
       energyDemand: renderData['精力要求'] ?? renderData.energyDemand,
       brainDemand: renderData['脑力要求'] ?? renderData.brainDemand,
@@ -231,14 +199,11 @@ export function buildRecordOutputPlan(input: {
       );
       const seriesBlock = encodeRecordBlock({
         recordId: seriesId,
-        schemaVersion: RECORD_SCHEMA_VERSION,
         coreBlock: 'task-series',
         fields: {
           status: 'active',
           content: taskFields.content,
-          goalId: taskFields.goalId,
           goalPath: taskFields.goalPath,
-          themePath: taskFields.themePath,
           priority: taskFields.priority,
           expectedDurationMinutes: taskFields.expectedDurationMinutes,
           energyDemand: taskFields.energyDemand,
@@ -253,14 +218,14 @@ export function buildRecordOutputPlan(input: {
           currentTaskId: recordId,
         },
       });
-      const taskBlock = encodeRecordBlock({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, coreBlock: 'task', fields: taskFields });
+      const taskBlock = encodeRecordBlock({ recordId, coreBlock: 'task', fields: taskFields });
       outputContent = `${seriesBlock}\n\n${taskBlock}`;
     } else {
-      outputContent = encodeRecordBlock({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, coreBlock: 'task', fields: taskFields });
+      outputContent = encodeRecordBlock({ recordId, coreBlock: 'task', fields: taskFields });
     }
   } else if (schema?.family === 'generic') {
     const draft = buildGenericRecordDraft(schema.coreBlock, renderData, input.template.fields);
-    outputContent = encodeRecordDraft({ recordId, schemaVersion: RECORD_SCHEMA_VERSION, draft });
+    outputContent = encodeRecordDraft({ recordId, draft });
   } else {
     throw new Error(`record_capture_not_supported:${schema.coreBlock}:${schema.captureMode}`);
   }
@@ -271,13 +236,11 @@ export function buildRecordOutputPlan(input: {
 
   return {
     recordId,
-    schemaVersion: RECORD_SCHEMA_VERSION,
     coreBlock,
     targetFilePath,
     targetHeader,
     outputContent,
     renderData,
-    themeParts: splitThemePath(input.theme?.path ?? null),
   };
 }
 

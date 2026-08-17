@@ -1,16 +1,13 @@
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
-import { getGoalOrderPath, getGoalOrderLabel, sortGoalTemplatesBySettingsOrder, sortGoalsBySettingsOrder } from '@core/goal/public';
-import { getThemePathLeaf } from '@core/theme/public';
+import { getGoalOrderPath, getGoalOrderLabel, sortGoalsBySettingsOrder, readGoalTemplateIcon } from '@core/goal/public';
 import type { CoreBlockDefinition } from '@core/blocks/public';
-import { getGoalTemplateDisplayName, readGoalTemplateIcon, readGoalTemplateThemePath } from './goalTemplateCopy';
 
-export type GoalTemplateCellStatus = 'inherit' | 'override' | 'multi' | 'disabled' | 'warning';
+export type GoalTemplateCellStatus = 'inherit' | 'override' | 'disabled' | 'warning';
 
 export interface GoalTemplateCellModel {
   goal: GoalDefinition;
   block: CoreBlockDefinition;
-  templates: GoalTemplate[];
-  enabledTemplates: GoalTemplate[];
+  template: GoalTemplate | null;
   status: GoalTemplateCellStatus;
   label: string;
   description: string;
@@ -20,13 +17,12 @@ function cleanPathSegment(value: string): string {
   return value.trim();
 }
 
-
 export function getGoalDisplayPath(goal: GoalDefinition): string {
-  return getGoalOrderPath(goal) || cleanPathSegment(goal.id);
+  return getGoalOrderPath(goal) || cleanPathSegment(goal.path);
 }
 
 export function getGoalDisplayName(goal: GoalDefinition): string {
-  return getGoalOrderLabel(goal) || cleanPathSegment(goal.title || goal.id);
+  return getGoalOrderLabel(goal) || cleanPathSegment(goal.path);
 }
 
 export function getGoalParentPath(goal: GoalDefinition): string {
@@ -35,9 +31,7 @@ export function getGoalParentPath(goal: GoalDefinition): string {
 }
 
 export function getGoalDepth(goal: GoalDefinition): number {
-  const path = getGoalDisplayPath(goal);
-  const parts = path.split('/').filter(Boolean);
-  return Math.max(0, parts.length - 1);
+  return Math.max(0, getGoalDisplayPath(goal).split('/').filter(Boolean).length - 1);
 }
 
 export function goalHasChildren(goal: GoalDefinition, goals: GoalDefinition[]): boolean {
@@ -60,35 +54,21 @@ export function sortGoalsForMatrix(goals: GoalDefinition[]): GoalDefinition[] {
 }
 
 export function buildGoalTemplateCell(goal: GoalDefinition, block: CoreBlockDefinition, templates: GoalTemplate[]): GoalTemplateCellModel {
-  const cellTemplates = templates.filter((template) => template.goalId === goal.id && template.coreBlockId === block.id);
-  const enabledTemplates = cellTemplates.filter((template) => template.enabled !== false);
-  let status: GoalTemplateCellStatus = 'inherit';
-  let label = '添加';
-  let description = '点击添加此目标的 Block 预设';
-
-  if (cellTemplates.length > 0 && enabledTemplates.length === 0) {
-    status = 'disabled';
-    label = '隐藏';
-    description = '该目标下隐藏此 Block';
-  } else if (enabledTemplates.length > 1) {
-    status = 'multi';
-    label = `选项 ${enabledTemplates.length}`;
-    description = '该目标下有多个记录预设选项';
-  } else if (enabledTemplates.length === 1) {
-    status = 'override';
-    label = '有预设';
-    description = enabledTemplates[0].name || enabledTemplates[0].variantId || '目标专属预设';
+  const goalPath = getGoalDisplayPath(goal);
+  const template = templates.find((item) => item.goalPath === goalPath && item.coreBlockId === block.id) || null;
+  if (!template) {
+    return { goal, block, template: null, status: 'inherit', label: '', description: '使用记录类型默认模板' };
   }
-
-  return { goal, block, templates: cellTemplates, enabledTemplates, status, label, description };
+  if (template.enabled === false) {
+    return { goal, block, template, status: 'disabled', label: '隐藏', description: '该目标下隐藏此记录类型' };
+  }
+  return { goal, block, template, status: 'override', label: '已配置', description: '该目标有专属字段预设' };
 }
 
 export function statusTone(status: GoalTemplateCellStatus): { border: string; background: string; color: string } {
   switch (status) {
     case 'override':
       return { border: 'var(--interactive-accent)', background: 'rgba(80, 140, 255, 0.10)', color: 'var(--text-normal)' };
-    case 'multi':
-      return { border: 'var(--interactive-accent)', background: 'rgba(80, 180, 120, 0.12)', color: 'var(--text-normal)' };
     case 'disabled':
       return { border: 'var(--text-muted)', background: 'rgba(120, 120, 120, 0.10)', color: 'var(--text-muted)' };
     case 'warning':
@@ -99,11 +79,8 @@ export function statusTone(status: GoalTemplateCellStatus): { border: string; ba
   }
 }
 
-
 export type DropPosition = 'before' | 'after';
-export type GoalDropState = { goalId: string; position: DropPosition } | null;
-export type PresetDragState = { goalId: string; blockId: string; templateKey: string };
-export type PresetDropCellState = { goalId: string; blockId: string } | null;
+export type GoalDropState = { goalPath: string; position: DropPosition } | null;
 
 export function normalizeSearchText(value: string): string {
   return String(value || '').toLowerCase().trim();
@@ -113,41 +90,20 @@ export function cleanDisplayText(value: unknown): string {
   return String(value ?? '').trim();
 }
 
-export { getThemePathLeaf as leafPath };
-
-export function isGeneratedPresetName(value: unknown): boolean {
-  const text = String(value ?? '').trim();
-  return !text || /^预设\s*\d+$/i.test(text) || /^preset[-_\s]*\d+$/i.test(text) || text === '记录预设' || text === '未命名预设';
-}
-
-export function getPresetCardName(template: GoalTemplate, goal: GoalDefinition): string {
-  const raw = getGoalTemplateDisplayName(template);
-  if (!isGeneratedPresetName(raw)) return raw;
-  return cleanDisplayText(getThemePathLeaf(readGoalTemplateThemePath(template, goal))) || raw;
+export function getPresetCardName(_template: GoalTemplate, _goal: GoalDefinition): string {
+  return '已配置';
 }
 
 export function goalTemplateKey(template: GoalTemplate): string {
-  return template.id || `${template.goalId}:${template.coreBlockId}:${template.variantId || 'default'}`;
+  return template.id || `${template.goalPath}:${template.coreBlockId}`;
 }
 
-export function goalTemplateVariantId(template: GoalTemplate): string {
-  return String(template.variantId || 'default').trim() || 'default';
-}
-
-export function sortPresets<T extends GoalTemplate>(items: T[], goals: GoalDefinition[] = []): T[] {
-  return sortGoalTemplatesBySettingsOrder(items, goals);
-}
-
-export function buildThemeIconMap(settings: any): Map<string, string> {
-  const map = new Map<string, string>();
-  for (const theme of settings.inputSettings?.themes || []) {
-    if (theme?.path) map.set(String(theme.path), String(theme.icon || ''));
-  }
-  return map;
+export function goalTemplateIcon(template: GoalTemplate, goal: GoalDefinition): string {
+  return readGoalTemplateIcon(template, goal.icon) || goal.icon || '◇';
 }
 
 export function presetSearchText(template: GoalTemplate, goal: GoalDefinition): string {
-  return `${getPresetCardName(template, goal)} ${readGoalTemplateThemePath(template, goal)} ${readGoalTemplateIcon(template)}`.toLowerCase();
+  return `${getGoalDisplayPath(goal)} ${template.coreBlockId} ${template.description || ''}`.toLowerCase();
 }
 
 export function getEventDropPosition(event: DragEvent, target?: HTMLElement | null): DropPosition {
@@ -155,10 +111,6 @@ export function getEventDropPosition(event: DragEvent, target?: HTMLElement | nu
   if (!element) return 'after';
   const rect = element.getBoundingClientRect();
   return event.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
-}
-
-export function isSameCell(left: PresetDragState, goal: GoalDefinition, block: CoreBlockDefinition): boolean {
-  return left.goalId === goal.id && left.blockId === block.id;
 }
 
 export function filterVisibleGoalTemplateMatrixGoals(input: {
@@ -169,11 +121,11 @@ export function filterVisibleGoalTemplateMatrixGoals(input: {
 }): GoalDefinition[] {
   const q = normalizeSearchText(input.query);
   return input.goals.filter((goal) => {
-    if (!isGoalVisibleByExpandedState(goal, input.expandedPaths)) return false;
-    if (!q) return true;
-    const goalText = `${getGoalDisplayName(goal)} ${getGoalDisplayPath(goal)} ${goal.themePath || ''}`.toLowerCase();
+    if (!q) return isGoalVisibleByExpandedState(goal, input.expandedPaths);
+    const goalText = `${getGoalDisplayName(goal)} ${getGoalDisplayPath(goal)}`.toLowerCase();
     if (goalText.includes(q)) return true;
-    return input.templates.some((template) => template.goalId === goal.id && presetSearchText(template, goal).includes(q));
+    const path = getGoalDisplayPath(goal);
+    return input.templates.some((template) => template.goalPath === path && presetSearchText(template, goal).includes(q));
   });
 }
 
@@ -215,51 +167,30 @@ export function toggleGoalPath(previous: Set<string>, path: string): Set<string>
   return next;
 }
 
-export function toggleGoalCollapsed(previous: Set<string>, goalId: string): Set<string> {
+export function toggleGoalCollapsed(previous: Set<string>, goalPath: string): Set<string> {
   const next = new Set(previous);
-  if (next.has(goalId)) next.delete(goalId);
-  else next.add(goalId);
+  if (next.has(goalPath)) next.delete(goalPath);
+  else next.add(goalPath);
   return next;
 }
 
 export function orderDraggedGoalSiblings(input: {
   goals: GoalDefinition[];
-  dragGoalId: string;
-  targetGoalId: string;
+  dragGoalPath: string;
+  targetGoalPath: string;
   position: DropPosition;
 }): GoalDefinition[] | null {
-  if (input.dragGoalId === input.targetGoalId) return null;
-  const dragged = input.goals.find((goal) => goal.id === input.dragGoalId);
-  const target = input.goals.find((goal) => goal.id === input.targetGoalId);
+  if (input.dragGoalPath === input.targetGoalPath) return null;
+  const dragged = input.goals.find((goal) => goal.path === input.dragGoalPath);
+  const target = input.goals.find((goal) => goal.path === input.targetGoalPath);
   if (!dragged || !target) return null;
   const draggedParent = getGoalParentPath(dragged);
   const targetParent = getGoalParentPath(target);
   if (draggedParent !== targetParent) return null;
   const siblings = sortGoalsForMatrix(input.goals.filter((goal) => getGoalParentPath(goal) === draggedParent));
-  const next = siblings.filter((goal) => goal.id !== dragged.id);
-  const targetIndex = next.findIndex((goal) => goal.id === target.id);
+  const next = siblings.filter((goal) => goal.path !== dragged.path);
+  const targetIndex = next.findIndex((goal) => goal.path === target.path);
   if (targetIndex < 0) return null;
   next.splice(input.position === 'before' ? targetIndex : targetIndex + 1, 0, dragged);
   return next;
-}
-
-export function reorderPresetTemplatesInCell(input: {
-  templates: GoalTemplate[];
-  goals: GoalDefinition[];
-  drag: PresetDragState;
-  targetTemplateKey: string | null;
-  position: DropPosition;
-}): GoalTemplate[] | null {
-  const cellTemplates = sortPresets(input.templates.filter((template) => template.goalId === input.drag.goalId && template.coreBlockId === input.drag.blockId && template.enabled !== false), input.goals);
-  const dragged = cellTemplates.find((template) => goalTemplateKey(template) === input.drag.templateKey);
-  if (!dragged) return null;
-  const next = cellTemplates.filter((template) => goalTemplateKey(template) !== input.drag.templateKey);
-  if (input.targetTemplateKey) {
-    const targetIndex = next.findIndex((template) => goalTemplateKey(template) === input.targetTemplateKey);
-    if (targetIndex >= 0) next.splice(input.position === 'before' ? targetIndex : targetIndex + 1, 0, dragged);
-    else next.push(dragged);
-  } else {
-    next.push(dragged);
-  }
-  return next.map((template, index) => ({ ...template, sortOrder: index * 10 }));
 }

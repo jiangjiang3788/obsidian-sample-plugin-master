@@ -5,7 +5,7 @@ import { asTaskSessionRecord } from '../records/task/taskSession';
 export type EnergyEffectConfidence = 'high' | 'medium';
 export type EnergyEffectEvidence = 'insufficient' | 'exploratory' | 'supported';
 export type EnergyEffectTrend = 'recovery' | 'depletion' | 'mixed' | 'insufficient';
-export type EnergyEffectDimension = 'activity' | 'theme' | 'duration';
+export type EnergyEffectDimension = 'activity' | 'goal' | 'duration';
 
 export interface EnergyEffectEndpoint {
   itemId: string;
@@ -21,7 +21,7 @@ export interface EnergyActivityEffectSample {
   activityItemId: string;
   activityTitle: string;
   activityLabel: string;
-  themeLabel: string;
+  goalLabel: string;
   durationBucket: string;
   durationMinutes: number;
   startDate: string;
@@ -64,7 +64,7 @@ export interface EnergyEffectAnalytics {
   excludedActivityCount: number;
   samples: EnergyActivityEffectSample[];
   byActivity: EnergyEffectAggregate[];
-  byTheme: EnergyEffectAggregate[];
+  byGoal: EnergyEffectAggregate[];
   byDuration: EnergyEffectAggregate[];
 }
 
@@ -125,9 +125,7 @@ function resolveEffectActivityInterval(item: RecordViewItem, byId: Map<string, R
   const activityItem: RecordViewItem = task ? {
     ...task,
     id: session.id,
-    goalId: session.goalId || task.goalId,
     goalPath: session.goalPath || task.goalPath,
-    themePath: session.themePath || task.themePath,
     duration: session.sessionDurationMinutes,
   } : session;
   const start = localDateTimeFromMs(startMs);
@@ -168,7 +166,7 @@ function activityTitle(item: RecordViewItem): string {
 }
 
 export function classifyEnergyActivity(item: RecordViewItem): string {
-  const text = [item.title, item.content, item.themePath, item.theme, item.leafTheme, item.rootTheme]
+  const text = [item.title, item.content, item.goalPath]
     .map((value) => String(value || ''))
     .join(' ');
   if (/代码|编码|编程|开发|插件|debug|调试/i.test(text)) return '代码 / 开发';
@@ -184,8 +182,8 @@ export function classifyEnergyActivity(item: RecordViewItem): string {
   return activityTitle(item).slice(0, 24);
 }
 
-function effectThemeLabel(item: RecordViewItem): string {
-  return readEffectText(item.themePath) || readEffectText(item.theme) || readEffectText(item.rootTheme) || readEffectText(item.leafTheme) || '未标主题';
+function effectGoalLabel(item: RecordViewItem): string {
+  return readEffectText(item.goalPath) || '未分目标';
 }
 
 function effectDurationBucket(durationMinutes: number): string {
@@ -314,7 +312,7 @@ export function buildEnergyEffects(items: RecordViewItem[], options: BuildEnergy
       activityItemId: session.id,
       activityTitle: activityTitle(interval.item),
       activityLabel: classifyEnergyActivity(interval.item),
-      themeLabel: effectThemeLabel(interval.item),
+      goalLabel: effectGoalLabel(interval.item),
       durationBucket: effectDurationBucket(interval.durationMinutes),
       durationMinutes: interval.durationMinutes,
       startDate: interval.startDate,
@@ -341,7 +339,7 @@ export function buildEnergyEffects(items: RecordViewItem[], options: BuildEnergy
     excludedActivityCount: intervals.length - samples.length,
     samples,
     byActivity: aggregateEffectRows(samples, 'activity', (sample) => sample.activityLabel, minimumTrendSamples, supportedTrendSamples),
-    byTheme: aggregateEffectRows(samples, 'theme', (sample) => sample.themeLabel, minimumTrendSamples, supportedTrendSamples),
+    byGoal: aggregateEffectRows(samples, 'goal', (sample) => sample.goalLabel, minimumTrendSamples, supportedTrendSamples),
     byDuration: aggregateEffectRows(samples, 'duration', (sample) => sample.durationBucket, minimumTrendSamples, supportedTrendSamples),
   };
 }

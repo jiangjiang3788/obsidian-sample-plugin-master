@@ -46,10 +46,6 @@ export function getRecordSchemaDefinitionById(typeId: unknown): RecordSchemaDefi
   return BY_TYPE_ID.get(String(typeId || '').trim()) || null;
 }
 
-/** R1 compatibility name. The returned object is the authoritative R3 definition. */
-export const getRecordSchemaContract = getRecordSchemaDefinition;
-/** R1 compatibility name. The returned object is the authoritative R3 definition. */
-export const requireRecordSchemaContract = requireRecordSchemaDefinition;
 
 export function getRecordFieldContract(coreBlock: unknown, fieldKey: unknown): RecordFieldContract | null {
   const schema = getRecordSchemaDefinition(coreBlock);
@@ -79,7 +75,7 @@ export function isSafeCustomRecordFieldKey(coreBlock: unknown, fieldKey: unknown
   const key = String(fieldKey || '').trim();
   if (!key) return false;
   if (getRecordFieldContract(schema.coreBlock, key)) return false;
-  return !['记录ID','recordId','id','记录版本','schemaVersion','核心Block','coreBlock'].includes(key);
+  return !['记录ID','recordId','id','核心Block','coreBlock'].includes(key);
 }
 
 export function inspectRecordFieldsAgainstSchema(

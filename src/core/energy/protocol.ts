@@ -5,11 +5,8 @@ export const ENERGY_PROTOCOL_ACTION = 'thinkos-energy';
 export const ENERGY_PROTOCOL_VERSION = 1 as const;
 
 export interface EnergyCaptureGoal {
-  id: string;
-  title: string;
-  goalPath?: string;
+  path: string;
   status: 'active' | 'paused' | 'completed' | 'archived';
-  themePath?: string | null;
 }
 
 export type EnergyProtocolParseResult =
@@ -68,12 +65,12 @@ export function parseEnergyProtocolParams(params: Record<string, string>): Energ
 /** Resolve the default Goal used by context-free captures such as iOS Shortcuts. */
 export function resolveEnergyCaptureGoal(
   goals: EnergyCaptureGoal[],
-  defaultGoalId?: string | null,
+  defaultGoalPath?: string | null,
 ): EnergyCaptureGoal | null {
   const available = goals.filter((goal) => goal.status !== 'archived');
-  const preferredId = String(defaultGoalId || '').trim();
-  if (preferredId) {
-    const preferred = available.find((goal) => goal.id === preferredId);
+  const preferredPath = String(defaultGoalPath || '').trim();
+  if (preferredPath) {
+    const preferred = available.find((goal) => (goal.path) === preferredPath);
     if (preferred) return preferred;
   }
   return available.find((goal) => goal.status === 'active') || available[0] || null;

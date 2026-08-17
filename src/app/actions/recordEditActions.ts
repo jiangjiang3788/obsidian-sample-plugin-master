@@ -24,7 +24,6 @@ function deriveEntryContext(item: RecordViewItem, openedFrom: EditFromItemParams
     entryId: item.id,
     sourcePath,
     sourceLine,
-    templateId: item.templateId || null,
     categoryKey: item.categoryKey || null,
     openedFrom: openedFrom || 'unknown',
   };
@@ -39,7 +38,8 @@ export function openEditFromItem(params: EditFromItemParams): boolean {
   };
 
   const modalApp = params.app as ConstructorParameters<typeof QuickInputModal>[0];
-  new QuickInputModal(modalApp, params.item.templateId || params.item.categoryKey || '', editContext, undefined, undefined, false, {
+  const blockId = params.item.coreBlock ? `core.${String(params.item.coreBlock).replace(/^core\./, '')}` : '';
+  new QuickInputModal(modalApp, blockId, editContext, undefined, false, {
     mode: 'edit',
     editItem: params.item,
   }).open();

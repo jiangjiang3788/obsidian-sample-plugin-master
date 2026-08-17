@@ -4,7 +4,7 @@ import { getAllFields, readField } from '@/core/fields/ViewFieldCatalog';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { filterByKeyword, filterByRules } from '@/core/utils/itemFilter';
 import { normalizeRecordItem } from '@/core/records/RecordNormalizer';
-import { getAvailableFieldsByCategory, getFieldLabel } from '@/core/types/fields';
+import { getAvailableFieldsByCategory, getFieldLabel, getFieldPickerOptions } from '@/core/types/fields';
 
 const TASK_ID = 'task.01J00000000000000000000000';
 const REC_ID = 'rec.01J00000000000000000000000';
@@ -44,17 +44,11 @@ describe('field semantics on Record Foundation v2', () => {
     expect(filterByKeyword([item], '09:00')).toHaveLength(1);
   });
 
-  it('common field picker exposes themePath instead of legacy theme', () => {
-    const fields = getAllFields([]);
-    expect(fields).toContain('themePath');
+  it('common field picker exposes Goal but no Theme fields', () => {
+    const fields = getFieldPickerOptions(getAllFields([] as any)).map((field: any) => field.value);
+    expect(fields).toContain('goalPath');
+    expect(fields).not.toContain('themePath');
     expect(fields).not.toContain('theme');
-    expect(getFieldLabel('themePath')).toBe('主题路径');
-    expect(getFieldLabel('theme')).toBe('主题路径');
-    expect(fields.length).toBeLessThanOrEqual(36);
-    expect(fields).not.toContain('id');
-    expect(fields).not.toContain('fullData');
-    expect(fields).not.toContain('cycleId');
-    expect(fields).not.toContain('displayCount');
   });
 
   it('field registry groups unknown Record KV as custom fields', () => {

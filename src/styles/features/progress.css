@@ -1,6 +1,6 @@
 /* Progress / 成长视图：纯列表系统。
-   目标 -> 主题 -> 复用 BlockView/TaskRow 的真实记录；不建立卡片、白底或目标统计胶囊。
-   Goal / Theme 共用同一列系统，确保等级与进度条严格纵向对齐。 */
+   目标 -> 子目标 -> 复用 BlockView/TaskRow 的真实记录；不建立卡片、白底或目标统计胶囊。
+   Goal 子层级共用同一列系统，确保等级与进度条严格纵向对齐。 */
 .think-progress-view {
   --think-progress-chevron-col: 12px;
   --think-progress-icon-col: 24px;
@@ -173,7 +173,7 @@
   border-top: 0;
 }
 
-/* 二级：主题。与目标完全共用列宽，只在图标列 + 名称列制造轻微缩进。
+/* 二级：子目标。与根目标完全共用列宽，只在图标列 + 名称列制造轻微缩进。
    这样缩进不会推动 Lv / progress / meta 三列。 */
 .think-progress-skill {
   display: grid;
@@ -233,15 +233,14 @@
 }
 
 .think-progress-empty-skill,
-.think-progress-theme-records__empty {
+.think-progress-goal-records__empty {
   padding: var(--think-space-3) 0;
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-sm);
 }
 
-/* 主题展开后直接复用 Statistics 使用的 BlockView 渲染链。
-   记录内容从主题名称起点再内缩一层，不影响主列表列对齐。 */
-.think-progress-theme-records {
+/* 子目标展开后直接复用 BlockView 渲染链；记录内容从子目标名称起点再内缩一层。 */
+.think-progress-goal-records {
   min-width: 0;
   margin-left: calc(
     var(--think-progress-chevron-col) +
@@ -252,20 +251,20 @@
   border-left: 2px solid color-mix(in srgb, var(--think-data-5) 28%, transparent);
 }
 
-.think-progress-theme-records .bv-container {
+.think-progress-goal-records .bv-container {
   gap: 0;
   padding: 0;
   background: transparent;
 }
 
-.think-progress-theme-records :is(.bv-item, .task-row) {
+.think-progress-goal-records :is(.bv-item, .task-row) {
   min-height: var(--think-list-row-min-height-compact);
 }
 
-.think-progress-theme-records .bv-block-main { gap: 0; }
+.think-progress-goal-records .bv-block-main { gap: 0; }
 
-.think-progress-theme-records .bv-block-content,
-.think-progress-theme-records .bv-block-title {
+.think-progress-goal-records .bv-block-content,
+.think-progress-goal-records .bv-block-title {
   font-size: var(--think-font-size-sm);
 }
 

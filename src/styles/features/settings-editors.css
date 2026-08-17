@@ -1,11 +1,10 @@
 /* CSS V3: settings editor feature facade. Keep imports in legacy cascade order. */
 @import "./settings-editors.base.css";
 @import "./settings-editors.rule-builder-base.css";
-@import "./settings-editors.theme-metadata.css";
 @import "./settings-editors.goal-template.css";
 @import "./settings-editors.statistics-categories.css";
 @import "./settings-editors.rule-builder-panel.css";
 @import "./settings-editors.block-editor.css";
-@import "./settings-editors.goal-theme-extensions.css";
+@import "./settings-editors.goal-extensions.css";
 @import "./settings-editors.fields-editor.css";
 @import "./settings-editors.view-editor.css";

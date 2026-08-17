@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { RecordViewItem, ThemeDefinition } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import { TaskCheckbox } from '@shared/ui/public';
 import { TaskSendToTimerButton } from '@shared/ui/public';
 import { isItemDone } from '@core/utils/public';
@@ -16,7 +16,6 @@ interface TaskRowProps {
     timerService: TimerController;
     onOpenRecord?: OpenRecordHandler;
     timer?: any;
-    allThemes: ThemeDefinition[];
     showFields?: string[];
     compact?: boolean;
     /** 可选展示标题。用于 EventTimelineView 等视图按配置字段展示任务正文，而不改变 item.title 真值。 */
@@ -33,7 +32,6 @@ export function TaskRow({
     onOpenRecordOrigin,
     timerService, 
     timer, 
-    allThemes,
     showFields = [],
     compact = false,
     displayTitle,
@@ -81,8 +79,7 @@ export function TaskRow({
                                 item={item} 
                                 fieldKey={fieldKey} 
                                 resolveResourcePath={resolveResourcePath} 
-                                allThemes={allThemes}
-                                onOpenRecordOrigin={onOpenRecordOrigin}
+                                                  onOpenRecordOrigin={onOpenRecordOrigin}
                             />
                         ))}
                     </div>

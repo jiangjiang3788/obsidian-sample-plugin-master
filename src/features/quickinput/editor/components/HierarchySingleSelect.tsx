@@ -146,7 +146,7 @@ export function HierarchySingleSelect({
           className="think-native-input"
           value={search}
           onInput={(event: any) => setSearch(event.target.value)}
-          placeholder="搜索目标/主题路径"
+          placeholder="搜索目标"
         />
       )}
 

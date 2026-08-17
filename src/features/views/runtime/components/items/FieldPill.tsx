@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { RecordViewItem, ThemeDefinition } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
 import { readField } from '@core/types/public';
 import { getFieldDefinition, getFieldLabel, isImageFieldDefinition, normalizeImageValue } from '@core/fields/public';
 import { getCategoryColor } from '@core/types/public';
@@ -13,14 +13,13 @@ interface FieldPillProps {
     item: RecordViewItem;
     fieldKey: string;
     resolveResourcePath?: ResolveResourcePathHandler;
-    allThemes: ThemeDefinition[];
     onOpenRecordOrigin?: OpenRecordOriginHandler;
 }
 
 /**
  * 通用字段渲染组件 - 可在多个视图间复用
  */
-export function FieldPill({ item, fieldKey, resolveResourcePath, allThemes, onOpenRecordOrigin }: FieldPillProps) {
+export function FieldPill({ item, fieldKey, resolveResourcePath, onOpenRecordOrigin }: FieldPillProps) {
     const value = readField(item, fieldKey);
     
     // 检查字段值是否为空
@@ -47,11 +46,11 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, allThemes, onOp
     
     // Tags 字段特殊处理
     if (fieldKey === 'tags') {
-        return <span {...originProps} title={originTitle}><TagsRenderer tags={value} allThemes={allThemes} /></span>;
+        return <span {...originProps} title={originTitle}><TagsRenderer tags={value} /></span>;
     }
 
-    // Theme 字段特殊处理：默认展示 themePath，旧 theme 仍兼容。
-    if ((fieldKey === 'themePath' || fieldKey === 'theme' || fieldKey === 'rootTheme' || fieldKey === 'leafTheme') && typeof value === 'string') {
+    // Goal 层级直接由 goalPath/rootGoal/leafGoal 读取。
+    if ((fieldKey === 'goalPath' || fieldKey === 'rootGoal' || fieldKey === 'leafGoal') && typeof value === 'string') {
         const fullPath = value;
         const labelText = getLeafPath(fullPath) || fullPath;
         return (
@@ -60,7 +59,7 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, allThemes, onOp
             </span>
         );
     }
-    
+
     // Category 字段特殊处理
     if (fieldKey === 'categoryKey') {
         const baseCategory = getLeafPath(item.categoryKey) || getBaseCategory(item.categoryKey);
@@ -71,7 +70,7 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, allThemes, onOp
         );
     }
     
-    // 图片字段特殊处理：不再只认 pintu；任何 type/semantic 为 image 的字段都可渲染。
+    // 图片字段按 image type/semantic 统一渲染。
     const fieldDef = getFieldDefinition(fieldKey);
     if (isImageFieldDefinition(fieldDef)) {
         const image = normalizeImageValue(value);

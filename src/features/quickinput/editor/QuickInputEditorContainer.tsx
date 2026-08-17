@@ -3,9 +3,8 @@ import { h } from 'preact';
 import { useEffect, useMemo, useReducer, useRef } from 'preact/hooks';
 
 import { selectSettings, useSelector } from '@/app/public'; import { dayjs } from '@core/utils/public';
-import { getEffectiveRecordTypes, ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public'; import { getGoalTemplateVariants, resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@core/goal/public';
+import { getEffectiveRecordTypes, ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public'; import { resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@core/goal/public';
 import { initializeRecordInputSession, reduceRecordInputSession } from '@core/recordInput/public';
-import type { ThemeDefinition } from '@core/types/public';
 import { QuickInputEditorView } from './QuickInputEditorView';
 import { resolveQuickInputRecordTypeRuntime } from './quickInputRecordTypeModel';
 import { EnergyQuickCapturePanel } from './components/EnergyQuickCapturePanel';
@@ -24,7 +23,6 @@ import {
   getGoalPath,
   hydrateQuickInputTemplateDefaults,
   resolveQuickInputCoreBlockId,
-  resolveQuickInputEnergyThemePath,
   shouldShowQuickInputTimeDirectionControl,
   splitPathParts,
 } from './QuickInputEditorModel';
@@ -36,7 +34,6 @@ export function QuickInputEditor({
   getResourcePath,
   initialBlockId,
   context,
-  initialThemeId = null,
   initialFormData,
   recordInputMode = 'create',
   allowBlockSwitch = true,
@@ -48,14 +45,13 @@ export function QuickInputEditor({
   isMobileLike = false,
 }: QuickInputEditorProps) {
   const fullSettings = useSelector(selectSettings);
-  const settings = fullSettings.inputSettings; const initialFieldSource = recordInputMode === 'create' ? 'context' : 'edit_backfill';
+  const initialFieldSource = recordInputMode === 'create' ? 'context' : 'edit_backfill';
   const recordInputModeRef = useRef(recordInputMode);
   const [session, dispatchSession] = useReducer(
     reduceRecordInputSession,
     initializeRecordInputSession({
       mode: recordInputMode,
       initialBlockId,
-      initialThemeId,
       initialFormData: initialFormData ?? EMPTY_FORM_DATA,
       initialFieldSources: buildInitialFieldSources(initialFormData, initialFieldSource),
       initialSelection: deriveQuickInputInitialSelection(initialFormData, context),
@@ -64,16 +60,13 @@ export function QuickInputEditor({
 
   const {
     currentBlockId,
-    selectedThemeId,
-    selectedGoalId,
     selectedGoalPath,
-    selectedTemplateVariantId,
     formData,
     fieldSources,
     timeDirection,
   } = session;
 
-  // 不要依赖 initialFormData（可能是新对象）→ 用 block/theme/context 变化作为 reset 语义。
+  // 不要依赖 initialFormData（可能是新对象）→ 用 block/context 变化作为 reset 语义。
   useEffect(() => {
     const modeForReset = recordInputModeRef.current;
     const sourceForReset = modeForReset === 'create' ? 'context' : 'edit_backfill';
@@ -82,13 +75,12 @@ export function QuickInputEditor({
       payload: {
         mode: modeForReset,
         initialBlockId,
-        initialThemeId,
         initialFormData: initialFormData ?? EMPTY_FORM_DATA,
         initialFieldSources: buildInitialFieldSources(initialFormData, sourceForReset),
         initialSelection: deriveQuickInputInitialSelection(initialFormData, context),
       },
     });
-  }, [initialBlockId, initialThemeId, context]);
+  }, [initialBlockId, context]);
 
   useEffect(() => {
     recordInputModeRef.current = recordInputMode;
@@ -101,48 +93,19 @@ export function QuickInputEditor({
     [blocks, currentBlockId],
   );
   const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID && currentRecordType.captureMode === 'direct';
-  const themes = useMemo(() => settings.themes || [], [settings.themes]);
-
-  const { availableThemes, themeIdMap, pathToIdMap } = useMemo(() => {
-    // Theme 已降级为目标 / 预设的上下文字段，不再通过 Theme × Block override 禁用主题。
-    return {
-      availableThemes: themes || [],
-      themeIdMap: new Map<string, ThemeDefinition>((themes || []).map((t: any) => [t.id, t])),
-      pathToIdMap: new Map<string, string>((themes || []).map((t: any) => [t.path, t.id])),
-    };
-  }, [themes]);
-
   const selectedGoal = useMemo(() => {
     const goals = fullSettings.goalSettings?.goals || [];
-    return selectedGoalId ? goals.find((goal) => goal.id === selectedGoalId) || null : null;
-  }, [fullSettings.goalSettings?.goals, selectedGoalId]);
+    return selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) || null : null;
+  }, [fullSettings.goalSettings?.goals, selectedGoalPath]);
 
   const currentEffectiveBlockIdForTemplates = useMemo(
     () => isEnergyDirect ? '' : resolveQuickInputCoreBlockId(fullSettings, currentBlockId),
     [fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks, currentBlockId, isEnergyDirect]
   );
 
-  const goalTemplateVariants = useMemo(() => {
-    const goal = selectedGoal || null;
-    if (!goal || !currentEffectiveBlockIdForTemplates) return [];
-    return getGoalTemplateVariants(fullSettings.goalSettings, goal, currentEffectiveBlockIdForTemplates);
-  }, [fullSettings.goalSettings, selectedGoal, currentEffectiveBlockIdForTemplates]);
-
-  useEffect(() => {
-    if (!goalTemplateVariants.length) {
-      if (selectedTemplateVariantId) dispatchSession({ type: 'selectTemplateVariant', variantId: null });
-      return;
-    }
-    const exists = selectedTemplateVariantId && goalTemplateVariants.some((template) => template.variantId === selectedTemplateVariantId || template.id === selectedTemplateVariantId);
-    if (!exists) {
-      const next = goalTemplateVariants[0];
-      dispatchSession({ type: 'selectTemplateVariant', variantId: next?.variantId || 'default' });
-    }
-  }, [goalTemplateVariants, selectedTemplateVariantId]);
-
-  const { template: rawTemplate, theme, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId, templateVariantId: resolvedTemplateVariantId } = useMemo(
-    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedThemeId, selectedTemplateVariantId }),
-    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalId, selectedThemeId, selectedTemplateVariantId],
+  const { template: rawTemplate, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId } = useMemo(
+    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath }),
+    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath],
   );
 
   const goalOptions = useMemo<GoalSelectorOption[]>(
@@ -158,10 +121,10 @@ export function QuickInputEditor({
     const stillVisible = goalOptions.some((option) => option.value === selectedPath);
     if (stillVisible) return;
     dispatchSession({ type: 'clearGoalContext' });
-  }, [goalOptions, selectedGoal?.goalPath, selectedGoalPath]);
+  }, [goalOptions, selectedGoal?.path, selectedGoalPath]);
 
   const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
-  const currentGoalTitle = String(selectedGoal?.title || resolvedGoal?.title || '').trim() || (currentGoalPath ? currentGoalPath.split('/').filter(Boolean).pop() || currentGoalPath : null);
+  const currentGoalTitle = currentGoalPath ? currentGoalPath.split('/').filter(Boolean).pop() || currentGoalPath : null;
   const currentGoalParts = splitPathParts(currentGoalPath);
   const currentRecordDate = String(formData['日期'] ?? formData.date ?? dayjs().format('YYYY-MM-DD')).trim();
   const periodPolicy = isEnergyDirect ? null : resolveTemplatePeriodPolicy(rawTemplate as any);
@@ -171,8 +134,8 @@ export function QuickInputEditor({
   const currentPeriodOptions = currentPeriodUi.options;
 
   const template = useMemo(
-    () => isEnergyDirect ? null : buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, availableThemes, goalFieldOptions),
-    [rawTemplate, availableThemes, effectiveBlockId, goalFieldOptions, isEnergyDirect]
+    () => isEnergyDirect ? null : buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, goalFieldOptions),
+    [rawTemplate, effectiveBlockId, goalFieldOptions, isEnergyDirect]
   );
 
   const showTimeDirectionControl = useMemo(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
@@ -185,10 +148,8 @@ export function QuickInputEditor({
       current: formData,
       fieldSources,
       selectedGoal,
-      selectedGoalId,
       currentGoalPath,
       currentGoalTitle,
-      theme,
       currentPeriod,
       timeDirection,
     });
@@ -198,41 +159,30 @@ export function QuickInputEditor({
       formData: hydrated.formData,
       fieldSources: hydrated.fieldSources,
     });
-  }, [template, theme, context, timeDirection, selectedGoal?.id, selectedGoal?.themePath, selectedGoalId, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle, formData, fieldSources, isEnergyDirect]);
+  }, [template, context, timeDirection, selectedGoalPath, currentPeriod?.id, currentPeriod?.label, currentGoalPath, currentGoalTitle, formData, fieldSources, isEnergyDirect]);
 
-  useEffect(() => {
-    const presetThemePath = String(formData.themePath ?? formData['主题'] ?? '').trim();
-    if (!presetThemePath) return;
-    const nextThemeId = pathToIdMap.get(presetThemePath) ?? null;
-    if (nextThemeId && nextThemeId !== selectedThemeId) dispatchSession({ type: 'selectTheme', themeId: nextThemeId });
-  }, [formData.themePath, formData['主题'], pathToIdMap, selectedThemeId]);
+
 
   const makeEditorState = (draftFormData: QuickInputFormData, directionOverride: TimeDirection = timeDirection, sourceOverride: QuickInputFieldSourceMap = fieldSources) => buildQuickInputEditorState({
     blockId: currentBlockId,
     effectiveBlockId: isEnergyDirect ? ENERGY_RECORD_TYPE_ID : effectiveBlockId,
     selectedGoal,
-    selectedGoalId,
     currentGoalPath,
     currentGoalTitle,
     currentGoalParts,
     currentPeriod,
-    selectedThemeId,
-    themeIdMap,
-    theme,
     formData: draftFormData,
     currentPeriodFields,
     timeDirection: directionOverride,
     template,
     templateId,
-    resolvedTemplateVariantId,
-    selectedTemplateVariantId,
     templateSourceType,
     fieldSources: sourceOverride,
   });
 
   useEffect(() => {
     onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
-  }, [currentBlockId, effectiveBlockId, selectedGoal?.id, selectedGoalId, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, selectedThemeId, formData, timeDirection, template, templateId, templateSourceType, resolvedTemplateVariantId, selectedTemplateVariantId, fieldSources, theme]);
+  }, [currentBlockId, effectiveBlockId, selectedGoalPath, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, formData, timeDirection, template, templateId, templateSourceType, fieldSources]);
 
   const handleUpdateField = (key: string, value: any, isOptionObject = false) => {
     const updated = applyQuickInputFieldUpdate({ formData, fieldSources, key, value, isOptionObject, timeDirection });
@@ -240,12 +190,7 @@ export function QuickInputEditor({
       type: 'updateDraft',
       formData: updated.formData,
       fieldSources: updated.fieldSources,
-      selectedThemeId: updated.nextThemePath !== undefined
-        ? (updated.nextThemePath ? pathToIdMap.get(updated.nextThemePath) ?? null : null)
-        : undefined,
       selectedGoalPath: updated.nextGoalPath !== undefined ? updated.nextGoalPath : undefined,
-      selectedGoalId: updated.nextGoalPath !== undefined ? updated.nextGoalId ?? null : undefined,
-      selectedTemplateVariantId: updated.nextGoalPath !== undefined ? null : undefined,
     });
   };
 
@@ -266,15 +211,13 @@ export function QuickInputEditor({
 
   const handleSelectGoal = (option: GoalSelectorOption | null) => {
     if (!option || !option.value) {
-      dispatchSession({ type: 'selectGoal', goalId: null, goalPath: null });
+      dispatchSession({ type: 'selectGoal', goalPath: null });
       return;
     }
     const nextSelection = applyQuickInputGoalSelection({ formData, fieldSources, option });
     dispatchSession({
       type: 'selectGoal',
-      goalId: nextSelection.goalId,
       goalPath: nextSelection.goalPath,
-      selectedThemeId: nextSelection.themePath ? pathToIdMap.get(nextSelection.themePath) ?? null : undefined,
       formData: nextSelection.formData,
       fieldSources: nextSelection.fieldSources,
     });
@@ -290,9 +233,7 @@ export function QuickInputEditor({
         goals={goalOptions}
         selectedGoalPath={currentGoalPath}
         onSelectGoal={handleSelectGoal}
-        selectedGoalId={selectedGoal?.id || selectedGoalId || null}
-        defaultGoalId={fullSettings.energySettings?.defaultGoalId || null}
-        selectedThemePath={resolveQuickInputEnergyThemePath({ formThemePath: formData.themePath ?? formData['主题'], formThemeSource: fieldSources.themePath ?? fieldSources['主题'], defaultThemePath: fullSettings.energySettings?.defaultThemePath, goalThemePath: selectedGoal?.themePath })}
+        defaultGoalPath={fullSettings.energySettings?.defaultGoalPath || null}
         onCapture={onEnergyCapture}
       />
     );
@@ -309,9 +250,6 @@ export function QuickInputEditor({
       selectedGoalPath={currentGoalPath}
       onSelectGoal={handleSelectGoal}
       onCreateGoal={undefined}
-      templateVariants={goalTemplateVariants.map((template) => ({ value: template.variantId || 'default', label: template.name || template.variantId || '默认模板' }))}
-      selectedTemplateVariantId={resolvedTemplateVariantId || selectedTemplateVariantId}
-      onSelectTemplateVariant={(variantId) => dispatchSession({ type: 'selectTemplateVariant', variantId })}
       template={template}
       formData={formData}
       fieldValueOptionsByKey={currentPeriodOptions}

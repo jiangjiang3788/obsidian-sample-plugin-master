@@ -16,7 +16,6 @@ export * from './constants';
 export * from './definitions';
 export * from '../settings/ThinkSettings';
 export * from '../recordInput/CaptureTemplate';
-export * from '../theme/ThemeDefinition';
 export * from '../view/ViewConfig';
 export * from '../fields/ViewFieldCatalog';
 export * from '../period/PeriodPolicy';
@@ -27,7 +26,6 @@ export * from './timeline';
 // 4.x / SSOT - common contracts
 export * from './common';
 export * from './actionMeta';
-export * from './theme';
 export * from './timer';
 // 4.5 composition contracts
 export * from './quickInput';

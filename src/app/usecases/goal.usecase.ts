@@ -21,29 +21,22 @@ import {
   removeGoalTemplatesForGoal,
   compactGoalTemplateForStorage,
   cleanupGoalTemplateStorage,
-  makeStableGoalIdFromPath,
   requireGoalPath,
-  splitGoalPath,
 } from '@core/goal/public';
 import { getCoreBlockById } from '@core/blocks/public';
 import { devError } from '@core/utils/public';
 import type { AppStoreApi } from './AppStoreApi';
 
 export interface AddGoalInput {
-  title: string;
-  goalPath?: string;
+  path: string;
   description?: string;
-  themePath?: string | null;
   status?: GoalDefinition['status'];
 }
 
 export interface UpsertGoalTemplateInput {
-  goalId: string;
+  goalPath: string;
   coreBlockId: string;
-  templateVariantId?: string;
-  templateName?: string;
   description?: string;
-  sortOrder?: number;
   enabled?: boolean;
   targetFile?: string;
   appendUnderHeader?: string;
@@ -65,40 +58,24 @@ function ensureGoalSettings(settings?: GoalSettings): GoalSettings {
 }
 
 function normalizeGoalInput(input: AddGoalInput): GoalDefinition {
-  const goalPath = requireGoalPath(input.goalPath || input.title);
-  const title = String(input.title || '').trim() || goalPath.split('/').filter(Boolean).pop() || goalPath;
-  if (title.includes('#') || title.includes('＃')) throw new Error('Goal title must not contain # markers.');
+  const path = requireGoalPath(input.path);
   const timestamp = nowIso();
   return {
-    id: makeStableGoalIdFromPath(goalPath),
-    title,
-    goalPath,
+    path,
     description: input.description,
     status: input.status || 'active',
-    parentGoalId: null,
-    themePath: input.themePath ?? null,
     metrics: [],
     createdAt: timestamp,
     updatedAt: timestamp,
   };
 }
 
-function normalizeStoredGoalPath(goal: Pick<GoalDefinition, 'goalPath' | 'title'>): string {
-  return requireGoalPath(goal.goalPath || goal.title);
-}
-
-
-function collectGoalCascadeIds(goals: GoalDefinition[], id: string): string[] {
-  const target = goals.find((goal) => goal.id === id);
-  if (!target) return [];
-  const targetPath = normalizeStoredGoalPath(target);
+function collectGoalCascadePaths(goals: GoalDefinition[], path: string): string[] {
+  const targetPath = requireGoalPath(path);
+  if (!goals.some((goal) => goal.path === targetPath)) return [];
   return goals
-    .filter((goal) => {
-      if (goal.id === id) return true;
-      const path = normalizeStoredGoalPath(goal);
-      return !!targetPath && path.startsWith(`${targetPath}/`);
-    })
-    .map((goal) => goal.id);
+    .filter((goal) => goal.path === targetPath || goal.path.startsWith(`${targetPath}/`))
+    .map((goal) => goal.path);
 }
 
 export class GoalUseCase {
@@ -111,7 +88,7 @@ export class GoalUseCase {
       const goal = normalizeGoalInput(input);
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const exists = draft.goalSettings.goals.some((item) => item.id === goal.id || normalizeStoredGoalPath(item) === goal.goalPath);
+        const exists = draft.goalSettings.goals.some((item) => item.path === goal.path);
         if (!exists) draft.goalSettings.goals.push(goal);
       });
       return goal;
@@ -121,23 +98,19 @@ export class GoalUseCase {
     }
   }
 
-  async updateGoal(id: string, patch: Partial<GoalDefinition>): Promise<void> {
+  async updateGoal(path: string, patch: Partial<Omit<GoalDefinition, 'path'>>): Promise<void> {
     try {
       const state = this.store.getState();
       if (!state.isInitialized) return;
-      const safePatch = { ...patch } as Partial<GoalDefinition> & { granularity?: unknown };
+      const canonicalPath = requireGoalPath(path);
+      const safePatch = { ...patch } as Partial<Omit<GoalDefinition, 'path'>> & { granularity?: unknown; path?: unknown };
       delete safePatch.granularity;
+      delete safePatch.path;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const target = draft.goalSettings.goals.find((goal) => goal.id === id);
+        const target = draft.goalSettings.goals.find((goal) => goal.path === canonicalPath);
         if (!target) return;
         Object.assign(target, safePatch, { updatedAt: nowIso() });
-        if (safePatch.title !== undefined) {
-          const title = String(target.title || '').trim();
-          if (!title || title.includes('#') || title.includes('＃')) throw new Error('Goal title must not contain # markers.');
-          target.title = title;
-        }
-        if (safePatch.goalPath || safePatch.title) target.goalPath = requireGoalPath(target.goalPath || target.title);
       });
     } catch (error) {
       devError('[GoalUseCase] updateGoal failed:', error);
@@ -145,58 +118,58 @@ export class GoalUseCase {
     }
   }
 
-  async archiveGoal(id: string): Promise<void> {
-    await this.updateGoal(id, { status: 'archived' });
+  async archiveGoal(path: string): Promise<void> {
+    await this.updateGoal(path, { status: 'archived' });
   }
 
-  async restoreGoal(id: string): Promise<void> {
-    await this.updateGoal(id, { status: 'active' });
+  async restoreGoal(path: string): Promise<void> {
+    await this.updateGoal(path, { status: 'active' });
   }
 
-  async updateGoalMetrics(id: string, metrics: GoalMetricContract[]): Promise<void> {
-    await this.updateGoal(id, { metrics });
+  async updateGoalMetrics(path: string, metrics: GoalMetricContract[]): Promise<void> {
+    await this.updateGoal(path, { metrics });
   }
 
-  async pauseGoal(id: string): Promise<void> {
-    await this.updateGoal(id, { status: 'paused' });
+  async pauseGoal(path: string): Promise<void> {
+    await this.updateGoal(path, { status: 'paused' });
   }
 
-  async completeGoal(id: string): Promise<void> {
-    await this.updateGoal(id, { status: 'completed' });
+  async completeGoal(path: string): Promise<void> {
+    await this.updateGoal(path, { status: 'completed' });
   }
 
-  private async deleteGoalsByIds(ids: string[]): Promise<void> {
-    const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
-    if (!uniqueIds.length) return;
-    const targetIds = new Set(uniqueIds);
+  private async deleteGoalsByPaths(paths: string[]): Promise<void> {
+    const uniquePaths = Array.from(new Set(paths.filter(Boolean).map((path) => requireGoalPath(path))));
+    if (!uniquePaths.length) return;
+    const targetPaths = new Set(uniquePaths);
     const state = this.store.getState();
     if (!state.isInitialized) return;
     await state.updateSettings((draft) => {
       draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-      draft.goalSettings.goals = draft.goalSettings.goals.filter((goal) => !targetIds.has(goal.id));
-      for (const targetId of targetIds) {
-        draft.goalSettings = removeGoalTemplatesForGoal(draft.goalSettings, targetId);
+      draft.goalSettings.goals = draft.goalSettings.goals.filter((goal) => !targetPaths.has(goal.path));
+      for (const targetPath of targetPaths) {
+        draft.goalSettings = removeGoalTemplatesForGoal(draft.goalSettings, targetPath);
       }
     });
   }
 
-  async deleteGoal(id: string): Promise<void> {
+  async deleteGoal(path: string): Promise<void> {
     try {
-      await this.deleteGoalsByIds([id]);
+      await this.deleteGoalsByPaths([path]);
     } catch (error) {
       devError('[GoalUseCase] deleteGoal failed:', error);
       throw error;
     }
   }
 
-  async deleteGoalCascade(id: string): Promise<number> {
+  async deleteGoalCascade(path: string): Promise<number> {
     try {
       const state = this.store.getState();
       if (!state.isInitialized) return 0;
       const goalSettings = ensureGoalSettings(state.settings.goalSettings || DEFAULT_GOAL_SETTINGS);
-      const ids = collectGoalCascadeIds(goalSettings.goals, id);
-      await this.deleteGoalsByIds(ids);
-      return ids.length;
+      const paths = collectGoalCascadePaths(goalSettings.goals, path);
+      await this.deleteGoalsByPaths(paths);
+      return paths.length;
     } catch (error) {
       devError('[GoalUseCase] deleteGoalCascade failed:', error);
       throw error;
@@ -244,15 +217,9 @@ export class GoalUseCase {
       if (!state.isInitialized) return;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const next = {
-          ...template,
-          id: template.id || getGoalTemplateId(template.goalId, template.coreBlockId, template.variantId || 'default'),
-          updatedAt: nowIso(),
-          createdAt: template.createdAt || nowIso(),
-        };
-        const goal = draft.goalSettings.goals.find((item) => item.id === next.goalId) || null;
+        const next = { ...template, id: getGoalTemplateId(template.goalPath, template.coreBlockId) };
         const coreBlock = getCoreBlockById(draft as any, next.coreBlockId);
-        draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, compactGoalTemplateForStorage(next, { coreBlock, goal }));
+        draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, compactGoalTemplateForStorage(next, { coreBlock }));
       });
     } catch (error) {
       devError('[GoalUseCase] upsertGoalTemplate failed:', error);
@@ -261,15 +228,11 @@ export class GoalUseCase {
   }
 
   async upsertGoalTemplateDraft(input: UpsertGoalTemplateInput): Promise<void> {
-    const timestamp = nowIso();
     await this.upsertGoalTemplate({
-      id: getGoalTemplateId(input.goalId, input.coreBlockId, input.templateVariantId || 'default'),
-      goalId: input.goalId,
+      id: getGoalTemplateId(input.goalPath, input.coreBlockId),
+      goalPath: input.goalPath,
       coreBlockId: input.coreBlockId,
-      variantId: input.templateVariantId || 'default',
-      name: input.templateName || (input.templateVariantId === 'default' || !input.templateVariantId ? '记录预设' : input.templateVariantId),
       description: input.description,
-      sortOrder: input.sortOrder,
       enabled: input.enabled !== false,
       targetFile: input.targetFile?.trim() || undefined,
       appendUnderHeader: input.appendUnderHeader?.trim() || undefined,
@@ -277,18 +240,16 @@ export class GoalUseCase {
       defaultValues: input.defaultValues || {},
       requiredFields: input.requiredFields || [],
       periodPolicy: input.periodPolicy,
-      createdAt: timestamp,
-      updatedAt: timestamp,
     });
   }
 
-  async deleteGoalTemplate(goalId: string, coreBlockId: string, templateVariantId = 'default'): Promise<void> {
+  async deleteGoalTemplate(goalPath: string, coreBlockId: string): Promise<void> {
     try {
       const state = this.store.getState();
       if (!state.isInitialized) return;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        draft.goalSettings = removeGoalTemplateFromSettings(draft.goalSettings, goalId, coreBlockId, templateVariantId);
+        draft.goalSettings = removeGoalTemplateFromSettings(draft.goalSettings, goalPath, coreBlockId);
       });
     } catch (error) {
       devError('[GoalUseCase] deleteGoalTemplate failed:', error);

@@ -2,7 +2,7 @@ import { useCallback } from 'preact/hooks';
 import type { ActionService } from '@core/services/public';
 import type { RecordViewItem, ViewInstance } from '@core/types/public';
 import { dayjs, buildRecordSubmitFeedbackPresentation } from '@core/utils/public';
-import { useModalPort, useUiPort, useUseCases } from '@/app/AppStoreContext';
+import { useDataStore, useModalPort, useUiPort, useUseCases } from '@/app/AppStoreContext';
 import {
   commitExcelCellFromView,
   openCreateFromHeatmap,
@@ -58,6 +58,7 @@ export function useViewRuntimeHandlers({
   excelAvailableFields,
 }: UseViewRuntimeHandlersParams): ViewRuntimeHandlers {
   const useCases = useUseCases();
+  const dataStore = useDataStore();
   const ui = useUiPort();
   const modal = useModalPort();
 
@@ -97,12 +98,14 @@ export function useViewRuntimeHandlers({
   }, [useCases.settings]);
 
   const onOpenRecord = useCallback<OpenRecordHandler>((item: RecordViewItem) => {
-    openEditFromItem({ app, item });
-  }, [app]);
+    const canonicalItem = dataStore.getRecordById(item.id) ?? item;
+    openEditFromItem({ app, item: canonicalItem });
+  }, [app, dataStore]);
 
   const onOpenRecordOrigin = useCallback<OpenRecordOriginHandler>((item: RecordViewItem) => {
-    openRecordOrigin({ app, item });
-  }, [app]);
+    const canonicalItem = dataStore.getRecordById(item.id) ?? item;
+    openRecordOrigin({ app, item: canonicalItem });
+  }, [app, dataStore]);
 
   const resolveResourcePath = useCallback<ResolveResourcePathHandler>((path) => {
     return resolveVaultResourcePath(app, path);
@@ -126,12 +129,7 @@ export function useViewRuntimeHandlers({
       sourceBlockId: request.sourceBlockId,
       date: request.date,
       item: request.item,
-      themePath: request.themePath,
       goalPath: request.goalPath,
-      goalId: request.goalId,
-      templateId: request.templateId,
-      templateVariantId: request.templateVariantId,
-      themesByPath: request.themesByPath,
       notice: (message) => ui.notice(message),
     });
   }, [app, ui]);

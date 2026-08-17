@@ -90,16 +90,15 @@ function taskTitle(item: RecordViewItem): string {
 }
 
 function buildGoalMap(goals: GoalDefinition[]): Map<string, GoalDefinition> {
-  return new Map((goals || []).map((goal) => [goal.id, goal] as const));
+  return new Map((goals || []).map((goal) => [text(goal.path), goal] as const));
 }
 
-function resolveTaskGoal(item: RecordViewItem, goalsById: Map<string, GoalDefinition>): { key: string; path?: string; label: string } {
-  const goalId = text(item.goalId);
-  if (!goalId) return { key: '__unassigned__', label: '未分目标' };
-  const goal = goalsById.get(goalId);
-  const path = text(goal?.goalPath || item.goalPath) || undefined;
-  const label = text(goal?.title || path) || '未分目标';
-  return { key: goalId, path, label };
+function resolveTaskGoal(item: RecordViewItem, goalsByPath: Map<string, GoalDefinition>): { key: string; path?: string; label: string } {
+  const path = text(item.goalPath);
+  if (!path) return { key: '__unassigned__', label: '未分目标' };
+  const goal = goalsByPath.get(path);
+  const label = text(goal?.path?.split('/').filter(Boolean).pop() || path.split('/').filter(Boolean).pop() || path) || '未分目标';
+  return { key: path, path, label };
 }
 
 function completionIdentity(item: RecordViewItem): string {
@@ -250,7 +249,7 @@ export function buildEnergyTaskListModel(args: {
     for (const row of matchable) energyMatchedIds.add(row.candidate.id);
   }
 
-  const goalsById = buildGoalMap(goals);
+  const goalsByPath = buildGoalMap(goals);
   const goalBuckets = new Map<string, {
     label: string;
     goalPath?: string;
@@ -258,7 +257,7 @@ export function buildEnergyTaskListModel(args: {
   }>();
 
   for (const item of visibleItems) {
-    const resolvedGoal = resolveTaskGoal(item, goalsById);
+    const resolvedGoal = resolveTaskGoal(item, goalsByPath);
     const goalPath = resolvedGoal.path;
     const label = resolvedGoal.label;
     const goalKey = resolvedGoal.key;

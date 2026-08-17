@@ -18,7 +18,7 @@ export type {
 export { EMPTY_FORM_DATA } from './model/types';
 
 export { hydrateQuickInputTemplateDefaults } from './model/hydrateDefaults';
-export { deriveQuickInputInitialSelection, resolveQuickInputThemeSelectionOnClick } from './model/initialSelection';
+export { deriveQuickInputInitialSelection } from './model/initialSelection';
 export type { BuildQuickInputEditorStateInput } from './model/editorState';
 export { buildQuickInputEditorState } from './model/editorState';
 export {
@@ -39,8 +39,6 @@ export {
 export {
   getGoalPath,
   splitPathParts,
-  splitThemePathParts,
-  themeOptions,
 } from './quickInputPathModel';
 export {
   applyQuickInputFieldUpdate,
@@ -53,5 +51,4 @@ export {
   buildQuickInputGoalOptions,
   resolveQuickInputCoreBlockId,
   resolveQuickInputEnergyDefaultGoal,
-  resolveQuickInputEnergyThemePath,
 } from './quickInputGoalModel';

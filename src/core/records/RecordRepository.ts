@@ -3,7 +3,7 @@ import type { VaultPort } from '@/core/ports/VaultPort';
 import type { DataStore } from '@/core/services/DataStore';
 import { appendUnderHeaderText } from '@/core/recordInput/mutation/HeaderAppender';
 import { resolveRecordBlockRangeById } from '@/core/recordInput/mutationLocator';
-import { createRecordId, RECORD_SCHEMA_VERSION } from './RecordId';
+import { createRecordId } from './RecordId';
 import { RecordMutationTransaction, RecordTransactionRecoveryError } from './RecordMutationTransaction';
 import { encodeRecordBlock, formatRecordDateTimeForMarkdown, type RecordDocument } from './codec/MarkdownRecordCodec';
 
@@ -28,9 +28,7 @@ export interface RecordBatchResult {
 const PATCH_FIELDS: Record<string, { label: string; aliases: string[] }> = {
   status: { label: '状态', aliases: ['状态', 'status'] },
   content: { label: '内容', aliases: ['内容', 'content'] },
-  goalId: { label: '目标ID', aliases: ['目标ID', 'goalId'] },
   goalPath: { label: '目标', aliases: ['目标', 'goalPath'] },
-  themePath: { label: '主题', aliases: ['主题', 'theme', 'themePath'] },
   createdAt: { label: '创建于', aliases: ['创建于', 'createdAt'] },
   scheduledAt: { label: '计划时间', aliases: ['计划时间', 'scheduledAt'] },
   startAt: { label: '开始时间', aliases: ['开始时间', 'startAt'] },
@@ -68,8 +66,6 @@ const PATCH_FIELDS: Record<string, { label: string; aliases: string[] }> = {
   energyDelta: { label: '精力变化', aliases: ['精力变化', 'energyDelta'] },
   brainDelta: { label: '脑力变化', aliases: ['脑力变化', 'brainDelta'] },
   physicalDelta: { label: '体力变化', aliases: ['体力变化', 'physicalDelta'] },
-  templateId: { label: '模板ID', aliases: ['模板ID', 'templateId'] },
-  templateSourceType: { label: '模板来源', aliases: ['模板来源', 'templateSourceType'] },
   startTime: { label: '时间', aliases: ['时间', 'startTime'] },
   endTime: { label: '结束', aliases: ['结束', 'endTime'] },
   duration: { label: '时长', aliases: ['时长', 'duration'] },
@@ -98,7 +94,7 @@ function resolvePatchField(rawKey: string): { label: string; aliases: string[] }
 
 export function patchRecordBlockMarkdown(markdown: string, patch: RecordPatch): string {
   const lines = markdown.split(/\r?\n/);
-  const protectedKeys = new Set(['记录id','recordid','id','记录版本','recordversion','schemaversion','核心block','coreblock']);
+  const protectedKeys = new Set(['记录id','recordid','id','核心block','coreblock']);
 
   for (const [rawKey, value] of Object.entries(patch)) {
     const key = rawKey.trim();
@@ -200,7 +196,6 @@ export class RecordRepository {
         createdIdsInBatch.add(recordId);
         const markdown = encodeRecordBlock({
           recordId,
-          schemaVersion: operation.record.schemaVersion ?? RECORD_SCHEMA_VERSION,
           coreBlock: operation.record.coreBlock,
           fields: operation.record.fields,
         });

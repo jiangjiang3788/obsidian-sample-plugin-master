@@ -20,7 +20,7 @@ export interface ViewFieldOrderContext {
  */
 export function isGoalOrderField(field?: string | null): boolean {
     const canonical = getCanonicalFieldKey(String(field || '').trim());
-    return ['goalPath', 'rootGoal', 'leafGoal', 'goalId'].includes(canonical);
+    return ['goalPath', 'rootGoal', 'leafGoal'].includes(canonical);
 }
 
 function normalizeText(value: unknown): string {
@@ -47,23 +47,8 @@ function normalizeGoalComparable(value: unknown): string {
     return splitGoalPath(text).goalPath || '';
 }
 
-function buildGoalPathById(goals: GoalDefinition[] = []): Map<string, string> {
-    const result = new Map<string, string>();
-    for (const goal of goals || []) {
-        const path = normalizeGoalComparable(goal.goalPath || goal.title || goal.id);
-        if (goal.id && path) result.set(goal.id, path);
-    }
-    return result;
-}
-
 function resolveGoalFieldComparable(field: string, rawValue: unknown, context?: ViewFieldOrderContext): string {
     const canonical = getCanonicalFieldKey(String(field || '').trim());
-    const goals = context?.goals || [];
-
-    if (canonical === 'goalId') {
-        const id = firstText(rawValue);
-        return buildGoalPathById(goals).get(id) || id || '';
-    }
 
     return normalizeGoalComparable(rawValue);
 }
@@ -87,9 +72,6 @@ export function compareFieldValuesByViewOrder(field: string, left: unknown, righ
 function readOrderedFieldValue(item: RecordViewItem, field: string, context?: ViewFieldOrderContext): unknown {
     const canonical = getCanonicalFieldKey(String(field || '').trim());
     if (isGoalOrderField(canonical)) {
-        if (canonical === 'goalId') {
-            return firstText((item as any)[canonical]) || readField(item, canonical);
-        }
         return item.goalPath || readField(item, canonical) || readField(item, 'goalPath');
     }
     return readField(item, canonical);

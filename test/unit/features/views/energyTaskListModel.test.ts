@@ -13,7 +13,6 @@ function task(id: string, title: string, overrides: Partial<RecordViewItem> = {}
     extra: {},
     coreBlock: 'task',
     status: 'open',
-    goalId: 'goal.test',
     goalPath: '测试目标',
     ...overrides,
   } as RecordViewItem;
@@ -21,7 +20,6 @@ function task(id: string, title: string, overrides: Partial<RecordViewItem> = {}
 
 function recurring(id: string, title: string, unit: 'day' | 'week' | 'month' | 'quarter' | 'year', goalPath?: string): RecordViewItem {
   return task(id, title, {
-    goalId: goalPath === '爱好能力' ? 'goal.hobby' : (goalPath === '工作能力' ? 'goal.work' : 'goal.test'),
     goalPath: goalPath || '测试目标',
     seriesId: `taskseries.${id}`,
     recurrenceInfo: { unit, interval: 1, anchor: 'scheduled' },
@@ -58,7 +56,7 @@ describe('buildEnergyTaskListModel', () => {
 
   it('keeps different goals separate while only exposing cadence rows that really contain tasks', () => {
     const items = [
-      task('a', 'A任务', { goalId: 'goal.work', goalPath: '工作能力' }),
+      task('a', 'A任务', { goalPath: '工作能力' }),
       recurring('b', 'B任务', 'week', '爱好能力'),
     ];
     const model = buildEnergyTaskListModel({ items, historyItems: items, timers: [], management: null, today: '2026-08-10', dateRange: dayRange() });

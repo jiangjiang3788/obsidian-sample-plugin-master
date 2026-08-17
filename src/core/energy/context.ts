@@ -69,9 +69,9 @@ function isHabitLike(item: RecordViewItem): boolean {
 }
 
 function matchesEnergyGoal(energyItem: RecordViewItem, candidate: RecordViewItem): boolean {
-  const energyGoalId = String(energyItem.goalId || '').trim();
-  if (!energyGoalId) return true;
-  return String(candidate.goalId || '').trim() === energyGoalId;
+  const energyGoalPath = String(energyItem.goalPath || '').trim();
+  if (!energyGoalPath) return true;
+  return String(candidate.goalPath || '').trim() === energyGoalPath;
 }
 
 function occurrenceDate(item: RecordViewItem): string | undefined {
@@ -231,7 +231,7 @@ function activityRank(activity: EnergyActivityContext): number {
 
 function classifyDailySignal(item: RecordViewItem): EnergyDailySignalKind | null {
   if (!isHabitLike(item)) return null;
-  const text = [item.title, item.content, item.themePath, item.theme, item.categoryKey]
+  const text = [item.title, item.content, item.goalPath, item.categoryKey]
     .map((value) => String(value || ''))
     .join(' ');
   if (/睡眠|睡觉|睡醒/.test(text)) return 'sleep';

@@ -4,6 +4,6 @@
  *
  * This module-level facade is the preferred future import surface for goal
  * path, template, period, ordering, and overview semantics. The root
- * `@core/public` facade remains for compatibility during the migration.
+ * `@core/public` exposes the stable public Goal API.
  */
 export * from './index';

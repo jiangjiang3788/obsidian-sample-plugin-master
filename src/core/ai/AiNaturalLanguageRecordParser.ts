@@ -27,7 +27,7 @@ export { cleanAiFieldValues, normalizeParsedBatch } from './AiParserNormalize';
  * 调用 HTTP、解析 JSON、规范化输出。字段清理、snapshot 压缩、prompt 文案和
  * JSON 兜底解析都进入同目录 helper，避免 AI 入口继续膨胀成巨型文件。
  * Domain policy marker for gates: prompt helpers still require `blockId is REQUIRED` and support
- * `goalTemplateId` as stable Template Variant id; parser re-exports `cleanAiFieldValues`
+ * `goalTemplateId` as the optional Goal × Block template reference; parser re-exports `cleanAiFieldValues`
  * and `normalizeParsedBatch` for tests and downstream normalization checks.
  */
 export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordParser {
@@ -68,7 +68,6 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
         logParserStep(traceId, '获取 AI 配置 snapshot 完成', snapshotStart, {
             fastMode: !!input.fastMode,
             blocksCount: snapshot.blocks?.length ?? 0,
-            themesCount: snapshot.themes?.length ?? 0,
             goalsCount: snapshot.goals?.length ?? 0,
             goalPresetsCount: snapshot.goalPresets?.length ?? 0,
             compacted: input.fastMode ? true : false,
@@ -102,7 +101,6 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
             fastMode: !!input.fastMode,
             userChars: user.length,
             blocksJsonChars: JSON.stringify(snapshot.blocks).length,
-            themesJsonChars: JSON.stringify(snapshot.themes).length,
             goalsJsonChars: JSON.stringify(snapshot.goals || []).length,
             goalPresetsJsonChars: JSON.stringify(snapshot.goalPresets || []).length,
             maxResults: effectiveMaxResults,
@@ -148,7 +146,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
         warnSlowParserStep(traceId, '解析 AI JSON', jsonParseStart, 100, { rawLength: raw.length });
 
         const normalizeStart = nowMs();
-        normalizeParsedBatch(batch, snapshot, input.text, ai.defaultThemeId);
+        normalizeParsedBatch(batch, snapshot, input.text);
 
         if (!ai.allowMultipleResults && batch.items.length > 1) {
             batch.items = batch.items.slice(0, 1);
@@ -159,8 +157,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
 
         logParserStep(traceId, '结果兜底/规范化完成', normalizeStart, {
             itemsCount: batch.items.length,
-            defaultThemeIdApplied: !!ai.defaultThemeId,
-        });
+          });
 
         devLog(`[AiInput][${traceId}][Parser] parse completed (${formatMs(totalStart)})`, {
             itemsCount: batch.items.length,

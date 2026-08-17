@@ -88,7 +88,6 @@ assertNotIncludes('src/features/settings/views/editors/RuleBuilder.tsx', [
 // maintenance win.
 const intentionallyNotSplit = [
   ['src/app/ui/primitives/FloatingPanel.tsx', 650],
-  ['src/shared/components/ThemeTreeSelect/Panel.tsx', 320],
   ['src/platform/obsidian/modals/NamePromptModal.tsx', 140],
 ];
 for (const [relativePath, maxLines] of intentionallyNotSplit) {

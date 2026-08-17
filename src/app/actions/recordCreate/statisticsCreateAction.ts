@@ -47,8 +47,7 @@ function buildStatisticsExplicitContext(
   payload: StatisticsCreatePayload | undefined,
   anchorDate: Dayjs,
   periodContext: '年' | '季' | '月' | '周' | '天',
-  filters: unknown[] | undefined,
-  themeId: string | undefined,
+  filters: unknown[] | undefined
 ): Record<string, unknown> {
   const cell = payload?.cellIdentifier;
   return {
@@ -65,9 +64,6 @@ function buildStatisticsExplicitContext(
       },
       categoryContext: {
         category: cell?.category,
-      },
-      themeContext: {
-        themeId: themeId ?? null,
       },
       goalContext: payload?.context?.__goalContext || null,
       filterContext: {
@@ -97,8 +93,7 @@ function buildStatisticsCreateConfig(params: StatisticsCreateParams): QuickInput
         params.payload,
         anchorDate,
         periodContext,
-        params.viewInstance.filters,
-        undefined,
+        params.viewInstance.filters
       ),
     };
   }
@@ -113,15 +108,13 @@ function buildStatisticsCreateConfig(params: StatisticsCreateParams): QuickInput
 
   return {
     blockId: base.blockId,
-    themeId: base.themeId,
     context: {
       ...(base.context || {}),
       ...buildStatisticsExplicitContext(
         params.payload,
         anchorDate,
         periodContext,
-        params.viewInstance.filters,
-        base.themeId,
+        params.viewInstance.filters
       ),
     },
   };

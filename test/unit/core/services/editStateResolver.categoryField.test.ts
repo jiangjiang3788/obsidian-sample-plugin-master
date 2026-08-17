@@ -1,161 +1,52 @@
 import { describe, expect, it } from '@jest/globals';
-
 import { buildEditRecordState } from '@/core/recordInput/editStateResolver';
+import { DEFAULT_SETTINGS } from '@/core/settings/ThinkSettings';
+import { DEFAULT_CORE_BLOCK_SETTINGS } from '@/core/blocks';
 
-describe('buildEditRecordState category backfill', () => {
-  it('uses categoryKey for flash-note category fields instead of theme path', () => {
-    const settings = {
-      blocks: [
-        {
-          id: 'blk-flash',
-          name: '闪念',
-          categoryKey: '闪念',
-          fields: [
-            {
-              id: 'f1',
-              key: '思考分类',
-              label: '思考分类',
-              type: 'select',
-              options: [
-                { value: '闪念/事件', label: '事件' },
-                { value: '闪念/感受', label: '感受' },
-                { value: '闪念/思考', label: '思考' },
-              ],
-            },
-            { id: 'f2', key: '内容', label: '内容', type: 'textarea' },
-          ],
-          outputTemplate: '<!-- start -->\n分类:: {{思考分类.value}}\n主题:: {{theme}}\n内容:: {{内容}}\n<!-- end -->',
-          targetFile: '01/闪念.md',
-          appendUnderHeader: '## {{theme}}',
-        },
-      ],
-      themes: [
-        { id: 'theme-health', path: '健康/心情' },
-      ],
-    };
+function settingsWithPatch(blockId: string, fields: any[]) {
+  return {
+    ...DEFAULT_SETTINGS,
+    inputSettings: { blocks: [] },
+    coreBlockSettings: {
+      ...DEFAULT_CORE_BLOCK_SETTINGS,
+      patches: [{ blockId, fields }],
+    },
+    goalSettings: { goals: [], goalTemplates: [] },
+  } as any;
+}
 
-    const item = {
-      id: 'rec.01J00000000000000000000071',
-      title: '我有点累',
-      content: '我有点累',
-      editableText: '我有点累',
-      rawSource: '<!-- start -->\n分类:: 闪念/感受\n主题:: 健康/心情\n内容:: 我有点累\n<!-- end -->',
-      tags: [],
-      created: 0,
-      modified: 0,
-      extra: {},
-      categoryKey: '闪念/感受',
-      theme: '健康/心情',
-      file: { path: '01/闪念.md', line: 12, basename: '闪念' },
-    };
-
-    const prepared = buildEditRecordState({
-      settings: settings as any,
-      item: item as any,
-      preferredBlockId: 'blk-flash',
-      preferredThemeId: 'theme-health',
-    });
-
+describe('buildEditRecordState current-field backfill', () => {
+  it('uses categoryKey for a custom Thought category field', () => {
+    const settings = settingsWithPatch('core.thought', [
+      { id: 'f1', key: '思考分类', label: '思考分类', type: 'select', semantic: 'categoryPath', options: [
+        { value: '闪念/事件', label: '事件' }, { value: '闪念/感受', label: '感受' }, { value: '闪念/思考', label: '思考' },
+      ] },
+      { id: 'f2', key: '内容', label: '内容', type: 'textarea', semantic: 'body' },
+    ]);
+    const item = { id: 'rec.01J00000000000000000000071', coreBlock: 'thought', title: '我有点累', content: '我有点累', editableText: '我有点累', tags: [], created: 0, modified: 0, extra: {}, categoryKey: '闪念/感受', file: { path: '01/闪念.md', line: 12, basename: '闪念' } } as any;
+    const prepared = buildEditRecordState({ settings, item, preferredBlockId: 'core.thought' });
     expect(prepared.initialFormData['思考分类']).toEqual({ value: '闪念/感受', label: '感受' });
-    expect(prepared.template?.id).toBe('blk-flash');
     expect(prepared.template?.coreBlockId).toBe('core.thought');
-    expect(prepared.snapshot?.outputPlan.coreBlock).toBe('thought');
   });
 
-  it('backfills period fields for plan records, including legacy duplicate category output', () => {
-    const settings = {
-      blocks: [
-        {
-          id: 'blk-plan',
-          name: '计划',
-          categoryKey: '计划',
-          fields: [
-            {
-              id: 'f1',
-              key: '周期',
-              label: '周期',
-              type: 'radio',
-              options: [
-                { value: '周', label: '周' },
-                { value: '月', label: '月' },
-                { value: '年', label: '年' },
-              ],
-            },
-            { id: 'f2', key: '内容', label: '内容', type: 'textarea' },
-          ],
-          outputTemplate: '<!-- start -->\n分类:: 计划\n周期:: {{周期}}\n内容:: {{内容}}\n<!-- end -->',
-          targetFile: '01/计划.md',
-        },
-      ],
-      themes: [],
-    };
-
-    const item = {
-      id: 'rec.01J00000000000000000000072',
-      templateId: 'blk-plan',
-      templateSourceType: 'block' as const,
-      title: '五月计划',
-      content: '五月计划',
-      editableText: '五月计划',
-      rawSource: '<!-- start -->\n模板ID:: blk-plan\n模板来源:: block\n分类:: 计划\n分类:: 月\n内容:: 五月计划\n<!-- end -->',
-      tags: [],
-      created: 0,
-      modified: 0,
-      extra: {},
-      categoryKey: '月',
-      file: { path: '01/计划.md', line: 20, basename: '计划' },
-    };
-
-    const prepared = buildEditRecordState({
-      settings: settings as any,
-      item: item as any,
-      preferredBlockId: 'blk-plan',
-    });
-
+  it('backfills period fields for Plan records', () => {
+    const settings = settingsWithPatch('core.plan', [
+      { id: 'f1', key: '周期', label: '周期', type: 'radio', semantic: 'period', options: [{ value: '周', label: '周' }, { value: '月', label: '月' }, { value: '年', label: '年' }] },
+      { id: 'f2', key: '内容', label: '内容', type: 'textarea', semantic: 'body' },
+    ]);
+    const item = { id: 'rec.01J00000000000000000000072', coreBlock: 'plan', title: '五月计划', content: '五月计划', editableText: '五月计划', period: '月', tags: [], created: 0, modified: 0, extra: {}, categoryKey: '计划', file: { path: '01/计划.md', line: 20, basename: '计划' } } as any;
+    const prepared = buildEditRecordState({ settings, item, preferredBlockId: 'core.plan' });
     expect(prepared.initialFormData['周期']).toEqual({ value: '月', label: '月' });
     expect(prepared.template?.coreBlockId).toBe('core.plan');
   });
 
-  it('backfills tags fields from parsed item tags', () => {
-    const settings = {
-      blocks: [
-        {
-          id: 'blk-flash',
-          name: '闪念',
-          categoryKey: '闪念',
-          fields: [
-            { id: 'f1', key: '标签', label: '标签', type: 'text' },
-            { id: 'f2', key: '内容', label: '内容', type: 'textarea' },
-          ],
-          outputTemplate: '<!-- start -->\n分类:: 闪念\n标签:: {{标签}}\n内容:: {{内容}}\n<!-- end -->',
-          targetFile: '01/闪念.md',
-        },
-      ],
-      themes: [],
-    };
-
-    const item = {
-      id: 'rec.01J00000000000000000000073',
-      templateId: 'blk-flash',
-      templateSourceType: 'block' as const,
-      title: '灵感',
-      content: '灵感',
-      editableText: '灵感',
-      rawSource: '<!-- start -->\n分类:: 闪念\n标签:: 阅读,AI\n内容:: 灵感\n<!-- end -->',
-      tags: ['阅读', 'AI'],
-      created: 0,
-      modified: 0,
-      extra: {},
-      categoryKey: '闪念',
-      file: { path: '01/闪念.md', line: 8, basename: '闪念' },
-    };
-
-    const prepared = buildEditRecordState({
-      settings: settings as any,
-      item: item as any,
-      preferredBlockId: 'blk-flash',
-    });
-
-    expect(prepared.initialFormData['标签']).toBe('阅读,AI');
+  it('backfills current multiTag fields from canonical item tags', () => {
+    const settings = settingsWithPatch('core.thought', [
+      { id: 'f1', key: '标签', label: '标签', type: 'multiTag', semantic: 'tags' },
+      { id: 'f2', key: '内容', label: '内容', type: 'textarea', semantic: 'body' },
+    ]);
+    const item = { id: 'rec.01J00000000000000000000073', coreBlock: 'thought', title: '灵感', content: '灵感', editableText: '灵感', tags: ['阅读', 'AI'], created: 0, modified: 0, extra: {}, categoryKey: '闪念', file: { path: '01/闪念.md', line: 8, basename: '闪念' } } as any;
+    const prepared = buildEditRecordState({ settings, item, preferredBlockId: 'core.thought' });
+    expect(prepared.initialFormData['标签']).toEqual(['阅读', 'AI']);
   });
 });

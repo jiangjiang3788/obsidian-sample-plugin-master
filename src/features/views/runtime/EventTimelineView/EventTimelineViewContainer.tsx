@@ -21,7 +21,6 @@ interface EventTimelineViewProps {
   onMarkDone?: MarkDoneHandler;
   timerService: TimerController;
   timers: any[];
-  allThemes: any[];
   goals?: GoalDefinition[];
   messageRenderPort?: MessageRenderPort;
   onOpenRecord?: OpenRecordHandler;
@@ -43,7 +42,6 @@ export function EventTimelineView(props: EventTimelineViewProps) {
     onMarkDone,
     timerService,
     timers,
-    allThemes,
     goals = [],
     messageRenderPort,
     onOpenRecord,
@@ -79,7 +77,6 @@ export function EventTimelineView(props: EventTimelineViewProps) {
       onMarkDone={onMarkDone}
       timerService={timerService}
       timers={timers}
-      allThemes={allThemes}
       onOpenRecord={onOpenRecord}
     />
   );
