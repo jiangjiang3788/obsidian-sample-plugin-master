@@ -63,11 +63,16 @@ export function normalizeHeatmapBlockId(params: {
     const byId = inputSettings.blocks.find((block) => block.id === value);
     if (byId) return byId.id;
 
-    const byCore = inputSettings.blocks.find((block) => block.coreBlockId === value);
+    const byCore = inputSettings.blocks.find((block) => block.recordTypeId === value);
     if (byCore) return byCore.id;
 
+    // Settings expose human-readable Block names/category keys (e.g. “任务”).
+    // Resolve those at the UI boundary instead of fabricating an invalid core.任务 id.
+    const byDisplayName = inputSettings.blocks.find((block) => block.categoryKey === rawValue || block.name === rawValue);
+    if (byDisplayName) return byDisplayName.id;
+
     if (configuredSourceBlockId && (value === configuredSourceBlockId || rawValue === configuredSourceBlockId)) {
-        const habit = inputSettings.blocks.find((block) => block.coreBlockId === 'core.habit' || block.categoryKey === '打卡' || block.name === '打卡');
+        const habit = inputSettings.blocks.find((block) => block.recordTypeId === 'core.habit' || block.categoryKey === '打卡' || block.name === '打卡');
         if (habit) return habit.id;
     }
 

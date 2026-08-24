@@ -8,6 +8,7 @@ export type QuickInputPendingAction = 'submit' | 'delete' | null;
 export interface QuickInputModalFooterProps {
   operationMode: QuickInputOperationMode;
   isBusy: boolean;
+  canSubmit?: boolean;
   isMobileLike: boolean;
   pendingAction: QuickInputPendingAction;
   onCancel: () => void;
@@ -20,6 +21,7 @@ export interface QuickInputModalFooterProps {
 export function QuickInputModalFooter({
   operationMode,
   isBusy,
+  canSubmit = true,
   isMobileLike,
   pendingAction,
   onCancel,
@@ -53,7 +55,7 @@ export function QuickInputModalFooter({
             onMouseDown={onSubmitPointerDown as any}
             onPointerDown={onSubmitPointerDown as any}
             onClick={isMobileLike ? onSubmitClick : undefined}
-            disabled={isBusy}
+            disabled={isBusy || !canSubmit}
           >{getQuickInputSubmitLabel(operationMode, pendingAction === 'submit')}</ThinkButton>
         </div>
       </div>

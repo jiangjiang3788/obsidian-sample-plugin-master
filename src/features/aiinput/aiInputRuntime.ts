@@ -3,6 +3,7 @@ import type { AiSettings, ThinkSettings } from '@core/types/public';
 import type { ISettingsProvider } from '@core/services/public';
 import { getZustandState, type AppStoreInstance } from '@/app/public';
 
+import { getTemplateRecordTypes } from '@core/recordTypes/public';
 export interface AiInputUiPort {
     notice: (message: string, timeout?: number) => { setMessage?: (message: string) => void; hide?: () => void } | void;
 }
@@ -47,7 +48,7 @@ export function readAiRuntimeConfig(store: AppStoreInstance, traceId: string): {
     const readSettingsStart = nowMs();
     const settings = getZustandState(store, s => s.settings);
     const ai = settings.aiSettings;
-    const blocks = settings.inputSettings?.blocks ?? [];
+    const blocks = [...getTemplateRecordTypes()];
     logAiInputStep(traceId, '读取 settings 完成', readSettingsStart, {
         aiEnabled: !!ai?.enabled,
         hasEndpoint: !!ai?.apiEndpoint,

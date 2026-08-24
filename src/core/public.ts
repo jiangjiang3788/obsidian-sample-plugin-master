@@ -32,7 +32,7 @@ export type {
       GoalTemplateStorageRow,
     GoalSettings,
 } from './goal';
-export { DEFAULT_GOAL_SETTINGS, assertCanonicalGoalSettings, normalizeGoalPath, requireGoalPath, splitGoalPath, getParentGoalPath, getGoalLeaf, isGoalPathDescendant, getGoalOrderPath, getGoalOrderLabel, createGoalOrderIndex, sortGoalsBySettingsOrder, compareGoalPathsBySettingsOrder, sortGoalPathsBySettingsOrder, sortGoalTemplatesBySettingsOrder, resolveDerivedPeriod, normalizePeriodGranularity, isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity, resolveTemplatePeriodPolicy, SYSTEM_RECORD_CONTEXT_FIELD_KEYS, isSystemRecordContextField, getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalPaths, findGoalTemplate, findDirectGoalTemplate, normalizeGoalTemplateStorageRow, toGoalTemplateStorageRow, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage, getGoalTemplateDisplayInfo, getGoalTemplateDisplayName, isGeneratedGoalTemplateName, readGoalTemplateIcon, goalTemplateHasCustomOverrides, inferGoalTemplateEditMode, compactGoalTemplateForStorage, describeGoalTemplateStorageDiff, UNASSIGNED_GOAL_KEY, getItemGoalKey, getItemGoalLabel, buildGoalBuckets } from './goal';
+export { DEFAULT_GOAL_SETTINGS, assertCanonicalGoalSettings, normalizeGoalPath, requireGoalPath, splitGoalPath, getParentGoalPath, getGoalLeaf, isGoalPathDescendant, getGoalOrderPath, getGoalOrderLabel, createGoalOrderIndex, sortGoalsBySettingsOrder, compareGoalPathsBySettingsOrder, sortGoalPathsBySettingsOrder, sortGoalTemplatesBySettingsOrder, resolveDerivedPeriod, normalizePeriodGranularity, isPeriodAwareRecordType, normalizePeriodPolicyGranularity, resolveTemplatePeriodPolicy, SYSTEM_RECORD_CONTEXT_FIELD_KEYS, isSystemRecordContextField, getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalPaths, findGoalTemplate, findDirectGoalTemplate, normalizeGoalTemplateStorageRow, toGoalTemplateStorageRow, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage, getGoalTemplateDisplayInfo, getGoalTemplateDisplayName, isGeneratedGoalTemplateName, readGoalTemplateIcon, goalTemplateHasCustomOverrides, inferGoalTemplateEditMode, compactGoalTemplateForStorage, describeGoalTemplateStorageDiff, UNASSIGNED_GOAL_KEY, getItemGoalKey, getItemGoalLabel, buildGoalBuckets } from './goal';
 export type { GoalPathParts, GoalOrderIndex, DerivedPeriod, GoalTemplate, PeriodGranularity, PeriodPolicy, GoalBucket, CompactGoalTemplateOptions, GoalTemplateDisplayInfo, GoalTemplateEditMode } from './goal';
 
 //
@@ -187,21 +187,20 @@ export { computeProgression } from './progression/computeProgression';
 export type { ProgressComputationOptions } from './progression/computeProgression';
 export type { ProgressBreakdownRow, ProgressResult } from './progression/types';
 
-// -------------------- Core Blocks（目标中心内置 Block） --------------------
+// -------------------- Record Types（唯一记录类型注册中心） --------------------
 export {
-    CORE_BLOCK_IDS,
-    DEFAULT_CORE_BLOCKS,
-    DEFAULT_CORE_BLOCK_SETTINGS,
-    getCoreBlockById,
-    getEffectiveCoreBlocks,
-    normalizeCoreBlockSettings,
-} from './blocks';
-export type {
-    CoreBlockKey,
-    CoreBlockDefinition,
-    CoreBlockPatch,
-    CoreBlockSettings,
-} from './blocks';
+    DEFAULT_RECORD_TYPES,
+    DEFAULT_TEMPLATE_RECORD_TYPES,
+    ENERGY_RECORD_TYPE,
+    ENERGY_RECORD_TYPE_ID,
+    buildRecordTypeInputSettings,
+    getEffectiveRecordTypes,
+    getRecordTypeById,
+    getTemplateRecordTypeById,
+    getTemplateRecordTypes,
+    isDirectRecordType,
+} from './recordTypes/public';
+export type { RecordTypeDefinition, TemplateRecordTypeDefinition } from './recordTypes/public';
 
 // -------------------- Core Services（DI 需要的 token / class） --------------------
 // 说明：这些 export 是为了组合根（main/app）和 usecases 能 resolve。
@@ -219,7 +218,7 @@ export type { IPluginStorage } from './services/StorageService';
 // -------------------- Record Input internals promoted for app usecase boundary --------------------
 // 说明：app/usecases/recordInput.usecase.ts 只能通过 core/public.ts 访问 core。
 // 这里导出的是 usecase 编排所需的稳定核心构件，不允许 features/shared 直接依赖内部路径。
-export { GoalTemplateResolver } from './services/GoalTemplateResolver';
+export { GoalTemplateResolver, getCreateEligibleGoalPaths } from './services/GoalTemplateResolver';
 export type { GoalTemplateResolveInput, GoalTemplateResolveResult, GoalTemplateSourceType } from './services/GoalTemplateResolver';
 export { RecordInputKernel } from './recordInput/RecordInputKernel';
 export {

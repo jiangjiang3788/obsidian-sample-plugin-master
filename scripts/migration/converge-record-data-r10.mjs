@@ -98,7 +98,7 @@ function transformBlock(blockText, filePath) {
   const map = new Map();
   for (const pair of pairs) if (pair.kv) map.set(pair.kv.key, pair.kv.value.trim());
   const recordId = map.get('记录ID') || '';
-  const coreBlock = map.get('核心Block') || '';
+  const coreBlock = map.get('记录类型') || '';
   if (!recordId || !coreBlock) throw new Error(`R10 requires v2 Record envelope: ${filePath} record=${recordId || '(missing)'}`);
 
   audit.recordCount += 1;
@@ -228,29 +228,29 @@ function transformTemplate(template) {
     audit.settings.removedOutputTemplates += 1;
   }
   if (Array.isArray(next.fields)) {
-    if (next.coreBlockId === 'core.thought') {
+    if (next.recordTypeId === 'core.thought') {
       next.fields = next.fields.map((field) => {
         if (field?.key === '分类') audit.settings.thoughtCategoryFieldsMigrated += 1;
         return normalizeThoughtField(field);
       });
-    } else if (next.coreBlockId === 'core.evidence') {
+    } else if (next.recordTypeId === 'core.evidence') {
       const before = next.fields.length;
       next.fields = next.fields.filter((field) => field?.key !== '分类');
       audit.settings.evidenceCategoryFieldsRemoved += before - next.fields.length;
     }
   }
   if (Array.isArray(next.requiredFields)) {
-    if (next.coreBlockId === 'core.thought') next.requiredFields = next.requiredFields.map((key) => key === '分类' ? '记录子类型' : key);
-    if (next.coreBlockId === 'core.evidence') next.requiredFields = next.requiredFields.filter((key) => key !== '分类');
+    if (next.recordTypeId === 'core.thought') next.requiredFields = next.requiredFields.map((key) => key === '分类' ? '记录子类型' : key);
+    if (next.recordTypeId === 'core.evidence') next.requiredFields = next.requiredFields.filter((key) => key !== '分类');
     if (!next.requiredFields.length) delete next.requiredFields;
   }
   if (next.defaultValues && typeof next.defaultValues === 'object') {
     const defaults = { ...next.defaultValues };
-    if (next.coreBlockId === 'core.thought' && Object.prototype.hasOwnProperty.call(defaults, '分类')) {
+    if (next.recordTypeId === 'core.thought' && Object.prototype.hasOwnProperty.call(defaults, '分类')) {
       const mapped = thoughtSubtypeFromLegacy(defaults['分类']);
       delete defaults['分类'];
       if (mapped) defaults['记录子类型'] = mapped;
-    } else if (next.coreBlockId === 'core.evidence') {
+    } else if (next.recordTypeId === 'core.evidence') {
       delete defaults['分类'];
     }
     next.defaultValues = defaults;
@@ -278,8 +278,8 @@ function transformSettings(inputPath, outputPath) {
   if (raw.goalSettings && Array.isArray(raw.goalSettings.goalTemplates)) {
     raw.goalSettings.goalTemplates = raw.goalSettings.goalTemplates.map(transformTemplate);
   }
-  if (raw.coreBlockSettings && Array.isArray(raw.coreBlockSettings.patches)) {
-    raw.coreBlockSettings.patches = raw.coreBlockSettings.patches.map((patch) => {
+  if (raw.recordTypeSettings && Array.isArray(raw.recordTypeSettings.patches)) {
+    raw.recordTypeSettings.patches = raw.recordTypeSettings.patches.map((patch) => {
       const next = { ...patch };
       if (Object.prototype.hasOwnProperty.call(next, 'outputTemplate')) {
         delete next.outputTemplate;

@@ -32,8 +32,8 @@ describe('HeatmapLayoutModel', () => {
 });
 
 const inputSettings = { blocks: [
-  { id: 'habit-block', coreBlockId: 'core.habit', categoryKey: '打卡', name: '打卡' },
-  { id: 'task-block', coreBlockId: 'core.task', categoryKey: '任务', name: '任务' },
+  { id: 'habit-block', recordTypeId: 'core.habit', categoryKey: '打卡', name: '打卡' },
+  { id: 'task-block', recordTypeId: 'core.task', categoryKey: '任务', name: '任务' },
 ] } as any;
 
 describe('HeatmapViewModel', () => {

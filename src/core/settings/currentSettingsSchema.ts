@@ -1,9 +1,7 @@
 import { DEFAULT_SETTINGS } from '@/core/settings/ThinkSettings';
-import type { InputSettings } from '@/core/recordInput/CaptureTemplate';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { DEFAULT_ENERGY_SETTINGS } from '@/core/energy';
-import { assertCanonicalGoalSettings, getGoalTemplateId, normalizeGoalPath } from '@/core/goal';
-import { getEffectiveCoreBlocks } from '@/core/blocks';
+import { assertCanonicalGoalSettings, normalizeGoalPath } from '@/core/goal';
 import type { GoalDefinition, GoalSettings, GoalTemplateStorageRow } from '@/core/goal';
 
 /**
@@ -26,16 +24,6 @@ export const CURRENT_THINK_SETTINGS_SCHEMA: CurrentSettingsSchemaStatus = {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function normalizeInputSettings(value: unknown): InputSettings {
-  const raw = isRecord(value) ? value : {};
-  return {
-    ...DEFAULT_SETTINGS.inputSettings,
-    ...(raw as Partial<InputSettings>),
-    // Core blocks are runtime projections. Goal is the only classification dimension.
-    blocks: [],
-  };
 }
 
 /** Hydrate compact persisted Goal rows into the existing runtime domain shape. */
@@ -66,9 +54,9 @@ function hydrateGoalOnlySettings(value: unknown): GoalSettings {
   const goalTemplates: GoalTemplateStorageRow[] = rawTemplates.map((entry) => {
     if (!isRecord(entry)) throw new Error('Invalid GoalTemplate row: expected object.');
     const goalPath = normalizeGoalPath(String(entry.goalPath ?? ''));
-    const coreBlockId = String(entry.coreBlockId ?? '').trim();
+    const recordTypeId = String(entry.recordTypeId ?? '').trim();
     if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`GoalTemplate references missing Goal path (${goalPath || '<empty>'}).`);
-    if (!coreBlockId) throw new Error(`GoalTemplate ${goalPath} is missing coreBlockId.`);
+    if (!recordTypeId) throw new Error(`GoalTemplate ${goalPath} is missing recordTypeId.`);
     const fields = Array.isArray(entry.fields)
       ? entry.fields.filter((field) => {
           if (!isRecord(field)) return false;
@@ -82,10 +70,10 @@ function hydrateGoalOnlySettings(value: unknown): GoalSettings {
     }
     return {
       goalPath,
-      coreBlockId,
+      recordTypeId,
       description: typeof entry.description === 'string' ? entry.description : undefined,
       enabled: entry.enabled !== false,
-      periodPolicy: isRecord(entry.periodPolicy) ? entry.periodPolicy as GoalTemplateStorageRow['periodPolicy'] : undefined,
+      periodPolicy: isRecord(entry.periodPolicy) ? entry.periodPolicy as unknown as GoalTemplateStorageRow['periodPolicy'] : undefined,
       fields,
       targetFile: typeof entry.targetFile === 'string' ? entry.targetFile : undefined,
       appendUnderHeader: typeof entry.appendUnderHeader === 'string' ? entry.appendUnderHeader : undefined,
@@ -106,16 +94,12 @@ export function toCurrentThinkSettings(rawValue: unknown): ThinkSettings {
   const current: ThinkSettings = {
     ...DEFAULT_SETTINGS,
     ...partial,
-    // Kept runtime-only because a few infrastructure APIs still expose the
-    // historical property. It is deliberately omitted by persistence.
-      groups: Array.isArray(partial.groups) ? partial.groups : [],
+    groups: Array.isArray(partial.groups) ? partial.groups : [],
     viewInstances: Array.isArray(partial.viewInstances) ? partial.viewInstances : [],
     layouts: Array.isArray(partial.layouts) ? partial.layouts : [],
-    inputSettings: normalizeInputSettings(partial.inputSettings),
     goalSettings: hydrateGoalOnlySettings(raw.goalSettings),
     energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...(isRecord(partial.energySettings) ? partial.energySettings : {}) },
   };
-  current.inputSettings.blocks = getEffectiveCoreBlocks(current);
   return current;
 }
 
@@ -157,7 +141,7 @@ function persistGoalOnlySettings(settings: ThinkSettings): Record<string, unknow
     for (const key of ['goalPath', '目标']) delete defaults[key];
     return {
       goalPath: path,
-      coreBlockId: template.coreBlockId,
+      recordTypeId: template.recordTypeId,
       ...(template.description ? { description: template.description } : null),
       enabled: template.enabled !== false,
       ...(template.periodPolicy ? { periodPolicy: template.periodPolicy } : null),
@@ -174,9 +158,10 @@ function persistGoalOnlySettings(settings: ThinkSettings): Record<string, unknow
 /** Persist only the current Goal-only data shape. */
 export function toPersistedThinkSettings(settings: ThinkSettings): Record<string, unknown> {
   const out = JSON.parse(JSON.stringify(settings ?? {})) as Record<string, any>;
-  if (isRecord(out.inputSettings)) {
-    delete out.inputSettings.blocks;
-  }
+  // RecordType definitions are code-registered and never persisted in data.json.
+  delete out.inputSettings;
+  delete out.coreBlockSettings;
+  delete out.recordTypeSettings;
 
   out.goalSettings = persistGoalOnlySettings(settings);
   return out;

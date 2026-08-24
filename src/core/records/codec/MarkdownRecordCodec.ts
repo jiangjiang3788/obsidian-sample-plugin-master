@@ -8,7 +8,6 @@ import {
 } from './FieldValueCodec';
 import type { RecordDraft } from '@/core/records/RecordDraft';
 import { getRecordFieldContract, getRecordSchemaDefinition } from '@/core/records/schema';
-
 export interface ParsedRecordMetadata {
   recordId?: string;
   title: string;
@@ -61,7 +60,6 @@ export interface ParsedRecordMetadata {
   brainDelta?: number;
   physicalDelta?: number;
 }
-
 export interface RecordDocument {
   recordId: string;
   coreBlock: string;
@@ -185,7 +183,7 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
   // Only ASCII double-colon is Record metadata; single-colon prose is never a field.
   const envelopeCoreBlock = contentLines
     .map((rawLine) => rawLine.trim().match(/^([^:\r\n]{1,64})::\s*(.*)$/))
-    .find((match) => match && normalizeMetaKey(match[1]) === '核心block')?.[2]?.trim();
+    .find((match) => match && normalizeMetaKey(match[1]) === '记录类型')?.[2]?.trim();
   if (envelopeCoreBlock) coreBlock = envelopeCoreBlock;
   const recordSchema = getRecordSchemaDefinition(coreBlock);
   const supportsCustomFields = Boolean(recordSchema?.capabilities.customFields);
@@ -241,7 +239,7 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
         else if (coreBlock === 'task-session' && key === '精力变化') energyDelta = decodeMarkdownNumber(value);
         else if (coreBlock === 'task-session' && key === '脑力变化') brainDelta = decodeMarkdownNumber(value);
         else if (coreBlock === 'task-session' && key === '体力变化') physicalDelta = decodeMarkdownNumber(value);
-        else if (key === '核心block') coreBlock = value.trim();
+        else if (key === '记录类型') coreBlock = value.trim();
         else if (key === '状态') status = value.trim().toLowerCase();
         else if (key === '目标') goalPath = decodeMarkdownString(value, FIELD_CODEC_PRESETS.goalPath);
         else if (key === '日期') date = parseDate(value);
@@ -381,7 +379,7 @@ function emitBody(lines: string[], body: string): void {
 /** Canonical Record encoder. Custom metadata is emitted before an optional terminal body. */
 export function encodeRecordBlock(document: RecordDocument): string {
   const fields = document.fields || {};
-  const lines = ['<!-- start -->', `记录ID:: ${document.recordId}`, `核心Block:: ${document.coreBlock}`];
+  const lines = ['<!-- start -->', `记录ID:: ${document.recordId}`, `记录类型:: ${document.coreBlock}`];
   const emitted = new Set<string>();
 
   if (document.coreBlock === 'task') {
@@ -393,7 +391,7 @@ export function encodeRecordBlock(document: RecordDocument): string {
       if (value) { lines.push(`${label}:: ${value}`); keys.forEach(key => emitted.add(key)); }
     }
     for (const [key, raw] of Object.entries(fields)) {
-      if (emitted.has(key) || BODY_FIELD_ALIASES.includes(key) || ['记录ID','recordId','id','核心Block','coreBlock'].includes(key)) continue;
+      if (emitted.has(key) || BODY_FIELD_ALIASES.includes(key) || ['记录ID','recordId','id','记录类型','coreBlock'].includes(key)) continue;
       const value = markdownScalar(raw);
       if (value) lines.push(`${key}:: ${value}`);
     }
@@ -418,7 +416,7 @@ export function encodeRecordBlock(document: RecordDocument): string {
     const supportsBody = Boolean(schema && getRecordFieldContract(schema.coreBlock, '内容'));
     for (const [key, raw] of Object.entries(fields)) {
       if (supportsBody && BODY_FIELD_ALIASES.includes(key)) continue;
-      if (['记录ID','recordId','id','核心Block','coreBlock'].includes(key)) continue;
+      if (['记录ID','recordId','id','记录类型','coreBlock'].includes(key)) continue;
       const value = markdownScalar(raw);
       if (value) lines.push(`${key}:: ${value}`);
     }
@@ -445,6 +443,6 @@ export function ensureRecordEnvelope(markdown: string, input: { recordId: string
   if (lines[0]?.trim() !== '<!-- start -->' || lines[lines.length - 1]?.trim() !== '<!-- end -->') {
     throw new Error('只允许写入 Markdown Record Block。');
   }
-  const body = lines.slice(1, -1).filter(line => !/^\s*(?:记录ID|核心Block)\s*::/.test(line));
-  return ['<!-- start -->', `记录ID:: ${input.recordId}`, `核心Block:: ${input.coreBlock}`, ...body, '<!-- end -->'].join('\n');
+  const body = lines.slice(1, -1).filter(line => !/^\s*(?:记录ID|记录类型)\s*::/.test(line));
+  return ['<!-- start -->', `记录ID:: ${input.recordId}`, `记录类型:: ${input.coreBlock}`, ...body, '<!-- end -->'].join('\n');
 }

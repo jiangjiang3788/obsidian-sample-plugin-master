@@ -7,7 +7,7 @@ Every persisted Record uses the codec-owned block/envelope and stable fields:
 ```text
 记录ID
 记录版本
-核心Block
+记录类型
 ```
 
 Record ID is identity. Source file, line, display label and debug metadata are not identity.
@@ -59,3 +59,10 @@ Special internal/domain records:
 
 - TaskSeries
 - TaskSession
+
+
+## Capture resolution
+
+For goal-bindable user RecordTypes, create capture always resolves from an explicit pair: `recordTypeId + goalPath` and requires an enabled direct GoalTemplate. No direct GoalTemplate means Quick Input creation is unavailable. The registered RecordType template is the structural base merged into an enabled GoalTemplate and remains available to edit/backfill flows; it is not a create fallback.
+
+Goal selection is system context, not a removable template field. Entry points may preselect it when they already know the Goal (for example a Heatmap cell), but they must never guess the first Goal or first RecordType.

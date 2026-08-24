@@ -1,3 +1,5 @@
+import { VIEW_OPTIONS, type RegisteredViewName } from '../config/views/registry';
+
 export interface Groupable {
   id: string;
   parentId: string | null;
@@ -10,18 +12,8 @@ export interface Group extends Groupable {
   collapsed?: boolean;
 }
 
-export const VIEW_OPTIONS = [
-  'BlockView',
-  'TableView',
-  'ExcelView',
-  'TimelineView',
-  'StatisticsView',
-  'HeatmapView',
-  'EventTimelineView',
-  'ProgressView',
-  'EnergyView',
-] as const;
-export type ViewName = (typeof VIEW_OPTIONS)[number];
+export { VIEW_OPTIONS };
+export type ViewName = RegisteredViewName;
 
 export interface ViewInstance extends Groupable {
   title: string;

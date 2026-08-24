@@ -4,6 +4,7 @@ import { h } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { RecordViewItem, ViewInstance, ViewPlacement } from '@core/types/public';
 import { calculateTimelineRange, dayjs, normalizeTimelineView } from '@core/utils/public';
+import { viewHasCapability } from '@core/view/public';
 import { ModulePanel } from './ModulePanel';
 import { useUiPort, useUseCases } from '@/app/AppStoreContext';
 import { useSelector } from '@/app/store/useSelector';
@@ -197,7 +198,9 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
         onActionClick={isModuleHeaderCreateAllowed(viewInstance.viewType)
           ? () => handleQuickInputAction(viewInstance)
           : undefined}
-        onExport={() => handleExport(viewInstance.id, viewInstance.title)}
+        onExport={viewHasCapability(viewInstance.viewType, 'export')
+          ? () => handleExport(viewInstance.id, viewInstance.title)
+          : undefined}
         onSettingsClick={() => handleSettingsClick(viewInstance)}
         onRemove={(freeformProps || freeformFallback) ? () => handleRemoveFromLayout(viewInstance.id) : () => handleDeleteViewInstance(viewInstance.id)}
         removeFromLayout={!!freeformProps || freeformFallback}

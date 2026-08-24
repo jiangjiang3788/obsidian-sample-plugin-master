@@ -1,3 +1,4 @@
+import { getTemplateRecordTypes } from '@/core/recordTypes/public';
 // src/core/ai/AiChatService.ts
 /**
  * AiChatService - AI 聊天服务
@@ -97,7 +98,7 @@ export class AiChatService {
     }
     
     private getBlocks() {
-        return this.settingsProvider.getSettings().inputSettings?.blocks ?? [];
+        return [...getTemplateRecordTypes()];
     }
 
     // ============== 构建上下文 ==============

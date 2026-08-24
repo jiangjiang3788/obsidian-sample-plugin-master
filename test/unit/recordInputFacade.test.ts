@@ -27,6 +27,15 @@ describe('RecordInputFacade', () => {
     expect(missing).toEqual(['优先级']);
   });
 
+  it('treats arrays containing only empty values as missing required input', () => {
+    expect(findMissingRecordInputRequiredFields({
+      formData: { 标签: ['', { value: '', label: '' }] },
+      template: {
+        fields: [{ key: '标签', label: '标签', type: 'multiSelect', required: true }] as never,
+      },
+    })).toEqual(['标签']);
+  });
+
   it('builds create and update submit params from one editor state shape', () => {
     const state = {
       blockId: 'task',
@@ -69,7 +78,7 @@ describe('RecordInputFacade', () => {
       fields: [
         { key: '状态', label: '状态', type: 'select', options: [{ value: 'doing', label: '进行中' }] },
         { key: '内容', label: '内容', type: 'text' },
-      ] as any,
+      ] as never,
     }, {
       状态: '进行中',
       内容: '保持文本',
@@ -79,6 +88,18 @@ describe('RecordInputFacade', () => {
       状态: { value: 'doing', label: '进行中' },
       内容: '保持文本',
     });
+  });
+
+  it('maps AI field labels onto template keys before normalization', () => {
+    const normalized = normalizeRecordInputFormDataForTemplate({
+      fields: [
+        { key: 'status', label: '状态', type: 'select', options: [{ value: 'doing', label: '进行中' }] },
+      ] as never,
+    }, {
+      状态: '进行中',
+    });
+
+    expect(normalized.status).toEqual({ value: 'doing', label: '进行中' });
   });
 
   it('merges draft context left-to-right and summarizes batch submit results', () => {
@@ -92,5 +113,16 @@ describe('RecordInputFacade', () => {
     expect(summary.status).toBe('partial_success');
     expect(summary.refresh.scanPaths).toEqual(['a.md', 'b.md']);
     expect(summary.errors?.[0]?.code).toBe('x');
+  });
+
+  it('treats partial-success batch items as persisted successes with warnings', () => {
+    const summary = buildBatchCreateRecordSubmitResult([
+      { status: 'partial_success', operation: 'create', refresh: { scanPaths: ['a.md'], notify: true }, warnings: [{ code: 'warn', message: 'saved with warning' }] },
+      { status: 'success', operation: 'create', refresh: { scanPaths: ['b.md'], notify: true } },
+    ]);
+
+    expect(summary.status).toBe('partial_success');
+    expect(summary.feedback?.notice).toContain('成功 2 条');
+    expect(summary.feedback?.notice).toContain('1 条有警告');
   });
 });

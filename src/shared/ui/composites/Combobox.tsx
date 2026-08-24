@@ -115,27 +115,43 @@ export function ThinkCombobox({
   );
 }
 
+export type ThinkMultiComboboxOption = string | ThinkComboboxOption;
+
 export interface ThinkMultiComboboxProps {
   values: string[];
-  options: string[];
+  options: ThinkMultiComboboxOption[];
   onChange: (values: string[]) => void;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  allowCustom?: boolean;
 }
 
-export function ThinkMultiCombobox({ values, options, onChange, placeholder = '搜索 / 选择', className, disabled = false }: ThinkMultiComboboxProps) {
+function normalizeMultiOption(option: ThinkMultiComboboxOption): ThinkComboboxOption {
+  return typeof option === 'string' ? { value: option, label: option } : option;
+}
+
+export function ThinkMultiCombobox({
+  values,
+  options,
+  onChange,
+  placeholder = '搜索 / 选择',
+  className,
+  disabled = false,
+  allowCustom = true,
+}: ThinkMultiComboboxProps) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const normalizedValues = useMemo(() => new Set(values.map(normalize)), [values]);
+  const normalizedOptions = useMemo(() => options.map(normalizeMultiOption), [options]);
+  const labelByValue = useMemo(() => new Map(normalizedOptions.map(option => [option.value, option.label])), [normalizedOptions]);
   const filtered = useMemo<ThinkComboboxOption[]>(() => {
     const needle = normalize(query);
-    return options
-      .filter((option) => !normalizedValues.has(normalize(option)))
-      .filter((option) => !needle || normalize(option).includes(needle))
-      .slice(0, 80)
-      .map((option) => ({ value: option, label: option }));
-  }, [options, query, normalizedValues]);
+    return normalizedOptions
+      .filter((option) => !normalizedValues.has(normalize(option.value)))
+      .filter((option) => !needle || normalize(option.label).includes(needle) || normalize(option.value).includes(needle))
+      .slice(0, 80);
+  }, [normalizedOptions, query, normalizedValues]);
 
   const addValue = (next: string) => {
     const clean = next.trim();
@@ -148,19 +164,22 @@ export function ThinkMultiCombobox({ values, options, onChange, placeholder = '�
   return (
     <div className={['think-multi-combobox', className].filter(Boolean).join(' ')}>
       <div className="think-combobox-control think-combobox-control--multi">
-        {values.map((value) => (
-          <span className="think-combobox-tag" key={value}>
-            <span>{value}</span>
-            <button
-              type="button"
-              className="think-combobox-tag__remove"
-              aria-label={`移除 ${value}`}
-              disabled={disabled}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => onChange(values.filter((item) => item !== value))}
-            >×</button>
-          </span>
-        ))}
+        {values.map((value) => {
+          const displayLabel = labelByValue.get(value) || value;
+          return (
+            <span className="think-combobox-tag" key={value}>
+              <span>{displayLabel}</span>
+              <button
+                type="button"
+                className="think-combobox-tag__remove"
+                aria-label={`移除 ${displayLabel}`}
+                disabled={disabled}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => onChange(values.filter((item) => item !== value))}
+              >×</button>
+            </span>
+          );
+        })}
         <input
           className="think-combobox-input think-combobox-input--multi"
           value={query}
@@ -175,7 +194,8 @@ export function ThinkMultiCombobox({ values, options, onChange, placeholder = '�
           onKeyDown={(event) => {
             if (event.key === 'Enter' || event.key === ',') {
               event.preventDefault();
-              addValue(filtered[0]?.value || query);
+              const next = filtered[0]?.value || (allowCustom ? query : '');
+              if (next) addValue(next);
             } else if (event.key === 'Backspace' && !query && values.length) {
               onChange(values.slice(0, -1));
             } else if (event.key === 'Escape') {
@@ -187,7 +207,11 @@ export function ThinkMultiCombobox({ values, options, onChange, placeholder = '�
         />
         <ThinkIcon className="think-combobox-control__icon" name="chevron-down" />
       </div>
-      {open && !disabled ? <OptionMenu options={filtered} onSelect={(option) => addValue(option.value)} emptyLabel={query ? '回车添加输入值' : '无可选项'} /> : null}
+      {open && !disabled ? <OptionMenu
+        options={filtered}
+        onSelect={(option) => addValue(option.value)}
+        emptyLabel={query && allowCustom ? '回车添加输入值' : '无可选项'}
+      /> : null}
     </div>
   );
 }

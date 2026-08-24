@@ -115,7 +115,6 @@ export function useViewRuntimeHandlers({
     openCreateFromTimeline({
       app,
       uiPort: ui,
-      inputBlocks: payload.inputBlocks,
       hourHeight: payload.hourHeight,
       dayBlocks: payload.dayBlocks,
       day: payload.day,

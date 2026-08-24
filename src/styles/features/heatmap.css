@@ -139,8 +139,8 @@
     gap: var(--think-space-3);
 }
 
-.heatmap-goal-title,
-.heatmap-day-section-title {
+.think-os .heatmap-goal-title,
+.think-os .heatmap-day-section-title {
     margin: 0;
     color: var(--think-text-primary);
     font-size: var(--think-type-section-size);
@@ -148,10 +148,6 @@
     line-height: var(--think-line-height-tight);
 }
 
-.heatmap-goal-meta {
-    color: var(--think-text-secondary);
-    font-size: var(--think-font-size-xs);
-}
 
 .heatmap-goal-list {
     display: flex;

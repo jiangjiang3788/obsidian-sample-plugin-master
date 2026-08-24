@@ -4,17 +4,17 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { ThinkButton, ThinkNotice } from '@shared/ui/public';
 import { diagnosticError } from '@shared/utils/public';
 import { FloatingPanel, useUiPort, type UseCases } from '@/app/public';
-import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import type { TemplateField } from '@core/types/public';
-import { isPeriodAwareCoreBlock } from '@core/goal/public';
+import { isPeriodAwareRecordType } from '@core/goal/public';
 import { FieldsEditor } from '../input/FieldsEditor';
 import { GoalTemplateModeSwitch } from './GoalTemplateModeSwitch';
 import { NativeSelectInput, NativeTextInput } from './GoalTemplateNativeControls';
 import {
   buildDisabledTemplate,
   buildDraftDiffSummary,
-  buildInheritedDraft,
+  buildDefaultDraft,
   buildTemplatePatchFromDraft,
   inferTemplateEditMode,
   makeDraftFromTemplate,
@@ -25,26 +25,27 @@ import {
   type GoalTemplateEditMode,
 } from './GoalTemplateEditorModel';
 
+// Goal Template 只定义字段、默认值与保存位置，不覆盖存储 grammar。
 interface GoalTemplateEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
   goal: GoalDefinition | null;
-  block: CoreBlockDefinition | null;
+  block: TemplateRecordTypeDefinition | null;
   template: GoalTemplate | null;
   useCases: UseCases;
 }
 
 export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template, useCases }: GoalTemplateEditorModalProps) {
   const ui = useUiPort();
-  const [mode, setMode] = useState<GoalTemplateEditMode>('inherit');
+  const [mode, setMode] = useState<GoalTemplateEditMode>('default');
   const [draft, setDraft] = useState<GoalTemplateDraftState>(() => makeNewDraft(block));
   const draftRef = useRef<GoalTemplateDraftState>(draft);
 
   useEffect(() => {
     if (!isOpen) return;
-    const nextMode = inferTemplateEditMode(template);
+    const nextMode: GoalTemplateEditMode = template ? inferTemplateEditMode(template) : 'override';
     const baseDraft = makeDraftFromTemplate(template && template.enabled !== false ? template : null, block);
-    const nextDraft = nextMode === 'inherit' ? buildInheritedDraft(baseDraft, block) : baseDraft;
+    const nextDraft = nextMode === 'default' ? buildDefaultDraft(baseDraft, block) : baseDraft;
     setMode(nextMode);
     draftRef.current = nextDraft;
     setDraft(nextDraft);
@@ -60,15 +61,15 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template
     });
   };
 
-  const supportsPeriod = !!block && isPeriodAwareCoreBlock(block.id);
+  const supportsPeriod = !!block && isPeriodAwareRecordType(block.id);
   const fieldEditDisabled = mode !== 'override';
   const diffSummary = useMemo(() => buildDraftDiffSummary(goal, block, draft), [goal, block, draft]);
 
   const handleModeChange = (nextMode: GoalTemplateEditMode) => {
     setMode(nextMode);
-    if (nextMode === 'inherit') {
+    if (nextMode === 'default') {
       setDraft((previous) => {
-        const next = buildInheritedDraft(previous, block);
+        const next = buildDefaultDraft(previous, block);
         draftRef.current = next;
         return next;
       });
@@ -91,9 +92,9 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template
     await new Promise((resolve) => window.setTimeout(resolve, 0));
 
     try {
-      if (mode === 'inherit') {
+      if (mode === 'default') {
         await useCases.goal.deleteGoalTemplate(goalPath, block.id);
-        ui.notice(`已恢复默认模板：${goalPath} / ${block.name}`);
+        ui.notice(`已移除模板：${goalPath} / ${block.name}`);
         onClose();
         return;
       }
@@ -106,11 +107,11 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template
       }
 
       await useCases.goal.upsertGoalTemplate(buildTemplatePatchFromDraft({ goal, block, draft: draftRef.current }));
-      ui.notice(`已保存字段预设：${goalPath} / ${block.name}`);
+      ui.notice(`已保存模板：${goalPath} / ${block.name}`);
       onClose();
     } catch (error) {
       diagnosticError('[GoalTemplateEditorModal] save failed', error);
-      ui.notice('保存字段预设失败，请查看控制台日志');
+      ui.notice('保存模板失败，请查看控制台日志');
     }
   };
 
@@ -120,7 +121,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template
   return (
     <FloatingPanel
       id={`goal-template-editor-${goal.path}-${block.id}`}
-      title={<span>字段预设：<strong>{goalPath}</strong> / {block.name}</span>}
+      title={<span>模板：<strong>{goalPath}</strong> / {block.name}</span>}
       onClose={onClose}
       defaultPosition={{ x: Math.max(24, window.innerWidth / 2 - 380), y: 72 }}
       portal={false}
@@ -141,8 +142,8 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template
           <header className="think-editor-header">
             <div className="think-goal-template-editor__identity">
               <div className="think-settings-title-strong">{goal.icon ? `${goal.icon} ` : ''}{goalPath}</div>
-              <div className="think-settings-caption">每个目标 × 记录类型只有一个字段预设，不再存在第二层分类或预设变体。</div>
-              <div className="think-settings-caption">Goal Template 只定义字段、默认值与保存位置，不覆盖存储 grammar。</div>
+              <div className="think-settings-caption">每个目标 × 记录类型最多只有一个模板。</div>
+              <div className="think-settings-caption">模板只定义这个目标下的录入字段、默认值与保存位置。</div>
             </div>
           </header>
 
@@ -175,8 +176,8 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template
 
           <section className={fieldEditDisabled ? 'think-settings-muted-disabled think-goal-template-editor__form-fields' : 'think-goal-template-editor__form-fields'}>
             <div className="think-goal-template-editor__section-heading">表单字段</div>
-            {mode === 'inherit' ? <div className="think-settings-caption">默认模式直接使用记录类型模板；切换到“自定义”后才保存目标专属字段。</div> : null}
-            {mode === 'disabled' ? <div className="think-settings-caption">隐藏模式不保存字段覆盖。</div> : null}
+            {mode === 'default' ? <div className="think-settings-caption">未配置表示删除这个目标的模板；没有模板时快捷录入不可用。</div> : null}
+            {mode === 'disabled' ? <div className="think-settings-caption">隐藏表示显式禁止这个目标使用该记录类型录入。</div> : null}
             <FieldsEditor fields={draft.fields || []} disabled={fieldEditDisabled} onChange={(fields: TemplateField[]) => updateDraft({ fields })} />
           </section>
 

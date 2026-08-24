@@ -41,7 +41,8 @@
   cursor: pointer;
 }
 
-.think-os .think-list-row--compact {
+.think-os .think-list-row--compact,
+.think-os .think-list-disclosure-row.think-list-row--compact {
   min-height: var(--think-list-row-min-height-compact);
   padding-block: var(--think-space-1);
 }

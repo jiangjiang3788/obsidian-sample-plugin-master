@@ -210,7 +210,7 @@ export function FreeformLayoutItem({
     top: `${placement.y}px`,
     width: `${placement.width}px`,
     height: `${visualHeight}px`,
-    zIndex: isDragging || isResizing ? 100000 : (placement.zIndex ?? index + 1),
+    zIndex: isDragging || isResizing ? undefined : (placement.zIndex ?? index + 1),
     transform: transform
       ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`
       : undefined,

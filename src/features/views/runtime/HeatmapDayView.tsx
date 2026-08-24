@@ -38,8 +38,7 @@ export function HeatmapDayView({
                 {goalGroupsToDisplay.map((goalGroup) => (
                     <section class="heatmap-goal-section heatmap-day-section" key={goalGroup.goalPath}>
                         <div class="heatmap-goal-title-row">
-                            <h3 class="heatmap-day-section-title">{goalGroup.label}</h3>
-                            <span class="heatmap-goal-meta">{goalGroup.entries.length} 个打卡 · {goalGroup.count} 条记录</span>
+                            <div class="heatmap-day-section-title" role="heading" aria-level="3">{goalGroup.label}</div>
                         </div>
                         <div class="heatmap-day-section-grid">
                             {goalGroup.entries.map((entry) => {
@@ -74,7 +73,7 @@ export function HeatmapDayView({
         <div class="heatmap-day-view">
             {dayGroups.map((group) => (
                 <section class="heatmap-day-section" key={group.title}>
-                    <h3 class="heatmap-day-section-title">{group.title}</h3>
+                    <div class="heatmap-day-section-title" role="heading" aria-level="3">{group.title}</div>
                     <div class="heatmap-day-section-grid">
                         {group.entries.map((entry) => {
                             const ratingMapping = resolveCellRatingMapping(entry.goalPath);

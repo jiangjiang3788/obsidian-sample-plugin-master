@@ -1,15 +1,15 @@
 import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 import type { GoalTemplateStorageRow, GoalDefinition, GoalSettings, PeriodPolicy } from './types';
-import { getGoalPathCandidates, normalizeGoalPath, splitGoalPath } from './path';
-import { isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity } from './period';
+import { normalizeGoalPath } from './path';
+import { isPeriodAwareRecordType, normalizePeriodPolicyGranularity } from './period';
 
-/** One Goal path × one CoreBlock template. */
+/** One Goal path × one RecordType template. */
 export interface GoalTemplate {
   /** Runtime-only stable key; never persisted. */
   id: string;
   /** Canonical human-readable Goal path and the only Goal identity on a template. */
   goalPath: string;
-  coreBlockId: string;
+  recordTypeId: string;
   description?: string;
   periodPolicy?: PeriodPolicy;
   enabled: boolean;
@@ -31,8 +31,8 @@ function canonicalGoalPath(value?: string | null): string {
   return normalizeGoalPath(value) || '';
 }
 
-function normalizeTemplatePeriodPolicy(coreBlockId: string, raw: any): PeriodPolicy | undefined {
-  if (!isPeriodAwareCoreBlock(coreBlockId)) return undefined;
+function normalizeTemplatePeriodPolicy(recordTypeId: string, raw: any): PeriodPolicy | undefined {
+  if (!isPeriodAwareRecordType(recordTypeId)) return undefined;
   const policy = raw?.periodPolicy;
   if (policy && policy.enabled !== false) {
     return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
@@ -40,18 +40,18 @@ function normalizeTemplatePeriodPolicy(coreBlockId: string, raw: any): PeriodPol
   return { enabled: true, granularity: 'week' };
 }
 
-export function getGoalTemplateId(goalPath: string, coreBlockId: string): string {
-  return `goal-template.${safeIdPart(canonicalGoalPath(goalPath))}.${safeIdPart(coreBlockId)}`;
+export function getGoalTemplateId(goalPath: string, recordTypeId: string): string {
+  return `goal-template.${safeIdPart(canonicalGoalPath(goalPath))}.${safeIdPart(recordTypeId)}`;
 }
 
 export function normalizeGoalTemplateStorageRow(row: GoalTemplateStorageRow): GoalTemplate {
   const goalPath = canonicalGoalPath(row.goalPath);
   return {
-    id: getGoalTemplateId(goalPath, row.coreBlockId),
+    id: getGoalTemplateId(goalPath, row.recordTypeId),
     goalPath,
-    coreBlockId: row.coreBlockId,
+    recordTypeId: row.recordTypeId,
     description: row.description,
-    periodPolicy: normalizeTemplatePeriodPolicy(row.coreBlockId, row),
+    periodPolicy: normalizeTemplatePeriodPolicy(row.recordTypeId, row),
     enabled: row.enabled !== false,
     fields: row.fields,
     targetFile: row.targetFile,
@@ -64,9 +64,9 @@ export function normalizeGoalTemplateStorageRow(row: GoalTemplateStorageRow): Go
 export function toGoalTemplateStorageRow(template: GoalTemplate): GoalTemplateStorageRow {
   return {
     goalPath: canonicalGoalPath(template.goalPath),
-    coreBlockId: template.coreBlockId,
+    recordTypeId: template.recordTypeId,
     description: template.description || undefined,
-    periodPolicy: normalizeTemplatePeriodPolicy(template.coreBlockId, template),
+    periodPolicy: normalizeTemplatePeriodPolicy(template.recordTypeId, template),
     enabled: template.enabled !== false,
     fields: template.fields?.length ? template.fields : undefined,
     targetFile: template.targetFile || undefined,
@@ -76,8 +76,8 @@ export function toGoalTemplateStorageRow(template: GoalTemplate): GoalTemplateSt
   };
 }
 
-function goalTemplateIdentityKey(template: Pick<GoalTemplate, 'goalPath' | 'coreBlockId'>): string {
-  return `${canonicalGoalPath(template.goalPath)}::${template.coreBlockId}`;
+function goalTemplateIdentityKey(template: Pick<GoalTemplate, 'goalPath' | 'recordTypeId'>): string {
+  return `${canonicalGoalPath(template.goalPath)}::${template.recordTypeId}`;
 }
 
 export function getGoalTemplates(goalSettings?: Pick<GoalSettings, 'goalTemplates'> | null): GoalTemplate[] {
@@ -91,7 +91,7 @@ export function getGoalTemplates(goalSettings?: Pick<GoalSettings, 'goalTemplate
       indexByKey.set(key, result.length);
       result.push(template);
     } else {
-      // Current-only invariant: one Goal path × CoreBlock. Latest row wins if
+      // Current-only invariant: one Goal path × RecordType. Latest row wins if
       // malformed duplicate storage is encountered during cleanup.
       result[existingIndex] = template;
     }
@@ -99,50 +99,38 @@ export function getGoalTemplates(goalSettings?: Pick<GoalSettings, 'goalTemplate
   return result;
 }
 
-export function getGoalTemplateCandidateGoalPaths(goal: GoalDefinition | null): string[] {
-  if (!goal) return [];
-  const path = splitGoalPath(goal.path).goalPath;
-  return getGoalPathCandidates(path);
-}
-
-/** Resolve the nearest enabled template, walking from leaf Goal to its parents. */
-export function findGoalTemplate(goalSettings: GoalSettings | undefined, goal: GoalDefinition | null, coreBlockId: string): GoalTemplate | null {
-  const candidates = getGoalTemplateCandidateGoalPaths(goal);
-  if (!candidates.length) return null;
-  const byIdentity = new Map(
-    getGoalTemplates(goalSettings)
-      .filter((template) => template.enabled !== false && template.coreBlockId === coreBlockId)
-      .map((template) => [canonicalGoalPath(template.goalPath), template] as const),
-  );
-  for (const path of candidates) {
-    const template = byIdentity.get(path);
-    if (template) return template;
-  }
-  return null;
+/** Direct Goal + RecordType lookup. Goal templates never inherit from parent Goals. */
+export function findGoalTemplate(goalSettings: GoalSettings | undefined, goal: GoalDefinition | null, recordTypeId: string): GoalTemplate | null {
+  if (!goal) return null;
+  const path = canonicalGoalPath(goal.path);
+  if (!path) return null;
+  return getGoalTemplates(goalSettings).find((template) =>
+    template.enabled !== false && template.goalPath === path && template.recordTypeId === recordTypeId
+  ) || null;
 }
 
 /** Direct template lookup used by the settings matrix. No ancestor fallback. */
-export function findDirectGoalTemplate(goalSettings: GoalSettings | undefined, goalPath: string, coreBlockId: string): GoalTemplate | null {
+export function findDirectGoalTemplate(goalSettings: GoalSettings | undefined, goalPath: string, recordTypeId: string): GoalTemplate | null {
   const path = canonicalGoalPath(goalPath);
-  return getGoalTemplates(goalSettings).find((template) => template.goalPath === path && template.coreBlockId === coreBlockId) || null;
+  return getGoalTemplates(goalSettings).find((template) => template.goalPath === path && template.recordTypeId === recordTypeId) || null;
 }
 
 export function upsertGoalTemplateInSettings(goalSettings: GoalSettings, template: GoalTemplate): GoalSettings {
   const path = canonicalGoalPath(template.goalPath);
   if (!path) throw new Error('GoalTemplate requires a canonical Goal path.');
-  const next = toGoalTemplateStorageRow({ ...template, goalPath: path, id: getGoalTemplateId(path, template.coreBlockId) });
+  const next = toGoalTemplateStorageRow({ ...template, goalPath: path, id: getGoalTemplateId(path, template.recordTypeId) });
   const rows = [...(goalSettings.goalTemplates || [])];
-  const index = rows.findIndex((row) => canonicalGoalPath(row.goalPath) === path && row.coreBlockId === template.coreBlockId);
+  const index = rows.findIndex((row) => canonicalGoalPath(row.goalPath) === path && row.recordTypeId === template.recordTypeId);
   if (index >= 0) rows[index] = next;
   else rows.push(next);
   return { ...goalSettings, goalTemplates: rows };
 }
 
-export function removeGoalTemplateFromSettings(goalSettings: GoalSettings, goalPath: string, coreBlockId: string): GoalSettings {
+export function removeGoalTemplateFromSettings(goalSettings: GoalSettings, goalPath: string, recordTypeId: string): GoalSettings {
   const path = canonicalGoalPath(goalPath);
   return {
     ...goalSettings,
-    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => !(canonicalGoalPath(template.goalPath) === path && template.coreBlockId === coreBlockId)),
+    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => !(canonicalGoalPath(template.goalPath) === path && template.recordTypeId === recordTypeId)),
   };
 }
 

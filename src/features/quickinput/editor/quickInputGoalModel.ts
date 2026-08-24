@@ -1,7 +1,9 @@
 import type { GoalDefinition } from '@core/goal/public';
+import { getGoalTemplates } from '@core/goal/public';
+import { getCreateEligibleGoalPaths } from '@core/recordInput/public';
 import type { ThinkSettings } from '@core/types/public';
 import { asUnknownRecord, readNumber } from '@core/utils/public';
-import { getGoalTemplates, normalizeGoalPath, splitGoalPath } from '@core/goal/public';
+import { normalizeGoalPath, splitGoalPath } from '@core/goal/public';
 
 import type { GoalSelectorOption } from "./components/GoalSelector";
 import type { QuickInputFieldSource, QuickInputFieldSourceMap, QuickInputFormData } from "./model/types";
@@ -61,33 +63,42 @@ function sortGoalsLikePresetMatrix(goals: GoalDefinition[]): GoalDefinition[] {
   });
 }
 
-function goalHasDirectEnabledPreset(
-  fullSettings: ThinkSettings,
-  goal: GoalDefinition,
-  coreBlockId: string,
-): boolean {
-  const goalPath = normalizeGoalPath(goal?.path);
-  if (!goalPath || !coreBlockId) return false;
-  return getGoalTemplates(fullSettings.goalSettings).some(
-    (template) =>
-      template.enabled !== false &&
-      template.goalPath === goalPath &&
-      template.coreBlockId === coreBlockId,
-  );
-}
-
 export function buildQuickInputGoalOptions(
   fullSettings: ThinkSettings,
-  coreBlockId: string,
-  options: { requirePreset?: boolean } = {},
+  recordTypeId?: string | null,
+  requireDirectTemplate = false,
 ): GoalSelectorOption[] {
   const seen = new Set<string>();
-  const requirePreset = options.requirePreset !== false;
+  const templates = getGoalTemplates(fullSettings.goalSettings);
+  const enabledTemplateGoalPaths = new Set(
+    recordTypeId ? getCreateEligibleGoalPaths(fullSettings, recordTypeId) : [],
+  );
+  const disabledGoalPaths = new Set(
+    recordTypeId
+      ? templates
+          .filter((template) => template.recordTypeId === recordTypeId && template.enabled === false)
+          .map((template) => normalizeGoalPath(template.goalPath) || '')
+          .filter(Boolean)
+      : [],
+  );
+  const navigationGoalPaths = new Set<string>();
+  if (requireDirectTemplate && recordTypeId) {
+    for (const path of enabledTemplateGoalPaths) {
+      const parts = path.split('/').filter(Boolean);
+      for (let index = 1; index <= parts.length; index += 1) {
+        navigationGoalPaths.add(parts.slice(0, index).join('/'));
+      }
+    }
+  }
   const sourceGoals = sortGoalsLikePresetMatrix([
     ...(fullSettings.goalSettings?.goals || []),
-  ])
-    .filter((goal) => goal.status !== "archived")
-    .filter((goal) => !requirePreset || goalHasDirectEnabledPreset(fullSettings, goal, coreBlockId));
+  ]).filter((goal) => {
+    if (goal.status === "archived") return false;
+    const path = normalizeGoalPath(goal.path) || '';
+    if (!path || disabledGoalPaths.has(path)) return false;
+    if (requireDirectTemplate && recordTypeId) return navigationGoalPaths.has(path);
+    return true;
+  });
 
   const result: GoalSelectorOption[] = [];
   for (const [index, goal] of sourceGoals.entries()) {
@@ -101,12 +112,13 @@ export function buildQuickInputGoalOptions(
       label: leaf,
       order: index,
       goal,
+      synthetic: requireDirectTemplate && !!recordTypeId && !enabledTemplateGoalPaths.has(normalized),
     });
   }
   return result;
 }
 
-export function resolveQuickInputCoreBlockId(
+export function resolveQuickInputRecordTypeId(
   _fullSettings: ThinkSettings,
   blockId: string,
 ): string {
@@ -139,7 +151,6 @@ export function applyQuickInputGoalSelection(params: {
   };
 
   assign("goalPath", goalPath);
-  assign("目标", goalPath);
   const parts = splitGoalPath(goalPath);
   assign("rootGoal", parts.rootGoal || "", "goal_context");
   assign("leafGoal", parts.leafGoal || "", "goal_context");
@@ -161,6 +172,9 @@ export function resolveQuickInputEnergyDefaultGoal(
     const preferred = goals.find((option) => option.value === preferredPath || option.goal?.path === preferredPath);
     if (preferred) return preferred;
   }
-  return goals[0] || null;
+
+  // Keep desktop QuickInput aligned with the public Energy protocol and settings copy:
+  // an empty/stale default means “use the first active Goal”, then any available Goal.
+  return goals.find((option) => option.goal?.status === 'active') || goals[0] || null;
 }
 

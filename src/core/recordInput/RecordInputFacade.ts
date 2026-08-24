@@ -45,7 +45,7 @@ export interface BuildUpdateRecordSubmitParamsInput {
 
 export function hasRecordInputRequiredValue(value: unknown): boolean {
   if (value === null || value === undefined) return false;
-  if (Array.isArray(value)) return value.length > 0;
+  if (Array.isArray(value)) return value.some((entry) => hasRecordInputRequiredValue(entry));
   if (isOptionLikeValue(value)) {
     const raw = value.value ?? value.label;
     return raw !== undefined && raw !== null && String(raw).trim() !== '';
@@ -156,20 +156,27 @@ export function normalizeRecordInputFormDataForTemplate(template: { fields?: Tem
 
   const next = { ...formData };
   template.fields.forEach((field) => {
-    if (!(field.key in next)) return;
-    next[field.key] = normalizeRecordInputFieldValueForTemplate(field, next[field.key]);
+    const hasKeyValue = Object.prototype.hasOwnProperty.call(next, field.key);
+    const label = String(field.label || '').trim();
+    const hasLabelValue = !hasKeyValue && label && Object.prototype.hasOwnProperty.call(next, label);
+    if (!hasKeyValue && !hasLabelValue) return;
+
+    const rawValue = hasKeyValue ? next[field.key] : next[label];
+    next[field.key] = normalizeRecordInputFieldValueForTemplate(field, rawValue);
   });
   return next;
 }
 
 export function buildBatchCreateRecordSubmitResult(results: RecordSubmitResult[]): RecordSubmitResult {
-  const succeeded = results.filter((result) => result.status === 'success');
-  const failed = results.filter((result) => result.status !== 'success' && result.status !== 'cancelled');
+  const succeeded = results.filter((result) => result.status === 'success' || result.status === 'partial_success');
+  const partial = results.filter((result) => result.status === 'partial_success');
+  const failed = results.filter((result) => !['success', 'partial_success', 'cancelled'].includes(result.status));
+  const cancelled = results.filter((result) => result.status === 'cancelled');
   const scanPaths = Array.from(new Set(results.flatMap((result) => result.refresh.scanPaths || [])));
   const warnings = results.flatMap((result) => result.warnings || []);
   const errors = results.flatMap((result) => result.errors || []);
 
-  if (failed.length === 0) {
+  if (failed.length === 0 && partial.length === 0) {
     return {
       status: 'success',
       operation: 'create',
@@ -178,7 +185,9 @@ export function buildBatchCreateRecordSubmitResult(results: RecordSubmitResult[]
         notify: results.some((result) => result.refresh.notify),
       },
       feedback: {
-        notice: `✅ 批量保存完成：成功 ${succeeded.length} 条`,
+        notice: cancelled.length > 0
+          ? `✅ 批量保存完成：成功 ${succeeded.length} 条，取消 ${cancelled.length} 条`
+          : `✅ 批量保存完成：成功 ${succeeded.length} 条`,
       },
       warnings,
     };
@@ -208,7 +217,7 @@ export function buildBatchCreateRecordSubmitResult(results: RecordSubmitResult[]
       notify: results.some((result) => result.refresh.notify),
     },
     feedback: {
-      notice: `⚠️ 批量保存完成：成功 ${succeeded.length} 条，失败 ${failed.length} 条`,
+      notice: `⚠️ 批量保存完成：成功 ${succeeded.length} 条${partial.length > 0 ? `（其中 ${partial.length} 条有警告）` : ''}${failed.length > 0 ? `，失败 ${failed.length} 条` : ''}${cancelled.length > 0 ? `，取消 ${cancelled.length} 条` : ''}`,
     },
     warnings,
     errors,

@@ -81,7 +81,7 @@ describe('CSS governance', () => {
     const row = read('src/features/views/runtime/components/items/TaskRow.tsx');
     expect(row).not.toContain("style={{ background: 'none'");
     expect(row).toContain('task-row-title');
-    expect(read('src/features/views/runtime/EnergyTaskList.tsx')).toContain("style={`left:${menu.x}px;top:${menu.y}px;`}");
+    expect(read('src/features/views/runtime/EnergyTaskList.tsx')).toContain("style={`left:${menu.x}px;top:${menu.y}px;z-index:${zIndex};`}");
     expect(read('src/platform/obsidian/modals/quickInputKeyboard.ts')).toContain('think-quick-input-keyboard-detected');
     expect(read('src/features/views/runtime/TableViewCell.tsx')).toContain('think-table-cell-item');
     expect(read('src/styles/overrides/quick-input-modal.css')).not.toContain('.keyboard-detected');

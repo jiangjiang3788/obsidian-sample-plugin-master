@@ -2,13 +2,7 @@
 import { h } from 'preact';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 
-import {
-  selectInputSettings,
-  selectSettings,
-  useDataStore,
-  useSelector,
-  useUseCases,
-} from '@/app/public';
+import { useDataStore, useUseCases } from '@/app/public';
 import type { RecordViewItem, QuickInputSaveData } from '@core/types/public';
 import { getRecordTypeById, ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public';
 import type { QuickInputEnergyCaptureRequest } from '../editor/QuickInputEditorModel';
@@ -56,8 +50,6 @@ export function QuickInputModalContent({
   onSubmitSuccess,
   showNotice,
 }: QuickInputModalContentProps) {
-  const settings = useSelector(selectInputSettings);
-  const fullSettings = useSelector(selectSettings);
   const useCases = useUseCases();
   const dataStore = useDataStore();
 
@@ -114,9 +106,14 @@ export function QuickInputModalContent({
   }, []);
 
   const currentState = editorStateRef.current || editorState;
-  const currentBlock = (settings.blocks || []).find((block: { id: string }) => block.id === currentState.blockId);
-  const currentRecordType = getRecordTypeById(fullSettings, currentState.blockId);
-  const currentBlockName = currentRecordType?.name || currentBlock?.name || currentState.template?.name || currentState.blockId;
+  const currentRecordType = getRecordTypeById(currentState.blockId);
+  const currentRecordTypeRequiresGoal = currentRecordType?.capabilities.goalBindable === true;
+  const canSubmit = Boolean(
+    currentState.blockId
+      && currentState.template
+      && (!currentRecordTypeRequiresGoal || currentState.goalPath),
+  );
+  const currentBlockName = currentRecordType?.name || currentState.template?.name || currentState.blockId || '请选择记录类型';
   const isEnergyDirect = mode === 'create' && currentState.blockId === ENERGY_RECORD_TYPE_ID;
   const isTimerCreate = mode === 'create' && (source === 'timer' || !!onSave);
   const {
@@ -247,6 +244,7 @@ export function QuickInputModalContent({
       {!isEnergyDirect && <QuickInputModalFooter
         operationMode={operationMode}
         isBusy={isBusy}
+        canSubmit={canSubmit}
         isMobileLike={isMobileLike}
         pendingAction={pendingAction}
         onCancel={closeModal}

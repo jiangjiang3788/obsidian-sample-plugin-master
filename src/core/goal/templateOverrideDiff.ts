@@ -1,13 +1,13 @@
-import type { CoreBlockDefinition } from '@/core/blocks';
+import type { TemplateRecordTypeDefinition } from '@/core/recordTypes/public';
 import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 import type { PeriodPolicy } from './types';
 import type { GoalTemplate } from './templates';
-import { isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity } from './period';
+import { isPeriodAwareRecordType, normalizePeriodPolicyGranularity } from './period';
 import { isSystemRecordContextField } from './contextFields';
 import { compactText } from '@/core/semantics/text';
 
 export interface CompactGoalTemplateOptions {
-  coreBlock?: Pick<CoreBlockDefinition, 'id' | 'fields' | 'targetFile' | 'appendUnderHeader' | 'periodPolicy'> | null;
+  recordType?: Pick<TemplateRecordTypeDefinition, 'id' | 'fields' | 'targetFile' | 'appendUnderHeader' | 'periodPolicy'> | null;
 }
 
 const CONTEXT_FIELD_KEYS = new Set([
@@ -104,7 +104,7 @@ function compactDefaultValues(values: Record<string, unknown> | undefined, baseF
 }
 
 function normalizePeriodPolicyForTemplate(template: GoalTemplate): PeriodPolicy | undefined {
-  if (!isPeriodAwareCoreBlock(template.coreBlockId)) return undefined;
+  if (!isPeriodAwareRecordType(template.recordTypeId)) return undefined;
   const policy = template.periodPolicy;
   if (policy && policy.enabled !== false) {
     return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
@@ -112,18 +112,18 @@ function normalizePeriodPolicyForTemplate(template: GoalTemplate): PeriodPolicy 
   return undefined;
 }
 
-/** CoreBlock stays the base; a GoalTemplate stores only true per-Goal overrides. */
+/** RecordType stays the base; a GoalTemplate stores only true per-Goal overrides. */
 export function compactGoalTemplateForStorage(template: GoalTemplate, options: CompactGoalTemplateOptions = {}): GoalTemplate {
-  const coreBlock = options.coreBlock || null;
-  const baseFields = coreBlock?.fields as TemplateField[] | undefined;
+  const recordType = options.recordType || null;
+  const baseFields = recordType?.fields as TemplateField[] | undefined;
   const next: GoalTemplate = { ...template, fields: stripContextFields(template.fields) };
 
   next.periodPolicy = normalizePeriodPolicyForTemplate(template);
 
-  if (coreBlock) {
+  if (recordType) {
     if (fieldsHaveSameStructure(next.fields, stripContextFields(baseFields))) next.fields = undefined;
-    if (compactText(template.targetFile) === compactText(coreBlock.targetFile)) next.targetFile = undefined;
-    if (compactText(template.appendUnderHeader) === compactText(coreBlock.appendUnderHeader)) next.appendUnderHeader = undefined;
+    if (compactText(template.targetFile) === compactText(recordType.targetFile)) next.targetFile = undefined;
+    if (compactText(template.appendUnderHeader) === compactText(recordType.appendUnderHeader)) next.appendUnderHeader = undefined;
 
     const explicitRequired = (template.requiredFields?.length ? template.requiredFields : deriveRequiredFields(template.fields))
       .filter((key) => !CONTEXT_FIELD_KEYS.has(compactText(key)));

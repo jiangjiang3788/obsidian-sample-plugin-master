@@ -8,7 +8,6 @@ import type {
   StatisticsViewConfig,
   TableViewConfig,
   TimelineViewConfig,
-  ViewDefaultConfigMap,
 } from './types';
 
 export const BLOCK_VIEW_DEFAULT_CONFIG: BlockViewConfig = {
@@ -88,16 +87,4 @@ export const TIMELINE_VIEW_DEFAULT_CONFIG: TimelineViewConfig = {
     生活: { name: '生活', color: '#fbbf24', files: ['生活', 'Life'] },
   },
   progressOrder: ['工作', '学习', '生活'],
-};
-
-export const VIEW_DEFAULT_CONFIGS: ViewDefaultConfigMap = {
-  TableView: TABLE_VIEW_DEFAULT_CONFIG,
-  BlockView: BLOCK_VIEW_DEFAULT_CONFIG,
-  ExcelView: EXCEL_VIEW_DEFAULT_CONFIG,
-  TimelineView: TIMELINE_VIEW_DEFAULT_CONFIG,
-  EventTimelineView: EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
-  StatisticsView: STATISTICS_VIEW_DEFAULT_CONFIG,
-  HeatmapView: HEATMAP_VIEW_DEFAULT_CONFIG,
-  ProgressView: PROGRESS_VIEW_DEFAULT_CONFIG,
-  EnergyView: ENERGY_VIEW_DEFAULT_CONFIG,
 };

@@ -127,7 +127,7 @@ function candidateForField(
       return first(renderData, ['标签', 'tags']);
     case '记录子类型':
       if (coreBlock === 'thought') {
-        return normalizeThoughtSubtype(first(renderData, ['记录子类型', 'recordSubtype']));
+        return normalizeThoughtSubtype(first(renderData, ['记录子类型', 'recordSubtype', '分类', 'categoryKey', 'categoryPath']));
       }
       return first(renderData, ['记录子类型', 'recordSubtype']);
     case '周期粒度': {
@@ -160,6 +160,11 @@ function contractForCaptureField(coreBlock: RecordCoreBlock, field: TemplateFiel
     if (contract) return contract;
   }
   const semantic = getTemplateFieldSemantic(field);
+  // Thought keeps one persisted subtype field. A user-facing 分类 path such as
+  // 闪念/思考 is capture UI only and converges to 记录子类型:: 思考.
+  if (coreBlock === 'thought' && semantic === 'categoryPath') {
+    return getRecordFieldContract(coreBlock, '记录子类型');
+  }
   const keyBySemantic: Partial<Record<typeof semantic, string>> = {
     body: '内容', tags: '标签', goalPath: '目标',
     date: '日期', recordSubtype: '记录子类型', rating: '评分', image: '图片', icon: '图标', period: '周期粒度',
@@ -205,7 +210,7 @@ export function buildCustomCaptureFields(
     // (for example 图片 on Thought). In that case Template freedom wins and the field is persisted
     // as an allowed extension while retaining the shared FieldSchema semantics.
     const markdownKey = String(resolved.storage?.markdownKey || field.label || field.key || resolved.label || '').trim();
-    if (!isSafeMarkdownFieldKey(markdownKey) || ['记录ID','记录版本','核心Block'].includes(markdownKey)) continue;
+    if (!isSafeMarkdownFieldKey(markdownKey) || ['记录ID','记录版本','记录类型'].includes(markdownKey)) continue;
     const value = normalizeCustomValue(field, first(renderData, [field.key, field.label]));
     if (nonEmpty(value)) fields[markdownKey] = value;
   }

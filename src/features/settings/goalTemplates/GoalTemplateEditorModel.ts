@@ -4,7 +4,7 @@ export { presetGranularityOptions } from './model/GoalTemplateEditorTypes';
 
 export {
   buildDraftPeriodPolicy,
-  buildInheritedDraft,
+  buildDefaultDraft,
   makeDraftFromTemplate,
   makeNewDraft,
   readPeriodGranularity,

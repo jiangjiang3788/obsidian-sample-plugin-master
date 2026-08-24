@@ -80,10 +80,10 @@ describe('integration: RecordRepository lifecycle', () => {
 
   it('rolls the first file back when a later file write fails in a multi-file batch', async () => {
     const seedA = [
-      '<!-- start -->', '记录ID:: rec.01JWF7T20074QW3VAKQMEWSBE1', '核心Block:: thought', '内容:: A0', '<!-- end -->',
+      '<!-- start -->', '记录ID:: rec.01JWF7T20074QW3VAKQMEWSBE1', '记录类型:: thought', '内容:: A0', '<!-- end -->',
     ].join('\n');
     const seedB = [
-      '<!-- start -->', '记录ID:: rec.01JWF7T20074QW3VAKQMEWSBE2', '核心Block:: evidence', '内容:: B0', '<!-- end -->',
+      '<!-- start -->', '记录ID:: rec.01JWF7T20074QW3VAKQMEWSBE2', '记录类型:: evidence', '内容:: B0', '<!-- end -->',
     ].join('\n');
     const h = createHarness({ 'a.md': seedA, 'b.md': seedB }, (path, content) => path === 'b.md' && content.includes('B1'));
     await h.scanFileByPath('a.md');

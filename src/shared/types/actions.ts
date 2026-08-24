@@ -48,7 +48,6 @@ export type OpenRecordHandler = (item: RecordViewItem) => void | Promise<void>;
 export interface TimelineCreatePayload {
   day: string;
   event: MouseEvent | TouchEvent;
-  inputBlocks: any[];
   hourHeight: number;
   dayBlocks: TaskBlock[];
 }

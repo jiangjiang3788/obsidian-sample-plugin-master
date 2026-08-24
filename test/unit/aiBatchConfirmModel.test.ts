@@ -4,6 +4,7 @@ import {
   buildAiBatchConfirmRecordContext,
   buildAiBatchConfirmRecordItems,
   findNextPendingAiBatchConfirmIndex,
+  materializeAiBatchConfirmRecordDraft,
   patchAiBatchConfirmRecordAtIndex,
   resolveGoalForAiTarget,
   resolvePresetForAiTarget,
@@ -13,10 +14,10 @@ import {
 import { getGoalTemplateId } from '@/core/public';
 
 const goalPath = '学习/英语/阅读';
-const blocks = [{ id: 'core.task', coreBlockId: 'core.task', name: '任务', categoryKey: '任务', fields: [{ key: '状态', label: '状态', type: 'select', options: [{ value: 'doing', label: '进行中' }] }] }] as any[];
+const blocks = [{ id: 'core.task', recordTypeId: 'core.task', name: '任务', categoryKey: '任务', fields: [{ key: '状态', label: '状态', type: 'select', options: [{ value: 'doing', label: '进行中' }] }] }] as any[];
 const goalSettings = {
   goals: [{ path: goalPath, status: 'active' }],
-  goalTemplates: [{ goalPath, coreBlockId: 'core.task', enabled: true, fields: blocks[0].fields }],
+  goalTemplates: [{ goalPath, recordTypeId: 'core.task', enabled: true, fields: blocks[0].fields }],
 } as any;
 
 describe('AiBatchConfirmModel', () => {
@@ -38,6 +39,7 @@ describe('AiBatchConfirmModel', () => {
     expect(records).toHaveLength(1);
     expect(records[0]).toMatchObject({ blockId: 'core.task', goalLabel: '阅读', presetLabel: '已配置' });
     expect(records[0].formData).toMatchObject({ 内容: '读一篇文章', 目标: goalPath, goalPath, 状态: { value: 'doing', label: '进行中' } });
+    expect(records[0].editorContext).toMatchObject({ 内容: '读一篇文章', 目标: goalPath, goalPath, 状态: '进行中' });
   });
 
   it('keeps record patching, pending lookup and summary pure', () => {
@@ -46,13 +48,50 @@ describe('AiBatchConfirmModel', () => {
     expect(records[0].saved).toBe(false);
     expect(next[0].saved).toBe(true);
     expect(findNextPendingAiBatchConfirmIndex(next, 0)).toBe(1);
+    expect(findNextPendingAiBatchConfirmIndex([{ ...next[0], saved: false }, { ...next[1], saved: true }], 1)).toBe(0);
     expect(summarizeAiBatchConfirmRecords(next)).toEqual({ savedCount: 1, skippedCount: 0, pendingCount: 1 });
   });
 
   it('builds Goal-only submit params and merged draft context', () => {
-    const record = { blockId: 'core.task', formData: { 内容: 'new', 目标: goalPath, goalPath }, cmd: { fieldValues: { 内容: 'old', fromAi: true } } } as any;
+    const record = { blockId: 'core.task', formData: { 内容: 'new', 目标: goalPath, goalPath }, editorContext: { 内容: 'old', fromAi: true } } as any;
     expect(buildAiBatchConfirmRecordContext(record)).toEqual({ 内容: 'new', fromAi: true, 目标: goalPath, goalPath });
     expect(buildAiBatchConfirmCreateSubmitParams(record)).toMatchObject({ blockId: 'core.task', formData: { 内容: 'new', 目标: goalPath, goalPath }, source: 'ai_batch' });
+  });
+
+
+  it('materializes editor draft without mutating the immutable editor context seed', () => {
+    const [record] = buildAiBatchConfirmRecordItems({
+      items: [{ rawText: '读一篇文章', target: { blockId: 'core.task', goalPath }, fieldValues: { 内容: '读一篇文章' } }],
+      blocks,
+      goalSettings,
+      inputSettings: { blocks },
+    });
+    const editorContext = record.editorContext;
+
+    const next = materializeAiBatchConfirmRecordDraft(record, {
+      blockId: 'core.task',
+      formData: { 内容: '改成精读两页', goalPath: '学习/英语/听力', 目标: '学习/英语/听力' },
+      goalPath: '学习/英语/听力',
+      goalTitle: '听力',
+      templateSourceType: 'goal-template',
+    });
+
+    expect(next).not.toBe(record);
+    expect(next.editorContext).toBe(editorContext);
+    expect(next.formData).toMatchObject({ 内容: '改成精读两页', 目标: '学习/英语/听力' });
+    expect(next.goalLabel).toBe('听力');
+    expect(next.presetLabel).toBe('已配置');
+  });
+
+  it('passes an abort signal through the AI submit transaction', () => {
+    const [record] = buildAiBatchConfirmRecordItems({
+      items: [{ rawText: '读一篇文章', target: { blockId: 'core.task', goalPath }, fieldValues: { 内容: '读一篇文章' } }],
+      blocks,
+      goalSettings,
+      inputSettings: { blocks },
+    });
+    const controller = new AbortController();
+    expect(buildAiBatchConfirmCreateSubmitParams(record, controller.signal).signal).toBe(controller.signal);
   });
 
   it('summarizes batch save results and shortens display text', () => {

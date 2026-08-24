@@ -22,14 +22,14 @@ export interface BuildQuickInputEditorStateInput {
   timeDirection: TimeDirection;
   template: QuickInputTemplateLike | null;
   templateId: string | null;
-  templateSourceType: 'core-block' | 'goal-template' | null;
+  templateSourceType: 'record-type' | 'goal-template' | null;
   fieldSources: QuickInputFieldSourceMap;
 }
 
 export function buildQuickInputEditorState(input: BuildQuickInputEditorStateInput): QuickInputEditorState {
   return {
     blockId: input.blockId,
-    coreBlockId: input.effectiveBlockId,
+    recordTypeId: input.effectiveBlockId,
     goalPath: input.currentGoalPath,
     goalTitle: input.currentGoalTitle,
     rootGoal: input.currentGoalParts.root,

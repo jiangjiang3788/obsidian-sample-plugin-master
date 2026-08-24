@@ -3,6 +3,7 @@ import type { AiSettingsReadiness } from './aiSettingsReadiness';
 
 export type AiSettingsUpdate = (updates: Partial<AiSettingsType>) => void;
 export type AiTestStatus = 'idle' | 'testing' | 'success' | 'error';
+export type AiModelFetchStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export interface AiSettingsSectionProps {
   settings: AiSettingsType;
@@ -11,10 +12,15 @@ export interface AiSettingsSectionProps {
 
 export interface AiApiConfigSectionProps extends AiSettingsSectionProps {
   readiness: AiSettingsReadiness;
+  apiAccessReadiness: AiSettingsReadiness;
   apiKeyPersistenceMessage: string;
   testStatus: AiTestStatus;
   testMessage: string;
   onTestConnection: () => void;
+  availableModels: string[];
+  modelFetchStatus: AiModelFetchStatus;
+  modelFetchMessage: string;
+  onFetchModels: () => void;
 }
 
 export interface AiPromptRulesSectionProps extends AiSettingsSectionProps {

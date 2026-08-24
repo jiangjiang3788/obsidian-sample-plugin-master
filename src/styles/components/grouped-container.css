@@ -77,9 +77,9 @@
   font-weight: var(--think-font-weight-regular);
 }
 
-/* BlockView: same hierarchy idea as the Energy task list.
- * A header establishes the level; descendants are expressed by indentation + one guide line,
- * never by nesting another bordered surface inside the parent.
+/* BlockView is a dense tree, not a stack of independent group sections.
+ * Headers use compact list-row density; indentation + one guide line carry hierarchy,
+ * so sibling spacing stays in the inline/row range instead of group/section rhythm.
  */
 .think-os .bv-group {
   --think-bv-indent-step: var(--think-list-indent-step);
@@ -92,17 +92,17 @@
 }
 
 .think-os .bv-group + .bv-group {
-  margin-top: var(--think-rhythm-related);
+  margin-top: var(--think-rhythm-inline);
 }
 
 .think-os :is(.bv-group--level-1, .bv-group--level-2, .bv-group--level-3) + :is(.bv-group--level-1, .bv-group--level-2, .bv-group--level-3) {
-  margin-top: var(--think-rhythm-row);
+  margin-top: var(--think-space-1);
 }
 
 .think-os .bv-group-title {
   display: flex;
   align-items: center;
-  gap: var(--think-list-row-gap);
+  gap: var(--think-space-2);
   margin: 0;
   border: 0;
   border-radius: 0;
@@ -111,6 +111,7 @@
   box-shadow: none;
   font-size: var(--think-type-subsection-size);
   font-weight: var(--think-type-subsection-weight);
+  line-height: var(--think-line-height-tight);
   cursor: pointer;
   user-select: none;
 }

@@ -81,7 +81,7 @@ export interface CacheV1 {
   };
 }
 
-// v14: persist Task recommendation metadata so warm-start and cold scan produce identical Energy recommendations.
+// v15: persist scanner integrity diagnostics; v14 added Task recommendation metadata for warm/cold parity.
 export const CURRENT_CACHE_SCHEMA_VERSION = 15;
 
 export function toCachedItem(it: RecordViewItem): CachedItem {

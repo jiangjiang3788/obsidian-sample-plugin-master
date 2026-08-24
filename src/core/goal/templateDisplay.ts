@@ -24,7 +24,7 @@ function readFieldDefault(fields: TemplateField[] | undefined, predicate: (field
 }
 
 export function isGeneratedGoalTemplateName(_value: unknown): boolean {
-  // Current model has no user-visible preset names; the cell identity is Goal × CoreBlock.
+  // Current model has no user-visible preset names; the cell identity is Goal × RecordType.
   return true;
 }
 
@@ -38,8 +38,16 @@ export function readGoalTemplateIcon(template?: Partial<GoalTemplate> | null, fa
   );
 }
 
-export function getGoalTemplateDisplayName(_template?: Partial<GoalTemplate> | null, _goal?: GoalDefinition | null, fallback = '已配置'): string {
-  return fallback;
+export function getGoalTemplateDisplayName(template?: Partial<GoalTemplate> | null, _goal?: GoalDefinition | null, fallback = '模板'): string {
+  const values = (template?.defaultValues || {}) as Record<string, unknown>;
+  return compactText(
+    readOptionText(values.name)
+    || readOptionText(values['名称'])
+    || readOptionText(values['任务内容'])
+    || readOptionText(values['内容'])
+    || readOptionText(values.title)
+    || fallback
+  );
 }
 
 export function getGoalTemplateDisplayInfo(
@@ -48,7 +56,7 @@ export function getGoalTemplateDisplayInfo(
   fallbackIcon?: string,
 ): GoalTemplateDisplayInfo {
   return {
-    name: '已配置',
+    name: getGoalTemplateDisplayName(template, goal, '模板'),
     icon: readGoalTemplateIcon(template, fallbackIcon || goal?.icon),
   };
 }

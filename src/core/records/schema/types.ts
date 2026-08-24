@@ -104,7 +104,7 @@ export interface RecordSchemaDefinition extends RecordSchemaContract {
   categoryKey: string;
   captureMode: RecordCaptureMode;
   /** Stable template-type binding. Direct/internal records leave this undefined. */
-  coreBlockId?: string;
+  recordTypeId?: string;
   /** Default capture fields. These are UI/input fields, not persisted schema fields. */
   fields: TemplateField[];
   targetFile: string;

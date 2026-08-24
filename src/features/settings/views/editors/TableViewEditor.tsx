@@ -1,11 +1,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { ViewEditorProps } from './ViewEditorProps';
-import { TABLE_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import { FieldPickerAutocomplete } from './FieldPickerAutocomplete';
 import { ConfigFieldRow, ViewEditorShell } from './settingsEditorUi';
 
-export { TABLE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 
 export function TableViewEditor({ value, onChange, fieldOptions }: ViewEditorProps) {
   return (

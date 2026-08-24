@@ -9,7 +9,7 @@ function base(overrides: Partial<RecordViewItem>): RecordViewItem {
 function energy(id: string, goalPath: string, date: string, time: string, score: number): RecordViewItem {
   return base({
     id, goalPath, date, coreBlock: 'energy', categoryKey: '精力', startTime: time,
-    extra: { 核心Block: 'energy', 精力值: score, 精力档位: Math.round(score / 20) * 20, 时间: time, 日期: date, 评分模式: 'quick', 记录方式: 'realtime' },
+    extra: { 记录类型: 'energy', 精力值: score, 精力档位: Math.round(score / 20) * 20, 时间: time, 日期: date, 评分模式: 'quick', 记录方式: 'realtime' },
   });
 }
 

@@ -16,7 +16,6 @@ import type { RecordCaptureTemplate, ViewInstance } from '@core/types/public';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
 // 重新导出以保持兼容性
-export { HEATMAP_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 
 function normalizeHeatmapConfig(value: Record<string, any> | undefined): HeatmapViewConfig {
     const base = HEATMAP_VIEW_DEFAULT_CONFIG;

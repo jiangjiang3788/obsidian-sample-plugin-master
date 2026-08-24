@@ -1,6 +1,6 @@
 /* Shared overlay contract: Obsidian-hosted modals, Think modal primitive and floating panels. */
 .think-os--modal.think-modal-overlay {
-  position: fixed; inset: 0; z-index: var(--think-z-modal); display: grid; place-items: center;
+  position: fixed; inset: 0; display: grid; place-items: center;
   padding: var(--think-rhythm-section); background: color-mix(in srgb, var(--think-bg-canvas) 38%, transparent); backdrop-filter: blur(2px);
 }
 

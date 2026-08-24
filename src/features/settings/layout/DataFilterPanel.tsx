@@ -8,7 +8,7 @@ import {
 } from '@shared/ui/public';
 import { DataStore } from '@core/services/public';
 import { getAllFields } from '@core/types/public';
-import { getFieldLabel } from '@core/fields/public';
+import { formatFieldValue, getFieldLabel } from '@core/fields/public';
 import type { FilterRule, RecordViewItem } from '@core/types/public';
 import { normalizeViewFilters } from '@core/view/public';
 import { RuleBuilder } from '@features/settings/views/editors/RuleBuilder';
@@ -33,13 +33,15 @@ function describeRule(rule: FilterRule): string {
   if (rule.op === 'in' || rule.op === 'notIn') {
     const values = asDisplayList(rule.value);
     const opText = rule.op === 'in' ? '属于任一' : '不属于任一';
-    return `${getFieldLabel(rule.field)} ${opText} ${values.join('、') || '未选择'}`;
+    const displayValues = values.map(value => formatFieldValue(rule.field, value));
+    return `${getFieldLabel(rule.field)} ${opText} ${displayValues.join('、') || '未选择'}`;
   }
   if (rule.op === 'between') {
     const values = asDisplayList(rule.value);
-    return `${getFieldLabel(rule.field)} 区间 ${values.join(' ~ ') || String(rule.value ?? '')}`;
+    const displayValues = values.map(value => formatFieldValue(rule.field, value));
+    return `${getFieldLabel(rule.field)} 区间 ${displayValues.join(' ~ ') || formatFieldValue(rule.field, rule.value)}`;
   }
-  return `${getFieldLabel(rule.field)} ${rule.op} ${String(rule.value ?? '')}`;
+  return `${getFieldLabel(rule.field)} ${rule.op} ${formatFieldValue(rule.field, rule.value)}`;
 }
 
 export function DataFilterPanel({ dataStore, filters, items, onChange }: DataFilterPanelProps) {

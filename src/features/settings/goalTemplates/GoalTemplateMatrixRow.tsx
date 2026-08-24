@@ -1,7 +1,8 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { ThinkIcon, ThinkIconButton } from '@shared/ui/public';
-import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { GoalTemplateMatrixCell } from './GoalTemplateMatrixCell';
 import {
@@ -18,7 +19,7 @@ export interface GoalTemplateMatrixGroupRowsProps {
   group: GoalDefinition[];
   groupIndex: number;
   goals: GoalDefinition[];
-  visibleBlocks: CoreBlockDefinition[];
+  visibleBlocks: TemplateRecordTypeDefinition[];
   templates: GoalTemplate[];
   visibleBlockCount: number;
   expandedPaths: Set<string>;
@@ -29,7 +30,62 @@ export interface GoalTemplateMatrixGroupRowsProps {
   toggleTreePath: (path: string) => void;
   reorderGoalSiblings: (dragGoalPath: string, targetGoalPath: string, position: 'before' | 'after') => Promise<void>;
   handleDeleteGoal: (event: MouseEvent, goal: GoalDefinition) => Promise<void>;
-  openEditor: (goal: GoalDefinition, block: CoreBlockDefinition, template?: GoalTemplate | null) => void;
+  openEditor: (goal: GoalDefinition, block: TemplateRecordTypeDefinition, template?: GoalTemplate | null) => void;
+}
+
+
+function GoalTemplateAddButton({ goal, blocks, openEditor }: {
+  goal: GoalDefinition;
+  blocks: TemplateRecordTypeDefinition[];
+  openEditor: (goal: GoalDefinition, block: TemplateRecordTypeDefinition, template?: GoalTemplate | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent) => {
+      if (rootRef.current?.contains(event.target as Node)) return;
+      setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+
+  if (blocks.length === 0) return null;
+  return (
+    <span className="think-goal-template-matrix__add" ref={rootRef}>
+      <ThinkIconButton
+        className="think-goal-template-matrix__add-button"
+        size="sm"
+        label="添加模板"
+        icon={<ThinkIcon name="plus" />}
+        onClick={(event: MouseEvent) => {
+          event.stopPropagation();
+          setOpen((value) => !value);
+        }}
+        onMouseDown={(event: MouseEvent) => event.stopPropagation()}
+      />
+      {open ? (
+        <div className="think-goal-template-matrix__add-menu" role="menu" aria-label={`给 ${goal.path} 添加模板`}>
+          {blocks.map((block) => (
+            <button
+              key={block.id}
+              type="button"
+              className="think-goal-template-matrix__add-option"
+              onClick={(event) => {
+                event.stopPropagation();
+                setOpen(false);
+                openEditor(goal, block, null);
+              }}
+            >
+              <span>{block.name}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </span>
+  );
 }
 
 function GoalDragHandle({ goal, setDraggingGoalPath, setGoalDrop }: {
@@ -91,13 +147,18 @@ function GoalPathCell(props: {
   setGoalDrop: (value: GoalDropState) => void;
   toggleTreePath: (path: string) => void;
   handleDeleteGoal: (event: MouseEvent, goal: GoalDefinition) => Promise<void>;
+  visibleBlocks: TemplateRecordTypeDefinition[];
+  templates: GoalTemplate[];
+  openEditor: (goal: GoalDefinition, block: TemplateRecordTypeDefinition, template?: GoalTemplate | null) => void;
 }) {
-  const { goal, goals, expandedPaths, setDraggingGoalPath, setGoalDrop, toggleTreePath, handleDeleteGoal } = props;
+  const { goal, goals, expandedPaths, setDraggingGoalPath, setGoalDrop, toggleTreePath, handleDeleteGoal, visibleBlocks, templates, openEditor } = props;
   const path = getGoalDisplayPath(goal);
   const depth = getGoalDepth(goal);
   const hasChildren = goalHasChildren(goal, goals);
   const expanded = expandedPaths.has(path);
   const isRoot = depth === 0;
+  const configured = new Set(templates.filter((template) => template.goalPath === path).map((template) => template.recordTypeId));
+  const addableBlocks = visibleBlocks.filter((block) => !configured.has(block.id));
 
   return (
     <td className="think-goal-template-matrix__path-cell">
@@ -109,6 +170,7 @@ function GoalPathCell(props: {
         <GoalDragHandle goal={goal} setDraggingGoalPath={setDraggingGoalPath} setGoalDrop={setGoalDrop} />
         <TreeToggle hasChildren={hasChildren} expanded={expanded} path={path} toggleTreePath={toggleTreePath} />
         <span className="think-goal-template-matrix__goal-name">{cleanDisplayText(getGoalDisplayName(goal))}</span>
+        <GoalTemplateAddButton goal={goal} blocks={addableBlocks} openEditor={openEditor} />
         <ThinkIconButton
           className="think-goal-template-matrix__delete"
           size="sm"
@@ -160,6 +222,9 @@ function GoalTemplateMatrixGoalRow(props: GoalTemplateMatrixGroupRowsProps & { g
         setGoalDrop={setGoalDrop}
         toggleTreePath={toggleTreePath}
         handleDeleteGoal={handleDeleteGoal}
+        visibleBlocks={visibleBlocks}
+        templates={templates}
+        openEditor={openEditor}
       />
       {visibleBlocks.map((block) => (
         <td key={block.id} className="think-goal-template-matrix__block-cell">

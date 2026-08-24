@@ -16,7 +16,7 @@ export const VIEW_PRIMARY_FIELD_KEYS = [
 
 export const VIEW_FIELD_ALIASES: Record<string, string> = {
   目标: 'goalPath',
-  核心Block: 'coreBlock',
+  记录类型: 'coreBlock',
   日期: 'date',
   内容: 'content',
   状态: 'status',
@@ -115,7 +115,6 @@ export function normalizeViewConfigDomain(viewConfig: Record<string, any> | unde
   for (const key of ['rowField', 'colField', 'valueField', 'dateField', 'groupField']) {
     if (next[key]) next[key] = normalizeViewFieldKey(next[key]);
   }
-  if (next.groupBy === 'category' || next.groupBy === 'categoryKey') next.groupBy = 'coreBlock';
   if (Array.isArray(next.categories) && next.categories.length === 0) delete next.categories;
   if (Array.isArray(next.goalPaths) && next.goalPaths.length === 0) delete next.goalPaths;
   return next;

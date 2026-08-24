@@ -1,20 +1,15 @@
 // src/platform/obsidian/modals/modalBackdropGuard.ts
 /**
- * Prevent Obsidian's modal backdrop from closing selected Promise-based modals.
+ * Prevent selected Promise-based modals from closing on a direct backdrop click.
  *
- * Some flows must finish through explicit buttons so their Promise resolves through
- * the expected success/cancel branch. Obsidian keeps the backdrop element on the
- * Modal instance as `bgEl`, which is not part of the public TypeScript surface,
- * so the unsafe access is isolated here instead of repeated in every modal.
+ * Important boundary rule:
+ * - only the backdrop itself may be cancelled;
+ * - events originating from modal descendants must never be swallowed;
+ * - pointer events are sufficient in current Obsidian/Electron runtimes, so we do
+ *   not register scroll-blocking touchstart listeners.
  */
 
-const BACKDROP_CLOSE_EVENTS = [
-  'pointerdown',
-  'mousedown',
-  'click',
-  'touchstart',
-  'touchend',
-] as const;
+const BACKDROP_CLOSE_EVENTS = ['pointerdown', 'click'] as const;
 
 interface ObsidianModalWithBackdrop {
   bgEl?: HTMLElement | null;
@@ -24,13 +19,15 @@ export function installBackdropCloseGuard(modal: unknown): () => void {
   const bgEl = (modal as ObsidianModalWithBackdrop).bgEl;
   if (!bgEl) return () => undefined;
 
-  const stopBackdropClose = (event: Event) => {
+  const stopDirectBackdropClose = (event: Event) => {
+    if (event.target !== event.currentTarget) return;
     event.preventDefault();
     event.stopPropagation();
   };
 
+  const options: AddEventListenerOptions = { capture: true };
   BACKDROP_CLOSE_EVENTS.forEach((eventName) => {
-    bgEl.addEventListener(eventName, stopBackdropClose, true);
+    bgEl.addEventListener(eventName, stopDirectBackdropClose, options);
   });
 
   let disposed = false;
@@ -38,7 +35,7 @@ export function installBackdropCloseGuard(modal: unknown): () => void {
     if (disposed) return;
     disposed = true;
     BACKDROP_CLOSE_EVENTS.forEach((eventName) => {
-      bgEl.removeEventListener(eventName, stopBackdropClose, true);
+      bgEl.removeEventListener(eventName, stopDirectBackdropClose, options);
     });
   };
 }

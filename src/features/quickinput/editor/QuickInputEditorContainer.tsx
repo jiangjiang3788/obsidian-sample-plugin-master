@@ -2,11 +2,13 @@
 import { h } from 'preact';
 import { useEffect, useMemo, useReducer, useRef } from 'preact/hooks';
 
-import { selectSettings, useSelector } from '@/app/public'; import { dayjs } from '@core/utils/public';
-import { getEffectiveRecordTypes, ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public'; import { resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@core/goal/public';
-import { initializeRecordInputSession, reduceRecordInputSession } from '@core/recordInput/public';
+import { selectSettings, useSelector } from '@/app/public';
+import { dayjs } from '@core/utils/public';
+import { getEffectiveRecordTypes, ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public';
+import { normalizeGoalPath, resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@core/goal/public';
+import { getCreateEligibleGoalPaths, initializeRecordInputSession, reduceRecordInputSession } from '@core/recordInput/public';
 import { QuickInputEditorView } from './QuickInputEditorView';
-import { resolveQuickInputRecordTypeRuntime } from './quickInputRecordTypeModel';
+import { resolveQuickInputRecordTypeRuntime, shouldRequireDirectGoalTemplateForQuickInput } from './quickInputRecordTypeModel';
 import { EnergyQuickCapturePanel } from './components/EnergyQuickCapturePanel';
 import type { GoalSelectorOption } from './components/GoalSelector';
 import {
@@ -22,7 +24,7 @@ import {
   deriveQuickInputInitialSelection,
   getGoalPath,
   hydrateQuickInputTemplateDefaults,
-  resolveQuickInputCoreBlockId,
+  resolveQuickInputRecordTypeId,
   shouldShowQuickInputTimeDirectionControl,
   splitPathParts,
 } from './QuickInputEditorModel';
@@ -87,30 +89,45 @@ export function QuickInputEditor({
     dispatchSession({ type: 'setMode', mode: recordInputMode });
   }, [recordInputMode]);
 
-  const blocks = useMemo(() => getEffectiveRecordTypes(fullSettings), [fullSettings]);
+  const blocks = useMemo(() => {
+    const all = getEffectiveRecordTypes();
+    if (recordInputMode !== 'create') return all;
+    const selectedPath = normalizeGoalPath(selectedGoalPath) || '';
+    return all.filter((recordType) => {
+      if (recordType.captureMode === 'direct') return true;
+      const eligibleGoalPaths = getCreateEligibleGoalPaths(fullSettings, recordType.id);
+      return selectedPath ? eligibleGoalPaths.includes(selectedPath) : eligibleGoalPaths.length > 0;
+    });
+  }, [fullSettings.goalSettings?.goalTemplates, selectedGoalPath, recordInputMode]);
   const currentRecordType = useMemo(
     () => blocks.find((recordType) => recordType.id === currentBlockId) || null,
     [blocks, currentBlockId],
   );
   const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID && currentRecordType.captureMode === 'direct';
+  const requiresGoalContext = currentRecordType?.capabilities.goalBindable === true;
+  const requireDirectGoalTemplate = shouldRequireDirectGoalTemplateForQuickInput(recordInputMode, isEnergyDirect);
   const selectedGoal = useMemo(() => {
     const goals = fullSettings.goalSettings?.goals || [];
     return selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) || null : null;
   }, [fullSettings.goalSettings?.goals, selectedGoalPath]);
 
   const currentEffectiveBlockIdForTemplates = useMemo(
-    () => isEnergyDirect ? '' : resolveQuickInputCoreBlockId(fullSettings, currentBlockId),
-    [fullSettings.coreBlockSettings, fullSettings.inputSettings?.blocks, currentBlockId, isEnergyDirect]
+    () => isEnergyDirect ? '' : resolveQuickInputRecordTypeId(fullSettings, currentBlockId),
+    [currentBlockId, isEnergyDirect]
   );
 
   const { template: rawTemplate, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId } = useMemo(
-    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath }),
-    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath],
+    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath, requireDirectGoalTemplate }),
+    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath, recordInputMode],
   );
 
   const goalOptions = useMemo<GoalSelectorOption[]>(
-    () => buildQuickInputGoalOptions(fullSettings, currentEffectiveBlockIdForTemplates, { requirePreset: !isEnergyDirect }),
-    [fullSettings, currentEffectiveBlockIdForTemplates, isEnergyDirect]
+    () => buildQuickInputGoalOptions(
+      fullSettings,
+      currentBlockId,
+      requireDirectGoalTemplate,
+    ),
+    [fullSettings.goalSettings?.goals, fullSettings.goalSettings?.goalTemplates, currentBlockId, requireDirectGoalTemplate]
   );
 
   const goalFieldOptions = useMemo(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label || goal.value })), [goalOptions]);
@@ -134,8 +151,16 @@ export function QuickInputEditor({
   const currentPeriodOptions = currentPeriodUi.options;
 
   const template = useMemo(
-    () => isEnergyDirect ? null : buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, goalFieldOptions),
-    [rawTemplate, effectiveBlockId, goalFieldOptions, isEnergyDirect]
+    () => {
+      if (isEnergyDirect) return null;
+      // Create flows only render fields after an enabled direct Goal x RecordType
+      // template has been resolved. Navigation-only ancestor Goals never create
+      // a fake default form. Edit mode may still use the RecordType base.
+      if (requiresGoalContext && !currentGoalPath) return null;
+      if (recordInputMode === 'create' && templateSourceType !== 'goal-template') return null;
+      return buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, goalFieldOptions);
+    },
+    [rawTemplate, effectiveBlockId, goalFieldOptions, isEnergyDirect, requiresGoalContext, currentGoalPath, recordInputMode, templateSourceType]
   );
 
   const showTimeDirectionControl = useMemo(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
@@ -211,7 +236,7 @@ export function QuickInputEditor({
 
   const handleSelectGoal = (option: GoalSelectorOption | null) => {
     if (!option || !option.value) {
-      dispatchSession({ type: 'selectGoal', goalPath: null });
+      dispatchSession({ type: 'clearGoalContext' });
       return;
     }
     const nextSelection = applyQuickInputGoalSelection({ formData, fieldSources, option });
@@ -262,6 +287,7 @@ export function QuickInputEditor({
       isMobileLike={isMobileLike}
       showTimeDirectionControl={showTimeDirectionControl}
       currentPeriodLabel={currentPeriod?.label || null}
+      currentGoalPath={currentGoalPath}
       templateSourceType={templateSourceType}
       fieldSourceSummary={makeEditorState(formData, timeDirection, fieldSources).fieldSourceSummary}
     />

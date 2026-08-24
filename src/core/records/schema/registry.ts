@@ -75,7 +75,7 @@ export function isSafeCustomRecordFieldKey(coreBlock: unknown, fieldKey: unknown
   const key = String(fieldKey || '').trim();
   if (!key) return false;
   if (getRecordFieldContract(schema.coreBlock, key)) return false;
-  return !['记录ID','recordId','id','核心Block','coreBlock'].includes(key);
+  return !['记录ID','recordId','id','记录类型','coreBlock'].includes(key);
 }
 
 export function inspectRecordFieldsAgainstSchema(
@@ -85,7 +85,7 @@ export function inspectRecordFieldsAgainstSchema(
   const schema = getRecordSchemaDefinition(coreBlock);
   if (!schema) {
     return [{
-      code: 'unknown_field', coreBlock: String(coreBlock || ''), field: '核心Block', value: coreBlock,
+      code: 'unknown_field', coreBlock: String(coreBlock || ''), field: '记录类型', value: coreBlock,
       message: `没有 Record Schema Definition: ${String(coreBlock || '')}`,
     }];
   }

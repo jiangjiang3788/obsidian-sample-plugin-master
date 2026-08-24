@@ -1,12 +1,12 @@
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
-import { getGoalOrderPath, getGoalOrderLabel, sortGoalsBySettingsOrder, readGoalTemplateIcon } from '@core/goal/public';
-import type { CoreBlockDefinition } from '@core/blocks/public';
+import { getGoalOrderPath, getGoalOrderLabel, sortGoalsBySettingsOrder, getGoalTemplateDisplayName, readGoalTemplateIcon } from '@core/goal/public';
+import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 
-export type GoalTemplateCellStatus = 'inherit' | 'override' | 'disabled' | 'warning';
+export type GoalTemplateCellStatus = 'default' | 'override' | 'disabled' | 'warning';
 
 export interface GoalTemplateCellModel {
   goal: GoalDefinition;
-  block: CoreBlockDefinition;
+  block: TemplateRecordTypeDefinition;
   template: GoalTemplate | null;
   status: GoalTemplateCellStatus;
   label: string;
@@ -53,16 +53,16 @@ export function sortGoalsForMatrix(goals: GoalDefinition[]): GoalDefinition[] {
   return sortGoalsBySettingsOrder(goals);
 }
 
-export function buildGoalTemplateCell(goal: GoalDefinition, block: CoreBlockDefinition, templates: GoalTemplate[]): GoalTemplateCellModel {
+export function buildGoalTemplateCell(goal: GoalDefinition, block: TemplateRecordTypeDefinition, templates: GoalTemplate[]): GoalTemplateCellModel {
   const goalPath = getGoalDisplayPath(goal);
-  const template = templates.find((item) => item.goalPath === goalPath && item.coreBlockId === block.id) || null;
+  const template = templates.find((item) => item.goalPath === goalPath && item.recordTypeId === block.id) || null;
   if (!template) {
-    return { goal, block, template: null, status: 'inherit', label: '', description: '使用记录类型默认模板' };
+    return { goal, block, template: null, status: 'default', label: '', description: '未配置模板，快捷录入不可用' };
   }
   if (template.enabled === false) {
     return { goal, block, template, status: 'disabled', label: '隐藏', description: '该目标下隐藏此记录类型' };
   }
-  return { goal, block, template, status: 'override', label: '已配置', description: '该目标有专属字段预设' };
+  return { goal, block, template, status: 'override', label: getGoalTemplateDisplayName(template, goal, block.name), description: '该目标已配置模板' };
 }
 
 export function statusTone(status: GoalTemplateCellStatus): { border: string; background: string; color: string } {
@@ -73,7 +73,7 @@ export function statusTone(status: GoalTemplateCellStatus): { border: string; ba
       return { border: 'var(--text-muted)', background: 'rgba(120, 120, 120, 0.10)', color: 'var(--text-muted)' };
     case 'warning':
       return { border: 'var(--text-error, #d65)', background: 'rgba(220, 90, 70, 0.12)', color: 'var(--text-normal)' };
-    case 'inherit':
+    case 'default':
     default:
       return { border: 'var(--background-modifier-border)', background: 'var(--background-secondary)', color: 'var(--text-muted)' };
   }
@@ -90,12 +90,12 @@ export function cleanDisplayText(value: unknown): string {
   return String(value ?? '').trim();
 }
 
-export function getPresetCardName(_template: GoalTemplate, _goal: GoalDefinition): string {
-  return '已配置';
+export function getPresetCardName(template: GoalTemplate, goal: GoalDefinition, fallback = '模板'): string {
+  return getGoalTemplateDisplayName(template, goal, fallback);
 }
 
 export function goalTemplateKey(template: GoalTemplate): string {
-  return template.id || `${template.goalPath}:${template.coreBlockId}`;
+  return template.id || `${template.goalPath}:${template.recordTypeId}`;
 }
 
 export function goalTemplateIcon(template: GoalTemplate, goal: GoalDefinition): string {
@@ -103,7 +103,7 @@ export function goalTemplateIcon(template: GoalTemplate, goal: GoalDefinition): 
 }
 
 export function presetSearchText(template: GoalTemplate, goal: GoalDefinition): string {
-  return `${getGoalDisplayPath(goal)} ${template.coreBlockId} ${template.description || ''}`.toLowerCase();
+  return `${getGoalDisplayPath(goal)} ${template.recordTypeId} ${template.description || ''}`.toLowerCase();
 }
 
 export function getEventDropPosition(event: DragEvent, target?: HTMLElement | null): DropPosition {
@@ -146,7 +146,7 @@ export function splitGoalsByRoot(goals: GoalDefinition[]): GoalDefinition[][] {
   return groups;
 }
 
-export function buildNextActiveBlockIds(previous: Set<string>, blockId: string, coreBlocks: CoreBlockDefinition[]): Set<string> {
+export function buildNextActiveBlockIds(previous: Set<string>, blockId: string, coreBlocks: TemplateRecordTypeDefinition[]): Set<string> {
   const next = new Set(previous);
   if (next.size === 0) coreBlocks.forEach((block) => next.add(block.id));
   if (next.has(blockId) && next.size > 1) next.delete(blockId);

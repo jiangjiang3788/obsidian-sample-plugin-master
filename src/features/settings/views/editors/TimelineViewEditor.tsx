@@ -7,7 +7,6 @@ import { TIMELINE_VIEW_DEFAULT_CONFIG, type CategoryConfig, type TimelineViewCon
 import { ViewEditorProps } from './ViewEditorProps';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
-export { TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 type CategoriesMap = Record<string, CategoryConfig>;
 type TimelineConfigPatch = Partial<Pick<TimelineViewConfig, 'defaultHourHeight' | 'categories' | 'progressOrder'>>;
 type CategoryPatchResult = { categories: CategoriesMap; progressOrder: string[] };

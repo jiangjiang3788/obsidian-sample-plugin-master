@@ -6,24 +6,6 @@ import { toDomListener } from './floatingPanelEvents';
 
 type SetState<T> = (value: T | ((current: T) => T)) => void;
 
-interface FloatingPanelRegistrationArgs {
-    id: string;
-    visible: boolean;
-    register: (id: string) => void;
-    unregister: (id: string) => void;
-}
-
-export function useFloatingPanelRegistration({ id, visible, register, unregister }: FloatingPanelRegistrationArgs): void {
-    useEffect(() => {
-        if (!visible) {
-            unregister(id);
-            return;
-        }
-        register(id);
-        return () => unregister(id);
-    }, [id, visible, register, unregister]);
-}
-
 interface FloatingPanelViewportClampArgs {
     size: PanelSize;
     position: FloatingPanelPosition;
@@ -58,8 +40,7 @@ export function useFloatingPanelViewportClamp(args: FloatingPanelViewportClampAr
 }
 
 interface FloatingPanelCloseHandlerArgs {
-    id: string;
-    activeId?: string | null;
+    isTop: boolean;
     visible: boolean;
     onClose?: () => void;
     closeOnOutsideClick: boolean;
@@ -68,14 +49,14 @@ interface FloatingPanelCloseHandlerArgs {
 }
 
 export function useFloatingPanelCloseHandlers(args: FloatingPanelCloseHandlerArgs): void {
-    const { id, activeId, visible, onClose, closeOnOutsideClick, closeOnEscape, rootRef } = args;
+    const { isTop, visible, onClose, closeOnOutsideClick, closeOnEscape, rootRef } = args;
 
     useEffect(() => {
         if (!onClose || !closeOnOutsideClick || !visible) return;
 
         const ignoreFirstClick = { current: true };
         const handler = (event: MouseEvent | TouchEvent) => {
-            if (ignoreFirstClick.current) return;
+            if (ignoreFirstClick.current || !isTop) return;
             if (!rootRef.current) return;
             if (event.target instanceof Node && !rootRef.current.contains(event.target)) {
                 onClose();
@@ -96,19 +77,18 @@ export function useFloatingPanelCloseHandlers(args: FloatingPanelCloseHandlerArg
             document.removeEventListener('mousedown', toDomListener(handler));
             document.removeEventListener('touchstart', toDomListener(handler));
         };
-    }, [onClose, closeOnOutsideClick, visible, rootRef]);
+    }, [onClose, closeOnOutsideClick, visible, isTop, rootRef]);
 
     useEffect(() => {
         if (!onClose || !closeOnEscape || !visible) return;
 
         const onKeyDown = (event: KeyboardEvent) => {
-            if (event.key !== 'Escape') return;
-            if (activeId && activeId !== id) return;
+            if (event.key !== 'Escape' || !isTop) return;
             onClose();
         };
         document.addEventListener('keydown', onKeyDown);
         return () => document.removeEventListener('keydown', onKeyDown);
-    }, [onClose, closeOnEscape, visible, activeId, id]);
+    }, [onClose, closeOnEscape, visible, isTop]);
 }
 
 interface FloatingPanelPersistenceArgs {

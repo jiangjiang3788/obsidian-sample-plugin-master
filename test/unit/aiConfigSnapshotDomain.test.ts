@@ -1,13 +1,13 @@
 import { buildAiConfigSnapshot } from '@/core/ai/AiConfigSnapshot';
-import { DEFAULT_AI_SETTINGS, DEFAULT_CORE_BLOCKS, getGoalTemplateId } from '@/core/public';
+import { DEFAULT_AI_SETTINGS, DEFAULT_TEMPLATE_RECORD_TYPES, getGoalTemplateId } from '@/core/public';
 import type { GoalSettings, InputSettings } from '@/core/public';
 
 describe('AI config snapshot domain model', () => {
-  const input: InputSettings = { blocks: DEFAULT_CORE_BLOCKS as any };
+  const input: InputSettings = { blocks: DEFAULT_TEMPLATE_RECORD_TYPES as any };
   const goalPath = '照顾好自己/健康/睡眠';
   const goalSettings: GoalSettings = {
     goals: [{ path: goalPath, status: 'active', metrics: [], createdAt: '', updatedAt: '' }],
-    goalTemplates: [{ goalPath, coreBlockId: 'core.habit', enabled: true }],
+    goalTemplates: [{ goalPath, recordTypeId: 'core.habit', enabled: true }],
   };
 
   it('ignores stale enabledBlockIds so AI snapshot does not become empty', () => {

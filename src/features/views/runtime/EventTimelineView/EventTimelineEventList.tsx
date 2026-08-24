@@ -87,7 +87,6 @@ export function EventTimelineEventList(props: EventTimelineEventListProps) {
                 <BlockItem
                   item={item}
                   fields={displayFields}
-                  isNarrow={false}
                   resolveResourcePath={resolveResourcePath}
                   onOpenRecordOrigin={onOpenRecordOrigin}
                   messageRenderPort={messageRenderPort}

@@ -9,11 +9,10 @@
  */
 
 import type { StateCreator } from 'zustand';
-import type { AiSettings, InputSettings, ThinkSettings } from '@core/types/public';
+import type { AiSettings, ThinkSettings } from '@core/types/public';
 import type { SettingsRepository } from '@core/services/public';
 import { createSettingsMutationRunner } from '../mutations/settingsMutationRunner';
 import {
-    patchInputSettingsDraft,
     patchSettingsDraft,
     replaceAiSettingsDraft,
     setFloatingTimerEnabledDraft,
@@ -26,12 +25,10 @@ export interface SettingsSliceState {
 
 export interface SettingsSliceActions {
     setFloatingTimerEnabled: (enabled: boolean) => Promise<void>;
-    updateInputSettings: (updates: Partial<InputSettings>) => Promise<void>;
     updateAiSettings: (aiSettings: AiSettings) => Promise<void>;
     updateSettings: (mutator: (draft: ThinkSettings) => void) => Promise<void>;
     batchUpdateSettings: (updates: Partial<ThinkSettings>) => Promise<void>;
     getFloatingTimerEnabled: () => boolean;
-    getInputSettings: () => InputSettings | undefined;
     getAiSettings: () => AiSettings | undefined;
     setSettingsError: (error: string | null) => void;
 }
@@ -66,14 +63,6 @@ export function createSettingsSlice(
                 });
             },
 
-            updateInputSettings: async (updates: Partial<InputSettings>): Promise<void> => {
-                await runSettingsMutation({
-                    action: 'settings.updateInputSettings',
-                    fallbackError: '更新输入设置失败',
-                    mutate: (draft) => patchInputSettingsDraft(draft, updates),
-                });
-            },
-
             updateAiSettings: async (aiSettings: AiSettings): Promise<void> => {
                 await runSettingsMutation({
                     action: 'settings.updateAiSettings',
@@ -99,7 +88,6 @@ export function createSettingsSlice(
             },
 
             getFloatingTimerEnabled: (): boolean => get().settings.floatingTimerEnabled ?? false,
-            getInputSettings: (): InputSettings | undefined => get().settings.inputSettings,
             getAiSettings: (): AiSettings | undefined => get().settings.aiSettings,
 
             setSettingsError: (error: string | null): void => {

@@ -12,12 +12,11 @@ import { toDomListener } from './floatingPanelEvents';
 type SetState<T> = (value: T | ((current: T) => T)) => void;
 
 interface FloatingPanelInteractionsArgs {
-    id: string;
     inline: boolean;
     resizable: boolean;
     position: FloatingPanelPosition;
     size: PanelSize;
-    focus: (id: string) => void;
+    focus: () => void;
     setPosition: SetState<FloatingPanelPosition>;
     setSize: SetState<PanelSize>;
     clampPosition: (position: FloatingPanelPosition, panelSize?: PanelSize) => FloatingPanelPosition;
@@ -28,7 +27,6 @@ interface FloatingPanelInteractionsArgs {
 
 export function useFloatingPanelInteractions(args: FloatingPanelInteractionsArgs) {
     const {
-        id,
         inline,
         resizable,
         position,
@@ -71,13 +69,13 @@ export function useFloatingPanelInteractions(args: FloatingPanelInteractionsArgs
         if (inline) return;
         const coords = getEventCoords(event);
         if (!coords) return;
-        focus(id);
+        focus();
         dragRef.current = { startX: coords.x, startY: coords.y, panelX: position.x, panelY: position.y };
         window.addEventListener('mousemove', toDomListener(onDragMove));
         window.addEventListener('mouseup', toDomListener(onDragEnd));
         window.addEventListener('touchmove', toDomListener(onDragMove), passiveListenerOptions);
         window.addEventListener('touchend', toDomListener(onDragEnd), passiveListenerOptions);
-    }, [inline, id, focus, position, onDragMove, onDragEnd]);
+    }, [inline, focus, position, onDragMove, onDragEnd]);
 
     const onResizeMove = useCallback((event: MouseEvent | TouchEvent) => {
         if (!(event as TouchEvent).touches) event.preventDefault();
@@ -112,7 +110,7 @@ export function useFloatingPanelInteractions(args: FloatingPanelInteractionsArgs
         const coords = getEventCoords(event);
         if (!coords) return;
         event.stopPropagation();
-        focus(id);
+        focus();
         resizeRef.current = {
             startX: coords.x,
             startY: coords.y,
@@ -124,11 +122,11 @@ export function useFloatingPanelInteractions(args: FloatingPanelInteractionsArgs
         window.addEventListener('mouseup', toDomListener(onResizeEnd));
         window.addEventListener('touchmove', toDomListener(onResizeMove), passiveListenerOptions);
         window.addEventListener('touchend', toDomListener(onResizeEnd), passiveListenerOptions);
-    }, [resizable, focus, id, onResizeMove, onResizeEnd, getEffectiveWidth, getEffectiveHeight]);
+    }, [resizable, focus, onResizeMove, onResizeEnd, getEffectiveWidth, getEffectiveHeight]);
 
     const onPanelPointerDown = useCallback(() => {
-        focus(id);
-    }, [id, focus]);
+        focus();
+    }, [focus]);
 
     return { onDragStart, onResizeStart, onPanelPointerDown };
 }

@@ -3,6 +3,10 @@
     "src/styles/overrides/quick-input-modal.css": {
       "maxOccurrences": 7,
       "reason": "V1 legacy baseline; reduce during feature migration and never increase."
+    },
+    "src/styles/foundations/scope.css": {
+      "maxOccurrences": 2,
+      "reason": "Reviewed global Think OS root override: suppress host/native shadows and scrollbar chrome across plugin surfaces."
     }
   }
 }

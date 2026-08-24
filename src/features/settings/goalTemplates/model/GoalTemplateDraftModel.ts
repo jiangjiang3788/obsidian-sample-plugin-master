@@ -1,6 +1,6 @@
-import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalTemplate } from '@core/goal/public';
-import { isPeriodAwareCoreBlock, normalizePeriodPolicyGranularity } from '@core/goal/public';
+import { isPeriodAwareRecordType, normalizePeriodPolicyGranularity } from '@core/goal/public';
 import type { GoalTemplateDraftState } from './GoalTemplateEditorTypes';
 import { deriveRequiredFields } from './GoalTemplateFieldModel';
 
@@ -10,7 +10,7 @@ function cloneValue<T>(value: T): T {
 
 export function readPeriodGranularity(
   template: GoalTemplate | null | undefined,
-  block: CoreBlockDefinition | null | undefined,
+  block: TemplateRecordTypeDefinition | null | undefined,
 ): GoalTemplateDraftState['granularity'] {
   return normalizePeriodPolicyGranularity(
     template?.periodPolicy?.granularity
@@ -20,16 +20,16 @@ export function readPeriodGranularity(
 }
 
 export function buildDraftPeriodPolicy(
-  block: CoreBlockDefinition | null | undefined,
+  block: TemplateRecordTypeDefinition | null | undefined,
   draft: Pick<GoalTemplateDraftState, 'granularity'>,
 ) {
-  if (!block || !isPeriodAwareCoreBlock(block.id)) return undefined;
+  if (!block || !isPeriodAwareRecordType(block.id)) return undefined;
   return { enabled: true, granularity: normalizePeriodPolicyGranularity(draft.granularity) };
 }
 
 export function makeDraftFromTemplate(
   template: GoalTemplate | null,
-  block: CoreBlockDefinition | null,
+  block: TemplateRecordTypeDefinition | null,
 ): GoalTemplateDraftState {
   const fields = cloneValue(template?.fields || block?.fields || []);
   return {
@@ -43,11 +43,11 @@ export function makeDraftFromTemplate(
   };
 }
 
-export function makeNewDraft(block: CoreBlockDefinition | null): GoalTemplateDraftState {
+export function makeNewDraft(block: TemplateRecordTypeDefinition | null): GoalTemplateDraftState {
   return makeDraftFromTemplate(null, block);
 }
 
-export function buildInheritedDraft(previous: GoalTemplateDraftState, block: CoreBlockDefinition | null): GoalTemplateDraftState {
+export function buildDefaultDraft(previous: GoalTemplateDraftState, block: TemplateRecordTypeDefinition | null): GoalTemplateDraftState {
   const fields = cloneValue(block?.fields || []);
   return {
     ...previous,
@@ -59,8 +59,8 @@ export function buildInheritedDraft(previous: GoalTemplateDraftState, block: Cor
   };
 }
 
-export function switchDraftToOverride(previous: GoalTemplateDraftState, block: CoreBlockDefinition | null): GoalTemplateDraftState {
-  const base = buildInheritedDraft(previous, block);
+export function switchDraftToOverride(previous: GoalTemplateDraftState, block: TemplateRecordTypeDefinition | null): GoalTemplateDraftState {
+  const base = buildDefaultDraft(previous, block);
   return {
     ...previous,
     fields: previous.fields?.length ? previous.fields : base.fields,

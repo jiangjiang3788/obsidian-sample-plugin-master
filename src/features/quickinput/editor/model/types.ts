@@ -13,7 +13,7 @@ export interface QuickInputOptionLike {
 
 export type QuickInputTemplateLike = Partial<RecordCaptureTemplate> & {
   fields?: TemplateField[];
-  coreBlockId?: string | null;
+  recordTypeId?: string | null;
 };
 
 export interface QuickInputPeriodLike {
@@ -48,7 +48,7 @@ export type QuickInputFieldSourceMap = Record<string, QuickInputFieldSource>;
 
 export interface QuickInputEditorState {
   blockId: string;
-  coreBlockId?: string | null;
+  recordTypeId?: string | null;
   goalPath?: string | null;
   goalTitle?: string | null;
   rootGoal?: string | null;
@@ -57,7 +57,7 @@ export interface QuickInputEditorState {
   formData: QuickInputFormData;
   template: QuickInputTemplateLike | null;
   templateId: string | null;
-  templateSourceType: 'core-block' | 'goal-template' | null;
+  templateSourceType: 'record-type' | 'goal-template' | null;
   fieldSources?: QuickInputFieldSourceMap;
   meta?: RecordInputMeta;
   fieldSourceSummary?: Record<QuickInputFieldSource, number>;

@@ -20,13 +20,13 @@ function assertTemplate(template: GoalTemplateStorageRow, goalPaths: Set<string>
   const goalPath = normalizeGoalPath(template.goalPath);
   if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`GoalTemplate references missing Goal (${template.goalPath || '<empty>'}).`);
   for (const key of Object.keys(template.defaultValues || {})) {
-    if (GOAL_CONTEXT_KEYS.has(key)) throw new Error(`GoalTemplate ${goalPath}/${template.coreBlockId} must not persist Goal context defaults (${key}).`);
+    if (GOAL_CONTEXT_KEYS.has(key)) throw new Error(`GoalTemplate ${goalPath}/${template.recordTypeId} must not persist Goal context defaults (${key}).`);
   }
   for (const field of template.fields || []) {
     const semantic = String((field as any).semantic || '').trim();
     const key = String((field as any).key || (field as any).label || '').trim();
     if (semantic === 'goalPath' || GOAL_CONTEXT_KEYS.has(key)) {
-      throw new Error(`GoalTemplate ${goalPath}/${template.coreBlockId} must not persist Goal context field (${key || semantic}).`);
+      throw new Error(`GoalTemplate ${goalPath}/${template.recordTypeId} must not persist Goal context field (${key || semantic}).`);
     }
   }
 }
@@ -39,7 +39,7 @@ export function assertCanonicalGoalSettings(goalSettings: GoalSettings | undefin
   const templateKeys = new Set<string>();
   for (const template of goalSettings?.goalTemplates || []) {
     assertTemplate(template, paths);
-    const key = `${template.goalPath}::${template.coreBlockId}`;
+    const key = `${template.goalPath}::${template.recordTypeId}`;
     if (templateKeys.has(key)) throw new Error(`Duplicate GoalTemplate detected (${key}).`);
     templateKeys.add(key);
   }

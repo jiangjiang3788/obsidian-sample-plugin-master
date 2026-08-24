@@ -13,7 +13,10 @@ import {
 import { QuickInputModalContent } from '@features/quickinput/modal/QuickInputModalContent';
 import { isMobileLikeEnvironment } from '@features/quickinput/modal/quickInputEnvironment';
 import type { RecordViewItem, QuickInputSaveData } from '@core/types/public';
+import { getCreateEligibleGoalPaths, resolveRecordGoalPath } from '@core/recordInput/public';
 import type { RecordInputSource, RecordSubmitResult } from '@core/recordInput/public';
+import { normalizeGoalPath } from '@core/goal/public';
+import { getRecordTypeById } from '@core/recordTypes/public';
 
 import { prepareThinkModal } from './modalPreact';
 import { setupQuickInputKeyboardDetection } from './quickInputKeyboard';
@@ -51,12 +54,41 @@ export class QuickInputModal extends Modal {
     this.services = createServices();
   }
 
+
+  private getCreateAvailabilityFailure(): string | null {
+    if ((this.options?.mode || 'create') !== 'create') return null;
+    const recordType = getRecordTypeById(this.blockId);
+    if (!recordType || recordType.captureMode === 'direct') return null;
+
+    const settings = this.services.zustandStore.getState().settings;
+    const goalPath = normalizeGoalPath(resolveRecordGoalPath({ context: this.context })) || '';
+    const eligibleGoalPaths = getCreateEligibleGoalPaths(settings, recordType.id);
+
+    if (!goalPath) {
+      return eligibleGoalPaths.length > 0
+        ? null
+        : `「${recordType.name}」还没有配置任何目标模板。`;
+    }
+
+    const direct = eligibleGoalPaths.includes(goalPath);
+    if (direct) return null;
+    const goalName = goalPath.split('/').filter(Boolean).pop() || goalPath;
+    return `「${goalName}」还没有配置「${recordType.name}」模板。`;
+  }
+
   // ✅ 方法一：官方 API（Obsidian ≥ 0.15.0）
   shouldCloseOnClickOutside(): boolean {
     return false;
   }
 
   onOpen() {
+    const unavailable = this.getCreateAvailabilityFailure();
+    if (unavailable) {
+      this.services.uiPort.notice(unavailable);
+      queueMicrotask(() => this.close());
+      return;
+    }
+
     if (QuickInputModal.activeModal && QuickInputModal.activeModal !== this) {
       try {
         QuickInputModal.activeModal.close();

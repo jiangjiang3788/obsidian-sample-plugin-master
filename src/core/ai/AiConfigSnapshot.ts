@@ -69,14 +69,14 @@ export function buildAiConfigSnapshot(
   const rawEnabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
   const inputBlocks = input?.blocks ?? [];
   const hasEnabledBlockMatch = !!rawEnabledSet && inputBlocks.some(
-    (block) => rawEnabledSet.has(block.id) || rawEnabledSet.has(block.coreBlockId || ''),
+    (block) => rawEnabledSet.has(block.id) || rawEnabledSet.has(block.recordTypeId || ''),
   );
   const enabledSet = hasEnabledBlockMatch ? rawEnabledSet : null;
 
   const blocks = inputBlocks
-    .filter((block) => !enabledSet || enabledSet.has(block.id) || enabledSet.has(block.coreBlockId || ''))
+    .filter((block) => !enabledSet || enabledSet.has(block.id) || enabledSet.has(block.recordTypeId || ''))
     .map((block) => {
-      const effective = input ? getEffectiveTemplate(input, block.id, undefined) : undefined;
+      const effective = input ? getEffectiveTemplate(input, block.id) : undefined;
       const sourceFields = effective?.template?.fields ?? block.fields ?? [];
       return {
         id: block.id,
@@ -87,7 +87,7 @@ export function buildAiConfigSnapshot(
     });
 
   const blockById = new Map(inputBlocks.map((block) => [block.id, block]));
-  const blockByCoreId = new Map(inputBlocks.map((block) => [block.coreBlockId || block.id, block]));
+  const blockByCoreId = new Map(inputBlocks.map((block) => [block.recordTypeId || block.id, block]));
 
   const goals = (goalSettings?.goals ?? [])
     .filter((goal) => goal.status !== 'archived')
@@ -101,17 +101,17 @@ export function buildAiConfigSnapshot(
   const goalPresets = getGoalTemplates(goalSettings)
     .filter((preset) => preset.enabled !== false)
     .filter((preset) => goalPaths.has(preset.goalPath))
-    .filter((preset) => !enabledSet || enabledSet.has(preset.coreBlockId))
+    .filter((preset) => !enabledSet || enabledSet.has(preset.recordTypeId))
     .map((preset) => {
-      const block = blockByCoreId.get(preset.coreBlockId) || blockById.get(preset.coreBlockId);
+      const block = blockByCoreId.get(preset.recordTypeId) || blockById.get(preset.recordTypeId);
       const fields = (preset.fields?.length ? preset.fields : block?.fields || [])
         .filter(isAiVisibleField)
         .map(normalizeField);
       return {
         id: preset.id,
         goalPath: preset.goalPath,
-        blockId: preset.coreBlockId,
-        categoryKey: block?.categoryKey || preset.coreBlockId,
+        blockId: preset.recordTypeId,
+        categoryKey: block?.categoryKey || preset.recordTypeId,
         periodPolicy: preset.periodPolicy,
         fields,
       };

@@ -44,3 +44,17 @@ Settings edit configuration. View runtime is a product feature and lives outside
 Module public facades are for crossing real module boundaries. Code inside a module should depend on concrete internal modules rather than importing its own root facade.
 
 Core dependency cycles are not accepted.
+
+## Record capture runtime
+
+All user entry points (command, Heatmap, Timeline, view quick-create and edit) converge on one Record input flow:
+
+```text
+RecordType + Goal context
+        -> GoalTemplateResolver
+        -> RecordInputSession
+        -> normalize / validate
+        -> RecordDraft / Codec
+```
+
+Goal is fixed system context for goal-bindable RecordTypes. Create capture requires an enabled direct Goal × RecordType template; absence means the Quick Input create surface must not open for that context. RecordType supplies the structural base that the direct GoalTemplate customizes. No parent-template inheritance and no first-item business fallback are allowed.

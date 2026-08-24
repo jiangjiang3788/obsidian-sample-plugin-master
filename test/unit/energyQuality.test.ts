@@ -9,7 +9,7 @@ function energy(id: string, date: string, time: string, mode: 'realtime' | 'retr
     coreBlock: 'energy',
     categoryKey: '精力',
     extra: {
-      核心Block: 'energy',
+      记录类型: 'energy',
       精力值: 60,
       精力档位: 60,
       日期: date,

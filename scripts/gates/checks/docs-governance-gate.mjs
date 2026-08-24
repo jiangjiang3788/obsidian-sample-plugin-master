@@ -12,7 +12,7 @@ const required = [
   'docs/TESTING_RELEASE.md',
   'docs/CSS_DESIGN_SPEC.md',
   'docs/DEVELOPMENT_GUARDRAILS.md',
-  'docs/文档治理.md',
+  'docs/DOCUMENT_GOVERNANCE.md',
 ];
 for (const file of required) {
   if (!fs.existsSync(path.join(root, file))) failures.push(`missing current doc: ${file}`);
@@ -26,8 +26,8 @@ for (const name of docs.map((entry) => entry.name)) {
     failures.push(`historical process doc must stay out of active docs/: ${name}`);
   }
 }
-const governance = fs.existsSync(path.join(root, 'docs/文档治理.md')) ? fs.readFileSync(path.join(root, 'docs/文档治理.md'), 'utf8') : '';
-for (const text of ['当前事实', '归档', '历史']) if (!governance.includes(text)) failures.push(`docs/文档治理.md must mention ${text}`);
+const governance = fs.existsSync(path.join(root, 'docs/DOCUMENT_GOVERNANCE.md')) ? fs.readFileSync(path.join(root, 'docs/DOCUMENT_GOVERNANCE.md'), 'utf8') : '';
+for (const text of ['当前事实', '归档', '历史']) if (!governance.includes(text)) failures.push(`docs/DOCUMENT_GOVERNANCE.md must mention ${text}`);
 if (fs.existsSync(path.join(root, 'demo'))) failures.push('historical demo datasets must stay outside the active source package');
 for (const dir of ['reports/record-architecture-convergence', 'reports/task-data-foundation-v2']) {
   if (fs.existsSync(path.join(root, dir))) failures.push(`historical report directory must stay archived: ${dir}`);

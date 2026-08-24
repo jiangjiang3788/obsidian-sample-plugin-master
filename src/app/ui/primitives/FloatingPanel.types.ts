@@ -35,13 +35,10 @@ export interface FloatingPanelProps {
     closeOnOutsideClick?: boolean;
     closeOnEscape?: boolean;
 
-    /** 兜底 zIndex（通常不需要传，交给 Zustand 管理） */
-    zIndex?: number;
-
     /**
-     * 是否使用 Portal 挂到 document.body。
+     * 是否使用 Portal 挂到统一 Think OverlayHost。
      * 默认 true，适合普通悬浮窗。
-     * 在 Obsidian 设置页内编辑输入框时，body portal 可能被设置页/Tabs 的焦点管理当作“外部区域”，
+     * 在 Obsidian 设置页内编辑输入框时，全局 portal 可能被设置页/Tabs 的焦点管理当作“外部区域”，
      * 导致 input focusin 后立刻 focusout 并把焦点还给 settings tab。
      * 这种场景传 false，让 fixed 面板仍然显示为悬浮窗，但 DOM 留在当前设置页焦点作用域内。
      */

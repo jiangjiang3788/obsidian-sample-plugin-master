@@ -12,5 +12,6 @@ runGateGroup("ui-runtime", [
   "list-hierarchy-convergence-gate.mjs",
   "settings-view-runtime-gate.mjs",
   "settings-field-view-convergence-gate.mjs",
-  "view-interaction-convergence-gate.mjs"
+  "view-interaction-convergence-gate.mjs",
+  "view-registry-convergence-gate.mjs"
 ]);

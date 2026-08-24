@@ -148,7 +148,7 @@ export function sortGoalPathsBySettingsOrder(paths: string[] = [], goals: GoalDe
   return [...paths].sort(order.compareGoalPaths);
 }
 
-/** Sort the one template owned by each Goal x CoreBlock cell. */
+/** Sort the one template owned by each Goal x RecordType cell. */
 export function sortGoalTemplatesBySettingsOrder<T extends GoalTemplate>(templates: T[] = [], goals: GoalDefinition[] = []): T[] {
   const goalOrder = createGoalOrderIndex(goals);
   const originalIndex = new Map<T, number>();
@@ -156,7 +156,7 @@ export function sortGoalTemplatesBySettingsOrder<T extends GoalTemplate>(templat
   return [...templates].sort((left, right) => {
     const byGoal = goalOrder.compareGoalPaths(left.goalPath, right.goalPath);
     if (byGoal !== 0) return byGoal;
-    const byBlock = String(left.coreBlockId || '').localeCompare(String(right.coreBlockId || ''), 'zh-CN');
+    const byBlock = String(left.recordTypeId || '').localeCompare(String(right.recordTypeId || ''), 'zh-CN');
     if (byBlock !== 0) return byBlock;
     return (originalIndex.get(left) ?? 0) - (originalIndex.get(right) ?? 0);
   });

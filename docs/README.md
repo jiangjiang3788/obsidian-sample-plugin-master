@@ -8,6 +8,6 @@ Active product/design truth:
 - `CSS_DESIGN_SPEC.md` - current UI/CSS design contract.
 - `UI_REDESIGN_PLAN.md` - full UI redesign phases and current progress.
 - `DEVELOPMENT_GUARDRAILS.md` - rules that prevent architecture from expanding again.
-- `文档治理.md` - documentation retention policy.
+- `DOCUMENT_GOVERNANCE.md` - documentation retention policy.
 
 Implementation history lives under `docs/reports/`. No phase report should be placed loose in the project root.

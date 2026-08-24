@@ -1,7 +1,7 @@
-import { buildGoalBuckets, getItemGoalKey, UNASSIGNED_GOAL_KEY } from '../../src/core/goal';
+import { buildGoalBuckets, getItemGoalKey, UNASSIGNED_GOAL_KEY, type GoalDefinition } from '../../src/core/goal';
 
-const goals = [
-  { path: '项目/目标A' },
+const goals: GoalDefinition[] = [
+  { path: '项目/目标A', status: 'active', createdAt: '', updatedAt: '' },
 ];
 
 describe('item goal grouping', () => {

@@ -10,7 +10,6 @@ export const CORE_PUBLIC_FACADES = [
   { specifier: '@core/semantics/public', file: 'src/core/semantics/public.ts', scope: 'module' },
   { specifier: '@core/utils/public', file: 'src/core/utils/public.ts', scope: 'module' },
   { specifier: '@core/types/public', file: 'src/core/types/public.ts', scope: 'module' },
-  { specifier: '@core/blocks/public', file: 'src/core/blocks/public.ts', scope: 'module' },
   { specifier: '@core/services/public', file: 'src/core/services/public.ts', scope: 'module' },
   { specifier: '@core/ports/public', file: 'src/core/ports/public.ts', scope: 'module' },
   { specifier: '@core/ai/public', file: 'src/core/ai/public.ts', scope: 'module' },

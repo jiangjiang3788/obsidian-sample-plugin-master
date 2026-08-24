@@ -15,7 +15,7 @@ export function collectGoalPathsForHeatmap(params: {
     const paths = new Set<string>();
     filteredItems.forEach((item) => {
         const itemBlock = item.coreBlock ? `core.${String(item.coreBlock).replace(/^core\./, '')}` : '';
-        const sourceBlockKey = sourceBlock.coreBlockId || sourceBlock.id || sourceBlock.name || sourceBlock.categoryKey;
+        const sourceBlockKey = sourceBlock.recordTypeId || sourceBlock.id || sourceBlock.name || sourceBlock.categoryKey;
         const isSourceBlock = itemBlock === sourceBlockKey
             || item.categoryKey === sourceBlock.categoryKey
             || item.categoryKey === sourceBlock.name;

@@ -69,7 +69,7 @@ function buildRenderData(
   const rawGoalPath = String(normalizedData.goalPath ?? normalizedData['目标'] ?? '').trim();
   const goalPath = rawGoalPath ? requireGoalPath(rawGoalPath) : '';
   const goalParts = goalPath ? goalPath.split('/').filter(Boolean) : [];
-  const coreBlock = String(normalizedData.coreBlock ?? normalizedData['核心Block'] ?? (template as any).coreBlockId ?? template.id ?? '').trim();
+  const coreBlock = String(normalizedData.coreBlock ?? normalizedData['记录类型'] ?? (template as any).recordTypeId ?? template.id ?? '').trim();
   const recordDate = String(normalizedData['日期'] ?? normalizedData.date ?? '').trim();
   const periodPolicy = resolveTemplatePeriodPolicy(template as any);
   const derivedPeriod = periodPolicy ? resolveDerivedPeriod(recordDate || undefined, periodPolicy.granularity) : null;
@@ -131,12 +131,12 @@ export function buildRecordOutputPlan(input: {
   }
 
   const renderData = buildRenderData(input.template, input.formData);
-  const explicitCoreBlockId = String((input.template as any).coreBlockId || '').trim();
-  const systemCoreBlockId = String(input.template.id || '').trim().startsWith('core.') ? String(input.template.id || '').trim() : '';
-  const trustedCoreBlock = (explicitCoreBlockId || systemCoreBlockId).replace(/^core\./, '');
+  const explicitRecordTypeId = String((input.template as any).recordTypeId || '').trim();
+  const systemRecordTypeId = String(input.template.id || '').trim().startsWith('core.') ? String(input.template.id || '').trim() : '';
+  const trustedCoreBlock = (explicitRecordTypeId || systemRecordTypeId).replace(/^core\./, '');
   const hintedCoreBlock = String(renderData.coreBlock || input.template.id || '').trim().replace(/^core\./, '');
   const coreBlock = trustedCoreBlock || hintedCoreBlock;
-  if (!coreBlock) throw new Error('每条记录都必须有核心Block。');
+  if (!coreBlock) throw new Error('每条记录都必须有记录类型。');
   const schema = getRecordSchemaDefinition(coreBlock);
   if (!schema) throw new Error(`unknown_record_schema:${coreBlock}`);
   const recordId = String(input.recordId || '').trim() || createRecordId(coreBlock);

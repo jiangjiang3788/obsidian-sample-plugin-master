@@ -9,8 +9,8 @@ export interface DerivedPeriod {
 }
 
 
-export function isPeriodAwareCoreBlock(coreBlockId?: string | null): boolean {
-  const id = String(coreBlockId || '').trim();
+export function isPeriodAwareRecordType(recordTypeId?: string | null): boolean {
+  const id = String(recordTypeId || '').trim();
   return id === 'core.plan' || id === 'core.review' || id === 'plan' || id === 'review';
 }
 
@@ -20,10 +20,10 @@ export function normalizePeriodPolicyGranularity(value?: string | null): PeriodG
   return 'week';
 }
 
-export function resolveTemplatePeriodPolicy(template?: { coreBlockId?: string; id?: string; periodPolicy?: PeriodPolicy | null } | null): PeriodPolicy | null {
+export function resolveTemplatePeriodPolicy(template?: { recordTypeId?: string; id?: string; periodPolicy?: PeriodPolicy | null } | null): PeriodPolicy | null {
   if (!template) return null;
-  const coreBlockId = template.coreBlockId || template.id || '';
-  if (!isPeriodAwareCoreBlock(coreBlockId)) return null;
+  const recordTypeId = template.recordTypeId || template.id || '';
+  if (!isPeriodAwareRecordType(recordTypeId)) return null;
   const explicitPolicy = template.periodPolicy;
   if (explicitPolicy && explicitPolicy.enabled !== false) {
     return { enabled: true, granularity: normalizePeriodPolicyGranularity(explicitPolicy.granularity) };

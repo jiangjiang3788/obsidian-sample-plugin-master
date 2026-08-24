@@ -4,7 +4,7 @@ import { dayjs } from '@core/utils/date';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { ViewInstance } from '@/core/view/ViewConfig';
 import type { RecordCaptureTemplate, TemplateField } from '@/core/recordInput/CaptureTemplate';
-import { getEffectiveCoreBlocks } from '@/core/blocks';
+import { getTemplateRecordTypes } from '@/core/recordTypes/public';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
 import type { QuickInputConfig, ISettingsProvider } from '@core/services/types';
@@ -25,14 +25,14 @@ export class ActionService {
     ) {}
 
     private getRuntimeBlocks(): RecordCaptureTemplate[] {
-        return getEffectiveCoreBlocks(settings);
+        return getTemplateRecordTypes();
     }
 
     private findBlockByCoreBlock(coreBlock: string | undefined): RecordCaptureTemplate | undefined {
         const normalized = String(coreBlock || '').trim().replace(/^core\./i, '');
         if (!normalized) return undefined;
         return this.getRuntimeBlocks().find((block) =>
-            String(block.coreBlockId || block.id || '').trim().replace(/^core\./i, '') === normalized
+            String(block.recordTypeId || block.id || '').trim().replace(/^core\./i, '') === normalized
         );
     }
 
@@ -66,7 +66,7 @@ export class ActionService {
         const coreBlock = String(coreBlockFilter.value);
         const targetBlock = this.findBlockByCoreBlock(coreBlock);
         if (!targetBlock) {
-            this.ui.notice(`快捷输入失败：找不到核心 Block 为 "${coreBlock}" 的模板。`);
+            this.ui.notice(`快捷输入失败：找不到记录类型 为 "${coreBlock}" 的模板。`);
             return null;
         }
 
@@ -138,7 +138,7 @@ export class ActionService {
         const targetBlock = this.findBlockByCoreBlock(coreBlock);
 
         if (!targetBlock) {
-            this.ui.notice(`找不到与核心 Block "${coreBlock}" 匹配的模板，无法编辑。`);
+            this.ui.notice(`找不到与记录类型 "${coreBlock}" 匹配的模板，无法编辑。`);
             return null;
         }
 
@@ -170,7 +170,6 @@ export class ActionService {
         periodContext: string,
         categoryName?: string
     ): QuickInputConfig | null {
-        const settings = this.settingsProvider.getSettings();
         const viewConfig = viewInstance.viewConfig || {};
         const categories = viewConfig.categories || [];
 
@@ -192,7 +191,8 @@ export class ActionService {
             '周期': periodContext,
         };
 
-        const equalityFilters = filters.filter((f) => f.op === '=' && f.field !== 'categoryKey');
+        const filters = viewInstance.filters || [];
+        const equalityFilters = filters.filter((filter) => filter.op === '=' && filter.field !== 'categoryKey');
         for (const filter of equalityFilters) {
             for (const templateField of targetBlock.fields) {
                 if (filter.field === templateField.key || filter.field === templateField.label) {
@@ -210,11 +210,11 @@ export class ActionService {
 
     public getQuickInputConfigForNewTimer(): QuickInputConfig | null {
         const blocks = this.getRuntimeBlocks();
-        if (!blocks || blocks.length === 0) {
-            this.ui.notice('没有可用的Block模板，请先在设置中创建一个。');
+        const taskBlock = blocks.find((b) => String(b.recordTypeId || b.id).replace(/^core\./i, '') === 'task');
+        if (!taskBlock) {
+            this.ui.notice('快捷输入失败：任务记录类型未注册。');
             return null;
         }
-        const taskBlock = blocks.find((b) => String(b.coreBlockId || b.id).replace(/^core\./i, '') === 'task') || blocks[0];
         return {
             blockId: taskBlock.id,
         };

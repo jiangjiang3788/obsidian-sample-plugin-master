@@ -1,4 +1,3 @@
-// src/platform/obsidian/modals/AiBatchConfirmSidebar.tsx
 /** @jsxImportSource preact */
 import {
   CheckCircleIcon,
@@ -12,15 +11,27 @@ import { shortDisplay } from './AiBatchConfirmModel';
 
 export interface AiBatchConfirmSidebarProps {
   records: AiBatchConfirmRecordItem[];
-  blocks: any[];
+  blocks: Array<{ id?: string; name?: string }>;
   currentIndex: number;
   savedCount: number;
   pendingCount: number;
+  isBusy: boolean;
+  isSavingAll: boolean;
   onSelect: (index: number) => void;
   onSaveAll: () => void;
 }
 
-export function AiBatchConfirmSidebar({ records, blocks, currentIndex, savedCount, pendingCount, onSelect, onSaveAll }: AiBatchConfirmSidebarProps) {
+export function AiBatchConfirmSidebar({
+  records,
+  blocks,
+  currentIndex,
+  savedCount,
+  pendingCount,
+  isBusy,
+  isSavingAll,
+  onSelect,
+  onSaveAll,
+}: AiBatchConfirmSidebarProps) {
   return (
     <aside className="think-ai-batch-sidebar">
       <div className="think-ai-batch-sidebar__header">
@@ -36,7 +47,9 @@ export function AiBatchConfirmSidebar({ records, blocks, currentIndex, savedCoun
               type="button"
               key={record.id}
               className={`think-ai-batch-sidebar__item${active ? ' is-selected' : ''}${record.skipped ? ' is-muted' : ''}`}
+              aria-current={active ? 'true' : undefined}
               onClick={() => onSelect(index)}
+              disabled={isBusy}
             >
               <span className="think-ai-batch-sidebar__status" aria-hidden="true">
                 {record.saved ? <CheckCircleIcon fontSize="small" /> : record.skipped ? <DeleteIcon fontSize="small" /> : <RadioButtonUncheckedIcon fontSize="small" />}
@@ -51,7 +64,14 @@ export function AiBatchConfirmSidebar({ records, blocks, currentIndex, savedCoun
         })}
       </div>
       <div className="think-ai-batch-sidebar__footer">
-        <ThinkButton size="sm" onClick={onSaveAll} disabled={pendingCount === 0}>保存全部 ({pendingCount})</ThinkButton>
+        <ThinkButton
+          size="sm"
+          loading={isSavingAll}
+          data-ai-batch-action="save-all"
+          onClick={onSaveAll}
+          disabled={isBusy || pendingCount === 0}
+          aria-label="保存全部 AI 识别记录"
+        >{isSavingAll ? '保存中…' : `保存全部 (${pendingCount})`}</ThinkButton>
       </div>
     </aside>
   );

@@ -8,7 +8,7 @@ function base(overrides: Partial<RecordViewItem>): RecordViewItem {
 function energy(id: string, date: string, time: string, score: number, brain?: number, physical?: number): RecordViewItem {
   return base({
     id, goalPath: '精力研究示例', date, startTime: time, coreBlock: 'energy', categoryKey: '精力',
-    extra: { 核心Block: 'energy', 精力值: score, 精力档位: Math.max(20, Math.round(score / 20) * 20), 时间: time, 日期: date, 评分模式: brain != null || physical != null ? 'detailed' : 'quick', ...(brain != null ? { 脑力精力: brain } : {}), ...(physical != null ? { 体力精力: physical } : {}) },
+    extra: { 记录类型: 'energy', 精力值: score, 精力档位: Math.max(20, Math.round(score / 20) * 20), 时间: time, 日期: date, 评分模式: brain != null || physical != null ? 'detailed' : 'quick', ...(brain != null ? { 脑力精力: brain } : {}), ...(physical != null ? { 体力精力: physical } : {}) },
   });
 }
 

@@ -10,6 +10,7 @@ export * from '../types/recordInput';
 export * from '../types/recordSnapshot';
 
 export * from './session/types';
+export { applyRecordGoalContext, resolveRecordGoalPath } from './systemContext';
 export { initializeRecordInputSession } from './session/initialize';
 export { getRecordInputSessionDraft, reduceRecordInputSession } from './session/reducer';
 export { preserveRecordInputBlockSwitchState, clearRecordInputGoalContext, RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS, RECORD_INPUT_GOAL_CONTEXT_KEYS, isRecordInputMeaningfulValue, isRecordInputOptionLike, isRecordInputRefreshableSource, isRecordInputSameValue, readRecordInputString } from './session/policy';
@@ -24,5 +25,5 @@ export { buildRecordOutputPlan, buildRecordPersistencePlan } from './snapshot/Ou
 export * from './RecordInputFacade';
 export { RecordInputKernel } from './RecordInputKernel';
 
-export { GoalTemplateResolver } from '../services/GoalTemplateResolver';
-export type { GoalTemplateResolveInput, GoalTemplateResolveResult, GoalTemplateSourceType } from '../services/GoalTemplateResolver';
+export { GoalTemplateResolver, getCreateEligibleGoalPaths } from '../services/GoalTemplateResolver';
+export type { GoalTemplateResolveInput, GoalTemplateResolveResult, GoalTemplateResolveStatus, GoalTemplateSourceType } from '../services/GoalTemplateResolver';

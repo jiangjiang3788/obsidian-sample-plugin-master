@@ -103,7 +103,6 @@ body.excel-view-is-resizing-column * {
 
 .excel-column-context-menu {
     position: fixed;
-    z-index: 9999;
     min-width: 168px;
     max-width: 260px;
     padding: var(--think-space-2);

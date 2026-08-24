@@ -1,6 +1,6 @@
 import {
   compactGoalTemplateForStorage,
-  DEFAULT_CORE_BLOCKS,
+  DEFAULT_TEMPLATE_RECORD_TYPES,
   DEFAULT_GOAL_SETTINGS,
   describeGoalTemplateStorageDiff,
   getGoalTemplateId,
@@ -10,8 +10,8 @@ import {
 } from '@/core/public';
 import type { GoalDefinition, GoalTemplate } from '@/core/public';
 
-const taskBlock = DEFAULT_CORE_BLOCKS.find((block) => block.id === 'core.task')!;
-const planBlock = DEFAULT_CORE_BLOCKS.find((block) => block.id === 'core.plan')!;
+const taskBlock = DEFAULT_TEMPLATE_RECORD_TYPES.find((block) => block.id === 'core.task')!;
+const planBlock = DEFAULT_TEMPLATE_RECORD_TYPES.find((block) => block.id === 'core.plan')!;
 const goal: GoalDefinition = {
   path: '爱好能力/电脑/记录系统',
   status: 'active',
@@ -25,7 +25,7 @@ describe('GoalTemplate storage helpers', () => {
     const template: GoalTemplate = {
       id: getGoalTemplateId('照顾好自己/健康/睡眠', 'core.task'),
       goalPath: '照顾好自己/健康/睡眠',
-      coreBlockId: 'core.task',
+      recordTypeId: 'core.task',
       enabled: true,
     };
     const next = upsertGoalTemplateInSettings(DEFAULT_GOAL_SETTINGS, template);
@@ -39,7 +39,7 @@ describe('GoalTemplate storage helpers', () => {
     const template: GoalTemplate = {
       id: getGoalTemplateId(goal.path, 'core.task'),
       goalPath: goal.path,
-      coreBlockId: 'core.task',
+      recordTypeId: 'core.task',
       enabled: true,
       fields: taskBlock.fields as any,
       targetFile: taskBlock.targetFile,
@@ -47,7 +47,7 @@ describe('GoalTemplate storage helpers', () => {
       defaultValues: { goalPath: goal.path, icon: '🧩' },
       requiredFields: [],
     };
-    const compacted = compactGoalTemplateForStorage(template, { coreBlock: taskBlock });
+    const compacted = compactGoalTemplateForStorage(template, { recordType: taskBlock });
     expect(compacted.fields).toBeUndefined();
     expect(compacted.targetFile).toBeUndefined();
     expect(compacted.appendUnderHeader).toBeUndefined();
@@ -58,13 +58,13 @@ describe('GoalTemplate storage helpers', () => {
 
   it('keeps periodPolicy only for period-aware blocks', () => {
     const taskTemplate = compactGoalTemplateForStorage({
-      id: getGoalTemplateId(goal.path, 'core.task'), goalPath: goal.path, coreBlockId: 'core.task', enabled: true,
+      id: getGoalTemplateId(goal.path, 'core.task'), goalPath: goal.path, recordTypeId: 'core.task', enabled: true,
       periodPolicy: { enabled: true, granularity: 'month' },
-    }, { coreBlock: taskBlock });
+    }, { recordType: taskBlock });
     const planTemplate = compactGoalTemplateForStorage({
-      id: getGoalTemplateId(goal.path, 'core.plan'), goalPath: goal.path, coreBlockId: 'core.plan', enabled: true,
+      id: getGoalTemplateId(goal.path, 'core.plan'), goalPath: goal.path, recordTypeId: 'core.plan', enabled: true,
       periodPolicy: { enabled: true, granularity: 'quarter' },
-    }, { coreBlock: planBlock });
+    }, { recordType: planBlock });
     expect(taskTemplate.periodPolicy).toBeUndefined();
     expect(planTemplate.periodPolicy).toEqual({ enabled: true, granularity: 'quarter' });
     expect(describeGoalTemplateStorageDiff(planTemplate)).toContain('周期 quarter');

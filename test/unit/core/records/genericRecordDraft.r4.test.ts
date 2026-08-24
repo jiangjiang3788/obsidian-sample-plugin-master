@@ -70,7 +70,7 @@ goalPath: '工作能力', 日期: '2026-08-11', 内容: '客户确认方案',
     });
 
     expect(markdown).toContain('记录ID:: rec.01TEST00000000000000000000');
-    expect(markdown).toContain('核心Block:: evidence');
+    expect(markdown).toContain('记录类型:: evidence');
     expect(markdown).toContain('内容:: 客户确认方案');
     expect(markdown).not.toContain('分类::');
     expect(markdown).not.toContain('模板ID::');
@@ -81,7 +81,7 @@ goalPath: '工作能力', 日期: '2026-08-11', 内容: '客户确认方案',
       id: 'core.thought',
       name: '思考',
       categoryKey: '思考',
-      coreBlockId: 'core.thought',
+      recordTypeId: 'core.thought',
       fields: [
         { id: 'date', key: '日期', label: '日期', type: 'date' },
         { id: 'category', key: '分类', label: '分类', type: 'singleSelect' },

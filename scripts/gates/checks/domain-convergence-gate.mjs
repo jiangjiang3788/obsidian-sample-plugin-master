@@ -48,7 +48,7 @@ function isAtLeast(version, min) {
   return c >= z;
 }
 
-assert(exists('src/core/goal/templateVariant.ts'), 'Missing Template Variant domain contract: src/core/goal/templateVariant.ts');
+assert(exists('src/core/goal/templates.ts'), 'Missing GoalTemplate domain contract: src/core/goal/templates.ts');
 assert(!exists('src/core/goal/domainConvergence.ts'), 'Runtime data convergence normalizer must be removed; data is migrated offline.');
 assert(!exists('scripts/migration/one-shot-domain-migration.mjs'), 'Command-line migration script must be removed from the plugin package.');
 assert(!exists('src/core/goal/themeOverrideMigration.ts'), 'Theme × Block migration helpers must not ship in runtime source.');
@@ -58,13 +58,13 @@ const nodeTypesVersion = packageJson.devDependencies?.['@types/node'] || package
 assert(isAtLeast(nodeTypesVersion, '20.19.0'), 'Vite 7 requires @types/node >=20.19.0; package.json must not pin an older Node type package.');
 
 const goalIndex = read('src/core/goal/index.ts');
-assert(goalIndex.includes('normalizeTemplateVariantId'), 'Template Variant helpers are not exported from core/goal.');
+assert(goalIndex.includes('getGoalTemplateId'), 'GoalTemplate helpers are not exported from core/goal.');
 assert(goalIndex.includes('isSystemRecordContextField'), 'System context field helper is not exported from core/goal.');
 assert(!goalIndex.includes('domainConvergence'), 'core/goal must not export runtime data convergence.');
 assert(!goalIndex.includes('themeOverrideMigration'), 'core/goal must not export legacy Theme × Block migration helpers.');
 
 const publicApi = read('src/core/public.ts');
-assert(publicApi.includes('normalizeTemplateVariantId'), 'Template Variant helpers are not exported from core/public.');
+assert(publicApi.includes('getGoalTemplateId'), 'GoalTemplate helpers are not exported from core/public.');
 assert(publicApi.includes('isSystemRecordContextField'), 'System context field helper is not exported from core/public.');
 assert(!publicApi.includes('normalizeThinkSettingsForDomainConvergence'), 'core/public must not export runtime data convergence.');
 assert(!publicApi.includes('ThemeOverrideMigration'), 'core/public must not export legacy Theme × Block migration types.');
@@ -97,9 +97,9 @@ const settingsIndex = read('src/features/settings/index.ts');
 assert(settingsIndex.includes('registerThinkSettingsWorkspaceView'), 'Settings setup must register the workspace settings view.');
 assert(settingsIndex.includes('think-open-control-center'), 'Settings setup must add the workspace settings command.');
 
-const templateDiff = read('src/core/goal/templateVariantDiff.ts');
+const templateDiff = read('src/core/goal/templateOverrideDiff.ts');
 assert(templateDiff.includes('compactGoalTemplateForStorage'), 'Template Variant diff compactor is missing.');
-assert(templateDiff.includes('CoreBlock is the source of truth'), 'Template Variant diff compactor must document CoreBlock as source of truth.');
+assert(templateDiff.includes('RecordType stays the base'), 'GoalTemplate diff compactor must document RecordType as the base definition.');
 const goalUseCaseText = read('src/app/usecases/goal.usecase.ts');
 assert(goalUseCaseText.includes('compactGoalTemplateForStorage'), 'GoalUseCase must compact Template Variant storage before persisting.');
 
@@ -123,14 +123,14 @@ assert(aiScope.includes('清理旧 Block ID'), 'AI settings must expose stale Bl
 const quickInputContainer = read('src/features/quickinput/editor/QuickInputEditorContainer.tsx');
 assert(!quickInputContainer.includes('settings.overrides'), 'QuickInput must not use Theme × Block overrides to disable themes.');
 
-const quickFields = read('src/features/quickinput/editor/components/Fields.tsx');
-assert(quickFields.includes('isSystemRecordContextField'), 'QuickInput fields must use the shared system-context field policy.');
+const quickFieldSemantics = read('src/features/quickinput/editor/fields/fieldSemantics.ts');
+assert(quickFieldSemantics.includes('isSystemRecordContextField'), 'QuickInput fields must use the shared system-context field policy.');
 
 
 const viewDomain = read('src/core/view-config/domainFields.ts');
 assert(viewDomain.includes('normalizeViewFieldKey'), 'View domain field policy must normalize legacy view fields.');
 assert(viewDomain.includes('normalizeViewConfigDomain'), 'View domain field policy must normalize legacy viewConfig axes.');
-assert(viewDomain.includes("categoryKey: 'coreBlock'"), 'View filters must converge old categoryKey axis to coreBlock.');
+assert(viewDomain.includes("记录类型: 'coreBlock'"), 'View field labels must normalize 记录类型 to canonical coreBlock.');
 assert(!viewDomain.includes('taskStatus'), 'View domain policy must not restore legacy taskStatus; Task filters use canonical status.');
 const fieldRegistry = read('src/core/fields/FieldRegistry.ts');
 assert(fieldRegistry.includes("status: text({ key: 'status'"), 'Field registry must expose canonical status for Task views.');

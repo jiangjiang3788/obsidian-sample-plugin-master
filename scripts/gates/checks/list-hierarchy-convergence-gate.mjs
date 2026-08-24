@@ -25,6 +25,12 @@ if (!grouped.includes('nodes.filter(node => countItemsInGroup(node) > 0)')) {
 if (!blockModel.includes("group: 'bv-group'")) {
   failures.push('BlockView group class must stay a single base class so level classes are generated correctly');
 }
+if (!blockModel.includes("title: 'bv-group-title think-list-disclosure-row think-list-row--compact'")) {
+  failures.push('BlockView group headings must explicitly opt into compact shared list density');
+}
+if (!listSystemCss.includes('.think-os .think-list-disclosure-row.think-list-row--compact')) {
+  failures.push('Shared list CSS must let the compact modifier override disclosure-row density');
+}
 if (!groupedCss.includes('.think-os .bv-group-content') || !groupedCss.includes('border-left: 1px solid')) {
   failures.push('Block hierarchy must use indentation/guide lines instead of nested surfaces');
 }

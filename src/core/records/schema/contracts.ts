@@ -13,7 +13,7 @@ function f(
 
 const ENVELOPE = [
   f('记录ID', 'identity', 'target', 'record-id', 'Stable Record identity; never derived from file path or line.', { required: true, aliases: ['recordId', 'id'] }),
-  f('核心Block', 'identity', 'target', 'enum', 'Business record type discriminator.', { required: true, aliases: ['coreBlock'] }),
+  f('记录类型', 'identity', 'target', 'enum', 'Business record type discriminator.', { required: true, aliases: ['coreBlock'] }),
 ] as const;
 
 const GOAL = [

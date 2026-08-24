@@ -1,5 +1,3 @@
-import type { ViewName } from '@/core/view/ViewConfig';
-
 /** StatisticsView 的默认配置。 */
 export interface StatisticsViewConfig {
   /** 目标中心：统计视图只按目标分组；时间与其他筛选统一由控制栏/视图筛选提供。 */
@@ -158,4 +156,4 @@ export type ViewDefaultConfig =
   | ProgressViewConfig
   | EnergyViewConfig;
 
-export type ViewDefaultConfigMap = Record<ViewName, ViewDefaultConfig>;
+export type ViewDefaultConfigMap = Record<string, ViewDefaultConfig>;

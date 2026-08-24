@@ -1,4 +1,5 @@
 import type { FreeformLayoutConfig, ViewName } from '@/core/view/ViewConfig';
+import { getViewDefinition } from '@/core/config/views/registry';
 
 export const DEFAULT_FREEFORM_LAYOUT_CONFIG: Required<FreeformLayoutConfig> = {
     defaultTemplate: 'balanced',
@@ -57,18 +58,10 @@ export function snapFreeformValue(value: number, gridSize: number): number {
  */
 export function getDefaultFreeformItemSize(viewType: ViewName | undefined, config?: FreeformLayoutConfig): FreeformItemSize {
     const normalizedConfig = normalizeFreeformLayoutConfig(config);
-    const recommendations: Partial<Record<ViewName, FreeformItemSize>> = {
-        BlockView: { width: 480, height: 340 },
-        TableView: { width: 680, height: 420 },
-        ExcelView: { width: 760, height: 460 },
-        TimelineView: { width: 680, height: 420 },
-        StatisticsView: { width: 440, height: 340 },
-        HeatmapView: { width: 520, height: 360 },
-        EventTimelineView: { width: 680, height: 420 },
-        ProgressView: { width: 480, height: 360 },
-        EnergyView: { width: 720, height: 620 },
-    };
-    const recommended = viewType ? recommendations[viewType] : undefined;
+    const definition = viewType ? getViewDefinition(viewType) : undefined;
+    const recommended = definition
+        ? { width: definition.layout.freeformWidth, height: definition.layout.freeformHeight }
+        : undefined;
 
     return {
         width: Math.max(normalizedConfig.minItemWidth, recommended?.width ?? normalizedConfig.defaultItemWidth),

@@ -94,13 +94,13 @@ function resolvePatchField(rawKey: string): { label: string; aliases: string[] }
 
 export function patchRecordBlockMarkdown(markdown: string, patch: RecordPatch): string {
   const lines = markdown.split(/\r?\n/);
-  const protectedKeys = new Set(['记录id','recordid','id','核心block','coreblock']);
+  const protectedKeys = new Set(['记录id','recordid','id','记录类型','coreblock']);
 
   for (const [rawKey, value] of Object.entries(patch)) {
     const key = rawKey.trim();
     if (!key || protectedKeys.has(key.toLowerCase())) continue;
     const definition = resolvePatchField(key);
-    const isTaskRecord = lines.some((line) => /^\s*(?:核心Block|coreBlock)\s*::\s*task\s*$/i.test(line));
+    const isTaskRecord = lines.some((line) => /^\s*(?:记录类型|coreBlock)\s*::\s*task\s*$/i.test(line));
     const taskDateTimeLabels = new Set(['创建于', '计划时间', '开始时间', '结束时间', '截止时间', '完成于', '取消于', '跳过于']);
     const rawEncoded = scalar(value);
     const encoded = isTaskRecord && taskDateTimeLabels.has(definition.label)

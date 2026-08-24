@@ -1,5 +1,4 @@
 export {
-  MODULE_HEADER_CREATE_ALLOWLIST,
   isModuleHeaderCreateAllowed,
   openCreateFromViewHeader,
 } from './viewHeaderCreateAction';

@@ -121,7 +121,7 @@ fail(!/\bpath:\s*string;/.test(goalDefinition), 'GoalDefinition must expose one 
 for (const duplicate of ['id:', 'title:', 'goalPath:', 'parentGoalId:']) {
   fail(goalDefinition.includes(duplicate), `GoalDefinition duplicate identity returned: ${duplicate}`);
 }
-fail(!goalTypes.includes('One Goal path × one CoreBlock can have at most one row.'), 'GoalTemplate uniqueness contract is missing.');
+fail(!goalTypes.includes('One Goal path × one RecordType can have at most one row.'), 'GoalTemplate uniqueness contract is missing.');
 fail(goalTypes.includes('variantId'), 'GoalTemplate variant identity returned.');
 
 const heatmap = read('src/features/views/runtime/HeatmapViewModel.ts');

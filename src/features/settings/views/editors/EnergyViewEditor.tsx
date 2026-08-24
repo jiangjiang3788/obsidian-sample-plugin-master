@@ -5,7 +5,6 @@ import { ENERGY_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import type { ViewEditorProps } from './ViewEditorProps';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
-export { ENERGY_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 
 export function EnergyViewEditor({ value, onChange }: ViewEditorProps) {
   const config = { ...ENERGY_VIEW_DEFAULT_CONFIG, ...value };

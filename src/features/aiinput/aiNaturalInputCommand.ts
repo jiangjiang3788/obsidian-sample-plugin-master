@@ -105,6 +105,7 @@ export function createNaturalInputCommandRunner({
                 {
                     title: fastMode ? '确认记录（快速模式）' : '确认记录',
                     items: batch.items,
+                    traceId,
                 }
             ).open();
             logAiInputStep(traceId, '打开批量确认 Modal 完成', confirmModalStart, {

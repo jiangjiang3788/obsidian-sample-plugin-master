@@ -31,7 +31,7 @@ export interface QuickInputEditorViewProps {
   isMobileLike?: boolean;
   showTimeDirectionControl?: boolean;
   currentGoalPath?: string | null;
-  templateSourceType?: 'core-block' | 'goal-template' | null;
+  templateSourceType?: 'record-type' | 'goal-template' | null;
   fieldSourceSummary?: Record<string, number>;
   currentPeriodLabel?: string | null;
 }
@@ -61,12 +61,41 @@ export function QuickInputEditorView({
   templateSourceType = null,
 }: QuickInputEditorViewProps) {
   if (!template) {
-    return <div>错误：找不到当前记录类型的默认配置。</div>;
+    return (
+      <div className={`think-quick-input-editor${dense ? ' is-dense' : ''}`}>
+        <div className="think-quick-input-context-grid">
+          {allowBlockSwitch && blocks.length > 1 && (
+            <QuickInputFormRow label="记录类型">
+              <RecordTypeSwitcher
+                blocks={blocks}
+                currentBlockId={currentBlockId}
+                onBlockChange={onBlockChange}
+              />
+            </QuickInputFormRow>
+          )}
+
+          {currentBlockId ? (
+            <QuickInputFormRow label="目标">
+              <GoalSelector
+                goals={goals}
+                selectedGoalPath={selectedGoalPath}
+                onSelect={onSelectGoal}
+                onCreateGoal={onCreateGoal}
+                dense={dense}
+              />
+            </QuickInputFormRow>
+          ) : null}
+        </div>
+        <div className="think-quick-input-context-hint">
+          {currentBlockId ? '请选择已配置模板的目标后继续。' : '请选择记录类型后继续。'}
+        </div>
+      </div>
+    );
   }
 
-  const shouldShowCoreBlockFallbackHint = Boolean(currentGoalPath)
-    && templateSourceType === 'core-block';
-  const isTaskTemplate = String(currentBlockId || template?.coreBlockId || template?.id || '').replace(/^core\./, '') === 'task';
+  const shouldShowRecordTypeFallbackHint = Boolean(currentGoalPath)
+    && templateSourceType === 'record-type';
+  const isTaskTemplate = String(currentBlockId || template?.recordTypeId || template?.id || '').replace(/^core\./, '') === 'task';
 
   return (
     <div className={`think-quick-input-editor${dense ? ' is-dense' : ''}`}>
@@ -90,8 +119,8 @@ export function QuickInputEditorView({
                 onCreateGoal={onCreateGoal}
                 dense={dense}
               />
-              {shouldShowCoreBlockFallbackHint && (
-                <div className="think-quick-input-context-hint">当前目标没有此记录类型的专属预设，已使用记录类型默认模板。</div>
+              {shouldShowRecordTypeFallbackHint && (
+                <div className="think-quick-input-context-hint">当前记录使用记录类型基础模板。</div>
               )}
             </div>
           </QuickInputFormRow>

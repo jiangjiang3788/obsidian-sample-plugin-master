@@ -1,37 +1,31 @@
-// src/platform/obsidian/modals/AiBatchConfirmModal.tsx
-/**
- * AiBatchConfirmModal
- * - openAndGetResult(): Promise<boolean>
- * - 关闭（X/遮罩/Esc）也会 resolve(false)，避免 Promise 悬挂
- */
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { App } from 'obsidian';
-import { Modal, Notice } from 'obsidian';
-import { useState } from 'preact/hooks';
+import { Modal } from 'obsidian';
+import { useMemo } from 'preact/hooks';
 
-import { type Services, createServices, mountWithServices, unmountPreact, useUseCases, useSelector, selectSettings, resolveVaultResourcePath } from '@/app/public';
+import {
+  type Services,
+  QuickInputEditor,
+  createServices,
+  mountWithServices,
+  resolveVaultResourcePath,
+  selectSettings,
+  unmountPreact,
+  useSelector,
+  useUseCases,
+} from '@/app/public';
+import { buildRecordTypeInputSettings } from '@core/recordTypes/public';
 import type { NaturalRecordCommand } from '@core/types/public';
-import type { RecordSubmitResult } from '@core/recordInput/public';
-import { readRecordSubmitMessage } from '@core/utils/public';
-
-import { QuickInputEditor } from '@/app/public';
+import { isMobileLikeEnvironment } from '@features/quickinput/modal/quickInputEnvironment';
 
 import { AiBatchConfirmFooter } from './AiBatchConfirmFooter';
-import {
-  type AiBatchConfirmRecordItem,
-  buildAiBatchConfirmBatchSummary,
-  buildAiBatchConfirmCreateSubmitParams,
-  buildAiBatchConfirmRecordContext,
-  buildAiBatchConfirmRecordItems,
-  findNextPendingAiBatchConfirmIndex,
-  patchAiBatchConfirmRecordAtIndex,
-  summarizeAiBatchConfirmRecords,
-} from './AiBatchConfirmModel';
+import { buildAiBatchConfirmRecordItems } from './AiBatchConfirmModel';
 import { AiBatchConfirmRecordHeader } from './AiBatchConfirmRecordHeader';
 import { AiBatchConfirmSidebar } from './AiBatchConfirmSidebar';
 import { installBackdropCloseGuard } from './modalBackdropGuard';
 import { prepareThinkModal } from './modalPreact';
+import { useAiBatchConfirmActions } from './useAiBatchConfirmActions';
 
 export class AiBatchConfirmModal extends Modal {
   private services: Services;
@@ -44,9 +38,10 @@ export class AiBatchConfirmModal extends Modal {
     private args: {
       title: string;
       items: NaturalRecordCommand[];
+      traceId?: string;
       confirmText?: string;
       cancelText?: string;
-    }
+    },
   ) {
     super(app);
     this.services = createServices();
@@ -68,8 +63,7 @@ export class AiBatchConfirmModal extends Modal {
       <AiBatchConfirmForm
         resolveResourcePath={(path) => resolveVaultResourcePath(this.app, path)}
         title={this.args.title}
-        confirmText={this.args.confirmText}
-        cancelText={this.args.cancelText}
+        traceId={this.args.traceId}
         items={this.args.items}
         closeModal={() => this.close()}
         onComplete={() => {
@@ -80,14 +74,13 @@ export class AiBatchConfirmModal extends Modal {
           }
         }}
       />,
-      this.services
+      this.services,
     );
   }
 
   onClose() {
     this.cleanupBackdropCloseGuard?.();
     this.cleanupBackdropCloseGuard = null;
-    // 用户直接关闭（点击遮罩/右上角/ESC）也必须 resolve(false)
     if (!this.resolved && this.resolvePromise) {
       this.resolvePromise(false);
       this.resolvePromise = null;
@@ -99,140 +92,106 @@ export class AiBatchConfirmModal extends Modal {
 function AiBatchConfirmForm({
   resolveResourcePath,
   title,
+  traceId,
   items: initialItems,
   closeModal,
   onComplete,
 }: {
   resolveResourcePath: (path: string) => string;
   title: string;
-  confirmText?: string;
-  cancelText?: string;
+  traceId?: string;
   items: NaturalRecordCommand[];
   closeModal: () => void;
   onComplete?: () => void;
 }) {
   const fullSettings = useSelector(selectSettings);
-  const settings = fullSettings.inputSettings;
+  const settings = buildRecordTypeInputSettings();
   const goalSettings = fullSettings.goalSettings;
   const useCases = useUseCases();
   const blocks = settings.blocks || [];
-  const [records, setRecords] = useState<AiBatchConfirmRecordItem[]>(() =>
-    buildAiBatchConfirmRecordItems({
+  const isMobileLike = useMemo(() => isMobileLikeEnvironment(), []);
+  const initialRecords = useMemo(
+    () => buildAiBatchConfirmRecordItems({
       items: initialItems,
       blocks,
       goalSettings,
       inputSettings: settings,
-    })
+    }),
+    [initialItems, blocks, goalSettings, settings],
   );
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const currentRecord = records[currentIndex];
-  const summary = summarizeAiBatchConfirmRecords(records);
 
-  const updateCurrentRecord = (updates: Partial<AiBatchConfirmRecordItem>) => {
-    setRecords((prev) => patchAiBatchConfirmRecordAtIndex(prev, currentIndex, updates));
-  };
-
-  const jumpToNextPending = (nextRecords = records) => {
-    const nextPending = findNextPendingAiBatchConfirmIndex(nextRecords, currentIndex);
-    if (nextPending >= 0) setCurrentIndex(nextPending);
-  };
-
-  const readFailureMessage = (result: RecordSubmitResult, fallback: string) => {
-    return readRecordSubmitMessage(result, fallback);
-  };
-
-  const handleSaveCurrent = async () => {
-    if (!currentRecord) return;
-
-    const result = await useCases.recordInput.submitCreateRecord(buildAiBatchConfirmCreateSubmitParams(currentRecord));
-
-    if (result.status === 'success') {
-      const nextRecords = patchAiBatchConfirmRecordAtIndex(records, currentIndex, { saved: true });
-      setRecords(nextRecords);
-      new Notice(`✅ 第 ${currentIndex + 1} 条已保存`);
-      jumpToNextPending(nextRecords);
-      return;
-    }
-
-    if (result.status === 'cancelled') return;
-    new Notice(`❌ 保存失败: ${readFailureMessage(result, '保存失败')}`, 10000);
-  };
-
-  const handleSkipCurrent = () => {
-    if (!currentRecord) return;
-    const nextRecords = patchAiBatchConfirmRecordAtIndex(records, currentIndex, { skipped: true });
-    setRecords(nextRecords);
-    jumpToNextPending(nextRecords);
-  };
-
-  const handleSaveAll = async () => {
-    const results: RecordSubmitResult[] = [];
-
-    for (let i = 0; i < records.length; i++) {
-      const record = records[i];
-      if (record.saved || record.skipped) continue;
-
-      setCurrentIndex(i);
-      const result = await useCases.recordInput.submitCreateRecord(buildAiBatchConfirmCreateSubmitParams(record));
-      results.push(result);
-
-      if (result.status === 'success') {
-        setRecords((prev) => patchAiBatchConfirmRecordAtIndex(prev, i, { saved: true }));
-      } else if (result.status !== 'cancelled') {
-        new Notice(`❌ 第 ${i + 1} 条保存失败: ${readFailureMessage(result, '保存失败')}`);
-      }
-    }
-
-    const batchSummary = buildAiBatchConfirmBatchSummary(results);
-    if (batchSummary.feedback?.notice) new Notice(batchSummary.feedback.notice);
-  };
-
-  const handleComplete = () => {
-    const latestSummary = summarizeAiBatchConfirmRecords(records);
-    new Notice(`完成：已保存 ${latestSummary.savedCount} 条，跳过 ${latestSummary.skippedCount} 条`);
-    onComplete?.();
-    closeModal();
-  };
+  const {
+    records,
+    currentIndex,
+    currentRecord,
+    summary,
+    pendingAction,
+    isBusy,
+    actionStatus,
+    setCurrentIndex,
+    handleEditorStateChange,
+    handleSaveCurrent,
+    handleSkipCurrent,
+    handleSaveAll,
+    handleComplete,
+  } = useAiBatchConfirmActions({
+    initialRecords,
+    traceId,
+    submitCreateRecord: (params) => useCases.recordInput.submitCreateRecord(params),
+    closeModal,
+    onComplete,
+  });
 
   if (!currentRecord) return <div className="think-overlay-empty">没有可处理的记录</div>;
 
   return (
-    <div className="think-ai-batch">
+    <div className="think-ai-batch" data-ai-batch-busy={isBusy ? 'true' : 'false'}>
       <AiBatchConfirmSidebar
         records={records}
         blocks={blocks}
         currentIndex={currentIndex}
         savedCount={summary.savedCount}
         pendingCount={summary.pendingCount}
+        isBusy={isBusy}
+        isSavingAll={pendingAction === 'all'}
         onSelect={setCurrentIndex}
-        onSaveAll={handleSaveAll}
+        onSaveAll={() => { void handleSaveAll(); }}
       />
 
       <section className="think-ai-batch__main">
-        <AiBatchConfirmRecordHeader title={title} currentIndex={currentIndex} record={currentRecord} onClose={closeModal} />
-        <div className="think-overlay-body think-ai-batch__editor">
+        <AiBatchConfirmRecordHeader
+          title={title}
+          currentIndex={currentIndex}
+          record={currentRecord}
+          onClose={() => { if (!isBusy) closeModal(); }}
+        />
+        <div
+          className={`think-overlay-body think-ai-batch__editor${isBusy ? ' is-busy' : ''}${currentRecord.saved || currentRecord.skipped ? ' is-locked' : ''}`}
+          aria-busy={isBusy || undefined}
+          aria-disabled={currentRecord.saved || currentRecord.skipped || undefined}
+        >
           <QuickInputEditor
             key={currentRecord.id}
             getResourcePath={resolveResourcePath}
             initialBlockId={currentRecord.blockId}
             initialFormData={currentRecord.formData}
-            context={buildAiBatchConfirmRecordContext(currentRecord)}
+            context={currentRecord.editorContext}
             allowBlockSwitch={true}
             dense={true}
-            onStateChange={(state) =>
-              updateCurrentRecord({
-                blockId: state.blockId,
-                formData: state.formData,
-              })
-            }
+            isMobileLike={isMobileLike}
+            onRequestSubmit={() => { void handleSaveCurrent(); }}
+            onStateChange={(state) => handleEditorStateChange(currentRecord.id, state)}
           />
         </div>
 
         <AiBatchConfirmFooter
           saved={currentRecord.saved}
           skipped={currentRecord.skipped}
+          isBusy={isBusy}
+          isSavingCurrent={pendingAction === 'current'}
+          actionStatus={actionStatus}
           onSkip={handleSkipCurrent}
-          onSave={handleSaveCurrent}
+          onSave={() => { void handleSaveCurrent(); }}
           onComplete={handleComplete}
         />
       </section>

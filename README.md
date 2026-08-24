@@ -1,67 +1,19 @@
-# Think OS
+# Think OS documentation
 
-Think OS is a single-user Obsidian plugin for recording and organizing personal information around Goals and Themes.
+Active product/design truth:
 
-The runtime model is Record-first. Core record kinds include Task, Plan, Review, Thought, Habit, Evidence, Blocker, Milestone and Energy. TaskSeries and TaskSession are specialized domain records used by recurrence and timer/session workflows.
+- `ARCHITECTURE.md` - current module boundaries and dependency direction.
+- `RECORD_MODEL.md` - canonical Record, Template and Field semantics.
+- `TESTING_RELEASE.md` - local verification, CI and release checks.
+- `CSS_DESIGN_SPEC.md` - current UI/CSS design contract.
+- `UI_REDESIGN_PLAN.md` - full UI redesign phases and current progress.
+- `DEVELOPMENT_GUARDRAILS.md` - rules that prevent architecture from expanding again.
+- `DOCUMENT_GOVERNANCE.md` - documentation retention policy.
 
-## Architecture
+Implementation history lives under `docs/reports/`. No phase report should be placed loose in the project root.
 
-The current data path is:
+## Product acceptance contracts
 
-```text
-Capture UI / AI / Form
-        -> RecordDraft
-        -> RecordSchemaDefinition + FieldSchema
-        -> MarkdownRecordCodec
-        -> RecordRepository / Transaction / RecordIndex
-        -> RecordQuery
-        -> Views
-```
+Quick input renders single-select options as product labels while persisting canonical values. Template-backed Record creation requires an enabled direct GoalTemplate for the selected `recordTypeId + goalPath`; ancestor Goals are navigation only, and the runtime never guesses another target or RecordType.
 
-Templates control the user's capture structure (enabled fields, order, defaults, options and safe custom fields). Templates do not define Markdown storage grammar.
-
-See `docs/ARCHITECTURE.md` and `docs/RECORD_MODEL.md`.
-
-## Development
-
-```bash
-npm run gate
-npm run typecheck:src
-npm run test:unit
-npm run test:integration
-npm run build
-```
-
-For a full local verification pass:
-
-```bash
-npm run verify
-```
-
-Release packaging:
-
-```bash
-npm run build:release
-npm run release:check
-npm run bundle:report
-```
-
-The CI path uses `npm run verify:ci` and `npm run build:release`.
-
-## Product guardrails
-
-- Record IDs are stable identity; file path and line number are not business identity.
-- Task status/recurrence/session semantics are structured fields, not checkbox/task-line syntax.
-- Record storage uses one codec-owned `key:: value` grammar.
-- Templates may add safe custom fields without source-code changes.
-- Settings support the current schema only; historical migrations live outside runtime code.
-- Views consume RecordQuery/domain projections rather than reimplementing filter/sort/date semantics.
-- Internal modules must not depend back on composition roots such as `main.ts`.
-- Runtime icons stay local; `@mui/icons-material` is intentionally banned.
-- QuickInput single-select options remain visible options, and conflict recovery actions stay inside the modal flow.
-
-## Documentation policy
-
-Only current operational documentation lives in this source package. Historical implementation notes, Energy version notes, old MVP handoff records, demo datasets and architecture phase reports are intentionally archived outside the active source tree.
-
-Start at `docs/README.md`.
+Release verification is intentionally reproducible: run `npm run verify:ci` for the full checks and `npm run build:release` for the release bundle/package boundary.

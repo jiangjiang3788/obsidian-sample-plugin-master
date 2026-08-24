@@ -8,19 +8,11 @@
 /** @jsxImportSource preact */
 
 import { useCallback, useMemo, useRef, useState } from 'preact/hooks';
-import { createPortal } from 'preact/compat';
 
 import { detectThinkDeviceProfile, diagnosticLog, getThinkDeviceProfileAttributes, isThinkMobileLikeProfile } from '@shared/utils/public';
+import { OverlayPortal, useOverlayLayer } from '@shared/ui/public';
 import { useLocalStorage } from '@shared/hooks/public';
 
-import {
-    makeSelectFloatingWindowZIndex,
-    selectFloatingWindowsActiveId,
-    selectFloatingWindowsFocus,
-    selectFloatingWindowsRegister,
-    selectFloatingWindowsUnregister,
-} from '@/app/store/selectors';
-import { useSelector } from '@/app/store/useSelector';
 import { FloatingPanelHeader } from './FloatingPanelHeader';
 import { FloatingPanelResizeHandles } from './FloatingPanelResizeHandles';
 import type { FloatingPanelProps } from './FloatingPanel.types';
@@ -35,7 +27,6 @@ import { useFloatingPanelInteractions } from './useFloatingPanelInteractions';
 import {
     useFloatingPanelCloseHandlers,
     useFloatingPanelPersistence,
-    useFloatingPanelRegistration,
     useFloatingPanelViewportClamp,
 } from './useFloatingPanelLifecycle';
 
@@ -61,7 +52,6 @@ export function FloatingPanel({
     onClose,
     closeOnOutsideClick = true,
     closeOnEscape = true,
-    zIndex = 9999,
     portal = true,
     portalContainer,
     placement = 'floating',
@@ -71,12 +61,8 @@ export function FloatingPanel({
     const mobile = isThinkMobileLikeProfile(deviceProfile);
     const inline = placement === 'inline';
 
-    const register = useSelector(selectFloatingWindowsRegister);
-    const unregister = useSelector(selectFloatingWindowsUnregister);
-    const focus = useSelector(selectFloatingWindowsFocus);
-    const activeId = useSelector(selectFloatingWindowsActiveId);
-    const managedZIndex = useSelector(makeSelectFloatingWindowZIndex(id));
-    const effectiveZIndex = managedZIndex ?? zIndex;
+    const overlay = useOverlayLayer(visible && !inline, `floating:${id}`);
+    const effectiveZIndex = overlay.zIndex;
 
     const mobileDefaultPosition = useMemo(() => getMobileDefaultFloatingPosition(), []);
     const [storedPosition, setStoredPosition] = useLocalStorage(`think-floating-pos-${id}`, mobile ? mobileDefaultPosition : defaultPosition);
@@ -127,18 +113,16 @@ export function FloatingPanel({
         };
     }, [getEffectiveWidth, getEffectiveHeight, mobile]);
 
-    useFloatingPanelRegistration({ id, visible, register, unregister });
     useFloatingPanelViewportClamp({ size, position, clampSize, clampPosition, setSize, setPosition });
-    useFloatingPanelCloseHandlers({ id, activeId, visible, onClose, closeOnOutsideClick, closeOnEscape, rootRef });
+    useFloatingPanelCloseHandlers({ isTop: overlay.isTop, visible, onClose, closeOnOutsideClick, closeOnEscape, rootRef });
     useFloatingPanelPersistence({ position, size, resizable, setStoredPosition, setStoredSize });
 
     const { onDragStart, onResizeStart, onPanelPointerDown } = useFloatingPanelInteractions({
-        id,
         inline,
         resizable,
         position,
         size,
-        focus,
+        focus: overlay.focus,
         setPosition,
         setSize,
         clampPosition,
@@ -153,7 +137,7 @@ export function FloatingPanel({
         id,
         portal,
         placement,
-        portalTarget: portal ? (portalContainer ? 'custom' : 'document.body') : 'inline',
+        portalTarget: portal ? (portalContainer ? 'custom' : 'think-overlay-host') : 'inline',
     });
 
     const paperStyle = buildFloatingPanelPaperStyle({
@@ -204,7 +188,7 @@ export function FloatingPanel({
 
     if (!portal) return panel;
 
-    return createPortal(panel, portalContainer || document.body);
+    return <OverlayPortal container={portalContainer}>{panel}</OverlayPortal>;
 }
 
 export default FloatingPanel;

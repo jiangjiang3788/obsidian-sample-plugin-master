@@ -31,6 +31,9 @@ describe('BlockViewModel', () => {
   it('finds timers and exposes stable group class names', () => {
     expect(findBlockViewTimer([{ taskId: 'a', status: 'running' }], 'a')?.status).toBe('running');
     expect(findBlockViewTimer([{ taskId: 'a' }], 'b')).toBeUndefined();
-    expect(buildBlockViewGroupClassNames().group).toContain('bv-group');
+    const classes = buildBlockViewGroupClassNames();
+    expect(classes.group).toContain('bv-group');
+    expect(classes.title).toContain('think-list-disclosure-row');
+    expect(classes.title).toContain('think-list-row--compact');
   });
 });

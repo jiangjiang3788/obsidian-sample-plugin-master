@@ -44,6 +44,15 @@ describe('field semantics on Record Foundation v2', () => {
     expect(filterByKeyword([item], '09:00')).toHaveLength(1);
   });
 
+  it('exposes coreBlock everywhere as the single UI name 记录类型', () => {
+    const allFields = getAllFields([] as any);
+    expect(allFields).toContain('coreBlock');
+    expect(getFieldLabel('coreBlock')).toBe('记录类型');
+    expect(getFieldPickerOptions(allFields)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ value: 'coreBlock', label: '记录类型' })]),
+    );
+  });
+
   it('common field picker exposes Goal but no Theme fields', () => {
     const fields = getFieldPickerOptions(getAllFields([] as any)).map((field: any) => field.value);
     expect(fields).toContain('goalPath');

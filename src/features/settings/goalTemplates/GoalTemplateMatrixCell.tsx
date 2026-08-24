@@ -1,15 +1,15 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { GoalPresetCard } from './GoalPresetCard';
-import { buildGoalTemplateCell, goalTemplateIcon, goalTemplateKey } from './goalTemplateMatrixModel';
+import { buildGoalTemplateCell, goalTemplateKey } from './goalTemplateMatrixModel';
 
 export interface GoalTemplateMatrixCellProps {
   goal: GoalDefinition;
-  block: CoreBlockDefinition;
+  block: TemplateRecordTypeDefinition;
   templates: GoalTemplate[];
-  openEditor: (goal: GoalDefinition, block: CoreBlockDefinition, template?: GoalTemplate | null) => void;
+  openEditor: (goal: GoalDefinition, block: TemplateRecordTypeDefinition, template?: GoalTemplate | null) => void;
 }
 
 export function GoalTemplateMatrixCell({ goal, block, templates, openEditor }: GoalTemplateMatrixCellProps) {
@@ -24,7 +24,6 @@ export function GoalTemplateMatrixCell({ goal, block, templates, openEditor }: G
           block={block}
           template={template}
           templateKey={goalTemplateKey(template)}
-          icon={goalTemplateIcon(template, goal)}
           onOpen={() => openEditor(goal, block, template)}
         />
       </div>
@@ -39,19 +38,12 @@ export function GoalTemplateMatrixCell({ goal, block, templates, openEditor }: G
         title="该目标下已隐藏此记录类型，点击修改"
         onClick={() => openEditor(goal, block, template)}
       >
-        <span className="think-goal-template-matrix__disabled-label">隐藏</span>
+        <span className="think-goal-template-matrix__disabled-label">已隐藏</span>
       </button>
     );
   }
 
-  return (
-    <button
-      type="button"
-      className="think-goal-template-matrix__preset-cell is-empty"
-      title="点击创建这个目标的字段预设"
-      onClick={() => openEditor(goal, block, null)}
-    >
-      <span className="think-goal-template-matrix__empty-add" aria-hidden="true">+</span>
-    </button>
-  );
+  // Empty matrix cells are intentionally inert. Creation belongs to the Goal
+  // row itself so the grid does not become a wall of plus buttons.
+  return <div className="think-goal-template-matrix__preset-cell is-empty" aria-label={`${goal.path} / ${block.name} 未配置模板`} />;
 }

@@ -89,47 +89,52 @@ export class UpdateRecordWorkflow {
   }
 
   async submit(params: SubmitUpdateRecordParams): Promise<RecordSubmitResult> {
-    const prepared = prepareTemplateSubmit({
-      kernel: this.runtime.getKernel(),
-      operation: 'update',
-      blockId: params.blockId,
-      item: params.item,
-      formData: { ...params.formData, seriesId: params.item.seriesId },
-      normalizeMode: 'edit',
-      validateMode: 'edit',
-    });
-    if (!prepared.ok) return prepared.result;
-
-    const { resolved, normalized, warnings } = prepared.submit;
-    const outputPlan = buildRecordOutputPlan({
-      template: resolved.template,
-      formData: normalized.normalizedFormData,
-      recordId: params.item.id,
-    });
-    const persistencePlan = buildRecordPersistencePlan({
-      mode: 'edit',
-      originalPath: getItemFilePath(params.item),
-      outputPlan,
-    });
-
-    const planConsistencyIssues = buildPlanConsistencyIssues({
-      expectedOutputPlan: params.expectedOutputPlan,
-      expectedPersistencePlan: params.expectedPersistencePlan,
-      actualOutputPlan: outputPlan,
-      actualPersistencePlan: persistencePlan,
-    });
-    if (planConsistencyIssues.length > 0) {
-      return buildValidationErrorResult('update', planConsistencyIssues, warnings);
-    }
+    let warnings: RecordSubmitResult['warnings'] = [];
 
     try {
+      // As with create, update is a result boundary: preparation and output
+      // planning errors must be mapped instead of escaping as rejected promises.
+      const prepared = prepareTemplateSubmit({
+        kernel: this.runtime.getKernel(),
+        operation: 'update',
+        blockId: params.blockId,
+        item: params.item,
+        formData: { ...params.formData, seriesId: params.item.seriesId },
+        normalizeMode: 'edit',
+        validateMode: 'edit',
+      });
+      if (!prepared.ok) return prepared.result;
+
+      const { resolved, normalized } = prepared.submit;
+      warnings = prepared.submit.warnings;
+      const outputPlan = buildRecordOutputPlan({
+        template: resolved.template,
+        formData: normalized.normalizedFormData,
+        recordId: params.item.id,
+      });
+      const persistencePlan = buildRecordPersistencePlan({
+        mode: 'edit',
+        originalPath: getItemFilePath(params.item),
+        outputPlan,
+      });
+
+      const planConsistencyIssues = buildPlanConsistencyIssues({
+        expectedOutputPlan: params.expectedOutputPlan,
+        expectedPersistencePlan: params.expectedPersistencePlan,
+        actualOutputPlan: outputPlan,
+        actualPersistencePlan: persistencePlan,
+      });
+      if (planConsistencyIssues.length > 0) {
+        return buildValidationErrorResult('update', planConsistencyIssues, warnings);
+      }
+
       if (persistencePlan.pathChanged && persistencePlan.writeMode === 'move_and_replace') {
         const result = await new RecordMigrationTransaction(this.runtime).execute({
           item: params.item,
           template: resolved.template,
           resolved,
           normalized,
-              outputPlan,
+          outputPlan,
           persistencePlan,
           warnings,
           signal: params.signal,
@@ -152,10 +157,11 @@ export class UpdateRecordWorkflow {
         params.item,
         resolved.template,
         normalized.normalizedFormData,
-          { signal: params.signal, autoRefresh: false },
+        { signal: params.signal, autoRefresh: false },
       );
       const seriesIssue = await this.syncRecurringTaskSeries(params, outputPlan.renderData);
-      const nextWarnings = seriesIssue ? [...warnings, seriesIssue] : warnings;
+      const baseWarnings = warnings || [];
+      const nextWarnings = seriesIssue ? [...baseWarnings, seriesIssue] : baseWarnings;
       return finalizeRecordSubmitResult(this.runtime.deps.dataStore, buildSuccessResult('update', {
         status: seriesIssue ? 'partial_success' : 'success',
         affectedPath: path,

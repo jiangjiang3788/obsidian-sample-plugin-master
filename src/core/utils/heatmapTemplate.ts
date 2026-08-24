@@ -7,7 +7,7 @@ export function getEffectiveHeatmapTemplate(
     settings: InputSettings,
     blockId: string,
 ): RecordCaptureTemplate | null {
-    return settings.blocks.find((block) => block.id === blockId || block.coreBlockId === blockId) ?? null;
+    return settings.blocks.find((block) => block.id === blockId || block.recordTypeId === blockId) ?? null;
 }
 
 export function buildRatingMapping(

@@ -12,10 +12,11 @@ import {
   ThinkCheckbox,
 } from '@shared/ui/public';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/types/public';
+import { getViewDefaultConfig, getViewLabel } from '@core/view/public';
 import { getFieldLabel, getFieldCategoryLabel } from '@core/fields/public';
 import { normalizeDisplayFields, normalizeViewFilters, normalizeViewGroupFields, normalizeViewSort } from '@core/view/public';
 import type { FilterRule, ViewInstance } from '@core/types/public';
-import { VIEW_EDITORS } from '@features/settings/views/editors/registry';
+import { getViewEditorComponent } from '@features/settings/views/editors/registry';
 import { useSelector, makeSelectViewInstanceById, useDataStore, useUseCases } from '@/app/public';
 import {
   FieldManager,
@@ -42,7 +43,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
     // 从store中获取最新的viewInstance状态
     const currentVi = useSelector(makeSelectViewInstanceById(vi.id)) || vi;
     const fieldOptions = useMemo(() => getAllFields(dataStore?.queryItems() || []), [dataStore]);
-    const EditorComponent = VIEW_EDITORS[currentVi.viewType];
+    const EditorComponent = getViewEditorComponent(currentVi.viewType);
 
     const correctedViewConfig = useMemo(() => {
         if (currentVi.viewConfig && typeof (currentVi.viewConfig as any).categories === 'object') return currentVi.viewConfig;
@@ -56,10 +57,9 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
     };
 
     // 准备选项数据
-    const viewTypeOptions = useMemo(() => {
-        const labels: Partial<Record<ViewName, string>> = { ProgressView: '成长', EnergyView: '精力' };
-        return VIEW_OPTIONS.map(v => ({ value: v, label: labels[v] || v.replace('View', '') }));
-    }, []);
+    const viewTypeOptions = useMemo(() =>
+        VIEW_OPTIONS.map(v => ({ value: v, label: getViewLabel(v) })),
+    []);
 
     const { quickRules, advancedRules } = useMemo(
         () => splitDefaultQuickFilterRules(currentVi.filters || []),
@@ -87,7 +87,10 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                             <SimpleSelect
                                 value={currentVi.viewType}
                                 options={viewTypeOptions}
-                                onChange={val => handleUpdate({ viewType: val as ViewName })}
+                                onChange={val => handleUpdate({
+                                    viewType: val as ViewName,
+                                    viewConfig: { ...(getViewDefaultConfig(val) || {}) },
+                                })}
                                 fullWidth
                                 className="think-module-settings__view-type"
                             />

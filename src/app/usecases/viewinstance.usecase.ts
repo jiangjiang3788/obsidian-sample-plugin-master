@@ -10,6 +10,7 @@ import {
   normalizeViewInstanceDomain,
   normalizeViewSort,
   removeDisplayField,
+  getViewDefaultConfig,
 } from '@core/view/public';
 import { devError, generateId } from '@core/utils/public';
 
@@ -40,7 +41,7 @@ export class ViewInstanceUseCase {
                 parentId: null,
                 title,
                 viewType,
-                viewConfig: {},
+                viewConfig: { ...(getViewDefaultConfig(viewType) || {}) },
                 fields: [],
                 groupFields: [],
                 filters: [],

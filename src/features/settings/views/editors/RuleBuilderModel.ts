@@ -1,7 +1,7 @@
 import type { DataStore } from '@core/services/public';
 import type { FilterRule, SortRule } from '@core/types/public';
 import { getAllFields, readField } from '@core/types/public';
-import { getFieldLabel } from '@core/fields/public';
+import { formatFieldValue, getFieldLabel } from '@core/fields/public';
 import { normalizeViewMultiValue } from '@core/view/public';
 
 export type RuleBuilderMode = 'filter' | 'sort';
@@ -65,17 +65,16 @@ export function formatRuleValue(rule: FilterRule): string {
   if (!operatorNeedsValue(rule.op)) return '';
   if (isMultiValueOperator(rule.op)) {
     const values = normalizeMultiValue(rule.value);
-    return values.length > 0 ? values.join('、') : '未选择';
+    return values.length > 0 ? values.map(value => formatFieldValue(rule.field, value)).join('、') : '未选择';
   }
   if (rule.op === 'between' && Array.isArray(rule.value)) {
-    return rule.value.map(v => String(v)).join(' ~ ');
+    return rule.value.map(value => formatFieldValue(rule.field, value)).join(' ~ ');
   }
-  return String(rule.value ?? '');
+  return formatFieldValue(rule.field, rule.value);
 }
 
 function stableRuleFieldLabel(field: string): string {
-  const label = getFieldLabel(field);
-  return label === field ? field : `${label} (${field})`;
+  return getFieldLabel(field);
 }
 
 export function buildRuleLabel(mode: RuleBuilderMode, rule: RuleBuilderRule): string {

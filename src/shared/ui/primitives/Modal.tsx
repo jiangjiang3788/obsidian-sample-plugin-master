@@ -1,5 +1,8 @@
 /**
  * Modal 模态框组件
+ *
+ * Top-level modal behavior is owned by OverlayRuntime: one body portal host,
+ * one active stack, top-only Escape/outside-click handling and shared scroll lock.
  */
 
 import { h, ComponentChildren } from 'preact';
@@ -7,6 +10,7 @@ import { ThinkButton } from './Button';
 import { ThinkIconButton } from './IconButton';
 import { getThinkDeviceProfileAttributes } from '../../utils/deviceProfile';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { acquireOverlayScrollLock, OverlayPortal, useOverlayLayer } from '../overlay/OverlayRuntime';
 
 export interface ModalProps {
     isOpen: boolean;
@@ -25,22 +29,6 @@ export interface ModalProps {
     onBeforeClose?: () => boolean;
 }
 
-// 修复类型问题：使用更通用的 HTMLElement 类型
-function useClickOutside(ref: { current: HTMLElement | null }, handler: (event: MouseEvent) => void) {
-    useEffect(() => {
-        const listener = (event: MouseEvent) => {
-            // 确保 event.target 是 Node 类型
-            if (event.target instanceof Node && ref.current && !ref.current.contains(event.target)) {
-                handler(event);
-            }
-        };
-        document.addEventListener('mousedown', listener);
-        return () => {
-            document.removeEventListener('mousedown', listener);
-        };
-    }, [ref, handler]);
-}
-
 export function Modal({
     isOpen,
     onClose,
@@ -57,54 +45,39 @@ export function Modal({
     showSaveButton = true,
     onBeforeClose
 }: ModalProps) {
-    const modalRef = useRef<HTMLDivElement>(null);
     const deviceProfileAttrs = useMemo(() => getThinkDeviceProfileAttributes(), []);
     const [isSaving, setIsSaving] = useState(false);
-
-    // 点击外部关闭
-    useClickOutside(modalRef, () => {
-        if (closeOnClickOutside && isOpen) {
-            handleClose();
-        }
-    });
-
-    // ESC 键关闭
-    useEffect(() => {
-        if (!closeOnEscape || !isOpen) return;
-
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                handleClose();
-            }
-        };
-
-        document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
-    }, [closeOnEscape, isOpen, onClose, onBeforeClose]);
-
-    // 阻止背景滚动
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-
-        return () => {
-            document.body.style.overflow = '';
-        };
-    }, [isOpen]);
+    const overlay = useOverlayLayer(isOpen, 'modal');
+    const overlayRef = useRef<HTMLDivElement | null>(null);
 
     const handleClose = () => {
-        if (onBeforeClose && !onBeforeClose()) {
-            return;
-        }
+        if (onBeforeClose && !onBeforeClose()) return;
         onClose();
     };
 
+    useEffect(() => {
+        if (!isOpen) return;
+        return acquireOverlayScrollLock();
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen || !overlayRef.current) return;
+        overlayRef.current.style.zIndex = String(overlay.zIndex);
+    }, [isOpen, overlay.zIndex]);
+
+    useEffect(() => {
+        if (!closeOnEscape || !isOpen) return;
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key !== 'Escape' || !overlay.isTop) return;
+            event.preventDefault();
+            handleClose();
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [closeOnEscape, isOpen, overlay.isTop, onClose, onBeforeClose]);
+
     const handleSave = async () => {
         if (!onSave || isSaving) return;
-        
         try {
             setIsSaving(true);
             await onSave();
@@ -138,29 +111,39 @@ export function Modal({
     );
 
     return (
-        <div className="think-os think-os--modal think-modal-overlay" {...deviceProfileAttrs}>
-            <div className={modalClasses} ref={modalRef}>
-                {(title || showCloseButton) && (
-                    <div className="think-modal__header">
-                        {title && <h2 className="think-modal__title">{title}</h2>}
-                        {showCloseButton && (
-                            <ThinkIconButton
-                                className="think-modal__close"
-                                label="关闭"
-                                icon="×"
-                                size="sm"
-                                onClick={handleClose}
-                            />
-                        )}
+        <OverlayPortal>
+            <div
+                ref={overlayRef}
+                className="think-os think-os--modal think-modal-overlay"
+                {...deviceProfileAttrs}
+                onMouseDown={(event: MouseEvent) => {
+                    if (!closeOnClickOutside || !overlay.isTop) return;
+                    if (event.target === event.currentTarget) handleClose();
+                }}
+            >
+                <div className={modalClasses}>
+                    {(title || showCloseButton) && (
+                        <div className="think-modal__header">
+                            {title && <h2 className="think-modal__title">{title}</h2>}
+                            {showCloseButton && (
+                                <ThinkIconButton
+                                    className="think-modal__close"
+                                    label="关闭"
+                                    icon="×"
+                                    size="sm"
+                                    onClick={handleClose}
+                                />
+                            )}
+                        </div>
+                    )}
+
+                    <div className="think-modal__body">
+                        {children}
                     </div>
-                )}
 
-                <div className="think-modal__body">
-                    {children}
+                    {footer !== undefined ? footer : defaultFooter}
                 </div>
-
-                {footer !== undefined ? footer : defaultFooter}
             </div>
-        </div>
+        </OverlayPortal>
     );
 }

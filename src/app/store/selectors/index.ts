@@ -1,12 +1,14 @@
 import type { ZustandAppStore } from '@/app/store/useAppStore';
+import { buildRecordTypeInputSettings } from '@core/recordTypes/public';
 
 
 export const selectSettings = (s: ZustandAppStore) => s.settings;
 
-export const selectInputSettings = (s: ZustandAppStore) => s.settings.inputSettings;
+const RECORD_TYPE_INPUT_SETTINGS = buildRecordTypeInputSettings();
 
-// inputSettings helpers (avoid repeating nullish checks in UI)
-export const selectInputBlocks = (s: ZustandAppStore) => s.settings.inputSettings?.blocks ?? [];
+/** Derived adapter for older view/AI props. It is not persisted settings. */
+export const selectInputSettings = (_s: ZustandAppStore) => RECORD_TYPE_INPUT_SETTINGS;
+export const selectInputBlocks = (_s: ZustandAppStore) => RECORD_TYPE_INPUT_SETTINGS.blocks;
 
 export const selectAiSettings = (s: ZustandAppStore) => s.settings.aiSettings;
 
@@ -57,16 +59,6 @@ export const selectTimers = (s: ZustandAppStore): TimerState[] => {
   lastActiveTimers = entries.filter(isActiveTimerState);
   return lastActiveTimers;
 };
-
-export const selectFloatingWindows = (s: ZustandAppStore) => s.floatingWindows;
-
-export const selectFloatingWindowsActiveId = (s: ZustandAppStore) => s.floatingWindows.activeId;
-export const selectFloatingWindowsRegister = (s: ZustandAppStore) => s.floatingWindows.register;
-export const selectFloatingWindowsUnregister = (s: ZustandAppStore) => s.floatingWindows.unregister;
-export const selectFloatingWindowsFocus = (s: ZustandAppStore) => s.floatingWindows.focus;
-
-export const makeSelectFloatingWindowZIndex = (id: string) => (s: ZustandAppStore) =>
-  s.floatingWindows.windows[id]?.zIndex;
 
 export const selectUi = (s: ZustandAppStore) => s.ui;
 

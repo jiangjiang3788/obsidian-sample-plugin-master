@@ -1,3 +1,4 @@
+import { buildRecordTypeInputSettings } from '@/core/recordTypes/public';
 // src/core/ai/AiConfigCache.ts
 // AI 配置缓存 - TTL 缓存 snapshot，避免每次调用模型都重新拼大段 prompt
 
@@ -48,7 +49,7 @@ export class AiConfigCache {
         // 检查缓存是否过期
         if (!cacheHit) {
             const rebuildStart = nowMs();
-            const nextSnapshot = buildAiConfigSnapshot(settings.inputSettings, ai, settings.goalSettings);
+            const nextSnapshot = buildAiConfigSnapshot(buildRecordTypeInputSettings(), ai, settings.goalSettings);
             this.snapshot = nextSnapshot;
             this.lastUpdated = now;
             devLog(`${prefix} buildAiConfigSnapshot 完成 (${elapsedMs(rebuildStart)})`, {

@@ -4,7 +4,7 @@
   height: auto !important; max-height: calc(100dvh - 32px) !important; margin: auto !important; transform: none !important;
   display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-lg);
   background: var(--think-bg-elevated); color: var(--think-text-primary); box-shadow: var(--think-shadow-md);
-  --think-quick-input-mobile-footer-space: 96px; --think-qif-label-column: 92px;
+  --think-quick-input-mobile-footer-space: 96px;
 }
 .modal.think-quick-input-modal .modal-close-button { display: none; }
 .modal.think-quick-input-modal .modal-content { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden; padding: 0; background: transparent; }
@@ -15,33 +15,6 @@
 .modal.think-quick-input-modal .think-quick-input-operation-switcher { width: fit-content; }
 .modal.think-quick-input-modal .think-modal__footer--quick-input { position: static; z-index: var(--think-z-raised); bottom: auto; padding: var(--think-space-4) 0 0; border-top: 1px solid var(--think-border-subtle); background: transparent; }
 
-.modal.think-quick-input-modal .think-native-input,
-.modal.think-quick-input-modal .think-native-input--textarea { width: 100%; padding: var(--think-space-3) var(--think-space-4); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-md); background: var(--think-bg-canvas); box-shadow: none; }
-.modal.think-quick-input-modal .think-native-input:focus,
-.modal.think-quick-input-modal .think-native-input--textarea:focus { border-color: var(--think-border-focus); outline: none; box-shadow: 0 0 0 1px var(--think-focus-ring-color); }
-
-.modal.think-quick-input-modal .think-ob-tag-editor { display: flex; flex-direction: column; gap: var(--think-space-3); }
-.modal.think-quick-input-modal .think-ob-tag-editor__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--think-space-2); width: 100%; min-height: var(--think-control-height-md); padding: var(--think-space-2) var(--think-space-3); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-md); background: var(--think-bg-canvas); box-sizing: border-box; }
-.modal.think-quick-input-modal .think-ob-tag-editor__row:focus-within { border-color: var(--think-border-focus); box-shadow: 0 0 0 1px var(--think-focus-ring-color); }
-.modal.think-quick-input-modal .think-ob-tag-input { flex: 1 1 120px; min-width: 90px; padding: var(--think-space-2) var(--think-space-1); border: 0; outline: 0; background: transparent; color: var(--think-text-primary); font: inherit; }
-.modal.think-quick-input-modal .think-ob-tag-pill { appearance: none; display: inline-flex; align-items: center; gap: var(--think-space-2); max-width: 100%; padding: var(--think-space-2) var(--think-space-3); border: 1px solid var(--tag-border-color, var(--think-border-subtle)); border-radius: var(--tag-radius, var(--think-radius-pill)); background: transparent; color: var(--tag-color, var(--think-text-primary)); font-size: var(--think-font-size-xs); line-height: var(--think-line-height-tight); cursor: pointer; box-shadow: none; }
-.modal.think-quick-input-modal .think-ob-tag-pill:hover { background: var(--think-bg-hover); }
-.modal.think-quick-input-modal .think-ob-tag-pill.is-selected { background: var(--think-surface-selection); }
-.modal.think-quick-input-modal .think-ob-tag-pill__remove { color: var(--think-text-secondary); font-weight: var(--think-font-weight-bold); }
-.modal.think-quick-input-modal .think-ob-tag-suggestions { display: flex; flex-wrap: wrap; gap: var(--think-space-2); }
-
-.modal.think-quick-input-modal .think-quick-input-record-type-switcher,
-.modal.think-quick-input-modal .think-quick-input-pill-row { display: flex; flex-wrap: wrap; gap: var(--think-space-2); min-width: 0; }
-.modal.think-quick-input-modal .think-quick-input-record-type-switcher__item { flex: 0 0 auto; }
-.modal.think-quick-input-modal .think-quick-input-selectable-pill { appearance: none; min-height: var(--think-control-height-sm); padding: var(--think-space-2) var(--think-space-4); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-md); background: transparent; color: var(--think-text-primary); font: inherit; font-size: var(--think-font-size-sm); font-weight: var(--think-font-weight-medium); line-height: var(--think-line-height-tight); cursor: pointer; box-shadow: none; transition: background-color var(--think-duration-fast) var(--think-ease-standard), border-color var(--think-duration-fast) var(--think-ease-standard), color var(--think-duration-fast) var(--think-ease-standard); }
-.modal.think-quick-input-modal .think-quick-input-selectable-pill:hover:not(:disabled),
-.modal.think-quick-input-modal .think-quick-input-selectable-pill:focus-visible:not(:disabled) { border-color: var(--think-border-focus); background: var(--think-bg-hover); outline: none; }
-.modal.think-quick-input-modal .think-quick-input-selectable-pill.is-selected { border-color: var(--think-border-selection); background: var(--think-surface-selection); color: var(--think-text-primary); font-weight: var(--think-font-weight-semibold); }
-.modal.think-quick-input-modal .think-quick-input-selectable-pill:disabled { cursor: default; opacity: .68; }
-
-.modal.think-quick-input-modal .think-quick-input-goal-selector { display: grid; gap: var(--think-space-3); }
-.modal.think-quick-input-modal .think-quick-input-goal-selector.is-dense { gap: var(--think-space-2); }
-.modal.think-quick-input-modal .think-quick-input-goal-selector__create { display: grid; grid-template-columns: minmax(140px, 1fr) auto; gap: var(--think-space-3); align-items: center; }
 .modal.think-quick-input-modal .think-quick-input-recovery { display: grid; gap: var(--think-space-3); margin: var(--think-space-2) 0 var(--think-space-3); padding: var(--think-space-3) var(--think-space-4); border-left: 2px solid var(--think-danger); background: var(--think-danger-bg); }
 .modal.think-quick-input-modal .think-quick-input-recovery__text { display: grid; gap: var(--think-space-1); font-size: var(--think-font-size-sm); line-height: var(--think-line-height-normal); }
 .modal.think-quick-input-modal .think-quick-input-recovery__advice,
@@ -67,14 +40,7 @@
   .modal.think-quick-input-modal { border-radius: var(--think-radius-md); }
   .modal.think-quick-input-modal .think-modal.think-modal--quick-input { max-height: calc(100dvh - 16px); padding: var(--think-space-4); }
   .modal.think-quick-input-modal--mobile.think-quick-input-keyboard-active .think-modal__footer--quick-input { position: static; }
-  .modal.think-quick-input-modal .think-quick-input-record-type-switcher,
-  .modal.think-quick-input-modal .think-quick-input-pill-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: var(--think-space-2); -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
   .modal.think-quick-input-modal .think-quick-input-footer-row { align-items: stretch; }
-  .modal.think-quick-input-modal .think-quick-input-goal-selector__create { grid-template-columns: 1fr; }
 }
-.modal.think-quick-input-modal[data-think-pointer="coarse"] .think-quick-input-record-type-switcher,
-.modal.think-quick-input-modal[data-think-pointer="coarse"] .think-quick-input-pill-row,
-.modal.think-quick-input-modal[data-think-viewport="narrow"] .think-quick-input-record-type-switcher,
-.modal.think-quick-input-modal[data-think-viewport="narrow"] .think-quick-input-pill-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: var(--think-space-2); -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
 .modal.think-quick-input-modal[data-think-platform="ios"] .think-modal__footer--quick-input,
 .modal.think-quick-input-modal[data-think-platform="android"] .think-modal__footer--quick-input { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-space-4)); }

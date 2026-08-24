@@ -1,3 +1,4 @@
+import { applyRecordGoalContext } from '../systemContext';
 import type {
   InitializeRecordInputSessionInput,
   RecordInputDraftSnapshot,
@@ -18,11 +19,16 @@ export function createRecordInputDraftSnapshot(
   input: InitializeRecordInputSessionInput,
 ): RecordInputDraftSnapshot {
   const selection: Partial<RecordInputSessionSelection> = input.initialSelection || {};
+  const withGoalContext = applyRecordGoalContext({
+    formData: input.initialFormData,
+    fieldSources: input.initialFieldSources,
+    selectedGoalPath: selection.selectedGoalPath,
+  });
   return {
-    selectedGoalPath: selection.selectedGoalPath ?? null,
+    selectedGoalPath: withGoalContext.goalPath,
     timeDirection: selection.timeDirection ?? 'forward',
-    formData: { ...(input.initialFormData || {}) },
-    fieldSources: { ...(input.initialFieldSources || {}) },
+    formData: withGoalContext.formData,
+    fieldSources: withGoalContext.fieldSources,
   };
 }
 

@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h, type ComponentChildren } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 
 import { getLeafPath, normalizePath } from '@core/utils/public';
 
@@ -86,6 +86,16 @@ function buildTree(options: HierarchySingleSelectOption[]) {
   return { roots, childrenByParent, byValue };
 }
 
+function resolveVisibleChildParent(
+  selectedValue: string | null,
+  childrenByParent: Map<string, HierarchySingleSelectOption[]>,
+): string | null {
+  if (!selectedValue) return null;
+  if ((childrenByParent.get(selectedValue) || []).length > 0) return selectedValue;
+  const parts = selectedValue.split('/').filter(Boolean);
+  return parts.length > 1 ? parts.slice(0, -1).join('/') : selectedValue;
+}
+
 export function HierarchySingleSelect({
   options,
   selectedValue,
@@ -100,14 +110,21 @@ export function HierarchySingleSelect({
 }: HierarchySingleSelectProps) {
   const [search, setSearch] = useState('');
   const normalizedSelected = normalizePath(selectedValue);
+  const [navigationPath, setNavigationPath] = useState<string | null>(normalizedSelected || null);
   const { roots, childrenByParent, byValue } = useMemo(() => buildTree(options), [options]);
   const selected = normalizedSelected ? byValue.get(normalizedSelected) || null : null;
-  const activeParentPath = normalizedSelected
-    ? normalizedSelected.includes('/')
-      ? normalizedSelected.slice(0, normalizedSelected.lastIndexOf('/'))
-      : normalizedSelected
-    : roots[0]?.value || null;
-  const children = activeParentPath ? childrenByParent.get(activeParentPath) || [] : [];
+
+  useEffect(() => {
+    if (normalizedSelected) setNavigationPath(normalizedSelected);
+  }, [normalizedSelected]);
+
+  useEffect(() => {
+    if (navigationPath && !byValue.has(navigationPath)) setNavigationPath(null);
+  }, [byValue, navigationPath]);
+
+  const activePath = navigationPath || normalizedSelected || null;
+  const visibleChildParent = resolveVisibleChildParent(activePath, childrenByParent);
+  const visibleChildren = visibleChildParent ? childrenByParent.get(visibleChildParent) || [] : [];
   const filtered = search.trim()
     ? Array.from(byValue.values())
         .filter((option) => !option.synthetic)
@@ -120,12 +137,26 @@ export function HierarchySingleSelect({
     return <div className="think-qif-hierarchy-empty">{emptyLabel}</div>;
   }
 
+  const isOnSelectedBranch = (value: string) => Boolean(
+    activePath && (activePath === value || activePath.startsWith(`${value}/`)),
+  );
+
   const renderPill = (option: HierarchySingleSelectOption, active: boolean) => (
     <SelectablePill
       key={option.id || option.value}
       selected={active}
-      title={option.value}
-      onClick={() => option.value ? onSelect(option) : onSelect(null)}
+      title={option.synthetic ? `${option.value}（展开）` : option.value}
+      onClick={() => {
+        if (!option.value) {
+          setNavigationPath(null);
+          onSelect(null);
+          return;
+        }
+        setNavigationPath(option.value);
+        // Synthetic ancestors exist only for hierarchy navigation. They must not
+        // become Record Goal context because they have no direct template.
+        if (!option.synthetic) onSelect(option);
+      }}
     >
       {option.icon ? `${option.icon} ` : ''}
       {cleanLabel(option.label || leafLabel(option.value))}
@@ -160,15 +191,13 @@ export function HierarchySingleSelect({
           {renderLevel(
             showParentLabel ? parentLabel : null,
             <>
-              {roots.map((option) => renderPill(option, activeParentPath === option.value || normalizedSelected === option.value))}
+              {roots.map((option) => renderPill(option, isOnSelectedBranch(option.value)))}
               {allowClear && selected && renderPill({ id: '__clear__', value: '', label: '清空' }, false)}
             </>,
           )}
-
-          {children.length > 0 && renderLevel(
-            childLabel,
-            children.map((option) => renderPill(option, normalizedSelected === option.value)),
-          )}
+          {visibleChildren.length > 0
+            ? renderLevel(childLabel, visibleChildren.map((option) => renderPill(option, isOnSelectedBranch(option.value))))
+            : null}
         </>
       )}
     </div>

@@ -23,3 +23,8 @@ Rules:
 15. Visual hierarchy and rhythm/boundary convergence gates are product contracts, not optional cleanup checks.
 16. Settings primary navigation is a left rail on desktop and secondary navigation belongs to the active content area; do not reintroduce top-level MUI tabs or segmented controls as navigation.
 17. Data-management pages must use shared list/matrix management patterns and must not repeat active navigation labels as competing page headings.
+
+18. Record creation entry points must pass explicit context into the shared Record input flow; they must not own a private template resolver.
+19. Business intent must never be inferred from array position (`goals[0]`, `blocks[0]`, etc.). First-item behavior is allowed only for visual focus/navigation.
+20. Quick Input create eligibility is an enabled direct Goal × RecordType GoalTemplate. Do not reintroduce RecordType-default create fallback, ancestor-template inheritance, or first-item guessing. Parent Goals without direct templates may only navigate the hierarchy; they are not selected Record context.
+21. Think OS UI is globally flat: no feature may introduce box-shadow to buttons, Goal rows, cards, menus, popovers, modals or floating panels.

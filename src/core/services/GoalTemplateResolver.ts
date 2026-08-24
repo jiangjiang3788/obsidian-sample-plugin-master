@@ -1,30 +1,55 @@
 import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import type { GoalDefinition, GoalSettings } from '@/core/goal';
-import { findGoalTemplate, resolveTemplatePeriodPolicy } from '@/core/goal';
-import { getCoreBlockById } from '@/core/blocks';
+import { findDirectGoalTemplate, getGoalTemplates, normalizeGoalPath, resolveTemplatePeriodPolicy } from '@/core/goal';
+import { getTemplateRecordTypeById } from '@/core/recordTypes/public';
 
-export type GoalTemplateSourceType = 'core-block' | 'goal-template' | null;
+export type GoalTemplateSourceType = 'record-type' | 'goal-template' | null;
+export type GoalTemplateResolveStatus = 'available' | 'disabled' | 'goal-required' | 'missing-goal-template' | 'unknown-record-type';
 
 export interface GoalTemplateResolveInput {
   settings: ThinkSettings;
-  blockId: string;
+  /** Canonical RecordType id (for example core.habit). */
+  recordTypeId?: string | null;
+  /** @deprecated 1.0.64 internal callers should pass recordTypeId. */
+  blockId?: string | null;
   /** Canonical slash path. Goal has no second identity. */
   goalPath?: string | null;
+  /** Create flows require an enabled direct Goal x RecordType template. Edit/settings flows may still use the RecordType base. */
+  requireDirectGoalTemplate?: boolean;
 }
 
 export interface GoalTemplateResolveResult {
+  status: GoalTemplateResolveStatus;
   template: RecordCaptureTemplate | null;
   goal: GoalDefinition | null;
   templateId: string | null;
   templateSourceType: GoalTemplateSourceType;
+  recordTypeId: string | null;
+  /** @deprecated alias kept only while non-capture call sites finish renaming. */
   effectiveBlockId: string | null;
+}
+
+
+export function getCreateEligibleGoalPaths(settings: ThinkSettings, recordTypeId: string): string[] {
+  const id = String(recordTypeId || '').trim();
+  if (!id) return [];
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const template of getGoalTemplates(settings.goalSettings)) {
+    if (template.recordTypeId !== id || template.enabled === false) continue;
+    const path = normalizeGoalPath(template.goalPath);
+    if (!path || seen.has(path)) continue;
+    seen.add(path);
+    result.push(path);
+  }
+  return result;
 }
 
 function findGoal(goalSettings: GoalSettings | undefined, goalPath?: string | null): GoalDefinition | null {
   const path = String(goalPath || '').trim();
   if (!path) return null;
-  return (goalSettings?.goals || []).find((goal) => (goal.path) === path) || null;
+  return (goalSettings?.goals || []).find((goal) => goal.path === path) || null;
 }
 
 function mergeTemplate(
@@ -62,32 +87,81 @@ function mergeTemplate(
   return merged;
 }
 
+/**
+ * Single capture-template resolver.
+ *
+ * RecordType supplies the structural base. Create flows may require an enabled
+ * direct Goal × RecordType template; when required, absence is unavailable
+ * rather than a RecordType-default fallback. Edit/settings flows can still use
+ * the base. There is no ancestor inheritance or feature-specific resolver.
+ */
 export class GoalTemplateResolver {
   static resolve(input: GoalTemplateResolveInput): GoalTemplateResolveResult {
-    const { settings, blockId } = input;
-    const effectiveBlockId = blockId;
+    const settings = input.settings;
+    const recordTypeId = String(input.recordTypeId || input.blockId || '').trim();
     const goal = findGoal(settings.goalSettings, input.goalPath);
-    const baseTemplate = getCoreBlockById(settings, effectiveBlockId);
+    const baseTemplate = getTemplateRecordTypeById(recordTypeId);
     if (!baseTemplate) {
       return {
+        status: 'unknown-record-type',
         template: null,
         goal,
         templateId: null,
         templateSourceType: null,
+        recordTypeId: null,
         effectiveBlockId: null,
       };
     }
 
-    // Exactly one template per Goal path x CoreBlock. Child Goals inherit the
-    // nearest configured parent only when they do not own a direct template.
-    const goalTemplate = findGoalTemplate(settings.goalSettings, goal, effectiveBlockId);
-    if (goalTemplate) {
+    const direct = input.goalPath
+      ? findDirectGoalTemplate(settings.goalSettings, input.goalPath, recordTypeId)
+      : null;
+
+    if (input.requireDirectGoalTemplate && !input.goalPath) {
       return {
-        template: mergeTemplate(baseTemplate, goalTemplate),
+        status: 'goal-required',
+        template: null,
         goal,
-        templateId: goalTemplate.id,
+        templateId: null,
+        templateSourceType: null,
+        recordTypeId,
+        effectiveBlockId: recordTypeId,
+      };
+    }
+
+    if (direct?.enabled === false) {
+      return {
+        status: 'disabled',
+        template: null,
+        goal,
+        templateId: direct.id,
         templateSourceType: 'goal-template',
-        effectiveBlockId,
+        recordTypeId,
+        effectiveBlockId: recordTypeId,
+      };
+    }
+
+    if (direct) {
+      return {
+        status: 'available',
+        template: mergeTemplate(baseTemplate, direct),
+        goal,
+        templateId: direct.id,
+        templateSourceType: 'goal-template',
+        recordTypeId,
+        effectiveBlockId: recordTypeId,
+      };
+    }
+
+    if (input.requireDirectGoalTemplate) {
+      return {
+        status: 'missing-goal-template',
+        template: null,
+        goal,
+        templateId: null,
+        templateSourceType: null,
+        recordTypeId,
+        effectiveBlockId: recordTypeId,
       };
     }
 
@@ -96,11 +170,13 @@ export class GoalTemplateResolver {
       ? { ...(baseTemplate as any), periodPolicy: policy }
       : { ...(baseTemplate as any), periodPolicy: undefined, granularity: undefined };
     return {
+      status: 'available',
       template,
       goal,
       templateId: baseTemplate.id,
-      templateSourceType: 'core-block',
-      effectiveBlockId,
+      templateSourceType: 'record-type',
+      recordTypeId,
+      effectiveBlockId: recordTypeId,
     };
   }
 }

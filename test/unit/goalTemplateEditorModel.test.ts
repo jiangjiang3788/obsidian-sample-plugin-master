@@ -1,5 +1,5 @@
 import {
-  buildInheritedDraft,
+  buildDefaultDraft,
   buildTemplatePatchFromDraft,
   makeDraftFromTemplate,
   makeNewDraft,
@@ -21,8 +21,8 @@ describe('GoalTemplateEditorModel Goal-only', () => {
   });
 
   it('keeps inherited draft aligned with the CoreBlock source', () => {
-    const draft = makeDraftFromTemplate({ id: '学习/英语::core.habit', goalPath: '学习/英语', coreBlockId: 'core.habit', enabled: true, fields: [] } as any, block);
-    const inherited = buildInheritedDraft(draft, block);
+    const draft = makeDraftFromTemplate({ id: '学习/英语::core.habit', goalPath: '学习/英语', recordTypeId: 'core.habit', enabled: true, fields: [] } as any, block);
+    const inherited = buildDefaultDraft(draft, block);
     expect(inherited.fields.length).toBe(block.fields.length);
     expect(inherited.targetFile).toBe(block.targetFile);
   });
@@ -31,7 +31,7 @@ describe('GoalTemplateEditorModel Goal-only', () => {
     const draft = { ...makeNewDraft(block), targetFile: '01/英语.md' };
     const patch = buildTemplatePatchFromDraft({ goal, block, draft });
     expect(patch.goalPath).toBe('学习/英语');
-    expect(patch.coreBlockId).toBe('core.habit');
+    expect(patch.recordTypeId).toBe('core.habit');
     expect(patch.targetFile).toBe('01/英语.md');
     expect((patch as any).variantId).toBeUndefined();
     expect((patch as any).themePath).toBeUndefined();

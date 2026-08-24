@@ -32,6 +32,26 @@
   display: none;
 }
 
+/* Global flat-surface rule: Think OS never uses drop shadows as hierarchy. */
+:where(.think-os, .think-os--settings, .think-os--layout, .think-os--modal),
+:where(.think-os, .think-os--settings, .think-os--layout, .think-os--modal) :where(*) {
+  box-shadow: none !important;
+}
+
 /* Device profile hooks are attached to Think OS roots at runtime. */
 .think-os[data-think-platform="ios"], .think-os[data-think-platform="android"] { -webkit-tap-highlight-color: transparent; }
 .think-os[data-think-viewport="narrow"], .think-os[data-think-viewport="medium"] { min-width: 0; }
+
+/* Preserve scrolling mechanics while keeping Think OS view chrome visually quiet. */
+:where(.think-os, .think-os--settings, .think-os--modal),
+:where(.think-os, .think-os--settings, .think-os--modal) :where(*) {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none;
+}
+
+:where(.think-os, .think-os--settings, .think-os--modal)::-webkit-scrollbar,
+:where(.think-os, .think-os--settings, .think-os--modal) :where(*)::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}

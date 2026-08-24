@@ -22,7 +22,8 @@ export type ThinkIconName =
   | 'settings'
   | 'trash-2'
   | 'unlock'
-  | 'upload';
+  | 'upload'
+  | 'x';
 
 export interface ThinkIconProps extends Omit<JSX.SVGAttributes<SVGSVGElement>, 'children'> {
   name: ThinkIconName;
@@ -60,6 +61,8 @@ function renderIcon(name: ThinkIconName) {
       return <><path d="M12 16V3M7 8l5-5 5 5" /><path d="M5 21h14a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2" /></>;
     case 'plus':
       return <path d="M12 5v14M5 12h14" />;
+    case 'x':
+      return <path d="M18 6 6 18M6 6l12 12" />;
     case 'check':
       return <path d="m5 12 4 4L19 6" />;
     case 'pencil':

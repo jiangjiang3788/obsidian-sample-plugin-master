@@ -2,10 +2,9 @@
 import { h } from 'preact';
 import { SimpleSelect, ThinkCheckbox, ThinkInput } from '@shared/ui/public';
 import type { ViewEditorProps } from './ViewEditorProps';
-import { STATISTICS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
+import { STATISTICS_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
-export { DEFAULT_CONFIG };
 const DISPLAY_MODE_OPTIONS = [
   { value: 'smart', label: '智能' },
   { value: 'linear', label: '线性' },
@@ -13,7 +12,7 @@ const DISPLAY_MODE_OPTIONS = [
 ];
 
 export function StatisticsViewEditor({ value, onChange }: ViewEditorProps) {
-  const config = { ...DEFAULT_CONFIG, ...value, groupBy: 'goal' };
+  const config = { ...STATISTICS_VIEW_DEFAULT_CONFIG, ...value, groupBy: 'goal' };
   return (
     <ViewEditorShell className="think-statistics-editor">
       <ConfigSection className="think-statistics-editor__section" title="目标统计视图" titleClassName="think-statistics-editor__title">

@@ -9,6 +9,8 @@
 }
 
 .think-freeform-canvas {
+    position: relative;
+    isolation: isolate;
     border-radius: var(--think-radius-md);
 }
 

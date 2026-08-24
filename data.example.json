@@ -1,10 +1,20 @@
 {
-  "schemaVersion": 2,
   "aiSettings": {
     "enabled": false,
+    "provider": "openai_compat",
     "apiEndpoint": "",
     "apiKey": "",
+    "persistApiKey": false,
     "model": "",
-    "persistApiKey": false
+    "temperature": 0.7,
+    "maxTokens": 4096,
+    "requestTimeoutMs": 30000,
+    "enabledBlockIds": [],
+    "allowMultipleResults": false,
+    "maxResults": 10,
+    "confirmMode": "batch",
+    "preloadConfigOnStartup": false,
+    "configCacheTTLSeconds": 300,
+    "customPrompt": ""
   }
 }

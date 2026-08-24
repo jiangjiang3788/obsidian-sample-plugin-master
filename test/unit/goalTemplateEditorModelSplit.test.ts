@@ -11,12 +11,12 @@ const block = {
 
 describe('GoalTemplateEditorModel facade', () => {
   it('exposes only one-template Goal-only editing semantics', () => {
-    const template = { id: '学习/英语::core.task', goalPath: '学习/英语', coreBlockId: 'core.task', enabled: true, targetFile: '01/英语.md' } as any;
+    const template = { id: '学习/英语::core.task', goalPath: '学习/英语', recordTypeId: 'core.task', enabled: true, targetFile: '01/英语.md' } as any;
     const draft = makeDraftFromTemplate(template, block);
     expect(draft.targetFile).toBe('01/英语.md');
     expect(inferTemplateEditMode(template)).toBe('override');
     const disabled = buildDisabledTemplate({ path: '学习/英语', status: 'active' } as any, block);
-    expect(disabled).toMatchObject({ goalPath: '学习/英语', coreBlockId: 'core.task', enabled: false });
+    expect(disabled).toMatchObject({ goalPath: '学习/英语', recordTypeId: 'core.task', enabled: false });
     expect((disabled as any).variantId).toBeUndefined();
   });
 });

@@ -13,6 +13,8 @@ export interface AiBatchConfirmRecordItem {
   goalLabel: string;
   presetLabel: string;
   formData: Record<string, unknown>;
+  /** Immutable context seed for QuickInputEditor. Never replace this during draft edits. */
+  editorContext: Record<string, unknown>;
   saved: boolean;
   skipped: boolean;
 }
@@ -28,6 +30,14 @@ export interface AiBatchConfirmRecordSummary {
   savedCount: number;
   skippedCount: number;
   pendingCount: number;
+}
+
+export interface AiBatchConfirmEditorDraftState {
+  blockId: string;
+  formData: Record<string, unknown>;
+  goalPath?: string | null;
+  goalTitle?: string | null;
+  templateSourceType?: 'record-type' | 'goal-template' | null;
 }
 
 export function resolveGoalForAiTarget(
@@ -79,16 +89,19 @@ export function buildAiBatchConfirmRecordItems({
   return items.map((cmd, index) => {
     let block = cmd.target.blockId ? blocks.find((entry) => entry.id === cmd.target.blockId) : undefined;
     if (!block && cmd.target.categoryKey) block = blocks.find((entry) => entry.categoryKey === cmd.target.categoryKey);
-    if (!block && blocks.length > 0) block = blocks[0];
 
     const goal = resolveGoalForAiTarget(goalSettings, cmd.target);
     const goalPath = normalizeGoalPath(goal?.path || cmd.target.goalPath || '');
     const preset = block ? resolvePresetForAiTarget(goalSettings, goal, block.id, cmd.target) : null;
-    const initialTemplate = preset || (block ? getEffectiveTemplate(inputSettings, block.id, undefined).template : undefined);
+    const initialTemplate = preset || (block ? getEffectiveTemplate(inputSettings, block.id).template : undefined);
     const initialFormData = {
       ...(cmd.fieldValues || {}),
       ...(goalPath ? { goalPath, '目标': goalPath } : {}),
     };
+    const editorContext = buildRecordDraftContext(
+      cmd.fieldValues,
+      goalPath ? { goalPath, '目标': goalPath } : undefined,
+    );
 
     return {
       id: `record-${index}`,
@@ -97,10 +110,34 @@ export function buildAiBatchConfirmRecordItems({
       goalLabel: goalDisplayName(goal, goalPath || undefined),
       presetLabel: presetDisplayName(preset),
       formData: normalizeRecordInputFormDataForTemplate(initialTemplate ?? undefined, initialFormData),
+      editorContext,
       saved: false,
       skipped: false,
     };
   });
+}
+
+export function materializeAiBatchConfirmRecordDraft(
+  record: AiBatchConfirmRecordItem,
+  state: AiBatchConfirmEditorDraftState | null | undefined,
+): AiBatchConfirmRecordItem {
+  if (!state) return record;
+
+  const nextGoalLabel = state.goalTitle
+    || goalDisplayName(null, state.goalPath || String(state.formData.goalPath || state.formData['目标'] || ''));
+  const nextPresetLabel = state.templateSourceType === 'goal-template'
+    ? '已配置'
+    : state.templateSourceType === 'record-type'
+      ? '记录类型默认'
+      : record.presetLabel;
+
+  return {
+    ...record,
+    blockId: state.blockId || record.blockId,
+    goalLabel: nextGoalLabel,
+    presetLabel: nextPresetLabel,
+    formData: { ...state.formData },
+  };
 }
 
 export function patchAiBatchConfirmRecordAtIndex(
@@ -112,7 +149,14 @@ export function patchAiBatchConfirmRecordAtIndex(
 }
 
 export function findNextPendingAiBatchConfirmIndex(records: AiBatchConfirmRecordItem[], currentIndex: number): number {
-  return records.findIndex((record, index) => index > currentIndex && !record.saved && !record.skipped);
+  const isPending = (record: AiBatchConfirmRecordItem) => !record.saved && !record.skipped;
+  for (let index = currentIndex + 1; index < records.length; index += 1) {
+    if (isPending(records[index])) return index;
+  }
+  for (let index = 0; index < Math.min(currentIndex, records.length); index += 1) {
+    if (isPending(records[index])) return index;
+  }
+  return -1;
 }
 
 export function summarizeAiBatchConfirmRecords(records: AiBatchConfirmRecordItem[]): AiBatchConfirmRecordSummary {
@@ -122,14 +166,18 @@ export function summarizeAiBatchConfirmRecords(records: AiBatchConfirmRecordItem
 }
 
 export function buildAiBatchConfirmRecordContext(record: AiBatchConfirmRecordItem): Record<string, unknown> {
-  return buildRecordDraftContext(record.cmd.fieldValues, record.formData);
+  return buildRecordDraftContext(record.editorContext, record.formData);
 }
 
-export function buildAiBatchConfirmCreateSubmitParams(record: AiBatchConfirmRecordItem): SubmitCreateRecordParams {
+export function buildAiBatchConfirmCreateSubmitParams(
+  record: AiBatchConfirmRecordItem,
+  signal?: AbortSignal,
+): SubmitCreateRecordParams {
   return {
     blockId: record.blockId,
     formData: record.formData,
     context: buildAiBatchConfirmRecordContext(record),
+    signal,
     source: 'ai_batch',
   };
 }

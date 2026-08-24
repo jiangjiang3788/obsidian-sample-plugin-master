@@ -42,6 +42,19 @@ export interface ChatCompletionRequest {
     signal?: AbortSignal;
 }
 
+/**
+ * 获取 OpenAI-Compatible 模型列表的请求参数。
+ */
+export interface ListModelsRequest {
+    /** API 端点 baseURL，例如 https://xxx/v1 */
+    baseURL: string;
+    /** API 密钥 */
+    apiKey: string;
+    /** 超时时间（毫秒） */
+    timeoutMs: number;
+    /** 可选：外部取消信号 */
+    signal?: AbortSignal;
+}
 
 /**
  * 可替换 HTTP 传输层。
@@ -71,7 +84,6 @@ export function resetDefaultAiHttpTransportFactory(): void {
     defaultTransportFactory = () => new FetchAiHttpTransport();
 }
 
-
 function summarizeUrl(baseURL: string): string {
     try {
         const url = new URL(baseURL);
@@ -89,6 +101,42 @@ function getBodySize(body: string): number {
     }
 }
 
+function joinApiPath(baseURL: string, path: string): string {
+    return `${baseURL.trim().replace(/\/+$/, '')}${path}`;
+}
+
+function extractModelId(item: unknown): string {
+    if (typeof item === 'string') return item.trim();
+    if (!item || typeof item !== 'object') return '';
+
+    const record = item as Record<string, unknown>;
+    for (const key of ['id', 'name', 'model']) {
+        const value = record[key];
+        if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    return '';
+}
+
+function parseModelIds(payload: unknown): string[] {
+    const record = payload && typeof payload === 'object'
+        ? payload as Record<string, unknown>
+        : null;
+
+    const rawModels = Array.isArray(payload)
+        ? payload
+        : Array.isArray(record?.data)
+            ? record.data
+            : Array.isArray(record?.models)
+                ? record.models
+                : [];
+
+    const ids = rawModels
+        .map(extractModelId)
+        .filter((id): id is string => id.length > 0);
+
+    return Array.from(new Set(ids)).sort((a, b) => a.localeCompare(b));
+}
+
 /**
  * AI HTTP 客户端
  * 实现 OpenAI-Compatible API 调用
@@ -97,15 +145,69 @@ export class AiHttpClient {
     constructor(private readonly transport: AiHttpTransport = defaultTransportFactory()) {}
 
     /**
+     * 拉取 OpenAI-Compatible `/models` 模型列表。
+     *
+     * 兼容：
+     * - OpenAI 标准 `{ data: [{ id }] }`
+     * - 常见代理 `{ models: [...] }`
+     * - 直接返回数组
+     * - 数组元素为字符串，或包含 `id` / `name` / `model`
+     */
+    async listModels(req: ListModelsRequest): Promise<string[]> {
+        const url = joinApiPath(req.baseURL, '/models');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), req.timeoutMs);
+
+        let externalAbortHandler: (() => void) | null = null;
+        if (req.signal) {
+            if (req.signal.aborted) controller.abort();
+            externalAbortHandler = () => controller.abort();
+            try {
+                req.signal.addEventListener('abort', externalAbortHandler, { once: true });
+            } catch {
+                // 某些环境 signal 可能不支持 addEventListener
+            }
+        }
+
+        try {
+            const response = await this.transport.request(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${req.apiKey}`,
+                },
+                signal: controller.signal,
+            });
+
+            if (!response.ok) {
+                const text = await response.text().catch(() => '');
+                throw new Error(`AI HTTP ${response.status}: ${text.slice(0, 200)}`);
+            }
+
+            const payload = await response.json();
+            return parseModelIds(payload);
+        } finally {
+            clearTimeout(timeoutId);
+            if (req.signal && externalAbortHandler) {
+                try {
+                    req.signal.removeEventListener('abort', externalAbortHandler);
+                } catch {
+                    // ignore
+                }
+            }
+        }
+    }
+
+    /**
      * 发送聊天完成请求
-     * 
+     *
      * @param req 请求参数
      * @returns AI 返回的内容字符串
      */
     async chatCompletion(req: ChatCompletionRequest): Promise<string> {
         const traceId = req.traceId || `ai-http-${Date.now().toString(36)}`;
         const totalStart = nowMs();
-        const url = req.baseURL.replace(/\/$/, '') + '/chat/completions';
+        const url = joinApiPath(req.baseURL, '/chat/completions');
 
         const payloadBuildStart = nowMs();
         const requestBody = JSON.stringify({
@@ -207,7 +309,7 @@ export class AiHttpClient {
             devLog(`[AiInput][${traceId}][HTTP] 提取 message.content 完成 (${elapsedMs(extractStart)})`, {
                 contentChars: typeof content === 'string' ? content.length : 0,
             });
-            
+
             if (!content) {
                 throw new Error('AI returned empty content');
             }

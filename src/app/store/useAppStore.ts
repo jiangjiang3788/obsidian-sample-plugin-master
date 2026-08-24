@@ -25,14 +25,10 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import type { ThinkSettings } from '@core/types/public';
 import type { SettingsRepository } from '@core/services/public';
-import { createSliceMeta } from '@core/types/public';
-import { devError } from '@core/utils/public';
 import { createLayoutSlice, type LayoutSlice } from './slices/layout.slice';
 import { createSettingsSlice, type SettingsSlice } from './slices/settings.slice';
-import { createBlocksSlice, type BlocksSlice } from './slices/blocks.slice';
 import { createTimerSlice, type TimerSlice } from './slices/timer.slice';
 import { createUiSlice, type UiSlice } from './slices/ui.slice';
-import { createFloatingWindowsSlice, type FloatingWindowsSlice } from './slices/floatingWindows.slice';
 
 // ============== 类型定义 ==============
 
@@ -50,9 +46,6 @@ export interface ZustandAppCoreActions {
     // 初始化
     initialize: (settings: ThinkSettings) => void;
     
-    // P0: Block 重排序（持久化）
-    reorderBlocks: (activeId: string, overId: string) => Promise<void>;
-    
     // 错误处理
     setError: (error: string | null) => void;
     setLoading: (loading: boolean) => void;
@@ -63,10 +56,8 @@ export type ZustandAppStore = ZustandAppCoreState &
     ZustandAppCoreActions &
     LayoutSlice &
     SettingsSlice &
-    BlocksSlice &
     TimerSlice &
-    UiSlice &
-    FloatingWindowsSlice;
+    UiSlice;
 
 // ============== Store 工厂 ==============
 
@@ -94,42 +85,6 @@ export function createAppStore(settingsRepository: SettingsRepository) {
                 }));
             },
 
-            // P0: Block 重排序（持久化）
-            reorderBlocks: async (activeId: string, overId: string) => {
-                const state = get();
-                if (!state.isInitialized) {
-                    devError('useAppStore: 未初始化，无法重排序 Block');
-                    return;
-                }
-
-                const blocks = state.settings.inputSettings?.blocks || [];
-                const oldIndex = blocks.findIndex(b => b.id === activeId);
-                const newIndex = blocks.findIndex(b => b.id === overId);
-
-                if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
-                    return;
-                }
-
-                set({ isLoading: true, error: null });
-
-                try {
-                    // S2: 只调用 settingsRepository.update()，settings 由 ServiceManager 订阅后统一同步
-                    // S1: 传入 ActionMeta 用于 dev 日志
-                    await settingsRepository.update(draft => {
-                        const blocks = draft.inputSettings?.blocks || [];
-                        const [removed] = blocks.splice(oldIndex, 1);
-                        blocks.splice(newIndex, 0, removed);
-                    }, createSliceMeta('core.reorderBlocks'));
-                    set({ isLoading: false });
-                } catch (error: any) {
-                    devError('useAppStore: Block 重排序失败', error);
-                    set({ 
-                        error: error.message || 'Block 重排序失败',
-                        isLoading: false 
-                    });
-                }
-            },
-
             setError: (error: string | null) => {
                 set({ error });
             },
@@ -144,17 +99,12 @@ export function createAppStore(settingsRepository: SettingsRepository) {
             // ============== Settings Slice ==============
             ...createSettingsSlice(settingsRepository)(set, get, store),
 
-            // ============== Blocks Slice ==============
-            ...createBlocksSlice(settingsRepository)(set, get, store),
-
             // ============== Timer Slice ==============
             ...createTimerSlice(set, get, store),
 
             // ============== UI Slice ==============
             ...createUiSlice(set, get, store),
 
-            // ============== Floating Windows Slice ==============
-            ...createFloatingWindowsSlice(set, get, store),
         }))
     );
 }

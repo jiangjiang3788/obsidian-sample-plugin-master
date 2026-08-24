@@ -7,11 +7,13 @@ import { useMemo, useCallback, useState } from 'preact/hooks';
 import { useUseCases, useSelector } from '@/app/public';
 import {
   Modal,
+  OverlayPortal,
   ThinkButton,
   ThinkIcon,
   ThinkIconButton,
   ThinkInput,
   ThinkSearchPicker,
+  useOverlayLayer,
 } from '@shared/ui/public';
 import type { UseCases } from '@/app/public';
 import type { Layout, ViewInstance } from '@core/types/public';
@@ -78,6 +80,7 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
   const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number; viewId: string; viewTitle: string } | null>(null);
   const [renameTarget, setRenameTarget] = useState<{ viewId: string; viewTitle: string } | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const contextOverlay = useOverlayLayer(Boolean(contextMenu), 'layout-context-menu');
 
   const handleUpdate = useCallback((updates: Partial<Layout>) => {
     if (!layout) return;
@@ -216,17 +219,20 @@ export function LayoutEditorPanel({ layoutId, useCases }: { layoutId: string; us
       </div>
 
       {contextMenu && (
-        <div
-          className="think-layout-editor__context-menu"
-          style={{ position: 'fixed', top: contextMenu.mouseY, left: contextMenu.mouseX, zIndex: 99999 }}
-          onMouseLeave={handleContextMenuClose}
-        >
-          <div className="think-layout-editor__context-actions">
-            <ThinkButton size="sm" variant="secondary" onClick={handleViewSettings}>设置…</ThinkButton>
-            <ThinkButton size="sm" variant="ghost" onClick={handleViewRename}>重命名…</ThinkButton>
-            <ThinkButton size="sm" variant="danger" onClick={handleViewRemove}>从布局移除</ThinkButton>
+        <OverlayPortal>
+          <div
+            className="think-os think-os--settings think-layout-editor__context-menu"
+            style={{ position: 'fixed', top: contextMenu.mouseY, left: contextMenu.mouseX, zIndex: contextOverlay.zIndex }}
+            onMouseEnter={contextOverlay.focus}
+            onMouseLeave={handleContextMenuClose}
+          >
+            <div className="think-layout-editor__context-actions">
+              <ThinkButton size="sm" variant="secondary" onClick={handleViewSettings}>设置…</ThinkButton>
+              <ThinkButton size="sm" variant="ghost" onClick={handleViewRename}>重命名…</ThinkButton>
+              <ThinkButton size="sm" variant="danger" onClick={handleViewRemove}>从布局移除</ThinkButton>
+            </div>
           </div>
-        </div>
+        </OverlayPortal>
       )}
 
       <Modal

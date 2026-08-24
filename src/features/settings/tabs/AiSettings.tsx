@@ -14,8 +14,8 @@ import { AiApiConfigSection } from './AiApiConfigSection';
 import { AiPromptRulesSection } from './AiPromptRulesSection';
 import { AiScopeSection } from './AiScopeSection';
 import { AiSettingsFooter } from './AiSettingsFooter';
-import { getAiSettingsReadiness, getApiKeyPersistenceMessage } from './aiSettingsReadiness';
-import type { AiTestStatus } from './aiSettingsUiTypes';
+import { getAiApiAccessReadiness, getAiSettingsReadiness, getApiKeyPersistenceMessage } from './aiSettingsReadiness';
+import type { AiModelFetchStatus, AiTestStatus } from './aiSettingsUiTypes';
 
 interface AiSettingsProps {
     // 保留空接口以便未来扩展
@@ -26,7 +26,7 @@ function getErrorMessage(error: unknown): string {
     return String(error);
 }
 
-function getTestConnectionErrorMessage(error: unknown): string {
+function getConnectionErrorMessage(error: unknown): string {
     if (error instanceof Error && error.name === 'AbortError') {
         return '请求已取消或超时，请检查网络、端点和超时设置。';
     }
@@ -42,16 +42,21 @@ export function AiSettings(_props: AiSettingsProps) {
     const [localSettings, setLocalSettings] = useState<AiSettingsType>(aiSettings);
     const [testStatus, setTestStatus] = useState<AiTestStatus>('idle');
     const [testMessage, setTestMessage] = useState('');
+    const [availableModels, setAvailableModels] = useState<string[]>([]);
+    const [modelFetchStatus, setModelFetchStatus] = useState<AiModelFetchStatus>('idle');
+    const [modelFetchMessage, setModelFetchMessage] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatusMessage, setSaveStatusMessage] = useState('');
     const [saveStatusSeverity, setSaveStatusSeverity] = useState<'success' | 'error' | 'info'>('info');
 
     const isMountedRef = useIsMounted();
-    const takeLatestRef = useRef(createTakeLatest());
+    const testTakeLatestRef = useRef(createTakeLatest());
+    const modelTakeLatestRef = useRef(createTakeLatest());
 
     useEffect(() => {
         return () => {
-            takeLatestRef.current.dispose();
+            testTakeLatestRef.current.dispose();
+            modelTakeLatestRef.current.dispose();
         };
     }, []);
 
@@ -62,6 +67,15 @@ export function AiSettings(_props: AiSettingsProps) {
 
     const updateLocal = (updates: Partial<AiSettingsType>) => {
         setSaveStatusMessage('');
+
+        if ('apiEndpoint' in updates || 'apiKey' in updates) {
+            setAvailableModels([]);
+            setModelFetchStatus('idle');
+            setModelFetchMessage('');
+            setTestStatus('idle');
+            setTestMessage('');
+        }
+
         setLocalSettings(prev => ({ ...prev, ...updates }));
     };
 
@@ -91,45 +105,74 @@ export function AiSettings(_props: AiSettingsProps) {
     const staleEnabledBlockIds = useMemo(() => (localSettings.enabledBlockIds || []).filter((id) => !validBlockIds.has(id)), [localSettings.enabledBlockIds, validBlockIds]);
 
     const readiness = useMemo(() => getAiSettingsReadiness(localSettings), [localSettings]);
+    const apiAccessReadiness = useMemo(() => getAiApiAccessReadiness(localSettings), [localSettings]);
     const apiKeyPersistenceMessage = useMemo(() => getApiKeyPersistenceMessage(localSettings), [localSettings]);
 
+    const requestModels = (signal: AbortSignal) => httpClientRef.current!.listModels({
+        baseURL: localSettings.apiEndpoint,
+        apiKey: localSettings.apiKey,
+        timeoutMs: localSettings.requestTimeoutMs,
+        signal,
+    });
+
     const handleTestConnection = async () => {
-        if (!readiness.ready) {
+        if (!apiAccessReadiness.ready) {
             setTestStatus('error');
-            setTestMessage(readiness.message);
+            setTestMessage(apiAccessReadiness.message);
             return;
         }
 
         if (isMountedRef.current) {
             setTestStatus('testing');
-            setTestMessage('正在测试连接...');
+            setTestMessage('正在测试 API 并读取模型接口...');
         }
 
         try {
-            await takeLatestRef.current.run((signal) =>
-                httpClientRef.current!.chatCompletion({
-                    baseURL: localSettings.apiEndpoint,
-                    apiKey: localSettings.apiKey,
-                    model: localSettings.model,
-                    temperature: 0,
-                    max_tokens: 10,
-                    messages: [
-                        { role: 'system', content: 'You are a test assistant.' },
-                        { role: 'user', content: 'ping' },
-                    ],
-                    timeoutMs: localSettings.requestTimeoutMs,
-                    signal,
-                })
-            );
-            if (isMountedRef.current) {
-                setTestStatus('success');
-                setTestMessage('连接成功！API 配置正确。');
-            }
+            const models = await testTakeLatestRef.current.run(requestModels);
+            if (!isMountedRef.current) return;
+
+            setAvailableModels(models);
+            setTestStatus('success');
+            setTestMessage(models.length > 0
+                ? `连接成功，模型接口返回 ${models.length} 个模型。`
+                : '连接成功，但模型接口没有返回可用模型。');
         } catch (error: unknown) {
             if (error instanceof CancelledError) return;
             if (isMountedRef.current) {
                 setTestStatus('error');
-                setTestMessage(`连接失败: ${getTestConnectionErrorMessage(error)}`);
+                setTestMessage(`连接失败：${getConnectionErrorMessage(error)}`);
+            }
+        }
+    };
+
+    const handleFetchModels = async () => {
+        if (!apiAccessReadiness.ready) {
+            setModelFetchStatus('error');
+            setModelFetchMessage(`无法拉取模型：${apiAccessReadiness.message}`);
+            return;
+        }
+
+        setModelFetchStatus('loading');
+        setModelFetchMessage('正在拉取模型列表...');
+
+        try {
+            const models = await modelTakeLatestRef.current.run(requestModels);
+            if (!isMountedRef.current) return;
+
+            setAvailableModels(models);
+            if (models.length === 0) {
+                setModelFetchStatus('error');
+                setModelFetchMessage('接口请求成功，但没有返回可用模型。');
+                return;
+            }
+
+            setModelFetchStatus('success');
+            setModelFetchMessage(`已拉取 ${models.length} 个模型，可从下拉列表选择。`);
+        } catch (error: unknown) {
+            if (error instanceof CancelledError) return;
+            if (isMountedRef.current) {
+                setModelFetchStatus('error');
+                setModelFetchMessage(`拉取模型失败：${getConnectionErrorMessage(error)}`);
             }
         }
     };
@@ -176,10 +219,15 @@ export function AiSettings(_props: AiSettingsProps) {
                 settings={localSettings}
                 onUpdate={updateLocal}
                 readiness={readiness}
+                apiAccessReadiness={apiAccessReadiness}
                 apiKeyPersistenceMessage={apiKeyPersistenceMessage}
                 testStatus={testStatus}
                 testMessage={testMessage}
                 onTestConnection={handleTestConnection}
+                availableModels={availableModels}
+                modelFetchStatus={modelFetchStatus}
+                modelFetchMessage={modelFetchMessage}
+                onFetchModels={handleFetchModels}
             />
             <AiPromptRulesSection
                 settings={localSettings}

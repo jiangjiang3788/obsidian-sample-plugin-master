@@ -4,7 +4,7 @@ import { buildQuickInputDisplayTemplate } from '../../src/features/quickinput/ed
 describe('QuickInput task display template', () => {
   const raw: QuickInputTemplateLike = {
     id: 'core.task',
-    coreBlockId: 'core.task',
+    recordTypeId: 'core.task',
     fields: [
       { id: 'body', key: '任务内容', label: '任务内容', type: 'textarea', semantic: 'body' },
       { id: 'priority', key: 'priority', label: '优先级', type: 'singleSelect', autoSelectFirst: false, options: [

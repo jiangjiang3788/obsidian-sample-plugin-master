@@ -1,17 +1,20 @@
 import { resolveQuickInputEnergyDefaultGoal } from '@/features/quickinput/editor/QuickInputEditorModel';
 
 const goals: any[] = [
-  { id: '生活/A', value: '生活/A', label: 'A', goal: { id: '生活/A', goalPath: '生活/A' } },
-  { id: '生活/B', value: '生活/B', label: 'B', goal: { id: '生活/B', goalPath: '生活/B' } },
+  { id: '生活/A', value: '生活/A', label: 'A', goal: { path: '生活/A', status: 'paused' } },
+  { id: '生活/B', value: '生活/B', label: 'B', goal: { path: '生活/B', status: 'active' } },
 ];
 
 describe('Energy desktop defaults', () => {
-  it('prefers configured Energy Goal and otherwise falls back to first visible Goal', () => {
+  it('prefers the configured Energy Goal', () => {
     expect(resolveQuickInputEnergyDefaultGoal(goals, '生活/B')?.id).toBe('生活/B');
-    expect(resolveQuickInputEnergyDefaultGoal(goals, 'missing')?.id).toBe('生活/A');
-    expect(resolveQuickInputEnergyDefaultGoal([], '生活/B')).toBeNull();
   });
 
+  it('falls back to the first active Goal when the default is empty or stale', () => {
+    expect(resolveQuickInputEnergyDefaultGoal(goals, '')?.id).toBe('生活/B');
+    expect(resolveQuickInputEnergyDefaultGoal(goals, 'missing')?.id).toBe('生活/B');
+    expect(resolveQuickInputEnergyDefaultGoal([], '生活/B')).toBeNull();
+  });
 });
 import { isEnergyItem, readEnergyItemSnapshot } from '@core/energy/public';
 

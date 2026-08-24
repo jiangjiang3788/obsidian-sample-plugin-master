@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { GoalTemplateMatrixGroupRows } from './GoalTemplateMatrixRow';
 import { splitGoalsByRoot } from './goalTemplateMatrixModel';
@@ -9,7 +9,7 @@ import type { GoalDropState } from './goalTemplateMatrixModel';
 export interface GoalTemplateMatrixTableProps {
   visibleGoals: GoalDefinition[];
   goals: GoalDefinition[];
-  visibleBlocks: CoreBlockDefinition[];
+  visibleBlocks: TemplateRecordTypeDefinition[];
   templates: GoalTemplate[];
   expandedPaths: Set<string>;
   draggingGoalPath: string | null;
@@ -19,10 +19,10 @@ export interface GoalTemplateMatrixTableProps {
   toggleTreePath: (path: string) => void;
   reorderGoalSiblings: (dragGoalPath: string, targetGoalPath: string, position: 'before' | 'after') => Promise<void>;
   handleDeleteGoal: (event: MouseEvent, goal: GoalDefinition) => Promise<void>;
-  openEditor: (goal: GoalDefinition, block: CoreBlockDefinition, template?: GoalTemplate | null) => void;
+  openEditor: (goal: GoalDefinition, block: TemplateRecordTypeDefinition, template?: GoalTemplate | null) => void;
 }
 
-function GoalTemplateMatrixHeader({ visibleBlocks }: { visibleBlocks: CoreBlockDefinition[] }) {
+function GoalTemplateMatrixHeader({ visibleBlocks }: { visibleBlocks: TemplateRecordTypeDefinition[] }) {
   return (
     <thead>
       <tr>

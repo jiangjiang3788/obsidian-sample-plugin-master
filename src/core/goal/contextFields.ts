@@ -1,7 +1,7 @@
 /** Non-editable Record context in the Goal-only model. */
 export const SYSTEM_RECORD_CONTEXT_FIELD_KEYS = [
   'goalPath', '目标', '目标路径', 'rootGoal', 'leafGoal',
-  'coreBlock', 'coreBlockId', '核心Block',
+  'coreBlock', 'recordTypeId', '记录类型',
   'templateId', '模板ID', 'templateSourceType', '模板来源',
   'cycleId', '周期ID', 'periodId', 'period', '周期', '周期粒度', 'goalGranularity',
 ] as const;

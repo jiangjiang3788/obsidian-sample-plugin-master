@@ -21,7 +21,6 @@ interface TimelineViewProps {
   onCreateFromTimeline?: OpenTimelineCreateHandler;
   onOpenRecord?: OpenRecordHandler;
   onNotice?: (message: string) => void;
-  inputSettings: any;
   records?: RecordViewItem[];
 }
 
@@ -37,10 +36,8 @@ export function TimelineView({
   onCreateFromTimeline,
   onOpenRecord,
   onNotice,
-  inputSettings,
   records,
 }: TimelineViewProps) {
-  const inputBlocks = inputSettings?.blocks || [];
   const renderModel = useMemo(
     () => buildTimelineRenderModel({ items, records, dateRange, module, currentView }),
     [items, records, dateRange, module, currentView]
@@ -55,12 +52,11 @@ export function TimelineView({
       onCreateFromTimeline?.({
         day,
         event: e,
-        inputBlocks,
         hourHeight,
         dayBlocks: renderModel.dailyViewData?.blocksByDay[day] || [],
       });
     },
-    [onCreateFromTimeline, inputBlocks, hourHeight, renderModel.dailyViewData]
+    [onCreateFromTimeline, hourHeight, renderModel.dailyViewData]
   );
 
   return (

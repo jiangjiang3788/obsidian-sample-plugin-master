@@ -3,7 +3,7 @@ import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
 
 const taskTemplate: RecordCaptureTemplate = {
   id: 'core.task',
-  coreBlockId: 'core.task',
+  recordTypeId: 'core.task',
   name: '任务',
   categoryKey: '任务',
   targetFile: '01/目标.md',

@@ -12,7 +12,7 @@ import type { QuickInputFieldValueOptions } from '../fields/types';
 
 export interface QuickInputEditorFieldsProps {
   getResourcePath: (path: string) => string;
-  template: { fields?: unknown[]; coreBlockId?: string; id?: string } | null | undefined;
+  template: { fields?: unknown[]; recordTypeId?: string; id?: string } | null | undefined;
   formData: Record<string, unknown>;
   fieldValueOptionsByKey?: QuickInputFieldValueOptions;
   dense?: boolean;
@@ -68,7 +68,7 @@ export function QuickInputEditorFields({
   const [tagDrafts, setTagDrafts] = useState<Record<string, string>>({});
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const fields = (template?.fields || []) as any[];
-  const isTaskTemplate = String(template?.coreBlockId || template?.id || '').replace(/^core\./, '') === 'task';
+  const isTaskTemplate = String(template?.recordTypeId || template?.id || '').replace(/^core\./, '') === 'task';
 
   const rendererProps = {
     getResourcePath,

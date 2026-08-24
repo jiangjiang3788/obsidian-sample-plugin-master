@@ -1,36 +1,58 @@
-import type { ThinkSettings } from '@/core/settings/ThinkSettings';
-import { getEffectiveCoreBlocks } from '@/core/blocks';
+import type { InputSettings } from '@/core/recordInput/CaptureTemplate';
 import {
   ENERGY_DEFINITION,
   RECORD_SCHEMA_DEFINITIONS,
   RECORD_TYPE_IDS,
-  type RecordSchemaDefinition,
 } from '@/core/records/schema';
+import type { RecordTypeDefinition, TemplateRecordTypeDefinition } from './types';
 
 export const ENERGY_RECORD_TYPE_ID = RECORD_TYPE_IDS.ENERGY;
-export const ENERGY_RECORD_TYPE = {
-  ...ENERGY_DEFINITION,
-  get goalBindable() { return ENERGY_DEFINITION.capabilities.goalBindable; },
-} as const;
+export const ENERGY_RECORD_TYPE = ENERGY_DEFINITION;
 
-/** User-capturable default record types; internal history definitions stay hidden. */
-export const DEFAULT_RECORD_TYPES: RecordSchemaDefinition[] = RECORD_SCHEMA_DEFINITIONS
-  .filter((definition) => definition.captureMode !== 'internal') as RecordSchemaDefinition[];
+/**
+ * The one runtime registry for user-capturable RecordTypes.
+ *
+ * Adding a normal RecordType must happen in the record schema definitions only;
+ * QuickInput, GoalTemplate, AI and view adapters consume this registry instead
+ * of maintaining their own Block lists.
+ */
+export const DEFAULT_RECORD_TYPES: readonly RecordTypeDefinition[] = Object.freeze(
+  RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.capabilities.userVisible && definition.captureMode !== 'internal'),
+);
 
-/** Template types respect settings patches; direct types come from the canonical schema definition. */
-export function getEffectiveRecordTypes(
-  settings: Pick<ThinkSettings, 'coreBlockSettings' | 'inputSettings'>,
-): RecordSchemaDefinition[] {
-  return [...getEffectiveCoreBlocks(settings), ENERGY_DEFINITION];
+/** Template-driven RecordTypes. Direct/internal kinds are intentionally excluded. */
+export const DEFAULT_TEMPLATE_RECORD_TYPES: readonly TemplateRecordTypeDefinition[] = Object.freeze(
+  RECORD_SCHEMA_DEFINITIONS.filter((definition): definition is TemplateRecordTypeDefinition =>
+    definition.capabilities.userVisible && definition.captureMode === 'template' && typeof definition.recordTypeId === 'string'
+  ),
+);
+
+export function getEffectiveRecordTypes(): RecordTypeDefinition[] {
+  return [...DEFAULT_RECORD_TYPES];
 }
 
-export function getRecordTypeById(
-  settings: Pick<ThinkSettings, 'coreBlockSettings' | 'inputSettings'>,
-  recordTypeId: string,
-): RecordSchemaDefinition | null {
-  return getEffectiveRecordTypes(settings).find((item) => item.id === recordTypeId) || null;
+export function getTemplateRecordTypes(): TemplateRecordTypeDefinition[] {
+  return [...DEFAULT_TEMPLATE_RECORD_TYPES];
 }
 
-export function isDirectRecordType(recordType: Pick<RecordSchemaDefinition, 'captureMode'>): boolean {
+export function getRecordTypeById(recordTypeId: string): RecordTypeDefinition | null {
+  const id = String(recordTypeId || '').trim();
+  return DEFAULT_RECORD_TYPES.find((item) => item.id === id) || null;
+}
+
+export function getTemplateRecordTypeById(recordTypeId: string): TemplateRecordTypeDefinition | null {
+  const id = String(recordTypeId || '').trim();
+  return DEFAULT_TEMPLATE_RECORD_TYPES.find((item) => item.id === id) || null;
+}
+
+/**
+ * Thin adapter for older AI/view utilities that still accept InputSettings.
+ * It is derived on demand and is never stored in ThinkSettings or data.json.
+ */
+export function buildRecordTypeInputSettings(): InputSettings {
+  return { blocks: [...DEFAULT_TEMPLATE_RECORD_TYPES] };
+}
+
+export function isDirectRecordType(recordType: Pick<RecordTypeDefinition, 'captureMode'>): boolean {
   return recordType.captureMode === 'direct';
 }

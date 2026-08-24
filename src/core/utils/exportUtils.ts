@@ -3,32 +3,17 @@ import { readField } from '@/core/fields/ViewFieldCatalog';
 import { getFieldDefinition } from '@/core/fields/FieldRegistry';
 import { normalizeFieldKey } from '@/core/fields/FieldValueResolver';
 import { getTaskStatus } from '@/core/records/task/taskStatus';
-import { 
-    BLOCK_EXPORT_DEFAULT_CONFIG, 
-    EVENT_TIMELINE_EXPORT_CONFIG,
-    EXCEL_EXPORT_CONFIG,
-    STATISTICS_EXPORT_CONFIG,
-    HEATMAP_EXPORT_CONFIG,
-    TIMELINE_EXPORT_CONFIG,
-    TABLE_EXPORT_CONFIG,
-    ExportViewConfig 
+import {
+    BLOCK_EXPORT_DEFAULT_CONFIG,
+    getViewExportConfig,
+    ExportViewConfig,
 } from '@/core/config/views';
 
 /**
  * 根据视图类型获取对应的导出配置
  */
 export function getExportConfigByViewType(viewType: string): ExportViewConfig {
-    const configMap: Record<string, ExportViewConfig> = {
-        'BlockView': BLOCK_EXPORT_DEFAULT_CONFIG,
-        'EventTimelineView': EVENT_TIMELINE_EXPORT_CONFIG,
-        'ExcelView': EXCEL_EXPORT_CONFIG,
-        'StatisticsView': STATISTICS_EXPORT_CONFIG,
-        'HeatmapView': HEATMAP_EXPORT_CONFIG,
-        'TimelineView': TIMELINE_EXPORT_CONFIG,
-        'TableView': TABLE_EXPORT_CONFIG,
-    };
-    
-    return configMap[viewType] || BLOCK_EXPORT_DEFAULT_CONFIG;
+    return getViewExportConfig(viewType) || BLOCK_EXPORT_DEFAULT_CONFIG;
 }
 
 /**

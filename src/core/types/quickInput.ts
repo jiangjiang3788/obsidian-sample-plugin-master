@@ -11,5 +11,5 @@ export interface QuickInputSaveData {
     source?: Extract<RecordInputSource, 'timer' | 'quickinput' | 'view_quick_create' | 'unknown'>;
     template?: RecordCaptureTemplate;
     templateId?: string | null;
-    templateSourceType?: 'core-block' | 'goal-template' | null;
+    templateSourceType?: 'record-type' | 'goal-template' | null;
 }

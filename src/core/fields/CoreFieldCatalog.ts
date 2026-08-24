@@ -76,6 +76,7 @@ const BUILT_IN_FIELD_GUIDE_GROUPS: BuiltInFieldGuideGroup[] = [
 ];
 
 const CORE_INPUT_FIELD_PRESETS: CoreInputFieldPreset[] = [
+  { label: '分类', type: 'hierarchicalSingleSelect', target: 'categoryKey', description: 'Record 的分类路径；Thought 可由分类叶节点映射为记录子类型。' },
   { label: '记录子类型', type: 'singleSelect', target: 'recordSubtype', description: 'Record 内部子类型；Thought 推荐使用 感受/思考。' },
   { label: '标签', type: 'multiTag', target: 'tags', description: '多标签字段，可填写多个标签。' },
   { label: '目标', type: 'hierarchicalSingleSelect', target: 'goalPath', description: '单值目标路径。Goal 是独立实体，不使用标签语义。' },
@@ -91,6 +92,10 @@ const CORE_INPUT_ALIAS_TARGETS: Record<string, CoreInputFieldPreset['target']> =
   recordsubtype: 'recordSubtype',
   '记录子类型': 'recordSubtype',
   // 分类
+  categorykey: 'categoryKey',
+  categorypath: 'categoryKey',
+  '分类': 'categoryKey',
+  '分类路径': 'categoryKey',
   // 标签
   tags: 'tags',
   '标签': 'tags',

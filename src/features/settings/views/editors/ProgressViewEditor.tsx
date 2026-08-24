@@ -5,7 +5,6 @@ import type { ViewEditorProps } from './ViewEditorProps';
 import { PROGRESS_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
-export { PROGRESS_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 
 /** ProgressView 只做目标经验卡片。筛选由统一筛选面板负责。 */
 export function ProgressViewEditor({ value, onChange }: ViewEditorProps) {

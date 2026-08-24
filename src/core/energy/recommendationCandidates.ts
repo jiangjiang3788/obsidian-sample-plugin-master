@@ -71,7 +71,7 @@ function number(value: unknown): number | undefined {
 }
 
 function normalizedBlock(item: RecordViewItem): string {
-  return text(item.coreBlock || item.extra?.['核心Block'])
+  return text(item.coreBlock || item.extra?.['记录类型'])
     .replace(/^core\./i, '')
     .toLowerCase();
 }

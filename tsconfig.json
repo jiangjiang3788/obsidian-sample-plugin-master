@@ -82,9 +82,6 @@
       "@core/types/public": [
         "src/core/types/public.ts"
       ],
-      "@core/blocks/public": [
-        "src/core/blocks/public.ts"
-      ],
       "@core/services/public": [
         "src/core/services/public.ts"
       ],

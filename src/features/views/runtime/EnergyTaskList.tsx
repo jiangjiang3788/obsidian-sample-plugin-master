@@ -8,10 +8,12 @@ import {
   hasPlatformModifier,
   isKeyboardActivation,
   RECORD_GESTURE_HINT,
+  OverlayPortal,
   SimpleSelect,
   stopInteractionEvent,
   ThinkButton,
   ThinkIcon,
+  useOverlayLayer,
 } from '@shared/ui/public';
 import type { EnergyTaskListItemVM, EnergyTaskListModel } from '../models/energyTaskListModel';
 
@@ -63,7 +65,7 @@ function taskHover(task: EnergyTaskListItemVM): string {
   ].filter(Boolean).join(' · ');
 }
 
-function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecordOrigin, onClose }: {
+function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecordOrigin, onClose, zIndex }: {
   menu: MenuState;
   task: EnergyTaskListItemVM;
   currentView: string;
@@ -71,6 +73,7 @@ function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecord
   onOpenRecord?: OpenRecordHandler;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
   onClose: () => void;
+  zIndex: number;
 }) {
   const editTask = () => {
     void onOpenRecord?.(task.item);
@@ -85,7 +88,7 @@ function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecord
     } : undefined,
   });
   return (
-    <div class="think-energy-task-list__menu" ref={menuRef} style={`left:${menu.x}px;top:${menu.y}px;`}>
+    <div class="think-energy-task-list__menu" ref={menuRef} style={`left:${menu.x}px;top:${menu.y}px;z-index:${zIndex};`}>
       <div class="think-energy-task-list__menu-title">{task.title}</div>
       <ThinkButton
         variant="link"
@@ -133,6 +136,7 @@ function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecord
 export function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, onOpenRecordOrigin, onContextChange }: Props) {
   const [menu, setMenu] = useState<MenuState | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuOverlay = useOverlayLayer(Boolean(menu), 'energy-task-menu');
   const taskMap = useMemo(() => {
     const map = new Map<string, EnergyTaskListItemVM>();
     for (const goal of model.goals) {
@@ -146,17 +150,17 @@ export function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, 
 
   useEffect(() => {
     const onDown = (event: MouseEvent) => {
-      if (!menuRef.current || menuRef.current.contains(event.target as Node)) return;
+      if (!menuOverlay.isTop || !menuRef.current || menuRef.current.contains(event.target as Node)) return;
       setMenu(null);
     };
-    const onEsc = (event: KeyboardEvent) => { if (event.key === 'Escape') setMenu(null); };
+    const onEsc = (event: KeyboardEvent) => { if (event.key === 'Escape' && menuOverlay.isTop) setMenu(null); };
     window.addEventListener('mousedown', onDown);
     window.addEventListener('keydown', onEsc);
     return () => {
       window.removeEventListener('mousedown', onDown);
       window.removeEventListener('keydown', onEsc);
     };
-  }, []);
+  }, [menuOverlay.isTop]);
 
   const activateTask = (task: EnergyTaskListItemVM, event?: MouseEvent | KeyboardEvent) => {
     if (event && hasPlatformModifier(event) && onOpenRecordOrigin) {
@@ -261,15 +265,18 @@ export function EnergyTaskList({ model, currentView, onStartTask, onOpenRecord, 
         )) : <div class="think-energy-task-list__empty-state think-list-empty">当前没有未完成任务。</div>}
       </div>
       {menu && selectedTask && (
-        <TaskMenu
-          menu={menu}
-          task={selectedTask}
-          currentView={currentView}
-          menuRef={menuRef}
-          onOpenRecord={onOpenRecord}
-          onOpenRecordOrigin={onOpenRecordOrigin}
-          onClose={() => setMenu(null)}
-        />
+        <OverlayPortal>
+          <TaskMenu
+            menu={menu}
+            task={selectedTask}
+            currentView={currentView}
+            menuRef={menuRef}
+            onOpenRecord={onOpenRecord}
+            onOpenRecordOrigin={onOpenRecordOrigin}
+            onClose={() => setMenu(null)}
+            zIndex={menuOverlay.zIndex}
+          />
+        </OverlayPortal>
       )}
     </section>
   );

@@ -23,8 +23,8 @@ describe('ViewToolbarModel', () => {
   });
 
   it('does not render fallback filters when a custom filter slot exists', () => {
-    expect(shouldRenderViewToolbarFallbackFilters({ hasFilterSlot: true, canSelectThemes: true, canSelectCategories: true })).toBe(false);
-    expect(shouldRenderViewToolbarFallbackFilters({ hasFilterSlot: false, canSelectThemes: false, canSelectCategories: false })).toBe(false);
-    expect(shouldRenderViewToolbarFallbackFilters({ hasFilterSlot: false, canSelectThemes: true, canSelectCategories: false })).toBe(true);
+    expect(shouldRenderViewToolbarFallbackFilters({ hasFilterSlot: true, canSelectCategories: true })).toBe(false);
+    expect(shouldRenderViewToolbarFallbackFilters({ hasFilterSlot: false, canSelectCategories: false })).toBe(false);
+    expect(shouldRenderViewToolbarFallbackFilters({ hasFilterSlot: false, canSelectCategories: true })).toBe(true);
   });
 });

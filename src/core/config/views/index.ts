@@ -7,3 +7,5 @@
 export * from './types';
 export * from './defaults';
 export * from './exportConfigs';
+
+export * from './registry';

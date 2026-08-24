@@ -1,42 +1,35 @@
-// src/features/settings/ui/components/view-editors/registry.tsx
 /** @jsxImportSource preact */
-import { h } from 'preact';
-import { TableViewEditor, DEFAULT_CONFIG as TableViewDefault } from './TableViewEditor';
-import { BlockViewEditor, DEFAULT_CONFIG as BlockViewDefault } from './BlockViewEditor';
-import { ExcelViewEditor, DEFAULT_CONFIG as ExcelViewDefault } from './ExcelViewEditor';
-import { TimelineViewEditor, DEFAULT_CONFIG as TimelineViewDefault } from './TimelineViewEditor';
-import { EventTimelineViewEditor, DEFAULT_CONFIG as EventTimelineViewDefault } from './EventTimelineViewEditor';
-import { StatisticsViewEditor, DEFAULT_CONFIG as StatisticsViewDefault } from './StatisticsViewEditor';
-import { HeatmapViewEditor, DEFAULT_CONFIG as HeatmapViewDefault } from './HeatmapViewEditor';
-import { ProgressViewEditor, DEFAULT_CONFIG as ProgressViewDefault } from './ProgressViewEditor';
-import { EnergyViewEditor, DEFAULT_CONFIG as EnergyViewDefault } from './EnergyViewEditor';
 import type { ViewName } from '@core/types/public';
-
-// [REFACTOR] ViewKind is now derived from the domain-level ViewName
-export type ViewKind = ViewName;
-
-export type { ViewEditorProps } from './ViewEditorProps';
+import { TableViewEditor } from './TableViewEditor';
+import { BlockViewEditor } from './BlockViewEditor';
+import { ExcelViewEditor } from './ExcelViewEditor';
+import { TimelineViewEditor } from './TimelineViewEditor';
+import { EventTimelineViewEditor } from './EventTimelineViewEditor';
+import { StatisticsViewEditor } from './StatisticsViewEditor';
+import { HeatmapViewEditor } from './HeatmapViewEditor';
+import { ProgressViewEditor } from './ProgressViewEditor';
+import { EnergyViewEditor } from './EnergyViewEditor';
 import type { ViewEditorProps } from './ViewEditorProps';
 
-// [REFACTOR] The registry is now the Single Source of Truth for both the editor component and its default configuration.
-export const VIEW_INFO_REGISTRY = {
-  TableView:    { component: TableViewEditor,    defaultConfig: TableViewDefault },
-  BlockView:    { component: BlockViewEditor,    defaultConfig: BlockViewDefault },
-  ExcelView:    { component: ExcelViewEditor,    defaultConfig: ExcelViewDefault },
-  TimelineView: { component: TimelineViewEditor, defaultConfig: TimelineViewDefault },
-  EventTimelineView: { component: EventTimelineViewEditor, defaultConfig: EventTimelineViewDefault },
-  StatisticsView: { component: StatisticsViewEditor, defaultConfig: StatisticsViewDefault },
-  HeatmapView: { component: HeatmapViewEditor, defaultConfig: HeatmapViewDefault },
-  ProgressView: { component: ProgressViewEditor, defaultConfig: ProgressViewDefault },
-  EnergyView: { component: EnergyViewEditor, defaultConfig: EnergyViewDefault },
-} as const;
+export type ViewKind = ViewName;
+export type { ViewEditorProps } from './ViewEditorProps';
 
+/**
+ * UI binding only. View names/defaults/layout/capabilities live in the core
+ * VIEW_DEFINITIONS registry; this map only attaches settings components.
+ */
+export const VIEW_EDITORS = {
+  TableView: TableViewEditor,
+  BlockView: BlockViewEditor,
+  ExcelView: ExcelViewEditor,
+  TimelineView: TimelineViewEditor,
+  EventTimelineView: EventTimelineViewEditor,
+  StatisticsView: StatisticsViewEditor,
+  HeatmapView: HeatmapViewEditor,
+  ProgressView: ProgressViewEditor,
+  EnergyView: EnergyViewEditor,
+} satisfies Record<ViewName, (p: ViewEditorProps) => any>;
 
-// For convenience, we can export the editors map and defaults map separately if needed elsewhere.
-export const VIEW_EDITORS = Object.fromEntries(
-    Object.entries(VIEW_INFO_REGISTRY).map(([k, v]) => [k, v.component])
-) as Record<ViewKind, (p: ViewEditorProps) => any>;
-
-export const VIEW_DEFAULT_CONFIGS = Object.fromEntries(
-    Object.entries(VIEW_INFO_REGISTRY).map(([k,v]) => [k, v.defaultConfig])
-) as Record<ViewKind, any>;
+export function getViewEditorComponent(viewType: ViewName) {
+  return VIEW_EDITORS[viewType];
+}

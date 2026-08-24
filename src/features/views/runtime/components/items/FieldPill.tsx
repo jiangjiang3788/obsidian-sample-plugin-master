@@ -1,8 +1,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
+import type { JSX } from 'preact';
 import type { RecordViewItem } from '@core/types/public';
 import { readField } from '@core/types/public';
-import { getFieldDefinition, getFieldLabel, isImageFieldDefinition, normalizeImageValue } from '@core/fields/public';
+import { formatFieldValue, getFieldDefinition, getFieldLabel, isImageFieldDefinition, normalizeImageValue } from '@core/fields/public';
 import { getCategoryColor } from '@core/types/public';
 import { TagsRenderer } from '@shared/ui/public';
 import { getBaseCategory, getLeafPath } from '@core/utils/public';
@@ -28,15 +29,15 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, onOpenRecordOri
     }
     
     const label = getFieldLabel(fieldKey);
-    const originProps = onOpenRecordOrigin ? {
-        role: 'button',
+    const originProps: JSX.HTMLAttributes<HTMLSpanElement> = onOpenRecordOrigin ? {
+        role: 'button' as const,
         tabIndex: 0,
-        onClick: (event: MouseEvent) => {
+        onClick: (event) => {
             if (!hasPlatformModifier(event)) return;
             stopInteractionEvent(event);
             void onOpenRecordOrigin(item);
         },
-        onKeyDown: (event: KeyboardEvent) => {
+        onKeyDown: (event) => {
             if (!hasPlatformModifier(event) || !isKeyboardActivation(event)) return;
             stopInteractionEvent(event);
             void onOpenRecordOrigin(item);
@@ -84,7 +85,7 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, onOpenRecordOri
     }
 
     // 默认文本显示
-    const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
+    const displayValue = formatFieldValue(fieldKey, value, item);
 
     return (
         <span {...originProps} class="tag-pill" title={`${label}: ${displayValue} · ${originTitle}`}>

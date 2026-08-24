@@ -15,7 +15,7 @@ describe('Goal canonical domain', () => {
 
     expect(() => assertCanonicalGoalSettings({
       goals: [{ path: '照顾好自己', status: 'active' } as any],
-      goalTemplates: [{ goalPath: '照顾好自己', coreBlockId: 'core.task', enabled: true, defaultValues: { 目标: '照顾好自己' } } as any],
+      goalTemplates: [{ goalPath: '照顾好自己', recordTypeId: 'core.task', enabled: true, defaultValues: { 目标: '照顾好自己' } } as any],
     })).toThrow(/must not persist Goal|system context/i);
   });
 
@@ -23,8 +23,8 @@ describe('Goal canonical domain', () => {
     expect(() => assertCanonicalGoalSettings({
       goals: [{ path: '照顾好自己', status: 'active' } as any],
       goalTemplates: [
-        { goalPath: '照顾好自己', coreBlockId: 'core.task', enabled: true },
-        { goalPath: '照顾好自己', coreBlockId: 'core.task', enabled: true },
+        { goalPath: '照顾好自己', recordTypeId: 'core.task', enabled: true },
+        { goalPath: '照顾好自己', recordTypeId: 'core.task', enabled: true },
       ] as any,
     })).toThrow(/duplicate/i);
   });

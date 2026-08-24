@@ -34,3 +34,5 @@ export * from './composites/TaskSendToTimerButton';
 export * from './composites/form/ListEditor';
 export * from './markdown/MarkdownContent';
 export * from './events/obsidianEventBoundary';
+
+export * from './overlay/OverlayRuntime';

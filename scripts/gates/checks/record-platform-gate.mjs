@@ -133,23 +133,15 @@ check_record_entity_r2_gate();
 function check_record_schema_definition_r3_gate() {
   const root = process.cwd();
   const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
+  const exists = (p) => fs.existsSync(path.join(root, p));
   const fail = (message) => { console.error(`[record-schema-r3] ${message}`); process.exitCode = 1; };
 
   const types = read('src/core/records/schema/types.ts');
   const definitions = read('src/core/records/schema/definitions.ts');
-  const coreBlocks = read('src/core/blocks/defaultCoreBlocks.ts');
-  const coreBlockTypes = read('src/core/blocks/types.ts');
   const recordTypeRegistry = read('src/core/recordTypes/registry.ts');
-  const sourceFiles = [];
-  function walk(dir) {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (/\.(ts|tsx)$/.test(entry.name)) sourceFiles.push(full);
-    }
-  }
-  walk(path.join(root, 'src'));
-  const allSource = sourceFiles.map((p) => fs.readFileSync(p, 'utf8')).join('\n');
+  const settings = read('src/core/settings/ThinkSettings.ts');
+  const selectors = read('src/app/store/selectors/index.ts');
+  const blockManager = read('src/features/settings/input/BlockManager.tsx');
 
   if (!types.includes('interface RecordSchemaDefinition extends RecordSchemaContract')) fail('missing authoritative RecordSchemaDefinition');
   if (!types.includes("RecordCaptureMode = 'template' | 'direct' | 'internal'")) fail('capture mode must live in schema definition types');
@@ -157,14 +149,18 @@ function check_record_schema_definition_r3_gate() {
   for (const marker of ['THOUGHT_DEFINITION','EVIDENCE_DEFINITION','HABIT_DEFINITION','PLAN_DEFINITION','REVIEW_DEFINITION','BLOCKER_DEFINITION','MILESTONE_DEFINITION','TASK_DEFINITION','TASK_SERIES_DEFINITION','TASK_SESSION_DEFINITION','ENERGY_DEFINITION']) {
     if (!definitions.includes(marker)) fail(`missing canonical definition: ${marker}`);
   }
-  if (!coreBlocks.includes('RECORD_SCHEMA_DEFINITIONS') || coreBlocks.includes('block({')) fail('DEFAULT_CORE_BLOCKS must be derived, not independently declared');
-  if (!recordTypeRegistry.includes('RECORD_SCHEMA_DEFINITIONS') || !recordTypeRegistry.includes('ENERGY_DEFINITION')) fail('record type registry must derive from schema definitions');
-  if (/\bRecordTypeDefinition\b/.test(allSource)) fail('RecordTypeDefinition must be retired; use RecordSchemaDefinition');
-  if (/interface\s+CoreBlockDefinition\b/.test(coreBlockTypes)) fail('CoreBlockDefinition must not be an independent interface');
-  if (/\bBlockTemplate\b/.test(allSource)) fail('legacy BlockTemplate type name must be retired; use RecordCaptureTemplate');
-  if (!allSource.includes('RecordCaptureTemplate')) fail('RecordCaptureTemplate boundary missing');
+  if (!recordTypeRegistry.includes('RECORD_SCHEMA_DEFINITIONS')) fail('RecordTypeRegistry must derive from Record Schema definitions');
+  if (!recordTypeRegistry.includes("definition.captureMode !== 'internal'")) fail('user RecordTypeRegistry must exclude internal kinds');
+  if (!recordTypeRegistry.includes("definition.captureMode === 'template'")) fail('template RecordType projection must derive from the same registry');
+  if (exists('src/core/blocks')) fail('legacy src/core/blocks authority must be deleted');
+  if (exists('src/app/store/slices/blocks.slice.ts')) fail('legacy mutable Blocks slice must be deleted');
+  if (exists('src/app/usecases/blocks.usecase.ts')) fail('legacy Blocks usecase must be deleted');
+  if (/inputSettings\??\s*:/.test(settings)) fail('ThinkSettings must not persist a second inputSettings Block catalog');
+  if (/recordTypeSettings\??\s*:|coreBlockSettings\??\s*:/.test(settings)) fail('ThinkSettings must not persist RecordType/CoreBlock patches');
+  if (!selectors.includes('buildRecordTypeInputSettings')) fail('legacy InputSettings consumers must receive only a derived registry adapter');
+  if (!blockManager.includes('记录类型由代码统一注册')) fail('RecordType settings must be read-only registry inspection, not mutable Block CRUD');
 
-  if (!process.exitCode) console.log('[record-schema-r3] PASS (single RecordSchemaDefinition authority)');
+  if (!process.exitCode) console.log('[record-schema-r3] PASS (RecordSchemaDefinition + RecordTypeRegistry are the single authority)');
 }
 
 check_record_schema_definition_r3_gate();
@@ -182,7 +178,6 @@ function check_generic_record_codec_r4_gate() {
   const draft = read('src/core/records/RecordDraft.ts');
   const planner = read('src/core/recordInput/snapshot/OutputPlanner.ts');
   const definitions = read('src/core/records/schema/definitions.ts');
-  const blockResolver = read('src/core/blocks/resolveCoreBlocks.ts');
   const templateResolver = read('src/core/services/GoalTemplateResolver.ts');
   const goalPatch = read('src/features/settings/goalTemplates/model/GoalTemplatePatchModel.ts');
 
@@ -213,7 +208,6 @@ function check_generic_record_codec_r4_gate() {
     failures.push('canonical RecordSchemaDefinition must not contain Markdown output grammar');
   }
 
-  if (blockResolver.includes('patch.outputTemplate')) failures.push('CoreBlock patches must not override canonical Record grammar');
   if (templateResolver.includes('patch.outputTemplate')) failures.push('GoalTemplateResolver must not merge outputTemplate grammar overrides');
   if (goalPatch.includes('outputTemplate')) failures.push('GoalTemplate save path must not expose outputTemplate after R10 hard cut');
 
@@ -225,7 +219,7 @@ function check_generic_record_codec_r4_gate() {
   requireText('src/core/utils/parser.ts', 'recordSubtype: parsed.recordSubtype');
   requireText('src/core/utils/parser.ts', '`闪念/${parsed.recordSubtype}`');
   forbidText('src/core/goal/templateMode.ts', 'patch.outputTemplate');
-  requireText('src/features/settings/input/BlockManager.tsx', 'Canonical Record 的 Markdown Block 由 RecordSchemaDefinition + Record Codec 统一生成');
+  requireText('src/features/settings/input/BlockManager.tsx', '记录类型由代码统一注册');
   requireText('src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx', 'Goal Template 只定义字段、默认值与保存位置，不覆盖存储 grammar');
 
   for (const forbidden of ['模板ID', '模板来源', '周期ID', "fields['分类']", "fields.分类"]) {
@@ -300,7 +294,6 @@ function check_field_system_r5_gate() {
 
   // R4 safety remains: template freedom controls fields, never Markdown grammar.
   forbidText('src/features/settings/goalTemplates/model/GoalTemplatePatchModel.ts', 'outputTemplate');
-  forbidText('src/core/blocks/resolveCoreBlocks.ts', 'patch.outputTemplate');
   forbidText('src/core/services/GoalTemplateResolver.ts', 'patch.outputTemplate');
 
   if (failures.length) {

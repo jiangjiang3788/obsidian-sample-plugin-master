@@ -99,7 +99,7 @@ export interface PreparedEditRecord {
   inferred: {
     usedFallbackBlock: boolean;
     canonicalBlockId?: string | null;
-    templateSourceType?: 'core-block' | 'goal-template' | null;
+    templateSourceType?: 'record-type' | 'goal-template' | null;
     resolvedBy?: 'exact' | 'inferred' | 'fallback';
   };
   warnings: RecordSubmitIssue[];
@@ -176,7 +176,7 @@ export interface ResolveDependenciesResult {
   errors: RecordSubmitIssue[];
   meta: {
     templateId?: string | null;
-    templateSourceType?: 'core-block' | 'goal-template' | null;
+    templateSourceType?: 'record-type' | 'goal-template' | null;
     usedFallbackBlock: boolean;
     canonicalBlockId?: string | null;
   };

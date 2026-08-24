@@ -49,6 +49,6 @@ export {
 export {
   applyQuickInputGoalSelection,
   buildQuickInputGoalOptions,
-  resolveQuickInputCoreBlockId,
+  resolveQuickInputRecordTypeId,
   resolveQuickInputEnergyDefaultGoal,
 } from './quickInputGoalModel';

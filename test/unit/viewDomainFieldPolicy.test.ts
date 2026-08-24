@@ -2,8 +2,10 @@ import { normalizeViewFilters, normalizeViewGroupFields, normalizeDisplayFields,
 import type { RecordViewItem } from '@/core/public';
 
 describe('view domain field policy', () => {
-  it('converts generic category filters into canonical coreBlock filters', () => {
-    expect(normalizeViewFilters([{ field: 'categoryKey', op: '=', value: '打卡' }]))
+  it('keeps category path filters distinct from RecordType and normalizes explicit CoreBlock labels', () => {
+    expect(normalizeViewFilters([{ field: 'categoryKey', op: '=', value: '闪念/感受' }]))
+      .toEqual([{ field: 'categoryKey', op: '=', value: '闪念/感受' }]);
+    expect(normalizeViewFilters([{ field: '记录类型', op: '=', value: '打卡' }]))
       .toEqual([{ field: 'coreBlock', op: '=', value: 'habit' }]);
   });
 
@@ -23,11 +25,11 @@ describe('view domain field policy', () => {
   });
 
   it('normalizes canonical view axes without introducing Task storage aliases', () => {
-    expect(normalizeViewConfigDomain({ rowField: 'recurrence', colField: 'categoryKey', groupBy: 'category', categories: [{ name: '打卡' }] })).toEqual({
+    expect(normalizeViewConfigDomain({ rowField: 'recurrence', colField: 'categoryKey', groupBy: 'categoryKey', categories: [{ name: '闪念/感受' }] })).toEqual({
       rowField: 'recurrence',
-      colField: 'coreBlock',
-      groupBy: 'coreBlock',
-      categories: [{ name: '打卡' }],
+      colField: 'categoryKey',
+      groupBy: 'categoryKey',
+      categories: [{ name: '闪念/感受' }],
     });
     expect(normalizeViewConfigDomain({ categories: [], goalPaths: [] })).toEqual({});
   });

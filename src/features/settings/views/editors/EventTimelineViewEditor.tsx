@@ -10,7 +10,6 @@ import type { ViewEditorProps } from './ViewEditorProps';
 import { ConfigFieldRow, ConfigSection, ViewEditorShell } from './settingsEditorUi';
 
 // 重新导出以保持兼容性
-export { EVENT_TIMELINE_VIEW_DEFAULT_CONFIG as DEFAULT_CONFIG } from '@core/view/public';
 
 function uniqueFields(fields: string[]): string[] {
     const seen = new Set<string>();

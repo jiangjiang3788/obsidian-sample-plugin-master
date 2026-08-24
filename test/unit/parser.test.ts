@@ -64,7 +64,7 @@ describe('current Record parser', () => {
   });
 
   it('rejects blocks without a stable Record ID instead of deriving identity from storage location', () => {
-    const item = parse(['<!-- start -->', '核心Block:: task', '状态:: open', '内容:: no id', '<!-- end -->'].join('\n'));
+    const item = parse(['<!-- start -->', '记录类型:: task', '状态:: open', '内容:: no id', '<!-- end -->'].join('\n'));
     expect(item).toBeNull();
   });
 
@@ -72,7 +72,7 @@ describe('current Record parser', () => {
     const markdown = [
       '<!-- start -->',
       `记录ID:: ${REC_ID}`,
-      '核心Block:: thought',
+      '记录类型:: thought',
       '目标:: 了解自我',
       '内容:: 第一行',
       '晚上：脑子有点蒙',
@@ -93,7 +93,7 @@ describe('current Record parser', () => {
     const markdown = [
       '<!-- start -->',
       `记录ID:: ${id}`,
-      '核心Block:: energy',
+      '记录类型:: energy',
       '记录子类型:: snapshot',
       '目标:: 照顾好自己',
       '日期:: 2026-08-12',

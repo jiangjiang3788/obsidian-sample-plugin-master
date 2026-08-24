@@ -1,9 +1,17 @@
 import type { RecordSubmitIssue, RecordValidationResult, ValidateRecordInputParams } from '@/core/types/recordInput';
 import { templateFieldValueToString } from '@/core/fields/FieldBehavior';
+import { getRecordTypeById } from '@/core/recordTypes/public';
 
 function issue(code: string, message: string, field?: string): RecordSubmitIssue {
   return { code, message, field };
 }
+
+function hasRequiredValue(value: unknown): boolean {
+  if (value === undefined || value === null) return false;
+  if (Array.isArray(value)) return value.some((entry) => hasRequiredValue(entry));
+  return templateFieldValueToString(value).trim() !== '';
+}
+
 export function validateRecordInput(input: ValidateRecordInputParams): RecordValidationResult {
   const errors: RecordSubmitIssue[] = [];
   const warnings: RecordSubmitIssue[] = [];
@@ -17,13 +25,36 @@ export function validateRecordInput(input: ValidateRecordInputParams): RecordVal
     errors.push(issue('record_target_file_missing', 'The selected template does not define a target file.', 'targetFile'));
   }
 
+  const recordType = getRecordTypeById(input.template.recordTypeId || input.template.id);
+  if (recordType?.capabilities.goalBindable) {
+    const goalPath = input.formData.goalPath ?? input.formData['目标'];
+    if (!hasRequiredValue(goalPath)) {
+      errors.push(issue('record_goal_required', '请选择目标。', '目标'));
+    }
+  }
+
   if ((input.mode === 'edit' || input.mode === 'delete') && !input.item) {
     errors.push(issue('record_item_missing', 'The target record is missing for this operation.'));
   }
 
   for (const field of input.template.fields || []) {
-    const rawValue = input.formData[field.key];
-    if (rawValue === undefined || rawValue === null || rawValue === '') continue;
+    const rawValue = input.formData[field.key] ?? input.formData[field.label || ''];
+    const hasValue = hasRequiredValue(rawValue);
+
+    // Required-field validation belongs to the domain submit boundary, not only
+    // to QuickInput UI helpers. AI/batch/API callers can bypass the editor UI,
+    // so keeping this invariant here prevents incomplete records from being
+    // persisted silently.
+    if (field.required && !hasValue) {
+      errors.push(issue(
+        'record_field_required',
+        `请填写必填字段：${field.label || field.key}`,
+        field.key,
+      ));
+      continue;
+    }
+
+    if (!hasValue) continue;
 
     if (field.type === 'number') {
       const numericValue = typeof rawValue === 'number' ? rawValue : Number(rawValue);

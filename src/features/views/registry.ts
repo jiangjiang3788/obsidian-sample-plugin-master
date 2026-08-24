@@ -12,7 +12,11 @@ import {
   EnergyView,
 } from './runtime';
 
-export const VIEW_REGISTRY: Record<ViewName, ComponentType<any>> = {
+/**
+ * Runtime binding only. View metadata belongs to core VIEW_DEFINITIONS.
+ * This map must stay exhaustive; the convergence gate checks key parity.
+ */
+export const VIEW_RUNTIME_BINDINGS = {
   TableView,
   BlockView,
   TimelineView,
@@ -22,6 +26,8 @@ export const VIEW_REGISTRY: Record<ViewName, ComponentType<any>> = {
   HeatmapView,
   ProgressView,
   EnergyView,
-} as const;
+} satisfies Record<ViewName, ComponentType<any>>;
 
-export const DashboardViewComponents = VIEW_REGISTRY;
+export function getViewRuntimeComponent(viewType: ViewName): ComponentType<any> {
+  return VIEW_RUNTIME_BINDINGS[viewType];
+}

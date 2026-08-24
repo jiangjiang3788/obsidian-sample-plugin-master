@@ -1,4 +1,4 @@
-import type { CoreBlockDefinition } from '@core/blocks/public';
+import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import type { TemplateField } from '@core/types/public';
 import {
@@ -19,7 +19,7 @@ const FORBIDDEN_CONTEXT_KEYS = new Set([
 
 function cleanDefaultValuesOverride(
   draft: GoalTemplateDraftState,
-  block: CoreBlockDefinition | null,
+  block: TemplateRecordTypeDefinition | null,
 ): Record<string, unknown> | undefined {
   const baseDefaults = getFieldDefaultMap(block?.fields as TemplateField[] | undefined);
   const result: Record<string, unknown> = {};
@@ -34,13 +34,13 @@ function cleanDefaultValuesOverride(
 }
 
 export function inferTemplateEditMode(template: GoalTemplate | null | undefined): GoalTemplateEditMode {
-  if (!template) return 'inherit';
+  if (!template) return 'default';
   return template.enabled === false ? 'disabled' : 'override';
 }
 
 export function buildTemplatePatchFromDraft(params: {
   goal: GoalDefinition;
-  block: CoreBlockDefinition;
+  block: TemplateRecordTypeDefinition;
   draft: GoalTemplateDraftState;
 }): GoalTemplate {
   const { goal, block, draft } = params;
@@ -59,7 +59,7 @@ export function buildTemplatePatchFromDraft(params: {
   const rawPatch: GoalTemplate = {
     id: getGoalTemplateId(goalPath, block.id),
     goalPath,
-    coreBlockId: block.id,
+    recordTypeId: block.id,
     description: draft.description || undefined,
     periodPolicy: buildDraftPeriodPolicy(block, draft),
     enabled: true,
@@ -69,22 +69,22 @@ export function buildTemplatePatchFromDraft(params: {
     requiredFields: sameRequired ? undefined : requiredFields,
     defaultValues: cleanDefaultValuesOverride(draft, block),
   };
-  return compactGoalTemplateForStorage(rawPatch, { coreBlock: block });
+  return compactGoalTemplateForStorage(rawPatch, { recordType: block });
 }
 
-export function buildDisabledTemplate(goal: GoalDefinition, block: CoreBlockDefinition): GoalTemplate {
+export function buildDisabledTemplate(goal: GoalDefinition, block: TemplateRecordTypeDefinition): GoalTemplate {
   const goalPath = goal.path;
   return {
     id: getGoalTemplateId(goalPath, block.id),
     goalPath,
-    coreBlockId: block.id,
+    recordTypeId: block.id,
     enabled: false,
   };
 }
 
 export function buildDraftDiffSummary(
   goal: GoalDefinition | null,
-  block: CoreBlockDefinition | null,
+  block: TemplateRecordTypeDefinition | null,
   draft: GoalTemplateDraftState,
 ): string[] {
   if (!block || !goal) return [];

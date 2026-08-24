@@ -23,6 +23,7 @@ export class RecordInputKernel {
     const resolved = this.resolveMissingDependencies({
       blockId: params.blockId ?? null,
       context: params.context ?? null,
+      requireDirectGoalTemplate: true,
     });
 
     const snapshot = buildEditableRecordSnapshot({
@@ -55,12 +56,14 @@ export class RecordInputKernel {
     blockId?: string | null;
     item?: PrepareEditRecordParams['item'] | null;
     context?: Record<string, unknown> | null;
+    requireDirectGoalTemplate?: boolean;
   }): ResolveDependenciesResult {
     return resolveRecordDependencies({
       settings: this.settings,
       blockId: params.blockId ?? null,
       item: params.item ?? null,
       context: params.context ?? null,
+      requireDirectGoalTemplate: params.requireDirectGoalTemplate === true,
     });
   }
 

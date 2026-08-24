@@ -28,7 +28,7 @@ function keyOf(field: TemplateField): string {
 }
 
 function isTaskTemplate(rawTemplate: QuickInputTemplateLike, effectiveBlockId: string | null | undefined): boolean {
-  return String(effectiveBlockId || rawTemplate.coreBlockId || rawTemplate.id || '').replace(/^core\./, '') === 'task';
+  return String(effectiveBlockId || rawTemplate.recordTypeId || rawTemplate.id || '').replace(/^core\./, '') === 'task';
 }
 
 function findField(fields: TemplateField[], predicate: (field: TemplateField) => boolean): TemplateField | undefined {
@@ -119,7 +119,7 @@ export function buildQuickInputDisplayTemplate(
 
   return {
     ...rawTemplate,
-    coreBlockId: effectiveBlockId || rawTemplate.coreBlockId,
+    recordTypeId: effectiveBlockId || rawTemplate.recordTypeId,
     fields: task ? normalizeTaskFields(mappedFields) : mappedFields,
   };
 }

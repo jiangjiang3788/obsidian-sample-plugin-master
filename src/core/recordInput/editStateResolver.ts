@@ -10,7 +10,7 @@ import {
   resolveRecordDependencies,
 } from "./dependencyResolver";
 import { buildInitialEditFormData } from "./EditBackfillMapper";
-import { getEffectiveCoreBlocks } from "@/core/blocks";
+import { getTemplateRecordTypes } from "@/core/recordTypes/public";
 import { asUnknownRecord, readFirstString } from "@/core/utils/unknownRecord";
 import { normalizeFieldToken } from "@/core/fields/fieldTokenSemantics";
 
@@ -47,7 +47,7 @@ function getItemSemanticTokens(item: RecordViewItem): Set<string> {
 }
 
 function templateCoreBlock(block: RecordCaptureTemplate): string {
-  const raw = String(block?.coreBlockId || block?.id || '').trim().replace(/^core\./i, '');
+  const raw = String(block?.recordTypeId || block?.id || '').trim().replace(/^core\./i, '');
   return normalizeFieldToken(raw);
 }
 
@@ -85,17 +85,14 @@ function looksLikeTaskTemplate(block: RecordCaptureTemplate): boolean {
   return templateCoreBlock(block) === 'task';
 }
 
-function looksLikeRecordCaptureTemplate(block: RecordCaptureTemplate): boolean {
-  return templateCoreBlock(block) !== 'task';
-}
 
 function readCoreBlockHint(item: RecordViewItem): string | null {
   const text =
-    readFirstString(asUnknownRecord(item), ["coreBlock", "coreBlockId"]) ??
+    readFirstString(asUnknownRecord(item), ["coreBlock", "recordTypeId"]) ??
     readFirstString(asUnknownRecord(item.extra || {}), [
-      "核心Block",
+      "记录类型",
       "coreBlock",
-      "coreBlockId",
+      "recordTypeId",
     ]);
   if (!text) return null;
   return text.startsWith("core.") ? text : `core.${text}`;
@@ -120,14 +117,14 @@ function resolveBlockForEdit(
     const block = blocks.find(
       (candidate) =>
         candidate.id === coreBlockHint ||
-        candidate.coreBlockId === coreBlockHint,
+        candidate.recordTypeId === coreBlockHint,
     );
     if (block) {
       return {
         blockId: block.id,
         resolvedBy: "exact" as const,
         usedFallbackBlock: false,
-        debugReason: `根据记录中的核心Block ${coreBlockHint} 精确还原 block=${block.id}`,
+        debugReason: `根据记录中的记录类型 ${coreBlockHint} 精确还原 block=${block.id}`,
       };
     }
   }
@@ -136,7 +133,7 @@ function resolveBlockForEdit(
     ? blocks.find((block) => block.id === preferredBlockId)
     : null;
   if (preferred) {
-    // preferredBlockId 只有在核心 Block 匹配时才作为强候选。
+    // preferredBlockId 只有在记录类型 匹配时才作为强候选。
     const typeMatches =
       item.coreBlock === 'task'
         ? looksLikeTaskTemplate(preferred)
@@ -151,7 +148,7 @@ function resolveBlockForEdit(
     }
   }
 
-  // 核心 Block 护栏：Task 只在 core.task 模板中推断，其它记录优先匹配自身 coreBlock。
+  // 记录类型 护栏：Task 只在 core.task 模板中推断，其它记录优先匹配自身 coreBlock。
   const typedCandidates =
     item.coreBlock === 'task'
       ? blocks.filter(looksLikeTaskTemplate)
@@ -172,16 +169,11 @@ function resolveBlockForEdit(
     };
   }
 
-  const sameTypeFallback =
-    item.coreBlock === 'task'
-      ? blocks.find(looksLikeTaskTemplate)
-      : blocks.find(looksLikeRecordCaptureTemplate);
-
   return {
-    blockId: sameTypeFallback?.id ?? blocks[0]?.id ?? null,
+    blockId: null,
     resolvedBy: "fallback" as const,
     usedFallbackBlock: true,
-    debugReason: `无法精确/推断命中，使用同类型 fallback=${sameTypeFallback?.id || blocks[0]?.id || ""}。`,
+    debugReason: "无法精确/推断命中；不使用任何列表第一项或同类第一项猜测。",
   };
 }
 
@@ -202,7 +194,6 @@ function buildInitialFormData(
   const goalPath = snapshot.semantic.goalPath;
   if (goalPath) {
     formData.goalPath = goalPath;
-    formData['目标'] = goalPath;
   }
   return formData;
 }
@@ -212,8 +203,7 @@ export function buildEditRecordState(
 ): PreparedEditRecord {
   const { settings, item, preferredBlockId } = input;
   const fullSettings = settings;
-  const inputSettings = fullSettings.inputSettings;
-  const canonicalBlocks = getEffectiveCoreBlocks(fullSettings);
+  const canonicalBlocks = getTemplateRecordTypes();
   // Current-only V5: edit discovery uses canonical CoreBlock definitions only.
   const runtimeBlocks = canonicalBlocks;
   const resolvedBlock = resolveBlockForEdit(

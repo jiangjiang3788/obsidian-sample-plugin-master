@@ -79,7 +79,7 @@ const TASK_FIELDS: TemplateField[] = [
 ];
 
 export const TASK_DEFINITION = define(TASK_SCHEMA, {
-  id: RECORD_TYPE_IDS.TASK, name: '任务', categoryKey: '任务', captureMode: 'template', coreBlockId: RECORD_TYPE_IDS.TASK,
+  id: RECORD_TYPE_IDS.TASK, name: '任务', categoryKey: '任务', captureMode: 'template', recordTypeId: RECORD_TYPE_IDS.TASK,
   description: '目标下的可执行任务。', fields: TASK_FIELDS,
   targetFile: '01/目标.md', appendUnderHeader: '## {{goalPath}}',
 });
@@ -89,7 +89,7 @@ function genericTemplate(
   input: { id: string; name: string; categoryKey: string; description: string; targetFile: string; extraFields?: TemplateField[]; period?: boolean },
 ): RecordSchemaDefinition {
   return define(contract, {
-    id: input.id, name: input.name, categoryKey: input.categoryKey, captureMode: 'template', coreBlockId: input.id,
+    id: input.id, name: input.name, categoryKey: input.categoryKey, captureMode: 'template', recordTypeId: input.id,
     description: input.description,
     fields: [contentField, dateField, ...(input.extraFields || []), iconField],
     periodPolicy: input.period ? { enabled: true, granularity: 'week' } : undefined,
@@ -125,7 +125,15 @@ export const TASK_SESSION_DEFINITION = define(TASK_SESSION_SCHEMA, {
 });
 
 export const RECORD_SCHEMA_DEFINITIONS: readonly RecordSchemaDefinition[] = [
-  THOUGHT_DEFINITION, EVIDENCE_DEFINITION, HABIT_DEFINITION, PLAN_DEFINITION, REVIEW_DEFINITION,
-  BLOCKER_DEFINITION, MILESTONE_DEFINITION, TASK_DEFINITION, TASK_SERIES_DEFINITION, TASK_SESSION_DEFINITION,
+  TASK_DEFINITION,
+  HABIT_DEFINITION,
+  PLAN_DEFINITION,
+  REVIEW_DEFINITION,
+  THOUGHT_DEFINITION,
+  EVIDENCE_DEFINITION,
+  BLOCKER_DEFINITION,
+  MILESTONE_DEFINITION,
   ENERGY_DEFINITION,
+  TASK_SERIES_DEFINITION,
+  TASK_SESSION_DEFINITION,
 ];

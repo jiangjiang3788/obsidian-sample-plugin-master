@@ -5,6 +5,7 @@ const read = (file) => fs.readFileSync(file, 'utf8');
 const failures = [];
 
 const registry = read('src/features/views/registry.ts');
+const viewDefinitions = read('src/core/config/views/registry.ts');
 const recordGesture = read('src/shared/ui/utils/recordOrigin.ts');
 const grouped = read('src/shared/ui/GroupedContainer.tsx');
 const itemLink = read('src/features/views/runtime/components/items/ItemLink.tsx');
@@ -20,11 +21,10 @@ const fieldPill = read('src/features/views/runtime/components/items/FieldPill.ts
 const excelCell = read('src/features/views/runtime/excel-view/ExcelCell.tsx');
 const modulePanel = read('src/app/dashboard/ModulePanel.tsx');
 
-for (const view of [
-  'TableView', 'BlockView', 'TimelineView', 'EventTimelineView', 'ExcelView',
-  'StatisticsView', 'HeatmapView', 'ProgressView', 'EnergyView',
-]) {
-  if (!registry.includes(`${view},`)) failures.push(`VIEW_REGISTRY must include ${view}`);
+const registeredViews = [...viewDefinitions.matchAll(/^  ([A-Za-z][A-Za-z0-9]*View): \{/gm)]
+  .map((match) => match[1]);
+for (const view of registeredViews) {
+  if (!registry.includes(`${view},`)) failures.push(`runtime view bindings must include ${view}`);
 }
 
 if (!recordGesture.includes('pendingPrimary') || !recordGesture.includes('cancelPendingPrimary')) {
@@ -92,4 +92,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('[view-interaction-convergence] PASS (9 views; every uniquely record-backed click surface supports Ctrl/⌘ origin navigation)');
+console.log(`[view-interaction-convergence] PASS (${registeredViews.length} registered views; every uniquely record-backed click surface supports Ctrl/⌘ origin navigation)`);

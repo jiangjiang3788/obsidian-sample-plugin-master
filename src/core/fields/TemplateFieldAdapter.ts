@@ -59,16 +59,18 @@ export function getTemplateFieldSemantic(field: Partial<TemplateField> | null | 
   const semanticType = normalizeFieldToken(field.semanticType);
   if (semanticType === 'ratingpair') return 'rating';
   if (semanticType === 'path') {
+    if (templateFieldMatches(field, ['分类', '分类路径', 'categoryKey', 'categoryPath'])) return 'categoryPath';
     if (templateFieldMatches(field, ['目标', '目标路径', 'goalPath'])) return 'goalPath';
     return 'none';
   }
 
   if (templateFieldMatches(field, ['标题', 'title', '名称', 'name'])) return 'title';
   if (templateFieldMatches(field, ['正文', '内容', '任务内容', '记录内容', 'body', 'content', 'text'])) return 'body';
+  if (templateFieldMatches(field, ['分类', '分类路径', 'categoryKey', 'categoryPath'])) return 'categoryPath';
   if (templateFieldMatches(field, ['标签', 'tags'])) return 'tags';
   if (templateFieldMatches(field, ['目标路径', 'goalPath'])) return 'goalPath';
   if (templateFieldMatches(field, ['周期ID', 'cycleId'])) return 'cycleId';
-  if (templateFieldMatches(field, ['核心Block', 'coreBlock'])) return 'coreBlock';
+  if (templateFieldMatches(field, ['记录类型', 'coreBlock'])) return 'coreBlock';
   if (templateFieldMatches(field, ['记录子类型', 'recordSubtype'])) return 'recordSubtype';
   if (templateFieldMatches(field, ['目标'])) return 'goalPath';
   if (templateFieldMatches(field, ['状态', 'status'])) return 'status';

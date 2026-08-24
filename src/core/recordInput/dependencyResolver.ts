@@ -1,106 +1,79 @@
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { GoalTemplateResolver } from '@/core/services/GoalTemplateResolver';
-import { getEffectiveCoreBlocks } from '@/core/blocks';
+import { getTemplateRecordTypeById } from '@/core/recordTypes/public';
 import type { RecordSubmitIssue, ResolveDependenciesResult } from '@/core/types/recordInput';
+import { resolveRecordGoalPath } from './systemContext';
 
 export interface DependencyResolverInput {
   settings: ThinkSettings;
   blockId?: string | null;
   item?: RecordViewItem | null;
   context?: Record<string, unknown> | null;
+  requireDirectGoalTemplate?: boolean;
 }
 
 function issue(code: string, message: string, field?: string): RecordSubmitIssue {
   return { code, message, field };
 }
 
-function readNestedGoalContext(context?: Record<string, unknown> | null): Record<string, unknown> {
-  const nested = context?.__goalContext;
-  return nested && typeof nested === 'object' ? nested as Record<string, unknown> : {};
-}
-
-function readFirstString(...values: unknown[]): string | null {
-  for (const value of values) {
-    if (value === undefined || value === null) continue;
-    if (Array.isArray(value)) {
-      const nested = readFirstString(...value);
-      if (nested) return nested;
-      continue;
-    }
-    if (typeof value === 'object') {
-      const obj = value as Record<string, unknown>;
-      const raw = obj.value ?? obj.label ?? obj.path ?? obj.title;
-      const text = String(raw ?? '').trim();
-      if (text) return text;
-      continue;
-    }
-    const text = String(value).trim();
-    if (text) return text;
-  }
-  return null;
-}
-
-function extractGoalPath(input: DependencyResolverInput): string | null {
-  const context = input.context || {};
-  const nested = readNestedGoalContext(context);
-  const item = input.item || null;
-  return readFirstString(
-    context.goalPath,
-    context['目标'],
-    nested.goalPath,
-    nested['目标'],
-    item?.goalPath,
-  );
-}
-
-function buildEffectiveInputSettings(settings: ThinkSettings) {
-  return {
-    ...settings.inputSettings,
-    blocks: getEffectiveCoreBlocks(settings),
-  };
-}
-
 export function resolveRecordDependencies(input: DependencyResolverInput): ResolveDependenciesResult {
   const warnings: RecordSubmitIssue[] = [];
   const errors: RecordSubmitIssue[] = [];
   const fullSettings = input.settings;
-  const requestedBlockId = input.blockId ? String(input.blockId) : null;
-  const effectiveSettings = buildEffectiveInputSettings(fullSettings);
-  const goalPath = extractGoalPath(input);
+  const requestedRecordTypeId = input.blockId ? String(input.blockId) : null;
+  const goalPath = resolveRecordGoalPath({ context: input.context, item: input.item });
 
-  if (!requestedBlockId) {
-    errors.push(issue('record_block_missing', 'Missing blockId for record submission.', 'blockId'));
+  if (!requestedRecordTypeId) {
+    errors.push(issue('record_type_missing', 'Missing recordTypeId for record submission.', 'recordTypeId'));
     return {
       blockId: null,
       template: null,
       warnings,
       errors,
-      meta: { templateId: null, templateSourceType: null, usedFallbackBlock: true },
+      meta: { templateId: null, templateSourceType: null, usedFallbackBlock: false },
     };
   }
 
-  const block = effectiveSettings.blocks.find((candidate) => candidate.id === requestedBlockId) ?? null;
-  if (!block) {
-    errors.push(issue('record_block_not_found', 'Selected block no longer exists.', 'blockId'));
+  const recordType = getTemplateRecordTypeById(requestedRecordTypeId);
+  if (!recordType) {
+    errors.push(issue('record_type_not_found', 'Selected RecordType no longer exists.', 'recordTypeId'));
     return {
-      blockId: requestedBlockId,
+      blockId: requestedRecordTypeId,
       template: null,
       warnings,
       errors,
-      meta: { templateId: null, templateSourceType: null, usedFallbackBlock: true },
+      meta: { templateId: null, templateSourceType: null, usedFallbackBlock: false },
     };
   }
 
   const resolved = GoalTemplateResolver.resolve({
     settings: fullSettings,
-    blockId: requestedBlockId,
+    recordTypeId: requestedRecordTypeId,
     goalPath,
+    requireDirectGoalTemplate: input.requireDirectGoalTemplate === true,
   });
+
+  if (resolved.status === 'disabled') {
+    errors.push(issue('record_goal_record_type_disabled', 'This RecordType is disabled for the selected Goal.', 'goalPath'));
+    return {
+      blockId: requestedRecordTypeId,
+      template: null,
+      warnings,
+      errors,
+      meta: { templateId: resolved.templateId, templateSourceType: resolved.templateSourceType, usedFallbackBlock: false },
+    };
+  }
+
+  if (resolved.status === 'goal-required') {
+    errors.push(issue('record_goal_required', 'Select a Goal with a configured template before creating this record.', 'goalPath'));
+  } else if (resolved.status === 'missing-goal-template') {
+    errors.push(issue('record_goal_template_missing', 'The selected Goal has no configured template for this RecordType.', 'goalPath'));
+  }
 
   if (resolved.template) {
     return {
-      blockId: resolved.effectiveBlockId || requestedBlockId,
+      blockId: resolved.recordTypeId || requestedRecordTypeId,
       template: resolved.template,
       warnings,
       errors,
@@ -112,9 +85,9 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
     };
   }
 
-  errors.push(issue('record_template_missing', 'No effective Goal + Block template is available for this record.', 'blockId'));
+  errors.push(issue('record_template_missing', 'No effective Goal + RecordType template is available for this record.', 'recordTypeId'));
   return {
-    blockId: requestedBlockId,
+    blockId: requestedRecordTypeId,
     template: null,
     warnings,
     errors,

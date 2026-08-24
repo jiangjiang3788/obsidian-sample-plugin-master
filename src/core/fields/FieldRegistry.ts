@@ -4,6 +4,7 @@ import type { FieldSchema } from './FieldSchema';
 import type { FieldDefinition } from './FieldDefinition';
 import type { FieldCategory, FieldValueType } from './FieldTypes';
 import { isImageLikeValue } from './imageSemantics';
+import { getRecordSchemaDefinition } from '@/core/records/schema/registry';
 
 export const FIELD_CATEGORY_LABELS: Record<FieldCategory, string> = {
   core: '核心字段',
@@ -49,7 +50,22 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   'period.id': text({ key: 'period.id', label: '周期ID', category: 'core', source: 'derived', semantic: 'period', inputType: 'text', hiddenByDefault: true, aliases: ['周期ID', 'periodId'] }),
   'period.label': text({ key: 'period.label', label: '周期', category: 'core', source: 'derived', semantic: 'period', inputType: 'text', aliases: ['周期', 'periodLabel'] }),
   'period.granularity': text({ key: 'period.granularity', label: '周期粒度', category: 'core', source: 'derived', semantic: 'period', inputType: 'text', hiddenByDefault: true, aliases: ['周期粒度', 'periodGranularity'] }),
-  coreBlock: text({ key: 'coreBlock', label: '核心Block', category: 'core', source: 'item', semantic: 'coreBlock', inputType: 'text', aliases: ['核心Block', 'coreBlock'] }),
+  coreBlock: text({
+    key: 'coreBlock',
+    label: '记录类型',
+    category: 'core',
+    source: 'item',
+    semantic: 'coreBlock',
+    inputType: 'text',
+    aliases: ['记录类型', 'coreBlock'],
+    formatter: (value) => {
+      const raw = String(value ?? '').trim();
+      if (!raw) return '';
+      const canonical = raw.replace(/^(?:core|internal)\./, '');
+      const recordType = getRecordSchemaDefinition(canonical);
+      return recordType?.name || recordType?.displayName || raw;
+    },
+  }),
   recordSubtype: text({ key: 'recordSubtype', label: '记录子类型', category: 'core', source: 'item', semantic: 'recordSubtype', inputType: 'singleSelect', aliases: ['记录子类型', 'recordSubtype'], description: 'Record 类型内部的可选子类型，例如 Thought 的 感受/思考。' }),
   status: text({ key: 'status', label: '状态', category: 'core', source: 'item', semantic: 'status', inputType: 'singleSelect', aliases: ['状态', 'status'], description: '实体显式状态；Task 使用 open/done/cancelled/skipped。' }),
   cadence: text({ key: 'cadence', label: '任务周期', category: 'core', source: 'derived', semantic: 'recurrence', inputType: 'singleSelect', aliases: ['任务周期', 'cadence'], description: '由 Task Series 结构化 recurrence 派生：routine/day/week/month/quarter/year。' }),
@@ -315,4 +331,22 @@ export function getFieldLabel(key: string): string {
 export function getFieldOptionLabel(key: string): string {
   const label = getFieldLabel(key);
   return label === key ? key : `${label}`;
+}
+
+/**
+ * Format a stored field value for user-facing UI without changing the canonical value.
+ * Filters/sorts continue to persist raw values such as `plan`; UI can render `计划`.
+ */
+export function formatFieldValue(field: string, value: unknown, item?: unknown): string {
+  if (value === null || value === undefined) return '';
+  const def = getFieldDefinition(field);
+  if (def?.formatter) return def.formatter(value, item);
+
+  const formatOne = (entry: unknown): string => {
+    const raw = String(entry ?? '');
+    const option = def?.options?.find(candidate => candidate.value === raw);
+    return option?.label || raw;
+  };
+
+  return Array.isArray(value) ? value.map(formatOne).join(', ') : formatOne(value);
 }

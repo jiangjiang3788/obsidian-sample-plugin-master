@@ -17,7 +17,7 @@ export interface RecordCaptureTemplate {
   categoryKey: string;
   fields: TemplateField[];
   targetFile: string;
-  coreBlockId?: string;
+  recordTypeId?: string;
   periodPolicy?: PeriodPolicy;
   appendUnderHeader?: string;
 }

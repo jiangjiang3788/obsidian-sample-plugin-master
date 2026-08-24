@@ -1,4 +1,5 @@
 import { buildProgressViewRenderModel } from '@/features/views/runtime/ProgressViewModel';
+import type { RecordViewItem } from '@/core/types/public';
 import {
   buildProgressBlockCountRows,
   buildProgressCollapsedFacts,
@@ -26,16 +27,21 @@ describe('ProgressView goal mode', () => {
   it('builds collapsible goal progress cards by default', () => {
     const model = buildProgressViewRenderModel({ items: items as never, module: { viewConfig: {} }, goals: [] });
     expect(model.mode).toBe('goal');
-    expect(model.goalCards).toHaveLength(2);
-    expect(model.goalCards[0]?.goalPath).toBe('项目/目标A');
+    expect(model.goalCards).toHaveLength(1);
+    expect(model.goalCards[0]?.goalPath).toBe('项目');
     expect(model.goalCards[0]?.blockCounts.task).toBe(1);
     expect(model.goalCards[0]?.blockCounts.habit).toBe(1);
+    expect(model.goalCards[0]?.blockCounts.evidence).toBe(1);
     expect(model.goalCards[0]?.blockCounts.energy).toBe(1);
+    expect(model.goalCards[0]?.goalBreakdown).toEqual([
+      { key: '项目/目标A', points: 2, count: 2 },
+      { key: '项目/目标B', points: 1, count: 1 },
+    ]);
     expect(model.goalCards[0]?.energySummary).toMatchObject({ count: 1, latestScore: 80, latestDate: '2026-08-10', latestTime: '14:35' });
     expect(model.goalCards[0]?.energySummary?.timeline?.coverage).toMatchObject({ sampledDays: 1, missingDays: 6, totalSamples: 1 });
-    expect(model.goalCards[0]?.itemCount).toBe(2);
-    expect(model.goalCards[0]?.totalPoints).toBe(2);
-    expect(model.summary.goalCount).toBe(2);
+    expect(model.goalCards[0]?.itemCount).toBe(3);
+    expect(model.goalCards[0]?.totalPoints).toBe(3);
+    expect(model.summary.goalCount).toBe(1);
     expect(model.summary.totalItems).toBe(3);
   });
 
@@ -60,7 +66,7 @@ describe('ProgressView goal mode', () => {
 
 
   it('attaches reliable nearby activity and same-day health signals to recent Energy samples', () => {
-    const contextItems = [
+    const contextItems: RecordViewItem[] = [
       { id: 'task', title: '写代码', categoryKey: '任务', coreBlock: 'task', goalPath: '项目/目标A', extra: {}, tags: [], content: '写代码', created: 0, modified: 0 },
       { id: 'session', title: '', categoryKey: '', coreBlock: 'task-session', taskId: 'task', sessionStartedAt: '2026-08-10T14:00:00', sessionEndedAt: '2026-08-10T15:30:00', sessionDurationMinutes: 90, sessionResult: 'work-block-ended', sessionSource: 'timer', extra: {}, tags: [], content: '', created: 0, modified: 0 },
       { id: 'sleep', title: '睡眠', categoryKey: '打卡', coreBlock: 'habit', goalPath: '项目/目标A', date: '2026-08-10', rating: 40, extra: {}, tags: [], content: '', created: 0, modified: 0 },

@@ -58,7 +58,7 @@ function readNumber(value: unknown): number | undefined {
 }
 
 function normalizeCoreBlock(item: RecordViewItem): string {
-  return String(item.coreBlock || item.extra?.['核心Block'] || '')
+  return String(item.coreBlock || item.extra?.['记录类型'] || '')
     .replace(/^core\./i, '')
     .trim()
     .toLowerCase();

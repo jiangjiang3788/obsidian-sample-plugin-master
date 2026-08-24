@@ -23,7 +23,7 @@ import {
   cleanupGoalTemplateStorage,
   requireGoalPath,
 } from '@core/goal/public';
-import { getCoreBlockById } from '@core/blocks/public';
+import { getTemplateRecordTypeById } from '@core/recordTypes/public';
 import { devError } from '@core/utils/public';
 import type { AppStoreApi } from './AppStoreApi';
 
@@ -35,7 +35,7 @@ export interface AddGoalInput {
 
 export interface UpsertGoalTemplateInput {
   goalPath: string;
-  coreBlockId: string;
+  recordTypeId: string;
   description?: string;
   enabled?: boolean;
   targetFile?: string;
@@ -217,8 +217,8 @@ export class GoalUseCase {
       if (!state.isInitialized) return;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        const next = { ...template, id: getGoalTemplateId(template.goalPath, template.coreBlockId) };
-        const coreBlock = getCoreBlockById(draft as any, next.coreBlockId);
+        const next = { ...template, id: getGoalTemplateId(template.goalPath, template.recordTypeId) };
+        const coreBlock = getTemplateRecordTypeById(next.recordTypeId);
         draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, compactGoalTemplateForStorage(next, { coreBlock }));
       });
     } catch (error) {
@@ -229,9 +229,9 @@ export class GoalUseCase {
 
   async upsertGoalTemplateDraft(input: UpsertGoalTemplateInput): Promise<void> {
     await this.upsertGoalTemplate({
-      id: getGoalTemplateId(input.goalPath, input.coreBlockId),
+      id: getGoalTemplateId(input.goalPath, input.recordTypeId),
       goalPath: input.goalPath,
-      coreBlockId: input.coreBlockId,
+      recordTypeId: input.recordTypeId,
       description: input.description,
       enabled: input.enabled !== false,
       targetFile: input.targetFile?.trim() || undefined,
@@ -243,13 +243,13 @@ export class GoalUseCase {
     });
   }
 
-  async deleteGoalTemplate(goalPath: string, coreBlockId: string): Promise<void> {
+  async deleteGoalTemplate(goalPath: string, recordTypeId: string): Promise<void> {
     try {
       const state = this.store.getState();
       if (!state.isInitialized) return;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
-        draft.goalSettings = removeGoalTemplateFromSettings(draft.goalSettings, goalPath, coreBlockId);
+        draft.goalSettings = removeGoalTemplateFromSettings(draft.goalSettings, goalPath, recordTypeId);
       });
     } catch (error) {
       devError('[GoalUseCase] deleteGoalTemplate failed:', error);

@@ -13,7 +13,7 @@ export { AiChatService } from './AiChatService';
 
 export type { AiConfigSnapshot, AiBlockConfig, AiBlockConfigField } from './AiConfigSnapshot';
 export type { INaturalLanguageRecordParser, ParseInput } from './INaturalLanguageRecordParser';
-export type { OpenAIChatMessage, ChatCompletionRequest, AiHttpTransport, AiHttpResponse, AiHttpTransportFactory } from './AiHttpClient';
+export type { OpenAIChatMessage, ChatCompletionRequest, ListModelsRequest, AiHttpTransport, AiHttpResponse, AiHttpTransportFactory } from './AiHttpClient';
 
 // [新增] AI Chat 类型导出
 export type { ChatSession, ChatMessage, SessionFilters } from './ChatSessionStore';

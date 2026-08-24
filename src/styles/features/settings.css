@@ -137,6 +137,20 @@
   justify-content: space-between;
 }
 
+/* AI model control keeps the fetch action permanently visible beside the model field. */
+.think-os--settings .think-ai-model-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--think-rhythm-inline);
+  min-width: 0;
+}
+
+.think-os--settings .think-ai-model-picker > .think-button {
+  min-width: 104px;
+  white-space: nowrap;
+}
+
 .think-os--settings .think-settings-sticky-actions {
   position: sticky;
   bottom: calc(-1 * var(--think-space-5));
@@ -217,6 +231,14 @@
 
   .think-os--settings .think-settings-row__label { padding-top: 0; }
   .think-os--settings .think-settings-indent { padding-left: 0; }
+
+  .think-os--settings .think-ai-model-picker {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .think-os--settings .think-ai-model-picker > .think-button {
+    width: 100%;
+  }
 
   .think-os--settings .think-settings-field--date,
   .think-os--settings .think-settings-field--xs,

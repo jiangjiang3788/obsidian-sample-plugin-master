@@ -12,7 +12,6 @@
     box-shadow: var(--think-shadow-overlay);
     width: 500px;
     max-width: 90vw;
-    z-index: 99999;
 }
 
 

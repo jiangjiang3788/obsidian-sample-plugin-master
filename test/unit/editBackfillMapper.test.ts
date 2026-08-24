@@ -9,7 +9,7 @@ const baseItem = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   status: 'open',
   title: '默认标题',
   content: '默认标题',
-  rawSource: '<!-- start -->\n记录ID:: task.01J00000000000000000000004\n核心Block:: task\n状态:: open\n内容:: 默认标题\n<!-- end -->',
+  rawSource: '<!-- start -->\n记录ID:: task.01J00000000000000000000004\n记录类型:: task\n状态:: open\n内容:: 默认标题\n<!-- end -->',
   tags: [],
   created: 0,
   modified: 0,

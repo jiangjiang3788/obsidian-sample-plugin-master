@@ -13,8 +13,6 @@ export type QuickCreateSource = Extract<RecordInputSource, 'quickinput' | 'view_
 
 export type StatisticsPeriodType = 'day' | 'week' | 'month' | 'quarter' | 'year';
 
-export type QuickInputBlockLike = { id: string; name?: string | null };
-
 export interface StatisticsCellIdentifier {
   type?: StatisticsPeriodType | string;
   category?: string;
@@ -38,7 +36,6 @@ export interface StatisticsCreatePayload {
 export interface TimelineCreateParams {
   app: QuickInputApp;
   uiPort: UiPort;
-  inputBlocks: QuickInputBlockLike[];
   hourHeight: number;
   dayBlocks: TaskBlock[];
   day: string;

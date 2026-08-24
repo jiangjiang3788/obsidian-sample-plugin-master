@@ -84,9 +84,6 @@ export function normalizeParsedBatch(
     if (block) {
       target.blockId = target.blockId || block.id || '';
       target.categoryKey = target.categoryKey || block.categoryKey;
-    } else if (!target.categoryKey && snapshot.blocks?.[0]?.categoryKey) {
-      target.categoryKey = snapshot.blocks[0].categoryKey;
-      target.blockId = snapshot.blocks[0].id || '';
     }
 
     const goal = findGoalByTarget(snapshot, target);

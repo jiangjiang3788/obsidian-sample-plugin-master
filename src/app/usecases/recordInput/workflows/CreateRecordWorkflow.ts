@@ -11,20 +11,26 @@ export class CreateRecordWorkflow {
   constructor(private runtime: RecordInputWorkflowRuntime) {}
 
   async submit(params: SubmitCreateRecordParams): Promise<RecordSubmitResult> {
-    const prepared = prepareTemplateSubmit({
-      kernel: this.runtime.getKernel(),
-      operation: 'create',
-      blockId: params.blockId,
-      formData: params.formData,
-      context: params.context,
-      normalizeMode: params.source === 'ai_batch' ? 'ai_batch' : 'create',
-      validateMode: 'create',
-    });
-    if (!prepared.ok) return prepared.result;
-
-    const { resolved, normalized, warnings } = prepared.submit;
+    let warnings: RecordSubmitResult['warnings'] = [];
 
     try {
+      // Keep the entire submit boundary result-based. Preparation can execute
+      // field behavior, dependency resolution and template normalization, all
+      // of which may throw for malformed/legacy AI values. UI callers should
+      // always receive a RecordSubmitResult instead of an unhandled rejection.
+      const prepared = prepareTemplateSubmit({
+        kernel: this.runtime.getKernel(),
+        operation: 'create',
+        blockId: params.blockId,
+        formData: params.formData,
+        context: params.context,
+        normalizeMode: params.source === 'ai_batch' ? 'ai_batch' : 'create',
+        validateMode: 'create',
+      });
+      if (!prepared.ok) return prepared.result;
+
+      const { resolved, normalized } = prepared.submit;
+      warnings = prepared.submit.warnings;
       throwIfAborted(params.signal);
       const preview = this.runtime.deps.inputService.previewTemplateExecution(
         resolved.template,

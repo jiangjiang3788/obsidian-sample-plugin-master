@@ -5,11 +5,12 @@ import {
   ThinkButton,
   ThinkIcon,
   ThinkMultiCombobox,
+  type ThinkComboboxOption,
 } from '@shared/ui/public';
 import type { DataStore } from '@core/services/public';
 import type { FilterRule, RecordViewItem } from '@core/types/public';
 import { getAllFields, readField } from '@core/types/public';
-import { getFieldLabel } from '@core/fields/public';
+import { formatFieldValue, getFieldLabel } from '@core/fields/public';
 import { normalizeViewFieldKey, normalizeViewMultiValue } from '@core/view/public';
 
 interface QuickFilterField {
@@ -186,9 +187,16 @@ export function CommonFilterPanel({
               <span className="think-common-filter__label">{label}</span>
               <ThinkMultiCombobox
                 values={values}
-                options={valueOptions[normalizeViewFieldKey(config.field)] || []}
+                options={Array.from(new Set([
+                  ...(valueOptions[normalizeViewFieldKey(config.field)] || []),
+                  ...values,
+                ])).map((value): ThinkComboboxOption => ({
+                  value,
+                  label: formatFieldValue(config.field, value),
+                }))}
                 onChange={(newValues) => onChange(upsertQuickRule(filters, config.field, newValues))}
                 placeholder={config.placeholder || `选择${label}`}
+                allowCustom={config.field !== 'coreBlock'}
               />
             </div>
           );

@@ -1,4 +1,4 @@
-import { buildValidationErrorResult } from '@core/recordInput/public';
+import { applyRecordGoalContext, buildValidationErrorResult } from '@core/recordInput/public';
 import type { RecordCaptureTemplate, RecordViewItem } from '@core/types/public';
 import type { NormalizeRecordInputParams, NormalizeRecordInputResult, RecordSubmitResult, ResolveDependenciesResult } from '@core/recordInput/public';
 import type { RecordInputKernel } from '@core/recordInput/public';
@@ -28,10 +28,16 @@ export function prepareTemplateSubmit(params: {
   normalizeMode: NormalizeRecordInputParams['mode'];
   validateMode: 'create' | 'edit';
 }): PrepareTemplateSubmitResult {
+  const withGoalContext = applyRecordGoalContext({
+    formData: params.formData,
+    context: params.context,
+    item: params.item,
+  });
   const resolved = params.kernel.resolveMissingDependencies({
     blockId: params.blockId,
     item: params.item,
-    context: { ...(params.context || {}), ...params.formData },
+    context: { ...(params.context || {}), ...withGoalContext.formData },
+    requireDirectGoalTemplate: params.operation === 'create',
   });
 
   if (resolved.errors.length > 0 || !resolved.template || !resolved.blockId) {
@@ -47,7 +53,7 @@ export function prepareTemplateSubmit(params: {
   const strictResolved = resolved as ResolvedTemplateDependencies;
   const normalized = params.kernel.normalizeRecordInput({
     template: strictResolved.template,
-    formData: params.formData,
+    formData: withGoalContext.formData,
     context: params.context,
     mode: params.normalizeMode,
   });

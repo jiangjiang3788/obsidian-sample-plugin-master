@@ -43,7 +43,7 @@ function readScore(value: unknown): number | undefined {
 }
 
 export function isEnergyItem(item: EnergyItemLike): boolean {
-  const block = String(item.coreBlock || item.extra?.['核心Block'] || '')
+  const block = String(item.coreBlock || item.extra?.['记录类型'] || '')
     .replace(/^core\./i, '')
     .trim()
     .toLowerCase();

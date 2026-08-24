@@ -76,10 +76,10 @@ export function getCategoryColor(categoryKey: string): string {
 
 
 // ================================================================
-// 核心Block与字段 (Core Blocks & Fields) 相关定义
+// 记录类型与字段 (Core Blocks & Fields) 相关定义
 // ================================================================
 
-/** 核心Block的名称 (用于快速输入和设置) */
+/** 记录类型的名称 (用于快速输入和设置) */
 export const BLOCK_NAMES = {
   TASK: 'Task', 
   PLAN: '计划', 

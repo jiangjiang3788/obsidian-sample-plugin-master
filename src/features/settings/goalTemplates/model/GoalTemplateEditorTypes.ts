@@ -1,6 +1,6 @@
 import type { TemplateField } from '@core/types/public';
 
-export type GoalTemplateEditMode = 'inherit' | 'override' | 'disabled';
+export type GoalTemplateEditMode = 'default' | 'override' | 'disabled';
 
 export interface GoalTemplateDraftState {
   description: string;

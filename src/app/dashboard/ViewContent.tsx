@@ -7,7 +7,7 @@ import type { FilterRule, InputSettings, RecordViewItem, ViewInstance } from '@c
 import { getAllFields } from '@core/types/public';
 import { getCategoryValuesFromFilters } from '@core/utils/public';
 import { queryViewBaseRecords } from '@core/view/public';
-import { DashboardViewComponents as ViewComponents } from '@features/views/public';
+import { getViewRuntimeComponent } from '@features/views/public';
 import { selectCategoryColors, selectSettings } from '@/app/store/selectors';
 import { useMessageRenderPort } from '@/app/AppStoreContext';
 import { useSelector } from '@/app/store/useSelector';
@@ -91,8 +91,7 @@ export function ViewContent({
     onDataLoaded(viewItems);
   }, [viewItems, onDataLoaded]);
 
-  const ViewComponent = (ViewComponents as any)[normalizedViewInstance.viewType];
-  if (!ViewComponent) return <div>未知视图: {normalizedViewInstance.viewType}</div>;
+  const ViewComponent = getViewRuntimeComponent(normalizedViewInstance.viewType);
 
   const handlers = useViewRuntimeHandlers({
     app,

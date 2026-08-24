@@ -2,23 +2,21 @@
 import { h } from 'preact';
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { getViewDefinition } from '@core/view/public';
+import type { ViewName } from '@core/types/public';
 
-const DEFAULT_HEIGHT_BY_VIEW: Record<string, number> = {
-  TableView: 420,
-  BlockView: 420,
-  ExcelView: 420,
-  TimelineView: 520,
-  EventTimelineView: 420,
-  StatisticsView: 320,
-  HeatmapView: 360,
-  ProgressView: 360,
-  EnergyView: 440,
-};
+function getInitialDeferredHeight(viewType: ViewName): number {
+  return getViewDefinition(viewType)?.layout.deferredMinHeight ?? 320;
+}
 
-export function ViewportDeferredView({ viewType, children }: { viewType: string; children: ComponentChildren }) {
+export function ViewportDeferredView({ viewType, children }: { viewType: ViewName; children: ComponentChildren }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [nearViewport, setNearViewport] = useState(false);
-  const [measuredHeight, setMeasuredHeight] = useState(DEFAULT_HEIGHT_BY_VIEW[viewType] || 320);
+  const [measuredHeight, setMeasuredHeight] = useState(() => getInitialDeferredHeight(viewType));
+
+  useEffect(() => {
+    setMeasuredHeight(getInitialDeferredHeight(viewType));
+  }, [viewType]);
 
   useEffect(() => {
     const host = hostRef.current;

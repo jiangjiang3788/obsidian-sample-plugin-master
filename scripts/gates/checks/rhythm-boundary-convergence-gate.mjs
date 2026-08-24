@@ -51,8 +51,11 @@ if (!settings.includes('gap: var(--think-rhythm-section)')) {
 if (/\.think-disclosure\s*\{[\s\S]{0,180}border-top/.test(grouped)) {
   failures.push('Disclosure sections must not create a Card/divider boundary by default.');
 }
-if (!grouped.includes('.bv-group + .bv-group') || !grouped.includes('var(--think-rhythm-related)')) {
-  failures.push('Block sibling groups must consume shared group rhythm.');
+if (!grouped.includes('.bv-group + .bv-group') || !grouped.includes('margin-top: var(--think-rhythm-inline)')) {
+  failures.push('Block root tree siblings must use compact inline rhythm, not section/group spacing.');
+}
+if (!grouped.includes('margin-top: var(--think-space-1)')) {
+  failures.push('Nested Block tree siblings must keep the compact hierarchy gap.');
 }
 if (/\.think-list-row\s*\{[\s\S]{0,260}border-bottom/.test(taskRows)) {
   failures.push('Ordinary list rows must not rely on horizontal divider lines.');

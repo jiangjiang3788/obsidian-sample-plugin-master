@@ -15,12 +15,11 @@ import {
 describe('QuickInputEditorModel', () => {
 
 
-  it('lists active goals without GoalTemplate requirements for direct record types', () => {
+  it('lists active goals without GoalTemplate requirements for any record type', () => {
     const settings = {
       groups: [],
       viewInstances: [],
       layouts: [],
-      inputSettings: { blocks: [] },
       goalSettings: {
         goals: [
           { path: '生活', status: 'active', createdAt: '', updatedAt: '' },
@@ -31,10 +30,44 @@ describe('QuickInputEditorModel', () => {
       floatingTimerEnabled: true,
     } as any;
 
-    expect(buildQuickInputGoalOptions(settings, '', { requirePreset: false }).map((goal) => goal.id)).toEqual(['生活']);
-    expect(buildQuickInputGoalOptions(settings, 'core.plan').map((goal) => goal.id)).toEqual([]);
+    expect(buildQuickInputGoalOptions(settings).map((goal) => goal.id)).toEqual(['生活']);
   });
 
+
+
+  it('limits create Goal choices to configured templates while keeping ancestors for navigation only', () => {
+    const settings = {
+      groups: [], viewInstances: [], layouts: [],
+      goalSettings: {
+        goals: [
+          { path: '照顾好自己', status: 'active', createdAt: '', updatedAt: '' },
+          { path: '照顾好自己/健康', status: 'active', createdAt: '', updatedAt: '' },
+          { path: '照顾好自己/健康/运动', status: 'active', createdAt: '', updatedAt: '' },
+          { path: '照顾好自己/健康/睡眠', status: 'active', createdAt: '', updatedAt: '' },
+        ],
+        goalTemplates: [
+          { goalPath: '照顾好自己/健康/运动', recordTypeId: 'core.habit', enabled: true },
+        ],
+      },
+      floatingTimerEnabled: true,
+    } as any;
+
+    const options = buildQuickInputGoalOptions(settings, 'core.habit', true);
+    expect(options.map((option) => [option.value, option.synthetic])).toEqual([
+      ['照顾好自己', true],
+      ['照顾好自己/健康', true],
+      ['照顾好自己/健康/运动', false],
+    ]);
+  });
+
+  it('derives Goal selection from a view create context without guessing any first Goal', () => {
+    const selection = deriveQuickInputInitialSelection(
+      {},
+      { __recordUiContext: { goalContext: { goalPath: '照顾好自己/健康/心情' } } } as any,
+    );
+    expect(selection.selectedGoalPath).toBe('照顾好自己/健康/心情');
+    expect(deriveQuickInputInitialSelection({}, {}).selectedGoalPath).toBeNull();
+  });
 
   it('derives initial goal/template selection from form data before invocation context', () => {
     const selection = deriveQuickInputInitialSelection(

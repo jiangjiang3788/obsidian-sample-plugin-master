@@ -1,5 +1,4 @@
-import { DEFAULT_CORE_BLOCKS } from '@core/blocks/public';
-import { DEFAULT_RECORD_TYPES, ENERGY_RECORD_TYPE } from '@core/recordTypes/public';
+import { DEFAULT_RECORD_TYPES, DEFAULT_TEMPLATE_RECORD_TYPES, ENERGY_RECORD_TYPE } from '@core/recordTypes/public';
 import {
   ENERGY_QUICK_LEVELS,
   buildEnergySnapshotMarkdown,
@@ -13,9 +12,9 @@ import {
 
 describe('Energy direct record foundation', () => {
   it('keeps energy outside the GoalTemplate/CoreBlock matrix', () => {
-    expect(DEFAULT_CORE_BLOCKS.some((block) => block.id === 'core.energy')).toBe(false);
+    expect(DEFAULT_TEMPLATE_RECORD_TYPES.some((block) => block.id === 'core.energy')).toBe(false);
     expect(ENERGY_RECORD_TYPE.captureMode).toBe('direct');
-    expect(ENERGY_RECORD_TYPE.goalBindable).toBe(true);
+    expect(ENERGY_RECORD_TYPE.capabilities.goalBindable).toBe(true);
     expect(ENERGY_RECORD_TYPE.targetFile).toBe('01/目标精力.md');
     expect(DEFAULT_RECORD_TYPES.some((recordType) => recordType.id === 'core.energy')).toBe(true);
   });
@@ -45,7 +44,7 @@ describe('Energy direct record foundation', () => {
     const markdown = buildEnergySnapshotMarkdown(record);
     expect(markdown).toMatch(/记录ID:: energy\.[0-9A-HJKMNP-TV-Z]{26}/);
     expect(markdown).not.toContain('记录版本::');
-    expect(markdown).toContain('核心Block:: energy');
+    expect(markdown).toContain('记录类型:: energy');
     expect(markdown).toContain('目标:: 我若安好便是晴天');
     expect(markdown).not.toContain('目标ID::');
     expect(markdown).not.toContain('主题::');

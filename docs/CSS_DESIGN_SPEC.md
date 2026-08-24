@@ -480,23 +480,19 @@ Token 不直接定义“紫色按钮”，而表达语义：
 - 触控降级：至少 40px；
 - 同一行控件必须对齐到同一高度。
 
-### 4.7 阴影与表面
+### 4.7 表面与阴影
+
+Think OS 使用全局 flat contract：**不使用投影表达层级**。层级只由 border、surface background、spacing 与 Overlay stack 表达。
 
 ```css
---think-shadow-0: none;
---think-shadow-1: 0 1px 2px rgba(0,0,0,.08);
---think-shadow-2: 0 4px 14px rgba(0,0,0,.14);
---think-shadow-3: 0 12px 32px rgba(0,0,0,.2);
+--think-shadow-sm: none;
+--think-shadow-md: none;
+--think-shadow-overlay: none;
 ```
 
-| 层级 | 用途 |
-|---|---|
-| Surface 0 | 页面背景，无阴影 |
-| Surface 1 | 普通卡片，优先边框而非阴影 |
-| Surface 2 | Popover/Dropdown，轻阴影 |
-| Surface 3 | Modal/FloatingPanel，明显但克制的阴影 |
-
-深色主题阴影应减弱，更多依靠边框和表面差异。
+- 普通卡片、按钮、Goal 行、Popover、Dropdown、Modal、FloatingPanel 均不得引入 box-shadow；
+- 宿主主题自带阴影进入 Think OS root 时由 scope 统一压平；
+- Overlay 的“在最上层”是交互层级，不是视觉投影。
 
 ### 4.8 z-index Token
 
@@ -706,7 +702,7 @@ default → hover → active → focus-visible → disabled → loading
 
 ## 5.10 Menu / Dropdown / Popover
 
-- Surface 2；8px radius；shadow 2；
+- Surface 2；8px radius；无 shadow，以边框与 surface 差异表达层级；
 - 最小宽度 160px；最大宽度根据内容 320–420px；
 - Item 高度 32px，触控 40px；
 - 选中、危险、禁用状态明确；
@@ -727,7 +723,7 @@ Modal
 规范：
 
 - Obsidian Modal host 是唯一外层 surface；普通内容不得再套第二层 Paper/Card；
-- radius / border / shadow 优先继承 Obsidian host bridge；
+- radius / border 优先继承 Obsidian host bridge；shadow 始终禁用；
 - 最大高度约 `min(85vh, available)`；
 - Header/Footer 固定，Body 滚动；
 - 宽度分 sm 420px、md 640px、lg 860px；

@@ -1,5 +1,6 @@
 import { ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public';
 import { GoalTemplateResolver } from '@core/recordInput/public';
+import type { RecordInputSessionMode } from '@core/recordInput/public';
 import type { ThinkSettings } from '@core/types/public';
 import type { GoalDefinition } from '@core/goal/public';
 
@@ -9,6 +10,15 @@ export interface ResolveQuickInputRecordTypeRuntimeInput {
   currentBlockId: string;
   selectedGoal: GoalDefinition | null;
   selectedGoalPath: string | null;
+  requireDirectGoalTemplate?: boolean;
+}
+
+
+export function shouldRequireDirectGoalTemplateForQuickInput(
+  mode: RecordInputSessionMode,
+  isEnergyDirect: boolean,
+): boolean {
+  return mode === 'create' && !isEnergyDirect;
 }
 
 export function resolveQuickInputRecordTypeRuntime(input: ResolveQuickInputRecordTypeRuntimeInput) {
@@ -24,7 +34,8 @@ export function resolveQuickInputRecordTypeRuntime(input: ResolveQuickInputRecor
 
   return GoalTemplateResolver.resolve({
     settings: input.settings,
-    blockId: input.currentBlockId,
+    recordTypeId: input.currentBlockId,
     goalPath: input.selectedGoal?.path || input.selectedGoalPath,
+    requireDirectGoalTemplate: input.requireDirectGoalTemplate === true,
   });
 }

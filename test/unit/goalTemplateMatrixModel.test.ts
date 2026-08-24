@@ -15,12 +15,12 @@ const goals = [
 ] as any[];
 const blocks = [{ id: 'core.habit', name: '打卡' }, { id: 'core.task', name: '任务' }] as any[];
 const templates = [
-  { id: 'tpl-a', goalPath: '学习/英语', coreBlockId: 'core.habit', description: '听力记录', enabled: true },
+  { id: 'tpl-a', goalPath: '学习/英语', recordTypeId: 'core.habit', description: '听力记录', enabled: true },
 ] as any[];
 
 describe('goalTemplateMatrixModel', () => {
-  it('uses one compact configured label per Goal × Block cell', () => {
-    expect(getPresetCardName(templates[0], goals[1])).toBe('已配置');
+  it('uses the RecordType name as the compact template fallback label', () => {
+    expect(getPresetCardName(templates[0], goals[1], '打卡')).toBe('打卡');
   });
 
   it('filters visible goals by Goal text and template description', () => {

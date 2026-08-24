@@ -37,12 +37,12 @@ export interface GoalDefinition {
 
 /**
  * Current GoalTemplate storage contract.
- * One Goal path × one CoreBlock can have at most one row.
+ * One Goal path × one RecordType can have at most one row.
  * There is no variant identity, Theme context, preset name, or per-cell ordering.
  */
 export interface GoalTemplateStorageRow {
   goalPath: string;
-  coreBlockId: string;
+  recordTypeId: string;
   description?: string;
   enabled: boolean;
   periodPolicy?: PeriodPolicy;
