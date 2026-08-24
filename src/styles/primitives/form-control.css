@@ -291,8 +291,18 @@
   cursor: pointer;
 }
 .think-os .think-combobox-option:hover { background: var(--think-bg-hover); }
-.think-os .think-combobox-option__group,
-.think-os .think-combobox-option--empty,
-.think-os .think-combobox-helper { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
-.think-os .think-combobox-option--empty { cursor: default; }
-.think-os .think-combobox-helper { margin-top: var(--think-space-1); }
+
+.think-os .think-combobox-option__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.think-os .think-combobox-option__group {
+  flex: 0 1 52%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}

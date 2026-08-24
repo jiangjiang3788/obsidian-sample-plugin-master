@@ -26,6 +26,7 @@ export interface HierarchySingleSelectProps {
   allowClear?: boolean;
   searchable?: boolean;
   showParentLabel?: boolean;
+  showAllNavigationLevels?: boolean;
 }
 
 function cleanLabel(value: string): string {
@@ -107,6 +108,7 @@ export function HierarchySingleSelect({
   allowClear = true,
   searchable = true,
   showParentLabel = true,
+  showAllNavigationLevels = false,
 }: HierarchySingleSelectProps) {
   const [search, setSearch] = useState('');
   const normalizedSelected = normalizePath(selectedValue);
@@ -125,6 +127,17 @@ export function HierarchySingleSelect({
   const activePath = navigationPath || normalizedSelected || null;
   const visibleChildParent = resolveVisibleChildParent(activePath, childrenByParent);
   const visibleChildren = visibleChildParent ? childrenByParent.get(visibleChildParent) || [] : [];
+  const visibleNavigationLevels = useMemo(() => {
+    if (!showAllNavigationLevels || !activePath) return [] as HierarchySingleSelectOption[][];
+    const parts = activePath.split('/').filter(Boolean);
+    const levels: HierarchySingleSelectOption[][] = [];
+    for (let index = 1; index <= parts.length; index += 1) {
+      const parentPath = parts.slice(0, index).join('/');
+      const children = childrenByParent.get(parentPath) || [];
+      if (children.length > 0) levels.push(children);
+    }
+    return levels;
+  }, [activePath, childrenByParent, showAllNavigationLevels]);
   const filtered = search.trim()
     ? Array.from(byValue.values())
         .filter((option) => !option.synthetic)
@@ -195,9 +208,14 @@ export function HierarchySingleSelect({
               {allowClear && selected && renderPill({ id: '__clear__', value: '', label: '清空' }, false)}
             </>,
           )}
-          {visibleChildren.length > 0
-            ? renderLevel(childLabel, visibleChildren.map((option) => renderPill(option, isOnSelectedBranch(option.value))))
-            : null}
+          {showAllNavigationLevels
+            ? visibleNavigationLevels.map((level) => renderLevel(
+                childLabel || null,
+                level.map((option) => renderPill(option, isOnSelectedBranch(option.value))),
+              ))
+            : visibleChildren.length > 0
+              ? renderLevel(childLabel, visibleChildren.map((option) => renderPill(option, isOnSelectedBranch(option.value))))
+              : null}
         </>
       )}
     </div>

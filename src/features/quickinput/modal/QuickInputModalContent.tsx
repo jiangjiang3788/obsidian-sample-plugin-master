@@ -108,10 +108,14 @@ export function QuickInputModalContent({
   const currentState = editorStateRef.current || editorState;
   const currentRecordType = getRecordTypeById(currentState.blockId);
   const currentRecordTypeRequiresGoal = currentRecordType?.capabilities.goalBindable === true;
+  const createRequiresDirectGoalTemplate = mode === 'create'
+    && currentState.blockId !== ENERGY_RECORD_TYPE_ID
+    && currentRecordTypeRequiresGoal;
   const canSubmit = Boolean(
     currentState.blockId
       && currentState.template
-      && (!currentRecordTypeRequiresGoal || currentState.goalPath),
+      && (!currentRecordTypeRequiresGoal || currentState.goalPath)
+      && (!createRequiresDirectGoalTemplate || currentState.templateSourceType === 'goal-template'),
   );
   const currentBlockName = currentRecordType?.name || currentState.template?.name || currentState.blockId || '请选择记录类型';
   const isEnergyDirect = mode === 'create' && currentState.blockId === ENERGY_RECORD_TYPE_ID;

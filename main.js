@@ -46220,7 +46220,8 @@ function HierarchySingleSelect({
   dense = false,
   allowClear = true,
   searchable = true,
-  showParentLabel = true
+  showParentLabel = true,
+  showAllNavigationLevels = false
 }) {
   const [search, setSearch] = d("");
   const normalizedSelected = normalizePath(selectedValue);
@@ -46236,6 +46237,17 @@ function HierarchySingleSelect({
   const activePath = navigationPath || normalizedSelected || null;
   const visibleChildParent = resolveVisibleChildParent(activePath, childrenByParent);
   const visibleChildren = visibleChildParent ? childrenByParent.get(visibleChildParent) || [] : [];
+  const visibleNavigationLevels = T$1(() => {
+    if (!showAllNavigationLevels || !activePath) return [];
+    const parts = activePath.split("/").filter(Boolean);
+    const levels = [];
+    for (let index = 1; index <= parts.length; index += 1) {
+      const parentPath = parts.slice(0, index).join("/");
+      const children = childrenByParent.get(parentPath) || [];
+      if (children.length > 0) levels.push(children);
+    }
+    return levels;
+  }, [activePath, childrenByParent, showAllNavigationLevels]);
   const filtered = search.trim() ? Array.from(byValue.values()).filter((option) => !option.synthetic).filter((option) => `${option.value} ${option.label || ""}`.toLowerCase().includes(search.trim().toLowerCase())).sort(compareOption).slice(0, 20) : [];
   if (!options || options.length === 0) {
     return /* @__PURE__ */ u2("div", { className: "think-qif-hierarchy-empty", children: emptyLabel });
@@ -46289,7 +46301,7 @@ function HierarchySingleSelect({
           allowClear && selected && renderPill({ id: "__clear__", value: "", label: "清空" }, false)
         ] })
       ),
-      visibleChildren.length > 0 ? renderLevel(childLabel, visibleChildren.map((option) => renderPill(option, isOnSelectedBranch(option.value)))) : null
+      showAllNavigationLevels ? visibleNavigationLevels.map((level) => renderLevel(childLabel || null, level.map((option) => renderPill(option, isOnSelectedBranch(option.value))))) : visibleChildren.length > 0 ? renderLevel(childLabel, visibleChildren.map((option) => renderPill(option, isOnSelectedBranch(option.value)))) : null
     ] })
   ] });
 }
@@ -46995,52 +47007,127 @@ function QuickInputEditorFields({
     )
   ] });
 }
-function GoalSelector({ goals, selectedGoalPath, onSelect, onCreateGoal, dense = false }) {
-  const [draftGoalPath, setDraftGoalPath] = d("");
-  const normalizedDraft = normalizeGoalPath(draftGoalPath) || "";
-  const existing = T$1(() => new Set((goals || []).map((goal) => normalizeGoalPath(goal.value) || "")), [goals]);
-  const canCreate = !!onCreateGoal && !!normalizedDraft && !existing.has(normalizedDraft);
+function goalInlineLeafLabel(path) {
+  const normalized = normalizeGoalPath(path) || String(path || "").trim();
+  return normalized.split("/").filter(Boolean).pop() || normalized;
+}
+function goalInlineOptionOrder(option) {
+  return typeof option.order === "number" && Number.isFinite(option.order) ? option.order : Number.MAX_SAFE_INTEGER;
+}
+function compareInlineGoalOption(left, right) {
+  const byOrder = goalInlineOptionOrder(left) - goalInlineOptionOrder(right);
+  if (byOrder !== 0) return byOrder;
+  return String(left.label || goalInlineLeafLabel(left.value)).localeCompare(String(right.label || goalInlineLeafLabel(right.value)), "zh-Hans-CN");
+}
+function goalInlineParentPath(path) {
+  const parts = String(path || "").split("/").filter(Boolean);
+  return parts.length > 1 ? parts.slice(0, -1).join("/") : "";
+}
+function buildInlineGoalHierarchy(goals) {
+  const byValue = /* @__PURE__ */ new Map();
+  for (const raw of goals || []) {
+    const value = normalizeGoalPath(raw.value) || "";
+    if (!value) continue;
+    byValue.set(value, { ...raw, value, label: raw.label || goalInlineLeafLabel(value) });
+  }
+  for (const option of Array.from(byValue.values())) {
+    const parts = option.value.split("/").filter(Boolean);
+    for (let index = 1; index < parts.length; index += 1) {
+      const value = parts.slice(0, index).join("/");
+      if (byValue.has(value)) continue;
+      byValue.set(value, {
+        id: `synthetic:${value}`,
+        value,
+        label: goalInlineLeafLabel(value),
+        order: option.order,
+        synthetic: true,
+        goal: null
+      });
+    }
+  }
+  const childrenByParent = /* @__PURE__ */ new Map();
+  for (const option of byValue.values()) {
+    const parent = goalInlineParentPath(option.value);
+    const siblings = childrenByParent.get(parent) || [];
+    siblings.push(option);
+    childrenByParent.set(parent, siblings);
+  }
+  childrenByParent.forEach((siblings, key) => childrenByParent.set(key, siblings.sort(compareInlineGoalOption)));
+  return { byValue, childrenByParent };
+}
+function inlineGoalBranchPathForSelection(selectedValue, childrenByParent) {
+  if (!selectedValue) return null;
+  if ((childrenByParent.get(selectedValue) || []).length > 0) return selectedValue;
+  return goalInlineParentPath(selectedValue) || selectedValue;
+}
+function GoalSelector({ goals, selectedGoalPath, onSelect, dense = false }) {
+  const normalizedSelected = normalizeGoalPath(selectedGoalPath) || null;
+  const { byValue, childrenByParent } = T$1(() => buildInlineGoalHierarchy(goals), [goals]);
+  const [expandedPath, setExpandedPath] = d(() => normalizedSelected);
+  const listRef = A$1(null);
+  y(() => {
+    setExpandedPath(normalizedSelected);
+  }, [normalizedSelected]);
+  y(() => {
+    if (expandedPath && !byValue.has(expandedPath)) setExpandedPath(null);
+  }, [byValue, expandedPath]);
+  const columns = T$1(() => {
+    const result = [];
+    const roots = childrenByParent.get("") || [];
+    if (roots.length > 0) result.push(roots);
+    if (!expandedPath) return result;
+    const parts = expandedPath.split("/").filter(Boolean);
+    for (let index = 1; index <= parts.length; index += 1) {
+      const current = parts.slice(0, index).join("/");
+      const children = childrenByParent.get(current) || [];
+      if (children.length > 0) result.push(children);
+    }
+    return result;
+  }, [childrenByParent, expandedPath]);
+  y(() => {
+    const element = listRef.current;
+    if (!element || columns.length <= 1) return;
+    element.scrollLeft = element.scrollWidth;
+  }, [columns.length, expandedPath]);
+  if (!goals || goals.length === 0) {
+    return /* @__PURE__ */ u2("div", { className: "think-combobox-option think-combobox-option--empty", children: "还没有目标。请到目标管理中新建或导入目标。" });
+  }
+  const activePath = expandedPath || normalizedSelected;
+  const isOnActiveBranch = (value) => Boolean(activePath && (activePath === value || activePath.startsWith(`${value}/`)));
+  const renderOption = (option, levelIndex) => {
+    const hasChildren = (childrenByParent.get(option.value) || []).length > 0;
+    const selectable = !option.synthetic;
+    const selected = normalizedSelected === option.value;
+    const branchActive = isOnActiveBranch(option.value);
+    const label = String(option.label || goalInlineLeafLabel(option.value));
+    return /* @__PURE__ */ u2("button", {
+      type: "button",
+      className: "think-combobox-option think-list-row think-list-row--interactive think-quick-input-goal-row",
+      role: "option",
+      "aria-selected": selected,
+      "aria-current": branchActive ? "true" : void 0,
+      "data-goal-path": option.value,
+      title: option.value.replaceAll("/", " › "),
+      onClick: () => {
+        setExpandedPath(option.value);
+        if (selectable) onSelect(option);
+      },
+      children: [
+        /* @__PURE__ */ u2("span", { className: "think-combobox-option__label", children: label }),
+        /* @__PURE__ */ u2("span", { className: "think-quick-input-goal-row__actions", "aria-hidden": "true", children: [
+          selected ? /* @__PURE__ */ u2(ThinkIcon, { name: "check" }) : null,
+          hasChildren ? /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-right" }) : null
+        ] })
+      ]
+    }, `${levelIndex}:${option.value}`);
+  };
+  const activePathLabel = activePath ? activePath.split("/").filter(Boolean).join(" › ") : "";
   return /* @__PURE__ */ u2("div", { className: `think-quick-input-goal-selector${dense ? " is-dense" : ""}`, children: [
-    /* @__PURE__ */ u2(
-      HierarchySingleSelect,
-      {
-        options: goals,
-        selectedValue: selectedGoalPath || null,
-        onSelect: (option) => onSelect(option),
-        childLabel: "子目标",
-        emptyLabel: "还没有目标。请到目标管理中新建或导入目标。",
-        dense,
-        allowClear: true,
-        searchable: false,
-        showParentLabel: false
-      }
-    ),
-    onCreateGoal ? /* @__PURE__ */ u2("div", { className: "think-quick-input-goal-selector__create", children: [
-      /* @__PURE__ */ u2(
-        ThinkInput,
-        {
-          value: draftGoalPath,
-          onInput: (event) => setDraftGoalPath(event.currentTarget.value),
-          placeholder: "快速新建目标，例如 产品化/插件/目标中心"
-        }
-      ),
-      /* @__PURE__ */ u2(
-        ThinkButton,
-        {
-          size: "sm",
-          disabled: !canCreate,
-          onClick: async () => {
-            if (!canCreate) return;
-            await onCreateGoal(normalizedDraft);
-            setDraftGoalPath("");
-          },
-          children: "新建"
-        }
-      )
-    ] }) : null,
-    normalizedDraft && existing.has(normalizedDraft) ? /* @__PURE__ */ u2("span", { className: "think-quick-input-context-hint", children: "目标已存在，可直接在上方选择。" }) : null
+    activePathLabel ? /* @__PURE__ */ u2("div", { className: "think-quick-input-goal-active-path", title: activePathLabel, "aria-live": "polite", children: activePathLabel }) : null,
+    /* @__PURE__ */ u2("div", { ref: listRef, className: "think-list think-quick-input-goal-list", "aria-label": "目标层级选择", children: columns.map((level, levelIndex) => /* @__PURE__ */ u2("div", { className: "think-list think-quick-input-goal-level", role: "listbox", "aria-label": `目标第 ${levelIndex + 1} 层`, children: level.map((option) => renderOption(option, levelIndex)) }, `goal-level:${levelIndex}`)) })
   ] });
 }
+
 function RecordTypeSwitcher({ blocks, currentBlockId, onBlockChange }) {
   if (blocks.length <= 1) return null;
   return /* @__PURE__ */ u2("div", { className: "think-quick-input-record-type-switcher", role: "tablist", "aria-label": "记录类型", children: blocks.map((block) => {
@@ -47151,9 +47238,6 @@ function QuickInputEditorView({
       }
     ) })
   ] });
-}
-function shouldRequireDirectGoalTemplateForQuickInput(mode, isEnergyDirect) {
-  return mode === "create" && !isEnergyDirect;
 }
 function resolveQuickInputRecordTypeRuntime(input) {
   if (input.isEnergyDirect) {
@@ -47717,7 +47801,7 @@ function resolveQuickInputEnergyDefaultGoal(goals, defaultGoalPath) {
     const preferred = goals.find((option) => option.value === preferredPath || option.goal?.path === preferredPath);
     if (preferred) return preferred;
   }
-  return goals.find((option) => option.goal?.status === "active") || goals[0] || null;
+  return null;
 }
 function EnergyQuickCapturePanel({
   blocks,
@@ -48042,8 +48126,6 @@ function QuickInputEditor({
     [blocks, currentBlockId]
   );
   const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID && currentRecordType.captureMode === "direct";
-  const requiresGoalContext = currentRecordType?.capabilities.goalBindable === true;
-  const requireDirectGoalTemplate = shouldRequireDirectGoalTemplateForQuickInput(recordInputMode, isEnergyDirect);
   const selectedGoal = T$1(() => {
     const goals = fullSettings.goalSettings?.goals || [];
     return selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) || null : null;
@@ -48053,16 +48135,27 @@ function QuickInputEditor({
     [currentBlockId, isEnergyDirect]
   );
   const { template: rawTemplate, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId } = T$1(
-    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath, requireDirectGoalTemplate }),
+    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath, requireDirectGoalTemplate: recordInputMode === "create" }),
     [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath, recordInputMode]
   );
-  const goalOptions = T$1(
-    () => buildQuickInputGoalOptions(
-      fullSettings,
+  const baseDisplayRuntime = T$1(
+    () => resolveQuickInputRecordTypeRuntime({
+      settings: fullSettings,
+      isEnergyDirect,
       currentBlockId,
-      requireDirectGoalTemplate
-    ),
-    [fullSettings.goalSettings?.goals, fullSettings.goalSettings?.goalTemplates, currentBlockId, requireDirectGoalTemplate]
+      selectedGoal: null,
+      selectedGoalPath: null,
+      requireDirectGoalTemplate: false
+    }),
+    [fullSettings, isEnergyDirect, currentBlockId]
+  );
+  const displayRawTemplate = rawTemplate || baseDisplayRuntime.template;
+  const displayTemplateId = rawTemplate ? templateId : baseDisplayRuntime.templateId;
+  const displayTemplateSourceType = rawTemplate ? templateSourceType : baseDisplayRuntime.templateSourceType;
+  const displayEffectiveBlockId = rawTemplate ? effectiveBlockId : baseDisplayRuntime.effectiveBlockId;
+  const goalOptions = T$1(
+    () => buildQuickInputGoalOptions(fullSettings, currentBlockId, recordInputMode === "create"),
+    [fullSettings.goalSettings?.goals, fullSettings.goalSettings?.goalTemplates, currentBlockId, recordInputMode]
   );
   const goalFieldOptions = T$1(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label || goal.value })), [goalOptions]);
   y(() => {
@@ -48076,7 +48169,7 @@ function QuickInputEditor({
   const currentGoalTitle = currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null;
   const currentGoalParts = splitPathParts(currentGoalPath);
   const currentRecordDate = String(formData["日期"] ?? formData.date ?? dayjs().format("YYYY-MM-DD")).trim();
-  const periodPolicy = isEnergyDirect ? null : resolveTemplatePeriodPolicy(rawTemplate);
+  const periodPolicy = isEnergyDirect ? null : resolveTemplatePeriodPolicy(displayRawTemplate);
   const currentPeriod = periodPolicy ? resolveDerivedPeriod(currentRecordDate || dayjs().format("YYYY-MM-DD"), periodPolicy.granularity) : null;
   const currentPeriodUi = T$1(() => buildQuickInputPeriodUi(currentPeriod), [currentPeriod?.id, currentPeriod?.label, currentPeriod?.granularity]);
   const currentPeriodFields = currentPeriodUi.fields;
@@ -48084,11 +48177,9 @@ function QuickInputEditor({
   const template = T$1(
     () => {
       if (isEnergyDirect) return null;
-      if (requiresGoalContext && !currentGoalPath) return null;
-      if (recordInputMode === "create" && templateSourceType !== "goal-template") return null;
-      return buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, goalFieldOptions);
+      return buildQuickInputDisplayTemplate(displayRawTemplate, displayEffectiveBlockId, goalFieldOptions);
     },
-    [rawTemplate, effectiveBlockId, goalFieldOptions, isEnergyDirect, requiresGoalContext, currentGoalPath, recordInputMode, templateSourceType]
+    [displayRawTemplate, displayEffectiveBlockId, goalFieldOptions, isEnergyDirect]
   );
   const showTimeDirectionControl = T$1(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
   y(() => {
@@ -48122,13 +48213,13 @@ function QuickInputEditor({
     currentPeriodFields,
     timeDirection: directionOverride,
     template,
-    templateId,
-    templateSourceType,
+    templateId: displayTemplateId,
+    templateSourceType: displayTemplateSourceType,
     fieldSources: sourceOverride
   });
   y(() => {
     onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
-  }, [currentBlockId, effectiveBlockId, selectedGoalPath, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, formData, timeDirection, template, templateId, templateSourceType, fieldSources]);
+  }, [currentBlockId, effectiveBlockId, selectedGoalPath, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, formData, timeDirection, template, displayTemplateId, displayTemplateSourceType, fieldSources]);
   const handleUpdateField = (key, value, isOptionObject2 = false) => {
     const updated = applyQuickInputFieldUpdate({ formData, fieldSources, key, value, isOptionObject: isOptionObject2, timeDirection });
     dispatchSession({
@@ -48205,7 +48296,7 @@ function QuickInputEditor({
       showTimeDirectionControl,
       currentPeriodLabel: currentPeriod?.label || null,
       currentGoalPath,
-      templateSourceType,
+      templateSourceType: displayTemplateSourceType,
       fieldSourceSummary: makeEditorState(formData, timeDirection, fieldSources).fieldSourceSummary
     }
   );
@@ -48735,8 +48826,9 @@ function QuickInputModalContent({
   const currentState = editorStateRef.current || editorState;
   const currentRecordType = getRecordTypeById(currentState.blockId);
   const currentRecordTypeRequiresGoal = currentRecordType?.capabilities.goalBindable === true;
+  const createRequiresDirectGoalTemplate = mode === "create" && currentState.blockId !== ENERGY_RECORD_TYPE_ID && currentRecordTypeRequiresGoal;
   const canSubmit = Boolean(
-    currentState.blockId && currentState.template && (!currentRecordTypeRequiresGoal || currentState.goalPath)
+    currentState.blockId && currentState.template && (!currentRecordTypeRequiresGoal || currentState.goalPath) && (!createRequiresDirectGoalTemplate || currentState.templateSourceType === "goal-template")
   );
   const currentBlockName = currentRecordType?.name || currentState.template?.name || currentState.blockId || "请选择记录类型";
   const isEnergyDirect = mode === "create" && currentState.blockId === ENERGY_RECORD_TYPE_ID;
@@ -49220,17 +49312,15 @@ function minuteToLocalDateTime(day, minute) {
 }
 function resolveTimelineCreateContext(input) {
   const clickedMinute = clampDayMinute(input.clickedMinute);
-  const blocks = [...input.dayBlocks || []].filter((block) => Number.isFinite(block.blockStartMinute) && Number.isFinite(block.blockEndMinute)).sort((a2, b2) => a2.blockStartMinute - b2.blockStartMinute || a2.blockEndMinute - b2.blockEndMinute);
-  const previousBlock = blocks.filter((block) => block.blockEndMinute <= clickedMinute).sort((a2, b2) => b2.blockEndMinute - a2.blockEndMinute || b2.blockStartMinute - a2.blockStartMinute)[0] || null;
-  const nextBlock = blocks.filter((block) => block.blockStartMinute >= clickedMinute).sort((a2, b2) => a2.blockStartMinute - b2.blockStartMinute || a2.blockEndMinute - b2.blockEndMinute)[0] || null;
+  const blocks = [...input.dayBlocks || []].filter((block) => Number.isFinite(block.blockStartMinute) && Number.isFinite(block.blockEndMinute)).sort((a, b) => a.blockStartMinute - b.blockStartMinute || a.blockEndMinute - b.blockEndMinute);
+  const previousBlock = blocks.filter((block) => block.blockEndMinute <= clickedMinute).sort((a, b) => b.blockEndMinute - a.blockEndMinute || b.blockStartMinute - a.blockStartMinute)[0] || null;
+  const nextBlock = blocks.filter((block) => block.blockStartMinute >= clickedMinute).sort((a, b) => a.blockStartMinute - b.blockStartMinute || a.blockEndMinute - b.blockEndMinute)[0] || null;
   const suggestedStartMinute = clampDayMinute(previousBlock?.blockEndMinute ?? clickedMinute);
   const nextStartMinute = nextBlock ? clampDayMinute(nextBlock.blockStartMinute) : null;
   const suggestedEndMinute = nextStartMinute !== null && nextStartMinute > suggestedStartMinute ? nextStartMinute : null;
-  const startAt = minuteToLocalDateTime(input.day, suggestedStartMinute);
   const context = {
     日期: input.day,
-    startAt,
-    // Legacy aliases remain invocation context only. New Task UI uses startAt/endAt.
+    startAt: minuteToLocalDateTime(input.day, suggestedStartMinute),
     时间: minutesToTime(suggestedStartMinute),
     __recordUiContext: {
       kind: "timeline_create",
@@ -49250,14 +49340,7 @@ function resolveTimelineCreateContext(input) {
     context.endAt = minuteToLocalDateTime(input.day, suggestedEndMinute);
     context["结束"] = minutesToTime(suggestedEndMinute);
   }
-  return {
-    clickedMinute,
-    suggestedStartMinute,
-    suggestedEndMinute,
-    previousBlock,
-    nextBlock,
-    context
-  };
+  return { clickedMinute, suggestedStartMinute, suggestedEndMinute, previousBlock, nextBlock, context };
 }
 function buildTimelineCreateConfig(params) {
   const targetEl = params.event.currentTarget;
@@ -49266,11 +49349,7 @@ function buildTimelineCreateConfig(params) {
   const clientY = getEventClientY(params.event);
   const y2 = clientY - rect.top;
   const clickedMinute = Math.floor(y2 / params.hourHeight * 60);
-  const resolved = resolveTimelineCreateContext({
-    day: params.day,
-    clickedMinute,
-    dayBlocks: params.dayBlocks
-  });
+  const resolved = resolveTimelineCreateContext({ day: params.day, clickedMinute, dayBlocks: params.dayBlocks });
   return {
     blockId: RECORD_TYPE_IDS.TASK,
     context: resolved.context

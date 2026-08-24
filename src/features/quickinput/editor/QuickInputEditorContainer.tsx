@@ -104,7 +104,6 @@ export function QuickInputEditor({
     [blocks, currentBlockId],
   );
   const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID && currentRecordType.captureMode === 'direct';
-  const requiresGoalContext = currentRecordType?.capabilities.goalBindable === true;
   const requireDirectGoalTemplate = shouldRequireDirectGoalTemplateForQuickInput(recordInputMode, isEnergyDirect);
   const selectedGoal = useMemo(() => {
     const goals = fullSettings.goalSettings?.goals || [];
@@ -120,6 +119,26 @@ export function QuickInputEditor({
     () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath, requireDirectGoalTemplate }),
     [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath, recordInputMode],
   );
+
+  // Goal is one field in the form, not a separate pre-form screen. For create
+  // mode we can render the RecordType base fields before a Goal is chosen, while
+  // the submit boundary still requires a valid Goal x RecordType template.
+  const baseDisplayRuntime = useMemo(
+    () => resolveQuickInputRecordTypeRuntime({
+      settings: fullSettings,
+      isEnergyDirect,
+      currentBlockId,
+      selectedGoal: null,
+      selectedGoalPath: null,
+      requireDirectGoalTemplate: false,
+    }),
+    [fullSettings, isEnergyDirect, currentBlockId],
+  );
+
+  const displayRawTemplate = rawTemplate || baseDisplayRuntime.template;
+  const displayTemplateId = rawTemplate ? templateId : baseDisplayRuntime.templateId;
+  const displayTemplateSourceType = rawTemplate ? templateSourceType : baseDisplayRuntime.templateSourceType;
+  const displayEffectiveBlockId = rawTemplate ? effectiveBlockId : baseDisplayRuntime.effectiveBlockId;
 
   const goalOptions = useMemo<GoalSelectorOption[]>(
     () => buildQuickInputGoalOptions(
@@ -144,7 +163,7 @@ export function QuickInputEditor({
   const currentGoalTitle = currentGoalPath ? currentGoalPath.split('/').filter(Boolean).pop() || currentGoalPath : null;
   const currentGoalParts = splitPathParts(currentGoalPath);
   const currentRecordDate = String(formData['日期'] ?? formData.date ?? dayjs().format('YYYY-MM-DD')).trim();
-  const periodPolicy = isEnergyDirect ? null : resolveTemplatePeriodPolicy(rawTemplate as any);
+  const periodPolicy = isEnergyDirect ? null : resolveTemplatePeriodPolicy(displayRawTemplate as any);
   const currentPeriod = periodPolicy ? resolveDerivedPeriod(currentRecordDate || dayjs().format('YYYY-MM-DD'), periodPolicy.granularity) : null;
   const currentPeriodUi = useMemo(() => buildQuickInputPeriodUi(currentPeriod), [currentPeriod?.id, currentPeriod?.label, currentPeriod?.granularity]);
   const currentPeriodFields = currentPeriodUi.fields;
@@ -153,14 +172,13 @@ export function QuickInputEditor({
   const template = useMemo(
     () => {
       if (isEnergyDirect) return null;
-      // Create flows only render fields after an enabled direct Goal x RecordType
-      // template has been resolved. Navigation-only ancestor Goals never create
-      // a fake default form. Edit mode may still use the RecordType base.
-      if (requiresGoalContext && !currentGoalPath) return null;
-      if (recordInputMode === 'create' && templateSourceType !== 'goal-template') return null;
-      return buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, goalFieldOptions);
+      // Goal is only one field inside the complete form. Always render the
+      // RecordType base form before Goal selection (and for stale Goal context);
+      // the modal submit boundary separately requires a direct GoalTemplate in
+      // create mode, so showing fields never weakens persistence rules.
+      return buildQuickInputDisplayTemplate(displayRawTemplate, displayEffectiveBlockId, goalFieldOptions);
     },
-    [rawTemplate, effectiveBlockId, goalFieldOptions, isEnergyDirect, requiresGoalContext, currentGoalPath, recordInputMode, templateSourceType]
+    [displayRawTemplate, displayEffectiveBlockId, goalFieldOptions, isEnergyDirect]
   );
 
   const showTimeDirectionControl = useMemo(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
@@ -200,14 +218,14 @@ export function QuickInputEditor({
     currentPeriodFields,
     timeDirection: directionOverride,
     template,
-    templateId,
-    templateSourceType,
+    templateId: displayTemplateId,
+    templateSourceType: displayTemplateSourceType,
     fieldSources: sourceOverride,
   });
 
   useEffect(() => {
     onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
-  }, [currentBlockId, effectiveBlockId, selectedGoalPath, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, formData, timeDirection, template, templateId, templateSourceType, fieldSources]);
+  }, [currentBlockId, effectiveBlockId, selectedGoalPath, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, formData, timeDirection, template, displayTemplateId, displayTemplateSourceType, fieldSources]);
 
   const handleUpdateField = (key: string, value: any, isOptionObject = false) => {
     const updated = applyQuickInputFieldUpdate({ formData, fieldSources, key, value, isOptionObject, timeDirection });
@@ -288,7 +306,7 @@ export function QuickInputEditor({
       showTimeDirectionControl={showTimeDirectionControl}
       currentPeriodLabel={currentPeriod?.label || null}
       currentGoalPath={currentGoalPath}
-      templateSourceType={templateSourceType}
+      templateSourceType={displayTemplateSourceType}
       fieldSourceSummary={makeEditorState(formData, timeDirection, fieldSources).fieldSourceSummary}
     />
   );

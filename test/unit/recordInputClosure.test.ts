@@ -59,12 +59,18 @@ describe('record input closure', () => {
     expect(hierarchy).toContain('resolveVisibleChildParent');
   });
 
-  it('requires an enabled direct Goal template before rendering create fields', () => {
+  it('keeps Goal as one form field while submit still requires an enabled direct Goal template', () => {
     const container = read('src/features/quickinput/editor/QuickInputEditorContainer.tsx');
     expect(container).toContain('shouldRequireDirectGoalTemplateForQuickInput(recordInputMode, isEnergyDirect)');
-    expect(container).toContain("templateSourceType !== 'goal-template'");
-    const view = read('src/features/quickinput/editor/QuickInputEditorView.tsx');
-    expect(view).toContain('请选择已配置模板的目标后继续。');
+    expect(container).toContain('const baseDisplayRuntime = useMemo(');
+    expect(container).toContain('const displayRawTemplate = rawTemplate || baseDisplayRuntime.template');
+    expect(container).toContain('Always render the');
+    expect(container).not.toContain("currentGoalPath && templateSourceType !== 'goal-template'");
+    expect(container).not.toContain('if (requiresGoalContext && !currentGoalPath) return null');
+    const modalContent = read('src/features/quickinput/modal/QuickInputModalContent.tsx');
+    expect(modalContent).toContain('currentState.template');
+    expect(modalContent).toContain('currentState.goalPath');
+    expect(modalContent).toContain("currentState.templateSourceType === 'goal-template'");
     const modal = read('src/platform/obsidian/modals/QuickInputModal.tsx');
     expect(modal).toContain('getCreateAvailabilityFailure');
     expect(modal).toContain('还没有配置');
