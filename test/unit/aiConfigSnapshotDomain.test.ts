@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F071/unit
+ * @covers F112/unit
+ */
 import { buildAiConfigSnapshot } from '@/core/ai/AiConfigSnapshot';
 import { DEFAULT_AI_SETTINGS, DEFAULT_TEMPLATE_RECORD_TYPES, getGoalTemplateId } from '@/core/public';
 import type { GoalSettings, InputSettings } from '@/core/public';

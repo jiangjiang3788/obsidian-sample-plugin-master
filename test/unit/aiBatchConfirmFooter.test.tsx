@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F073/ui
+ * @covers F073/unit
+ */
 /** @jsxImportSource preact */
 import { render } from 'preact';
 import { AiBatchConfirmFooter } from '@/platform/obsidian/modals/AiBatchConfirmFooter';

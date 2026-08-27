@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F050/regression
+ * @covers F050/unit
+ */
 import {
   canTransitionTaskStatus,
   getTaskStatus,

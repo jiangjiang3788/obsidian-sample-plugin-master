@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F014/regression
+ * @covers F014/unit
+ * @covers F043/unit
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 

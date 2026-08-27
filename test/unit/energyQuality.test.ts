@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F060/regression
+ * @covers F060/unit
+ */
 import type { RecordViewItem } from '@core/types/public';
 import { buildEnergyDataQuality } from '@core/energy/public';
 

@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F015/regression
+ * @covers F015/unit
+ * @covers F045/unit
+ */
 import type { RecordCaptureTemplate } from '../../src/core/recordInput/CaptureTemplate';
 import type { RecordViewItem } from '../../src/core/records/RecordEntity';
 import { buildParsedRecordSnapshot } from '../../src/core/types/recordSnapshot';

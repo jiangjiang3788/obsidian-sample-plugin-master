@@ -1,3 +1,11 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F015/unit
+ * @covers F016/unit
+ * @covers F017/error
+ * @covers F017/regression
+ * @covers F017/unit
+ */
 import { RecordMutationTransaction, RecordTransactionRecoveryError } from '@/core/records/RecordMutationTransaction';
 import type { VaultPort } from '@/core/ports/VaultPort';
 

@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F003/unit
+ * @covers F101/unit
+ */
 import { createLayoutRenderSignature } from '@/app/dashboard/layoutRenderSignature';
 
 function createView(id: string, title: string) {

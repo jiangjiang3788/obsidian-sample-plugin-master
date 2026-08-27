@@ -1,3 +1,11 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F014/error
+ * @covers F015/error
+ * @covers F016/error
+ * @covers F017/error
+ * @covers F043/error
+ */
 import { CreateRecordWorkflow } from '@/app/usecases/recordInput/workflows/CreateRecordWorkflow';
 import { UpdateRecordWorkflow } from '@/app/usecases/recordInput/workflows/UpdateRecordWorkflow';
 

@@ -1,3 +1,10 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F011/integration
+ * @covers F012/integration
+ * @covers F120/integration
+ * @covers F121/integration
+ */
 import { parseRecordBlock } from '@/core/utils/parser';
 import { encodeRecordBlock } from '@/core/records/codec';
 import { RecordIndex } from '@/core/records/RecordIndex';
@@ -9,7 +16,7 @@ const NOTE_ID = 'rec.01J00000000000000000000000';
 function parseAt(markdown: string, filePath: string, startLine = 1): RecordViewItem {
   const lines = markdown.split('\n');
   const item = parseRecordBlock(filePath, lines, 0, lines.length - 1, 'root');
-  if (!item) throw new Error('fixture failed to parse');
+  if (!item) throw new Error('测试夹具解析失败');
   item.file = { path: filePath, line: startLine };
   item.source = { path: filePath, startLine, endLine: startLine + lines.length - 1, modified: 1 };
   return item;

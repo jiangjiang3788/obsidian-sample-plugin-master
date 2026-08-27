@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F051/regression
+ * @covers F051/unit
+ */
 import { TaskCompletionMutation } from '@core/services/item/TaskCompletionMutation';
 import type { RecordViewItem } from '@core/types/public';
 

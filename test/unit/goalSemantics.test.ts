@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F030/regression
+ * @covers F030/unit
+ * @covers F033/unit
+ */
 import { readField } from '@/core/fields/ViewFieldCatalog';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { buildParsedRecordSnapshot } from '@/core/types/recordSnapshot';

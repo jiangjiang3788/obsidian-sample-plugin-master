@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F025/unit
+ * @covers F027/unit
+ * @covers F116/unit
+ */
 import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 import {
   getTemplateFieldBehaviorKind,

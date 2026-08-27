@@ -1,3 +1,7 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F013/unit
+ */
 import { resolveFieldValue, readFieldValue, normalizeFieldKey } from '@/core/fields/public';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 

@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F090/unit
+ * @covers F104/unit
+ */
 import {
   appendRule,
   buildRuleLabel,

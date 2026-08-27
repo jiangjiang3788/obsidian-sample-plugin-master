@@ -6,6 +6,8 @@ module.exports = {
   testEnvironment: 'jsdom',
   roots: ['<rootDir>/test'],
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
+  // 性能基线独立运行，避免普通 unit/integration/coverage 被慢测试拖长。
+  testPathIgnorePatterns: ['<rootDir>/test/performance/'],
   transform: {
     '^.+\\.(t|j)sx?$': [
       'ts-jest',
@@ -52,5 +54,6 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/test/setupTests.ts'],
   clearMocks: true,
   testTimeout: 10000,
-  verbose: true,
+  verbose: false,
+  reporters: ['<rootDir>/test/configs/jest-reporter.zh-CN.cjs'],
 };

@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F010/regression
+ * @covers F010/unit
+ * @covers F115/unit
+ */
 import {
   DEFAULT_RECORD_TYPES,
   DEFAULT_TEMPLATE_RECORD_TYPES,

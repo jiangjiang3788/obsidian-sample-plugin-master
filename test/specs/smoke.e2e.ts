@@ -1,3 +1,10 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F001/e2e
+ * @covers F003/e2e
+ * @covers F130/e2e
+ * @covers F130/regression
+ */
 import { browser, $ } from '@wdio/globals';
 
 describe('Think Plugin 冒烟测试', () => {

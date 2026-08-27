@@ -1,3 +1,7 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F025/unit
+ */
 import { FIELD_CATEGORY_LABELS, FIELD_REGISTRY, getAvailableFieldsByCategory } from '@/core/fields/FieldRegistry';
 
 describe('field registry user-facing categories', () => {

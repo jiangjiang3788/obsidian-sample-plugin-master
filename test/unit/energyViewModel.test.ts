@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F064/unit
+ * @covers F088/unit
+ */
 import type { GoalDefinition } from '@core/goal/public';
 import type { RecordViewItem } from '@core/types/public';
 import { buildEnergyViewModel } from '@/features/views/models/energyViewModel';

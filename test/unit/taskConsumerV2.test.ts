@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F051/unit
+ * @covers F055/unit
+ * @covers F057/unit
+ */
 import type { RecordViewItem } from '@core/types/public';
 import { buildEnergyRecommendationLearning, attachEnergyRecommendationLearning } from '@core/energy/public';
 import { readFieldValue } from '@/core/fields/public';

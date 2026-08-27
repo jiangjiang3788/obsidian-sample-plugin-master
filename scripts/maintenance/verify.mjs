@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
 import process from 'node:process';
+import { npmInvocation } from '../testing/process-launch.mjs';
 
 const args = new Set(process.argv.slice(2));
 const isFast = args.has('--fast');
 const isCi = args.has('--ci');
-
-const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 const commandSets = {
   fast: [
@@ -30,7 +29,8 @@ function run(cmd, cmdArgs) {
   const printable = `${cmd} ${cmdArgs.join(' ')}`;
   console.log(`\n[verify] ${printable}`);
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd === 'npm' ? npmCmd : cmd, cmdArgs, {
+    const invocation = cmd === 'npm' ? npmInvocation(cmdArgs) : { command: cmd, args: cmdArgs };
+    const child = spawn(invocation.command, invocation.args, {
       stdio: 'inherit',
       shell: false,
       env: process.env,

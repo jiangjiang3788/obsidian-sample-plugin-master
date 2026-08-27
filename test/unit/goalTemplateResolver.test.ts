@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F035/regression
+ * @covers F035/unit
+ * @covers F036/unit
+ */
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { GoalTemplateResolver } from '@/core/services/GoalTemplateResolver';
 

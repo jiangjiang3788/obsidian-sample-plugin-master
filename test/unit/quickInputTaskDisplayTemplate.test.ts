@@ -1,3 +1,7 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F042/unit
+ */
 import type { QuickInputTemplateLike } from '../../src/features/quickinput/editor/model/types';
 import { buildQuickInputDisplayTemplate } from '../../src/features/quickinput/editor/model/displayTemplate';
 

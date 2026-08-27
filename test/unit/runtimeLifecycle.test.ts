@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F001/unit
+ * @covers F002/unit
+ */
 import { isDisposed, markDisposed, resetDisposedForTests } from '@/app/runtime/lifecycleState';
 import { Disposables } from '@/app/runtime/disposables';
 

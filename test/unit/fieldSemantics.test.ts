@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F025/regression
+ * @covers F025/unit
+ */
 import { parseRecordBlock } from '@/core/utils/parser';
 import { encodeRecordBlock } from '@/core/records/codec';
 import { getAllFields, readField } from '@/core/fields/ViewFieldCatalog';
@@ -13,7 +18,7 @@ function parseRecord(coreBlock: string, fields: Record<string, unknown>, id = RE
   const markdown = encodeRecordBlock({ recordId: id, coreBlock, fields });
   const lines = markdown.split('\n');
   const item = parseRecordBlock('records.md', lines, 0, lines.length - 1, 'root');
-  if (!item) throw new Error('fixture failed to parse');
+  if (!item) throw new Error('测试夹具解析失败');
   return item;
 }
 

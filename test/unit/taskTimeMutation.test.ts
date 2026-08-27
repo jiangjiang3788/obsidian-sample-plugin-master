@@ -1,3 +1,7 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F052/unit
+ */
 import { TaskTimeMutation } from '@/core/services/item/TaskTimeMutation';
 
 function taskRecord(overrides: Record<string, unknown> = {}) {

@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F120/regression
+ * @covers F120/unit
+ * @covers F123/unit
+ */
 import { DataStoreCache } from '@/core/services/dataStore/DataStoreCache';
 import { CURRENT_CACHE_SCHEMA_VERSION } from '@/core/types/cache';
 import type { IPluginStorage } from '@/core/services/StorageService';

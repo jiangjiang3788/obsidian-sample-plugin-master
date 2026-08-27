@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F020/regression
+ * @covers F020/unit
+ */
 import { getItemFilePath, getItemLineNumber } from '@/app/usecases/recordInput/locator';
 import { makeObsUri } from '@/core/utils/obsidian';
 

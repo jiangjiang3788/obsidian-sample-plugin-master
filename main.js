@@ -46071,7 +46071,7 @@ function closeAllFloatingWidgets() {
     closeFloatingWidget(id);
   }
 }
-const __vite_import_meta_env__ = { "BASE_URL": "/", "DEV": false, "MODE": "production", "PROD": true, "SSR": false };
+const __vite_import_meta_env__ = { "BASE_URL": "/", "DEV": false, "MODE": "development", "PROD": true, "SSR": false };
 function isDevBuild() {
   try {
     const env = __vite_import_meta_env__;
@@ -46158,7 +46158,7 @@ function SelectablePill({
 function cleanLabel(value) {
   return String(value || "").trim();
 }
-function leafLabel(path) {
+function leafLabel$1(path) {
   return cleanLabel(getLeafPath(path) || path);
 }
 function getOrder(option) {
@@ -46167,7 +46167,7 @@ function getOrder(option) {
 function compareOption(a2, b2) {
   const byOrder = getOrder(a2) - getOrder(b2);
   if (byOrder !== 0) return byOrder;
-  return (a2.label || leafLabel(a2.value)).localeCompare(b2.label || leafLabel(b2.value), "zh-Hans-CN");
+  return (a2.label || leafLabel$1(a2.value)).localeCompare(b2.label || leafLabel$1(b2.value), "zh-Hans-CN");
 }
 function buildTree(options) {
   const byValue = /* @__PURE__ */ new Map();
@@ -46175,17 +46175,17 @@ function buildTree(options) {
   for (const raw of options || []) {
     const value = normalizePath(raw.value);
     if (!value) continue;
-    byValue.set(value, { ...raw, value, label: raw.label || leafLabel(value) });
+    byValue.set(value, { ...raw, value, label: raw.label || leafLabel$1(value) });
   }
   for (const value of Array.from(byValue.keys())) {
     const parts = value.split("/").filter(Boolean);
     for (let i2 = 1; i2 < parts.length; i2 += 1) {
-      const parentPath = parts.slice(0, i2).join("/");
-      if (!byValue.has(parentPath)) {
-        byValue.set(parentPath, {
-          id: `synthetic:${parentPath}`,
-          value: parentPath,
-          label: leafLabel(parentPath),
+      const parentPath2 = parts.slice(0, i2).join("/");
+      if (!byValue.has(parentPath2)) {
+        byValue.set(parentPath2, {
+          id: `synthetic:${parentPath2}`,
+          value: parentPath2,
+          label: leafLabel$1(parentPath2),
           synthetic: true
         });
       }
@@ -46242,8 +46242,8 @@ function HierarchySingleSelect({
     const parts = activePath.split("/").filter(Boolean);
     const levels = [];
     for (let index = 1; index <= parts.length; index += 1) {
-      const parentPath = parts.slice(0, index).join("/");
-      const children = childrenByParent.get(parentPath) || [];
+      const parentPath2 = parts.slice(0, index).join("/");
+      const children = childrenByParent.get(parentPath2) || [];
       if (children.length > 0) levels.push(children);
     }
     return levels;
@@ -46271,7 +46271,7 @@ function HierarchySingleSelect({
       },
       children: [
         option.icon ? `${option.icon} ` : "",
-        cleanLabel(option.label || leafLabel(option.value))
+        cleanLabel(option.label || leafLabel$1(option.value))
       ]
     },
     option.id || option.value
@@ -46301,7 +46301,10 @@ function HierarchySingleSelect({
           allowClear && selected && renderPill({ id: "__clear__", value: "", label: "清空" }, false)
         ] })
       ),
-      showAllNavigationLevels ? visibleNavigationLevels.map((level) => renderLevel(childLabel || null, level.map((option) => renderPill(option, isOnSelectedBranch(option.value))))) : visibleChildren.length > 0 ? renderLevel(childLabel, visibleChildren.map((option) => renderPill(option, isOnSelectedBranch(option.value)))) : null
+      showAllNavigationLevels ? visibleNavigationLevels.map((level) => renderLevel(
+        childLabel || null,
+        level.map((option) => renderPill(option, isOnSelectedBranch(option.value)))
+      )) : visibleChildren.length > 0 ? renderLevel(childLabel, visibleChildren.map((option) => renderPill(option, isOnSelectedBranch(option.value)))) : null
     ] })
   ] });
 }
@@ -47007,28 +47010,35 @@ function QuickInputEditorFields({
     )
   ] });
 }
-function goalInlineLeafLabel(path) {
-  const normalized = normalizeGoalPath(path) || String(path || "").trim();
-  return normalized.split("/").filter(Boolean).pop() || normalized;
+function leafLabel(path) {
+  const normalized2 = normalizeGoalPath(path) || String(path || "").trim();
+  return normalized2.split("/").filter(Boolean).pop() || normalized2;
 }
-function goalInlineOptionOrder(option) {
+function optionOrder(option) {
   return typeof option.order === "number" && Number.isFinite(option.order) ? option.order : Number.MAX_SAFE_INTEGER;
 }
-function compareInlineGoalOption(left, right) {
-  const byOrder = goalInlineOptionOrder(left) - goalInlineOptionOrder(right);
+function compareGoalOption(left2, right2) {
+  const byOrder = optionOrder(left2) - optionOrder(right2);
   if (byOrder !== 0) return byOrder;
-  return String(left.label || goalInlineLeafLabel(left.value)).localeCompare(String(right.label || goalInlineLeafLabel(right.value)), "zh-Hans-CN");
+  return String(left2.label || leafLabel(left2.value)).localeCompare(
+    String(right2.label || leafLabel(right2.value)),
+    "zh-Hans-CN"
+  );
 }
-function goalInlineParentPath(path) {
+function parentPath(path) {
   const parts = String(path || "").split("/").filter(Boolean);
   return parts.length > 1 ? parts.slice(0, -1).join("/") : "";
 }
-function buildInlineGoalHierarchy(goals) {
+function buildGoalHierarchy(goals) {
   const byValue = /* @__PURE__ */ new Map();
   for (const raw of goals || []) {
     const value = normalizeGoalPath(raw.value) || "";
     if (!value) continue;
-    byValue.set(value, { ...raw, value, label: raw.label || goalInlineLeafLabel(value) });
+    byValue.set(value, {
+      ...raw,
+      value,
+      label: raw.label || leafLabel(value)
+    });
   }
   for (const option of Array.from(byValue.values())) {
     const parts = option.value.split("/").filter(Boolean);
@@ -47038,7 +47048,7 @@ function buildInlineGoalHierarchy(goals) {
       byValue.set(value, {
         id: `synthetic:${value}`,
         value,
-        label: goalInlineLeafLabel(value),
+        label: leafLabel(value),
         order: option.order,
         synthetic: true,
         goal: null
@@ -47047,22 +47057,19 @@ function buildInlineGoalHierarchy(goals) {
   }
   const childrenByParent = /* @__PURE__ */ new Map();
   for (const option of byValue.values()) {
-    const parent = goalInlineParentPath(option.value);
+    const parent = parentPath(option.value);
     const siblings = childrenByParent.get(parent) || [];
     siblings.push(option);
     childrenByParent.set(parent, siblings);
   }
-  childrenByParent.forEach((siblings, key) => childrenByParent.set(key, siblings.sort(compareInlineGoalOption)));
+  childrenByParent.forEach((siblings, key) => {
+    childrenByParent.set(key, siblings.sort(compareGoalOption));
+  });
   return { byValue, childrenByParent };
-}
-function inlineGoalBranchPathForSelection(selectedValue, childrenByParent) {
-  if (!selectedValue) return null;
-  if ((childrenByParent.get(selectedValue) || []).length > 0) return selectedValue;
-  return goalInlineParentPath(selectedValue) || selectedValue;
 }
 function GoalSelector({ goals, selectedGoalPath, onSelect, dense = false }) {
   const normalizedSelected = normalizeGoalPath(selectedGoalPath) || null;
-  const { byValue, childrenByParent } = T$1(() => buildInlineGoalHierarchy(goals), [goals]);
+  const { byValue, childrenByParent } = T$1(() => buildGoalHierarchy(goals), [goals]);
   const [expandedPath, setExpandedPath] = d(() => normalizedSelected);
   const listRef = A$1(null);
   y(() => {
@@ -47078,8 +47085,8 @@ function GoalSelector({ goals, selectedGoalPath, onSelect, dense = false }) {
     if (!expandedPath) return result;
     const parts = expandedPath.split("/").filter(Boolean);
     for (let index = 1; index <= parts.length; index += 1) {
-      const current = parts.slice(0, index).join("/");
-      const children = childrenByParent.get(current) || [];
+      const current2 = parts.slice(0, index).join("/");
+      const children = childrenByParent.get(current2) || [];
       if (children.length > 0) result.push(children);
     }
     return result;
@@ -47093,33 +47100,39 @@ function GoalSelector({ goals, selectedGoalPath, onSelect, dense = false }) {
     return /* @__PURE__ */ u2("div", { className: "think-combobox-option think-combobox-option--empty", children: "还没有目标。请到目标管理中新建或导入目标。" });
   }
   const activePath = expandedPath || normalizedSelected;
-  const isOnActiveBranch = (value) => Boolean(activePath && (activePath === value || activePath.startsWith(`${value}/`)));
+  const isOnActiveBranch = (value) => Boolean(
+    activePath && (activePath === value || activePath.startsWith(`${value}/`))
+  );
   const renderOption = (option, levelIndex) => {
     const hasChildren = (childrenByParent.get(option.value) || []).length > 0;
     const selectable = !option.synthetic;
     const selected = normalizedSelected === option.value;
     const branchActive = isOnActiveBranch(option.value);
-    const label = String(option.label || goalInlineLeafLabel(option.value));
-    return /* @__PURE__ */ u2("button", {
-      type: "button",
-      className: "think-combobox-option think-list-row think-list-row--interactive think-quick-input-goal-row",
-      role: "option",
-      "aria-selected": selected,
-      "aria-current": branchActive ? "true" : void 0,
-      "data-goal-path": option.value,
-      title: option.value.replaceAll("/", " › "),
-      onClick: () => {
-        setExpandedPath(option.value);
-        if (selectable) onSelect(option);
+    const label = String(option.label || leafLabel(option.value));
+    return /* @__PURE__ */ u2(
+      "button",
+      {
+        type: "button",
+        className: "think-combobox-option think-list-row think-list-row--interactive think-quick-input-goal-row",
+        role: "option",
+        "aria-selected": selected,
+        "aria-current": branchActive ? "true" : void 0,
+        "data-goal-path": option.value,
+        title: option.value.replaceAll("/", " › "),
+        onClick: () => {
+          setExpandedPath(option.value);
+          if (selectable) onSelect(option);
+        },
+        children: [
+          /* @__PURE__ */ u2("span", { className: "think-combobox-option__label", children: label }),
+          /* @__PURE__ */ u2("span", { className: "think-quick-input-goal-row__actions", "aria-hidden": "true", children: [
+            selected ? /* @__PURE__ */ u2(ThinkIcon, { name: "check" }) : null,
+            hasChildren ? /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-right" }) : null
+          ] })
+        ]
       },
-      children: [
-        /* @__PURE__ */ u2("span", { className: "think-combobox-option__label", children: label }),
-        /* @__PURE__ */ u2("span", { className: "think-quick-input-goal-row__actions", "aria-hidden": "true", children: [
-          selected ? /* @__PURE__ */ u2(ThinkIcon, { name: "check" }) : null,
-          hasChildren ? /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-right" }) : null
-        ] })
-      ]
-    }, `${levelIndex}:${option.value}`);
+      `${levelIndex}:${option.value}`
+    );
   };
   const activePathLabel = activePath ? activePath.split("/").filter(Boolean).join(" › ") : "";
   return /* @__PURE__ */ u2("div", { className: `think-quick-input-goal-selector${dense ? " is-dense" : ""}`, children: [
@@ -47127,7 +47140,6 @@ function GoalSelector({ goals, selectedGoalPath, onSelect, dense = false }) {
     /* @__PURE__ */ u2("div", { ref: listRef, className: "think-list think-quick-input-goal-list", "aria-label": "目标层级选择", children: columns.map((level, levelIndex) => /* @__PURE__ */ u2("div", { className: "think-list think-quick-input-goal-level", role: "listbox", "aria-label": `目标第 ${levelIndex + 1} 层`, children: level.map((option) => renderOption(option, levelIndex)) }, `goal-level:${levelIndex}`)) })
   ] });
 }
-
 function RecordTypeSwitcher({ blocks, currentBlockId, onBlockChange }) {
   if (blocks.length <= 1) return null;
   return /* @__PURE__ */ u2("div", { className: "think-quick-input-record-type-switcher", role: "tablist", "aria-label": "记录类型", children: blocks.map((block) => {
@@ -47238,6 +47250,9 @@ function QuickInputEditorView({
       }
     ) })
   ] });
+}
+function shouldRequireDirectGoalTemplateForQuickInput(mode, isEnergyDirect) {
+  return mode === "create" && !isEnergyDirect;
 }
 function resolveQuickInputRecordTypeRuntime(input) {
   if (input.isEnergyDirect) {
@@ -47801,7 +47816,7 @@ function resolveQuickInputEnergyDefaultGoal(goals, defaultGoalPath) {
     const preferred = goals.find((option) => option.value === preferredPath || option.goal?.path === preferredPath);
     if (preferred) return preferred;
   }
-  return null;
+  return goals.find((option) => option.goal?.status === "active") || goals[0] || null;
 }
 function EnergyQuickCapturePanel({
   blocks,
@@ -48126,6 +48141,7 @@ function QuickInputEditor({
     [blocks, currentBlockId]
   );
   const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID && currentRecordType.captureMode === "direct";
+  const requireDirectGoalTemplate = shouldRequireDirectGoalTemplateForQuickInput(recordInputMode, isEnergyDirect);
   const selectedGoal = T$1(() => {
     const goals = fullSettings.goalSettings?.goals || [];
     return selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) || null : null;
@@ -48135,7 +48151,7 @@ function QuickInputEditor({
     [currentBlockId, isEnergyDirect]
   );
   const { template: rawTemplate, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId } = T$1(
-    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath, requireDirectGoalTemplate: recordInputMode === "create" }),
+    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath, requireDirectGoalTemplate }),
     [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath, recordInputMode]
   );
   const baseDisplayRuntime = T$1(
@@ -48154,8 +48170,12 @@ function QuickInputEditor({
   const displayTemplateSourceType = rawTemplate ? templateSourceType : baseDisplayRuntime.templateSourceType;
   const displayEffectiveBlockId = rawTemplate ? effectiveBlockId : baseDisplayRuntime.effectiveBlockId;
   const goalOptions = T$1(
-    () => buildQuickInputGoalOptions(fullSettings, currentBlockId, recordInputMode === "create"),
-    [fullSettings.goalSettings?.goals, fullSettings.goalSettings?.goalTemplates, currentBlockId, recordInputMode]
+    () => buildQuickInputGoalOptions(
+      fullSettings,
+      currentBlockId,
+      requireDirectGoalTemplate
+    ),
+    [fullSettings.goalSettings?.goals, fullSettings.goalSettings?.goalTemplates, currentBlockId, requireDirectGoalTemplate]
   );
   const goalFieldOptions = T$1(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label || goal.value })), [goalOptions]);
   y(() => {
@@ -49312,15 +49332,17 @@ function minuteToLocalDateTime(day, minute) {
 }
 function resolveTimelineCreateContext(input) {
   const clickedMinute = clampDayMinute(input.clickedMinute);
-  const blocks = [...input.dayBlocks || []].filter((block) => Number.isFinite(block.blockStartMinute) && Number.isFinite(block.blockEndMinute)).sort((a, b) => a.blockStartMinute - b.blockStartMinute || a.blockEndMinute - b.blockEndMinute);
-  const previousBlock = blocks.filter((block) => block.blockEndMinute <= clickedMinute).sort((a, b) => b.blockEndMinute - a.blockEndMinute || b.blockStartMinute - a.blockStartMinute)[0] || null;
-  const nextBlock = blocks.filter((block) => block.blockStartMinute >= clickedMinute).sort((a, b) => a.blockStartMinute - b.blockStartMinute || a.blockEndMinute - b.blockEndMinute)[0] || null;
+  const blocks = [...input.dayBlocks || []].filter((block) => Number.isFinite(block.blockStartMinute) && Number.isFinite(block.blockEndMinute)).sort((a2, b2) => a2.blockStartMinute - b2.blockStartMinute || a2.blockEndMinute - b2.blockEndMinute);
+  const previousBlock = blocks.filter((block) => block.blockEndMinute <= clickedMinute).sort((a2, b2) => b2.blockEndMinute - a2.blockEndMinute || b2.blockStartMinute - a2.blockStartMinute)[0] || null;
+  const nextBlock = blocks.filter((block) => block.blockStartMinute >= clickedMinute).sort((a2, b2) => a2.blockStartMinute - b2.blockStartMinute || a2.blockEndMinute - b2.blockEndMinute)[0] || null;
   const suggestedStartMinute = clampDayMinute(previousBlock?.blockEndMinute ?? clickedMinute);
   const nextStartMinute = nextBlock ? clampDayMinute(nextBlock.blockStartMinute) : null;
   const suggestedEndMinute = nextStartMinute !== null && nextStartMinute > suggestedStartMinute ? nextStartMinute : null;
+  const startAt = minuteToLocalDateTime(input.day, suggestedStartMinute);
   const context = {
     日期: input.day,
-    startAt: minuteToLocalDateTime(input.day, suggestedStartMinute),
+    startAt,
+    // Legacy aliases remain invocation context only. New Task UI uses startAt/endAt.
     时间: minutesToTime(suggestedStartMinute),
     __recordUiContext: {
       kind: "timeline_create",
@@ -49340,7 +49362,14 @@ function resolveTimelineCreateContext(input) {
     context.endAt = minuteToLocalDateTime(input.day, suggestedEndMinute);
     context["结束"] = minutesToTime(suggestedEndMinute);
   }
-  return { clickedMinute, suggestedStartMinute, suggestedEndMinute, previousBlock, nextBlock, context };
+  return {
+    clickedMinute,
+    suggestedStartMinute,
+    suggestedEndMinute,
+    previousBlock,
+    nextBlock,
+    context
+  };
 }
 function buildTimelineCreateConfig(params) {
   const targetEl = params.event.currentTarget;
@@ -49349,7 +49378,11 @@ function buildTimelineCreateConfig(params) {
   const clientY = getEventClientY(params.event);
   const y2 = clientY - rect.top;
   const clickedMinute = Math.floor(y2 / params.hourHeight * 60);
-  const resolved = resolveTimelineCreateContext({ day: params.day, clickedMinute, dayBlocks: params.dayBlocks });
+  const resolved = resolveTimelineCreateContext({
+    day: params.day,
+    clickedMinute,
+    dayBlocks: params.dayBlocks
+  });
   return {
     blockId: RECORD_TYPE_IDS.TASK,
     context: resolved.context
@@ -65335,6 +65368,11 @@ function AiChatModalContainer({ closeModal, services }) {
   const { chatService, retrievalService, sessionStore } = services;
   const [sessions, setSessions] = d([]);
   const [currentSessionId, setCurrentSessionId] = d(null);
+  const currentSessionIdRef = A$1(null);
+  const setActiveSessionId = q$1((sessionId) => {
+    currentSessionIdRef.current = sessionId;
+    setCurrentSessionId(sessionId);
+  }, []);
   const [messages, setMessages] = d([]);
   const [inputText, setInputText] = d("");
   const [isLoading, setIsLoading] = d(false);
@@ -65354,8 +65392,9 @@ function AiChatModalContainer({ closeModal, services }) {
     loadSessions();
     const unsubscribe = sessionStore.subscribe(() => {
       loadSessions();
-      if (currentSessionId) {
-        setMessages(sessionStore.getMessages(currentSessionId));
+      const activeSessionId = currentSessionIdRef.current;
+      if (activeSessionId) {
+        setMessages(sessionStore.getMessages(activeSessionId));
       }
     });
     if (retrievalService.needsRebuild()) {
@@ -65386,12 +65425,12 @@ function AiChatModalContainer({ closeModal, services }) {
     if (selectedType) filters.coreBlocks = [selectedType];
     if (selectedBlockId) filters.coreBlocks = [String(selectedBlockId).replace(/^core\./, "")];
     const session = await sessionStore.createSession(void 0, filters);
-    setCurrentSessionId(session.id);
+    setActiveSessionId(session.id);
     setInputText("");
     setError(null);
   };
   const handleSelectSession = (sessionId) => {
-    setCurrentSessionId(sessionId);
+    setActiveSessionId(sessionId);
     setError(null);
     const session = sessionStore.getSession(sessionId);
     if (session?.filters) {
@@ -65404,7 +65443,7 @@ function AiChatModalContainer({ closeModal, services }) {
     e2.stopPropagation();
     await sessionStore.deleteSession(sessionId);
     if (currentSessionId === sessionId) {
-      setCurrentSessionId(null);
+      setActiveSessionId(null);
     }
   };
   const handleSend = q$1(async () => {
@@ -65413,7 +65452,7 @@ function AiChatModalContainer({ closeModal, services }) {
     if (!sessionId) {
       const session = await sessionStore.createSession();
       sessionId = session.id;
-      setCurrentSessionId(sessionId);
+      setActiveSessionId(sessionId);
     }
     const userMessage = inputText.trim();
     setInputText("");
@@ -65459,7 +65498,7 @@ function AiChatModalContainer({ closeModal, services }) {
     } finally {
       if (isMountedRef.current) setIsLoading(false);
     }
-  }, [inputText, isLoading, currentSessionId, selectedGoalPath, selectedType, selectedBlockId, enableRetrieval]);
+  }, [inputText, isLoading, currentSessionId, selectedGoalPath, selectedType, selectedBlockId, enableRetrieval, setActiveSessionId]);
   const handleKeyDown = (e2) => {
     if (e2.key === "Enter" && !e2.shiftKey) {
       e2.preventDefault();
@@ -67304,8 +67343,8 @@ function isGoalVisibleByExpandedState(goal, expandedPaths) {
   const parts = getGoalDisplayPath(goal).split("/").filter(Boolean);
   if (parts.length <= 1) return true;
   for (let index = 1; index < parts.length; index += 1) {
-    const parentPath = parts.slice(0, index).join("/");
-    if (!expandedPaths.has(parentPath)) return false;
+    const parentPath2 = parts.slice(0, index).join("/");
+    if (!expandedPaths.has(parentPath2)) return false;
   }
   return true;
 }
@@ -68041,6 +68080,7 @@ class VaultWatcher {
     );
     this.unsubscribers.push(
       this.events.onMarkdownDelete((path) => {
+        if (this.disposed) return;
         this.cancelPendingScan(path);
         this.dataStore.removeFileItems(path);
         this.dataStore.notifyChange();

@@ -1,3 +1,10 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F026/unit
+ * @covers F026/regression
+ * @covers F116/unit
+ * @covers F116/error
+ */
 import {
   createCustomTemplateField,
   getUserTemplateFieldTypeOptions,

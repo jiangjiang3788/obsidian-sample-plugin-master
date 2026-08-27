@@ -1,3 +1,7 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F053/unit
+ */
 import { buildRecordOutputPlan } from '@/core/recordInput/snapshot/OutputPlanner';
 import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
 

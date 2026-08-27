@@ -11,7 +11,7 @@ function walk(dir: string): string[] {
   });
 }
 
-describe('CSS governance', () => {
+describe('CSS 治理', () => {
   it('keeps Settings static sx within the migration budget', () => {
     const settingsFiles = walk(path.join(ROOT, 'src/features/settings')).filter((file) => /\.(?:ts|tsx)$/.test(file));
     const count = settingsFiles.reduce((total, file) => total + (fs.readFileSync(file, 'utf8').match(/\bsx\s*=\s*\{\{/g)?.length ?? 0), 0);
@@ -107,7 +107,7 @@ describe('CSS governance', () => {
   });
 });
 
-describe('UI redesign convergence', () => {
+describe('UI 重构收敛', () => {
   it('keeps dashboard toolbar and actions primitive-owned', () => {
     const toolbarRuntime = read('src/features/views/runtime/ViewToolbar.tsx');
     const toolbarCss = read('src/styles/features/view-shell.toolbar.css');
@@ -127,8 +127,12 @@ describe('UI redesign convergence', () => {
     expect(iconPrimitive).not.toContain("from 'obsidian'");
   });
 
-  it('keeps implementation reports under docs', () => {
-    const rootMarkdown = fs.readdirSync(ROOT).filter((name) => name.endsWith('.md')).sort();
+  it('正式源码根目录只保留 README；本地补丁交付说明不计入源码文档治理', () => {
+    const localHandoffDocs = new Set(['交付说明.md', '覆盖说明.md']);
+    const rootMarkdown = fs.readdirSync(ROOT)
+      .filter((name) => name.endsWith('.md'))
+      .filter((name) => !localHandoffDocs.has(name) && !/_PATCH_MANIFEST\.md$/i.test(name))
+      .sort();
     expect(rootMarkdown).toEqual(['README.md']);
     expect(fs.existsSync(path.join(ROOT, 'docs/reports'))).toBe(true);
     expect(read('docs/UI_REDESIGN_PLAN.md')).toContain('Phase 3');

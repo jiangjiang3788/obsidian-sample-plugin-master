@@ -1,3 +1,10 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F036/regression
+ * @covers F036/unit
+ * @covers F041/regression
+ * @covers F041/unit
+ */
 import { ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public';
 import { buildQuickInputGoalOptions } from '@/features/quickinput/editor/QuickInputEditorModel';
 import { shouldRequireDirectGoalTemplateForQuickInput } from '@/features/quickinput/editor/quickInputRecordTypeModel';

@@ -1,3 +1,7 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F061/unit
+ */
 import type { RecordViewItem } from '@core/types/public';
 import { buildEnergyManagement } from '@core/energy/public';
 

@@ -1,0 +1,445 @@
+{
+  "schemaVersion": 1,
+  "version": "v9",
+  "description": "Think OS 可重复故障实验室：固定坏数据样本 + 动态故障注入 + 明确恢复预期。登记不代表执行通过。",
+  "principles": [
+    "故障必须可重复，不能依赖随机网络或人工时机",
+    "业务源码不得知道故障实验室的存在",
+    "每个场景必须声明用户影响、预期隔离行为和自动化证据",
+    "发生部分提交或恢复失败时必须显式报告，不能静默吞掉"
+  ],
+  "scenarios": [
+    {
+      "id": "FL-MD-001",
+      "category": "Markdown损坏",
+      "name": "记录块缺少稳定记录ID",
+      "risk": "P0",
+      "fault": "合法包络中缺少记录ID",
+      "expected": [
+        "不进入有效索引",
+        "产生record_id_missing完整性问题",
+        "不影响同仓库其他合法记录"
+      ],
+      "fixtures": [
+        "test/fixtures/fault-lab/markdown/缺少记录ID.md",
+        "test/fixtures/fault-lab/markdown/合法思考.md"
+      ],
+      "evidence": [
+        "test/integration/faultLabMarkdownIntegrity.test.ts"
+      ],
+      "covers": [
+        "F011",
+        "F018",
+        "F019",
+        "F121"
+      ],
+      "runGroup": "data"
+    },
+    {
+      "id": "FL-MD-002",
+      "category": "Markdown损坏",
+      "name": "任务状态字段非法",
+      "risk": "P0",
+      "fault": "任务状态超出当前Schema允许值",
+      "expected": [
+        "非法任务被隔离",
+        "产生record_block_malformed完整性问题",
+        "扫描流程不崩溃"
+      ],
+      "fixtures": [
+        "test/fixtures/fault-lab/markdown/非法任务状态.md"
+      ],
+      "evidence": [
+        "test/integration/faultLabMarkdownIntegrity.test.ts"
+      ],
+      "covers": [
+        "F010",
+        "F011",
+        "F019",
+        "F121"
+      ],
+      "runGroup": "data"
+    },
+    {
+      "id": "FL-MD-003",
+      "category": "Markdown损坏",
+      "name": "同步中断造成半写入记录块",
+      "risk": "P0",
+      "fault": "存在start标记但缺少end标记",
+      "expected": [
+        "半写入内容不会成为有效Record",
+        "扫描调用正常结束",
+        "不会凭文件位置制造伪身份"
+      ],
+      "fixtures": [
+        "test/fixtures/fault-lab/markdown/半写入记录.md"
+      ],
+      "evidence": [
+        "test/integration/faultLabMarkdownIntegrity.test.ts"
+      ],
+      "covers": [
+        "F011",
+        "F019",
+        "F121"
+      ],
+      "runGroup": "data"
+    },
+    {
+      "id": "FL-ID-001",
+      "category": "身份冲突",
+      "name": "两个文件出现相同记录ID",
+      "risk": "P0",
+      "fault": "重复稳定ID",
+      "expected": [
+        "重复ID不进入唯一记录索引",
+        "保留两个冲突位置",
+        "产生record_id_duplicate完整性问题"
+      ],
+      "fixtures": [
+        "test/fixtures/fault-lab/markdown/重复记录-A.md",
+        "test/fixtures/fault-lab/markdown/重复记录-B.md"
+      ],
+      "evidence": [
+        "test/integration/faultLabMarkdownIntegrity.test.ts"
+      ],
+      "covers": [
+        "F018",
+        "F019",
+        "F120",
+        "F121"
+      ],
+      "runGroup": "data"
+    },
+    {
+      "id": "FL-REF-001",
+      "category": "引用损坏",
+      "name": "任务引用不存在的循环任务系列",
+      "risk": "P0",
+      "fault": "seriesId指向不存在的TaskSeries",
+      "expected": [
+        "任务本身仍可被识别",
+        "产生task_series_reference_orphan完整性问题",
+        "不会自动猜测其他系列"
+      ],
+      "fixtures": [
+        "test/fixtures/fault-lab/markdown/孤儿循环任务.md"
+      ],
+      "evidence": [
+        "test/integration/faultLabMarkdownIntegrity.test.ts"
+      ],
+      "covers": [
+        "F018",
+        "F053",
+        "F054",
+        "F121"
+      ],
+      "runGroup": "data"
+    },
+    {
+      "id": "FL-TEXT-001",
+      "category": "文本边界",
+      "name": "中文Emoji链接标签与双冒号混合内容",
+      "risk": "P1",
+      "fault": "正文包含容易与元数据语法混淆的特殊字符",
+      "expected": [
+        "记录仍能解析",
+        "正文字符保持",
+        "不会额外制造元数据字段"
+      ],
+      "fixtures": [
+        "test/fixtures/fault-lab/markdown/自定义字段与特殊字符.md"
+      ],
+      "evidence": [
+        "test/integration/faultLabMarkdownIntegrity.test.ts"
+      ],
+      "covers": [
+        "F011",
+        "F013"
+      ],
+      "runGroup": "data"
+    },
+    {
+      "id": "FL-TX-001",
+      "category": "并发修改",
+      "name": "提交前文件被外部程序改写",
+      "risk": "P0",
+      "fault": "事务预检第二次读取看到不同内容",
+      "expected": [
+        "写入前阻止提交",
+        "外部内容不被覆盖",
+        "返回record_write_conflict"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/integration/faultLabTransactionRecovery.test.ts"
+      ],
+      "covers": [
+        "F015",
+        "F017",
+        "F044"
+      ],
+      "runGroup": "transaction"
+    },
+    {
+      "id": "FL-TX-002",
+      "category": "磁盘失败",
+      "name": "多文件事务第二次写盘失败",
+      "risk": "P0",
+      "fault": "前一个文件已写入，后一个文件写入抛错",
+      "expected": [
+        "已写文件回滚到提交前内容",
+        "未成功文件保持原样",
+        "调用方收到明确失败"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/integration/faultLabTransactionRecovery.test.ts"
+      ],
+      "covers": [
+        "F017",
+        "F124",
+        "F125"
+      ],
+      "runGroup": "transaction"
+    },
+    {
+      "id": "FL-TX-003",
+      "category": "恢复失败",
+      "name": "写盘失败后回滚自身再次失败",
+      "risk": "P0",
+      "fault": "事务失败且恢复写入也失败",
+      "expected": [
+        "抛出RecordTransactionRecoveryError",
+        "DataStore留下record_transaction_recovery_required",
+        "不把部分成功伪装为成功"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/integration/faultLabTransactionRecovery.test.ts"
+      ],
+      "covers": [
+        "F017",
+        "F120",
+        "F124",
+        "F125"
+      ],
+      "runGroup": "transaction"
+    },
+    {
+      "id": "FL-SCAN-001",
+      "category": "提交后扫描失败",
+      "name": "文件写成功但重新扫描暂时拿不到stat",
+      "risk": "P0",
+      "fault": "提交已落盘，post-commit rescan失败",
+      "expected": [
+        "调用方收到record_post_commit_rescan_failed",
+        "磁盘数据保留",
+        "恢复stat后可重新扫描进入索引"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/integration/faultLabTransactionRecovery.test.ts"
+      ],
+      "covers": [
+        "F014",
+        "F017",
+        "F120",
+        "F121"
+      ],
+      "runGroup": "transaction"
+    },
+    {
+      "id": "FL-CACHE-001",
+      "category": "缓存陈旧",
+      "name": "插件关闭期间文件被删除",
+      "risk": "P0",
+      "fault": "缓存中存在记录但Vault源文件已经删除",
+      "expected": [
+        "重启后旧缓存不能复活记录",
+        "查询结果为空",
+        "当前Vault是真相来源"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/integration/dataStoreRestartRecovery.test.ts"
+      ],
+      "covers": [
+        "F120",
+        "F123",
+        "F126"
+      ],
+      "runGroup": "restart"
+    },
+    {
+      "id": "FL-CHAT-001",
+      "category": "JSON损坏",
+      "name": "AI Chat会话存储结构损坏",
+      "risk": "P1",
+      "fault": "chat-sessions.json无法通过Schema校验",
+      "expected": [
+        "损坏数据备份为corrupt文件",
+        "Store安全回到空会话",
+        "初始化不崩溃"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/unit/chatSessionStore.test.ts"
+      ],
+      "covers": [
+        "F077"
+      ],
+      "runGroup": "storage"
+    },
+    {
+      "id": "FL-MIG-001",
+      "category": "备份失败隔离",
+      "name": "迁移备份过程中单个源文件缺失",
+      "risk": "P0",
+      "fault": "备份清单中的一个Markdown已不存在",
+      "expected": [
+        "其他文件继续备份",
+        "manifest记录失败路径",
+        "不因单文件失败丢掉整个备份"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/integration/migrationBackupSafety.test.ts"
+      ],
+      "covers": [
+        "F124"
+      ],
+      "runGroup": "storage"
+    },
+    {
+      "id": "FL-AI-001",
+      "category": "AI传输失败",
+      "name": "AI服务返回429限流",
+      "risk": "P1",
+      "fault": "HTTP 429并带错误正文",
+      "expected": [
+        "AiHttpClient明确抛出状态码错误",
+        "错误正文长度受控",
+        "不产生假成功内容"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/integration/faultLabAiFailures.test.ts"
+      ],
+      "covers": [
+        "F070",
+        "F074",
+        "F075"
+      ],
+      "runGroup": "ai"
+    },
+    {
+      "id": "FL-AI-002",
+      "category": "AI响应损坏",
+      "name": "AI服务返回无法解析的JSON",
+      "risk": "P1",
+      "fault": "HTTP成功但response.json抛出解析错误",
+      "expected": [
+        "解析错误向上返回",
+        "不把损坏响应当成空结果",
+        "内部超时定时器得到清理"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/integration/faultLabAiFailures.test.ts"
+      ],
+      "covers": [
+        "F070",
+        "F072",
+        "F074"
+      ],
+      "runGroup": "ai"
+    },
+    {
+      "id": "FL-AI-003",
+      "category": "AI响应损坏",
+      "name": "AI响应没有message.content",
+      "risk": "P1",
+      "fault": "choices为空或content为空",
+      "expected": [
+        "明确报AI返回空内容",
+        "不返回假成功字符串"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/integration/faultLabAiFailures.test.ts"
+      ],
+      "covers": [
+        "F070",
+        "F072",
+        "F074"
+      ],
+      "runGroup": "ai"
+    },
+    {
+      "id": "FL-AI-004",
+      "category": "AI超时",
+      "name": "AI请求超过timeoutMs",
+      "risk": "P1",
+      "fault": "传输层一直等待直到内部AbortController超时",
+      "expected": [
+        "请求被取消",
+        "向上返回AbortError",
+        "内部超时定时器得到清理"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/integration/faultLabAiFailures.test.ts"
+      ],
+      "covers": [
+        "F070",
+        "F074",
+        "F075"
+      ],
+      "runGroup": "ai"
+    },
+    {
+      "id": "FL-AI-005",
+      "category": "AI取消",
+      "name": "用户关闭界面触发外部取消",
+      "risk": "P1",
+      "fault": "外部AbortSignal在请求期间触发",
+      "expected": [
+        "内部请求同步取消",
+        "返回AbortError",
+        "内部超时定时器得到清理"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/integration/faultLabAiFailures.test.ts"
+      ],
+      "covers": [
+        "F070",
+        "F074"
+      ],
+      "runGroup": "ai"
+    },
+    {
+      "id": "FL-SCALE-001",
+      "category": "超大输入",
+      "name": "单条记录包含512KiB正文",
+      "risk": "P1",
+      "fault": "远超普通笔记长度的单记录正文",
+      "expected": [
+        "扫描和索引不崩溃",
+        "内容可被完整读取",
+        "耗时不超过灾难性预算"
+      ],
+      "fixtures": [],
+      "evidence": [
+        "test/performance/faultLabOversizedData.test.ts"
+      ],
+      "covers": [
+        "F011",
+        "F120",
+        "F121",
+        "F132"
+      ],
+      "runGroup": "scale"
+    }
+  ]
+}

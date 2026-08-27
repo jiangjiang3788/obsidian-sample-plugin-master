@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F018/regression
+ * @covers F018/unit
+ */
 import { RecordIndex } from '@/core/records/RecordIndex';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 

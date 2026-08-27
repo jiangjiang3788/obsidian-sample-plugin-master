@@ -1,3 +1,11 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F031/regression
+ * @covers F031/ui
+ * @covers F031/unit
+ * @covers F040/ui
+ * @covers F040/unit
+ */
 /** @jsxImportSource preact */
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';

@@ -1,4 +1,5 @@
 node_modules/
+reports/
 dist/
 main.js.map
 *.log
@@ -17,4 +18,5 @@ data.json
 
 .obsidian/workspace*.json
 .obsidian/cache/
+.obsidian-cache
 .obsidian-cache

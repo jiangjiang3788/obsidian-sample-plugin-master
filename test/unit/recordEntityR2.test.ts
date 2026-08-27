@@ -1,3 +1,7 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F012/unit
+ */
 import type { RecordEntity } from '@/core/records/RecordEntity';
 import { asHabitRecord, toRecordViewItem } from '@/core/records/RecordEntity';
 import { DataStoreIndex } from '@/core/services/dataStore/DataStoreIndex';

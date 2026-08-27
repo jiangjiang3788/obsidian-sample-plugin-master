@@ -1,3 +1,7 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F092/unit
+ */
 import { getRecordTypeById, RECORD_TYPE_IDS } from '@core/recordTypes/public';
 import type { TaskBlock } from '@core/types/public';
 import { hydrateQuickInputTemplateDefaults } from '@/features/quickinput/editor/QuickInputEditorModel';

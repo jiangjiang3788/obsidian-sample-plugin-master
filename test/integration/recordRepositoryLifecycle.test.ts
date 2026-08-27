@@ -1,3 +1,20 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F014/integration
+ * @covers F014/persistence
+ * @covers F015/integration
+ * @covers F015/persistence
+ * @covers F016/integration
+ * @covers F016/persistence
+ * @covers F017/integration
+ * @covers F020/integration
+ * @covers F020/persistence
+ * @covers F043/integration
+ * @covers F043/persistence
+ * @covers F045/integration
+ * @covers F045/persistence
+ * @covers F121/integration
+ */
 import { describe, expect, it } from '@jest/globals';
 
 import type { VaultPort } from '@/core/ports/VaultPort';

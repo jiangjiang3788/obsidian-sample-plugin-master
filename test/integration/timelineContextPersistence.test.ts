@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F083/integration
+ * @covers F083/persistence
+ * @covers F126/integration
+ */
 import { resolveTimelineCreateContext } from '@/app/actions/recordCreate/timelineCreateAction';
 import { hydrateQuickInputTemplateDefaults } from '@/features/quickinput/editor/QuickInputEditorModel';
 import { buildRecordOutputPlan } from '@/core/recordInput/snapshot/OutputPlanner';

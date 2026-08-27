@@ -1,3 +1,17 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F018/integration
+ * @covers F050/integration
+ * @covers F051/integration
+ * @covers F051/persistence
+ * @covers F052/integration
+ * @covers F052/persistence
+ * @covers F055/integration
+ * @covers F055/persistence
+ * @covers F055/regression
+ * @covers F056/integration
+ * @covers F056/persistence
+ */
 import { describe, expect, it } from '@jest/globals';
 
 import type { RecordEntity } from '@/core/records/RecordEntity';

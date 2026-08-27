@@ -1,3 +1,7 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F030/unit
+ */
 import { assertCanonicalGoalSettings, normalizeGoalPath, requireGoalPath } from '@/core/goal/public';
 
 describe('Goal canonical domain', () => {

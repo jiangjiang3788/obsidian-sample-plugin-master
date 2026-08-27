@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "version": "v9",
+  "historyLimit": 60,
+  "performance": {
+    "warningRegressionRatio": 0.2,
+    "criticalRegressionRatio": 0.5,
+    "comparisonWindow": 5
+  },
+  "stability": {
+    "jestRepeat": 3,
+    "e2eP0Repeat": 2,
+    "failOnFlaky": true
+  },
+  "slowTest": {
+    "unitWarningMs": 1000,
+    "integrationWarningMs": 2500,
+    "e2eWarningMs": 15000
+  },
+  "retention": {
+    "localHistoryRuns": 120,
+    "ciArtifactsDays": 21
+  },
+  "faultLab": {
+    "minimumScenarios": 15,
+    "requiredGroups": [
+      "data",
+      "transaction",
+      "storage",
+      "ai",
+      "scale"
+    ],
+    "requireExplicitFaultMarker": true,
+    "oversizedRecordBytes": 524288,
+    "oversizedRecordBudgetMs": 3000
+  }
+}

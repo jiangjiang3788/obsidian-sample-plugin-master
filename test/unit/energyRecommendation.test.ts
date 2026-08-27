@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F063/regression
+ * @covers F063/unit
+ */
 import { buildEnergyActionRecommendations, type EnergyActionCandidate } from '@core/energy/public';
 
 const candidates: EnergyActionCandidate[] = [

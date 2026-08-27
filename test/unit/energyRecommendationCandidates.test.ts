@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F057/unit
+ * @covers F063/unit
+ */
 import { attachEnergyRecommendationEvidence, buildEnergyActionCandidateResult, buildEnergyActionCandidates } from '@core/energy/public';
 import type { EnergyManagementModel } from '@core/energy/public';
 import type { RecordViewItem } from '@core/types/public';

@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F030/unit
+ * @covers F120/unit
+ */
 import { DataStore } from '@/core/services/DataStore';
 import type { FileStatPort } from '@/core/ports/FileStatPort';
 import type { MetadataPort } from '@/core/ports/MetadataPort';

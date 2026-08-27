@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F031/ui
+ * @covers F040/regression
+ * @covers F040/ui
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 

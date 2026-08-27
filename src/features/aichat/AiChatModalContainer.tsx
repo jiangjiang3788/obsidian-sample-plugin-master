@@ -30,6 +30,11 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
     const { chatService, retrievalService, sessionStore } = services;
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+    const currentSessionIdRef = useRef<string | null>(null);
+    const setActiveSessionId = useCallback((sessionId: string | null) => {
+        currentSessionIdRef.current = sessionId;
+        setCurrentSessionId(sessionId);
+    }, []);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
 
     // 输入状态
@@ -63,8 +68,9 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
         // 订阅变化
         const unsubscribe = sessionStore.subscribe(() => {
             loadSessions();
-            if (currentSessionId) {
-                setMessages(sessionStore.getMessages(currentSessionId));
+            const activeSessionId = currentSessionIdRef.current;
+            if (activeSessionId) {
+                setMessages(sessionStore.getMessages(activeSessionId));
             }
         });
 
@@ -103,14 +109,14 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
         if (selectedBlockId) filters.coreBlocks = [String(selectedBlockId).replace(/^core\./, '')];
 
         const session = await sessionStore.createSession(undefined, filters);
-        setCurrentSessionId(session.id);
+        setActiveSessionId(session.id);
         setInputText('');
         setError(null);
     };
 
     // 选择会话
     const handleSelectSession = (sessionId: string) => {
-        setCurrentSessionId(sessionId);
+        setActiveSessionId(sessionId);
         setError(null);
 
         // 恢复会话的过滤器
@@ -127,7 +133,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
         e.stopPropagation();
         await sessionStore.deleteSession(sessionId);
         if (currentSessionId === sessionId) {
-            setCurrentSessionId(null);
+            setActiveSessionId(null);
         }
     };
 
@@ -140,7 +146,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
         if (!sessionId) {
             const session = await sessionStore.createSession();
             sessionId = session.id;
-            setCurrentSessionId(sessionId);
+            setActiveSessionId(sessionId);
         }
 
         const userMessage = inputText.trim();
@@ -202,7 +208,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
         } finally {
             if (isMountedRef.current) setIsLoading(false);
         }
-    }, [inputText, isLoading, currentSessionId, selectedGoalPath, selectedType, selectedBlockId, enableRetrieval]);
+    }, [inputText, isLoading, currentSessionId, selectedGoalPath, selectedType, selectedBlockId, enableRetrieval, setActiveSessionId]);
 
     // 处理按键
     const handleKeyDown = (e: KeyboardEvent) => {

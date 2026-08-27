@@ -1,3 +1,10 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F011/error
+ * @covers F019/error
+ * @covers F019/regression
+ * @covers F019/unit
+ */
 import {
   asUnknownRecord,
   isUnknownRecord,

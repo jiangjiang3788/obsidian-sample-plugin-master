@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F110/unit
+ * @covers F111/unit
+ * @covers F127/unit
+ */
 import type { ThinkSettings } from '@core/public';
 import {
   addLayoutSettingsDraft,

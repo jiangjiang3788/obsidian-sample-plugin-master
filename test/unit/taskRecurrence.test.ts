@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F053/regression
+ * @covers F053/unit
+ * @covers F054/unit
+ */
 import {
   addRecurrenceToDate,
   buildNextOccurrenceDates,

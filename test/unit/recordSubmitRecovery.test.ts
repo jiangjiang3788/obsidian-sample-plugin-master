@@ -1,3 +1,11 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F014/error
+ * @covers F043/error
+ * @covers F044/error
+ * @covers F044/regression
+ * @covers F044/unit
+ */
 import {
   buildRecordSubmitRecoveryPresentation,
   getRecordRecoveryPaths,

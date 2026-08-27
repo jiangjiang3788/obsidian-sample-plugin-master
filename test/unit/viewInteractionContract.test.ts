@@ -1,3 +1,8 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F089/unit
+ * @covers F092/unit
+ */
 import { createRecordGestureHandlers, RECORD_GESTURE_MULTI_ACTIVATION_MS } from '@shared/ui/public';
 
 const item: any = { id: 'record.1', title: 'Record 1', coreBlock: 'thought' };

@@ -38,6 +38,7 @@ export class VaultWatcher {
     // delete
     this.unsubscribers.push(
       this.events.onMarkdownDelete((path) => {
+        if (this.disposed) return;
         this.cancelPendingScan(path);
         this.dataStore.removeFileItems(path);
         this.dataStore.notifyChange();

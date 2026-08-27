@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F011/regression
+ * @covers F011/unit
+ * @covers F019/unit
+ */
 import { parseRecordBlock } from '@/core/utils/parser';
 import { encodeRecordBlock } from '@/core/records/codec';
 import { asTaskRecord } from '@/core/records/task/taskDomain';

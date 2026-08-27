@@ -1,12 +1,4 @@
-/*
- * Think OS stylesheet entry.
- *
- * Tokens stay in a named layer. Host-facing component rules are intentionally
- * unlayered: Obsidian and community themes are also unlayered author CSS, and
- * putting every plugin rule in a layer would make host rules win regardless of
- * specificity. Internal precedence is therefore explicit source order plus
- * scoped semantic class names; host overrides remain last and narrowly scoped.
- */
+
 
 @layer think.reset,
        think.tokens,
@@ -16,10 +8,16 @@
        think.features,
        think.utilities,
        think.overrides;
-
-
-/* inlined: src/styles/tokens/semantic.css */
-@layer think.tokens {
+/*
+ * Think OS stylesheet entry.
+ *
+ * Tokens stay in a named layer. Host-facing component rules are intentionally
+ * unlayered: Obsidian and community themes are also unlayered author CSS, and
+ * putting every plugin rule in a layer would make host rules win regardless of
+ * specificity. Internal precedence is therefore explicit source order plus
+ * scoped semantic class names; host overrides remain last and narrowly scoped.
+ */
+@layer think.tokens{
 /*
  * Think OS semantic design tokens.
  *
@@ -188,12 +186,8 @@
     --think-empty-state-bg: color-mix(in srgb, var(--think-bg-surface-1) 78%, var(--think-bg-canvas));
   }
 }
-
 }
-
-
-/* inlined: src/styles/tokens/density.css */
-@layer think.tokens {
+@layer think.tokens{
 /* Think OS spacing and density tokens. Obsidian uses a compact desktop UI; keep the grid small. */
 .think-os {
   --think-space-0: 0;
@@ -257,12 +251,8 @@
   --think-control-height-lg: 44px;
   --think-touch-target: 44px;
 }
-
 }
-
-
-/* inlined: src/styles/tokens/data-colors.css */
-@layer think.tokens {
+@layer think.tokens{
 /*
  * Data-visualization palette. These tokens are intentionally separate from UI
  * surface/accent tokens. Charts must provide labels or legends in addition to
@@ -329,11 +319,7 @@
   --think-heatmap-4: #4c7ed1;
   --think-heatmap-5: #759cff;
 }
-
 }
-
-
-/* inlined: src/styles/foundations/scope.css */
 /* Minimal, plugin-scoped normalization. Existing feature CSS remains untouched in V1. */
 .think-os,
 .think-os *,
@@ -341,7 +327,6 @@
 .think-os *::after {
   box-sizing: border-box;
 }
-
 .think-os {
   min-width: 0;
   color: var(--think-text-primary);
@@ -349,52 +334,40 @@
   line-height: var(--think-line-height-normal);
   text-rendering: optimizeLegibility;
 }
-
 .think-os--settings,
 .think-os--layout,
 .think-os--modal {
   isolation: isolate;
 }
-
 .think-os :where(img, svg, canvas, video) {
   max-width: 100%;
 }
-
 .think-os :where(button, input, select, textarea) {
   font: inherit;
 }
-
 .think-os :where([hidden]) {
   display: none;
 }
-
 /* Global flat-surface rule: Think OS never uses drop shadows as hierarchy. */
 :where(.think-os, .think-os--settings, .think-os--layout, .think-os--modal),
 :where(.think-os, .think-os--settings, .think-os--layout, .think-os--modal) :where(*) {
   box-shadow: none !important;
 }
-
 /* Device profile hooks are attached to Think OS roots at runtime. */
 .think-os[data-think-platform="ios"], .think-os[data-think-platform="android"] { -webkit-tap-highlight-color: transparent; }
 .think-os[data-think-viewport="narrow"], .think-os[data-think-viewport="medium"] { min-width: 0; }
-
 /* Preserve scrolling mechanics while keeping Think OS view chrome visually quiet. */
 :where(.think-os, .think-os--settings, .think-os--modal),
 :where(.think-os, .think-os--settings, .think-os--modal) :where(*) {
   scrollbar-width: none !important;
   -ms-overflow-style: none;
 }
-
 :where(.think-os, .think-os--settings, .think-os--modal)::-webkit-scrollbar,
 :where(.think-os, .think-os--settings, .think-os--modal) :where(*)::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
 }
-
-
-
-/* inlined: src/styles/foundations/typography.css */
 /* Shared semantic typography. Feature views select a role, never a private scale. */
 .think-os .think-type-caption,
 .think-os .think-type-meta {
@@ -403,28 +376,24 @@
   font-weight: var(--think-font-weight-regular);
   line-height: var(--think-line-height-normal);
 }
-
 .think-os .think-type-label {
   color: var(--think-text-primary);
   font-size: var(--think-type-label-size);
   font-weight: var(--think-type-label-weight);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os .think-type-body {
   color: var(--think-text-primary);
   font-size: var(--think-type-body-size);
   font-weight: var(--think-type-body-weight);
   line-height: var(--think-line-height-normal);
 }
-
 .think-os .think-type-view-title {
   color: var(--think-text-primary);
   font-size: var(--think-type-view-title-size);
   font-weight: var(--think-type-view-title-weight);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os .think-type-heading-sm,
 .think-os .think-type-section {
   color: var(--think-text-primary);
@@ -432,14 +401,12 @@
   font-weight: var(--think-type-section-weight);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os .think-type-subsection {
   color: var(--think-text-primary);
   font-size: var(--think-type-subsection-size);
   font-weight: var(--think-type-subsection-weight);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os .think-type-heading-md,
 .think-os .think-type-page {
   color: var(--think-text-primary);
@@ -447,17 +414,12 @@
   font-weight: var(--think-type-page-weight);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os .think-type-table-header {
   color: var(--think-text-secondary);
   font-size: var(--think-type-table-header-size);
   font-weight: var(--think-type-table-header-weight);
   line-height: var(--think-line-height-tight);
 }
-
-
-
-/* inlined: src/styles/foundations/focus.css */
 /* A single keyboard-focus contract. Mouse focus is intentionally not forced. */
 .think-os :where(
   button,
@@ -471,7 +433,6 @@
   outline: var(--think-focus-ring-width) solid var(--think-focus-ring-color);
   outline-offset: var(--think-focus-ring-offset);
 }
-
 .think-os :where(
   button,
   [role="button"],
@@ -483,7 +444,6 @@
 ):focus:not(:focus-visible) {
   outline: none;
 }
-
 @media (forced-colors: active) {
   .think-os :where(
     button,
@@ -497,10 +457,6 @@
     outline-color: Highlight;
   }
 }
-
-
-
-/* inlined: src/styles/foundations/motion.css */
 .think-os {
   --think-transition-color: color var(--think-duration-fast) var(--think-ease-standard),
     background-color var(--think-duration-fast) var(--think-ease-standard),
@@ -508,7 +464,6 @@
   --think-transition-transform: transform var(--think-duration-normal) var(--think-ease-standard);
   --think-transition-opacity: opacity var(--think-duration-fast) var(--think-ease-standard);
 }
-
 @media (prefers-reduced-motion: reduce) {
   .think-os {
     --think-duration-fast: 0ms;
@@ -525,10 +480,6 @@
     transition-duration: 0.01ms;
   }
 }
-
-
-
-/* inlined: src/styles/primitives/button.css */
 /* Think OS button primitive. */
 .think-os .think-button {
   --think-button-height: var(--think-control-height-md);
@@ -566,61 +517,51 @@
     opacity var(--think-duration-fast) var(--think-ease-standard),
     transform var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .think-os .think-button--sm {
   --think-button-height: var(--think-control-height-sm);
   --think-button-padding-x: var(--think-space-4);
   --think-button-font-size: var(--think-font-size-xs);
   --think-button-icon-size: var(--think-icon-size-sm);
 }
-
 .think-os .think-button--lg {
   --think-button-height: var(--think-control-height-lg);
   --think-button-padding-x: 14px;
   --think-button-font-size: var(--think-font-size-md);
   --think-button-icon-size: var(--think-icon-size-lg);
 }
-
 .think-os .think-button--primary {
   background: var(--think-accent);
   border-color: var(--think-accent);
   color: var(--think-text-on-accent);
 }
-
 .think-os .think-button--primary:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--think-accent-hover);
   border-color: var(--think-accent-hover);
 }
-
 .think-os .think-button--secondary {
   background: var(--think-bg-surface-1);
   border-color: var(--think-border-subtle);
   color: var(--think-text-primary);
 }
-
 .think-os .think-button--secondary:hover:not(:disabled, [aria-disabled="true"]),
 .think-os .think-button--ghost:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--think-bg-hover);
   border-color: var(--think-border-strong);
 }
-
 .think-os .think-button--ghost {
   background: transparent;
   border-color: transparent;
   color: var(--think-text-secondary);
 }
-
 .think-os .think-button--danger {
   background: transparent;
   border-color: var(--think-border-subtle);
   color: var(--think-danger);
 }
-
 .think-os .think-button--danger:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--think-danger-bg);
   border-color: var(--think-danger);
 }
-
 .think-os .think-button--link {
   min-height: auto;
   height: auto;
@@ -630,11 +571,9 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-
 .think-os .think-button:active:not(:disabled, [aria-disabled="true"]) {
   transform: translateY(1px);
 }
-
 .think-os .think-button:disabled,
 .think-os .think-button[aria-disabled="true"] {
   color: var(--think-text-disabled);
@@ -644,11 +583,9 @@
   opacity: 0.68;
   transform: none;
 }
-
 .think-os .think-button[aria-busy="true"] {
   cursor: progress;
 }
-
 .think-os .think-button__icon {
   width: var(--think-button-icon-size);
   height: var(--think-button-icon-size);
@@ -657,7 +594,6 @@
   align-items: center;
   justify-content: center;
 }
-
 .think-os .think-button__spinner {
   width: var(--think-button-icon-size);
   height: var(--think-button-icon-size);
@@ -667,19 +603,11 @@
   border-radius: var(--think-radius-pill);
   animation: think-button-spin 700ms linear infinite;
 }
-
 @keyframes think-button-spin {
   to { transform: rotate(1turn); }
 }
-
 .think-os .think-button[aria-pressed="true"]:not(.think-button--primary, .think-button--danger) { background: var(--think-surface-selection); border-color: var(--think-border-selection); color: var(--think-text-accent); }
-
-
 .think-os .think-button__icon > svg { width: var(--think-button-icon-size); height: var(--think-button-icon-size); }
-
-
-
-/* inlined: src/styles/primitives/icon-button.css */
 /* Think OS icon-only action primitive. */
 .think-os .think-icon-button {
   --think-icon-button-size: var(--think-control-height-md);
@@ -707,55 +635,42 @@
     color var(--think-duration-fast) var(--think-ease-standard),
     opacity var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .think-os .think-icon-button--sm {
   --think-icon-button-size: var(--think-control-height-sm);
   --think-icon-button-glyph: var(--think-icon-size-sm);
 }
-
 .think-os .think-icon-button--lg {
   --think-icon-button-size: var(--think-control-height-lg);
   --think-icon-button-glyph: var(--think-icon-size-lg);
 }
-
 .think-os .think-icon-button:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--think-bg-hover);
   border-color: var(--think-border-subtle);
   color: var(--think-text-primary);
 }
-
 .think-os .think-icon-button[aria-pressed="true"] {
   background: var(--think-surface-selection);
   border-color: var(--think-border-selection);
   color: var(--think-text-accent);
 }
-
 .think-os .think-icon-button--danger:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--think-danger-bg);
   border-color: var(--think-danger);
   color: var(--think-danger);
 }
-
 .think-os .think-icon-button:disabled,
 .think-os .think-icon-button[aria-disabled="true"] {
   color: var(--think-text-disabled);
   cursor: not-allowed;
   opacity: 0.56;
 }
-
 .think-os .think-icon-button > svg,
 .think-os .think-icon-button__glyph {
   width: var(--think-icon-button-glyph);
   height: var(--think-icon-button-glyph);
   font-size: var(--think-icon-button-glyph);
 }
-
-
 .think-os .think-lucide-icon { width: 1em; height: 1em; display: inline-block; flex: 0 0 auto; vertical-align: -0.125em; }
-
-
-
-/* inlined: src/styles/primitives/form-control.css */
 /* Think OS native form-control and field primitives. */
 .think-os .think-input,
 .think-os .think-select,
@@ -777,19 +692,16 @@
     border-color var(--think-duration-fast) var(--think-ease-standard),
     box-shadow var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .think-os .think-input::placeholder,
 .think-os .think-textarea::placeholder {
   color: var(--think-text-subtle);
   opacity: 1;
 }
-
 .think-os .think-input:hover:not(:disabled, [readonly]),
 .think-os .think-select:hover:not(:disabled),
 .think-os .think-textarea:hover:not(:disabled, [readonly]) {
   border-color: var(--think-border-strong);
 }
-
 .think-os .think-input:focus,
 .think-os .think-select:focus,
 .think-os .think-textarea:focus {
@@ -797,13 +709,11 @@
   outline: none;
   box-shadow: 0 0 0 var(--think-focus-ring-width) color-mix(in srgb, var(--think-focus-ring-color) 28%, transparent);
 }
-
 .think-os .think-input[aria-invalid="true"],
 .think-os .think-select[aria-invalid="true"],
 .think-os .think-textarea[aria-invalid="true"] {
   border-color: var(--think-danger);
 }
-
 .think-os .think-input:disabled,
 .think-os .think-select:disabled,
 .think-os .think-textarea:disabled {
@@ -812,33 +722,27 @@
   cursor: not-allowed;
   opacity: 0.72;
 }
-
 .think-os .think-input[readonly],
 .think-os .think-textarea[readonly] {
   background: var(--think-bg-surface-2);
   color: var(--think-text-secondary);
 }
-
 .think-os .think-textarea {
   min-height: 80px;
   padding-block: var(--think-space-4);
   resize: vertical;
 }
-
 .think-os .think-select {
   padding-inline-end: 30px;
 }
-
 .think-os .think-field {
   display: grid;
   gap: var(--think-space-2);
   min-width: 0;
 }
-
 .think-os .think-field + .think-field {
   margin-top: var(--think-space-6);
 }
-
 .think-os .think-field__label {
   display: inline-flex;
   align-items: center;
@@ -848,31 +752,25 @@
   font-weight: var(--think-font-weight-medium);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os .think-field__required {
   color: var(--think-danger);
   font-size: var(--think-font-size-xs);
 }
-
 .think-os .think-field__control {
   min-width: 0;
 }
-
 .think-os .think-field__description,
 .think-os .think-field__error {
   margin: 0;
   font-size: var(--think-font-size-xs);
   line-height: var(--think-line-height-normal);
 }
-
 .think-os .think-field__description {
   color: var(--think-text-secondary);
 }
-
 .think-os .think-field__error {
   color: var(--think-danger);
 }
-
 .think-os .think-selection-control {
   min-height: var(--think-control-height-sm);
   display: inline-flex;
@@ -882,25 +780,21 @@
   font-size: var(--think-font-size-sm);
   cursor: pointer;
 }
-
 .think-os .think-selection-control > input {
   width: 17px;
   height: 17px;
   margin: 0;
   accent-color: var(--think-accent);
 }
-
 .think-os .think-selection-control:has(input:disabled) {
   color: var(--think-text-disabled);
   cursor: not-allowed;
 }
-
 /* Selection controls: one Obsidian-native control language for Settings. */
 .think-os .think-selection-control--compact { min-height: var(--think-control-height-sm); }
 .think-os .think-selection-control__text { min-width: 0; display: inline-grid; gap: 1px; }
 .think-os .think-selection-control__label { line-height: var(--think-line-height-tight); }
 .think-os .think-selection-control__description { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); line-height: var(--think-line-height-normal); }
-
 .think-os .think-toggle-control {
   min-height: var(--think-control-height-sm); display: inline-flex; align-items: center; gap: var(--think-space-4);
   color: var(--think-text-primary); font-size: var(--think-font-size-sm); cursor: pointer;
@@ -919,7 +813,6 @@
 .think-os .think-toggle-control__input:checked + .think-toggle-control__track .think-toggle-control__thumb { background: var(--think-text-on-accent); transform: translateX(14px); }
 .think-os .think-toggle-control__input:focus-visible + .think-toggle-control__track { outline: var(--think-focus-ring-width) solid var(--think-focus-ring-color); outline-offset: var(--think-focus-ring-offset); }
 .think-os .think-toggle-control:has(input:disabled) { color: var(--think-text-disabled); cursor: not-allowed; opacity: .65; }
-
 /* Compact native range and inline notices used by Settings. */
 .think-os .think-range {
   width: 100%; min-width: 0; height: var(--think-control-height-sm); margin: 0;
@@ -936,7 +829,6 @@
 .think-os .think-notice--success { border-left-color: var(--think-success); color: var(--think-text-primary); }
 .think-os .think-notice--warning { border-left-color: var(--think-warning); color: var(--think-text-primary); }
 .think-os .think-notice--danger { border-left-color: var(--think-danger); color: var(--think-danger); }
-
 /* Shared comboboxes own a single visual boundary; inputs inside are deliberately borderless. */
 .think-os .think-combobox,
 .think-os .think-multi-combobox,
@@ -944,7 +836,6 @@
   position: relative;
   min-width: 0;
 }
-
 .think-os .think-combobox-control {
   min-height: var(--think-control-height-md);
   display: flex;
@@ -957,12 +848,10 @@
   background: var(--think-bg-surface-1);
   box-shadow: none;
 }
-
 .think-os .think-combobox-control:focus-within {
   border-color: var(--think-border-focus);
   box-shadow: 0 0 0 var(--think-focus-ring-width) color-mix(in srgb, var(--think-focus-ring-color) 28%, transparent);
 }
-
 .think-os .think-combobox-control > .think-combobox-input {
   flex: 1 1 auto;
   min-width: 0;
@@ -978,11 +867,9 @@
   font: inherit;
   font-size: var(--think-font-size-sm);
 }
-
 .think-os .think-combobox-control > .think-combobox-input:focus { border: 0; outline: 0; box-shadow: none; }
 .think-os .think-combobox-input::placeholder { color: var(--think-text-subtle); opacity: 1; }
 .think-os .think-combobox-control__icon { flex: 0 0 auto; width: var(--think-icon-size-sm); color: var(--think-text-secondary); }
-
 .think-os .think-combobox-control--multi {
   min-height: var(--think-control-height-md);
   flex-wrap: wrap;
@@ -1017,7 +904,6 @@
   cursor: pointer;
 }
 .think-os .think-combobox-tag__remove:hover:not(:disabled) { color: var(--think-text-primary); }
-
 .think-os .think-combobox-menu {
   position: absolute;
   inset: calc(100% + var(--think-space-1)) 0 auto;
@@ -1049,7 +935,6 @@
   cursor: pointer;
 }
 .think-os .think-combobox-option:hover { background: var(--think-bg-hover); }
-
 .think-os .think-combobox-option__label {
   min-width: 0;
   overflow: hidden;
@@ -1064,8 +949,6 @@
   white-space: nowrap;
   text-align: right;
 }
-
-/* inlined: src/styles/primitives/card.css */
 /* Think OS surfaces and card primitive. */
 .think-os .think-surface,
 .think-os .think-card {
@@ -1073,21 +956,17 @@
   color: var(--think-text-primary);
   border: 1px solid var(--think-object-border);
 }
-
 .think-os .think-surface--0 {
   background: var(--think-bg-canvas);
   border-color: transparent;
 }
-
 .think-os .think-surface--2 {
   background: var(--think-bg-surface-2);
 }
-
 .think-os .think-surface--elevated {
   background: var(--think-bg-elevated);
   box-shadow: var(--think-shadow-md);
 }
-
 .think-os .think-card {
   display: flex;
   flex-direction: column;
@@ -1100,59 +979,46 @@
     box-shadow var(--think-duration-fast) var(--think-ease-standard),
     opacity var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .think-os .think-card--interactive {
   cursor: pointer;
 }
-
 .think-os .think-card--interactive:hover {
   background: var(--think-bg-hover);
   border-color: var(--think-border-strong);
 }
-
 .think-os .think-card--selected,
 .think-os .think-card[aria-selected="true"] {
   background: var(--think-surface-selection);
   border-color: var(--think-border-selection);
 }
-
 .think-os .think-card--locked,
 .think-os .think-card[data-locked="true"] {
   border-style: dashed;
 }
-
 .think-os .think-card--dragging,
 .think-os .think-card[data-dragging="true"] {
   z-index: var(--think-z-drag);
   box-shadow: var(--think-shadow-md);
   opacity: 0.94;
 }
-
 .think-os .think-card__header,
 .think-os .think-card__footer {
   display: flex;
   align-items: center;
   min-width: 0;
 }
-
 .think-os .think-card__header {
   gap: var(--think-rhythm-related);
   margin-bottom: var(--think-rhythm-group);
 }
-
 .think-os .think-card__body {
   min-width: 0;
 }
-
 .think-os .think-card__footer {
   justify-content: flex-end;
   gap: var(--think-rhythm-related);
   margin-top: var(--think-rhythm-section);
 }
-
-
-
-/* inlined: src/styles/primitives/chip.css */
 /* Think OS chip, tag and badge primitives. */
 .think-os .think-chip,
 .think-os .think-tag,
@@ -1165,7 +1031,6 @@
   white-space: nowrap;
   line-height: 1;
 }
-
 .think-os .think-chip {
   min-height: 26px;
   gap: var(--think-space-2);
@@ -1176,29 +1041,24 @@
   font-size: var(--think-font-size-xs);
   cursor: default;
 }
-
 .think-os button.think-chip {
   cursor: pointer;
 }
-
 .think-os .think-chip:hover:not(:disabled) {
   border-color: var(--think-border-strong);
   background: var(--think-bg-hover);
   color: var(--think-text-primary);
 }
-
 .think-os .think-chip--selected,
 .think-os .think-chip[aria-pressed="true"] {
   border-color: var(--think-border-selection);
   background: var(--think-surface-selection);
   color: var(--think-text-accent);
 }
-
 .think-os .think-chip__label {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .think-os .think-chip__remove {
   width: 18px;
   height: 18px;
@@ -1213,11 +1073,9 @@
   color: inherit;
   cursor: pointer;
 }
-
 .think-os .think-chip__remove:hover {
   background: var(--think-bg-active);
 }
-
 .think-os .think-tag {
   min-height: 23px;
   padding: 0 var(--think-space-4);
@@ -1225,7 +1083,6 @@
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 .think-os .think-badge {
   min-width: 20px;
   min-height: 20px;
@@ -1235,7 +1092,6 @@
   font-size: var(--think-font-size-2xs);
   font-weight: var(--think-font-weight-semibold);
 }
-
 .think-os .think-chip__label {
   min-width: 0;
   display: inline-flex;
@@ -1251,10 +1107,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-
-
-/* inlined: src/styles/primitives/toolbar.css */
 /* Think OS toolbar, section and empty-state primitives. */
 .think-os .think-toolbar {
   min-height: var(--think-control-height-lg);
@@ -1263,35 +1115,28 @@
   gap: var(--think-space-3);
   min-width: 0;
 }
-
 .think-os .think-toolbar--compact {
   min-height: var(--think-control-height-md);
   gap: var(--think-space-2);
 }
-
 .think-os .think-toolbar--wrap {
   flex-wrap: wrap;
 }
-
 .think-os .think-toolbar__group {
   display: inline-flex;
   align-items: center;
   gap: var(--think-space-3);
   min-width: 0;
 }
-
 .think-os .think-toolbar__spacer {
   flex: 1 1 auto;
 }
-
 .think-os .think-section {
   min-width: 0;
 }
-
 .think-os .think-section + .think-section {
   margin-top: var(--think-space-7);
 }
-
 .think-os .think-section__header {
   display: flex;
   align-items: flex-start;
@@ -1299,7 +1144,6 @@
   gap: var(--think-space-5);
   margin-bottom: var(--think-space-5);
 }
-
 .think-os .think-section__title {
   margin: 0;
   color: var(--think-text-primary);
@@ -1307,14 +1151,12 @@
   font-weight: var(--think-type-section-weight);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os .think-section__description {
   margin: var(--think-space-2) 0 0;
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
   line-height: var(--think-line-height-normal);
 }
-
 .think-os .think-empty-state {
   min-height: 160px;
   display: flex;
@@ -1326,26 +1168,22 @@
   text-align: center;
   color: var(--think-text-secondary);
 }
-
 .think-os .think-empty-state__icon {
   color: var(--think-text-subtle);
   font-size: var(--think-font-size-3xl);
 }
-
 .think-os .think-empty-state__title {
   margin: 0;
   color: var(--think-text-primary);
   font-size: var(--think-font-size-md);
   font-weight: var(--think-font-weight-semibold);
 }
-
 .think-os .think-empty-state__description {
   max-width: 44ch;
   margin: 0;
   font-size: var(--think-font-size-sm);
   line-height: var(--think-line-height-normal);
 }
-
 @container (max-width: 560px) {
   .think-os .think-toolbar {
     flex-wrap: wrap;
@@ -1355,7 +1193,6 @@
     display: none;
   }
 }
-
 /* Compact single-boundary segmented control. */
 .think-os .think-segmented-control {
   --think-segment-height: var(--think-control-height-md); --think-segment-font-size: var(--think-font-size-sm);
@@ -1378,10 +1215,6 @@
 .think-os .think-segmented-control__item:hover:not(:disabled) { background: var(--think-bg-hover); color: var(--think-text-primary); }
 .think-os .think-segmented-control__item[aria-pressed="true"] { background: var(--think-surface-selection); color: var(--think-text-accent); font-weight: var(--think-type-label-weight); }
 .think-os .think-segmented-control__item:disabled { color: var(--think-text-disabled); cursor: not-allowed; opacity: 0.56; }
-
-
-
-/* inlined: src/styles/primitives/tabs.css */
 /* Think OS tabs primitive. */
 .think-os .think-tabs {
   display: flex;
@@ -1392,7 +1225,6 @@
   border-bottom: 1px solid var(--think-border-divider);
   scrollbar-width: thin;
 }
-
 .think-os .think-tab {
   min-height: var(--think-control-height-lg);
   display: inline-flex;
@@ -1410,20 +1242,14 @@
   white-space: nowrap;
   cursor: pointer;
 }
-
 .think-os .think-tab:hover {
   color: var(--think-text-primary);
   background: var(--think-bg-hover);
 }
-
 .think-os .think-tab[aria-selected="true"] {
   border-bottom-color: var(--think-accent);
   color: var(--think-text-accent);
 }
-
-
-
-/* inlined: src/styles/components/settings-shell.css */
 /* Settings workspace shell: desktop navigation is a left rail, page navigation stays in content. */
 .think-os.think-setting-root {
   width: 100%;
@@ -1432,12 +1258,10 @@
   container-name: think-settings;
   container-type: inline-size;
 }
-
 .think-os.think-setting-root--workspace {
   max-width: var(--think-content-width-xl);
   margin-inline: auto;
 }
-
 .think-os .think-settings-workspace {
   display: grid;
   grid-template-columns: 148px minmax(0, 1fr);
@@ -1445,28 +1269,23 @@
   min-width: 0;
   min-height: 0;
 }
-
 .think-os .think-settings-workspace__rail {
   position: sticky;
   top: 0;
   align-self: start;
   padding: var(--think-rhythm-section) var(--think-rhythm-related) var(--think-rhythm-section) 0;
 }
-
 .think-os .think-settings-workspace__content {
   min-width: 0;
   border-left: 1px solid var(--think-structural-divider);
 }
-
 .think-os .think-settings-panel {
   min-width: 0;
   padding: var(--think-rhythm-section);
 }
-
 .think-os .think-settings-navigation {
   min-width: 0;
 }
-
 .think-os .think-settings-navigation__item {
   min-width: 0;
   border: 0;
@@ -1479,17 +1298,14 @@
   line-height: var(--think-line-height-tight);
   cursor: pointer;
 }
-
 .think-os .think-settings-navigation__item:hover {
   background: var(--think-bg-hover);
   color: var(--think-text-primary);
 }
-
 .think-os .think-settings-navigation--primary {
   display: grid;
   gap: var(--think-rhythm-inline);
 }
-
 .think-os .think-settings-navigation--primary .think-settings-navigation__item {
   position: relative;
   width: 100%;
@@ -1498,12 +1314,10 @@
   border-radius: var(--think-radius-sm);
   text-align: left;
 }
-
 .think-os .think-settings-navigation--primary .think-settings-navigation__item.is-active {
   background: var(--think-surface-selection);
   color: var(--think-text-primary);
 }
-
 .think-os .think-settings-navigation--primary .think-settings-navigation__item.is-active::before {
   content: '';
   position: absolute;
@@ -1513,7 +1327,6 @@
   border-radius: var(--think-radius-pill);
   background: var(--think-accent);
 }
-
 .think-os .think-settings-navigation--secondary {
   display: flex;
   align-items: flex-end;
@@ -1522,7 +1335,6 @@
   overflow-x: auto;
   border-bottom: 1px solid var(--think-structural-divider);
 }
-
 .think-os .think-settings-navigation--secondary .think-settings-navigation__item {
   position: relative;
   flex: 0 0 auto;
@@ -1530,11 +1342,9 @@
   padding: 0 var(--think-space-1) var(--think-rhythm-row);
   white-space: nowrap;
 }
-
 .think-os .think-settings-navigation--secondary .think-settings-navigation__item.is-active {
   color: var(--think-text-primary);
 }
-
 .think-os .think-settings-navigation--secondary .think-settings-navigation__item.is-active::after {
   content: '';
   position: absolute;
@@ -1545,27 +1355,22 @@
   border-radius: var(--think-radius-pill) var(--think-radius-pill) 0 0;
   background: var(--think-accent);
 }
-
 .think-os.think-setting-root--launcher {
   max-width: 760px;
   padding: var(--think-rhythm-section);
 }
-
 .think-os .think-settings-launcher__title {
   margin: 0 0 var(--think-rhythm-related);
   font-size: var(--think-type-page-size);
   font-weight: var(--think-type-page-weight);
 }
-
 .think-settings-workspace-view {
   overflow: auto;
   padding: var(--think-rhythm-group) var(--think-rhythm-section) var(--think-rhythm-major);
 }
-
 .think-setting-root--workspace {
   min-height: calc(100vh - 96px);
 }
-
 @container think-settings (max-width: 720px) {
   .think-os .think-settings-workspace {
     grid-template-columns: minmax(0, 1fr);
@@ -1601,16 +1406,11 @@
     height: 2px;
   }
 }
-
 @container think-settings (max-width: 520px) {
   .think-os .think-settings-panel {
     padding: var(--think-rhythm-group) var(--think-rhythm-related);
   }
 }
-
-
-
-/* inlined: src/styles/components/rhythm-boundary.css */
 /*
  * Shared rhythm and boundary contract.
  *
@@ -1625,12 +1425,10 @@
   display: grid;
   min-width: 0;
 }
-
 .think-os .think-row-flow { gap: var(--think-rhythm-row); }
 .think-os .think-group-flow { gap: var(--think-rhythm-group); }
 .think-os .think-section-flow { gap: var(--think-rhythm-section); }
 .think-os .think-major-flow { gap: var(--think-rhythm-major); }
-
 .think-os .think-object-frame {
   min-width: 0;
   border: 1px solid var(--think-object-border);
@@ -1638,36 +1436,27 @@
   background: var(--think-object-bg);
   box-shadow: none;
 }
-
 .think-os .think-object-frame:hover,
 .think-os .think-object-frame:focus-within {
   border-color: var(--think-object-border-hover);
 }
-
 .think-os .think-object-frame--compact {
   border-color: var(--think-border-control);
   border-radius: var(--think-radius-sm);
 }
-
 .think-os .think-object-frame--padded {
   padding: var(--think-object-padding);
 }
-
 /* A divider is a structural boundary (header/body, sticky footer, table cell),
  * not a generic way to separate sibling content. */
 .think-os .think-structural-divider {
   border-color: var(--think-structural-divider);
 }
-
-
-
-/* inlined: src/styles/components/modal.css */
 /* Shared overlay contract: Obsidian-hosted modals, Think modal primitive and floating panels. */
 .think-os--modal.think-modal-overlay {
   position: fixed; inset: 0; display: grid; place-items: center;
   padding: var(--think-rhythm-section); background: color-mix(in srgb, var(--think-bg-canvas) 38%, transparent); backdrop-filter: blur(2px);
 }
-
 .think-os--modal .think-modal {
   width: min(100%, 640px); max-height: min(88dvh, 920px); display: flex; flex-direction: column; overflow: hidden;
   border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-lg); background: var(--think-bg-elevated);
@@ -1677,7 +1466,6 @@
 .think-os--modal .think-modal--medium { width: min(100%, 640px); }
 .think-os--modal .think-modal--large { width: min(100%, 920px); }
 .think-os--modal .think-modal--full { width: min(100%, 1200px); height: min(92dvh, 960px); }
-
 .think-os--modal .think-modal__header,
 .think-modal-header,
 .think-floating-panel__header {
@@ -1693,7 +1481,6 @@
 .think-modal-header__right:empty { display: none; }
 .think-modal-header__close,
 .think-floating-panel__close { flex: 0 0 auto; }
-
 .think-os--modal .think-modal__title {
   min-width: 0; margin: 0; overflow: hidden; color: var(--think-text-primary); font-size: var(--think-type-page-size);
   font-weight: var(--think-type-page-weight); line-height: var(--think-line-height-tight); text-overflow: ellipsis; white-space: nowrap;
@@ -1704,7 +1491,6 @@
   display: flex; align-items: center; justify-content: flex-end; gap: var(--think-rhythm-row); flex: 0 0 auto;
   padding: var(--think-rhythm-related) var(--think-rhythm-group); border-top: 1px solid var(--think-structural-divider); background: var(--think-bg-surface-1);
 }
-
 /* Reusable structure for content rendered inside an Obsidian Modal host. */
 .think-overlay-form { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .think-overlay-body { flex: 1 1 auto; min-width: 0; min-height: 0; overflow: auto; padding: var(--think-rhythm-group); }
@@ -1717,7 +1503,6 @@
 .think-overlay-empty { padding: var(--think-rhythm-major) var(--think-rhythm-group); color: var(--think-text-secondary); font-size: var(--think-font-size-sm); text-align: center; }
 .think-overlay-spinner { width: 14px; height: 14px; display: inline-block; border: 2px solid var(--think-border-subtle); border-top-color: var(--think-accent); border-radius: 50%; animation: think-overlay-spin .8s linear infinite; }
 @keyframes think-overlay-spin { to { transform: rotate(360deg); } }
-
 /* Floating panels use the same header rhythm but keep movable geometry. */
 .think-floating-panel { border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-lg); background: var(--think-bg-elevated); color: var(--think-text-primary); box-shadow: var(--think-shadow-md); }
 .think-floating-panel__header { position: relative; z-index: 2; flex-shrink: 0; padding: var(--think-space-3) var(--think-space-4); }
@@ -1738,7 +1523,6 @@
 .think-floating-panel.is-mobile .think-floating-panel__drag-icon { padding: var(--think-space-2); font-size: 1.3rem; }
 .think-floating-panel.is-mobile .think-floating-panel__actions { gap: var(--think-rhythm-row); }
 .think-floating-panel.is-mobile .think-floating-panel__close { min-width: var(--think-touch-target); min-height: var(--think-touch-target); }
-
 /* Check-in manager keeps only row-specific rules; shell/header/body come from the overlay contract. */
 .think-checkin-modal__list { display: grid; gap: var(--think-rhythm-row); }
 .think-checkin-modal__item { display: flex; align-items: center; justify-content: space-between; gap: var(--think-rhythm-related); min-height: var(--think-control-height-lg); padding: var(--think-rhythm-row) 0; border: 0; cursor: pointer; }
@@ -1749,27 +1533,20 @@
 .think-checkin-modal__item-content { font-size: var(--think-font-size-sm); font-weight: var(--think-font-weight-medium); }
 .think-checkin-modal__item-meta { margin-top: var(--think-space-1); color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
 .think-checkin-modal__item-delete { color: var(--think-danger); }
-
 @media (max-width: 560px) {
   .think-os--modal.think-modal-overlay { align-items: end; padding: var(--think-space-4); }
   .think-os--modal .think-modal { width: 100%; max-height: calc(100dvh - var(--think-space-4) * 2); }
   .think-overlay-footer { flex-wrap: wrap; }
 }
-
-
-
-/* inlined: src/styles/components/simple-select.css */
 /* CSS V3: shared select composite, aligned with native and MUI controls. */
 .think-simple-select {
   position: relative;
   width: auto;
   min-width: 0;
 }
-
 .think-simple-select--full {
   width: 100%;
 }
-
 .think-simple-select__trigger {
   min-height: var(--think-control-height-md);
   display: flex;
@@ -1787,23 +1564,19 @@
     background-color var(--think-duration-fast) var(--think-ease-standard),
     box-shadow var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .think-simple-select__trigger:hover {
   border-color: var(--think-border-strong);
 }
-
 .think-simple-select.is-open .think-simple-select__trigger {
   border-color: var(--think-border-focus);
   box-shadow: 0 0 0 var(--think-focus-ring-width) color-mix(in srgb, var(--think-focus-ring-color) 28%, transparent);
 }
-
 .think-simple-select.is-disabled .think-simple-select__trigger {
   background: var(--think-bg-disabled);
   color: var(--think-text-disabled);
   cursor: not-allowed;
   opacity: 0.72;
 }
-
 .think-simple-select__value {
   min-width: 0;
   overflow: hidden;
@@ -1812,21 +1585,17 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .think-simple-select__value.is-placeholder {
   color: var(--think-text-secondary);
 }
-
 .think-simple-select__arrow {
   flex: 0 0 auto;
   color: var(--think-text-secondary);
   transition: transform var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .think-simple-select.is-open .think-simple-select__arrow {
   transform: rotate(180deg);
 }
-
 .think-simple-select__menu {
   position: absolute;
   inset: calc(100% + var(--think-space-2)) 0 auto;
@@ -1838,7 +1607,6 @@
   background: var(--think-bg-elevated);
   box-shadow: var(--think-shadow-md);
 }
-
 .think-simple-select__group {
   padding: var(--think-space-3) var(--think-space-5);
   border-top: 1px solid var(--think-border-subtle);
@@ -1847,42 +1615,32 @@
   font-size: var(--think-font-size-xs);
   font-weight: var(--think-type-subsection-weight);
 }
-
 .think-simple-select__group:first-child {
   border-top: 0;
 }
-
 .think-simple-select__option {
   padding: var(--think-space-4) var(--think-space-5);
   color: var(--think-text-primary);
   font-size: var(--think-font-size-sm);
   cursor: pointer;
 }
-
 .think-simple-select__option:hover:not(.is-disabled) {
   background: var(--think-bg-hover);
 }
-
 .think-simple-select__option.is-selected {
   background: var(--think-surface-selection);
   font-weight: var(--think-font-weight-medium);
 }
-
 .think-simple-select__option.is-disabled {
   color: var(--think-text-disabled);
   cursor: not-allowed;
   opacity: 0.72;
 }
-
-
-
-/* inlined: src/styles/components/native-controls.css */
 /* CSS V3: native controls used by complex Settings editors. */
 .think-native-field {
   display: block;
   min-width: 0;
 }
-
 .think-native-field__label {
   display: block;
   margin-bottom: var(--think-space-2);
@@ -1890,23 +1648,16 @@
   font-size: var(--think-font-size-xs);
   line-height: var(--think-line-height-tight);
 }
-
 .think-native-field .think-input,
 .think-native-field .think-textarea {
   width: 100%;
 }
-
 .think-native-field.is-flex {
   flex: 1 1 0;
 }
-
 .think-native-field--narrow {
   width: 120px;
 }
-
-
-
-/* inlined: src/styles/components/task-row.css */
 /* Shared list / hierarchy contract for Block, Progress and Energy runtime views.
  * Features own their data columns and hierarchy meaning; this file owns ordinary
  * row density, dividers, hover, metadata rhythm and flat disclosure behavior.
@@ -1921,12 +1672,10 @@
   --think-list-guide: color-mix(in srgb, var(--think-border-subtle) 72%, transparent);
   --think-list-indent-step: var(--think-space-5);
 }
-
 .think-os .think-list {
   width: 100%;
   min-width: 0;
 }
-
 .think-os .think-list-row {
   box-sizing: border-box;
   width: 100%;
@@ -1942,31 +1691,26 @@
   font-size: var(--think-font-size-sm);
   line-height: var(--think-line-height-normal);
 }
-
 .think-os button.think-list-row {
   appearance: none;
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
-
 .think-os .think-list-row--compact,
 .think-os .think-list-disclosure-row.think-list-row--compact {
   min-height: var(--think-list-row-min-height-compact);
   padding-block: var(--think-space-1);
 }
-
 .think-os .think-list-row--interactive:hover,
 .think-os button.think-list-row:hover {
   background: var(--think-list-hover-bg);
 }
-
 .think-os .think-list-row--selected,
 .think-os .think-list-row[aria-selected="true"] {
   background: var(--think-surface-selection);
   box-shadow: inset 2px 0 0 var(--think-accent);
 }
-
 .think-os .think-list-disclosure-row {
   display: flex;
   align-items: center;
@@ -1977,19 +1721,16 @@
   color: var(--think-text-primary);
   cursor: pointer;
 }
-
 .think-os .think-list-meta {
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os .think-list-empty {
   padding: var(--think-rhythm-related) 0;
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-sm);
 }
-
 /* Record metadata is shared by BlockView, TaskRow and any list that reuses them.
  * It must not live in a feature stylesheet because shared TagsRenderer consumes it.
  */
@@ -2009,7 +1750,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .think-os .tag-pill img {
   width: 1.15em;
   height: 1.15em;
@@ -2030,7 +1770,6 @@
   text-align: left;
   vertical-align: middle;
 }
-
 .think-os .task-row-checkbox-wrapper,
 .think-os .task-row-timer-action {
   display: flex;
@@ -2038,13 +1777,11 @@
   align-items: center;
   justify-content: flex-start;
 }
-
 .think-os .task-row-checkbox-wrapper {
   height: var(--think-list-row-min-height-compact);
   min-height: var(--think-list-row-min-height-compact);
   padding-top: 0;
 }
-
 /* Obsidian themes commonly add checkbox margins/vertical offsets. Task rows own
  * the alignment, so normalize only the shared task checkbox instead of every
  * checkbox in the plugin. */
@@ -2059,7 +1796,6 @@
   transform: none;
   vertical-align: middle;
 }
-
 .think-os .task-row-content {
   display: flex;
   flex: 0 1 auto;
@@ -2070,7 +1806,6 @@
   min-width: 0;
   text-align: left;
 }
-
 .think-os .task-row-main,
 .think-os .task-row-title {
   display: inline-flex;
@@ -2079,12 +1814,10 @@
   min-width: 0;
   max-width: 100%;
 }
-
 .think-os .task-row-main {
   gap: var(--think-space-3);
   min-height: var(--think-control-height-sm);
 }
-
 .think-os .task-row-title {
   flex: 0 1 auto;
   gap: var(--think-space-2);
@@ -2099,14 +1832,12 @@
   white-space: nowrap;
   cursor: pointer;
 }
-
 .think-os .task-row-title:hover,
 .think-os .task-row-title:active,
 .think-os .task-row-title:focus-visible {
   background: transparent;
   box-shadow: none;
 }
-
 .think-os .task-row-fields {
   display: flex;
   flex-wrap: wrap;
@@ -2116,62 +1847,50 @@
   min-width: 0;
   margin-top: 0;
 }
-
 /* Full-width runtime list variant: BlockView and Progress theme records. */
 .think-os .task-row.think-list-row {
   display: flex;
   gap: var(--think-list-row-gap);
   width: 100%;
 }
-
 .think-os .task-row.think-list-row--compact {
   padding-block: 0;
 }
-
 .think-os .task-row.think-list-row .task-row-content {
   flex: 0 1 auto;
   max-width: 100%;
 }
-
 .think-os .task-row.think-list-row .task-row-main {
   width: auto;
   max-width: 100%;
   min-height: var(--think-list-row-min-height-compact);
 }
-
 .think-os .task-row.think-list-row .task-row-title {
   flex: 0 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .think-os .task-row.think-list-row .task-row-timer-action {
   margin-inline-start: 0;
   min-height: var(--think-list-row-min-height-compact);
 }
-
 .think-os .task-row-timer-action .task-timer-button {
   border-color: transparent;
   color: var(--think-text-secondary);
 }
-
 .think-os .task-row-timer-action .task-timer-button.is-running {
   cursor: default;
 }
-
 .think-os .task-row--done .task-row-title {
   color: var(--think-text-secondary);
   text-decoration: line-through;
 }
-
 .think-os .task-row--compact :is(.task-row-checkbox-wrapper, .task-row-main, .task-row-title) {
   min-height: var(--think-list-row-min-height-compact);
 }
-
 .think-os .task-row--compact .task-row-checkbox-wrapper {
   height: var(--think-list-row-min-height-compact);
 }
-
 /* Shared cell-item contract: TaskRow / ItemLink keep one alignment baseline when
  * embedded by TableView. Data-grid owns the surrounding cell borders/density. */
 .think-os .think-table-cell-item {
@@ -2181,10 +1900,6 @@
   min-width: 0;
   text-align: left;
 }
-
-
-
-/* inlined: src/styles/components/data-grid.css */
 /* Shared data-grid contract for Table / Excel / Heatmap.
  * Features own data semantics; this layer owns density, border rhythm, typography,
  * row hover and selection language so data-heavy views feel like one system.
@@ -2202,7 +1917,6 @@
   --think-data-grid-selected-bg: var(--think-surface-selection);
   --think-data-grid-heatmap-cell-size: 36px;
 }
-
 .think-os .think-data-grid-scroll {
   width: 100%;
   max-width: 100%;
@@ -2211,7 +1925,6 @@
   border-radius: var(--think-radius-md);
   background: var(--think-bg-canvas);
 }
-
 .think-os .think-data-grid {
   width: 100%;
   min-width: 100%;
@@ -2225,7 +1938,6 @@
   font-size: var(--think-data-grid-font-size);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os .think-data-grid :is(th, td) {
   box-sizing: border-box;
   min-height: var(--think-data-grid-row-height);
@@ -2236,15 +1948,12 @@
   vertical-align: middle;
   text-align: left;
 }
-
 .think-os .think-data-grid :is(th, td):last-child {
   border-inline-end: 0;
 }
-
 .think-os .think-data-grid tbody tr:last-child > td {
   border-block-end: 0;
 }
-
 .think-os .think-data-grid th {
   height: var(--think-data-grid-header-height);
   background: var(--think-data-grid-header-bg);
@@ -2253,32 +1962,26 @@
   font-weight: var(--think-type-table-header-weight);
   white-space: nowrap;
 }
-
 .think-os .think-data-grid td {
   background: var(--think-bg-canvas);
 }
-
 .think-os .think-data-grid tbody tr:hover > td {
   background: var(--think-data-grid-hover-bg);
 }
-
 .think-os .think-data-grid td[aria-selected="true"],
 .think-os .think-data-grid td.is-selected {
   background: var(--think-data-grid-selected-bg);
   box-shadow: inset 0 0 0 1px var(--think-border-selection);
 }
-
 .think-os .think-data-grid-empty {
   padding: var(--think-rhythm-related);
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-sm);
 }
-
 /* Runtime matrix table: multiple task/link items can share a cell. */
 .think-os .think-data-grid--matrix :is(th, td) {
   white-space: nowrap;
 }
-
 .think-os .think-data-grid--matrix td > .think-table-cell-item {
   display: flex;
   align-items: center;
@@ -2286,24 +1989,17 @@
   min-height: var(--think-data-grid-row-height);
   text-align: left;
 }
-
 .think-os .think-data-grid--matrix td > .think-table-cell-item + .think-table-cell-item {
   margin-top: var(--think-rhythm-inline);
 }
-
 .think-os .think-data-grid--matrix .task-row {
   align-items: center;
   gap: var(--think-space-3);
 }
-
 .think-os .think-data-grid--matrix td > .think-table-cell-item,
 .think-os .think-data-grid--matrix td > .think-table-cell-item * {
   white-space: nowrap;
 }
-
-
-
-/* inlined: src/styles/components/visualization.css */
 /* Shared visualization contract for Timeline / EventTimeline / Statistics / Energy.
  * Features own geometry and data colors; this layer owns typography, guide/track
  * contrast, hover/focus language, empty states and compact visualization rhythm.
@@ -2332,7 +2028,6 @@
   line-height: var(--think-line-height-tight);
   container-type: inline-size;
 }
-
 .think-os .think-viz-axis-label {
   color: var(--think-text-subtle);
   font-size: var(--think-viz-font-axis);
@@ -2340,28 +2035,22 @@
   font-weight: var(--think-font-weight-regular);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os .think-viz-meta {
   color: var(--think-text-secondary);
   font-size: var(--think-viz-font-meta);
   font-variant-numeric: tabular-nums;
 }
-
 .think-os .think-viz-label {
   color: var(--think-text-primary);
   font-size: var(--think-viz-font-label);
   font-weight: var(--think-type-label-weight);
 }
-
 .think-os .think-viz-value {
   color: var(--think-text-primary);
   font-size: var(--think-viz-font-value);
   font-variant-numeric: tabular-nums;
   font-weight: var(--think-type-data-emphasis-weight);
 }
-
-
-
 .think-os .think-viz-empty {
   display: grid;
   place-items: center;
@@ -2373,11 +2062,6 @@
   font-size: var(--think-viz-font-meta);
   text-align: center;
 }
-
-
-
-
-/* inlined: src/styles/components/grouped-container.css */
 /* Shared group structure. Visual language is selected per view:
  * - BlockView uses a flat indented list.
  * - EventTimeline uses the axis + indentation; groups stay flat.
@@ -2385,7 +2069,6 @@
 .think-os :is(.bv-group, .et-group) {
   min-width: 0;
 }
-
 /* EventTimeline groups are semantic sections inside one timeline, not independent
  * objects. Spacing + indentation carry hierarchy; the timeline axis remains the
  * structural boundary. */
@@ -2396,11 +2079,9 @@
   border-radius: 0;
   background: transparent;
 }
-
 .think-os .et-group + .et-group {
   margin-top: var(--think-rhythm-group);
 }
-
 .think-os .et-group-title {
   display: flex;
   align-items: center;
@@ -2417,46 +2098,38 @@
   cursor: pointer;
   user-select: none;
 }
-
 .think-os .et-group-title:hover {
   color: var(--think-text-accent);
   background: transparent;
   box-shadow: none;
 }
-
 .think-os .et-group-toggle-icon {
   flex-shrink: 0;
   color: var(--think-text-secondary);
   font-size: 0.8em;
 }
-
 .think-os .et-group-content {
   display: flex;
   flex-direction: column;
   gap: var(--think-rhythm-row);
   padding: 0;
 }
-
 .think-os .et-group--level-1 { margin-left: var(--think-rhythm-section); }
 .think-os .et-group--level-2 { margin-left: var(--think-rhythm-major); }
 .think-os .et-group--level-3 { margin-left: calc(var(--think-rhythm-major) + var(--think-rhythm-group)); }
-
 .think-os :is(.et-group--level-1, .et-group--level-2, .et-group--level-3) {
   padding-left: var(--think-rhythm-related);
   border-left: 1px solid var(--think-list-guide);
 }
-
 .think-os .et-group--level-2 .et-group-title {
   font-size: var(--think-type-meta-size);
   font-weight: var(--think-type-label-weight);
 }
-
 .think-os .et-group--level-3 .et-group-title {
   color: var(--think-text-secondary);
   font-size: var(--think-type-meta-size);
   font-weight: var(--think-font-weight-regular);
 }
-
 /* BlockView is a dense tree, not a stack of independent group sections.
  * Headers use compact list-row density; indentation + one guide line carry hierarchy,
  * so sibling spacing stays in the inline/row range instead of group/section rhythm.
@@ -2470,15 +2143,12 @@
   border-radius: 0;
   background: transparent;
 }
-
 .think-os .bv-group + .bv-group {
   margin-top: var(--think-rhythm-inline);
 }
-
 .think-os :is(.bv-group--level-1, .bv-group--level-2, .bv-group--level-3) + :is(.bv-group--level-1, .bv-group--level-2, .bv-group--level-3) {
   margin-top: var(--think-space-1);
 }
-
 .think-os .bv-group-title {
   display: flex;
   align-items: center;
@@ -2495,13 +2165,11 @@
   cursor: pointer;
   user-select: none;
 }
-
 .think-os .bv-group-title:hover {
   background: transparent;
   color: var(--think-text-accent);
   box-shadow: none;
 }
-
 .think-os .bv-group-toggle-icon {
   display: inline-flex;
   flex: 0 0 16px;
@@ -2509,19 +2177,16 @@
   justify-content: center;
   color: var(--think-text-secondary);
 }
-
 .think-os .bv-group-toggle-icon .think-lucide-icon {
   width: var(--think-icon-size-sm);
   height: var(--think-icon-size-sm);
 }
-
 .think-os .bv-group-label {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .think-os .bv-group-content {
   display: flex;
   flex-direction: column;
@@ -2531,21 +2196,17 @@
   padding: 0 0 0 var(--think-bv-indent-step);
   border-left: 1px solid var(--think-list-guide);
 }
-
 .think-os .bv-group--level-1 > .bv-group-title {
   font-size: var(--think-type-meta-size);
   font-weight: var(--think-type-subsection-weight);
 }
-
 .think-os .bv-group--level-1 > .bv-group-content {
   --think-bv-indent-step: var(--think-list-indent-step);
 }
-
 .think-os .bv-group--level-2 > .bv-group-content,
 .think-os .bv-group--level-3 > .bv-group-content {
   --think-bv-indent-step: var(--think-space-3);
 }
-
 .think-os :is(.bv-group--level-2, .bv-group--level-3) > .bv-group-title {
   color: var(--think-text-secondary);
   font-size: var(--think-type-meta-size);
@@ -2558,11 +2219,9 @@
   border: 0;
   background: transparent;
 }
-
 .think-os .think-disclosure + .think-disclosure {
   margin-top: var(--think-rhythm-section);
 }
-
 .think-os .think-disclosure__summary {
   min-height: var(--think-control-height-sm);
   display: flex;
@@ -2574,17 +2233,12 @@
   cursor: pointer;
   user-select: none;
 }
-
 .think-os .think-disclosure__summary::-webkit-details-marker { display: none; }
 .think-os .think-disclosure__title { font-size: var(--think-type-subsection-size); font-weight: var(--think-type-subsection-weight); }
 .think-os .think-disclosure__meta { margin-inline-start: auto; color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
 .think-os .think-disclosure__icon { width: var(--think-icon-size-sm); height: var(--think-icon-size-sm); transition: transform var(--think-duration-fast) var(--think-ease-standard); }
 .think-os .think-disclosure[open] .think-disclosure__icon { transform: rotate(180deg); }
 .think-os .think-disclosure__body { padding: var(--think-rhythm-inline) 0 0 var(--think-rhythm-group); }
-
-
-
-/* inlined: src/styles/features/settings.css */
 /* CSS V3: governed Settings workspace and page composition. */
 .think-os--settings .think-settings-page {
   width: min(100%, var(--think-content-width-lg));
@@ -2592,11 +2246,9 @@
   display: grid;
   gap: var(--think-rhythm-section);
 }
-
 .think-os--settings .think-settings-page--wide {
   width: min(100%, var(--think-content-width-xl));
 }
-
 .think-os--settings .think-settings-page__header {
   display: flex;
   align-items: flex-start;
@@ -2604,12 +2256,9 @@
   gap: var(--think-rhythm-related);
   flex-wrap: wrap;
 }
-
-
 .think-os--settings .think-settings-page__header--nav-only {
   justify-content: flex-start;
 }
-
 .think-os--settings .think-settings-page__title {
   margin: 0;
   color: var(--think-text-primary);
@@ -2617,7 +2266,6 @@
   font-weight: var(--think-type-page-weight);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os--settings .think-settings-page__description,
 .think-os--settings .think-settings-help,
 .think-os--settings .think-settings-caption {
@@ -2626,7 +2274,6 @@
   font-size: var(--think-font-size-xs);
   line-height: var(--think-line-height-normal);
 }
-
 .think-os--settings .think-settings-section {
   display: grid;
   gap: var(--think-rhythm-related);
@@ -2636,13 +2283,11 @@
   border-radius: 0;
   background: transparent;
 }
-
 .think-os--settings .think-settings-section--flat {
   padding: 0;
   border: 0;
   background: transparent;
 }
-
 .think-os--settings .think-settings-section__header {
   display: flex;
   align-items: flex-start;
@@ -2650,7 +2295,6 @@
   gap: var(--think-rhythm-related);
   flex-wrap: wrap;
 }
-
 .think-os--settings .think-settings-section__title,
 .think-os--settings .think-settings-subheading {
   margin: 0;
@@ -2659,17 +2303,14 @@
   font-weight: var(--think-type-section-weight);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os--settings .think-settings-stack {
   display: grid;
   gap: var(--think-rhythm-row);
   min-width: 0;
 }
-
 .think-os--settings .think-settings-stack--tight {
   gap: var(--think-rhythm-inline);
 }
-
 /* Settings rows are horizontally aligned by default: semantic label left, control right. */
 .think-os--settings .think-settings-row {
   --think-settings-label-width: 112px;
@@ -2680,13 +2321,9 @@
   row-gap: var(--think-rhythm-inline);
   min-width: 0;
 }
-
 .think-os--settings .think-settings-row--top { align-items: start; }
-
 .think-os--settings .think-settings-row--wrap .think-settings-row__body { display: flex; flex-wrap: wrap; gap: var(--think-rhythm-row); }
-
 .think-os--settings .think-settings-row--between { grid-template-columns: minmax(0, 1fr) auto; }
-
 .think-os--settings .think-settings-row__label {
   width: auto;
   min-width: 0;
@@ -2695,23 +2332,18 @@
   font-weight: var(--think-type-label-weight);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os--settings .think-settings-row__label--top { padding-top: var(--think-space-3); }
-
 .think-os--settings .think-settings-row__body { min-width: 0; }
-
 .think-os--settings .think-settings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--think-rhythm-group);
   min-width: 0;
 }
-
 .think-os--settings .think-settings-grid--compact {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--think-rhythm-related);
 }
-
 .think-os--settings .think-settings-actions {
   display: flex;
   align-items: center;
@@ -2719,11 +2351,9 @@
   gap: var(--think-rhythm-related);
   flex-wrap: wrap;
 }
-
 .think-os--settings .think-settings-actions--between {
   justify-content: space-between;
 }
-
 /* AI model control keeps the fetch action permanently visible beside the model field. */
 .think-os--settings .think-ai-model-picker {
   display: grid;
@@ -2732,12 +2362,10 @@
   gap: var(--think-rhythm-inline);
   min-width: 0;
 }
-
 .think-os--settings .think-ai-model-picker > .think-button {
   min-width: 104px;
   white-space: nowrap;
 }
-
 .think-os--settings .think-settings-sticky-actions {
   position: sticky;
   bottom: calc(-1 * var(--think-space-5));
@@ -2750,66 +2378,52 @@
   border-top: 1px solid var(--think-structural-divider);
   background: var(--think-bg-canvas);
 }
-
 .think-os--settings .think-settings-search {
   min-width: 220px;
   max-width: 520px;
 }
-
 .think-os--settings .think-settings-field--date {
   width: 170px;
 }
-
 .think-os--settings .think-settings-field--xs {
   width: 100px;
 }
-
 .think-os--settings .think-settings-field--sm {
   width: 120px;
 }
-
 .think-os--settings .think-settings-field--md {
   width: 145px;
 }
-
 .think-os--settings .think-settings-control-no-shrink {
   flex-shrink: 0;
   margin-right: 0;
 }
-
 .think-os--settings .think-settings-indent {
   padding-left: 96px;
 }
-
 .think-os--settings .think-settings-full-width {
   width: 100%;
   min-width: 0;
 }
-
 .think-os--settings .think-settings-muted-disabled {
   opacity: 0.72;
 }
-
 .think-os--settings .think-settings-title-strong {
   font-weight: var(--think-type-section-weight);
   line-height: var(--think-line-height-tight);
 }
-
 .think-os--settings .think-settings-label-strong {
   font-weight: var(--think-type-label-weight);
 }
-
 .think-os--settings .think-settings-centered-empty {
   padding-block: var(--think-space-8);
   text-align: center;
   color: var(--think-text-secondary);
 }
-
 .think-os--settings .think-settings-scroll-region {
   min-height: 0;
   overflow: auto;
 }
-
 @container think-settings (max-width: 420px) {
   .think-os--settings .think-settings-row {
     grid-template-columns: minmax(0, 1fr);
@@ -2832,35 +2446,27 @@
   .think-os--settings .think-settings-field--sm,
   .think-os--settings .think-settings-field--md { width: 100%; }
 }
-
 @media (max-width: 560px) {
   .think-os--settings .think-settings-panel {
     padding: var(--think-rhythm-group) var(--think-rhythm-related);
   }
 }
-
-
 .think-os--settings .think-settings-alert {
   margin-top: var(--think-rhythm-related);
 }
-
 .think-os--settings .think-settings-divider {
   margin-block: var(--think-rhythm-section);
 }
-
 .think-os--settings .think-settings-actions--start { justify-content: flex-start; }
 .think-os--settings .think-ai-scope-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--think-rhythm-inline) var(--think-rhythm-group); }
 .think-os--settings .think-ai-settings-footer { display: grid; gap: var(--think-rhythm-row); justify-items: stretch; padding-top: var(--think-rhythm-section); border-top: 1px solid var(--think-structural-divider); }
-
 /* Phase 10C: Settings information architecture and management-page patterns. */
 .think-os--settings .think-data-management {
   gap: var(--think-rhythm-section);
 }
-
 .think-os--settings .think-data-management__content {
   min-width: 0;
 }
-
 .think-os--settings .think-management-toolbar {
   min-height: var(--think-control-height-md);
   display: flex;
@@ -2869,11 +2475,9 @@
   gap: var(--think-rhythm-related);
   flex-wrap: wrap;
 }
-
 .think-os--settings .think-management-toolbar .think-settings-search {
   margin-left: auto;
 }
-
 @container think-settings (max-width: 560px) {
   .think-os--settings .think-management-toolbar {
     align-items: stretch;
@@ -2885,10 +2489,6 @@
     margin-left: 0;
   }
 }
-
-
-
-/* inlined: src/styles/features/settings-structural.css */
 /* Compact Settings form primitives: left label, right control, one visual boundary. */
 .think-os .think-form-field {
   --think-form-field-label-width: 112px;
@@ -2904,7 +2504,6 @@
 .think-os .think-form-field__control { min-width: 0; }
 .think-os .think-form-field__help, .think-os .think-form-field__error { grid-column: 2; margin: 0; font-size: var(--think-font-size-xs); line-height: var(--think-line-height-normal); }
 .think-os .think-form-field__help { color: var(--think-text-secondary); }
-
 .think-os .think-field-manager { display: grid; gap: var(--think-rhythm-inline); min-width: 0; }
 .think-os .think-field-manager__tags { display: flex; flex-wrap: wrap; gap: var(--think-space-2); }
 .think-os .think-field-manager__tag {
@@ -2916,7 +2515,6 @@
 .think-os .think-field-manager__tag-remove { color: var(--think-text-subtle); }
 .think-os .think-field-manager__select { width: 100%; }
 .think-os .think-field-manager__status { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
-
 .think-os .think-module-settings { display: grid; gap: var(--think-rhythm-section); min-width: 0; }
 .think-os .think-module-settings__section { display: grid; gap: var(--think-rhythm-related); min-width: 0; }
 .think-os .think-module-settings__section + .think-module-settings__section { margin-top: var(--think-rhythm-related); }
@@ -2928,7 +2526,6 @@
 .think-os .think-module-settings-panel { width: 100%; min-height: 0; display: flex; flex: 1 1 auto; flex-direction: column; }
 .think-os .think-module-settings-panel__body { min-height: 0; flex: 1 1 auto; overflow: auto; padding: var(--think-rhythm-section); }
 .think-os .think-module-settings-panel__actions { display: flex; justify-content: flex-end; gap: var(--think-rhythm-row); padding: var(--think-rhythm-related) var(--think-rhythm-section); border-top: 1px solid var(--think-structural-divider); background: var(--think-bg-canvas); }
-
 .think-os .think-common-filter { display: grid; gap: var(--think-rhythm-related); min-width: 0; }
 .think-os .think-common-filter__header { min-height: var(--think-control-height-sm); display: flex; align-items: center; justify-content: space-between; gap: var(--think-rhythm-related); }
 .think-os .think-common-filter__title { color: var(--think-text-primary); font-size: var(--think-type-subsection-size); font-weight: var(--think-type-subsection-weight); }
@@ -2943,7 +2540,6 @@
   min-width: 0;
 }
 .think-os .think-common-filter__label { min-width: 0; color: var(--think-text-primary); font-size: var(--think-type-label-size); font-weight: var(--think-type-label-weight); line-height: var(--think-line-height-tight); }
-
 /* Advanced filters are always visible and use the same add-row language as
  * sorting. The heading is informational, not another collapsible container. */
 .think-os .think-filter-rule-section {
@@ -2965,13 +2561,11 @@
   font-size: var(--think-font-size-xs);
   font-weight: var(--think-font-weight-regular);
 }
-
 .think-data-filter-dialog { width: min(920px, calc(100vw - 32px)); max-width: calc(100vw - 32px); max-height: min(760px, calc(100vh - 48px)); }
 .think-os--modal .think-data-filter-dialog .think-modal__body { padding: var(--think-space-6); }
 .think-data-filter-dialog__content { display: grid; gap: var(--think-rhythm-related); padding: 0; background: transparent; }
 .think-data-filter-dialog__meta-line { display: flex; justify-content: flex-end; gap: var(--think-space-4); color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
 .think-data-filter-dialog__actions { display: flex; justify-content: space-between; gap: var(--think-rhythm-row); padding: var(--think-rhythm-related) var(--think-rhythm-section); border-top: 1px solid var(--think-structural-divider); background: var(--think-bg-surface-1); }
-
 @media (max-width: 420px) {
   .think-os .think-form-field { grid-template-columns: minmax(0, 1fr); gap: var(--think-space-2); }
   .think-os .think-form-field__label { padding-top: 0; }
@@ -2979,13 +2573,7 @@
   .think-os .think-module-settings__inline { align-items: stretch; flex-direction: column; }
   .think-os .think-common-filter__field { grid-template-columns: minmax(0, 1fr); gap: var(--think-space-2); }
 }
-
-
-
-/* inlined: src/styles/features/settings-editors.css */
 /* CSS V3: settings editor feature facade. Keep imports in legacy cascade order. */
-
-/* inlined: src/styles/features/settings-editors.base.css */
 /* Settings editor shared composition primitives. */
 /* CSS V3: reusable editor composition for Settings feature. */
 /* Settings editors are flat by default. Independently managed objects opt into
@@ -2997,46 +2585,38 @@
   gap: var(--think-rhythm-group);
   flex-wrap: wrap;
 }
-
 .think-os--settings .think-editor-inline {
   display: flex;
   align-items: center;
   gap: var(--think-rhythm-related);
   min-width: 0;
 }
-
 .think-os--settings .think-editor-inline--wrap {
   flex-wrap: wrap;
 }
-
 .think-os--settings .think-editor-column {
   display: flex;
   flex-direction: column;
   gap: var(--think-rhythm-related);
   min-width: 0;
 }
-
 .think-os--settings .think-editor-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--think-rhythm-related);
   min-width: 0;
 }
-
 .think-os--settings .think-editor-grid--two {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-
 .think-os--settings .think-editor-grid--metadata {
   grid-template-columns: minmax(220px, 1fr) 110px auto;
   align-items: center;
 }
-
 .think-os--settings .think-editor-grid--list-toolbar {
   grid-template-columns: minmax(0, 1fr) minmax(180px, 280px);
   align-items: center;
 }
-
 .think-os--settings .think-editor-field-label {
   width: 92px;
   flex: 0 0 92px;
@@ -3044,30 +2624,25 @@
   font-size: var(--think-type-label-size);
   font-weight: var(--think-type-label-weight);
 }
-
 .think-os--settings .think-editor-field-control {
   min-width: 220px;
 }
-
 .think-os--settings .think-editor-field-control--narrow {
   width: 140px;
   min-width: 0;
 }
-
 .think-os--settings .think-editor-section-title {
   margin: 0 0 var(--think-space-3);
   color: var(--think-text-primary);
   font-size: var(--think-type-section-size);
   font-weight: var(--think-type-section-weight);
 }
-
 .think-os--settings .think-editor-diff-list {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--think-space-2);
 }
-
 .think-os--settings .think-editor-diff-chip {
   padding: var(--think-space-1) var(--think-space-4);
   border: 1px solid var(--think-border-subtle);
@@ -3075,17 +2650,9 @@
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
-
-
-/* inlined: src/styles/features/settings-editors.rule-builder-base.css */
 /* Shared minimum widths used by the compact filter / sort rule editor. */
 .think-os .think-rule-builder__logic { min-width: 50px; }
 .think-os .think-rule-builder__operator { min-width: 110px; }
-
-
-
-/* inlined: src/styles/features/settings-editors.goal-template.css */
 /* Goal template settings: flat rows, native primitives and a data-grid matrix. */
 .think-os--settings .think-goal-template-editor {
   min-height: 0;
@@ -3113,7 +2680,6 @@
   font-weight: var(--think-type-subsection-weight);
 }
 .think-os--settings .think-goal-template-editor__textarea { min-height: 120px; }
-
 .think-os--settings .think-goal-template-matrix__scroll { width: 100%; overflow-x: auto; }
 .think-os--settings .think-goal-template-matrix {
   width: max-content;
@@ -3180,13 +2746,11 @@
 .think-os--settings .think-goal-template-matrix__goal-row.is-drop-after > td { border-bottom: 2px solid var(--think-accent); }
 .think-os--settings .think-goal-template-matrix__spacer-row td { height: var(--think-space-3); padding: 0; }
 .think-os--settings .think-goal-template-matrix td.think-goal-template-matrix__empty { padding: var(--think-space-6); color: var(--think-text-secondary); text-align: center; }
-
 @container think-settings (max-width: 620px) {
   .think-os--settings .think-goal-template-editor { padding: var(--think-space-5); }
   .think-os--settings .think-goal-template-matrix__path-header,
   .think-os--settings .think-goal-template-matrix__path-cell { width: 210px; }
 }
-
 .think-os--settings .think-goal-template-matrix__preset-cell {
   display: grid;
   grid-auto-rows: min-content;
@@ -3197,7 +2761,6 @@
   border-radius: var(--think-radius-sm);
 }
 .think-os--settings .think-goal-template-matrix__preset-cell.is-drop-target { outline: 2px dashed var(--think-accent); outline-offset: -2px; }
-
 .think-os--settings .think-goal-template-matrix__preset-cell.is-empty { min-height: var(--think-control-height-md); border: 0; background: transparent; }
 .think-os--settings .think-goal-template-matrix__add { position: relative; flex: 0 0 var(--think-control-height-md); width: var(--think-control-height-md); height: var(--think-control-height-md); }
 .think-os--settings .think-goal-template-matrix__add-button { width: var(--think-control-height-md); min-width: var(--think-control-height-md); height: var(--think-control-height-md); min-height: var(--think-control-height-md); border: 1px solid var(--think-border-subtle); background: var(--think-bg-canvas); box-shadow: none; }
@@ -3224,7 +2787,6 @@
 .think-os--settings .think-goal-preset.is-dragging { opacity: 0.48; }
 .think-os--settings .think-goal-preset__icon { width: 22px; height: 22px; display: inline-grid; place-items: center; overflow: hidden; }
 .think-os--settings .think-goal-preset__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--think-font-size-xs); font-weight: var(--think-font-weight-semibold); }
-
 .think-goal-template-menu-layer { position: fixed; inset: 0; z-index: var(--think-z-popover); pointer-events: none; }
 .think-goal-template-menu__backdrop { position: fixed; inset: 0; pointer-events: auto; background: transparent; }
 .think-goal-template-menu {
@@ -3269,40 +2831,31 @@
 .think-goal-template-menu__item:disabled { opacity: 0.5; cursor: not-allowed; }
 .think-os--settings .think-goal-template-matrix__preset-cell.is-disabled { width: 100%; height: var(--think-control-height-md); border: 1px solid var(--think-border-subtle); background: var(--think-bg-surface-1); color: var(--think-text-secondary); font: inherit; cursor: pointer; }
 .think-os--settings .think-goal-template-matrix__disabled-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--think-font-size-xs); }
-
-
-
-/* inlined: src/styles/features/settings-editors.statistics-categories.css */
 /* Statistics editor and category controls. */
 .think-os--settings .think-statistics-editor {
   display: grid;
   gap: var(--think-space-6);
   font-size: var(--think-font-size-md);
 }
-
 .think-os--settings .think-statistics-editor__section {
   display: grid;
   gap: var(--think-space-4);
 }
-
 .think-os--settings .think-statistics-editor__title {
   color: var(--think-text-primary);
   font-weight: var(--think-type-section-weight);
 }
-
 .think-os--settings .think-statistics-editor__description {
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
   line-height: var(--think-line-height-relaxed);
 }
-
 .think-os--settings .think-statistics-editor__period-toggle {
   display: flex;
   align-items: center;
   gap: var(--think-space-3);
   margin-top: 18px;
 }
-
 @container think-settings (max-width: 700px) {
   .think-os--settings .think-editor-grid--two,
   .think-os--settings .think-editor-grid--metadata,
@@ -3319,12 +2872,10 @@
     min-width: 0;
   }
 }
-
 .think-os--settings .think-category-list {
   display: grid;
   gap: var(--think-rhythm-row);
 }
-
 .think-os--settings .think-category-row {
   display: flex;
   align-items: center;
@@ -3335,15 +2886,12 @@
   border-radius: 0;
   background: transparent;
 }
-
 .think-os--settings .think-category-row__name {
   min-width: 60px;
 }
-
 .think-os--settings .think-category-row__remove {
   margin-left: auto;
 }
-
 .think-os--settings .think-category-color {
   width: var(--think-control-height-md);
   height: var(--think-control-height-md);
@@ -3354,29 +2902,24 @@
   background: transparent;
   cursor: pointer;
 }
-
 .think-os--settings .think-category-color::-webkit-color-swatch-wrapper {
   padding: 2px;
 }
-
 .think-os--settings .think-category-color::-webkit-color-swatch {
   border: 0;
   border-radius: var(--think-radius-xs);
 }
-
 .think-os--settings .think-category-add {
   display: grid;
   grid-template-columns: auto minmax(160px, 1fr) auto;
   align-items: center;
   gap: var(--think-space-5);
 }
-
 .think-os--settings .think-settings-nav {
   display: flex;
   gap: var(--think-space-3);
   flex-wrap: wrap;
 }
-
 @container think-settings (max-width: 520px) {
   .think-os--settings .think-category-row {
     flex-wrap: wrap;
@@ -3390,10 +2933,6 @@
     grid-column: 1 / -1;
   }
 }
-
-
-
-/* inlined: src/styles/features/settings-editors.rule-builder-panel.css */
 /* RuleBuilder uses one compact interaction for both filters and sorting:
  * existing rules are removable chips; the final row adds a new rule.
  */
@@ -3404,30 +2943,25 @@
   flex-wrap: wrap;
   gap: var(--think-rhythm-inline);
 }
-
 .think-os .think-rule-builder__compact-add {
   display: grid;
   gap: var(--think-rhythm-inline);
   align-items: center;
   min-width: 0;
 }
-
 .think-os .think-rule-builder__compact-add.is-filter.is-with-value {
   grid-template-columns: minmax(180px, 1fr) minmax(110px, .55fr) minmax(180px, 1fr) auto;
 }
-
 .think-os .think-rule-builder__compact-add.is-filter.is-no-value,
 .think-os .think-rule-builder__compact-add.is-sort {
   grid-template-columns: minmax(180px, 1fr) minmax(110px, .55fr) auto;
 }
-
 .think-os .think-rule-builder__compact {
   display: flex;
   flex-direction: row;
   gap: var(--think-rhythm-group);
   min-width: 0;
 }
-
 .think-os .think-rule-builder__compact-body {
   flex: 1 1 auto;
   display: flex;
@@ -3435,12 +2969,10 @@
   gap: var(--think-rhythm-row);
   min-width: 0;
 }
-
 .think-os .think-common-filter__clear {
   flex: 0 0 auto;
   white-space: nowrap;
 }
-
 @media (max-width: 700px) {
   .think-os .think-rule-builder__compact {
     flex-direction: column;
@@ -3453,10 +2985,6 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
-
-
-
-/* inlined: src/styles/features/settings-editors.block-editor.css */
 /* Block manager and block editor: flat rows, one boundary per record type. */
 .think-os--settings .think-block-manager { width: min(100%, 980px); margin-inline: auto; }
 .think-os--settings .think-block-manager__header { margin-bottom: var(--think-space-3); }
@@ -3467,22 +2995,16 @@
 .think-os--settings .think-block-accordion__title { min-width: 0; padding: 0; border: 0; background: transparent; color: var(--think-text-primary); font: inherit; font-size: var(--think-font-size-sm); font-weight: var(--think-font-weight-medium); text-align: left; cursor: pointer; }
 .think-os--settings .think-block-accordion__details { padding: var(--think-rhythm-related) 0 var(--think-rhythm-group) calc(var(--think-control-height-sm) + var(--think-rhythm-inline)); border: 0; background: transparent; }
 .think-os--settings .think-block-editor { display: grid; gap: var(--think-rhythm-row); }
-
 .think-os--settings .think-block-manager__toolbar { margin-bottom: var(--think-rhythm-related); }
 .think-os--settings .think-block-accordion__drag--placeholder { visibility: hidden; cursor: default; }
 .think-os--settings .think-block-accordion__meta { color: var(--think-text-secondary); font-size: var(--think-type-meta-size); white-space: nowrap; }
 .think-os--settings .think-block-accordion--builtin .think-block-accordion__summary { grid-template-columns: auto minmax(0, 1fr) auto auto; }
-
-
-
-/* inlined: src/styles/features/settings-editors.goal-extensions.css */
 /* Goal settings extensions. */
 .think-os--settings .think-goal-template-editor__section-heading {
   margin-bottom: var(--think-space-3);
   font-size: var(--think-type-section-size);
   font-weight: var(--think-type-section-weight);
 }
-
 .think-os--settings .think-goal-manager,
 .think-os--settings .think-goal-metrics {
   width: 100%;
@@ -3504,10 +3026,6 @@
 @container think-settings (max-width: 720px) {
   .think-os--settings .think-goal-manager__create { grid-template-columns: 1fr; }
 }
-
-
-
-/* inlined: src/styles/features/settings-editors.fields-editor.css */
 /* Field editor grid and row controls. */
 .think-os--settings .think-fields-editor {
   width: 100%;
@@ -3515,7 +3033,6 @@
   box-sizing: border-box;
   overflow-x: hidden;
 }
-
 .think-os--settings .think-fields-editor__grid {
   display: grid;
   grid-template-columns: 20px minmax(0, 1.15fr) minmax(112px, 145px) minmax(0, 1fr) 54px 46px 30px;
@@ -3523,41 +3040,32 @@
   align-items: center;
   min-width: 0;
 }
-
 .think-os--settings .think-fields-editor__header {
   padding-inline: var(--think-space-2);
   color: var(--think-text-secondary);
 }
-
 .think-os--settings .think-fields-editor__header-center {
   text-align: center;
 }
-
 .think-os--settings .think-fields-editor__divider {
   margin-block: var(--think-space-3);
 }
-
 .think-os--settings .think-fields-editor__row-wrap {
   border-radius: var(--think-radius-sm);
 }
-
 .think-os--settings .think-fields-editor__row-wrap.is-dragging {
   opacity: 0.55;
 }
-
 .think-os--settings .think-field-row {
   padding: var(--think-space-3) var(--think-space-2);
   border-radius: var(--think-radius-sm);
 }
-
 .think-os--settings .think-field-row.is-dragging {
   background: var(--think-bg-hover);
 }
-
 .think-os--settings .think-field-row__cell {
   min-width: 0;
 }
-
 .think-os--settings .think-field-row__drag {
   width: 28px;
   min-height: 40px;
@@ -3567,19 +3075,15 @@
   color: var(--think-text-secondary);
   cursor: grab;
 }
-
 .think-os--settings .think-field-row__drag.is-disabled {
   cursor: default;
 }
-
 .think-os--settings .think-field-row__drag-icon {
   font-size: 1.25rem;
 }
-
 .think-os--settings .think-field-row__empty {
   min-height: 40px;
 }
-
 .think-os--settings .think-field-row__required {
   min-width: 0;
   min-height: 40px;
@@ -3587,7 +3091,6 @@
   align-items: center;
   justify-content: center;
 }
-
 .think-os--settings .think-field-row__required-label {
   display: inline-flex;
   align-items: center;
@@ -3595,14 +3098,12 @@
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 .think-os--settings .think-field-row__details-cell,
 .think-os--settings .think-field-row__delete-cell {
   min-width: 0;
   display: flex;
   justify-content: center;
 }
-
 .think-os--settings .think-field-row__details-button {
   width: 100%;
   min-width: 0;
@@ -3616,17 +3117,14 @@
   font-size: var(--think-font-size-xs);
   white-space: nowrap;
 }
-
 .think-os--settings .think-field-row__details-button:hover:not(:disabled) {
   background: var(--think-bg-hover);
   color: var(--think-text-primary);
 }
-
 .think-os--settings .think-field-row__details-button:disabled {
   cursor: default;
   opacity: 0.6;
 }
-
 .think-os--settings .think-field-row__delete {
   width: 26px;
   height: 26px;
@@ -3640,24 +3138,20 @@
   font-size: var(--think-icon-size-md);
   line-height: 1;
 }
-
 .think-os--settings .think-field-row__delete:hover:not(:disabled) {
   background: var(--think-danger-bg);
   color: var(--think-danger);
 }
-
 .think-os--settings .think-field-row__delete:disabled {
   cursor: default;
   opacity: 0.55;
 }
-
 .think-os--settings .think-field-row__warning {
   display: block;
   margin-top: var(--think-space-2);
   margin-left: 36px;
   color: var(--think-warning);
 }
-
 .think-os--settings .think-field-row__details {
   margin-top: var(--think-rhythm-related);
   margin-left: 36px;
@@ -3666,28 +3160,22 @@
   border-radius: 0;
   background: transparent;
 }
-
 .think-os--settings .think-field-row__number-range {
   display: flex;
   gap: var(--think-space-4);
 }
-
 .think-os--settings .think-field-row__number-range.has-options {
   margin-bottom: var(--think-space-5);
 }
-
 .think-os--settings .think-field-row__option-divider {
   border-style: dashed;
 }
-
 .think-os--settings .think-field-row__add-option {
   margin-top: var(--think-space-5);
 }
-
 .think-os--settings .think-option-row__delete {
   padding-top: 20px;
 }
-
 @container think-settings (max-width: 780px) {
   .think-os--settings .think-fields-editor__header {
     display: none;
@@ -3701,7 +3189,6 @@
     grid-column: 2 / -1;
   }
 }
-
 .think-os--settings .think-fields-editor__rows { display: grid; gap: var(--think-rhythm-row); min-width: 0; }
 .think-os--settings .think-fields-editor__row-wrap { border: 0; border-radius: 0; }
 .think-os--settings .think-field-row { padding: var(--think-rhythm-row) 0; border-radius: 0; }
@@ -3709,10 +3196,6 @@
 .think-os--settings .think-field-row__options { display: grid; gap: var(--think-space-3); }
 .think-os--settings .think-field-row__options-list { display: grid; gap: var(--think-space-2); }
 .think-os--settings .think-field-option-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto; align-items: end; gap: var(--think-space-3); }
-
-
-
-/* inlined: src/styles/features/settings-editors.view-editor.css */
 /* View editor shared settings rows: semantic label left, control right. */
 .think-os--settings .think-view-editor-shell {
   --think-view-editor-gap: var(--think-rhythm-related);
@@ -3755,7 +3238,6 @@
   .think-os--settings .think-view-editor-field-row { grid-template-columns: minmax(0, 1fr); gap: var(--think-space-2); }
   .think-os--settings .think-view-editor-field-row--top .think-view-editor-field-row__label { padding-top: 0; }
 }
-
 .think-os--settings .think-timeline-category-list { display: grid; gap: var(--think-rhythm-row); min-width: 0; }
 .think-os--settings .think-timeline-category-row {
   display: grid; grid-template-columns: auto auto minmax(120px, 160px) minmax(180px, 1fr) auto;
@@ -3769,11 +3251,6 @@
   .think-os--settings .think-timeline-category-row { grid-template-columns: auto auto minmax(0, 1fr) auto; }
   .think-os--settings .think-timeline-category-row__files { grid-column: 3 / 5; }
 }
-
-
-
-
-/* inlined: src/styles/features/layout-editor.css */
 /* Compact layout settings: rows, dividers and single-boundary controls. */
 .think-os--settings .think-layout-editor {
   width: 100%; min-width: 0; box-sizing: border-box; display: grid; gap: var(--think-rhythm-related);
@@ -3824,24 +3301,16 @@
   .think-os--settings .think-layout-editor__segmented { width: 100%; }
   .think-os--settings .think-layout-editor__segmented .think-segmented-control__item { flex: 1 1 0; }
 }
-
 /* Floating layout settings must consume the same Settings row system as the workspace page. */
 .think-layout-settings-widget {
   width: 100%; min-width: 0; min-height: 0; flex: 1 1 auto; overflow: auto;
   box-sizing: border-box; padding: var(--think-space-6);
 }
 .think-layout-settings-widget .think-layout-editor { padding: 0; }
-
 .think-os--settings .think-layout-list__item-title,
 .think-os--settings .think-layout-list__drag-handle { border: 0; background: transparent; box-shadow: none; color: inherit; font: inherit; }
 .think-os--settings .think-layout-list__item-title { padding: 0; text-align: left; }
-
-
-
-/* inlined: src/styles/features/view-shell.css */
 /* Shared view shell feature facade. Keep imports in legacy cascade order. */
-
-/* inlined: src/styles/features/view-shell.modules.css */
 /*
  * ModulePanel is the single authoritative workspace-view frame.
  *
@@ -3859,11 +3328,9 @@
     box-shadow: var(--think-shadow-none);
     container-type: inline-size;
 }
-
 .think-os .think-module.is-layout-selected {
     border-color: var(--think-panel-selected-border);
 }
-
 .think-os .module-header {
     display: flex;
     align-items: center;
@@ -3881,23 +3348,19 @@
         background-color var(--think-duration-fast) var(--think-ease-standard),
         border-color var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .think-os .think-module.is-collapsed .module-header {
     border-bottom-color: transparent;
 }
-
 .think-os .module-header:hover,
 .think-os .module-header.is-layout-selected {
     background: var(--think-panel-header-hover-bg);
 }
-
 .think-os .module-header-main {
     display: flex;
     align-items: center;
     min-width: 0;
     gap: var(--think-rhythm-row);
 }
-
 .think-os .module-title {
     min-width: 0;
     overflow: hidden;
@@ -3908,7 +3371,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
 .think-os .module-header-controls,
 .think-os .module-header-actions {
     display: flex;
@@ -3916,11 +3378,9 @@
     min-width: 0;
     gap: var(--think-rhythm-inline);
 }
-
 .think-os .module-header-icon {
     font-size: var(--think-icon-size-md);
 }
-
 .think-os .module-content {
     min-width: 0;
     padding: var(--think-rhythm-related);
@@ -3928,20 +3388,17 @@
     background: var(--think-panel-bg);
     container-type: inline-size;
 }
-
 .think-os .module-deferred-placeholder {
     padding: var(--think-space-4) 0;
     color: var(--think-text-secondary);
     font-size: var(--think-font-size-sm);
 }
-
 .think-os .module-content a,
 .think-os .module-content a:visited,
 .think-os .module-content a:hover {
     text-decoration: none;
     box-shadow: none;
 }
-
 @container (max-width: 560px) {
     .think-os .module-header {
         align-items: flex-start;
@@ -3963,7 +3420,6 @@
         padding: var(--think-space-3);
     }
 }
-
 /* Expanded dashboard views are viewport-gated so a long layout does not execute every
  * heavy view model at once. The placeholder keeps layout geometry stable until the
  * panel approaches the viewport. */
@@ -3976,10 +3432,6 @@
   display: grid;
   place-items: center;
 }
-
-
-
-/* inlined: src/styles/features/view-shell.toolbar.css */
 /* Dashboard toolbar: one framed, single-line Obsidian-native action language. */
 .think-os .tp-toolbar {
     --tp-toolbar-control-height: var(--think-control-height-md);
@@ -4034,10 +3486,6 @@
     .tp-toolbar__spacer { min-width: 0; }
     .tp-toolbar .think-filter-popover__selected-chips { display: none; }
 }
-
-
-
-/* inlined: src/styles/features/view-shell.freeform-base.css */
 /* Freeform layout base canvas and item rules. */
 /* ===================================================================
  * Freeform Layout v1
@@ -4055,16 +3503,13 @@
     touch-action: none;
     opacity: 0.78;
 }
-
 .module-drag-handle:hover {
     opacity: 1;
     background: color-mix(in srgb, var(--think-text-primary) 8%, transparent);
 }
-
 .module-drag-handle:active {
     cursor: grabbing;
 }
-
 .think-freeform-toolbar {
     display: flex;
     align-items: center;
@@ -4075,20 +3520,16 @@
     border: 0;
     background: transparent;
 }
-
-
 .think-freeform-toolbar-hint {
     color: var(--think-text-secondary);
     font-size: var(--think-font-size-xs);
     line-height: var(--think-line-height-normal);
 }
-
 .think-freeform-host {
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
 }
-
 .think-freeform-canvas {
     position: relative;
     width: 100%;
@@ -4100,7 +3541,6 @@
         border-color var(--think-duration-fast) var(--think-ease-standard),
         background-color var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .think-freeform-canvas.is-editing {
     border-color: var(--think-border-subtle);
     background-image:
@@ -4109,7 +3549,6 @@
     background-size: var(--think-freeform-grid-size, 16px) var(--think-freeform-grid-size, 16px);
     background-color: color-mix(in srgb, var(--think-bg-canvas) 92%, var(--think-bg-surface-1));
 }
-
 .think-freeform-item {
     position: absolute;
     box-sizing: border-box;
@@ -4117,7 +3556,6 @@
     min-height: 180px;
     transition: box-shadow var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .think-freeform-item .think-module {
     display: flex;
     flex-direction: column;
@@ -4126,36 +3564,27 @@
     margin-bottom: 0;
     background: var(--think-bg-canvas);
 }
-
 .think-freeform-item .module-content {
     flex: 1 1 auto;
     min-height: 0;
     overflow: auto;
 }
-
 .think-freeform-item.is-editing {
     outline: 1px dashed transparent;
     outline-offset: 2px;
 }
-
 .think-freeform-item.is-editing:hover {
     outline-color: var(--think-accent);
 }
-
 .think-freeform-item.is-dragging {
     opacity: 0.92;
     box-shadow: 0 12px 32px color-mix(in srgb, var(--think-text-primary) 24%, transparent);
 }
-
 @container (max-width: 760px) {
     .think-freeform-toolbar-hint {
         flex-basis: 100%;
     }
 }
-
-
-
-/* inlined: src/styles/features/view-shell.freeform-resize.css */
 /* Freeform resize handles and size feedback. */
 /* ===================================================================
  * Freeform Layout v2: resize, size feedback and narrow-pane behavior
@@ -4164,22 +3593,18 @@
     overscroll-behavior-x: contain;
     scrollbar-gutter: stable;
 }
-
 .think-freeform-canvas {
     min-width: 0;
 }
-
 .think-freeform-item.is-resizing,
 .think-freeform-item.is-dragging {
     transition: none;
     user-select: none;
 }
-
 .think-freeform-item.is-resizing {
     outline-color: var(--think-accent);
     box-shadow: 0 12px 32px color-mix(in srgb, var(--think-text-primary) 20%, transparent);
 }
-
 .think-freeform-resize-handle {
     position: absolute;
     right: -2px;
@@ -4201,14 +3626,12 @@
             var(--think-accent) 59% 66%,
             transparent 67%);
 }
-
 .think-freeform-resize-handle:hover,
 .think-freeform-resize-handle:focus-visible {
     opacity: 1;
     outline: 2px solid color-mix(in srgb, var(--think-accent) 45%, transparent);
     outline-offset: 1px;
 }
-
 .think-freeform-size-indicator {
     position: absolute;
     right: 8px;
@@ -4224,10 +3647,6 @@
     pointer-events: none;
     box-shadow: 0 2px 8px color-mix(in srgb, var(--think-text-primary) 16%, transparent);
 }
-
-
-
-/* inlined: src/styles/features/view-shell.freeform-management.css */
 /* Freeform selection, management actions and accessibility. */
 /* ===================================================================
  * Freeform Layout v3: selection, management actions and mobile fallback
@@ -4237,26 +3656,21 @@
     outline-offset: 2px;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--think-accent) 14%, transparent);
 }
-
 .think-freeform-item.is-locked:not(.is-selected) {
     outline: 1px dashed var(--text-faint);
     outline-offset: 2px;
 }
-
 .think-freeform-item.is-collapsed {
     min-height: var(--think-control-height-md);
 }
-
 .think-freeform-item.is-collapsed .think-module,
 .think-freeform-item.is-collapsed .module-header {
     min-height: var(--think-control-height-md);
 }
-
 .module-drag-handle.is-disabled {
     cursor: not-allowed;
     opacity: 0.35;
 }
-
 .module-layout-lock-badge {
     display: inline-flex;
     align-items: center;
@@ -4271,7 +3685,6 @@
     opacity: 0.75;
     white-space: nowrap;
 }
-
 .module-layout-actions {
     display: inline-flex;
     align-items: center;
@@ -4279,15 +3692,12 @@
     padding-inline-end: var(--think-space-2);
     border-inline-end: 1px solid var(--think-border-subtle);
 }
-
-
 .think-freeform-add-controls {
     display: inline-flex;
     align-items: center;
     gap: var(--think-space-2);
     flex-wrap: wrap;
 }
-
 .think-freeform-view-select {
     width: auto;
     min-width: 150px;
@@ -4296,23 +3706,19 @@
     height: var(--think-control-height-sm);
     font-size: var(--think-font-size-xs);
 }
-
 .think-freeform-mobile-fallback {
     display: block;
 }
-
 .think-freeform-mobile-fallback .think-module {
     width: 100%;
     max-width: 100%;
 }
-
 @container (max-width: 900px) {
     .module-header-controls {
         gap: var(--think-space-2);
     }
 
 }
-
 /* ===================================================================
  * Freeform Layout v4: keyboard focus, accessibility and motion safety
  * =================================================================== */
@@ -4321,22 +3727,15 @@
     outline-offset: 3px;
     box-shadow: 0 0 0 5px color-mix(in srgb, var(--think-accent) 14%, transparent);
 }
-
 .think-freeform-item.is-locked:focus-visible {
     outline-style: double;
 }
-
-
 @media (prefers-reduced-motion: reduce) {
     .think-freeform-canvas,
     .think-freeform-item {
         transition: none;
     }
 }
-
-
-
-/* inlined: src/styles/features/view-shell.normalization.css */
 /* View-shell normalization for layout/freeform contexts only.
  * ModulePanel skin lives in view-shell.modules.css.
  * Dashboard toolbar skin lives in view-shell.toolbar.css.
@@ -4346,23 +3745,16 @@
     container-type: inline-size;
     color: var(--think-text-primary);
 }
-
 .think-freeform-canvas {
     position: relative;
     isolation: isolate;
     border-radius: var(--think-radius-md);
 }
-
 .think-freeform-item.is-dragging,
 .think-freeform-item.is-resizing {
     z-index: var(--think-z-drag);
     box-shadow: var(--think-shadow-overlay);
 }
-
-
-
-
-/* inlined: src/styles/features/progress.css */
 /* Progress / 成长视图：纯列表系统。
    目标 -> 子目标 -> 复用 BlockView/TaskRow 的真实记录；不建立卡片、白底或目标统计胶囊。
    Goal 子层级共用同一列系统，确保等级与进度条严格纵向对齐。 */
@@ -4378,30 +3770,25 @@
   max-width: var(--think-content-width-lg);
   min-width: 0;
 }
-
 .think-progress-view__empty {
   padding: var(--think-space-5) 0;
   color: var(--think-text-secondary);
   text-align: center;
 }
-
 .think-progress-section {
   display: flex;
   flex-direction: column;
   min-width: 0;
   border: 0;
 }
-
 .think-progress-section + .think-progress-section {
   margin-top: var(--think-rhythm-group);
 }
-
 .think-os .think-progress-section__trigger,
 .think-os .think-progress-skill {
   color: inherit;
   text-align: left;
 }
-
 /* 一级：目标。
    展开符 | 图标 | 名称 | 等级 | 进度 | 百分比 */
 .think-progress-section__trigger,
@@ -4414,7 +3801,6 @@
     minmax(120px, 1.35fr)
     var(--think-progress-tail-col);
 }
-
 .think-progress-section__trigger {
   display: grid;
   gap: var(--think-space-2);
@@ -4424,20 +3810,17 @@
   min-height: calc(var(--think-list-row-min-height) + var(--think-rhythm-inline));
   cursor: pointer;
 }
-
 .think-progress-section__chevron,
 .think-progress-skill__chevron {
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-md);
   line-height: 1;
 }
-
 .think-progress-section__chevron .think-lucide-icon,
 .think-progress-skill__chevron .think-lucide-icon {
   width: var(--think-icon-size-sm);
   height: var(--think-icon-size-sm);
 }
-
 .think-progress-section__icon {
   display: inline-flex;
   align-items: center;
@@ -4447,7 +3830,6 @@
   font-size: var(--think-type-section-size);
   line-height: 1;
 }
-
 .think-progress-section__name {
   display: inline-flex;
   align-items: baseline;
@@ -4455,7 +3837,6 @@
   min-width: 0;
   overflow: hidden;
 }
-
 .think-progress-section__title {
   min-width: 0;
   overflow: hidden;
@@ -4466,7 +3847,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .think-progress-section__level,
 .think-progress-skill__level {
   justify-self: start;
@@ -4474,11 +3854,9 @@
   font-weight: var(--think-type-section-weight);
   white-space: nowrap;
 }
-
 .think-progress-section__level {
   font-size: var(--think-font-size-md);
 }
-
 .think-progress-section__level-title {
   flex: 0 0 auto;
   color: var(--think-text-secondary);
@@ -4486,7 +3864,6 @@
   font-weight: var(--think-font-weight-medium);
   white-space: nowrap;
 }
-
 .think-progress-section__percent {
   justify-self: end;
   color: var(--think-data-2);
@@ -4495,12 +3872,10 @@
   text-align: right;
   white-space: nowrap;
 }
-
 .think-progress-section__body {
   min-width: 0;
   padding-left: 0;
 }
-
 .think-progress-bar {
   display: block;
   width: 100%;
@@ -4510,9 +3885,7 @@
   border-radius: var(--think-radius-pill);
   background: color-mix(in srgb, var(--think-border-subtle) 45%, transparent);
 }
-
 .think-progress-bar--goal { height: 7px; }
-
 .think-progress-bar__fill {
   display: block;
   width: var(--think-progress-ratio, 0%);
@@ -4521,23 +3894,19 @@
   background: linear-gradient(90deg, var(--think-data-2), color-mix(in srgb, var(--think-data-2) 42%, var(--think-data-3)));
   transition: width var(--think-duration-normal) var(--think-ease-standard);
 }
-
 .think-progress-bar--skill .think-progress-bar__fill {
   background: linear-gradient(90deg, color-mix(in srgb, var(--think-data-2) 88%, white), color-mix(in srgb, var(--think-data-2) 45%, white));
 }
-
 .think-progress-skills {
   display: grid;
   gap: 0;
   min-width: 0;
 }
-
 .think-progress-skill-group {
   display: grid;
   min-width: 0;
   border-top: 0;
 }
-
 /* 二级：子目标。与根目标完全共用列宽，只在图标列 + 名称列制造轻微缩进。
    这样缩进不会推动 Lv / progress / meta 三列。 */
 .think-progress-skill {
@@ -4549,7 +3918,6 @@
   min-height: var(--think-list-row-min-height);
   cursor: pointer;
 }
-
 .think-progress-skill__bullet {
   grid-column: 2;
   justify-self: center;
@@ -4557,7 +3925,6 @@
   font-size: var(--think-font-size-sm);
   text-align: center;
 }
-
 .think-progress-skill__title {
   grid-column: 3;
   min-width: 0;
@@ -4569,16 +3936,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .think-progress-skill__level {
   grid-column: 4;
   font-size: var(--think-font-size-sm);
 }
-
 .think-progress-skill > .think-progress-bar {
   grid-column: 5;
 }
-
 .think-progress-skill__tail {
   grid-column: 6;
   display: inline-flex;
@@ -4587,7 +3951,6 @@
   gap: var(--think-space-2);
   min-width: 0;
 }
-
 .think-progress-skill__meta {
   min-width: 0;
   overflow: hidden;
@@ -4596,14 +3959,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .think-progress-empty-skill,
 .think-progress-goal-records__empty {
   padding: var(--think-space-3) 0;
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-sm);
 }
-
 /* 子目标展开后直接复用 BlockView 渲染链；记录内容从子目标名称起点再内缩一层。 */
 .think-progress-goal-records {
   min-width: 0;
@@ -4615,24 +3976,19 @@
   padding: 0 0 var(--think-space-2) var(--think-space-3);
   border-left: 2px solid color-mix(in srgb, var(--think-data-5) 28%, transparent);
 }
-
 .think-progress-goal-records .bv-container {
   gap: 0;
   padding: 0;
   background: transparent;
 }
-
 .think-progress-goal-records :is(.bv-item, .task-row) {
   min-height: var(--think-list-row-min-height-compact);
 }
-
 .think-progress-goal-records .bv-block-main { gap: 0; }
-
 .think-progress-goal-records .bv-block-content,
 .think-progress-goal-records .bv-block-title {
   font-size: var(--think-font-size-sm);
 }
-
 /* 小屏仍然共用同一列系统：缩列但不改变列语义，所以 Lv / progress 始终对齐。 */
 @container (max-width: 760px) {
   .think-progress-view {
@@ -4667,7 +4023,6 @@
   .think-progress-skill__title { padding-left: var(--think-space-2); font-size: var(--think-font-size-xs); }
   .think-progress-skill__meta { font-size: var(--think-font-size-xs); }
 }
-
 @container (max-width: 500px) {
   .think-progress-view {
     --think-progress-chevron-col: 8px;
@@ -4698,10 +4053,6 @@
   .think-progress-skill__title { padding-left: var(--think-space-1); }
   .think-progress-skill__bullet { font-size: var(--think-font-size-xs); }
 }
-
-
-
-/* inlined: src/styles/features/progress-energy.css */
 .think-progress-energy {
   margin: 0 var(--think-space-6) var(--think-space-4);
   padding: var(--think-space-3) var(--think-space-4);
@@ -4709,40 +4060,33 @@
   border-radius: var(--think-radius-md);
   background: var(--think-bg-secondary);
 }
-
 .think-progress-energy__summary {
   display: flex;
   align-items: baseline;
   gap: var(--think-space-3);
   flex-wrap: wrap;
 }
-
 .think-progress-energy__title {
   font-size: var(--think-font-size-sm);
   font-weight: var(--think-font-weight-semibold);
 }
-
 .think-progress-energy__score {
   font-size: var(--think-font-size-xl);
   line-height: 1;
 }
-
 .think-progress-energy__dimension,
 .think-progress-energy__meta {
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 .think-progress-energy__meta {
   margin-left: auto;
 }
-
 .think-progress-energy__samples {
   display: grid;
   gap: var(--think-space-2);
   margin-top: var(--think-space-3);
 }
-
 .think-progress-energy__sample {
   display: block;
   width: 100%;
@@ -4753,26 +4097,21 @@
   color: inherit;
   text-align: left;
 }
-
 .think-progress-energy__sample:not(:disabled) {
   cursor: pointer;
 }
-
 .think-progress-energy__sample:not(:disabled):hover {
   background: var(--think-bg-hover);
 }
-
 @media (max-width: 600px) {
   .think-progress-energy__meta { margin-left: 0; width: 100%; }
 }
-
 .think-progress-energy__sample-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto auto;
   gap: var(--think-space-3);
   align-items: center;
 }
-
 .think-progress-energy__context {
   display: flex;
   flex-wrap: wrap;
@@ -4781,12 +4120,10 @@
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 @media (max-width: 600px) {
   .think-progress-energy__sample-main { grid-template-columns: minmax(0, 1fr) auto; }
   .think-progress-energy__sample-main > span:nth-child(n+3) { display: none; }
 }
-
 .think-progress-energy-timeline {
   display: grid;
   gap: var(--think-space-2);
@@ -4794,7 +4131,6 @@
   padding-top: var(--think-space-3);
   border-top: 1px solid var(--think-border-subtle);
 }
-
 .think-progress-energy-timeline__stats,
 .think-progress-energy-timeline__legend {
   display: flex;
@@ -4803,34 +4139,28 @@
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 .think-progress-energy-timeline__stats strong {
   color: var(--think-text-normal);
 }
-
 .think-progress-energy-timeline__axis,
 .think-progress-energy-timeline__day {
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr);
   gap: var(--think-space-2);
 }
-
 .think-progress-energy-timeline__axis {
   grid-template-columns: 48px repeat(5, 1fr);
   color: var(--think-text-faint);
   font-size: 10px;
   text-align: center;
 }
-
 .think-progress-energy-timeline__axis span:nth-child(2) { text-align: left; }
 .think-progress-energy-timeline__axis span:last-child { text-align: right; }
-
 .think-progress-energy-timeline__date {
   padding-top: 12px;
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 .think-progress-energy-timeline__track {
   position: relative;
   min-height: 58px;
@@ -4839,7 +4169,6 @@
   background: var(--think-bg-primary);
   overflow: visible;
 }
-
 .think-progress-energy-timeline__guide {
   position: absolute;
   right: 0;
@@ -4847,11 +4176,9 @@
   border-top: 1px dashed var(--think-border-subtle);
   pointer-events: none;
 }
-
 .think-progress-energy-timeline__guide.is-high { top: 20%; }
 .think-progress-energy-timeline__guide.is-mid { top: 50%; }
 .think-progress-energy-timeline__guide.is-low { top: 80%; }
-
 .think-progress-energy-timeline__line {
   position: absolute;
   left: var(--think-energy-line-left);
@@ -4864,7 +4191,6 @@
   opacity: 0.55;
   pointer-events: none;
 }
-
 .think-progress-energy-timeline__point {
   position: absolute;
   left: var(--think-energy-time);
@@ -4883,14 +4209,11 @@
   transform: translate(-50%, 50%);
   z-index: 2;
 }
-
 .think-progress-energy-timeline__point.is-retrospective {
   border-style: dashed;
 }
-
 .think-progress-energy-timeline__point:not(:disabled) { cursor: pointer; }
 .think-progress-energy-timeline__point:not(:disabled):hover { background: var(--think-bg-hover); }
-
 .think-progress-energy-timeline__missing {
   position: absolute;
   inset: 0;
@@ -4899,13 +4222,11 @@
   color: var(--think-text-faint);
   font-size: var(--think-font-size-xs);
 }
-
 .think-progress-energy-timeline__day.is-missing .think-progress-energy-timeline__track {
   background: transparent;
   border-right-style: dashed;
   border-left-style: dashed;
 }
-
 .think-progress-energy-timeline__dimensions {
   grid-column: 2;
   display: flex;
@@ -4914,7 +4235,6 @@
   color: var(--think-text-secondary);
   font-size: 10px;
 }
-
 @media (max-width: 600px) {
   .think-progress-energy-timeline__stats { gap: var(--think-space-1) var(--think-space-3); }
   .think-progress-energy-timeline__axis,
@@ -4922,7 +4242,6 @@
   .think-progress-energy-timeline__axis { grid-template-columns: 40px repeat(5, 1fr); }
   .think-progress-energy-timeline__point { width: 23px; height: 23px; line-height: 19px; }
 }
-
 .think-progress-energy-effects {
   display: grid;
   gap: var(--think-space-3);
@@ -4930,19 +4249,16 @@
   padding-top: var(--think-space-3);
   border-top: 1px solid var(--think-border-subtle);
 }
-
 .think-progress-energy-effects__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--think-space-3);
 }
-
 .think-progress-energy-effects__header > div:first-child {
   display: grid;
   gap: var(--think-space-1);
 }
-
 .think-progress-energy-effects__header span,
 .think-progress-energy-effects__coverage,
 .think-progress-energy-effects__note,
@@ -4950,27 +4266,22 @@
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 .think-progress-energy-effects__coverage {
   white-space: nowrap;
 }
-
 .think-progress-energy-effects__group {
   display: grid;
   gap: var(--think-space-2);
 }
-
 .think-progress-energy-effects__group-title {
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
   font-weight: var(--think-font-weight-semibold);
 }
-
 .think-progress-energy-effects__rows {
   display: grid;
   gap: var(--think-space-1);
 }
-
 .think-progress-energy-effects__row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 64px minmax(90px, auto);
@@ -4981,42 +4292,35 @@
   border-radius: var(--think-radius-sm);
   background: var(--think-bg-primary);
 }
-
 .think-progress-energy-effects__label,
 .think-progress-energy-effects__delta,
 .think-progress-energy-effects__dimension {
   display: grid;
   gap: 2px;
 }
-
 .think-progress-energy-effects__label span,
 .think-progress-energy-effects__delta span,
 .think-progress-energy-effects__dimension {
   color: var(--think-text-secondary);
   font-size: 10px;
 }
-
 .think-progress-energy-effects__delta {
   text-align: right;
 }
-
 .think-progress-energy-effects__dimension {
   grid-auto-flow: column;
   justify-content: end;
   gap: var(--think-space-2);
 }
-
 .think-progress-energy-effects__note {
   padding-top: var(--think-space-1);
   border-top: 1px dashed var(--think-border-subtle);
 }
-
 @media (max-width: 600px) {
   .think-progress-energy-effects__header { display: grid; }
   .think-progress-energy-effects__row { grid-template-columns: minmax(0, 1fr) 56px; }
   .think-progress-energy-effects__dimension { grid-column: 1 / -1; justify-content: start; }
 }
-
 .think-progress-energy-effects__discoveries {
   display: flex;
   flex-wrap: wrap;
@@ -5027,31 +4331,23 @@
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 .think-progress-energy-effects__discoveries strong {
   color: var(--think-text-normal);
 }
-
-
-
-/* inlined: src/styles/features/energy-view.css */
 .think-energy-view {
   display: grid;
   gap: var(--think-rhythm-related);
   min-width: 0;
 }
-
 .think-energy-view__goals,
 .think-energy-view__goal {
   display: grid;
   gap: var(--think-rhythm-group);
   min-width: 0;
 }
-
 .think-energy-view__goal + .think-energy-view__goal {
   margin-top: var(--think-rhythm-group);
 }
-
 .think-energy-view__primary {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
@@ -5059,9 +4355,7 @@
   align-items: start;
   min-width: 0;
 }
-
 .think-energy-view__timeline-off { min-height: 160px; }
-
 /* period review: flat supporting column */
 .think-energy-review,
 .think-energy-detail {
@@ -5069,7 +4363,6 @@
   padding-left: var(--think-space-4);
   border-left: 1px solid var(--think-viz-guide);
 }
-
 .think-energy-review__head {
   display: flex;
   align-items: baseline;
@@ -5077,7 +4370,6 @@
   gap: var(--think-space-2);
   padding-bottom: var(--think-space-2);
 }
-
 .think-energy-review__head > span,
 .think-energy-review__row > span,
 .think-energy-detail__mode,
@@ -5087,31 +4379,25 @@
   color: var(--think-text-secondary);
   font-size: var(--think-viz-font-meta);
 }
-
 .think-energy-review__list { display: grid; }
-
 .think-energy-review__row {
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr);
   gap: var(--think-space-3);
   padding: var(--think-space-2) 0;
 }
-
-
 .think-energy-review__row > p {
   margin: 0;
   color: var(--think-text-primary);
   font-size: var(--think-viz-font-meta);
   line-height: var(--think-line-height-normal);
 }
-
 /* selected node/day */
 .think-energy-detail {
   display: grid;
   gap: var(--think-space-3);
   align-content: start;
 }
-
 .think-energy-detail__back,
 .think-energy-detail__open {
   width: fit-content;
@@ -5121,44 +4407,36 @@
   color: var(--think-text-accent);
   cursor: pointer;
 }
-
 .think-energy-detail__head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--think-space-3);
 }
-
 .think-energy-detail__head > div {
   display: grid;
   gap: var(--think-space-1);
 }
-
 .think-energy-detail__head > div > span {
   color: var(--think-text-secondary);
   font-size: var(--think-viz-font-label);
 }
-
 .think-energy-detail__total {
   display: flex;
   align-items: baseline;
   gap: var(--think-space-2);
   padding: var(--think-space-1) 0;
 }
-
 .think-energy-detail__total > strong {
   color: var(--think-accent);
   font-size: var(--think-font-size-2xl);
   line-height: 1;
 }
-
 .think-energy-detail__total > span { color: var(--think-text-secondary); }
-
 .think-energy-detail__bars {
   display: grid;
   gap: var(--think-space-2);
 }
-
 .think-energy-detail__bars > div {
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr);
@@ -5167,7 +4445,6 @@
   color: var(--think-text-secondary);
   font-size: var(--think-viz-font-meta);
 }
-
 .think-energy-detail__bars i {
   position: relative;
   display: block;
@@ -5176,7 +4453,6 @@
   border-radius: var(--think-radius-pill);
   background: var(--think-viz-track);
 }
-
 .think-energy-detail__bars i > b {
   position: absolute;
   inset: 0 auto 0 0;
@@ -5184,7 +4460,6 @@
   border-radius: inherit;
   background: var(--think-accent);
 }
-
 .think-energy-detail__section,
 .think-energy-detail__impact {
   display: grid;
@@ -5193,10 +4468,8 @@
   padding-top: 0;
   border: 0;
 }
-
 .think-energy-detail__section > p { margin: 0; line-height: var(--think-line-height-normal); }
 .think-energy-detail__impact > strong { font-size: var(--think-viz-font-label); }
-
 .think-energy-detail__record-row {
   appearance: none;
   width: fit-content;
@@ -5210,13 +4483,11 @@
   text-align: left;
   cursor: pointer;
 }
-
 .think-energy-detail__record-row:hover,
 .think-energy-detail__record-row:focus-visible {
   color: var(--think-text-accent);
   text-decoration: underline;
 }
-
 @container (max-width: 760px) {
   .think-energy-view__primary { grid-template-columns: 1fr; }
   .think-energy-review,
@@ -5227,10 +4498,6 @@
     border: 0;
   }
 }
-
-
-
-/* inlined: src/styles/features/energy-task-list.css */
 /* 1.0.33: tasks are grouped by Goal, then by cadence. Energy only ranks within the real task system. */
 /* Cadence surface tokens (including --think-task-cadence-year-bg) remain available for compatibility, but task rows no longer paint cadence background blocks. */
 .think-os .think-energy-task-list {
@@ -5239,23 +4506,19 @@
   padding-top: 0;
   border: 0;
 }
-
 .think-os .think-energy-task-list__title {
   color: var(--think-text-primary);
   font-size: var(--think-type-section-size);
   font-weight: var(--think-type-section-weight);
 }
-
 .think-os .think-energy-task-list__goals {
   display: grid;
   gap: var(--think-rhythm-group);
 }
-
 .think-os .think-energy-task-list__goal-group {
   display: grid;
   gap: 0;
 }
-
 /* Goal title provides the boundary. Avoid a second full-width line between
  * every group; the task list is intentionally text-first and dense. */
 .think-os .think-energy-task-list__goal-group + .think-energy-task-list__goal-group {
@@ -5263,7 +4526,6 @@
   padding-top: 0;
   border: 0;
 }
-
 .think-os .think-energy-task-list__goal-title {
   display: inline-flex;
   align-items: center;
@@ -5279,19 +4541,16 @@
   font-weight: var(--think-type-section-weight);
   letter-spacing: -0.01em;
 }
-
 .think-os .think-energy-task-list__rows {
   display: grid;
   gap: var(--think-space-1);
 }
-
 .think-os .think-energy-task-list__row {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
   gap: var(--think-space-2);
   align-items: start;
 }
-
 .think-os .think-energy-task-list__row-label {
   display: inline-flex;
   align-items: center;
@@ -5302,14 +4561,12 @@
   font-size: var(--think-font-size-md);
   font-weight: var(--think-font-weight-semibold);
 }
-
 .think-os .think-energy-task-list__items {
   display: flex;
   flex-wrap: wrap;
   gap: 0;
   min-width: 0;
 }
-
 .think-os .think-energy-task-list__item {
   appearance: none;
   position: relative;
@@ -5328,7 +4585,6 @@
   font-size: var(--think-font-size-sm);
   cursor: pointer;
 }
-
 .think-os .think-energy-task-list__item:first-child { padding-inline-start: 0; }
 .think-os .think-energy-task-list__item + .think-energy-task-list__item {
   padding-inline-start: calc(var(--think-space-2) + .65em);
@@ -5346,7 +4602,6 @@
   background: transparent;
   color: var(--think-text-accent);
 }
-
 .think-os .think-energy-task-list__task {
   min-width: 0;
   overflow: hidden;
@@ -5354,11 +4609,9 @@
   white-space: nowrap;
   font-weight: var(--think-font-weight-medium);
 }
-
 .think-os .think-energy-task-list__count { color: var(--think-text-secondary); }
 .think-os .think-energy-task-list__empty,
 .think-os .think-energy-task-list__empty-state { color: var(--think-text-subtle); line-height: var(--think-control-height-sm); }
-
 .think-os .think-energy-task-list__menu {
   position: fixed;
   z-index: var(--think-z-popover);
@@ -5371,7 +4624,6 @@
   color: var(--think-text-primary);
   box-shadow: var(--think-shadow-overlay);
 }
-
 .think-os .think-energy-task-list__menu-title { margin-bottom: var(--think-space-2); font-weight: var(--think-type-subsection-weight); }
 .think-os .think-energy-task-list__menu-action {
   padding: 0;
@@ -5385,7 +4637,6 @@
 .think-os .think-energy-task-list__menu-empty { color: var(--think-text-secondary); font-size: var(--think-font-size-sm); }
 .think-os .think-energy-task-list__menu-records { display: grid; gap: var(--think-space-2); margin-top: var(--think-space-3); }
 .think-os .think-energy-task-list__menu-record { color: var(--think-text-primary); text-decoration: none; }
-
 @container think-view (max-width: 620px) {
   .think-os .think-energy-task-list__row { grid-template-columns: 1fr; gap: var(--think-space-1); }
   .think-os .think-energy-task-list__row-label {
@@ -5394,7 +4645,6 @@
     min-height: auto;
   }
 }
-
 /* 1.0.34 Desktop UX final: Energy match is a visible but lightweight badge.
    Use warm orange-yellow instead of the task cadence purple so the signal survives
    on day/week/month chips without turning the task itself into a recommendation card. */
@@ -5406,7 +4656,6 @@
   line-height: 1;
   pointer-events: none;
 }
-
 /* 1.0.43 Energy Recommendation V2
  * Recommendation is a flat decision list, not another card surface.
  * Reason/evidence stays in the native hover title; only task + countdown is visible.
@@ -5418,7 +4667,6 @@
   padding-bottom: 0;
   border: 0;
 }
-
 .think-os .think-energy-task-list__recommendation-head {
   display: flex;
   align-items: center;
@@ -5426,27 +4674,23 @@
   gap: var(--think-space-3);
   min-width: 0;
 }
-
 .think-os .think-energy-task-list__recommendation-heading {
   display: inline-flex;
   align-items: baseline;
   gap: var(--think-space-2);
   min-width: 0;
 }
-
 .think-os .think-energy-task-list__recommendation-heading > strong {
   color: var(--think-text-accent);
   font-size: var(--think-font-size-md);
   font-weight: var(--think-type-subsection-weight);
 }
-
 .think-os .think-energy-task-list__recommendation-heading > span,
 .think-os .think-energy-task-list__recommendation-empty,
 .think-os .think-energy-task-list__all-head {
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 .think-os .think-energy-task-list__context {
   display: inline-flex;
   align-items: center;
@@ -5455,21 +4699,17 @@
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 .think-os .think-energy-task-list__context-select {
   width: 92px;
 }
-
 .think-os .think-energy-task-list__context-select .think-simple-select__trigger {
   min-height: var(--think-control-height-sm);
   padding-inline: var(--think-space-3);
 }
-
 .think-os .think-energy-task-list__recommendations {
   display: grid;
   min-width: 0;
 }
-
 .think-os .think-energy-task-list__recommendation {
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr) auto 18px;
@@ -5477,16 +4717,13 @@
   align-items: center;
   min-height: calc(var(--think-list-row-min-height) + var(--think-space-1));
 }
-
 .think-os .think-energy-task-list__recommendation:last-child { border-bottom: 0; }
-
 .think-os .think-energy-task-list__recommendation-rank {
   color: var(--think-text-accent);
   font-size: var(--think-font-size-xs);
   font-weight: var(--think-type-subsection-weight);
   text-align: center;
 }
-
 .think-os .think-energy-task-list__recommendation-title {
   min-width: 0;
   overflow: hidden;
@@ -5495,7 +4732,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .think-os .think-energy-task-list__recommendation-duration {
   color: var(--think-text-accent);
   font-family: var(--font-monospace);
@@ -5504,23 +4740,19 @@
   font-weight: var(--think-font-weight-semibold);
   white-space: nowrap;
 }
-
 .think-os .think-energy-task-list__recommendation-play {
   color: var(--think-text-accent);
   font-size: var(--think-font-size-xs);
   text-align: right;
 }
-
 .think-os .think-energy-task-list__recommendation-play .think-lucide-icon {
   width: var(--think-icon-size-sm);
   height: var(--think-icon-size-sm);
 }
-
 .think-os .think-energy-task-list__all-head {
   padding-top: var(--think-space-1);
   font-weight: var(--think-font-weight-semibold);
 }
-
 @container think-view (max-width: 620px) {
   .think-os .think-energy-task-list__recommendation-head {
     align-items: flex-start;
@@ -5532,10 +4764,6 @@
     grid-template-columns: 18px minmax(0, 1fr) auto 16px;
   }
 }
-
-
-
-/* inlined: src/styles/features/energy-map.css */
 /* Energy visualization geometry. Labels, guides, empty states and interaction
  * contrast consume the shared visualization contract; score/capture encoding
  * stays feature-owned.
@@ -5543,8 +4771,6 @@
 .think-energy-period-map {
   min-width: 0;
 }
-
-
 .think-energy-period-map__heading {
   display: flex;
   align-items: baseline;
@@ -5552,18 +4778,15 @@
   min-height: var(--think-viz-row-height-sm);
   padding-bottom: var(--think-space-2);
 }
-
 .think-energy-period-map__heading > strong {
   color: var(--think-text-primary);
   font-size: var(--think-viz-font-title);
   font-weight: var(--think-font-weight-semibold);
 }
-
 .think-energy-period-map__heading > span {
   color: var(--think-text-secondary);
   font-size: var(--think-viz-font-meta);
 }
-
 .think-energy-dot {
   --think-energy-dot-size: 22px;
   display: block;
@@ -5578,58 +4801,48 @@
   transition: transform var(--think-duration-fast) var(--think-ease-standard);
   user-select: none;
 }
-
 .think-energy-dot__shape,
 .think-energy-dot__selection {
   transform-box: fill-box;
   transform-origin: center;
 }
-
 .think-energy-dot__selection {
   fill: none;
   stroke: currentColor;
   stroke-width: 0;
   opacity: 0;
 }
-
 .think-energy-dot__shape { opacity: 1; }
-
 .think-energy-dot.is-realtime .think-energy-dot__shape {
   fill: currentColor;
   stroke: currentColor;
   stroke-width: 0;
 }
-
 .think-energy-dot.is-retrospective .think-energy-dot__shape {
   fill: none;
   stroke: currentColor;
   stroke-width: 1.35;
 }
-
 .think-energy-dot.is-plot { transform: translate(-50%, -50%); }
 .think-energy-dot.is-cell { transform: none; }
-
 .think-energy-dot.is-plot:hover,
 .think-energy-dot.is-plot.is-selected,
 .think-energy-dot.is-plot:focus-visible {
   z-index: 4;
   transform: translate(-50%, -50%) scale(1.1);
 }
-
 .think-energy-dot.is-cell:hover,
 .think-energy-dot.is-cell.is-selected,
 .think-energy-dot.is-cell:focus-visible {
   z-index: 4;
   transform: scale(1.1);
 }
-
 .think-energy-dot:hover .think-energy-dot__selection,
 .think-energy-dot.is-selected .think-energy-dot__selection,
 .think-energy-dot:focus-visible .think-energy-dot__selection {
   stroke-width: 3;
   opacity: 0.22;
 }
-
 /* day: horizontal time */
 .think-energy-day-map__track {
   position: relative;
@@ -5637,7 +4850,6 @@
   margin: var(--think-space-2) var(--think-space-2) var(--think-space-4);
   border-bottom: 1px solid var(--think-viz-guide-strong);
 }
-
 .think-energy-day-map__guide {
   --think-energy-x: 0%;
   position: absolute;
@@ -5646,13 +4858,11 @@
   left: var(--think-energy-x);
   width: 1px;
 }
-
 .think-energy-day-map__guide > i {
   position: absolute;
   inset: 0;
   border-left: 1px dashed var(--think-viz-guide);
 }
-
 .think-energy-day-map__guide > b {
   position: absolute;
   bottom: calc(-1 * var(--think-space-6));
@@ -5663,14 +4873,12 @@
   font-weight: var(--think-font-weight-regular);
   transform: translateX(-50%);
 }
-
 .think-energy-day-map__track > .think-energy-dot {
   --think-energy-x: 0%;
   position: absolute;
   top: 52%;
   left: var(--think-energy-x);
 }
-
 .think-energy-day-map__empty {
   position: absolute;
   top: 50%;
@@ -5679,30 +4887,24 @@
   font-size: var(--think-viz-font-meta);
   transform: translate(-50%, -50%);
 }
-
 /* week/month: date x time */
 .think-energy-date-map__scroll {
   overflow-x: auto;
   overflow-y: hidden;
   padding-top: var(--think-space-2);
 }
-
 .think-energy-date-map__chart {
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr);
 }
-
 .think-energy-date-map__chart.is-week { min-width: 640px; }
 .think-energy-date-map__chart.is-month { min-width: 1120px; }
-
 .think-energy-date-map__axis,
 .think-energy-date-map__day {
   display: grid;
   grid-template-rows: var(--think-viz-row-height-md) var(--think-viz-plot-height-md);
 }
-
 .think-energy-date-map__axis-track { position: relative; }
-
 .think-energy-date-map__axis-track > span {
   --think-energy-y: 0%;
   position: absolute;
@@ -5713,45 +4915,36 @@
   font-variant-numeric: tabular-nums;
   transform: translateY(-50%);
 }
-
 .think-energy-date-map__axis-track > span:first-child { transform: translateY(0); }
 .think-energy-date-map__axis-track > span:last-child { transform: translateY(-100%); }
-
 .think-energy-date-map__days {
   --think-energy-day-count: 7;
   display: grid;
   grid-template-columns: repeat(var(--think-energy-day-count), minmax(36px, 1fr));
 }
-
 .think-energy-date-map__day {
   min-width: 36px;
   border-left: 1px solid var(--think-viz-guide);
 }
-
 .think-energy-date-map__day.is-missing {
   background: color-mix(in srgb, var(--think-bg-surface-1) 45%, transparent);
 }
-
 .think-energy-date-map__day-head {
   display: grid;
   place-items: center;
   align-content: center;
   gap: 1px;
 }
-
 .think-energy-date-map__day-head > strong {
   font-size: var(--think-viz-font-meta);
   font-weight: var(--think-font-weight-semibold);
 }
-
 .think-energy-date-map__day-head > span {
   color: var(--think-text-secondary);
   font-size: var(--think-viz-font-axis);
   font-variant-numeric: tabular-nums;
 }
-
 .think-energy-date-map__lane { position: relative; }
-
 .think-energy-date-map__guide {
   --think-energy-y: 0%;
   position: absolute;
@@ -5760,14 +4953,12 @@
   left: 0;
   border-top: 1px dashed var(--think-viz-guide);
 }
-
 .think-energy-date-map__lane > .think-energy-dot {
   --think-energy-y: 0%;
   position: absolute;
   top: var(--think-energy-y);
   left: 50%;
 }
-
 /* quarter/year: one day = one encoded dot */
 .think-energy-daily-dots__months {
   --think-energy-gap-minor: var(--think-space-3);
@@ -5776,41 +4967,34 @@
   gap: var(--think-energy-gap-major);
   padding-top: var(--think-space-2);
 }
-
 .think-energy-daily-dots__months.is-quarter {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-
 .think-energy-daily-dots__months.is-year {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
-
 .think-energy-daily-dots__month {
   display: grid;
   gap: var(--think-energy-gap-minor);
   min-width: 0;
 }
-
 .think-energy-daily-dots__month > strong {
   display: block;
   margin: 0;
   font-size: var(--think-viz-font-label);
   font-weight: var(--think-font-weight-semibold);
 }
-
 .think-energy-daily-dots__weekdays,
 .think-energy-daily-dots__grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(28px, 1fr));
   gap: var(--think-space-2);
 }
-
 .think-energy-daily-dots__weekdays {
   color: var(--think-text-subtle);
   font-size: var(--think-viz-font-axis);
   text-align: center;
 }
-
 .think-energy-daily-dots__grid > i,
 .think-energy-daily-dot-cell {
   display: grid;
@@ -5818,27 +5002,20 @@
   min-width: 28px;
   min-height: 30px;
 }
-
 .think-energy-daily-dot-cell.is-missing { background: transparent; }
 .think-energy-daily-dot { justify-self: center; align-self: center; }
-
 @container (max-width: 760px) {
   .think-energy-daily-dots__months.is-year,
   .think-energy-daily-dots__months.is-quarter {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-
 @container (max-width: 480px) {
   .think-energy-daily-dots__months.is-year,
   .think-energy-daily-dots__months.is-quarter {
     grid-template-columns: 1fr;
   }
 }
-
-
-
-/* inlined: src/styles/features/heatmap.css */
 /* Heatmap consumes the shared data-grid density while keeping its calendar semantics. */
 .heatmap-container {
     --heatmap-cell-size: var(--think-data-grid-heatmap-cell-size);
@@ -5848,7 +5025,6 @@
     font-size: var(--think-data-grid-font-size);
     container-type: inline-size;
 }
-
 .heatmap-view-wrapper,
 .heatmap-day-view,
 .heatmap-goal-day-view {
@@ -5856,7 +5032,6 @@
     flex-direction: column;
     gap: var(--think-space-4);
 }
-
 .heatmap-goal-group {
     display: flex;
     flex-direction: column;
@@ -5864,11 +5039,9 @@
     padding: var(--think-space-2) 0;
     border-bottom: 1px solid var(--think-data-grid-border);
 }
-
 .heatmap-goal-group:last-child {
     border-bottom: 0;
 }
-
 .heatmap-goal-header {
     display: flex;
     flex-direction: column;
@@ -5879,48 +5052,39 @@
     border: 0;
     background: transparent;
 }
-
 .heatmap-goal-header:is(.week-inline-layout, .row-inline-layout) {
     flex-direction: row;
     align-items: center;
     gap: var(--think-space-4);
 }
-
 .heatmap-goal-header.vertical-layout {
     flex-direction: column;
     align-items: stretch;
 }
-
 .heatmap-header-info,
 .heatmap-header-info-left {
     display: flex;
     align-items: center;
     min-width: 0;
 }
-
 .heatmap-header-info {
     flex: 0 0 auto;
 }
-
 .heatmap-header-info.is-clickable {
     cursor: pointer;
 }
-
 .heatmap-header-info-left {
     gap: var(--think-space-2);
 }
-
 .heatmap-collapse-arrow {
     flex: 0 0 auto;
     color: var(--think-text-secondary);
     font-size: var(--think-font-size-xs);
     transition: transform var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .heatmap-collapse-arrow.is-collapsed {
     transform: rotate(-90deg);
 }
-
 .heatmap-goal-name {
     max-width: 180px;
     min-width: 0;
@@ -5931,7 +5095,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
 .heatmap-header-cells {
     display: flex;
     flex: 1 1 auto;
@@ -5942,44 +5105,36 @@
     width: 100%;
     min-width: 0;
 }
-
 .heatmap-goal-header:is(.week-inline-layout, .row-inline-layout) .heatmap-header-cells {
     width: auto;
 }
-
 .heatmap-goal-header.row-inline-layout .heatmap-header-cells {
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
 }
-
 .heatmap-header-cells.grid-view {
     gap: var(--think-space-6);
 }
-
 .heatmap-day-section,
 .heatmap-goal-section {
     display: flex;
     flex-direction: column;
     gap: var(--think-space-3);
 }
-
 .heatmap-goal-section {
     padding: var(--think-space-3) 0 var(--think-space-4);
     border-bottom: 1px solid var(--think-data-grid-border);
 }
-
 .heatmap-goal-section:last-child {
     border-bottom: 0;
 }
-
 .heatmap-goal-title-row {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     gap: var(--think-space-3);
 }
-
 .think-os .heatmap-goal-title,
 .think-os .heatmap-day-section-title {
     margin: 0;
@@ -5988,28 +5143,23 @@
     font-weight: var(--think-type-section-weight);
     line-height: var(--think-line-height-tight);
 }
-
-
 .heatmap-goal-list {
     display: flex;
     flex-direction: column;
     gap: var(--think-space-1);
 }
-
 .heatmap-day-section-grid {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
     gap: var(--think-space-3) var(--think-space-5);
 }
-
 .heatmap-day-item {
     display: inline-flex;
     flex: 0 0 auto;
     align-items: center;
     min-width: 0;
 }
-
 .heatmap-cell {
     position: relative;
     display: flex;
@@ -6029,26 +5179,21 @@
         border-color var(--think-duration-fast) var(--think-ease-standard),
         background-color var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .heatmap-cell:hover {
     z-index: 1;
     border-color: var(--think-border-strong);
 }
-
 .heatmap-cell:focus-visible {
     outline: var(--think-focus-ring-width) solid var(--think-focus-ring-color);
     outline-offset: var(--think-focus-ring-offset);
 }
-
 .heatmap-cell.current-day {
     box-shadow: inset 0 0 0 1px var(--think-accent);
 }
-
 .heatmap-cell.empty {
     background: var(--think-heatmap-0);
     cursor: default;
 }
-
 .heatmap-cell.grid-spacer {
     visibility: hidden;
     border: 0;
@@ -6056,12 +5201,10 @@
     box-shadow: none;
     pointer-events: none;
 }
-
 .heatmap-cell.heatmap-count-level-2 { border-color: var(--think-data-1); }
 .heatmap-cell.heatmap-count-level-3 { border-color: var(--think-data-4); }
 .heatmap-cell.heatmap-count-level-4 { border-color: var(--think-data-3); }
 .heatmap-cell.heatmap-count-level-5 { border-color: var(--think-data-2); }
-
 .heatmap-cell-content,
 .cell-with-image,
 .cell-with-text,
@@ -6073,19 +5216,16 @@
     width: 100%;
     height: 100%;
 }
-
 .cell-with-empty-label {
     padding: var(--think-space-1);
     text-align: center;
 }
-
 .heatmap-cell-image,
 .cell-with-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-
 .empty-label-text {
     color: var(--think-text-secondary);
     font-size: var(--think-font-size-2xs);
@@ -6093,34 +5233,28 @@
     line-height: var(--think-line-height-tight);
     word-break: break-word;
 }
-
 .pure-count {
     color: var(--think-text-primary);
     font-size: var(--think-font-size-xs);
     font-weight: var(--think-font-weight-semibold);
     line-height: 1;
 }
-
 .pure-count.medium { font-size: var(--think-font-size-2xs); }
 .pure-count.large { font-size: 9px; }
-
 .month-label {
     margin-bottom: var(--think-space-2);
     color: var(--think-text-secondary);
     font-size: var(--think-font-size-xs);
     text-align: center;
 }
-
 .heatmap-row.calendar {
     display: grid;
     grid-template-columns: repeat(7, var(--heatmap-cell-size));
     gap: var(--think-space-1);
 }
-
 body.theme-dark .heatmap-cell.empty {
     background: color-mix(in srgb, var(--think-data-5) 14%, transparent);
 }
-
 @container (max-width: 560px) {
     .heatmap-container {
         --heatmap-cell-size: 32px;
@@ -6140,20 +5274,13 @@ body.theme-dark .heatmap-cell.empty {
         gap: var(--think-space-2) var(--think-space-4);
     }
 }
-
 @container (max-width: 400px) {
     .heatmap-container { --heatmap-cell-size: 30px; }
     .heatmap-view-wrapper,
     .heatmap-day-view,
     .heatmap-goal-day-view { gap: var(--think-space-3); }
 }
-
-
-
-/* inlined: src/styles/features/statistics.css */
 /* CSS V4 statistics feature facade. Keep imports in legacy cascade order. */
-
-/* inlined: src/styles/features/statistics.base.css */
 /* Statistics view base. Visualization typography and empty states are shared. */
 .statistics-view {
   box-sizing: border-box;
@@ -6163,11 +5290,6 @@ body.theme-dark .heatmap-cell.empty {
   border: 0;
   background: transparent;
 }
-
-
-
-
-/* inlined: src/styles/features/statistics.grids.css */
 /* Statistics time hierarchy: spacing + indentation carry hierarchy; repeated
  * horizontal separators are intentionally avoided because the chart baseline
  * already provides a strong visual guide.
@@ -6180,7 +5302,6 @@ body.theme-dark .heatmap-cell.empty {
   flex-direction: column;
   gap: 0;
 }
-
 .sv-year-grid,
 .sv-quarter-grid,
 .sv-month-grid {
@@ -6189,42 +5310,34 @@ body.theme-dark .heatmap-cell.empty {
   column-gap: var(--sv-gap-major);
   row-gap: var(--sv-gap-major);
 }
-
 .sv-year-grid {
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--sv-gap-minor);
   row-gap: var(--sv-gap-section);
 }
-
 .sv-quarter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .sv-month-grid { grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); }
-
 .sv-period-level {
   min-width: 0;
   box-sizing: border-box;
   background: transparent;
 }
-
 .sv-period-level--0 { padding-bottom: var(--think-space-3); }
 .sv-period-level--1 { padding-left: var(--think-space-2); }
 .sv-period-level--2 { padding-left: var(--think-space-3); }
 .sv-period-level--3 { padding-left: var(--think-space-4); }
-
 .sv-period-level--1,
 .sv-period-level--2,
 .sv-period-level--3 {
   border-left: 1px solid var(--think-viz-guide-strong);
 }
-
 .sv-year-grid-year,
 .sv-quarter-grid-summary,
 .sv-month-grid-summary { grid-column: 1 / -1; }
-
 .sv-year-grid-quarter { grid-column: span 3; }
 .sv-year-grid-month,
 .sv-quarter-grid-month,
 .sv-month-grid-week { min-width: 0; }
-
 .sv-year-grid-week-col,
 .sv-quarter-grid-week-col {
   display: flex;
@@ -6233,9 +5346,7 @@ body.theme-dark .heatmap-cell.empty {
   min-width: 0;
   padding-top: var(--think-space-2);
 }
-
 .sv-quarter-end { margin-right: 0; }
-
 .sv-year-grid-year > .sv-chart-block { --sv-chart-height: 112px; }
 .sv-year-grid-quarter > .sv-chart-block,
 .sv-quarter-grid-summary > .sv-chart-block,
@@ -6245,18 +5356,12 @@ body.theme-dark .heatmap-cell.empty {
 .sv-year-grid-week-col .sv-chart-block,
 .sv-quarter-grid-week-col .sv-chart-block,
 .sv-month-grid-week > .sv-chart-block { --sv-chart-height: 66px; }
-
 .sv-year-grid-week-col .sv-vbar-bar { max-width: 9px; }
 .sv-year-grid-month .sv-vbar-bar { max-width: 12px; }
-
 @container (max-width: 700px) {
   .sv-year-grid { min-width: 720px; }
   .sv-quarter-grid { min-width: 520px; }
 }
-
-
-
-/* inlined: src/styles/features/statistics.charts.css */
 /* Statistics chart blocks use the shared visualization scale. Charts remain
  * feature geometry; ordinary typography / hover / guide contrast is shared.
  */
@@ -6272,30 +5377,24 @@ body.theme-dark .heatmap-cell.empty {
   cursor: pointer;
   transition: background-color var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .sv-chart-block.is-compact {
   --sv-chart-height: 68px;
   padding-block: var(--think-space-1);
 }
-
 .sv-chart-block:hover,
 .sv-chart-block:focus-visible {
   background: var(--think-viz-hover);
 }
-
 .sv-chart-block:focus-visible {
   outline: var(--think-focus-ring-width) solid var(--think-focus-ring-color);
   outline-offset: 1px;
 }
-
 .sv-chart-block.is-empty :is(.sv-chart-label, .sv-chart-number, .sv-chart-category) {
   color: var(--think-text-subtle);
 }
-
 .sv-chart-block.is-empty .sv-vbar-bar {
   opacity: 0.28;
 }
-
 .sv-chart-label {
   flex-shrink: 0;
   overflow: hidden;
@@ -6303,7 +5402,6 @@ body.theme-dark .heatmap-cell.empty {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .sv-chart-content {
   display: flex;
   flex: 1 1 auto;
@@ -6311,7 +5409,6 @@ body.theme-dark .heatmap-cell.empty {
   gap: var(--think-space-1);
   min-height: 0;
 }
-
 .sv-chart-numbers,
 .sv-chart-categories {
   display: flex;
@@ -6319,7 +5416,6 @@ body.theme-dark .heatmap-cell.empty {
   justify-content: space-between;
   gap: var(--think-space-1);
 }
-
 .sv-chart-number,
 .sv-chart-category {
   flex: 1 1 0;
@@ -6331,16 +5427,13 @@ body.theme-dark .heatmap-cell.empty {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .sv-chart-number {
   font-size: var(--think-viz-font-axis);
   font-weight: var(--think-font-weight-semibold);
 }
-
 .sv-chart-category {
   color: var(--think-text-secondary);
 }
-
 .sv-chart-bars-container {
   display: flex;
   flex: 1 1 auto;
@@ -6349,7 +5442,6 @@ body.theme-dark .heatmap-cell.empty {
   min-height: 28px;
   border-bottom: 1px solid var(--think-viz-guide-strong);
 }
-
 .sv-vbar-wrapper {
   display: flex;
   flex: 1 1 0;
@@ -6359,11 +5451,9 @@ body.theme-dark .heatmap-cell.empty {
   height: 100%;
   cursor: pointer;
 }
-
 .sv-vbar-wrapper:hover {
   opacity: 0.78;
 }
-
 .sv-vbar-bar {
   width: min(100%, 14px);
   min-height: 2px;
@@ -6371,16 +5461,11 @@ body.theme-dark .heatmap-cell.empty {
   background: var(--think-data-neutral);
   transition: height var(--think-duration-normal) var(--think-ease-standard);
 }
-
-
-
-/* inlined: src/styles/features/statistics.popover.css */
 .sv-popover-heading {
     display: flex;
     align-items: center;
     gap: var(--think-space-2);
 }
-
 /* Statistics popover base. */
 /* 弹窗样式 */
 .sv-popover {
@@ -6390,8 +5475,6 @@ body.theme-dark .heatmap-cell.empty {
     width: 500px;
     max-width: 90vw;
 }
-
-
 .sv-popover-content {
     height: 100%;
     min-height: 0;
@@ -6399,18 +5482,11 @@ body.theme-dark .heatmap-cell.empty {
     padding: 4px;
     box-sizing: border-box;
 }
-
-
 .sv-popover-empty {
     color: var(--think-text-subtle);
     padding: 24px;
     text-align: center;
 }
-
-
-
-
-/* inlined: src/styles/features/timeline.css */
 /* Timeline visualization. Geometry stays feature-owned; typography, guides,
  * empty states and interaction states consume the shared visualization contract.
  */
@@ -6420,24 +5496,20 @@ body.theme-dark .heatmap-cell.empty {
   overflow-x: auto;
   color: var(--think-text-primary);
 }
-
 .timeline-sticky-header,
 .timeline-scrollable-body {
   display: flex;
   min-width: max-content;
 }
-
 .timeline-sticky-header {
   position: sticky;
   top: 0;
   z-index: var(--think-z-raised);
   background: var(--think-bg-canvas);
 }
-
 .time-axis {
   flex: 0 0 var(--timeline-time-axis-width);
 }
-
 .time-axis-hour {
   position: relative;
   box-sizing: border-box;
@@ -6450,22 +5522,18 @@ body.theme-dark .heatmap-cell.empty {
   line-height: var(--think-line-height-tight);
   text-align: end;
 }
-
 .day-column-header,
 .day-column-body {
   flex: 0 0 var(--timeline-day-width);
   border-inline-start: 1px solid var(--think-viz-guide);
 }
-
 .day-column-header {
   background: var(--think-bg-surface-1);
 }
-
 .day-column-body {
   position: relative;
   cursor: cell;
 }
-
 .day-header-title,
 .summary-title {
   height: var(--think-viz-row-height-sm);
@@ -6477,23 +5545,19 @@ body.theme-dark .heatmap-cell.empty {
   text-align: center;
   white-space: nowrap;
 }
-
 .daily-progress-bar,
 .summary-content {
   min-height: 52px;
 }
-
 .summary-progress-container {
   border-bottom: 1px solid var(--think-viz-guide);
 }
-
 .progress-block-container {
   display: flex;
   flex-direction: column;
   gap: var(--think-space-1);
   padding: var(--think-space-2);
 }
-
 .progress-block-item {
   position: relative;
   width: 100%;
@@ -6502,13 +5566,11 @@ body.theme-dark .heatmap-cell.empty {
   border-radius: var(--think-radius-pill);
   background: var(--think-viz-track);
 }
-
 .progress-block-bar {
   height: 100%;
   border-radius: inherit;
   background: var(--timeline-progress-color, var(--think-data-neutral));
 }
-
 .progress-block-text {
   position: absolute;
   inset: 0;
@@ -6523,17 +5585,14 @@ body.theme-dark .heatmap-cell.empty {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .progress-block-text-light { color: var(--think-text-on-accent); }
 .progress-block-text-dark { color: var(--think-text-primary); }
-
 .timeline-task-block {
   position: absolute;
   left: var(--think-space-1);
   right: var(--think-space-1);
   min-height: 2px;
 }
-
 .timeline-task-link {
   display: flex;
   width: 100%;
@@ -6543,17 +5602,14 @@ body.theme-dark .heatmap-cell.empty {
   color: inherit;
   text-decoration: none;
 }
-
 .timeline-task-link:focus-visible {
   outline: var(--think-focus-ring-width) solid var(--think-focus-ring-color);
   outline-offset: 1px;
 }
-
 .timeline-task-indicator {
   flex: 0 0 3px;
   background: var(--timeline-task-color, var(--think-accent));
 }
-
 .timeline-task-content {
   display: flex;
   flex: 1 1 auto;
@@ -6567,12 +5623,10 @@ body.theme-dark .heatmap-cell.empty {
   font-size: var(--think-viz-font-meta);
   line-height: var(--think-line-height-tight);
 }
-
 .timeline-task-icon {
   flex: 0 0 auto;
   line-height: 1;
 }
-
 .timeline-task-title {
   flex: 1 1 auto;
   min-width: 0;
@@ -6580,7 +5634,6 @@ body.theme-dark .heatmap-cell.empty {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .task-buttons {
   position: absolute;
   top: 50%;
@@ -6593,13 +5646,11 @@ body.theme-dark .heatmap-cell.empty {
   transform: translateY(-50%);
   transition: opacity var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .timeline-task-block:hover .task-buttons,
 .timeline-task-block:focus-within .task-buttons {
   opacity: 1;
   pointer-events: auto;
 }
-
 .think-os .timeline-task-action.think-icon-button {
   width: 18px;
   min-width: 18px;
@@ -6609,27 +5660,20 @@ body.theme-dark .heatmap-cell.empty {
   border-color: var(--think-viz-guide-strong);
   background: var(--think-bg-elevated);
 }
-
 .think-os .timeline-task-action .think-lucide-icon {
   width: 12px;
   height: 12px;
 }
-
-
 .timeline-summary-table {
   table-layout: fixed;
 }
-
 .timeline-summary-table th:first-child,
 .timeline-summary-table td:first-child {
   width: 84px;
 }
-
 .timeline-summary-table .progress-block-container {
   min-width: 104px;
 }
-
-
 @container (max-width: 720px) {
   .timeline-view-wrapper {
     --timeline-day-width: 124px;
@@ -6640,7 +5684,6 @@ body.theme-dark .heatmap-cell.empty {
     font-size: var(--think-viz-font-axis);
   }
 }
-
 @container (max-width: 480px) {
   .timeline-view-wrapper {
     --timeline-day-width: 112px;
@@ -6652,20 +5695,13 @@ body.theme-dark .heatmap-cell.empty {
     font-size: var(--think-viz-font-meta);
   }
 }
-
-
-
-/* inlined: src/styles/features/excel.css */
 /* Excel view feature facade. Keep imports in legacy cascade order. */
-
-/* inlined: src/styles/features/excel.base.css */
 /* Excel view shell and compact runtime toolbar. */
 .excel-view-shell {
     width: 100%;
     min-width: 0;
     overflow: auto;
 }
-
 .excel-view-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -6678,26 +5714,21 @@ body.theme-dark .heatmap-cell.empty {
     font-size: var(--think-font-size-xs);
     user-select: none;
 }
-
 .excel-view-legend-item {
     display: inline-flex;
     align-items: center;
     min-height: var(--think-control-height-sm);
     color: var(--think-text-secondary);
 }
-
 .excel-view-legend-item.is-editable {
     color: var(--think-text-accent);
 }
-
 .excel-view-legend-separator {
     color: var(--think-border-strong);
 }
-
 .excel-view-content-mode-button {
     margin-inline-start: var(--think-space-2);
 }
-
 /* Single Excel workspace surface; child toolbars remain flat sections. */
 .excel-view-shell {
     border: 1px solid var(--think-data-grid-border);
@@ -6705,46 +5736,35 @@ body.theme-dark .heatmap-cell.empty {
     background: var(--think-bg-canvas);
     container-type: inline-size;
 }
-
 .excel-view-table th {
     background: var(--think-data-grid-header-bg);
     color: var(--think-text-primary);
 }
-
 .excel-column-context-menu {
     z-index: var(--think-z-popover);
     border-radius: var(--think-radius-md);
     background: var(--think-bg-elevated);
     box-shadow: var(--think-shadow-overlay);
 }
-
-
-
-/* inlined: src/styles/features/excel.table-cells.css */
 /* Excel editable table cell states and editors. */
 .excel-view-table th {
     position: relative;
     white-space: nowrap;
     vertical-align: middle;
 }
-
 .excel-view-table th[data-editable="true"] {
     background: var(--think-data-grid-header-bg);
 }
-
 .excel-view-table th[data-editable="false"] {
     color: var(--think-text-secondary);
     background: var(--think-data-grid-header-bg);
 }
-
 .excel-view-table th[data-danger-level="medium"][data-editable="true"] {
     background: var(--think-data-grid-header-bg);
 }
-
 .excel-view-header-label {
     margin-right: 6px;
 }
-
 .excel-view-header-badge {
     display: inline-flex;
     align-items: center;
@@ -6757,15 +5777,12 @@ body.theme-dark .heatmap-cell.empty {
     font-weight: var(--think-font-weight-regular);
     line-height: var(--think-line-height-tight);
 }
-
 .excel-view-table th[data-editable="true"] .excel-view-header-badge {
     color: var(--think-text-accent);
 }
-
 .excel-view-table th[data-danger-level="medium"][data-editable="true"] .excel-view-header-badge {
     color: var(--think-warning);
 }
-
 .excel-view-table .excel-view-cell {
     position: relative;
     min-width: 96px;
@@ -6778,7 +5795,6 @@ body.theme-dark .heatmap-cell.empty {
         box-shadow var(--think-duration-fast) var(--think-ease-standard),
         color var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .excel-view-table .excel-view-cell-value,
 .excel-view-table .excel-view-content-link {
     display: block;
@@ -6786,62 +5802,49 @@ body.theme-dark .heatmap-cell.empty {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
 .excel-view-table .excel-view-cell.is-inline-editable {
     cursor: text;
     background: transparent;
 }
-
 .excel-view-table .excel-view-cell.is-inline-editable:hover {
     background: var(--think-data-grid-hover-bg);
 }
-
 .excel-view-table .excel-view-cell.is-readonly {
     cursor: default;
     color: var(--think-text-secondary);
     background: color-mix(in srgb, var(--think-bg-surface-1) 44%, transparent);
 }
-
 .excel-view-table .excel-view-cell.is-policy-readonly .excel-view-cell-value,
 .excel-view-table .excel-view-cell.is-policy-readonly .excel-view-content-link {
     opacity: 0.72;
 }
-
 .excel-view-table .excel-view-cell.is-medium-risk.is-inline-editable {
     background: transparent;
 }
-
 .excel-view-table .excel-view-cell.is-medium-risk.is-inline-editable:hover {
     background: var(--think-data-grid-hover-bg);
 }
-
 .excel-view-table .excel-view-cell.is-high-risk,
 .excel-view-table .excel-view-cell[data-editor-kind="path"] {
     color: var(--think-text-subtle);
     background: color-mix(in srgb, var(--think-bg-surface-1) 58%, transparent);
 }
-
 .excel-view-table .excel-view-cell.is-selected {
     outline: none;
 }
-
 .excel-view-table .excel-view-cell.is-selected.is-readonly {
     box-shadow: inset 0 0 0 2px var(--think-text-subtle);
 }
-
 .excel-view-table .excel-view-cell.is-pending {
     opacity: 0.72;
 }
-
 .excel-view-table .excel-view-cell.has-error {
     outline: 2px solid var(--think-danger);
     outline-offset: -2px;
 }
-
 .excel-view-cell-edit-wrap {
     display: block;
 }
-
 .excel-view-table .excel-view-cell-editor {
     box-sizing: border-box;
     width: 100%;
@@ -6855,17 +5858,14 @@ body.theme-dark .heatmap-cell.empty {
     line-height: var(--think-line-height-tight);
     padding: var(--think-space-2) var(--think-space-3);
 }
-
 .excel-view-table .excel-view-cell-editor:focus {
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--think-accent) 24%, transparent);
     outline: none;
 }
-
 .excel-view-table .excel-view-cell-editor-textarea {
     min-height: 64px;
     resize: vertical;
 }
-
 .excel-view-cell-edit-hint {
     display: block;
     margin-top: 2px;
@@ -6873,13 +5873,11 @@ body.theme-dark .heatmap-cell.empty {
     font-size: var(--think-font-size-2xs);
     line-height: var(--think-line-height-tight);
 }
-
 .excel-view-table .excel-view-content-link {
     color: var(--think-text-accent);
     text-decoration: underline;
     text-underline-offset: 2px;
 }
-
 .excel-view-table .excel-view-cell-status,
 .excel-view-table .excel-view-cell-error,
 .excel-view-table .excel-view-cell-affordance {
@@ -6890,30 +5888,24 @@ body.theme-dark .heatmap-cell.empty {
     line-height: 1;
     pointer-events: none;
 }
-
 .excel-view-table .excel-view-cell-affordance {
     color: var(--think-text-subtle);
     opacity: 0.86;
 }
-
 .excel-view-table .excel-view-cell.is-inline-editable .excel-view-cell-affordance {
     color: var(--think-text-accent);
 }
-
 .excel-view-table .excel-view-cell-error {
     color: var(--think-danger);
     font-weight: var(--think-font-weight-bold);
 }
-
 .excel-view-table .excel-view-cell.is-fill-source {
     outline: 2px dashed var(--think-accent);
     outline-offset: -3px;
 }
-
 .excel-view-table .excel-view-cell.is-fill-target {
     box-shadow: inset 0 0 0 2px var(--interactive-accent-hover, var(--think-accent));
 }
-
 .excel-view-table .excel-view-fill-handle {
     position: absolute;
     right: 1px;
@@ -6925,15 +5917,10 @@ body.theme-dark .heatmap-cell.empty {
     cursor: crosshair;
     z-index: 1;
 }
-
 .excel-view-table .excel-view-cell[data-editor-kind="path"] .excel-view-fill-handle,
 .excel-view-table .excel-view-cell[data-editable="false"] .excel-view-fill-handle {
     display: none;
 }
-
-
-
-/* inlined: src/styles/features/excel.columns.css */
 /* Excel column configuration: one flat toolbar, draggable fields, no nested card. */
 .excel-column-toolbar {
     display: flex;
@@ -6948,14 +5935,12 @@ body.theme-dark .heatmap-cell.empty {
     background: transparent;
     user-select: none;
 }
-
 .excel-column-toolbar-title {
     flex: 0 0 auto;
     color: var(--think-text-secondary);
     font-size: var(--think-font-size-xs);
     font-weight: var(--think-font-weight-semibold);
 }
-
 .excel-column-chip-list {
     display: inline-flex;
     align-items: center;
@@ -6964,7 +5949,6 @@ body.theme-dark .heatmap-cell.empty {
     min-width: 0;
     flex: 1 1 auto;
 }
-
 .excel-column-chip {
     display: inline-flex;
     align-items: center;
@@ -6980,29 +5964,24 @@ body.theme-dark .heatmap-cell.empty {
     font-size: var(--think-font-size-xs);
     line-height: 1;
 }
-
 .excel-column-toolbar[data-editable="true"] .excel-column-chip {
     cursor: grab;
 }
-
 .excel-column-toolbar[data-editable="true"] .excel-column-chip:hover {
     border-color: var(--think-border-strong);
     background: var(--think-bg-hover);
 }
-
 .excel-column-chip.is-dragging {
     opacity: 0.56;
     outline: 2px dashed var(--think-accent);
     outline-offset: 2px;
 }
-
 .excel-column-chip-handle {
     margin-inline-end: var(--think-space-1);
     color: var(--think-text-subtle);
     font-size: var(--think-font-size-2xs);
     letter-spacing: -3px;
 }
-
 .excel-column-chip-label {
     max-width: 180px;
     overflow: hidden;
@@ -7010,34 +5989,25 @@ body.theme-dark .heatmap-cell.empty {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
 .excel-column-add-field {
     flex: 0 0 150px;
     min-width: 150px;
 }
-
 .excel-column-add-select {
     width: 100%;
 }
-
 .excel-column-toolbar-readonly,
 .excel-column-toolbar-status,
 .excel-column-toolbar-error {
     color: var(--think-text-secondary);
     font-size: var(--think-font-size-xs);
 }
-
 .excel-column-toolbar-status {
     color: var(--think-text-accent);
 }
-
 .excel-column-toolbar-error {
     color: var(--think-danger);
 }
-
-
-
-/* inlined: src/styles/features/excel.grid-interactions.css */
 /* Excel sticky grid, resize, context menu and save feedback. */
 /* ExcelView step8: sticky grid, column resize, context menu, save flash */
 .excel-view-table {
@@ -7047,7 +6017,6 @@ body.theme-dark .heatmap-cell.empty {
     border-collapse: separate;
     border-spacing: 0;
 }
-
 .excel-view-table th {
     position: sticky;
     top: 0;
@@ -7058,23 +6027,19 @@ body.theme-dark .heatmap-cell.empty {
     overflow: visible;
     user-select: none;
 }
-
 .excel-view-table th:first-child {
     left: 0;
     z-index: 8;
 }
-
 .excel-view-table td:first-child {
     position: sticky;
     left: 0;
     z-index: 4;
     background-clip: padding-box;
 }
-
 .excel-view-table tr:hover td:first-child {
     z-index: 5;
 }
-
 .excel-view-header-stack {
     display: flex;
     align-items: center;
@@ -7082,7 +6047,6 @@ body.theme-dark .heatmap-cell.empty {
     min-width: 0;
     padding-right: 8px;
 }
-
 .excel-view-header-label {
     display: block;
     margin-right: 0;
@@ -7091,7 +6055,6 @@ body.theme-dark .heatmap-cell.empty {
     white-space: nowrap;
     font-weight: var(--think-font-weight-semibold);
 }
-
 .excel-view-header-badge {
     flex: 0 0 auto;
     max-width: 100%;
@@ -7099,7 +6062,6 @@ body.theme-dark .heatmap-cell.empty {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
 .excel-view-column-resize-handle {
     position: absolute;
     top: 0;
@@ -7109,27 +6071,22 @@ body.theme-dark .heatmap-cell.empty {
     cursor: col-resize;
     z-index: 12;
 }
-
 .excel-view-column-resize-handle:hover,
 .excel-view-column-resize-handle:active {
     background: color-mix(in srgb, var(--think-accent) 28%, transparent);
 }
-
 body.excel-view-is-resizing-column,
 body.excel-view-is-resizing-column * {
     cursor: col-resize;
     user-select: none;
 }
-
 .excel-view-table .excel-view-cell.is-saved {
     animation: excel-cell-saved-flash 1200ms ease-out;
 }
-
 .excel-view-table .excel-view-cell-status.is-saved {
     color: var(--text-success, var(--think-text-accent));
     font-weight: 800;
 }
-
 @keyframes excel-cell-saved-flash {
     0% {
         background: color-mix(in srgb, var(--text-success, var(--think-accent)) 24%, transparent);
@@ -7140,7 +6097,6 @@ body.excel-view-is-resizing-column * {
         box-shadow: inset 0 0 0 0 transparent;
     }
 }
-
 .excel-column-context-menu {
     position: fixed;
     min-width: 168px;
@@ -7152,7 +6108,6 @@ body.excel-view-is-resizing-column * {
     color: var(--think-text-primary);
     box-shadow: var(--think-shadow-md);
 }
-
 .excel-column-context-menu-title {
     padding: var(--think-space-2) var(--think-space-3) var(--think-space-3);
     color: var(--think-text-secondary);
@@ -7162,7 +6117,6 @@ body.excel-view-is-resizing-column * {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
 .excel-column-context-menu button {
     display: block;
     width: 100%;
@@ -7178,17 +6132,14 @@ body.excel-view-is-resizing-column * {
     text-align: left;
     cursor: pointer;
 }
-
 .excel-column-context-menu button:hover:not(:disabled),
 .excel-column-context-menu button:focus:not(:disabled) {
     background: var(--think-bg-hover);
 }
-
 .excel-column-context-menu button:disabled {
     color: var(--think-text-subtle);
     cursor: not-allowed;
 }
-
 .excel-column-context-info {
     margin-top: var(--think-space-2);
     padding: var(--think-space-3);
@@ -7196,7 +6147,6 @@ body.excel-view-is-resizing-column * {
     color: var(--think-text-secondary);
     font-size: var(--think-font-size-2xs);
 }
-
 .excel-column-context-info div {
     display: grid;
     grid-template-columns: 44px minmax(0, 1fr);
@@ -7204,7 +6154,6 @@ body.excel-view-is-resizing-column * {
     align-items: center;
     margin: 3px 0;
 }
-
 .excel-column-context-info strong,
 .excel-column-context-info code {
     min-width: 0;
@@ -7213,27 +6162,22 @@ body.excel-view-is-resizing-column * {
     white-space: nowrap;
     color: var(--think-text-primary);
 }
-
 /* ExcelView step9: keyboard navigation, paste feedback, field-specific editors */
 .excel-view-table .excel-view-cell:focus {
     outline: 2px solid var(--think-accent);
     outline-offset: -2px;
 }
-
 .excel-view-table .excel-view-cell.is-selected:focus {
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--think-accent) 70%, transparent);
 }
-
 .excel-view-table .excel-view-cell-editor-select {
     appearance: auto;
     cursor: pointer;
 }
-
 .excel-view-table .excel-view-cell[data-editor-kind="boolean"] .excel-view-cell-editor,
 .excel-view-table .excel-view-cell[data-editor-kind="select"] .excel-view-cell-editor {
     min-width: 100%;
 }
-
 .excel-view-table .excel-view-cell[data-save-state="pending"]::after {
     content: "";
     position: absolute;
@@ -7244,15 +6188,10 @@ body.excel-view-is-resizing-column * {
     background: linear-gradient(90deg, transparent, var(--think-accent), transparent);
     animation: excel-cell-pending-bar 900ms linear infinite;
 }
-
 @keyframes excel-cell-pending-bar {
     0% { transform: translateX(-70%); }
     100% { transform: translateX(70%); }
 }
-
-
-
-/* inlined: src/styles/features/excel.content-expanded.css */
 /* Excel expanded content and markdown cell rendering. */
 /* ExcelView content 字段全文 / Markdown 展示增强 */
 .excel-view-content-mode-button[aria-pressed="true"] {
@@ -7260,16 +6199,13 @@ body.excel-view-is-resizing-column * {
     background: var(--think-surface-selection);
     color: var(--think-text-accent);
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded {
     vertical-align: top;
     white-space: normal;
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded.is-policy-readonly {
     color: var(--think-text-primary);
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md {
     display: block;
     max-height: 360px;
@@ -7282,15 +6218,12 @@ body.excel-view-is-resizing-column * {
     overflow-wrap: anywhere;
     overscroll-behavior: contain;
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md > :first-child {
     margin-top: 0;
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md > :last-child {
     margin-bottom: 0;
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md p,
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md ul,
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md ol,
@@ -7300,19 +6233,16 @@ body.excel-view-is-resizing-column * {
     margin-top: 0.35em;
     margin-bottom: 0.35em;
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md ul,
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md ol {
     padding-left: 1.35em;
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md blockquote {
     margin-left: 0;
     padding-left: 0.85em;
     border-left: 2px solid var(--think-border-subtle);
     color: var(--think-text-secondary);
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md pre {
     max-width: 100%;
     overflow: auto;
@@ -7320,34 +6250,24 @@ body.excel-view-is-resizing-column * {
     border-radius: var(--think-radius-xs);
     background: var(--think-bg-surface-1);
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md code {
     white-space: pre-wrap;
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md table {
     max-width: 100%;
     overflow: auto;
     display: block;
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md img {
     max-width: 100%;
     height: auto;
 }
-
 .excel-view-table .excel-view-cell.is-content-expanded .excel-view-cell-md a {
     color: var(--think-text-accent);
     cursor: pointer;
 }
-
-
-
-
-/* inlined: src/styles/features/block.css */
 /* CSS V4 migrated from block-view.css. */
 /* BlockView 样式 */
-
 /* --- 容器与分组样式 --- */
 .bv-container {
     display: flex;
@@ -7357,23 +6277,18 @@ body.excel-view-is-resizing-column * {
     min-width: 0;
     padding: 0;
 }
-
 /* 分组样式已提取到 common-group.css */
-
 /* --- 条目通用样式 --- */
 .bv-item {
     font-size: var(--think-font-size-sm);
 }
-
 /* --- BlockView 核心布局 (合并了 TS 中的响应式逻辑) --- */
-
 /* 整体容器：默认是flex双栏 */
 .bv-item--block {
     display: flex;
     gap: var(--think-list-row-gap);
     align-items: flex-start;
 }
-
 /* 左侧元数据栏：宽度由内容决定，且不可压缩 */
 .bv-block-metadata {
     flex-shrink: 0;
@@ -7382,7 +6297,6 @@ body.excel-view-is-resizing-column * {
     align-items: flex-start;
     gap: var(--think-space-2);
 }
-
 /* 右侧主内容栏：弹性增长，占据所有剩余空间 */
 .bv-block-main {
     flex-grow: 1;
@@ -7391,7 +6305,6 @@ body.excel-view-is-resizing-column * {
     flex-direction: column;
     gap: var(--think-space-3);
 }
-
 /* --- 标题和内容样式 --- */
 .bv-block-title {
     font-weight: var(--think-type-label-weight);
@@ -7405,13 +6318,11 @@ body.excel-view-is-resizing-column * {
 .bv-block-title a:hover {
     color: var(--think-accent);
 }
-
 .bv-block-content {
     font-size: var(--think-font-size-sm);
     color: var(--think-text-secondary);
     cursor: pointer;
 }
-
 /*
  * Markdown 内容交给 Obsidian 默认规则渲染，避免把普通换行强行渲染成额外断行。
  * 仅保留断词能力，确保长文本不会撑破布局。
@@ -7422,8 +6333,6 @@ body.excel-view-is-resizing-column * {
 .bv-block-content .message-render-markdown blockquote {
     word-break: break-word;
 }
-
-
 /* Block 内容现在支持 Markdown 渲染（复用 MessageRenderPort） */
 .bv-block-content .md-content {
     white-space: normal;
@@ -7451,11 +6360,9 @@ body.excel-view-is-resizing-column * {
     padding: 1px var(--think-space-2);
     border-radius: var(--think-radius-xs);
 }
-
 .bv-block-content .bv-block-plain {
     white-space: pre-wrap;
 }
-
 /* --- 元数据容器 --- */
 .bv-fields-list-wrapper,
 .bv-fields-list {
@@ -7465,13 +6372,10 @@ body.excel-view-is-resizing-column * {
     align-items: center;
     margin-top: var(--think-space-1);
 }
-
 .bv-container {
     color: var(--think-text-primary);
     container-type: inline-size;
 }
-
-
 @container (max-width: 450px) {
     .bv-item--block {
         flex-direction: column;
@@ -7482,20 +6386,14 @@ body.excel-view-is-resizing-column * {
         width: 100%;
     }
 }
-
 /* Block hierarchy is communicated by indentation + vertical guides, not row separators. */
 .bv-container .think-list-row {
     border-bottom: 0;
 }
-
 .bv-container > :is(.bv-item, .task-row):last-child,
 .bv-group-content > :is(.bv-item, .task-row):last-child {
     border-bottom: 0;
 }
-
-
-
-/* inlined: src/styles/features/event-timeline.css */
 /* Event Timeline: date | axis | time | content. The time axis is the structural
  * boundary; records stay flat and use the shared visualization rhythm.
  */
@@ -7506,15 +6404,12 @@ body.excel-view-is-resizing-column * {
   min-width: 0;
   padding: var(--think-space-1) 0;
 }
-
-
 .et-ungrouped,
 .et-group-content {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
-
 .et-event {
   display: grid;
   grid-template-columns: 92px 20px 46px minmax(0, 1fr);
@@ -7522,14 +6417,12 @@ body.excel-view-is-resizing-column * {
   align-items: stretch;
   min-width: 0;
 }
-
 .et-event-date,
 .et-time-label,
 .et-event-content,
 .et-line {
   min-height: var(--think-viz-row-height-md);
 }
-
 .et-event-date {
   display: flex;
   align-items: center;
@@ -7537,7 +6430,6 @@ body.excel-view-is-resizing-column * {
   color: var(--think-text-primary);
   text-align: end;
 }
-
 .et-date-label {
   color: var(--think-text-primary);
   font-size: var(--think-viz-font-meta);
@@ -7545,7 +6437,6 @@ body.excel-view-is-resizing-column * {
   font-weight: var(--think-font-weight-semibold);
   white-space: nowrap;
 }
-
 .et-time-label {
   display: flex;
   align-items: center;
@@ -7556,7 +6447,6 @@ body.excel-view-is-resizing-column * {
   font-weight: var(--think-font-weight-medium);
   white-space: nowrap;
 }
-
 .et-line {
   position: relative;
   display: flex;
@@ -7565,7 +6455,6 @@ body.excel-view-is-resizing-column * {
   align-self: stretch;
   width: 20px;
 }
-
 .et-line::before {
   content: '';
   position: absolute;
@@ -7576,11 +6465,9 @@ body.excel-view-is-resizing-column * {
   background: var(--think-viz-guide-strong);
   transform: translateX(-50%);
 }
-
 .et-event--first .et-line::before { top: 50%; }
 .et-event--last .et-line::before { bottom: 50%; }
 .et-event--first.et-event--last .et-line::before { top: 50%; bottom: 50%; }
-
 .et-dot {
   position: relative;
   z-index: 1;
@@ -7592,13 +6479,11 @@ body.excel-view-is-resizing-column * {
   background: var(--think-bg-canvas);
   transition: border-color var(--think-duration-fast) var(--think-ease-standard), transform var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .et-event:hover .et-dot,
 .et-event:focus-within .et-dot {
   border-color: var(--think-accent-hover);
   transform: scale(1.1);
 }
-
 .et-event-content {
   display: flex;
   align-items: center;
@@ -7606,7 +6491,6 @@ body.excel-view-is-resizing-column * {
   border: 0;
   background: transparent;
 }
-
 .et-event-content .bv-item,
 .et-event-content .task-row {
   width: 100%;
@@ -7616,30 +6500,22 @@ body.excel-view-is-resizing-column * {
   border: 0;
   background: transparent;
 }
-
 .et-event-date:empty { min-height: var(--think-viz-row-height-md); }
-
 @container (max-width: 620px) {
   .et-event {
     grid-template-columns: 76px 18px 40px minmax(0, 1fr);
     gap: var(--think-space-1);
   }
 }
-
 @container (max-width: 420px) {
   .et-event { grid-template-columns: 18px 40px minmax(0, 1fr); }
   .et-event-date { display: none; }
   .et-time-label { grid-column: 2; }
   .et-event-content { grid-column: 3; }
 }
-
-
-
-/* inlined: src/styles/features/overlay-ui.css */
 /* Phase 9: shared overlay content language for AI chat, AI batch/prompt and compact hosted dialogs. */
 .modal.think-ai-chat-modal .modal-content,
 .modal.think-ai-batch-confirm-modal .modal-content { height: 100%; }
-
 .think-ai-chat { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; overflow: hidden; }
 .think-ai-chat__main { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .think-ai-chat__title { display: flex; align-items: center; gap: var(--think-space-3); min-width: 0; font-size: var(--think-type-section-size); font-weight: var(--think-type-section-weight); }
@@ -7663,13 +6539,11 @@ body.excel-view-is-resizing-column * {
 .think-ai-chat-session__delete { opacity: 0; }
 .think-ai-chat-session:hover .think-ai-chat-session__delete,
 .think-ai-chat-session:focus-within .think-ai-chat-session__delete { opacity: 1; }
-
 .think-ai-chat-filters { display: flex; align-items: center; gap: var(--think-space-3); min-width: 0; padding: var(--think-space-3) var(--think-space-5); border-bottom: 1px solid var(--think-border-subtle); overflow-x: auto; scrollbar-width: thin; }
 .think-ai-chat-filters__toggle { flex: 0 0 auto; }
 .think-ai-chat-filters__select { width: 118px; flex: 0 0 118px; }
 .think-ai-chat-filters__select--block { width: 148px; flex-basis: 148px; }
 .think-ai-chat-filters__index { flex: 0 0 auto; color: var(--think-text-secondary); font-size: var(--think-font-size-xs); white-space: nowrap; }
-
 .think-ai-chat-messages { flex: 1 1 auto; min-height: 0; overflow: auto; padding: var(--think-space-5); }
 .think-ai-chat-messages__stack { display: grid; gap: var(--think-space-5); }
 .think-ai-chat-empty { min-height: 100%; display: grid; place-content: center; justify-items: center; gap: var(--think-space-2); color: var(--think-text-secondary); text-align: center; }
@@ -7699,7 +6573,6 @@ body.excel-view-is-resizing-column * {
 .think-ai-chat-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--think-space-3); align-items: end; padding: var(--think-space-4) var(--think-space-5); border-top: 1px solid var(--think-border-subtle); background: var(--think-bg-surface-1); }
 .think-ai-chat-composer__input { min-height: calc(var(--think-control-height-md) * 1.8); max-height: 120px; resize: vertical; }
 .think-ai-chat-composer__send { align-self: end; }
-
 .think-ai-batch { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; overflow: hidden; }
 .think-ai-batch__main { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .think-ai-batch__editor { padding: var(--think-space-5); }
@@ -7748,11 +6621,9 @@ body.excel-view-is-resizing-column * {
 .think-ai-batch-footer__status.is-working { color: var(--think-text-primary); }
 .think-ai-batch-footer__status.is-success { color: var(--think-success); }
 .think-ai-batch-footer__status.is-error { color: var(--think-danger); }
-
 .think-ai-prompt__body,
 .think-name-prompt__body { display: grid; align-content: start; gap: var(--think-space-3); }
 .think-ai-prompt__input { min-height: 120px; resize: vertical; }
-
 @media (max-width: 720px) {
   .think-ai-chat-sessions,
   .think-ai-batch-sidebar { width: 168px; flex-basis: 168px; }
@@ -7766,10 +6637,6 @@ body.excel-view-is-resizing-column * {
   .think-ai-chat-session__delete { opacity: 1; }
   .think-ai-chat-composer { grid-template-columns: 1fr; }
 }
-
-
-
-/* inlined: src/styles/features/timer.css */
 .think-timer-list { display: grid; gap: var(--think-space-2); max-height: 400px; overflow-y: auto; padding: var(--think-space-3); }
 .think-timer-row { width: 100%; }
 .think-timer-row__main { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--think-space-3); min-height: var(--think-control-height-md); }
@@ -7784,16 +6651,11 @@ body.excel-view-is-resizing-column * {
   .think-timer-row__main { grid-template-columns: minmax(0, 1fr) auto; }
   .think-timer-row__actions { grid-column: 1 / -1; justify-content: flex-end; }
 }
-
-
-
-/* inlined: src/styles/features/quick-input-editor.css */
 /*
  * Quick Input editor layout.
  * One aligned label column is shared by context selectors and template fields.
  * Host/modal geometry remains in overrides/quick-input-modal.css.
  */
-
 /*
  * Quick Input form rhythm
  * Desktop/tablet uses one fixed label column across context and content rows.
@@ -7806,17 +6668,14 @@ body.excel-view-is-resizing-column * {
   gap: var(--think-space-6);
   min-width: 0;
 }
-
 .think-quick-input-editor.is-dense {
   gap: var(--think-space-5);
 }
-
 .think-quick-input-editor .think-quick-input-context-grid {
   display: grid;
   gap: var(--think-space-5);
   min-width: 0;
 }
-
 .think-quick-input-editor .think-qif-row {
   display: grid;
   grid-template-columns: var(--think-qif-label-column) minmax(0, 1fr);
@@ -7825,12 +6684,10 @@ body.excel-view-is-resizing-column * {
   width: 100%;
   min-width: 0;
 }
-
 .think-quick-input-editor .think-qif-row__label {
   padding-top: var(--think-space-3);
   min-width: 0;
 }
-
 .think-quick-input-editor .think-qif-label {
   display: block;
   color: var(--think-text-secondary);
@@ -7839,23 +6696,19 @@ body.excel-view-is-resizing-column * {
   line-height: var(--think-line-height-normal);
   white-space: nowrap;
 }
-
 .think-quick-input-editor .think-qif-row__control,
 .think-quick-input-editor .think-quick-input-context-row__stack {
   min-width: 0;
 }
-
 .think-quick-input-editor .think-quick-input-context-row__stack {
   display: grid;
   gap: var(--think-space-3);
 }
-
 .think-quick-input-editor .think-quick-input-context-divider {
   height: 1px;
   background: var(--think-border-subtle);
   opacity: .72;
 }
-
 .think-quick-input-editor .think-quick-input-context-hint {
   margin-top: var(--think-space-2);
   padding: 0;
@@ -7866,53 +6719,41 @@ body.excel-view-is-resizing-column * {
   font-size: var(--think-font-size-xs);
   line-height: var(--think-line-height-normal);
 }
-
-
-
 .think-quick-input-editor .think-qif-fields-stack {
   display: grid;
   gap: var(--think-space-5);
   min-width: 0;
 }
-
 .think-quick-input-editor .think-qif-fields-stack.is-dense {
   gap: var(--think-space-4);
 }
-
 .think-quick-input-editor .think-qif-fields-stack__item {
   min-width: 0;
 }
-
 .think-quick-input-editor .think-qif-frame {
   row-gap: var(--think-space-3);
 }
-
 .think-quick-input-editor .think-qif-row__control {
   min-width: 0;
 }
-
 .think-quick-input-editor .think-qif-label__required {
   margin-left: var(--think-space-1);
   color: var(--text-error);
 }
-
 .think-quick-input-editor .think-qif-choice-row,
 .think-quick-input-editor .think-qif-rating-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--think-space-2);
 }
-
 .think-quick-input-editor .think-qif-hierarchy {
   display: grid;
   gap: var(--think-space-3);
   min-width: 0;
 }
-
 .think-quick-input-editor .think-qif-hierarchy.is-dense {
   gap: var(--think-space-2);
 }
-
 .think-quick-input-editor .think-qif-hierarchy-level {
   display: grid;
   grid-template-columns: 68px minmax(0, 1fr);
@@ -7920,11 +6761,9 @@ body.excel-view-is-resizing-column * {
   gap: var(--think-space-3);
   min-width: 0;
 }
-
 .think-quick-input-editor .think-qif-hierarchy-level--unlabeled {
   grid-template-columns: minmax(0, 1fr);
 }
-
 .think-quick-input-editor .think-qif-hierarchy-level__label {
   padding-top: var(--think-space-3);
   color: var(--think-text-subtle);
@@ -7933,28 +6772,24 @@ body.excel-view-is-resizing-column * {
   line-height: var(--think-line-height-normal);
   white-space: nowrap;
 }
-
 .think-quick-input-editor .think-qif-hierarchy-level__options {
   display: flex;
   flex-wrap: wrap;
   gap: var(--think-space-2);
   min-width: 0;
 }
-
 .think-quick-input-editor .think-qif-hierarchy-empty {
   padding-top: var(--think-space-3);
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-sm);
   line-height: var(--think-line-height-normal);
 }
-
 .think-quick-input-editor .think-qif-image-preview {
   display: flex;
   align-items: center;
   gap: var(--think-space-2);
   margin-top: var(--think-space-2);
 }
-
 .think-quick-input-editor .think-qif-image-preview__thumb {
   width: 56px;
   height: 56px;
@@ -7962,13 +6797,11 @@ body.excel-view-is-resizing-column * {
   border: 1px solid var(--think-border-subtle);
   border-radius: var(--think-radius-md);
 }
-
 .think-quick-input-editor .think-qif-image-preview__src {
   overflow-wrap: anywhere;
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 .think-quick-input-editor .think-qif-rating-button {
   min-width: 40px;
   height: 40px;
@@ -7979,65 +6812,53 @@ body.excel-view-is-resizing-column * {
   opacity: .8;
   transition: opacity var(--think-motion-fast), background var(--think-motion-fast), border-color var(--think-motion-fast);
 }
-
 .think-quick-input-editor .think-qif-rating-button:hover,
 .think-quick-input-editor .think-qif-rating-button:focus-visible {
   background: var(--think-bg-hover);
   opacity: 1;
 }
-
 .think-quick-input-editor .think-qif-rating-button.is-selected {
   border: 2px solid var(--interactive-accent);
   background: var(--background-modifier-hover);
   opacity: 1;
 }
-
 .think-quick-input-editor .think-qif-rating-image {
   width: 22px;
   height: 22px;
   object-fit: contain;
 }
-
 .think-quick-input-editor .think-qif-rating-text {
   font-size: var(--think-type-page-size);
   line-height: 1;
 }
-
 .think-quick-input-editor .think-qif-textarea {
   min-height: 118px;
   overflow-y: hidden;
   resize: none;
 }
-
 .think-quick-input-editor .think-qif-textarea.is-dense {
   min-height: 96px;
 }
-
 .think-quick-input-editor .think-qif-textarea--short {
   min-height: 96px;
 }
-
 .think-quick-input-editor .think-qif-textarea--short.is-dense {
   min-height: 78px;
 }
-
 .think-quick-input-editor .think-qif-time-input {
   min-height: 42px;
 }
-
 .think-quick-input-editor .think-qif-time-section {
   display: flex;
   flex-direction: column;
   gap: var(--think-space-3);
 }
-
 .think-quick-input-editor .think-qif-time-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--think-space-5);
   padding-top: 0;
 }
-
 .think-quick-input-editor .think-qif-time-direction {
   display: flex;
   align-items: center;
@@ -8045,7 +6866,6 @@ body.excel-view-is-resizing-column * {
   min-height: 28px;
   padding-left: calc(var(--think-qif-label-column) + var(--think-space-5));
 }
-
 .think-quick-input-editor .think-qif-time-direction__label {
   display: inline-flex;
   align-items: center;
@@ -8054,7 +6874,6 @@ body.excel-view-is-resizing-column * {
   font-size: var(--think-font-size-xs);
   cursor: pointer;
 }
-
 /*
  * Task advanced fields are one collapsible card, rather than another form section.
  * The heading stays on the left edge and no divider is used to split it from the primary task fields.
@@ -8066,19 +6885,14 @@ body.excel-view-is-resizing-column * {
   border-radius: var(--think-radius-lg);
   background: var(--think-bg-surface-1);
 }
-
 .think-quick-input-editor .think-qif-advanced-disclosure > .think-disclosure__summary {
   min-height: 44px;
   padding: var(--think-space-3) var(--think-space-4);
   color: var(--think-text-secondary);
 }
-
 .think-quick-input-editor .think-qif-advanced-disclosure > .think-disclosure__body {
   padding: 0 var(--think-space-4) var(--think-space-4);
 }
-
-
-
 @media (max-width: 640px) {
   .think-quick-input-editor {
     --think-qif-label-column: 76px;
@@ -8092,7 +6906,6 @@ body.excel-view-is-resizing-column * {
     padding-left: calc(var(--think-qif-label-column) + var(--think-space-4));
   }
 }
-
 @media (max-width: 440px) {
   .think-quick-input-editor .think-qif-row {
     grid-template-columns: 1fr;
@@ -8120,10 +6933,6 @@ body.excel-view-is-resizing-column * {
     grid-template-columns: 56px minmax(0, 1fr);
   }
 }
-
-
-
-/* inlined: src/styles/features/quick-input-editor-controls.css */
 /*
  * QuickInputEditor reusable controls.
  *
@@ -8131,7 +6940,6 @@ body.excel-view-is-resizing-column * {
  * specific Obsidian modal host. QuickInputEditor is embedded by Quick Input,
  * AI confirmation and other composed capture flows.
  */
-
 /*
  * Editor-owned controls.
  * These styles intentionally live on the editor surface instead of an Obsidian modal host,
@@ -8146,20 +6954,17 @@ body.excel-view-is-resizing-column * {
   background: var(--think-bg-canvas);
   box-shadow: none;
 }
-
 .think-quick-input-editor .think-native-input:focus,
 .think-quick-input-editor .think-native-input--textarea:focus {
   border-color: var(--think-border-focus);
   outline: none;
   box-shadow: 0 0 0 1px var(--think-focus-ring-color);
 }
-
 .think-quick-input-editor .think-ob-tag-editor {
   display: flex;
   flex-direction: column;
   gap: var(--think-space-3);
 }
-
 .think-quick-input-editor .think-ob-tag-editor__row {
   display: flex;
   flex-wrap: wrap;
@@ -8173,12 +6978,10 @@ body.excel-view-is-resizing-column * {
   background: var(--think-bg-canvas);
   box-sizing: border-box;
 }
-
 .think-quick-input-editor .think-ob-tag-editor__row:focus-within {
   border-color: var(--think-border-focus);
   box-shadow: 0 0 0 1px var(--think-focus-ring-color);
 }
-
 .think-quick-input-editor .think-ob-tag-input {
   flex: 1 1 120px;
   min-width: 90px;
@@ -8189,7 +6992,6 @@ body.excel-view-is-resizing-column * {
   color: var(--think-text-primary);
   font: inherit;
 }
-
 .think-quick-input-editor .think-ob-tag-pill {
   appearance: none;
   display: inline-flex;
@@ -8206,12 +7008,10 @@ body.excel-view-is-resizing-column * {
   cursor: pointer;
   box-shadow: none;
 }
-
 .think-quick-input-editor .think-ob-tag-pill:hover { background: var(--think-bg-hover); }
 .think-quick-input-editor .think-ob-tag-pill.is-selected { background: var(--think-surface-selection); }
 .think-quick-input-editor .think-ob-tag-pill__remove { color: var(--think-text-secondary); font-weight: var(--think-font-weight-bold); }
 .think-quick-input-editor .think-ob-tag-suggestions { display: flex; flex-wrap: wrap; gap: var(--think-space-2); }
-
 .think-quick-input-editor .think-quick-input-record-type-switcher,
 .think-quick-input-editor .think-quick-input-pill-row {
   display: flex;
@@ -8219,9 +7019,7 @@ body.excel-view-is-resizing-column * {
   gap: var(--think-space-2);
   min-width: 0;
 }
-
 .think-quick-input-editor .think-quick-input-record-type-switcher__item { flex: 0 0 auto; }
-
 .think-quick-input-editor .think-quick-input-selectable-pill {
   appearance: none;
   min-height: var(--think-control-height-sm);
@@ -8241,14 +7039,12 @@ body.excel-view-is-resizing-column * {
     border-color var(--think-duration-fast) var(--think-ease-standard),
     color var(--think-duration-fast) var(--think-ease-standard);
 }
-
 .think-quick-input-editor .think-quick-input-selectable-pill:hover:not(:disabled),
 .think-quick-input-editor .think-quick-input-selectable-pill:focus-visible:not(:disabled) {
   border-color: var(--think-border-focus);
   background: var(--think-bg-hover);
   outline: none;
 }
-
 .think-quick-input-editor .think-quick-input-selectable-pill.is-selected,
 .think-quick-input-editor .think-quick-input-selectable-pill[aria-pressed="true"] {
   border-color: var(--think-accent);
@@ -8257,19 +7053,15 @@ body.excel-view-is-resizing-column * {
   font-weight: var(--think-font-weight-semibold);
   box-shadow: inset 0 0 0 1px var(--think-accent);
 }
-
 .think-quick-input-editor .think-quick-input-selectable-pill:disabled {
   cursor: default;
   opacity: .68;
 }
-
 .think-quick-input-editor .think-quick-input-goal-selector {
   display: grid;
   gap: var(--think-space-3);
 }
-
 .think-quick-input-editor .think-quick-input-goal-selector.is-dense { gap: var(--think-space-2); }
-
 .think-quick-input-editor .think-quick-input-goal-active-path {
   min-width: 0;
   overflow: hidden;
@@ -8279,7 +7071,6 @@ body.excel-view-is-resizing-column * {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .think-quick-input-editor .think-quick-input-goal-selector__create {
   display: grid;
   grid-template-columns: minmax(140px, 1fr) auto;
@@ -8294,7 +7085,6 @@ body.excel-view-is-resizing-column * {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
 }
-
 @media (max-width: 768px) {
   .think-quick-input-editor .think-quick-input-record-type-switcher,
   .think-quick-input-editor .think-quick-input-pill-row {
@@ -8307,11 +7097,6 @@ body.excel-view-is-resizing-column * {
 
   .think-quick-input-editor .think-quick-input-goal-selector__create { grid-template-columns: 1fr; }
 }
-
-
-
-
-
 /* Goal hierarchy is a form-field list, not a pill group. This is a scoped
  * layout fallback for Obsidian's native button skin; all visual values reuse
  * the existing Think list/combobox tokens instead of defining a Goal skin. */
@@ -8325,7 +7110,6 @@ body.excel-view-is-resizing-column * {
   overflow-y: visible;
   overscroll-behavior-x: contain;
 }
-
 .think-quick-input-editor .think-quick-input-goal-level {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -8336,13 +7120,11 @@ body.excel-view-is-resizing-column * {
   align-self: flex-start;
   gap: 0;
 }
-
 .think-quick-input-editor .think-quick-input-goal-level + .think-quick-input-goal-level {
   margin-left: 0;
   padding-left: var(--think-space-2);
   border-left: 1px solid var(--think-border-subtle);
 }
-
 .think-quick-input-editor button.think-quick-input-goal-row {
   appearance: none;
   box-sizing: border-box;
@@ -8366,31 +7148,26 @@ body.excel-view-is-resizing-column * {
   text-align: left;
   cursor: pointer;
 }
-
 .think-quick-input-editor button.think-quick-input-goal-row:hover,
 .think-quick-input-editor button.think-quick-input-goal-row:focus-visible {
   background: var(--think-bg-hover);
   outline: none;
 }
-
 .think-quick-input-editor button.think-quick-input-goal-row[aria-current="true"] {
   background: var(--think-bg-hover);
   font-weight: var(--think-font-weight-medium);
 }
-
 .think-quick-input-editor button.think-quick-input-goal-row[aria-selected="true"] {
   background: var(--think-surface-selection);
   color: var(--think-text-accent);
   box-shadow: inset 2px 0 0 var(--think-accent);
 }
-
 .think-quick-input-editor .think-quick-input-goal-row__actions {
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
   gap: var(--think-space-1);
 }
-
 .think-quick-input-editor .think-quick-input-goal-row .think-combobox-option__label {
   flex: 1 1 auto;
   min-width: 0;
@@ -8398,16 +7175,12 @@ body.excel-view-is-resizing-column * {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 @media (max-width: 768px) {
   .think-quick-input-editor .think-quick-input-goal-level {
     flex-basis: 50%;
     min-width: 160px;
   }
 }
-
-
-/* inlined: src/styles/overrides/mui.css */
 /*
  * MUI host bridge.
  * Component skin lives in the MUI theme; this file handles selectors that are
@@ -8416,7 +7189,6 @@ body.excel-view-is-resizing-column * {
 .think-os .MuiTouchRipple-root {
   color: currentColor;
 }
-
 .think-os .MuiButtonBase-root.Mui-focusVisible,
 .think-os .MuiInputBase-root.Mui-focused,
 .think-os .MuiChip-root.Mui-focusVisible,
@@ -8424,11 +7196,9 @@ body.excel-view-is-resizing-column * {
   outline: var(--think-focus-ring-width) solid var(--think-focus-ring-color);
   outline-offset: var(--think-focus-ring-offset);
 }
-
 .think-os .Mui-disabled {
   cursor: not-allowed;
 }
-
 .think-os .MuiPopover-paper,
 .think-os .MuiMenu-paper,
 .think-os .MuiAutocomplete-paper {
@@ -8437,10 +7207,6 @@ body.excel-view-is-resizing-column * {
   color: var(--think-text-primary);
   box-shadow: var(--think-shadow-overlay);
 }
-
-
-
-/* inlined: src/styles/overrides/obsidian-modal.css */
 /* Obsidian host bridge: one visual surface, Think-owned internal rhythm. */
 .modal.think-modal-host {
   overflow: hidden; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-lg);
@@ -8457,10 +7223,6 @@ body.excel-view-is-resizing-column * {
   .modal.think-modal-host--large,
   .modal.think-modal-host--wide { width: calc(100vw - 16px); max-width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
 }
-
-
-
-/* inlined: src/styles/overrides/quick-input-modal.css */
 /* Quick Input: Obsidian modal is the only surface; nested Think structure stays flat. */
 .modal.think-quick-input-modal {
   position: relative !important; inset: auto !important; width: min(780px, calc(100vw - 32px)) !important; max-width: calc(100vw - 32px);
@@ -8477,24 +7239,20 @@ body.excel-view-is-resizing-column * {
 .modal.think-quick-input-modal .think-quick-input-modal-title { margin: 0; color: var(--think-text-primary); font-size: var(--think-type-page-size); font-weight: var(--think-type-page-weight); line-height: var(--think-line-height-tight); }
 .modal.think-quick-input-modal .think-quick-input-operation-switcher { width: fit-content; }
 .modal.think-quick-input-modal .think-modal__footer--quick-input { position: static; z-index: var(--think-z-raised); bottom: auto; padding: var(--think-space-4) 0 0; border-top: 1px solid var(--think-border-subtle); background: transparent; }
-
 .modal.think-quick-input-modal .think-quick-input-recovery { display: grid; gap: var(--think-space-3); margin: var(--think-space-2) 0 var(--think-space-3); padding: var(--think-space-3) var(--think-space-4); border-left: 2px solid var(--think-danger); background: var(--think-danger-bg); }
 .modal.think-quick-input-modal .think-quick-input-recovery__text { display: grid; gap: var(--think-space-1); font-size: var(--think-font-size-sm); line-height: var(--think-line-height-normal); }
 .modal.think-quick-input-modal .think-quick-input-recovery__advice,
 .modal.think-quick-input-modal .think-quick-input-recovery__paths { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
 .modal.think-quick-input-modal .think-quick-input-recovery__paths { word-break: break-all; }
 .modal.think-quick-input-modal .think-quick-input-recovery__actions { display: flex; flex-wrap: wrap; gap: var(--think-space-2); }
-
 .modal.think-quick-input-modal .think-quick-input-footer-row { display: flex; align-items: center; justify-content: space-between; gap: var(--think-space-3); width: 100%; }
 .modal.think-quick-input-modal .think-quick-input-footer-danger-zone,
 .modal.think-quick-input-modal .think-quick-input-footer-actions { display: flex; flex-wrap: wrap; gap: var(--think-space-3); }
 .modal.think-quick-input-modal .think-quick-input-footer-actions { justify-content: flex-end; }
-
 .modal.think-quick-input-modal--mobile .think-modal__body { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-quick-input-mobile-footer-space)); }
 .modal.think-quick-input-modal--mobile .think-modal__footer--quick-input { position: sticky; bottom: 0; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-space-4)); background: var(--think-bg-elevated); }
 .modal.think-quick-input-modal--mobile.think-quick-input-keyboard-suspected .think-modal__body { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 168px); }
 .modal.think-quick-input-modal--mobile.think-quick-input-keyboard-detected .think-modal__body { padding-bottom: calc(var(--keyboard-height, 0px) + env(safe-area-inset-bottom, 0px) + 120px); }
-
 @supports not (height: 100dvh) {
   .modal.think-quick-input-modal,
   .modal.think-quick-input-modal .think-modal.think-modal--quick-input { max-height: calc(100vh - 32px); }
@@ -8507,22 +7265,16 @@ body.excel-view-is-resizing-column * {
 }
 .modal.think-quick-input-modal[data-think-platform="ios"] .think-modal__footer--quick-input,
 .modal.think-quick-input-modal[data-think-platform="android"] .think-modal__footer--quick-input { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-space-4)); }
-
-
-
-/* inlined: src/styles/features/energy-capture.css */
 /* Energy direct-capture surface. Kept separate from generic QuickInput overrides. */
 .modal.think-quick-input-modal .think-quick-input-energy-panel {
   display: flex;
   flex-direction: column;
   gap: var(--think-space-6);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-section {
   display: block;
   min-width: 0;
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-section__title {
   margin-bottom: var(--think-space-2);
   color: var(--think-text-primary);
@@ -8530,13 +7282,11 @@ body.excel-view-is-resizing-column * {
   font-weight: var(--think-type-subsection-weight);
   line-height: var(--think-line-height-tight);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-levels {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--think-space-2);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-level {
   min-width: 0;
   min-height: 64px;
@@ -8547,20 +7297,17 @@ body.excel-view-is-resizing-column * {
   justify-content: center;
   gap: var(--think-space-1);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-level__score {
   font-size: var(--think-type-data-emphasis-size);
   font-weight: var(--think-type-data-emphasis-weight);
   line-height: 1;
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-level__label {
   color: inherit;
   font-size: var(--think-font-size-xs);
   line-height: var(--think-line-height-tight);
   white-space: nowrap;
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-mode-row {
   display: flex;
   align-items: center;
@@ -8568,11 +7315,9 @@ body.excel-view-is-resizing-column * {
   gap: var(--think-space-3);
   margin-bottom: var(--think-space-2);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-mode-row .think-quick-input-energy-section__title {
   margin-bottom: 0;
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-detail-toggle,
 .modal.think-quick-input-modal .think-quick-input-energy-save-detailed {
   border: 1px solid var(--think-border-control);
@@ -8582,24 +7327,20 @@ body.excel-view-is-resizing-column * {
   cursor: pointer;
   font: inherit;
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-detail-toggle {
   padding: var(--think-space-1) var(--think-space-3);
   font-size: var(--think-font-size-xs);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-detailed {
   display: flex;
   flex-direction: column;
   gap: var(--think-space-4);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-dimension {
   display: flex;
   flex-direction: column;
   gap: var(--think-space-2);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-dimension__header {
   display: flex;
   align-items: center;
@@ -8607,23 +7348,19 @@ body.excel-view-is-resizing-column * {
   gap: var(--think-space-3);
   color: var(--think-text-primary);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-dimension__controls {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 76px;
   align-items: center;
   gap: var(--think-space-3);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-dimension__controls input[type="range"] {
   width: 100%;
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-dimension__number {
   width: 100%;
   box-sizing: border-box;
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-summary {
   display: grid;
   grid-template-columns: auto auto minmax(0, 1fr);
@@ -8634,35 +7371,28 @@ body.excel-view-is-resizing-column * {
   border-radius: var(--think-radius-sm);
   background: var(--think-bg-surface-1);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-summary strong {
   font-size: var(--think-font-size-lg);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-summary__hint {
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-save-detailed {
   min-height: 40px;
   padding: var(--think-space-2) var(--think-space-4);
   font-weight: var(--think-type-label-weight);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-detail-toggle:disabled,
 .modal.think-quick-input-modal .think-quick-input-energy-save-detailed:disabled {
   cursor: default;
   opacity: 0.68;
 }
-
-
 .modal.think-quick-input-modal .think-quick-input-energy-capture-mode {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--think-space-2);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-capture-mode__button {
   min-height: 36px;
   border: 1px solid var(--think-border-control);
@@ -8672,20 +7402,17 @@ body.excel-view-is-resizing-column * {
   cursor: pointer;
   font: inherit;
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-capture-mode__button.is-active {
   border-color: var(--interactive-accent);
   background: var(--background-modifier-hover);
   font-weight: var(--think-type-label-weight);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-retrospective-time {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--think-space-3);
   margin-top: var(--think-space-3);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-retrospective-time label {
   display: flex;
   flex-direction: column;
@@ -8693,16 +7420,13 @@ body.excel-view-is-resizing-column * {
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-retrospective-time input {
   min-height: 36px;
   box-sizing: border-box;
 }
-
 .modal.think-quick-input-modal .think-quick-input-energy-retrospective-time .think-quick-input-context-hint {
   grid-column: 1 / -1;
 }
-
 @media (max-width: 640px) {
   .modal.think-quick-input-modal .think-quick-input-energy-levels {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -8728,8 +7452,6 @@ body.excel-view-is-resizing-column * {
     grid-column: 1 / -1;
   }
 }
-
-
 /* 1.0.26 desktop reset: target context is informational by default. */
 .think-quick-input-energy-target__summary {
   display: flex;
@@ -8737,10 +7459,8 @@ body.excel-view-is-resizing-column * {
   justify-content: space-between;
   gap: var(--think-space-3);
 }
-
 .think-quick-input-energy-target__editor {
   display: grid;
   gap: var(--think-space-2);
   padding-top: var(--think-space-2);
 }
-

@@ -1,3 +1,9 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F013/error
+ * @covers F013/regression
+ * @covers F013/unit
+ */
 import {
   decodeMarkdownFieldValue,
   decodeUnknownMarkdownKvValue,

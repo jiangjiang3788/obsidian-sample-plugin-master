@@ -1,3 +1,10 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F046/integration
+ * @covers F061/integration
+ * @covers F065/integration
+ * @covers F065/persistence
+ */
 import { DEFAULT_TEMPLATE_RECORD_TYPES } from '@core/recordTypes/public';
 import type { RecordCaptureTemplate, TemplateField } from '@/core/recordInput/CaptureTemplate';
 import { buildRecordOutputPlan } from '@/core/recordInput/snapshot/OutputPlanner';

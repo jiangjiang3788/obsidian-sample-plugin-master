@@ -1,0 +1,21 @@
+# 测试体系 v2 变更记录
+
+- 功能总账 `schemaVersion` 升级到 2，并校准错误的产品能力假设。
+- P0 从 v1 的“41 项：完整 6 / 部分 33 / 缺失 2”推进到“40 项：完整 12 / 部分 28 / 缺失 0”。
+- 新增/加强 P0 数据安全、重启恢复和生命周期测试，覆盖 Record、DataStore、VaultWatcher、Settings、Goal、Task、Recurring Task、TaskSession、Timer、Energy、Migration Backup。
+- 新增 `test/unit/dataStoreFileScanner.test.ts`，覆盖扫描器的坏路径/不可读/合法解析边界。
+- 新增 `npm run test:p0:data-safety`，集中运行 P0 数据安全自动化。
+- 新增 `npm run verify:p0`，先生成总账报告再运行 P0 数据安全测试。
+- F014/F015/F016 增加 Record 创建/修改/删除后的真实重启生命周期证据。
+- F020 增加“插件关闭期间外部移动文件后，稳定 Record ID 不变”的重启证据。
+- F033 增加 Goal 创建/修改/父子层级/级联删除/重启恢复证据。
+- F050/F051/F052/F055 增加 Task 状态、时间与 TaskSession 的重启生命周期证据。
+- F053/F054 增加循环任务下一次生成、TaskSeries 指针和歧义修复证据。
+- F056 增加 Timer 运行态/暂停态重启恢复与坏 JSON 隔离。
+- F065 增加 Energy 真 Markdown → DataStore → 重启恢复，以及损坏文件不从旧缓存复活。
+- F122 增加 create/modify/delete/rename、防抖、异常、dispose、重新注册保护。
+- F124 增加真实备份落盘与单文件失败隔离。
+- F125 校准为 Record 路径变化安全迁移，并验证“先写新位置，再删除旧位置”。
+- F127 校准为 current-only data.json 契约，不再虚构旧设置自动迁移。
+- F114 校准为 P1 数据管理页导航壳；真正的缓存/索引重建仍归 F123。
+- 仍未把“测试证据存在”冒充成“测试已经运行通过”；实际结果必须以 Jest/WDIO 执行为准。

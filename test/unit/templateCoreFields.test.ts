@@ -1,3 +1,7 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F026/unit
+ */
 import { normalizeTemplateRenderData } from '@/core/fields/public';
 
 describe('core input fields in templates', () => {

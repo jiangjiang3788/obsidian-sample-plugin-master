@@ -1,3 +1,10 @@
+/**
+ * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
+ * @covers F072/error
+ * @covers F072/regression
+ * @covers F072/unit
+ * @covers F074/unit
+ */
 import { cleanAiFieldValues, normalizeParsedBatch } from '@/core/ai/AiNaturalLanguageRecordParser';
 import type { NaturalRecordBatch } from '@/core/public';
 

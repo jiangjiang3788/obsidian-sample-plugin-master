@@ -1,0 +1,3286 @@
+{
+  "schemaVersion": 8,
+  "productVersion": "1.0.65-test-system-v9",
+  "description": "Think OS 功能测试总账 v9：P0/P1/P2 功能覆盖保持完整；新增可重复故障实验室、固定坏数据样本、事务/AI/超大输入故障注入与故障报告。",
+  "dimensions": {
+    "unit": "小功能/规则测试",
+    "ui": "界面交互测试",
+    "integration": "模块组合测试",
+    "e2e": "真实 Obsidian 流程",
+    "persistence": "落盘/持久化验证",
+    "restart": "关闭重开后的恢复验证",
+    "migration": "旧版本数据升级验证",
+    "error": "失败/异常路径",
+    "regression": "Bug 防复发/契约保护",
+    "performance": "性能与大数据量"
+  },
+  "risk": {
+    "P0": "核心/数据安全：出错可能丢数据或核心流程不可用",
+    "P1": "重要功能：出错会显著影响使用，但通常不直接丢数据",
+    "P2": "辅助体验：局部功能或体验问题"
+  },
+  "features": [
+    {
+      "id": "F001",
+      "area": "插件生命周期",
+      "name": "插件启动、核心服务初始化与卸载",
+      "risk": "P0",
+      "sources": [
+        "src/main.ts",
+        "src/app/bootstrap/initializeCore.ts",
+        "src/app/runtime/lifecycleState.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/coreInitializationComposition.test.ts"
+        ],
+        "e2e": [
+          "test/specs/plugin-lifecycle.e2e.ts",
+          "test/specs/smoke.e2e.ts"
+        ],
+        "restart": [
+          "test/specs/plugin-lifecycle.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/runtimeLifecycle.test.ts",
+          "test/unit/validateServices.test.ts"
+        ],
+        "error": [
+          "test/unit/validateServices.test.ts"
+        ]
+      },
+      "note": "v4：新增 initializeCore 组合测试，验证 SettingsRepository→Store→UseCases→Disposables 生命周期；真机仍由 plugin-lifecycle E2E 保护。"
+    },
+    {
+      "id": "F002",
+      "area": "插件生命周期",
+      "name": "功能注册与命令贡献注册",
+      "risk": "P1",
+      "sources": [
+        "src/app/FeatureRegistry.ts",
+        "src/app/features/registerFeatureContributions.ts",
+        "src/features/quickinput/registerCommands.ts",
+        "src/features/aiinput/registerCommands.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/featureRegistrationComposition.test.ts"
+        ],
+        "e2e": [
+          "test/specs/plugin-lifecycle.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/runtimeLifecycle.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F003",
+      "area": "插件生命周期",
+      "name": "Dashboard / think 代码块渲染",
+      "risk": "P1",
+      "sources": [
+        "src/app/dashboard/registerDashboard.ts",
+        "src/app/dashboard/RendererService.ts",
+        "src/app/dashboard/LayoutRenderer.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/dashboardCodeblockComposition.test.ts"
+        ],
+        "e2e": [
+          "test/specs/smoke.e2e.ts"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/layoutRenderSignature.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F010",
+      "area": "记录数据",
+      "name": "记录类型与 Schema 注册表一致性",
+      "risk": "P0",
+      "sources": [
+        "src/core/records/schema/definitions.ts",
+        "src/core/recordTypes/registry.ts"
+      ],
+      "required": [
+        "unit",
+        "regression"
+      ],
+      "evidence": {
+        "regression": [
+          "test/unit/recordCaptureSurfaceMatrix.test.ts",
+          "test/unit/recordTypeRegistryConvergence.test.ts"
+        ],
+        "unit": [
+          "test/unit/recordSchemaContract.test.ts",
+          "test/unit/recordTypeRegistryConvergence.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F011",
+      "area": "记录数据",
+      "name": "Markdown 记录解析",
+      "risk": "P0",
+      "sources": [
+        "src/core/utils/parser.ts",
+        "src/core/records/codec/MarkdownRecordCodec.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/parserDataFlow.test.ts"
+        ],
+        "regression": [
+          "test/unit/parser.test.ts"
+        ],
+        "unit": [
+          "test/unit/parser.test.ts"
+        ],
+        "error": [
+          "test/unit/unknownRecord.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F012",
+      "area": "记录数据",
+      "name": "记录规范化与 Canonical 数据形态",
+      "risk": "P0",
+      "sources": [
+        "src/core/records/RecordNormalizer.ts",
+        "src/core/records/RecordEntity.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/parserDataFlow.test.ts"
+        ],
+        "unit": [
+          "test/unit/recordEntityR2.test.ts",
+          "test/unit/recordNormalizer.test.ts"
+        ],
+        "regression": [
+          "test/unit/recordNormalizer.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F013",
+      "area": "记录数据",
+      "name": "字段值编码/解码与解析",
+      "risk": "P0",
+      "sources": [
+        "src/core/records/codec/FieldValueCodec.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordTemplateQueryFlow.test.ts"
+        ],
+        "error": [
+          "test/unit/fieldValueCodec.test.ts"
+        ],
+        "regression": [
+          "test/unit/fieldValueCodec.test.ts"
+        ],
+        "unit": [
+          "test/unit/fieldValueCodec.test.ts",
+          "test/unit/fieldValueResolver.test.ts"
+        ]
+      },
+      "note": "v2 证据审计：现有 FieldValueCodec 测试已经覆盖非法 Goal Tag 返回 undefined / 写入时抛错。"
+    },
+    {
+      "id": "F014",
+      "area": "记录数据",
+      "name": "创建记录：草稿→模板→写入→索引",
+      "risk": "P0",
+      "sources": [
+        "src/app/usecases/recordInput/workflows/CreateRecordWorkflow.ts",
+        "src/core/recordInput/RecordInputFacade.ts",
+        "src/core/records/RecordRepository.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordRepositoryLifecycle.test.ts",
+          "test/integration/recordTemplateQueryFlow.test.ts"
+        ],
+        "persistence": [
+          "test/integration/recordRepositoryLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/recordRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/recordInputClosure.test.ts"
+        ],
+        "unit": [
+          "test/unit/recordInputClosure.test.ts",
+          "test/unit/recordInputFacade.test.ts",
+          "test/unit/recordInputValidation.test.ts"
+        ],
+        "error": [
+          "test/unit/recordInputWorkflowErrorBoundary.test.ts",
+          "test/unit/recordSubmitRecovery.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F015",
+      "area": "记录数据",
+      "name": "修改记录：回填→更新→重新索引",
+      "risk": "P0",
+      "sources": [
+        "src/app/usecases/recordInput/workflows/UpdateRecordWorkflow.ts",
+        "src/core/recordInput/EditBackfillMapper.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordRepositoryLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/recordRepositoryLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/recordRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/record-mutation.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/editBackfillMapper.test.ts"
+        ],
+        "unit": [
+          "test/unit/editBackfillMapper.test.ts",
+          "test/unit/recordMutationTransactionV2.test.ts"
+        ],
+        "error": [
+          "test/unit/recordInputWorkflowErrorBoundary.test.ts"
+        ]
+      },
+      "note": "v3：真实 Obsidian Runtime 经 RecordInputUseCase 修改字段，核对 Markdown 并重启恢复。"
+    },
+    {
+      "id": "F016",
+      "area": "记录数据",
+      "name": "删除记录：文件、索引与视图一致",
+      "risk": "P0",
+      "sources": [
+        "src/app/usecases/recordInput/workflows/DeleteRecordWorkflow.ts",
+        "src/core/records/RecordRepository.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordRepositoryLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/recordRepositoryLifecycle.test.ts"
+        ],
+        "regression": [
+          "test/integration/recordRestartLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/recordRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/record-mutation.e2e.ts"
+        ],
+        "error": [
+          "test/unit/recordInputWorkflowErrorBoundary.test.ts"
+        ],
+        "unit": [
+          "test/unit/recordMutationTransactionV2.test.ts"
+        ]
+      },
+      "note": "v3：真实 Obsidian Runtime 删除 Record 后核对文件、DataStore，并验证重启不复活。"
+    },
+    {
+      "id": "F017",
+      "area": "记录数据",
+      "name": "写入失败时事务回滚与原数据保护",
+      "risk": "P0",
+      "sources": [
+        "src/core/records/RecordMutationTransaction.ts",
+        "src/app/usecases/recordInput/workflows/RecordMigrationTransaction.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordRepositoryLifecycle.test.ts"
+        ],
+        "error": [
+          "test/unit/recordInputWorkflowErrorBoundary.test.ts",
+          "test/unit/recordMutationTransactionV2.test.ts"
+        ],
+        "regression": [
+          "test/unit/recordMutationTransactionV2.test.ts"
+        ],
+        "unit": [
+          "test/unit/recordMutationTransactionV2.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F018",
+      "area": "记录数据",
+      "name": "RecordIndex 身份、去重与完整性",
+      "risk": "P0",
+      "sources": [
+        "src/core/records/RecordIndex.ts",
+        "src/core/services/dataStore/DataStoreIndex.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "restart",
+        "regression",
+        "performance"
+      ],
+      "evidence": {
+        "restart": [
+          "test/integration/dataStoreRestartRecovery.test.ts"
+        ],
+        "integration": [
+          "test/integration/taskSessionIntegrity.test.ts"
+        ],
+        "performance": [
+          "test/performance/recordIndexScale.test.ts"
+        ],
+        "regression": [
+          "test/unit/recordIndexIntegrityV2.test.ts"
+        ],
+        "unit": [
+          "test/unit/recordIndexIntegrityV2.test.ts"
+        ]
+      },
+      "note": "v4：20,000 条 RecordIndex 重建/位置/查找性能基线，使用宽松灾难性回归预算避免机器差异导致脆弱 benchmark。"
+    },
+    {
+      "id": "F019",
+      "area": "记录数据",
+      "name": "未知/损坏记录不会拖垮整个索引",
+      "risk": "P0",
+      "sources": [
+        "src/core/utils/unknownRecord.ts",
+        "src/core/utils/parser.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/dataStoreRestartRecovery.test.ts"
+        ],
+        "unit": [
+          "test/unit/parser.test.ts",
+          "test/unit/unknownRecord.test.ts"
+        ],
+        "error": [
+          "test/unit/unknownRecord.test.ts"
+        ],
+        "regression": [
+          "test/unit/unknownRecord.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F020",
+      "area": "记录数据",
+      "name": "记录位置、移动后身份与备份定位",
+      "risk": "P0",
+      "sources": [
+        "src/core/recordInput/mutationLocator.ts",
+        "src/core/services/item/MigrationBackupService.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "persistence",
+        "restart",
+        "regression"
+      ],
+      "evidence": {
+        "restart": [
+          "test/integration/dataStoreRestartRecovery.test.ts"
+        ],
+        "integration": [
+          "test/integration/recordRepositoryLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/recordRepositoryLifecycle.test.ts"
+        ],
+        "unit": [
+          "test/unit/migrationBackupService.recordLocation.test.ts",
+          "test/unit/recordLocation.test.ts"
+        ],
+        "regression": [
+          "test/unit/recordLocation.test.ts"
+        ]
+      },
+      "note": "v2：已覆盖插件关闭期间文件被外部移动，重启后稳定 Record ID 保持、位置更新且不产生重复位置。"
+    },
+    {
+      "id": "F025",
+      "area": "字段系统",
+      "name": "字段注册、类型语义与类别",
+      "risk": "P1",
+      "sources": [
+        "src/core/fields",
+        "src/core/types/fields.ts"
+      ],
+      "required": [
+        "unit",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/fieldBehavior.test.ts",
+          "test/unit/fieldRegistryCategories.test.ts",
+          "test/unit/fieldSemantics.test.ts"
+        ],
+        "regression": [
+          "test/unit/fieldSemantics.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F026",
+      "area": "字段系统",
+      "name": "模板核心字段与字段清洗",
+      "risk": "P1",
+      "sources": [
+        "src/core/recordInput/CaptureTemplate.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordTemplateQueryFlow.test.ts"
+        ],
+        "unit": [
+          "test/unit/templateCoreFields.test.ts",
+          "test/unit/templateFieldAdapter.test.ts",
+          "test/unit/templateFieldSanitizer.test.ts"
+        ],
+        "regression": [
+          "test/unit/templateFieldSanitizer.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F027",
+      "area": "字段系统",
+      "name": "Quick Input 各字段渲染与录入",
+      "risk": "P1",
+      "sources": [
+        "src/features/quickinput/editor/fields/FieldRenderer.tsx",
+        "src/features/quickinput/editor/fields"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/quickInputFieldDefaultsComposition.test.ts"
+        ],
+        "e2e": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/fieldBehavior.test.ts",
+          "test/unit/quickInputEditorModel.test.ts"
+        ],
+        "ui": [
+          "test/unit/quickInputFieldRendererUi.test.tsx"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F030",
+      "area": "目标系统",
+      "name": "Goal 领域语义、唯一性与 Canonical 规则",
+      "risk": "P0",
+      "sources": [
+        "src/core/goal",
+        "src/app/usecases/goal.usecase.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordTemplateQueryFlow.test.ts"
+        ],
+        "unit": [
+          "test/unit/dataStore.goalSemantics.test.ts",
+          "test/unit/goalDomainCanonical.test.ts",
+          "test/unit/goalSemantics.test.ts"
+        ],
+        "regression": [
+          "test/unit/goalSemantics.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F031",
+      "area": "目标系统",
+      "name": "Goal 层级路径与父子导航",
+      "risk": "P0",
+      "sources": [
+        "src/core/goal/path.ts",
+        "src/core/semantics/path.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/goalSettingsLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/goalSelectorDrilldown.test.tsx"
+        ],
+        "ui": [
+          "test/unit/goalSelectorDrilldown.test.tsx",
+          "test/unit/goalSelectorLayoutContract.test.ts"
+        ],
+        "unit": [
+          "test/unit/goalSelectorDrilldown.test.tsx",
+          "test/unit/hierarchyPathSemantics.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F032",
+      "area": "目标系统",
+      "name": "Goal 周期与周期语义",
+      "risk": "P1",
+      "sources": [
+        "src/core/goal/period.ts",
+        "src/core/period/PeriodPolicy.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/goalPeriodPolicyFlow.test.ts"
+        ],
+        "regression": [
+          "test/integration/goalPeriodPolicyFlow.test.ts"
+        ],
+        "unit": [
+          "test/unit/goalPeriod.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F033",
+      "area": "目标系统",
+      "name": "设置中创建/修改/删除 Goal",
+      "risk": "P0",
+      "sources": [
+        "src/features/settings/input/GoalManager.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/goalSettingsLifecycle.test.ts"
+        ],
+        "integration": [
+          "test/integration/goalSettingsLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/goalSettingsLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/goalSettingsLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/settings-goal.e2e.ts"
+        ],
+        "ui": [
+          "test/specs/settings-goal.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/goalSemantics.test.ts"
+        ]
+      },
+      "note": "v2：已覆盖 UseCase→SettingsRepository→落盘→重启的 Goal CRUD/级联删除/非法路径；UI 与真 Obsidian E2E 仍是缺口。 v3：新增真实设置控制台 UI 创建/删除 Goal，并验证重启持久化。"
+    },
+    {
+      "id": "F034",
+      "area": "目标系统",
+      "name": "Goal 指标管理",
+      "risk": "P1",
+      "sources": [
+        "src/features/settings/input/goalManager/GoalMetricSection.tsx"
+      ],
+      "required": [
+        "ui",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/goalMetricsLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/goalMetricsLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/goalMetricsLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/settings-p1.e2e.ts"
+        ],
+        "ui": [
+          "test/specs/settings-p1.e2e.ts",
+          "test/unit/goalMetricSection.test.tsx"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F035",
+      "area": "目标模板",
+      "name": "当前 Goal × RecordType 直接模板解析",
+      "risk": "P0",
+      "sources": [
+        "src/core/services/GoalTemplateResolver.ts",
+        "src/core/goal/templates.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordTemplateQueryFlow.test.ts"
+        ],
+        "e2e": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/goalTemplateResolver.test.ts"
+        ],
+        "unit": [
+          "test/unit/goalTemplateResolver.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F036",
+      "area": "目标模板",
+      "name": "禁止祖先 Goal 模板回退/猜测",
+      "risk": "P0",
+      "sources": [
+        "src/core/services/GoalTemplateResolver.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordTemplateQueryFlow.test.ts"
+        ],
+        "e2e": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/goalTemplateResolver.test.ts",
+          "test/unit/quickInputRecordTypeEligibilityMatrix.test.ts"
+        ],
+        "regression": [
+          "test/unit/quickInputRecordTypeEligibilityMatrix.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F037",
+      "area": "目标模板",
+      "name": "GoalTemplate 保存与持久化",
+      "risk": "P0",
+      "sources": [
+        "src/core/goal/templates.ts",
+        "src/core/services/SettingsRepository.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "persistence",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/goalSettingsLifecycle.test.ts",
+          "test/integration/recordTemplateQueryFlow.test.ts"
+        ],
+        "persistence": [
+          "test/integration/goalSettingsLifecycle.test.ts",
+          "test/unit/goalTemplateStorage.test.ts"
+        ],
+        "restart": [
+          "test/integration/goalSettingsLifecycle.test.ts",
+          "test/integration/settingsRestartPersistence.test.ts"
+        ],
+        "error": [
+          "test/integration/settingsRestartPersistence.test.ts"
+        ],
+        "unit": [
+          "test/unit/goalTemplateStorage.test.ts"
+        ]
+      },
+      "note": "v2 校准：当前设置策略是 current-only；验证当前 GoalTemplate 落盘/重启和损坏引用拒绝，不虚构旧 data.json 自动迁移能力。"
+    },
+    {
+      "id": "F038",
+      "area": "目标模板",
+      "name": "GoalTemplate 设置矩阵与编辑器",
+      "risk": "P1",
+      "sources": [
+        "src/features/settings/goalTemplates/GoalTemplateMatrix.tsx",
+        "src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "persistence"
+      ],
+      "evidence": {
+        "persistence": [
+          "test/integration/goalSettingsLifecycle.test.ts"
+        ],
+        "integration": [
+          "test/integration/goalSettingsLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/goal-template-fields.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/goalTemplateEditorModel.test.ts",
+          "test/unit/goalTemplateEditorModelSplit.test.ts",
+          "test/unit/goalTemplateMatrixModel.test.ts"
+        ],
+        "ui": [
+          "test/unit/goalTemplateEditorUi.test.tsx"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F040",
+      "area": "快速录入",
+      "name": "四列 Goal Cascade 选择与钻取",
+      "risk": "P0",
+      "sources": [
+        "src/features/quickinput/editor/components/GoalSelector.tsx",
+        "src/features/quickinput/editor/quickInputGoalModel.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/goalCascadeEligibilityFlow.test.ts"
+        ],
+        "e2e": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "ui": [
+          "test/unit/goalSelectorDrilldown.test.tsx",
+          "test/unit/goalSelectorLayoutContract.test.ts"
+        ],
+        "unit": [
+          "test/unit/goalSelectorDrilldown.test.tsx"
+        ],
+        "regression": [
+          "test/unit/goalSelectorLayoutContract.test.ts"
+        ]
+      },
+      "note": "v3：组合测试锁定“直接模板才可创建、祖先模板不继承”，真实 Quick Input 再使用四层 Goal 路径逐列钻取。"
+    },
+    {
+      "id": "F041",
+      "area": "快速录入",
+      "name": "RecordType 可用性与模板资格判断",
+      "risk": "P0",
+      "sources": [
+        "src/features/quickinput/editor/quickInputRecordTypeModel.ts",
+        "src/features/quickinput/editor/components/RecordTypeSwitcher.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordTemplateQueryFlow.test.ts"
+        ],
+        "e2e": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "ui": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/quickInputRecordTypeEligibilityMatrix.test.ts"
+        ],
+        "unit": [
+          "test/unit/quickInputRecordTypeEligibilityMatrix.test.ts",
+          "test/unit/recordCaptureSurfaceMatrix.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F042",
+      "area": "快速录入",
+      "name": "动态字段、默认值与编辑器状态",
+      "risk": "P1",
+      "sources": [
+        "src/features/quickinput/editor/QuickInputEditorModel.ts",
+        "src/features/quickinput/editor/model/hydrateDefaults.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/quickInputFieldDefaultsComposition.test.ts"
+        ],
+        "e2e": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/quickInputEditorModel.test.ts",
+          "test/unit/quickInputTaskDisplayTemplate.test.ts"
+        ],
+        "ui": [
+          "test/unit/quickInputFieldRendererUi.test.tsx"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F043",
+      "area": "快速录入",
+      "name": "提交创建记录完整流程",
+      "risk": "P0",
+      "sources": [
+        "src/features/quickinput/modal/useQuickInputSubmit.ts",
+        "src/app/usecases/recordInput/submitPipeline.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordRepositoryLifecycle.test.ts",
+          "test/integration/recordTemplateQueryFlow.test.ts"
+        ],
+        "persistence": [
+          "test/integration/recordRepositoryLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "regression": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "restart": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "ui": [
+          "test/specs/quick-input-task.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/recordInputClosure.test.ts",
+          "test/unit/recordSubmitFeedback.test.ts"
+        ],
+        "error": [
+          "test/unit/recordInputWorkflowErrorBoundary.test.ts",
+          "test/unit/recordSubmitRecovery.test.ts"
+        ]
+      },
+      "note": "v3：真实 Quick Input UI 创建任务，核对 Markdown + DataStore，并重启验证同一 Record ID。"
+    },
+    {
+      "id": "F044",
+      "area": "快速录入",
+      "name": "冲突、失败提示与恢复重试",
+      "risk": "P0",
+      "sources": [
+        "src/features/quickinput/modal/QuickInputConflictRecoveryPanel.tsx",
+        "src/core/recordInput/recovery.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordConflictRecoveryFlow.test.ts"
+        ],
+        "e2e": [
+          "test/specs/edit-recovery-timer-ui.e2e.ts"
+        ],
+        "ui": [
+          "test/unit/quickInputConflictRecoveryPanel.test.tsx"
+        ],
+        "unit": [
+          "test/unit/recordSubmitFeedback.test.ts",
+          "test/unit/recordSubmitRecovery.test.ts"
+        ],
+        "error": [
+          "test/unit/recordSubmitRecovery.test.ts"
+        ],
+        "regression": [
+          "test/unit/recordSubmitRecovery.test.ts"
+        ]
+      },
+      "note": "v4：冲突恢复面板行为、冲突→扫描→重试组合契约，以及真实 Obsidian 中外部文件改写故障注入→恢复文件→重新扫描→重试保存。"
+    },
+    {
+      "id": "F045",
+      "area": "快速录入",
+      "name": "编辑已有记录与字段回填",
+      "risk": "P0",
+      "sources": [
+        "src/core/recordInput/EditBackfillMapper.ts",
+        "src/app/usecases/recordInput/workflows/UpdateRecordWorkflow.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordRepositoryLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/recordRepositoryLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/edit-recovery-timer-ui.e2e.ts",
+          "test/specs/record-mutation.e2e.ts"
+        ],
+        "error": [
+          "test/specs/edit-recovery-timer-ui.e2e.ts"
+        ],
+        "ui": [
+          "test/specs/edit-recovery-timer-ui.e2e.ts"
+        ],
+        "restart": [
+          "test/specs/record-mutation.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/editBackfillMapper.test.ts",
+          "test/unit/quickInputEditorModel.test.ts"
+        ]
+      },
+      "note": "v4：从 Timer 真 UI 打开已有 Task，验证字段回填→修改→写回→重启，并通过外部文件改写验证编辑失败/恢复路径。"
+    },
+    {
+      "id": "F046",
+      "area": "快速录入",
+      "name": "精力快速采集",
+      "risk": "P1",
+      "sources": [
+        "src/features/quickinput/editor/components/EnergyQuickCapturePanel.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "persistence"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordTypePersistenceMatrix.test.ts"
+        ],
+        "ui": [
+          "test/specs/energy-quick-capture-ui.e2e.ts",
+          "test/unit/energyQuickCapturePanel.test.tsx"
+        ],
+        "e2e": [
+          "test/specs/energy-quick-capture-ui.e2e.ts"
+        ],
+        "persistence": [
+          "test/specs/energy-quick-capture-ui.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/energyQuickCapturePanel.test.tsx",
+          "test/unit/recordTypesEnergy.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F050",
+      "area": "任务系统",
+      "name": "任务 open/done 状态语义",
+      "risk": "P0",
+      "sources": [
+        "src/core/records/task/taskStatus.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/taskRestartLifecycle.test.ts",
+          "test/integration/taskSessionIntegrity.test.ts"
+        ],
+        "regression": [
+          "test/integration/taskRestartLifecycle.test.ts",
+          "test/unit/taskStatusV2.test.ts"
+        ],
+        "e2e": [
+          "test/specs/timer-runtime.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/taskStatusV2.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F051",
+      "area": "任务系统",
+      "name": "完成/重新打开任务并保持数据一致",
+      "risk": "P0",
+      "sources": [
+        "src/core/services/item/TaskCompletionMutation.ts",
+        "src/app/actions/recordTaskActions.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/taskRestartLifecycle.test.ts"
+        ],
+        "integration": [
+          "test/integration/taskRestartLifecycle.test.ts",
+          "test/integration/taskSessionIntegrity.test.ts"
+        ],
+        "persistence": [
+          "test/integration/taskRestartLifecycle.test.ts",
+          "test/integration/taskSessionIntegrity.test.ts"
+        ],
+        "restart": [
+          "test/integration/taskRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/timer-runtime.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/taskCompletionMutationV2.test.ts"
+        ],
+        "unit": [
+          "test/unit/taskCompletionMutationV2.test.ts",
+          "test/unit/taskConsumerV2.test.ts"
+        ]
+      },
+      "note": "v2：真实 RecordRepository/DataStore 路径已覆盖 complete→重启→reopen→重启及非法重复 reopen。"
+    },
+    {
+      "id": "F052",
+      "area": "任务系统",
+      "name": "任务开始/结束时间与时长",
+      "risk": "P0",
+      "sources": [
+        "src/core/records/task/taskTime.ts",
+        "src/core/services/item/TaskTimeMutation.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/taskRestartLifecycle.test.ts"
+        ],
+        "integration": [
+          "test/integration/taskRestartLifecycle.test.ts",
+          "test/integration/taskSessionIntegrity.test.ts"
+        ],
+        "persistence": [
+          "test/integration/taskRestartLifecycle.test.ts",
+          "test/integration/taskSessionIntegrity.test.ts"
+        ],
+        "restart": [
+          "test/integration/taskRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/record-mutation.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/taskTimeDateTime.test.ts",
+          "test/unit/taskTimeMutation.test.ts"
+        ]
+      },
+      "note": "v2：真实落盘已覆盖任务时间/时长修改、重启恢复和非法时长拒绝。 v3：真实 Obsidian Runtime 更新任务开始/结束时间与时长并核对 Markdown。"
+    },
+    {
+      "id": "F053",
+      "area": "任务系统",
+      "name": "循环任务规则与下一次任务生成",
+      "risk": "P0",
+      "sources": [
+        "src/core/records/task/taskRecurrence.ts",
+        "src/core/records/task/taskCadence.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recurringTaskRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/recurringTaskRestartLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/recurringTaskRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/recurrence-runtime.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/taskOutputPlannerLifecycle.test.ts",
+          "test/unit/taskRecurrence.test.ts"
+        ],
+        "regression": [
+          "test/unit/taskRecurrence.test.ts"
+        ]
+      },
+      "note": "v2：真实 RecordRepository/DataStore 已覆盖完成当前实例→生成下一实例→Series 指针更新→重启保持；真 Obsidian E2E 仍待补。 v3：真实 Obsidian Runtime 完成周期任务，生成下一实例、推进 Series 指针并重启验证。"
+    },
+    {
+      "id": "F054",
+      "area": "任务系统",
+      "name": "TaskSeries 修复与长期系列一致性",
+      "risk": "P0",
+      "sources": [
+        "src/core/records/task/RecurrenceTypes.ts",
+        "src/core/records/task/taskRecurrence.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "restart",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/recurringTaskRestartLifecycle.test.ts"
+        ],
+        "integration": [
+          "test/integration/recurringTaskRestartLifecycle.test.ts"
+        ],
+        "regression": [
+          "test/integration/recurringTaskRestartLifecycle.test.ts",
+          "test/unit/taskSeriesRepairV2.test.ts"
+        ],
+        "restart": [
+          "test/integration/recurringTaskRestartLifecycle.test.ts"
+        ],
+        "unit": [
+          "test/unit/taskRecurrence.test.ts",
+          "test/unit/taskSeriesRepairV2.test.ts"
+        ]
+      },
+      "note": "v2：真实数据层已覆盖唯一 open 候选自动修复，以及多个候选时拒绝猜测。"
+    },
+    {
+      "id": "F055",
+      "area": "任务系统",
+      "name": "TaskSession 工作块创建与索引完整性",
+      "risk": "P0",
+      "sources": [
+        "src/core/records/task/taskSession.ts",
+        "src/core/services/item/TaskSessionMutation.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/taskRestartLifecycle.test.ts"
+        ],
+        "integration": [
+          "test/integration/taskRestartLifecycle.test.ts",
+          "test/integration/taskSessionIntegrity.test.ts"
+        ],
+        "persistence": [
+          "test/integration/taskRestartLifecycle.test.ts",
+          "test/integration/taskSessionIntegrity.test.ts"
+        ],
+        "restart": [
+          "test/integration/taskRestartLifecycle.test.ts"
+        ],
+        "regression": [
+          "test/integration/taskSessionIntegrity.test.ts"
+        ],
+        "e2e": [
+          "test/specs/timer-runtime.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/taskConsumerV2.test.ts"
+        ]
+      },
+      "note": "v2：TaskSession 已覆盖真实 Record 写入、重启索引恢复和不存在 taskId 的失败路径；真 Obsidian 仍待补。"
+    },
+    {
+      "id": "F056",
+      "area": "任务系统",
+      "name": "Timer 开始/暂停/继续/停止并写回任务",
+      "risk": "P0",
+      "sources": [
+        "src/core/services/TimerStateService.ts",
+        "src/app/usecases/timer.usecase.ts",
+        "src/features/timer"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/taskSessionIntegrity.test.ts"
+        ],
+        "persistence": [
+          "test/integration/taskSessionIntegrity.test.ts"
+        ],
+        "error": [
+          "test/integration/timerRestartRecovery.test.ts"
+        ],
+        "regression": [
+          "test/integration/timerRestartRecovery.test.ts"
+        ],
+        "restart": [
+          "test/integration/timerRestartRecovery.test.ts"
+        ],
+        "e2e": [
+          "test/specs/edit-recovery-timer-ui.e2e.ts",
+          "test/specs/timer-runtime.e2e.ts"
+        ],
+        "ui": [
+          "test/specs/edit-recovery-timer-ui.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/timerRuntimeStateV2.test.ts"
+        ]
+      },
+      "note": "v4：补真实悬浮 Timer UI 的暂停→继续→完成任务按钮流；Runtime 重启与 TaskSession 仍由 v3 套件保护。"
+    },
+    {
+      "id": "F057",
+      "area": "任务系统",
+      "name": "任务需求（精力/脑力/体力/场景）参与业务判断",
+      "risk": "P1",
+      "sources": [
+        "src/core/records/schema/definitions.ts",
+        "src/core/energy/recommendationCandidates.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/energyTaskDemandRecommendationFlow.test.ts"
+        ],
+        "regression": [
+          "test/integration/energyTaskDemandRecommendationFlow.test.ts"
+        ],
+        "unit": [
+          "test/unit/energyRecommendationCandidates.test.ts",
+          "test/unit/taskConsumerV2.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F060",
+      "area": "精力系统",
+      "name": "精力质量与状态计算",
+      "risk": "P1",
+      "sources": [
+        "src/core/energy/quality.ts"
+      ],
+      "required": [
+        "unit",
+        "regression"
+      ],
+      "evidence": {
+        "regression": [
+          "test/unit/energyQuality.test.ts"
+        ],
+        "unit": [
+          "test/unit/energyQuality.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F061",
+      "area": "精力系统",
+      "name": "精力记录管理与动作策略",
+      "risk": "P1",
+      "sources": [
+        "src/core/energy/management.ts",
+        "src/core/energy/actionPolicy.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "persistence"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/recordTypePersistenceMatrix.test.ts"
+        ],
+        "unit": [
+          "test/unit/energyActionPolicy.test.ts",
+          "test/unit/energyManagement.test.ts"
+        ],
+        "e2e": [
+          "test/specs/energy-quick-capture-ui.e2e.ts"
+        ],
+        "persistence": [
+          "test/specs/energy-quick-capture-ui.e2e.ts"
+        ]
+      },
+      "note": "v6：按严格证据口径补齐剩余 P1 必需维度；真机执行结果仍以完整依赖环境实际运行为准。"
+    },
+    {
+      "id": "F062",
+      "area": "精力系统",
+      "name": "精力模式识别与 effects",
+      "risk": "P1",
+      "sources": [
+        "src/core/energy/patterns.ts",
+        "src/core/energy/effects.ts"
+      ],
+      "required": [
+        "unit",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/energyEffects.test.ts",
+          "test/unit/energyPatterns.test.ts"
+        ],
+        "regression": [
+          "test/unit/energyPatterns.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F063",
+      "area": "精力系统",
+      "name": "任务推荐与候选过滤",
+      "risk": "P1",
+      "sources": [
+        "src/core/energy/recommendation.ts",
+        "src/core/energy/recommendationCandidates.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/energyTaskDemandRecommendationFlow.test.ts"
+        ],
+        "regression": [
+          "test/unit/energyRecommendation.test.ts"
+        ],
+        "unit": [
+          "test/unit/energyRecommendation.test.ts",
+          "test/unit/energyRecommendationCandidates.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F064",
+      "area": "精力系统",
+      "name": "精力视图与任务关联展示",
+      "risk": "P1",
+      "sources": [
+        "src/features/views/runtime/EnergyView.tsx",
+        "src/features/views/models/energyViewModel.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/energyRecordViewSemantics.test.ts",
+          "test/unit/energyViewModel.test.ts"
+        ],
+        "ui": [
+          "test/specs/energy-view-task.e2e.ts"
+        ],
+        "integration": [
+          "test/integration/energyViewTaskFlow.test.ts"
+        ],
+        "e2e": [
+          "test/specs/energy-view-task.e2e.ts"
+        ]
+      },
+      "note": "v6：按严格证据口径补齐剩余 P1 必需维度；真机执行结果仍以完整依赖环境实际运行为准。"
+    },
+    {
+      "id": "F065",
+      "area": "精力系统",
+      "name": "精力记录持久化与重启恢复",
+      "risk": "P0",
+      "sources": [
+        "src/core/records/schema/definitions.ts",
+        "src/core/services/DataStore.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/energyRestartLifecycle.test.ts"
+        ],
+        "integration": [
+          "test/integration/energyRestartLifecycle.test.ts",
+          "test/integration/recordTypePersistenceMatrix.test.ts"
+        ],
+        "persistence": [
+          "test/integration/energyRestartLifecycle.test.ts",
+          "test/integration/recordTypePersistenceMatrix.test.ts"
+        ],
+        "restart": [
+          "test/integration/energyRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/energy-runtime.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/recordTypesEnergy.test.ts"
+        ]
+      },
+      "note": "v2 校准：当前精力 Record 使用统一 Record schema 持久化；新增真实 Markdown → DataStore → 重启恢复与损坏文件不从旧缓存复活的验证。源码未声明独立的旧精力格式迁移能力。 v3：真实 Obsidian Runtime 写入 Energy 快照，核对 Vault/DataStore 并重启恢复。"
+    },
+    {
+      "id": "F070",
+      "area": "AI",
+      "name": "AI HTTP 传输、模型列表与错误处理",
+      "risk": "P1",
+      "sources": [
+        "src/core/ai/AiHttpClient.ts",
+        "src/platform/obsidian/ObsidianAiHttpTransport.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/aiHttpObsidianTransportFlow.test.ts"
+        ],
+        "regression": [
+          "test/integration/aiHttpObsidianTransportFlow.test.ts"
+        ],
+        "unit": [
+          "test/unit/aiHttpClientModels.test.ts",
+          "test/unit/platform/obsidianAiHttpTransport.test.ts"
+        ],
+        "error": [
+          "test/unit/platform/obsidianAiHttpTransport.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F071",
+      "area": "AI",
+      "name": "AI 设置就绪判断与配置快照",
+      "risk": "P1",
+      "sources": [
+        "src/core/ai/AiConfigSnapshot.ts",
+        "src/features/settings/tabs/aiSettingsReadiness.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "persistence",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "persistence": [
+          "test/integration/aiSettingsLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/aiSettingsLifecycle.test.ts"
+        ],
+        "error": [
+          "test/integration/aiSettingsLifecycle.test.ts",
+          "test/unit/aiSettingsUi.test.tsx"
+        ],
+        "unit": [
+          "test/unit/aiConfigSnapshotDomain.test.ts",
+          "test/unit/aiSettingsReadiness.test.ts"
+        ],
+        "ui": [
+          "test/unit/aiSettingsUi.test.tsx"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F072",
+      "area": "AI",
+      "name": "自然语言解析、JSON 归一化与字段映射",
+      "risk": "P1",
+      "sources": [
+        "src/core/ai/AiNaturalLanguageRecordParser.ts",
+        "src/core/ai/AiParserNormalize.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/aiNaturalParserFlow.test.ts"
+        ],
+        "error": [
+          "test/unit/aiNormalizeDomain.test.ts"
+        ],
+        "regression": [
+          "test/unit/aiNormalizeDomain.test.ts"
+        ],
+        "unit": [
+          "test/unit/aiNormalizeDomain.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F073",
+      "area": "AI",
+      "name": "AI 批量确认与副作用边界",
+      "risk": "P1",
+      "sources": [
+        "src/platform/obsidian/modals/AiBatchConfirmModal.tsx",
+        "src/platform/obsidian/modals/AiBatchConfirmModel.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "error"
+      ],
+      "evidence": {
+        "ui": [
+          "test/unit/aiBatchConfirmFooter.test.tsx"
+        ],
+        "unit": [
+          "test/unit/aiBatchConfirmFooter.test.tsx",
+          "test/unit/aiBatchConfirmModel.test.ts",
+          "test/unit/aiBatchConfirmSideEffectBoundary.test.ts"
+        ],
+        "integration": [
+          "test/integration/aiBatchConfirmActionFlow.test.tsx"
+        ],
+        "e2e": [
+          "test/specs/ai-natural-input.e2e.ts"
+        ],
+        "error": [
+          "test/integration/aiBatchConfirmActionFlow.test.tsx"
+        ]
+      },
+      "note": "v6：按严格证据口径补齐剩余 P1 必需维度；真机执行结果仍以完整依赖环境实际运行为准。"
+    },
+    {
+      "id": "F074",
+      "area": "AI",
+      "name": "AI 自然语言录入命令完整流程",
+      "risk": "P1",
+      "sources": [
+        "src/features/aiinput/aiNaturalInputCommand.ts",
+        "src/features/aiinput/aiInputRuntime.ts",
+        "src/features/aiinput/registerCommands.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "persistence",
+        "error"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/aiNormalizeDomain.test.ts"
+        ],
+        "integration": [
+          "test/integration/aiNaturalInputCommandFlow.test.ts"
+        ],
+        "e2e": [
+          "test/specs/ai-natural-input.e2e.ts"
+        ],
+        "persistence": [
+          "test/specs/ai-natural-input.e2e.ts"
+        ],
+        "error": [
+          "test/integration/aiNaturalInputCommandFlow.test.ts"
+        ]
+      },
+      "note": "v6：按严格证据口径补齐剩余 P1 必需维度；真机执行结果仍以完整依赖环境实际运行为准。"
+    },
+    {
+      "id": "F075",
+      "area": "AI",
+      "name": "AI 接口测速命令",
+      "risk": "P2",
+      "sources": [
+        "src/features/aiinput/aiSpeedTestCommand.ts",
+        "src/features/aiinput/registerCommands.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "error"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/aiSpeedTestCommand.test.ts"
+        ],
+        "integration": [
+          "test/integration/aiSpeedTestFlow.test.ts"
+        ],
+        "e2e": [
+          "test/specs/ai-speed-test.e2e.ts"
+        ],
+        "error": [
+          "test/unit/aiSpeedTestCommand.test.ts"
+        ]
+      },
+      "note": "v7：成功、配置缺失、HTTP 失败、取消语义均有规则测试；组合测试真实经过 AiHttpClient + takeLatest；真机命令使用本地 OpenAI 兼容服务，不依赖外网。"
+    },
+    {
+      "id": "F076",
+      "area": "AI",
+      "name": "检索索引、过滤与结果映射",
+      "risk": "P1",
+      "sources": [
+        "src/core/ai/RetrievalService.ts",
+        "src/core/ai/retrieval"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "regression",
+        "performance"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/retrievalIndexFilterFlow.test.ts"
+        ],
+        "regression": [
+          "test/integration/retrievalIndexFilterFlow.test.ts"
+        ],
+        "performance": [
+          "test/performance/retrievalScale.test.ts"
+        ],
+        "unit": [
+          "test/unit/retrievalModel.test.ts",
+          "test/unit/retrievalService.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F077",
+      "area": "AI",
+      "name": "AI Chat 会话存储与消息生命周期",
+      "risk": "P1",
+      "sources": [
+        "src/core/ai/AiChatService.ts",
+        "src/core/ai/ChatSessionStore.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/chatSessionRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/chatSessionRestartLifecycle.test.ts",
+          "test/specs/ai-chat-store-runtime.e2e.ts"
+        ],
+        "restart": [
+          "test/integration/chatSessionRestartLifecycle.test.ts",
+          "test/specs/ai-chat-store-runtime.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/ai-chat-store-runtime.e2e.ts"
+        ],
+        "error": [
+          "test/specs/ai-chat-store-runtime.e2e.ts",
+          "test/unit/chatSessionStore.test.ts"
+        ],
+        "unit": [
+          "test/unit/chatSessionStore.test.ts"
+        ]
+      },
+      "note": "v4：内存存储单测 + 新 Store 重启恢复 + 真实 Obsidian/Vault 会话持久化；损坏 JSON 会备份 corrupt 文件并安全启动。"
+    },
+    {
+      "id": "F078",
+      "area": "AI",
+      "name": "AI Chat 界面：会话列表、过滤、发送消息",
+      "risk": "P1",
+      "sources": [
+        "src/features/aichat/AiChatModalContainer.tsx",
+        "src/features/aichat/AiChatModalView.tsx"
+      ],
+      "required": [
+        "ui",
+        "integration",
+        "e2e",
+        "error"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/aiChatContainerFlow.test.tsx"
+        ],
+        "error": [
+          "test/integration/aiChatContainerFlow.test.tsx",
+          "test/unit/aiChatModalView.test.tsx"
+        ],
+        "e2e": [
+          "test/specs/ai-chat-ui.e2e.ts"
+        ],
+        "ui": [
+          "test/unit/aiChatModalView.test.tsx"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F080",
+      "area": "展示视图",
+      "name": "块视图",
+      "risk": "P1",
+      "sources": [
+        "src/features/views/runtime/BlockView.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/viewRegistryRuntimeComposition.test.ts"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/blockViewModel.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F081",
+      "area": "展示视图",
+      "name": "表格视图",
+      "risk": "P1",
+      "sources": [
+        "src/features/views/runtime/TableView.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/viewRegistryRuntimeComposition.test.ts"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/tableViewModel.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F082",
+      "area": "展示视图",
+      "name": "数据表格（Excel）",
+      "risk": "P1",
+      "sources": [
+        "src/features/views/runtime/excel-view/ExcelView.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/viewRegistryRuntimeComposition.test.ts"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/excelViewModels.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F083",
+      "area": "展示视图",
+      "name": "时间轴",
+      "risk": "P1",
+      "sources": [
+        "src/features/views/runtime/TimelineView/TimelineViewContainer.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/timelineContextPersistence.test.ts",
+          "test/integration/viewRegistryRuntimeComposition.test.ts"
+        ],
+        "persistence": [
+          "test/integration/timelineContextPersistence.test.ts"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/timelineViewModel.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F084",
+      "area": "展示视图",
+      "name": "事件时间线",
+      "risk": "P1",
+      "sources": [
+        "src/features/views/runtime/EventTimelineView/EventTimelineViewContainer.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/viewRegistryRuntimeComposition.test.ts"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/eventTimelineViewModel.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F085",
+      "area": "展示视图",
+      "name": "统计视图",
+      "risk": "P1",
+      "sources": [
+        "src/features/views/runtime/StatisticsView/StatisticsViewContainer.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/viewRegistryRuntimeComposition.test.ts"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/statisticsViewModel.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F086",
+      "area": "展示视图",
+      "name": "打卡热力图",
+      "risk": "P1",
+      "sources": [
+        "src/features/views/runtime/HeatmapView.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/viewRegistryRuntimeComposition.test.ts"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/heatmapViewModel.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F087",
+      "area": "展示视图",
+      "name": "成长视图",
+      "risk": "P1",
+      "sources": [
+        "src/features/views/runtime/ProgressView.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/viewRegistryRuntimeComposition.test.ts"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/progressViewModel.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F088",
+      "area": "展示视图",
+      "name": "精力视图",
+      "risk": "P1",
+      "sources": [
+        "src/features/views/runtime/EnergyView.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/viewRegistryRuntimeComposition.test.ts"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/energyViewModel.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F089",
+      "area": "展示视图",
+      "name": "视图工具栏、日期控制与交互",
+      "risk": "P1",
+      "sources": [
+        "src/features/views/runtime/ViewToolbar.tsx",
+        "src/features/views/runtime/ViewToolbarDateControls.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/viewToolbarInteraction.test.tsx"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/viewInteractionContract.test.ts",
+          "test/unit/viewToolbarModel.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F090",
+      "area": "展示视图",
+      "name": "筛选规则 RuleBuilder 与字段兼容",
+      "risk": "P1",
+      "sources": [
+        "src/features/settings/views/editors/RuleBuilder.tsx",
+        "src/features/settings/views/editors/CommonFilterPanel.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/dataFilterPanelFlow.test.tsx"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/ruleBuilderModel.test.ts",
+          "test/unit/viewDomainFieldPolicy.test.ts",
+          "test/unit/viewRecordTypeCompatibilityMatrix.test.ts"
+        ],
+        "ui": [
+          "test/unit/ruleBuilderUi.test.tsx"
+        ],
+        "regression": [
+          "test/unit/ruleBuilderUi.test.tsx"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F091",
+      "area": "展示视图",
+      "name": "Markdown 导出",
+      "risk": "P1",
+      "sources": [
+        "src/core/config/views/exportConfigs.ts",
+        "src/core/utils/exportUtils.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "error"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/markdownExportMatrix.test.ts",
+          "test/unit/markdownExport.test.ts"
+        ],
+        "integration": [
+          "test/integration/markdownExportMatrix.test.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/markdownExport.test.ts"
+        ]
+      },
+      "note": "v4：补导出格式/Task 领域字段/未知视图回退，以及 7 类 View 配置矩阵；真实 UI/剪贴板 E2E 仍保留。"
+    },
+    {
+      "id": "F092",
+      "area": "展示视图",
+      "name": "视图头部直接创建记录",
+      "risk": "P1",
+      "sources": [
+        "src/app/actions/recordCreate/viewHeaderCreateAction.ts",
+        "src/app/actions/recordCreate/timelineCreateAction.ts",
+        "src/app/actions/recordCreate/statisticsCreateAction.ts",
+        "src/app/actions/recordCreate/heatmapCreateAction.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/viewHeaderCreateFlow.test.ts"
+        ],
+        "regression": [
+          "test/integration/viewHeaderCreateFlow.test.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/timelineCreateContext.test.ts",
+          "test/unit/viewInteractionContract.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F100",
+      "area": "布局系统",
+      "name": "Freeform 布局模型、坐标与 ZIndex",
+      "risk": "P1",
+      "sources": [
+        "src/core/layout/freeformLayout.ts",
+        "src/core/layout/freeformLayoutPlacement.ts",
+        "src/core/layout/freeformLayoutZIndex.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "persistence",
+        "restart",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/freeformLayoutPersistence.test.ts"
+        ],
+        "persistence": [
+          "test/integration/freeformLayoutPersistence.test.ts"
+        ],
+        "restart": [
+          "test/integration/freeformLayoutPersistence.test.ts"
+        ],
+        "regression": [
+          "test/integration/freeformLayoutPersistence.test.ts"
+        ],
+        "unit": [
+          "test/unit/freeformLayoutModel.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F101",
+      "area": "布局系统",
+      "name": "Dashboard 布局渲染与模块装载",
+      "risk": "P1",
+      "sources": [
+        "src/app/dashboard/LayoutRenderer.tsx",
+        "src/app/dashboard/ModulePanel.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/freeformLayoutPersistence.test.ts"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/layoutRenderSignature.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F102",
+      "area": "布局系统",
+      "name": "布局编辑器：拖拽、缩放、排序、复制/删除",
+      "risk": "P1",
+      "sources": [
+        "src/features/settings/components/LayoutEditorPanel.tsx",
+        "src/features/settings/components/LayoutEditorControls.tsx"
+      ],
+      "required": [
+        "ui",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "ui": [
+          "test/unit/layoutEditorControlsUi.test.tsx"
+        ],
+        "integration": [
+          "test/integration/layoutEditorLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/layout-editor-module-settings.e2e.ts"
+        ],
+        "persistence": [
+          "test/integration/layoutEditorLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/layoutEditorLifecycle.test.ts"
+        ],
+        "error": [
+          "test/integration/layoutEditorLifecycle.test.ts"
+        ]
+      },
+      "note": "v6：按严格证据口径补齐剩余 P1 必需维度；真机执行结果仍以完整依赖环境实际运行为准。"
+    },
+    {
+      "id": "F103",
+      "area": "布局系统",
+      "name": "模块设置弹窗与模块参数保存",
+      "risk": "P1",
+      "sources": [
+        "src/features/settings/layout/ModuleSettingsModal.tsx",
+        "src/features/settings/layout/LayoutSettingsWidget.tsx"
+      ],
+      "required": [
+        "ui",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart"
+      ],
+      "evidence": {
+        "ui": [
+          "test/specs/layout-editor-module-settings.e2e.ts"
+        ],
+        "integration": [
+          "test/integration/moduleSettingsLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/layout-editor-module-settings.e2e.ts"
+        ],
+        "persistence": [
+          "test/integration/moduleSettingsLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/moduleSettingsLifecycle.test.ts"
+        ]
+      },
+      "note": "v6：按严格证据口径补齐剩余 P1 必需维度；真机执行结果仍以完整依赖环境实际运行为准。"
+    },
+    {
+      "id": "F104",
+      "area": "布局系统",
+      "name": "布局数据筛选与模块过滤",
+      "risk": "P1",
+      "sources": [
+        "src/features/settings/layout/DataFilterPanel.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/dataFilterPanelFlow.test.tsx"
+        ],
+        "ui": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/ruleBuilderModel.test.ts",
+          "test/unit/viewDomainFieldPolicy.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F110",
+      "area": "设置系统",
+      "name": "通用设置修改与保存",
+      "risk": "P1",
+      "sources": [
+        "src/features/settings/tabs/GeneralSettings.tsx",
+        "src/app/store/mutations/generalSettingsMutations.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/generalSettingsLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/generalSettingsLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/generalSettingsLifecycle.test.ts"
+        ],
+        "error": [
+          "test/integration/generalSettingsLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/settings-p1.e2e.ts"
+        ],
+        "ui": [
+          "test/specs/settings-p1.e2e.ts",
+          "test/unit/generalSettingsUi.test.tsx"
+        ],
+        "unit": [
+          "test/unit/storeSettingsMutations.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F111",
+      "area": "设置系统",
+      "name": "布局设置修改与保存",
+      "risk": "P1",
+      "sources": [
+        "src/features/settings/tabs/LayoutSettings.tsx",
+        "src/app/store/mutations/layoutSettingsMutations.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/freeformLayoutPersistence.test.ts"
+        ],
+        "persistence": [
+          "test/integration/freeformLayoutPersistence.test.ts"
+        ],
+        "ui": [
+          "test/specs/settings-p1.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/settings-p1.e2e.ts"
+        ],
+        "restart": [
+          "test/specs/settings-p1.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/storeSettingsMutations.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F112",
+      "area": "设置系统",
+      "name": "AI API / 模型 / Prompt / Scope 设置",
+      "risk": "P1",
+      "sources": [
+        "src/features/settings/tabs/AiSettings.tsx",
+        "src/features/settings/tabs/AiApiConfigSection.tsx",
+        "src/features/settings/tabs/AiPromptRulesSection.tsx",
+        "src/features/settings/tabs/AiScopeSection.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/aiSettingsLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/aiSettingsLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/aiSettingsLifecycle.test.ts"
+        ],
+        "error": [
+          "test/integration/aiSettingsLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/settings-p1.e2e.ts"
+        ],
+        "ui": [
+          "test/specs/settings-p1.e2e.ts",
+          "test/unit/aiSettingsUi.test.tsx"
+        ],
+        "unit": [
+          "test/unit/aiConfigSnapshotDomain.test.ts",
+          "test/unit/aiSettingsReadiness.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F113",
+      "area": "设置系统",
+      "name": "精力记录默认目标设置",
+      "risk": "P2",
+      "sources": [
+        "src/features/settings/input/BlockManager.tsx",
+        "src/features/settings/input/EnergyRecordTypeSettings.tsx",
+        "src/app/usecases/settings.usecase.ts"
+      ],
+      "required": [
+        "ui",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "ui": [
+          "test/unit/energySettingsUi.test.tsx"
+        ],
+        "integration": [
+          "test/integration/energySettingsLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/energy-settings.e2e.ts"
+        ],
+        "persistence": [
+          "test/integration/energySettingsLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/energySettingsLifecycle.test.ts"
+        ],
+        "error": [
+          "test/integration/energySettingsLifecycle.test.ts"
+        ]
+      },
+      "note": "v7 校准真实用户入口：设置位于“数据管理 → 记录类型 → 精力”，不再把未注册的 EnergySettingsSection 当作产品入口。覆盖活跃 Goal 过滤、自动模式、落盘失败与重启恢复。"
+    },
+    {
+      "id": "F114",
+      "area": "设置系统",
+      "name": "数据管理设置页分区导航：记录类型 / 目标 / 指标",
+      "risk": "P1",
+      "sources": [
+        "src/features/settings/tabs/DataManagementSettings.tsx"
+      ],
+      "required": [
+        "ui",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "e2e": [
+          "test/specs/settings-p1.e2e.ts"
+        ],
+        "ui": [
+          "test/unit/dataManagementSettingsNavigation.test.tsx"
+        ],
+        "regression": [
+          "test/unit/dataManagementSettingsNavigation.test.tsx"
+        ]
+      },
+      "note": "v2 校准：该组件只负责三个设置分区的导航壳；重建索引/缓存恢复属于 F123，不在这里重复计为 P0。",
+      "notes": "该组件只负责“记录类型 / 目标 / 指标”三个设置分区的导航切换；子页的数据组合与持久化由 F034/F115 等功能分别覆盖，因此不再人为要求独立 integration。"
+    },
+    {
+      "id": "F115",
+      "area": "设置系统",
+      "name": "已注册记录类型查看器 BlockManager（只读）",
+      "risk": "P1",
+      "sources": [
+        "src/features/settings/input/BlockManager.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/blockManagerRegistryComposition.test.tsx"
+        ],
+        "e2e": [
+          "test/specs/settings-p1.e2e.ts"
+        ],
+        "ui": [
+          "test/unit/blockManagerUi.test.tsx"
+        ],
+        "regression": [
+          "test/unit/blockManagerUi.test.tsx"
+        ],
+        "unit": [
+          "test/unit/recordTypeRegistryConvergence.test.ts"
+        ]
+      },
+      "note": "审计校准：BlockManager 是代码注册 RecordType 的只读查看器，不提供 CRUD，因此 persistence/restart 不是该 UI 的产品职责。Goal 差异由 GoalTemplate 管理。"
+    },
+    {
+      "id": "F116",
+      "area": "设置系统",
+      "name": "FieldsEditor 字段添加/修改/删除/选项编辑",
+      "risk": "P1",
+      "sources": [
+        "src/features/settings/input/FieldsEditor.tsx",
+        "src/features/settings/input/fieldsEditor/FieldRow.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error"
+      ],
+      "evidence": {
+        "restart": [
+          "test/integration/goalSettingsLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/goalSettingsLifecycle.test.ts"
+        ],
+        "integration": [
+          "test/integration/goalSettingsLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/goal-template-fields.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/fieldBehavior.test.ts",
+          "test/unit/templateFieldSanitizer.test.ts"
+        ],
+        "ui": [
+          "test/unit/fieldsEditorUi.test.tsx"
+        ],
+        "error": [
+          "test/unit/templateFieldSanitizer.test.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F120",
+      "area": "数据服务",
+      "name": "DataStore 缓存与索引一致性",
+      "risk": "P0",
+      "sources": [
+        "src/core/services/DataStore.ts",
+        "src/core/services/dataStore/DataStoreCache.ts",
+        "src/core/services/dataStore/DataStoreIndex.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "restart",
+        "error",
+        "regression",
+        "performance"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/dataStoreRestartRecovery.test.ts"
+        ],
+        "integration": [
+          "test/integration/dataStoreRestartRecovery.test.ts",
+          "test/integration/parserDataFlow.test.ts"
+        ],
+        "restart": [
+          "test/integration/dataStoreRestartRecovery.test.ts"
+        ],
+        "performance": [
+          "test/performance/dataStoreScale.test.ts"
+        ],
+        "unit": [
+          "test/unit/dataStore.goalSemantics.test.ts",
+          "test/unit/dataStoreCacheIntegrityV2.test.ts"
+        ],
+        "regression": [
+          "test/unit/dataStoreCacheIntegrityV2.test.ts"
+        ]
+      },
+      "note": "v4：1,500 Markdown 文件全量扫描/查询/重建性能基线，并保留正确性与重启/异常测试。"
+    },
+    {
+      "id": "F121",
+      "area": "数据服务",
+      "name": "Vault 扫描、解析与重新扫描数据流",
+      "risk": "P0",
+      "sources": [
+        "src/core/services/dataStore/DataStoreFileScanner.ts",
+        "src/core/services/DataStore.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "restart",
+        "error",
+        "performance"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/dataStoreRestartRecovery.test.ts",
+          "test/unit/dataStoreFileScanner.test.ts"
+        ],
+        "integration": [
+          "test/integration/dataStoreRestartRecovery.test.ts",
+          "test/integration/parserDataFlow.test.ts",
+          "test/integration/recordRepositoryLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/dataStoreRestartRecovery.test.ts"
+        ],
+        "performance": [
+          "test/performance/dataStoreScale.test.ts"
+        ],
+        "e2e": [
+          "test/specs/vault-index.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/dataStoreFileScanner.test.ts"
+        ]
+      },
+      "note": "v4：1,500 Markdown 文件全量扫描/查询/重建性能基线，并保留正确性与重启/异常测试。"
+    },
+    {
+      "id": "F122",
+      "area": "数据服务",
+      "name": "VaultWatcher 文件创建/修改/删除监听",
+      "risk": "P0",
+      "sources": [
+        "src/platform/obsidian/events/VaultWatcher.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "restart",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/vaultWatcherLifecycle.test.ts"
+        ],
+        "integration": [
+          "test/integration/vaultWatcherLifecycle.test.ts"
+        ],
+        "regression": [
+          "test/integration/vaultWatcherLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/vaultWatcherLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/vault-index.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/vaultWatcher.test.ts"
+        ]
+      },
+      "note": "v2：已覆盖防抖、删除、rename、扫描失败、dispose 和重载后重新注册；只剩真 Obsidian 文件事件 E2E。 v3：使用 wdio-obsidian-service 对真实临时 Vault 写/改/删文件，等待 VaultWatcher 驱动 DataStore 变化。"
+    },
+    {
+      "id": "F123",
+      "area": "数据服务",
+      "name": "重建索引与缓存恢复",
+      "risk": "P0",
+      "sources": [
+        "src/core/services/dataStore/WarmStartPlanner.ts",
+        "src/core/services/DataStore.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "restart",
+        "error",
+        "performance"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/dataStoreRestartRecovery.test.ts"
+        ],
+        "integration": [
+          "test/integration/dataStoreRestartRecovery.test.ts"
+        ],
+        "regression": [
+          "test/integration/dataStoreRestartRecovery.test.ts"
+        ],
+        "restart": [
+          "test/integration/dataStoreRestartRecovery.test.ts"
+        ],
+        "performance": [
+          "test/performance/dataStoreScale.test.ts"
+        ],
+        "e2e": [
+          "test/specs/vault-index.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/dataStoreCacheIntegrityV2.test.ts"
+        ]
+      },
+      "note": "v4：1,500 Markdown 文件全量扫描/查询/重建性能基线，并保留正确性与重启/异常测试。"
+    },
+    {
+      "id": "F124",
+      "area": "数据安全",
+      "name": "迁移前备份与记录位置保护",
+      "risk": "P0",
+      "sources": [
+        "src/core/services/item/MigrationBackupService.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "persistence",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/migrationBackupSafety.test.ts"
+        ],
+        "integration": [
+          "test/integration/migrationBackupSafety.test.ts"
+        ],
+        "persistence": [
+          "test/integration/migrationBackupSafety.test.ts"
+        ],
+        "regression": [
+          "test/unit/migrationBackupService.recordLocation.test.ts"
+        ],
+        "unit": [
+          "test/unit/migrationBackupService.recordLocation.test.ts"
+        ]
+      },
+      "note": "v2 校准：备份能力验证备份文件真实写入与单文件失败隔离；旧版本升级由具体迁移能力另行登记。"
+    },
+    {
+      "id": "F125",
+      "area": "数据安全",
+      "name": "Record 路径变化安全迁移：先写新位置，再删除旧位置",
+      "risk": "P0",
+      "sources": [
+        "src/app/usecases/recordInput/workflows/RecordMigrationTransaction.ts"
+      ],
+      "required": [
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/recordMigrationSafety.test.ts"
+        ],
+        "integration": [
+          "test/integration/recordMigrationSafety.test.ts"
+        ],
+        "regression": [
+          "test/integration/recordMigrationSafety.test.ts"
+        ],
+        "e2e": [
+          "test/specs/record-mutation.e2e.ts"
+        ],
+        "persistence": [
+          "test/specs/record-mutation.e2e.ts"
+        ],
+        "restart": [
+          "test/specs/record-mutation.e2e.ts"
+        ]
+      },
+      "note": "v2 校准：这是当前实际存在的“路径变化安全迁移”能力；不再把 current-only settings 错写成旧版本自动迁移。 v3：真实 Obsidian Runtime 改变 Goal 触发目标文件迁移，验证旧位置清除、新位置落盘及重启 ID 不变。"
+    },
+    {
+      "id": "F126",
+      "area": "数据安全",
+      "name": "插件重启后设置、索引、任务、布局恢复",
+      "risk": "P0",
+      "sources": [
+        "src/core/services/dataStore/WarmStartPlanner.ts",
+        "src/core/services/SettingsRepository.ts",
+        "src/core/services/TimerStateService.ts"
+      ],
+      "required": [
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/dataStoreRestartRecovery.test.ts",
+          "test/integration/settingsRestartPersistence.test.ts",
+          "test/integration/timerRestartRecovery.test.ts"
+        ],
+        "integration": [
+          "test/integration/dataStoreRestartRecovery.test.ts",
+          "test/integration/freeformLayoutPersistence.test.ts",
+          "test/integration/recordRestartLifecycle.test.ts",
+          "test/integration/settingsRestartPersistence.test.ts",
+          "test/integration/timelineContextPersistence.test.ts",
+          "test/integration/timerRestartRecovery.test.ts"
+        ],
+        "regression": [
+          "test/integration/dataStoreRestartRecovery.test.ts",
+          "test/integration/recordRestartLifecycle.test.ts"
+        ],
+        "restart": [
+          "test/integration/dataStoreRestartRecovery.test.ts",
+          "test/integration/recordRestartLifecycle.test.ts",
+          "test/integration/settingsRestartPersistence.test.ts",
+          "test/integration/timerRestartRecovery.test.ts"
+        ],
+        "persistence": [
+          "test/integration/recordRestartLifecycle.test.ts",
+          "test/integration/settingsRestartPersistence.test.ts",
+          "test/integration/timerRestartRecovery.test.ts"
+        ],
+        "e2e": [
+          "test/specs/quick-input-task.e2e.ts",
+          "test/specs/settings-goal.e2e.ts",
+          "test/specs/timer-runtime.e2e.ts",
+          "test/specs/vault-index.e2e.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F127",
+      "area": "数据安全",
+      "name": "设置仓储读写与 current-only data.json 兼容",
+      "risk": "P0",
+      "sources": [
+        "src/core/services/SettingsRepository.ts",
+        "src/core/settings/ThinkSettings.ts",
+        "src/core/settings/currentSettingsSchema.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "e2e",
+        "persistence",
+        "restart",
+        "error",
+        "regression"
+      ],
+      "evidence": {
+        "error": [
+          "test/integration/settingsRestartPersistence.test.ts"
+        ],
+        "integration": [
+          "test/integration/settingsRestartPersistence.test.ts"
+        ],
+        "persistence": [
+          "test/integration/settingsRestartPersistence.test.ts"
+        ],
+        "regression": [
+          "test/integration/settingsRestartPersistence.test.ts"
+        ],
+        "restart": [
+          "test/integration/settingsRestartPersistence.test.ts"
+        ],
+        "e2e": [
+          "test/specs/settings-goal.e2e.ts"
+        ],
+        "unit": [
+          "test/unit/storeSettingsMutations.test.ts"
+        ]
+      },
+      "note": "当前代码明确 supportsLegacyMigration=false：测试应保证当前结构正确恢复、损坏引用被拒绝、旧式未知字段不被“猜迁移”。"
+    },
+    {
+      "id": "F130",
+      "area": "兼容与质量",
+      "name": "真实 Obsidian 启动冒烟",
+      "risk": "P0",
+      "sources": [
+        "test/configs/wdio.conf.mts",
+        "test/specs/smoke.e2e.ts"
+      ],
+      "required": [
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "e2e": [
+          "test/specs/plugin-lifecycle.e2e.ts",
+          "test/specs/smoke.e2e.ts"
+        ],
+        "regression": [
+          "test/specs/plugin-lifecycle.e2e.ts",
+          "test/specs/smoke.e2e.ts"
+        ]
+      },
+      "note": ""
+    },
+    {
+      "id": "F131",
+      "area": "兼容与质量",
+      "name": "窄屏/触控设备 profile 响应适配",
+      "risk": "P2",
+      "sources": [
+        "src/shared/utils/deviceProfile.ts",
+        "src/platform/obsidian/modals/QuickInputModal.tsx",
+        "src/features/quickinput/modal/quickInputEnvironment.ts",
+        "src/app/dashboard/LayoutRenderer.tsx"
+      ],
+      "required": [
+        "unit",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/deviceProfile.test.ts"
+        ],
+        "e2e": [
+          "test/specs/mobile-profile.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/deviceProfileRegression.test.ts"
+        ]
+      },
+      "note": "v7：覆盖 Android/iPadOS/桌面识别、820/821px 边界、matchMedia 异常回退，以及真实 Obsidian Electron 窄屏/桌面 Quick Input 响应。这里验证的是设备 profile/响应式行为，不宣称替代 iOS/Android 原生 Obsidian App 实机认证。"
+    },
+    {
+      "id": "F132",
+      "area": "兼容与质量",
+      "name": "大 Vault 启动、索引、查询性能",
+      "risk": "P1",
+      "sources": [
+        "src/core/services/dataStore",
+        "src/core/query",
+        "src/core/records/RecordIndex.ts"
+      ],
+      "required": [
+        "integration",
+        "e2e",
+        "performance",
+        "regression"
+      ],
+      "evidence": {
+        "integration": [
+          "test/integration/dataStoreRestartRecovery.test.ts"
+        ],
+        "performance": [
+          "test/performance/dataStoreScale.test.ts",
+          "test/performance/recordIndexScale.test.ts"
+        ],
+        "regression": [
+          "test/performance/dataStoreScale.test.ts",
+          "test/performance/recordIndexScale.test.ts"
+        ],
+        "e2e": [
+          "test/specs/large-vault.e2e.ts"
+        ]
+      },
+      "note": "v6：按严格证据口径补齐剩余 P1 必需维度；真机执行结果仍以完整依赖环境实际运行为准。"
+    },
+    {
+      "id": "F133",
+      "area": "兼容与质量",
+      "name": "不同 Obsidian 版本兼容",
+      "risk": "P1",
+      "sources": [
+        "manifest.json",
+        "test/configs/wdio.conf.mts"
+      ],
+      "required": [
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "e2e": [
+          "test/specs/compatibility-matrix.e2e.ts"
+        ],
+        "regression": [
+          "test/specs/compatibility-matrix.e2e.ts"
+        ]
+      },
+      "note": "v6：按严格证据口径补齐剩余 P1 必需维度；真机执行结果仍以完整依赖环境实际运行为准。"
+    }
+  ]
+}
