@@ -2741,6 +2741,23 @@
 .think-os--settings .think-goal-template-matrix__drag-handle:active { cursor: grabbing; }
 .think-os--settings .think-goal-template-matrix__tree-toggle,
 .think-os--settings .think-goal-template-matrix__delete { width: var(--think-control-height-md); min-width: var(--think-control-height-md); height: var(--think-control-height-md); min-height: var(--think-control-height-md); border: 0; background: transparent; }
+.think-os--settings .think-goal-template-matrix__goal-icon {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--think-radius-sm);
+  background: transparent;
+  box-shadow: none;
+  color: var(--think-text-secondary);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+.think-os--settings .think-goal-template-matrix__goal-icon:hover { background: var(--think-bg-hover); color: var(--think-text-primary); }
 .think-os--settings .think-goal-template-matrix__goal-name { min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .think-os--settings .think-goal-template-matrix__goal-row.is-drop-before > td { border-top: 2px solid var(--think-accent); }
 .think-os--settings .think-goal-template-matrix__goal-row.is-drop-after > td { border-bottom: 2px solid var(--think-accent); }
@@ -2762,31 +2779,62 @@
 }
 .think-os--settings .think-goal-template-matrix__preset-cell.is-drop-target { outline: 2px dashed var(--think-accent); outline-offset: -2px; }
 .think-os--settings .think-goal-template-matrix__preset-cell.is-empty { min-height: var(--think-control-height-md); border: 0; background: transparent; }
-.think-os--settings .think-goal-template-matrix__add { position: relative; flex: 0 0 var(--think-control-height-md); width: var(--think-control-height-md); height: var(--think-control-height-md); }
-.think-os--settings .think-goal-template-matrix__add-button { width: var(--think-control-height-md); min-width: var(--think-control-height-md); height: var(--think-control-height-md); min-height: var(--think-control-height-md); border: 1px solid var(--think-border-subtle); background: var(--think-bg-canvas); box-shadow: none; }
-.think-os--settings .think-goal-template-matrix__add-menu { position: absolute; top: calc(100% + var(--think-space-1)); right: 0; z-index: var(--think-z-popover); min-width: 132px; display: grid; gap: var(--think-space-1); padding: var(--think-space-1); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-elevated); box-shadow: none; }
-.think-os--settings .think-goal-template-matrix__add-option { min-height: var(--think-control-height-md); height: var(--think-control-height-md); display: flex; align-items: center; padding-inline: var(--think-space-3); border: 0; border-radius: var(--think-radius-sm); background: transparent; box-shadow: none; color: var(--think-text-primary); font: inherit; text-align: left; cursor: pointer; }
-.think-os--settings .think-goal-template-matrix__add-option:hover { background: var(--think-bg-hover); }
+.think-os--settings .think-goal-template-matrix__add { position: relative; flex: 0 0 28px; width: 28px; height: 28px; }
+.think-os--settings .think-goal-template-matrix__add-button {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--think-radius-sm);
+  background: transparent;
+  box-shadow: none;
+  color: var(--think-text-secondary);
+  cursor: pointer;
+}
+.think-os--settings .think-goal-template-matrix__add-button:hover { background: var(--think-bg-hover); color: var(--think-text-primary); }
+.think-goal-template-matrix__add-menu-layer { position: fixed; inset: 0; pointer-events: auto; background: transparent; }
+.think-goal-template-matrix__add-menu {
+  position: fixed;
+  z-index: 1;
+  min-width: 164px;
+  max-height: min(360px, calc(100vh - 16px));
+  overflow: auto;
+  display: grid;
+  gap: var(--think-space-1);
+  padding: var(--think-space-1);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-elevated);
+  box-shadow: var(--think-shadow-overlay);
+  pointer-events: auto;
+}
+.think-goal-template-matrix__add-option { min-height: var(--think-control-height-md); height: var(--think-control-height-md); display: flex; align-items: center; padding-inline: var(--think-space-3); border: 0; border-radius: var(--think-radius-sm); background: transparent; box-shadow: none; color: var(--think-text-primary); font: inherit; text-align: left; cursor: pointer; }
+.think-goal-template-matrix__add-option:hover { background: var(--think-bg-hover); }
 .think-os--settings .think-goal-preset {
   width: 100%;
-  min-height: var(--think-control-height-md);
   height: var(--think-control-height-md);
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  min-height: var(--think-control-height-md);
+  display: flex;
   align-items: center;
-  gap: var(--think-space-1);
-  padding: 0 var(--think-space-2);
+  padding-inline: var(--think-space-2);
   border: 1px solid var(--think-border-subtle);
   border-radius: var(--think-radius-sm);
   background: var(--think-bg-canvas);
   color: var(--think-text-primary);
   cursor: pointer;
   user-select: none;
+  text-align: left;
 }
 .think-os--settings .think-goal-preset:hover { border-color: var(--think-border-strong); background: var(--think-bg-hover); }
 .think-os--settings .think-goal-preset.is-dragging { opacity: 0.48; }
-.think-os--settings .think-goal-preset__icon { width: 22px; height: 22px; display: inline-grid; place-items: center; overflow: hidden; }
-.think-os--settings .think-goal-preset__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--think-font-size-xs); font-weight: var(--think-font-weight-semibold); }
+.think-os--settings .think-goal-preset__identity { min-width: 0; display: flex; align-items: center; gap: var(--think-space-1); }
+.think-os--settings .think-goal-preset__icon { width: 20px; height: 20px; flex: 0 0 20px; display: inline-grid; place-items: center; overflow: hidden; line-height: 1; }
+.think-os--settings .think-goal-preset__goal { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--think-font-size-xs); font-weight: var(--think-font-weight-semibold); }
+.think-os--settings .think-goal-preset__detail { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: calc(20px + var(--think-space-1)); color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
 .think-goal-template-menu-layer { position: fixed; inset: 0; z-index: var(--think-z-popover); pointer-events: none; }
 .think-goal-template-menu__backdrop { position: fixed; inset: 0; pointer-events: auto; background: transparent; }
 .think-goal-template-menu {
@@ -2829,8 +2877,64 @@
 .think-goal-template-menu__item.is-emphasized { background: var(--think-surface-selection); }
 .think-goal-template-menu__item.is-danger { color: var(--think-danger); }
 .think-goal-template-menu__item:disabled { opacity: 0.5; cursor: not-allowed; }
-.think-os--settings .think-goal-template-matrix__preset-cell.is-disabled { width: 100%; height: var(--think-control-height-md); border: 1px solid var(--think-border-subtle); background: var(--think-bg-surface-1); color: var(--think-text-secondary); font: inherit; cursor: pointer; }
-.think-os--settings .think-goal-template-matrix__disabled-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--think-font-size-xs); }
+.think-os--settings .think-goal-template-matrix__preset-cell.is-disabled { width: 100%; height: var(--think-control-height-md); min-height: var(--think-control-height-md); display: flex; align-items: center; padding-inline: var(--think-space-2); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-surface-1); color: var(--think-text-secondary); font: inherit; text-align: left; cursor: pointer; }
+/* 1.0.74 Goal weekly time budget: stay on the Goal row; details live in the native tooltip. */
+.think-os--settings .think-goal-template-matrix__budget {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-canvas);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  font-weight: var(--think-font-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+.think-os--settings .think-goal-template-matrix__budget:focus-within {
+  border-color: var(--think-accent);
+}
+.think-os--settings .think-goal-template-matrix__budget-input {
+  width: 34px;
+  min-width: 34px;
+  height: 22px;
+  padding: 0 2px 0 4px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--think-text-primary);
+  font: inherit;
+  line-height: 22px;
+  text-align: right;
+  appearance: textfield;
+}
+.think-os--settings .think-goal-template-matrix__budget-input::-webkit-inner-spin-button,
+.think-os--settings .think-goal-template-matrix__budget-input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.think-os--settings .think-goal-template-matrix__budget-input:focus { outline: 0; box-shadow: none; }
+.think-os--settings .think-goal-template-matrix__budget-unit { padding-right: 4px; line-height: 1; }
+/* Natural-time preset summary: keep the settings surface to one compact line. */
+.think-os--settings .think-goal-template-matrix__time-total {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 var(--think-space-2) var(--think-space-1);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.think-os--settings .think-goal-template-matrix__budget-derived {
+  padding-right: 4px;
+  color: var(--think-text-secondary);
+  line-height: 1;
+  white-space: nowrap;
+}
+.think-os--settings .think-goal-template-matrix__budget-input {
+  width: 42px;
+  min-width: 42px;
+}
 /* Statistics editor and category controls. */
 .think-os--settings .think-statistics-editor {
   display: grid;
@@ -5586,14 +5690,38 @@ body.theme-dark .heatmap-cell.empty {
   background: var(--think-bg-canvas);
 }
 .time-axis {
+  position: relative;
   flex: 0 0 var(--timeline-time-axis-width);
+  cursor: zoom-in;
+}
+.timeline-current-time-scroll-anchor {
+  position: absolute;
+  inset-inline-start: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
 }
 .time-axis-hour {
   position: relative;
   box-sizing: border-box;
   height: var(--timeline-hour-height, 60px);
   padding-inline-end: var(--think-space-2);
-  border-bottom: 1px dashed var(--think-viz-guide);
+  border-bottom: 1px dashed var(--think-viz-guide-strong);
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--timeline-quarter-hour-height, 15px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 92%, transparent) calc(var(--timeline-quarter-hour-height, 15px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 92%, transparent) var(--timeline-quarter-hour-height, 15px)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--timeline-five-minute-height, 5px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 70%, transparent) calc(var(--timeline-five-minute-height, 5px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 70%, transparent) var(--timeline-five-minute-height, 5px)
+    );
   color: var(--think-text-subtle);
   font-size: var(--think-viz-font-axis);
   font-variant-numeric: tabular-nums;
@@ -5610,7 +5738,57 @@ body.theme-dark .heatmap-cell.empty {
 }
 .day-column-body {
   position: relative;
-  cursor: cell;
+  cursor: crosshair;
+  user-select: none;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--timeline-hour-height, 60px) - 1px),
+      var(--think-viz-guide-strong) calc(var(--timeline-hour-height, 60px) - 1px),
+      var(--think-viz-guide-strong) var(--timeline-hour-height, 60px)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--timeline-quarter-hour-height, 15px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 86%, transparent) calc(var(--timeline-quarter-hour-height, 15px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 86%, transparent) var(--timeline-quarter-hour-height, 15px)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--timeline-five-minute-height, 5px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 64%, transparent) calc(var(--timeline-five-minute-height, 5px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 64%, transparent) var(--timeline-five-minute-height, 5px)
+    );
+}
+.timeline-range-selection {
+  position: absolute;
+  inset-inline: var(--think-space-1);
+  z-index: calc(var(--think-z-raised) + 1);
+  box-sizing: border-box;
+  overflow: visible;
+  border: 1px solid var(--think-accent);
+  border-radius: var(--think-radius-xs);
+  background: color-mix(in srgb, var(--think-accent) 16%, transparent);
+  pointer-events: none;
+}
+.timeline-range-selection__label {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: inline-block;
+  max-width: calc(100% - var(--think-space-2));
+  margin: 2px;
+  padding: 1px var(--think-space-1);
+  border-radius: var(--think-radius-xs);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  font-size: var(--think-viz-font-axis);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--think-line-height-tight);
+  white-space: nowrap;
 }
 .day-header-title,
 .summary-title {
@@ -5835,6 +6013,199 @@ body.theme-dark .heatmap-cell.empty {
 }
 .timeline-task-block.timeline-task-block--planned .timeline-task-indicator {
   opacity: 0.55;
+}
+/* Timeline direct manipulation: the block itself moves; logical range boundaries resize. */
+.timeline-task-block[data-timeline-editable="true"] {
+  cursor: grab;
+  touch-action: none;
+}
+.timeline-task-block--dragging {
+  z-index: calc(var(--think-z-raised) + 2);
+  cursor: grabbing;
+}
+.timeline-task-block--dragging .timeline-task-link {
+  pointer-events: none;
+}
+.timeline-task-resize-handle {
+  position: absolute;
+  inset-inline: 3px;
+  z-index: calc(var(--think-z-raised) + 3);
+  height: 8px;
+  cursor: ns-resize;
+  touch-action: none;
+}
+.timeline-task-resize-handle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 28px;
+  height: 2px;
+  border-radius: var(--think-radius-pill);
+  background: color-mix(in srgb, var(--timeline-task-color, var(--think-accent)) 72%, var(--think-bg-elevated));
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity var(--think-duration-fast) var(--think-ease-standard);
+}
+.timeline-task-resize-handle--start { top: -3px; }
+.timeline-task-resize-handle--start::after { top: 3px; }
+.timeline-task-resize-handle--end { bottom: -3px; }
+.timeline-task-resize-handle--end::after { bottom: 3px; }
+.timeline-task-block:hover .timeline-task-resize-handle::after,
+.timeline-task-block:focus-within .timeline-task-resize-handle::after,
+.timeline-task-block--dragging .timeline-task-resize-handle::after {
+  opacity: 1;
+}
+.timeline-task-drag-label {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: calc(var(--think-z-raised) + 4);
+  max-width: calc(100% - var(--think-space-2));
+  padding: 1px var(--think-space-1);
+  border-radius: var(--think-radius-xs);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  font-size: var(--think-viz-font-axis);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--think-line-height-tight);
+  pointer-events: none;
+  white-space: nowrap;
+}
+/* Timeline Goal time-budget / balance presentation. Kept separate from the
+ * Timeline geometry stylesheet so each feature stylesheet stays within release budgets.
+ */
+/* 1.0.74 Goal allocation summary. Keep every Goal on one line; detailed budget,
+ * deviation and child breakdown are intentionally exposed through title tooltips.
+ */
+.timeline-goal-allocation-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--think-space-2);
+}
+.timeline-goal-allocation-line {
+  --timeline-goal-allocation-color: var(--think-data-neutral);
+  position: relative;
+  width: 100%;
+  height: 16px;
+  overflow: hidden;
+  border-radius: var(--think-radius-pill);
+  background: var(--think-viz-track);
+  font-variant-numeric: tabular-nums;
+}
+.timeline-goal-allocation-line:hover {
+  outline: 1px solid color-mix(in srgb, var(--timeline-goal-allocation-color) 38%, transparent);
+  outline-offset: -1px;
+}
+.timeline-goal-allocation-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  min-width: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--timeline-goal-allocation-color) 46%, transparent);
+}
+.timeline-goal-allocation-budget-marker {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  z-index: 1;
+  width: 1px;
+  background: var(--think-text-primary);
+  opacity: 0.38;
+  transform: translateX(-0.5px);
+  pointer-events: none;
+}
+.timeline-goal-allocation-text {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 3px;
+  padding-inline: 5px;
+  color: var(--think-text-primary);
+  font-size: var(--think-viz-font-axis);
+  font-weight: var(--think-font-weight-medium);
+  line-height: 16px;
+  white-space: nowrap;
+}
+.timeline-goal-allocation-icon { flex: 0 0 auto; line-height: 1; }
+.timeline-goal-allocation-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.timeline-goal-allocation-metric { flex: 0 0 auto; }
+.timeline-goal-allocation-line.is-unallocated {
+  --timeline-goal-allocation-color: var(--think-data-neutral);
+  color: var(--think-text-secondary);
+}
+.timeline-goal-summary-view {
+  width: min(420px, 100%);
+  min-width: 220px;
+}
+.timeline-goal-summary-heading {
+  min-height: var(--think-viz-row-height-sm);
+  display: flex;
+  align-items: center;
+  padding-inline: var(--think-space-2);
+  border-bottom: 1px solid var(--think-viz-guide-strong);
+  color: var(--think-text-primary);
+  font-size: var(--think-viz-font-label);
+  font-weight: var(--think-font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+@container (max-width: 480px) {
+  .timeline-goal-allocation-block { padding: var(--think-space-1); }
+  .timeline-goal-allocation-text { padding-inline: 4px; gap: 2px; }
+}
+/* Time Balance presentation.
+ * The bar keeps the original Timeline semantics:
+ * confirmed Goal time / natural time, with a vertical preset marker.
+ * Only the deviation number communicates balance state.
+ */
+.timeline-summary-table__month-label {
+  display: inline-block;
+  font-size: 0.86em;
+  line-height: 1.15;
+  font-weight: var(--think-font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* Keep Goal identity fully readable. Do not lower icon/label contrast. */
+.timeline-goal-allocation-icon,
+.timeline-goal-allocation-label {
+  opacity: 1;
+}
+.timeline-goal-allocation-metric {
+  opacity: 1;
+  font-weight: var(--think-font-weight-semibold);
+}
+/* Exact presentation contract:
+ * balanced (conclusive, within ±10%) -> green
+ * high/low (conclusive, outside ±10%) -> red
+ * insufficient/pending -> neutral gray
+ * unconfigured/unallocated -> faint gray
+ */
+.timeline-goal-allocation-line.is-balanced .timeline-goal-allocation-metric {
+  color: var(--text-success, var(--color-green));
+}
+.timeline-goal-allocation-line.is-low .timeline-goal-allocation-metric,
+.timeline-goal-allocation-line.is-high .timeline-goal-allocation-metric {
+  color: var(--text-error, var(--color-red));
+}
+.timeline-goal-allocation-line.is-insufficient .timeline-goal-allocation-metric,
+.timeline-goal-allocation-line.is-pending .timeline-goal-allocation-metric {
+  color: var(--text-muted);
+}
+.timeline-goal-allocation-line.is-unconfigured .timeline-goal-allocation-metric,
+.timeline-goal-allocation-line.is-unallocated .timeline-goal-allocation-metric {
+  color: var(--text-faint, var(--text-muted));
 }
 /* Excel view feature facade. Keep imports in legacy cascade order. */
 /* Excel view shell and compact runtime toolbar. */
@@ -6780,7 +7151,7 @@ body.excel-view-is-resizing-column * {
 }
 .think-timer-list { display: grid; gap: var(--think-space-2); max-height: 400px; overflow-y: auto; padding: var(--think-space-3); }
 .think-timer-row { width: 100%; }
-.think-timer-row__main { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--think-space-3); min-height: var(--think-control-height-md); }
+.think-timer-row__main { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: var(--think-space-3); min-height: var(--think-control-height-md); }
 .think-timer-row__title { min-width: 0; overflow: hidden; color: var(--think-text-primary); font-size: var(--think-font-size-sm); text-overflow: ellipsis; white-space: nowrap; }
 .think-timer-row__title.is-clickable { cursor: pointer; }
 .think-timer-row__clock { min-width: 64px; color: var(--think-text-secondary); font-family: var(--think-font-monospace); font-size: var(--think-font-size-xs); font-variant-numeric: tabular-nums; text-align: right; }
@@ -6788,8 +7159,44 @@ body.excel-view-is-resizing-column * {
 .think-timer-row__actions { display: flex; align-items: center; gap: var(--think-space-1); }
 .think-timer-row__stop-point { display: flex; align-items: center; gap: var(--think-space-3); padding-inline-start: var(--think-space-2); }
 .think-os .think-timer-empty-state { display: grid; place-items: center; min-height: 44px; padding: var(--think-space-3) var(--think-space-4); color: var(--think-text-secondary); font-size: var(--think-font-size-sm); pointer-events: none; user-select: none; }
+/* 1.0.73 hotfix: Energy sampling is a one-shot action, not a persistent toggle. */
+.think-timer-row__energy { display: inline-flex; align-items: center; }
+.think-timer-row__energy .think-button { min-height: 24px; padding-inline: var(--think-space-2); font-size: var(--think-font-size-xs); white-space: nowrap; }
+.think-timer-energy-capture {
+  display: grid;
+  gap: var(--think-space-3);
+  padding: var(--think-space-3);
+  border-top: 1px solid var(--think-border-subtle);
+  background: var(--think-bg-surface-1);
+  outline: none;
+}
+.think-timer-energy-capture__head { display: flex; align-items: center; justify-content: space-between; gap: var(--think-space-3); }
+.think-timer-energy-capture__head strong { font-size: var(--think-font-size-sm); }
+.think-timer-energy-capture__skip { border: 0; background: transparent; color: var(--think-text-secondary); cursor: pointer; font-size: var(--think-font-size-xs); }
+.think-timer-energy-capture__quick { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--think-space-1); }
+.think-timer-energy-capture__quick-button {
+  min-height: var(--think-control-height-sm);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-bg-surface-2);
+  color: var(--think-text-primary);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.think-timer-energy-capture__quick-button:hover,
+.think-timer-energy-capture__quick-button.is-active { border-color: var(--think-accent); color: var(--think-text-accent); }
+.think-timer-energy-capture__slider { display: grid; grid-template-columns: minmax(0, 1fr) 32px auto; align-items: center; gap: var(--think-space-2); }
+.think-timer-energy-capture__slider strong { text-align: center; font-size: var(--think-font-size-sm); font-variant-numeric: tabular-nums; }
+@container (max-width: 520px) {
+  .think-timer-row__main { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .think-timer-row__energy { grid-column: 2; }
+  .think-timer-row__clock { grid-column: 3; }
+  .think-timer-row__actions { grid-column: 1 / -1; justify-content: flex-end; }
+}
 @container (max-width: 440px) {
   .think-timer-row__main { grid-template-columns: minmax(0, 1fr) auto; }
+  .think-timer-row__energy { grid-column: 2; }
+  .think-timer-row__clock { grid-column: 1; text-align: left; }
   .think-timer-row__actions { grid-column: 1 / -1; justify-content: flex-end; }
 }
 /*
@@ -7323,6 +7730,24 @@ body.excel-view-is-resizing-column * {
   gap: var(--think-space-3);
 }
 .think-quick-input-editor .think-quick-input-goal-selector.is-dense { gap: var(--think-space-2); }
+.think-quick-input-editor .think-quick-input-goal-recent {
+  display: flex; align-items: center; gap: var(--think-space-2); min-width: 0;
+}
+.think-quick-input-editor .think-quick-input-goal-recent__label {
+  flex: 0 0 auto; color: var(--think-text-secondary); font-size: var(--think-font-size-sm); font-weight: 600;
+}
+.think-quick-input-editor .think-quick-input-goal-recent__items {
+  display: flex; gap: var(--think-space-1); min-width: 0; overflow-x: auto; scrollbar-width: thin;
+}
+.think-quick-input-editor .think-quick-input-goal-recent__chip {
+  display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto;
+  min-height: 28px; padding: 3px 8px; border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm); background: var(--think-bg-surface-1); color: var(--think-text-primary);
+}
+.think-quick-input-editor .think-quick-input-goal-recent__chip:hover,
+.think-quick-input-editor .think-quick-input-goal-recent__chip:focus-visible {
+  background: var(--think-bg-surface-2); border-color: var(--think-border-strong);
+}
 .think-quick-input-editor .think-quick-input-goal-active-path {
   min-width: 0;
   overflow: hidden;
@@ -7441,6 +7866,23 @@ body.excel-view-is-resizing-column * {
     flex-basis: 50%;
     min-width: 160px;
   }
+}
+/* Goal identity icon: QuickInput renders only Goal.icon; synthetic hierarchy nodes
+ * reserve the same slot without inventing an icon. */
+.think-quick-input-editor .think-quick-input-goal-row__main {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.think-quick-input-editor .think-quick-input-goal-row__icon {
+  width: 1.5em;
+  min-width: 1.5em;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 1.5em;
+  line-height: 1;
 }
 /*
  * MUI host bridge.

@@ -25,6 +25,7 @@ import {
   getGoalPath,
   hydrateQuickInputTemplateDefaults,
   resolveQuickInputRecordTypeId,
+  resolveTaskQuickInputTimingMode,
   shouldShowQuickInputTimeDirectionControl,
   splitPathParts,
 } from './QuickInputEditorModel';
@@ -45,6 +46,7 @@ export function QuickInputEditor({
   onRequestSubmit,
   onEnergyCapture,
   isMobileLike = false,
+  autoFocusContent = false,
 }: QuickInputEditorProps) {
   const fullSettings = useSelector(selectSettings);
   const initialFieldSource = recordInputMode === 'create' ? 'context' : 'edit_backfill';
@@ -169,12 +171,12 @@ export function QuickInputEditor({
   const currentPeriodFields = currentPeriodUi.fields;
   const currentPeriodOptions = currentPeriodUi.options;
 
-  const taskTimingMode = useMemo(() => {
-    const uiContext = context?.__recordUiContext;
-    if (!uiContext || typeof uiContext !== 'object' || Array.isArray(uiContext)) return 'plan' as const;
-    const ui = uiContext as Record<string, unknown>;
-    return ui.kind === 'timeline_create' && ui.captureMode === 'completed_execution' ? 'execution' as const : 'plan' as const;
-  }, [context]);
+  const taskTimingMode = useMemo(() => resolveTaskQuickInputTimingMode({
+    context,
+    formData,
+    recordInputMode: recordInputMode === 'create' ? 'create' : 'edit',
+    effectiveBlockId: displayEffectiveBlockId || currentBlockId,
+  }), [context, formData.status, formData['状态'], recordInputMode, displayEffectiveBlockId, currentBlockId]);
 
   const template = useMemo(
     () => {
@@ -303,6 +305,7 @@ export function QuickInputEditor({
       currentBlockId={currentEffectiveBlockIdForTemplates || currentBlockId}
       onBlockChange={handleBlockChange}
       goals={goalOptions}
+      recentGoalPaths={fullSettings.recentGoalPaths || []}
       selectedGoalPath={currentGoalPath}
       onSelectGoal={handleSelectGoal}
       onCreateGoal={undefined}
@@ -321,6 +324,7 @@ export function QuickInputEditor({
       currentGoalPath={currentGoalPath}
       templateSourceType={displayTemplateSourceType}
       fieldSourceSummary={makeEditorState(formData, timeDirection, fieldSources).fieldSourceSummary}
+      autoFocusContent={autoFocusContent}
     />
   );
 }

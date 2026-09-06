@@ -87,6 +87,23 @@
 .think-os--settings .think-goal-template-matrix__drag-handle:active { cursor: grabbing; }
 .think-os--settings .think-goal-template-matrix__tree-toggle,
 .think-os--settings .think-goal-template-matrix__delete { width: var(--think-control-height-md); min-width: var(--think-control-height-md); height: var(--think-control-height-md); min-height: var(--think-control-height-md); border: 0; background: transparent; }
+.think-os--settings .think-goal-template-matrix__goal-icon {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--think-radius-sm);
+  background: transparent;
+  box-shadow: none;
+  color: var(--think-text-secondary);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+.think-os--settings .think-goal-template-matrix__goal-icon:hover { background: var(--think-bg-hover); color: var(--think-text-primary); }
 .think-os--settings .think-goal-template-matrix__goal-name { min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .think-os--settings .think-goal-template-matrix__goal-row.is-drop-before > td { border-top: 2px solid var(--think-accent); }
 .think-os--settings .think-goal-template-matrix__goal-row.is-drop-after > td { border-bottom: 2px solid var(--think-accent); }
@@ -111,31 +128,62 @@
 .think-os--settings .think-goal-template-matrix__preset-cell.is-drop-target { outline: 2px dashed var(--think-accent); outline-offset: -2px; }
 
 .think-os--settings .think-goal-template-matrix__preset-cell.is-empty { min-height: var(--think-control-height-md); border: 0; background: transparent; }
-.think-os--settings .think-goal-template-matrix__add { position: relative; flex: 0 0 var(--think-control-height-md); width: var(--think-control-height-md); height: var(--think-control-height-md); }
-.think-os--settings .think-goal-template-matrix__add-button { width: var(--think-control-height-md); min-width: var(--think-control-height-md); height: var(--think-control-height-md); min-height: var(--think-control-height-md); border: 1px solid var(--think-border-subtle); background: var(--think-bg-canvas); box-shadow: none; }
-.think-os--settings .think-goal-template-matrix__add-menu { position: absolute; top: calc(100% + var(--think-space-1)); right: 0; z-index: var(--think-z-popover); min-width: 132px; display: grid; gap: var(--think-space-1); padding: var(--think-space-1); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-elevated); box-shadow: none; }
-.think-os--settings .think-goal-template-matrix__add-option { min-height: var(--think-control-height-md); height: var(--think-control-height-md); display: flex; align-items: center; padding-inline: var(--think-space-3); border: 0; border-radius: var(--think-radius-sm); background: transparent; box-shadow: none; color: var(--think-text-primary); font: inherit; text-align: left; cursor: pointer; }
-.think-os--settings .think-goal-template-matrix__add-option:hover { background: var(--think-bg-hover); }
+.think-os--settings .think-goal-template-matrix__add { position: relative; flex: 0 0 28px; width: 28px; height: 28px; }
+.think-os--settings .think-goal-template-matrix__add-button {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--think-radius-sm);
+  background: transparent;
+  box-shadow: none;
+  color: var(--think-text-secondary);
+  cursor: pointer;
+}
+.think-os--settings .think-goal-template-matrix__add-button:hover { background: var(--think-bg-hover); color: var(--think-text-primary); }
+.think-goal-template-matrix__add-menu-layer { position: fixed; inset: 0; pointer-events: auto; background: transparent; }
+.think-goal-template-matrix__add-menu {
+  position: fixed;
+  z-index: 1;
+  min-width: 164px;
+  max-height: min(360px, calc(100vh - 16px));
+  overflow: auto;
+  display: grid;
+  gap: var(--think-space-1);
+  padding: var(--think-space-1);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-elevated);
+  box-shadow: var(--think-shadow-overlay);
+  pointer-events: auto;
+}
+.think-goal-template-matrix__add-option { min-height: var(--think-control-height-md); height: var(--think-control-height-md); display: flex; align-items: center; padding-inline: var(--think-space-3); border: 0; border-radius: var(--think-radius-sm); background: transparent; box-shadow: none; color: var(--think-text-primary); font: inherit; text-align: left; cursor: pointer; }
+.think-goal-template-matrix__add-option:hover { background: var(--think-bg-hover); }
 .think-os--settings .think-goal-preset {
   width: 100%;
-  min-height: var(--think-control-height-md);
   height: var(--think-control-height-md);
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  min-height: var(--think-control-height-md);
+  display: flex;
   align-items: center;
-  gap: var(--think-space-1);
-  padding: 0 var(--think-space-2);
+  padding-inline: var(--think-space-2);
   border: 1px solid var(--think-border-subtle);
   border-radius: var(--think-radius-sm);
   background: var(--think-bg-canvas);
   color: var(--think-text-primary);
   cursor: pointer;
   user-select: none;
+  text-align: left;
 }
 .think-os--settings .think-goal-preset:hover { border-color: var(--think-border-strong); background: var(--think-bg-hover); }
 .think-os--settings .think-goal-preset.is-dragging { opacity: 0.48; }
-.think-os--settings .think-goal-preset__icon { width: 22px; height: 22px; display: inline-grid; place-items: center; overflow: hidden; }
-.think-os--settings .think-goal-preset__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--think-font-size-xs); font-weight: var(--think-font-weight-semibold); }
+.think-os--settings .think-goal-preset__identity { min-width: 0; display: flex; align-items: center; gap: var(--think-space-1); }
+.think-os--settings .think-goal-preset__icon { width: 20px; height: 20px; flex: 0 0 20px; display: inline-grid; place-items: center; overflow: hidden; line-height: 1; }
+.think-os--settings .think-goal-preset__goal { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--think-font-size-xs); font-weight: var(--think-font-weight-semibold); }
+.think-os--settings .think-goal-preset__detail { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: calc(20px + var(--think-space-1)); color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
 
 .think-goal-template-menu-layer { position: fixed; inset: 0; z-index: var(--think-z-popover); pointer-events: none; }
 .think-goal-template-menu__backdrop { position: fixed; inset: 0; pointer-events: auto; background: transparent; }
@@ -179,5 +227,63 @@
 .think-goal-template-menu__item.is-emphasized { background: var(--think-surface-selection); }
 .think-goal-template-menu__item.is-danger { color: var(--think-danger); }
 .think-goal-template-menu__item:disabled { opacity: 0.5; cursor: not-allowed; }
-.think-os--settings .think-goal-template-matrix__preset-cell.is-disabled { width: 100%; height: var(--think-control-height-md); border: 1px solid var(--think-border-subtle); background: var(--think-bg-surface-1); color: var(--think-text-secondary); font: inherit; cursor: pointer; }
-.think-os--settings .think-goal-template-matrix__disabled-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--think-font-size-xs); }
+.think-os--settings .think-goal-template-matrix__preset-cell.is-disabled { width: 100%; height: var(--think-control-height-md); min-height: var(--think-control-height-md); display: flex; align-items: center; padding-inline: var(--think-space-2); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-surface-1); color: var(--think-text-secondary); font: inherit; text-align: left; cursor: pointer; }
+
+/* 1.0.74 Goal weekly time budget: stay on the Goal row; details live in the native tooltip. */
+.think-os--settings .think-goal-template-matrix__budget {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-canvas);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  font-weight: var(--think-font-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+.think-os--settings .think-goal-template-matrix__budget:focus-within {
+  border-color: var(--think-accent);
+}
+.think-os--settings .think-goal-template-matrix__budget-input {
+  width: 34px;
+  min-width: 34px;
+  height: 22px;
+  padding: 0 2px 0 4px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--think-text-primary);
+  font: inherit;
+  line-height: 22px;
+  text-align: right;
+  appearance: textfield;
+}
+.think-os--settings .think-goal-template-matrix__budget-input::-webkit-inner-spin-button,
+.think-os--settings .think-goal-template-matrix__budget-input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.think-os--settings .think-goal-template-matrix__budget-input:focus { outline: 0; box-shadow: none; }
+.think-os--settings .think-goal-template-matrix__budget-unit { padding-right: 4px; line-height: 1; }
+
+/* Natural-time preset summary: keep the settings surface to one compact line. */
+.think-os--settings .think-goal-template-matrix__time-total {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 var(--think-space-2) var(--think-space-1);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.think-os--settings .think-goal-template-matrix__budget-derived {
+  padding-right: 4px;
+  color: var(--think-text-secondary);
+  line-height: 1;
+  white-space: nowrap;
+}
+.think-os--settings .think-goal-template-matrix__budget-input {
+  width: 42px;
+  min-width: 42px;
+}

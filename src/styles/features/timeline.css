@@ -22,7 +22,17 @@
 }
 
 .time-axis {
+  position: relative;
   flex: 0 0 var(--timeline-time-axis-width);
+  cursor: zoom-in;
+}
+
+.timeline-current-time-scroll-anchor {
+  position: absolute;
+  inset-inline-start: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
 }
 
 .time-axis-hour {
@@ -30,7 +40,22 @@
   box-sizing: border-box;
   height: var(--timeline-hour-height, 60px);
   padding-inline-end: var(--think-space-2);
-  border-bottom: 1px dashed var(--think-viz-guide);
+  border-bottom: 1px dashed var(--think-viz-guide-strong);
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--timeline-quarter-hour-height, 15px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 92%, transparent) calc(var(--timeline-quarter-hour-height, 15px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 92%, transparent) var(--timeline-quarter-hour-height, 15px)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--timeline-five-minute-height, 5px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 70%, transparent) calc(var(--timeline-five-minute-height, 5px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 70%, transparent) var(--timeline-five-minute-height, 5px)
+    );
   color: var(--think-text-subtle);
   font-size: var(--think-viz-font-axis);
   font-variant-numeric: tabular-nums;
@@ -50,7 +75,59 @@
 
 .day-column-body {
   position: relative;
-  cursor: cell;
+  cursor: crosshair;
+  user-select: none;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--timeline-hour-height, 60px) - 1px),
+      var(--think-viz-guide-strong) calc(var(--timeline-hour-height, 60px) - 1px),
+      var(--think-viz-guide-strong) var(--timeline-hour-height, 60px)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--timeline-quarter-hour-height, 15px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 86%, transparent) calc(var(--timeline-quarter-hour-height, 15px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 86%, transparent) var(--timeline-quarter-hour-height, 15px)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--timeline-five-minute-height, 5px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 64%, transparent) calc(var(--timeline-five-minute-height, 5px) - 1px),
+      color-mix(in srgb, var(--think-viz-guide-strong) 64%, transparent) var(--timeline-five-minute-height, 5px)
+    );
+}
+
+.timeline-range-selection {
+  position: absolute;
+  inset-inline: var(--think-space-1);
+  z-index: calc(var(--think-z-raised) + 1);
+  box-sizing: border-box;
+  overflow: visible;
+  border: 1px solid var(--think-accent);
+  border-radius: var(--think-radius-xs);
+  background: color-mix(in srgb, var(--think-accent) 16%, transparent);
+  pointer-events: none;
+}
+
+.timeline-range-selection__label {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: inline-block;
+  max-width: calc(100% - var(--think-space-2));
+  margin: 2px;
+  padding: 1px var(--think-space-1);
+  border-radius: var(--think-radius-xs);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  font-size: var(--think-viz-font-axis);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--think-line-height-tight);
+  white-space: nowrap;
 }
 
 .day-header-title,
@@ -312,4 +389,69 @@
 
 .timeline-task-block.timeline-task-block--planned .timeline-task-indicator {
   opacity: 0.55;
+}
+
+/* Timeline direct manipulation: the block itself moves; logical range boundaries resize. */
+.timeline-task-block[data-timeline-editable="true"] {
+  cursor: grab;
+  touch-action: none;
+}
+
+.timeline-task-block--dragging {
+  z-index: calc(var(--think-z-raised) + 2);
+  cursor: grabbing;
+}
+
+.timeline-task-block--dragging .timeline-task-link {
+  pointer-events: none;
+}
+
+.timeline-task-resize-handle {
+  position: absolute;
+  inset-inline: 3px;
+  z-index: calc(var(--think-z-raised) + 3);
+  height: 8px;
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.timeline-task-resize-handle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 28px;
+  height: 2px;
+  border-radius: var(--think-radius-pill);
+  background: color-mix(in srgb, var(--timeline-task-color, var(--think-accent)) 72%, var(--think-bg-elevated));
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity var(--think-duration-fast) var(--think-ease-standard);
+}
+
+.timeline-task-resize-handle--start { top: -3px; }
+.timeline-task-resize-handle--start::after { top: 3px; }
+.timeline-task-resize-handle--end { bottom: -3px; }
+.timeline-task-resize-handle--end::after { bottom: 3px; }
+
+.timeline-task-block:hover .timeline-task-resize-handle::after,
+.timeline-task-block:focus-within .timeline-task-resize-handle::after,
+.timeline-task-block--dragging .timeline-task-resize-handle::after {
+  opacity: 1;
+}
+
+.timeline-task-drag-label {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: calc(var(--think-z-raised) + 4);
+  max-width: calc(100% - var(--think-space-2));
+  padding: 1px var(--think-space-1);
+  border-radius: var(--think-radius-xs);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  font-size: var(--think-viz-font-axis);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--think-line-height-tight);
+  pointer-events: none;
+  white-space: nowrap;
 }

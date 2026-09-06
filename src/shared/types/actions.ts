@@ -47,16 +47,22 @@ export type UpdateTaskQuadrantHandler = (recordId: string, quadrant: EisenhowerQ
  * shared/ui 只表达“在时间轴某一天/时刻创建记录”的意图。
  * 具体打开 QuickInput、推断模板、写入记录等都由 feature/app 层桥接。
  */
+export interface TimelineCreateSelectionRange {
+  startMinute: number;
+  endMinute: number;
+}
+
 export interface TimelineCreatePayload {
   day: string;
   event: MouseEvent | TouchEvent;
   hourHeight: number;
   maxHours: number;
   dayBlocks: TaskBlock[];
+  /** Explicit range selected by dragging the Timeline; bypasses gap inference. */
+  selectedRange?: TimelineCreateSelectionRange | null;
 }
 
 export type OpenTimelineCreateHandler = (payload: TimelineCreatePayload) => void;
-export type EditTimelineBlockHandler = (block: TaskBlock) => void | Promise<void>;
 
 
 export interface HeatmapCreateRequest {

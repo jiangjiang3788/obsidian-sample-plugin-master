@@ -12,8 +12,8 @@ describe('heatmap presentation contract', () => {
 
     expect(dayView).not.toContain('<h3');
     expect(content).not.toContain('<h3');
-    expect(dayView).toContain('role="heading" aria-level="3"');
-    expect(content).toContain('role="heading" aria-level="3"');
+    expect(dayView).toContain('role="heading" aria-level={3}');
+    expect(content).toContain('role="heading" aria-level={3}');
     expect(css).toContain('.think-os .heatmap-day-section-title');
     expect(css).toContain('font-size: var(--think-type-section-size)');
     expect(css).toContain('color: var(--think-text-primary)');

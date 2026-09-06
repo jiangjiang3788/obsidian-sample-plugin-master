@@ -128,6 +128,131 @@ describe('QuickInputEditorModel', () => {
 
 
 
+  it('marks Goal.icon-derived record defaults as goal_context and preserves a user icon override', () => {
+    const selectedGoal = { path: '照顾好自己/运动', icon: '💪' } as any;
+    const first = hydrateQuickInputTemplateDefaults({
+      template: { fields: [{ id: 'icon', key: 'icon', label: '图标', type: 'text', semantic: 'icon', defaultValue: '💪' } as any] },
+      current: {},
+      fieldSources: {},
+      selectedGoal,
+      currentGoalPath: selectedGoal.path,
+      currentGoalTitle: '运动',
+      timeDirection: 'forward',
+    });
+    expect(first.formData.icon).toBe('💪');
+    expect(first.fieldSources.icon).toBe('goal_context');
+
+    const userOwned = hydrateQuickInputTemplateDefaults({
+      template: { fields: [{ id: 'icon', key: 'icon', label: '图标', type: 'text', semantic: 'icon', defaultValue: '💪' } as any] },
+      current: { icon: '🧘' },
+      fieldSources: { icon: 'user' },
+      selectedGoal,
+      currentGoalPath: selectedGoal.path,
+      currentGoalTitle: '运动',
+      timeDirection: 'forward',
+    });
+    expect(userOwned.formData.icon).toBe('🧘');
+    expect(userOwned.fieldSources.icon).toBe('user');
+  });
+
+  it('stabilizes multi-select Goal defaults instead of rehydrating a fresh array forever', () => {
+    const template: Parameters<typeof hydrateQuickInputTemplateDefaults>[0]['template'] = {
+      fields: [
+        { id: 'contexts', key: 'availabilityContexts', label: '可用场景', type: 'multiSelect', defaultValue: 'work', options: [
+          { value: 'work', label: '工作' },
+          { value: 'home', label: '家' },
+        ] },
+      ],
+    };
+    const first = hydrateQuickInputTemplateDefaults({
+      template, current: {}, fieldSources: {}, selectedGoal: null,
+      currentGoalPath: '爱好能力/记录系统', currentGoalTitle: '记录系统', timeDirection: 'forward',
+    });
+    expect(first.changed).toBe(true);
+    expect(first.formData.availabilityContexts).toEqual(['work']);
+
+    const second = hydrateQuickInputTemplateDefaults({
+      template, current: first.formData, fieldSources: first.fieldSources, selectedGoal: null,
+      currentGoalPath: '爱好能力/记录系统', currentGoalTitle: '记录系统', timeDirection: 'forward',
+    });
+    expect(second.changed).toBe(false);
+    expect(second.formData).toBe(first.formData);
+  });
+
+  it('keeps 50 alternating Goal multi-select hydrations bounded and stable', () => {
+    let state = { current: {}, fieldSources: {} };
+    for (let index = 0; index < 50; index += 1) {
+      const value = index % 2 === 0 ? 'work' : 'home';
+      const template: Parameters<typeof hydrateQuickInputTemplateDefaults>[0]['template'] = { fields: [{
+        id: 'contexts', key: 'availabilityContexts', label: '可用场景', type: 'multiSelect', defaultValue: value,
+        options: [{ value: 'work', label: '工作' }, { value: 'home', label: '家' }],
+      }] };
+      const switched = hydrateQuickInputTemplateDefaults({
+        template, current: state.current, fieldSources: state.fieldSources, selectedGoal: null,
+        currentGoalPath: `目标/${index}`, currentGoalTitle: String(index), timeDirection: 'forward',
+      });
+      state = { current: switched.formData, fieldSources: switched.fieldSources };
+      const stable = hydrateQuickInputTemplateDefaults({
+        template, current: state.current, fieldSources: state.fieldSources, selectedGoal: null,
+        currentGoalPath: `目标/${index}`, currentGoalTitle: String(index), timeDirection: 'forward',
+      });
+      expect(stable.changed).toBe(false);
+      state = { current: stable.formData, fieldSources: stable.fieldSources };
+    }
+  });
+
+  it('stabilizes Timeline range hydration when a Goal duration default conflicts with the actual interval', () => {
+    const template: Parameters<typeof hydrateQuickInputTemplateDefaults>[0]['template'] = {
+      fields: [
+        { id: 'status', key: 'status', label: '状态', type: 'singleSelect', semantic: 'status', defaultValue: 'open', options: [
+          { value: 'open', label: '未完成' }, { value: 'done', label: '已完成' },
+        ] },
+        { id: 'start', key: 'startAt', label: '实际开始', type: 'datetime', semantic: 'startTime' },
+        { id: 'end', key: 'endAt', label: '实际结束', type: 'datetime', semantic: 'endTime' },
+        { id: 'duration', key: 'expectedDurationMinutes', label: '时长（分钟）', type: 'number', semantic: 'duration', defaultValue: '15' },
+      ],
+    };
+    const context = {
+      status: 'done',
+      startAt: '2026-08-31T08:00',
+      endAt: '2026-08-31T08:40',
+      __recordUiContext: { kind: 'timeline_create', captureMode: 'completed_execution' },
+    };
+
+    const first = hydrateQuickInputTemplateDefaults({
+      template, context, current: {}, fieldSources: {}, selectedGoal: null,
+      currentGoalPath: '工作能力/通勤', currentGoalTitle: '通勤', timeDirection: 'forward',
+    });
+    expect(first.changed).toBe(true);
+    expect(first.formData.status).toMatchObject({ value: 'done' });
+    expect(first.fieldSources.status).toBe('context');
+    expect(first.formData.expectedDurationMinutes).toBe(40);
+    expect(typeof first.formData.expectedDurationMinutes).toBe('number');
+    expect(first.fieldSources.expectedDurationMinutes).toBe('system_auto');
+
+    const second = hydrateQuickInputTemplateDefaults({
+      template, context, current: first.formData, fieldSources: first.fieldSources, selectedGoal: null,
+      currentGoalPath: '工作能力/通勤', currentGoalTitle: '通勤', timeDirection: 'forward',
+    });
+    expect(second.changed).toBe(false);
+    expect(second.formData).toBe(first.formData);
+  });
+
+  it('resolves Timeline status context by semantic alias even when a legacy template uses 状态 as key', () => {
+    const template: Parameters<typeof hydrateQuickInputTemplateDefaults>[0]['template'] = {
+      fields: [{
+        id: 'legacy-status', key: '状态', label: '任务状态', type: 'singleSelect', semantic: 'status', defaultValue: 'open',
+        options: [{ value: 'open', label: '未完成' }, { value: 'done', label: '已完成' }],
+      }],
+    };
+    const result = hydrateQuickInputTemplateDefaults({
+      template, context: { status: 'done' }, current: {}, fieldSources: {}, selectedGoal: null,
+      currentGoalPath: '工作能力/通勤', currentGoalTitle: '通勤', timeDirection: 'forward',
+    });
+    expect(result.formData['状态']).toMatchObject({ value: 'done' });
+    expect(result.fieldSources['状态']).toBe('context');
+  });
+
   it('keeps optional select fields empty when autoSelectFirst is disabled', () => {
     const hydrated = hydrateQuickInputTemplateDefaults({
       template: {

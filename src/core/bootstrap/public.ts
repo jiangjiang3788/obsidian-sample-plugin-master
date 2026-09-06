@@ -4,3 +4,4 @@
  */
 export { ensureReflectMetadata } from '../polyfills';
 export { setupCoreContainer } from '../di/setupCore';
+export { applyGoalTaskDefaultsSeed, GOAL_TASK_DEFAULTS_SEED_VERSION } from '../settings/goalTaskDefaultsSeed';

@@ -57,6 +57,7 @@
 @import "./features/heatmap.css";
 @import "./features/statistics.css";
 @import "./features/timeline.css";
+@import "./features/timeline-goal-allocation.css";
 @import "./features/excel.css";
 @import "./features/block.css";
 @import "./features/event-timeline.css";

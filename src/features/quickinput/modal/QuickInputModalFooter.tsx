@@ -43,8 +43,11 @@ export function QuickInputModalFooter({
               variant="danger"
               size="sm"
               onMouseDown={onPreserveDesktopInputFocus as any}
-              onPointerDown={onPreserveDesktopInputFocus as any}
-              onClick={onDelete}
+              onPointerDown={isMobileLike ? undefined : ((event: PointerEvent) => {
+                onPreserveDesktopInputFocus(event);
+                onDelete();
+              }) as any}
+              onClick={isMobileLike ? onDelete : undefined}
               disabled={isBusy}
             >{pendingAction === 'delete' ? '删除中…' : '删除'}</ThinkButton>
           ) : null}

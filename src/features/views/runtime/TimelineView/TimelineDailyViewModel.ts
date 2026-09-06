@@ -35,7 +35,7 @@ export function buildTimelineTimeAxisRows(maxHours: number, hourHeight: number):
     const rowMinutes = Math.max(0, Math.min(60, visibleEndMinute - rowStartMinute));
     return {
       hour,
-      label: hour === 0 || hour % 2 === 0 ? `${String(hour).padStart(2, '0')}:00` : '',
+      label: `${String(hour).padStart(2, '0')}:00`,
       // The final row can be partial. Its total pixel height must still exactly match
       // the day column height computed from the same visible-minute boundary.
       height: `${(rowMinutes / 60) * hourHeight}px`,

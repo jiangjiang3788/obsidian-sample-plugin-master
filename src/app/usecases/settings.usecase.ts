@@ -150,6 +150,23 @@ export class SettingsUseCase {
     }
 
 
+
+    /** 记录最近在 QuickInput 中明确选择的 Goal；用于选择器快捷入口。 */
+    async rememberRecentGoalPath(goalPath: string, limit = 5): Promise<void> {
+        try {
+            const path = String(goalPath || '').trim();
+            if (!path) return;
+            const state = this.store.getState();
+            if (!state.isInitialized) return;
+            await state.updateSettings((draft) => {
+                const previous = Array.isArray(draft.recentGoalPaths) ? draft.recentGoalPaths : [];
+                draft.recentGoalPaths = [path, ...previous.filter((item) => item !== path)].slice(0, Math.max(1, limit));
+            });
+        } catch (error) {
+            devError('[SettingsUseCase] rememberRecentGoalPath 失败:', error);
+        }
+    }
+
     /**
      * 更新全局分类颜色配置
      * @param colors categoryKey 基础类别 → 颜色 映射

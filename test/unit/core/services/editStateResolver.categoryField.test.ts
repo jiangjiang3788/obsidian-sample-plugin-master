@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import { buildEditRecordState } from '@/core/recordInput/editStateResolver';
 import { DEFAULT_SETTINGS } from '@/core/settings/ThinkSettings';
+import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 function settingsWithGoalTemplate(recordTypeId: string, fields: any[]) {
   const goalPath = '测试/编辑回填';
@@ -14,6 +15,28 @@ function settingsWithGoalTemplate(recordTypeId: string, fields: any[]) {
 }
 
 describe('buildEditRecordState current-field backfill', () => {
+  it('always seeds an unfinished Task body from the visible Record snapshot', () => {
+    const item: RecordViewItem = {
+      id: 'task.01J00000000000000000000074',
+      coreBlock: 'task',
+      status: 'open',
+      title: '日历图片功能',
+      content: '',
+      editableText: '',
+      tags: [],
+      created: 0,
+      modified: 0,
+      extra: {},
+      goalPath: '爱好能力/记录系统',
+      categoryKey: '任务',
+      file: { path: '01/2-5电脑.md', line: 20, basename: '2-5电脑' },
+    };
+    const prepared = buildEditRecordState({ settings: DEFAULT_SETTINGS, item, preferredBlockId: 'core.task' });
+    expect(prepared.blockId).toBe('core.task');
+    expect(prepared.initialFormData['任务内容']).toBe('日历图片功能');
+    expect(prepared.initialFormData.goalPath).toBe('爱好能力/记录系统');
+  });
+
   it('uses categoryKey for a custom Thought category field', () => {
     const settings = settingsWithGoalTemplate('core.thought', [
       { id: 'f1', key: '思考分类', label: '思考分类', type: 'select', semantic: 'categoryPath', options: [

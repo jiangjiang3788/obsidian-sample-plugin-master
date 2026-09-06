@@ -12,7 +12,7 @@ import {
   ThinkCheckbox,
 } from '@shared/ui/public';
 import { VIEW_OPTIONS, ViewName, getAllFields } from '@core/types/public';
-import { getViewDefaultConfig, getViewLabel } from '@core/view/public';
+import { getViewDefaultConfig, getViewLabel, normalizeViewDateRole, type ViewDateRole } from '@core/view/public';
 import { getFieldLabel, getFieldCategoryLabel } from '@core/fields/public';
 import { normalizeDisplayFields, normalizeViewFilters, normalizeViewGroupFields, normalizeViewSort } from '@core/view/public';
 import type { FilterRule, ViewInstance } from '@core/types/public';
@@ -30,8 +30,13 @@ import { CommonFilterPanel, splitDefaultQuickFilterRules } from '@features/setti
 import { FloatingPanel } from '@/app/public';
 import { closeFloatingWidget, openFloatingWidget } from '@/app/public';
 
-
-
+const VIEW_DATE_ROLE_OPTIONS: Array<{ value: ViewDateRole; label: string }> = [
+    { value: 'default', label: '默认时间（记录日期）' },
+    { value: 'task-scheduled', label: '计划时间' },
+    { value: 'task-due', label: '截止时间' },
+    { value: 'task-completed', label: '完成时间' },
+    { value: 'task-actual', label: '实际执行时间（TaskSession）' },
+];
 
 // [S5 术语统一] 视图设置编辑器组件 - 通过 useCases.layout 调用
 function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
@@ -50,6 +55,7 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
         if (currentVi.viewConfig && (currentVi.viewConfig as any).viewConfig) return (currentVi.viewConfig as any).viewConfig;
         return currentVi.viewConfig || {};
     }, [currentVi.viewConfig]);
+    const currentDateRole: ViewDateRole = normalizeViewDateRole(correctedViewConfig.dateRole) ?? 'default';
 
     // 迁移: 通过 useCases.viewInstance.updateView 更新
     const handleUpdate = (updates: Partial<ViewInstance>) => {
@@ -89,7 +95,9 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                                 options={viewTypeOptions}
                                 onChange={val => handleUpdate({
                                     viewType: val as ViewName,
-                                    viewConfig: { ...(getViewDefaultConfig(val) || {}) },
+                                    // dateRole is a cross-view query semantic, so switching the renderer
+                                    // must not silently change which business time fact the toolbar filters.
+                                    viewConfig: { ...(getViewDefaultConfig(val) || {}), dateRole: currentDateRole },
                                 })}
                                 fullWidth
                                 className="think-module-settings__view-type"
@@ -101,6 +109,23 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
                                 compact
                             />
                         </div>
+                    </FormField>
+
+                    <FormField
+                        label="时间依据"
+                        help="控制栏的年/季/月/周/日范围会按这里选择的业务时间筛选当前视图。计划/截止/完成只匹配 Task；实际执行时间匹配 TaskSession。"
+                    >
+                        <SimpleSelect
+                            value={currentDateRole}
+                            options={VIEW_DATE_ROLE_OPTIONS}
+                            onChange={value => handleUpdate({
+                                viewConfig: {
+                                    ...correctedViewConfig,
+                                    dateRole: normalizeViewDateRole(value) ?? 'default',
+                                },
+                            })}
+                            fullWidth
+                        />
                     </FormField>
 
                     <FormField label="显示字段">

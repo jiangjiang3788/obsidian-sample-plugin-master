@@ -2,9 +2,11 @@ import { RECORD_TYPE_IDS } from '@core/recordTypes/public';
 import type { QuickInputConfig } from '@core/services/public';
 import type { TaskBlock } from '@core/types/public';
 import {
+  clampTimelineBoundaryMinute,
   clampTimelineMinute,
   minutesToTime,
   TIMELINE_DAY_START_MINUTE,
+  timelineBoundaryMinuteToLocalDateTime,
   timelineMinuteFromOffset,
   timelineMinuteToLocalDateTime,
 } from '@core/utils/public';
@@ -34,6 +36,57 @@ export interface TimelineCreateContextResolution {
   previousBlock: TaskBlock | null;
   nextBlock: TaskBlock | null;
   context: Record<string, unknown>;
+}
+
+export interface TimelineSelectedRangeContextResolution {
+  startMinute: number;
+  endMinute: number;
+  context: Record<string, unknown>;
+}
+
+/**
+ * Resolve an explicit drag selection. Unlike click capture this does not infer
+ * neighbouring block boundaries: the selected interval itself is the user's
+ * execution fact.
+ */
+export function resolveTimelineSelectedRangeContext(input: {
+  day: string;
+  startMinute: number;
+  endMinute: number;
+  maxHours?: number;
+}): TimelineSelectedRangeContextResolution | null {
+  const maxHours = input.maxHours ?? 24;
+  const startMinute = clampTimelineBoundaryMinute(Math.min(input.startMinute, input.endMinute), maxHours);
+  const endMinute = clampTimelineBoundaryMinute(Math.max(input.startMinute, input.endMinute), maxHours);
+  if (endMinute <= startMinute) return null;
+
+  return {
+    startMinute,
+    endMinute,
+    context: {
+      日期: input.day,
+      status: 'done',
+      __timeDirection: 'backward',
+      startAt: timelineBoundaryMinuteToLocalDateTime(input.day, startMinute, maxHours),
+      endAt: timelineBoundaryMinuteToLocalDateTime(input.day, endMinute, maxHours),
+      时间: minutesToTime(startMinute),
+      结束: minutesToTime(endMinute),
+      __recordUiContext: {
+        kind: 'timeline_create',
+        captureMode: 'completed_execution',
+        timeContext: {
+          date: input.day,
+          clickedMinute: null,
+          suggestedStartMinute: startMinute,
+          suggestedEndMinute: endMinute,
+          startSource: 'drag_selection',
+          endSource: 'drag_selection',
+          previousBlockId: null,
+          nextBlockId: null,
+        },
+      },
+    },
+  };
 }
 
 /**
@@ -115,6 +168,18 @@ export function resolveTimelineCreateContext(input: {
 }
 
 export function buildTimelineCreateConfig(params: TimelineCreateParams): QuickInputConfig | null {
+  if (params.selectedRange) {
+    const selected = resolveTimelineSelectedRangeContext({
+      day: params.day,
+      startMinute: params.selectedRange.startMinute,
+      endMinute: params.selectedRange.endMinute,
+      maxHours: params.maxHours,
+    });
+    if (selected) {
+      return { blockId: RECORD_TYPE_IDS.TASK, context: selected.context };
+    }
+  }
+
   const targetEl = params.event.currentTarget as HTMLElement | null;
   if (!targetEl) return null;
 

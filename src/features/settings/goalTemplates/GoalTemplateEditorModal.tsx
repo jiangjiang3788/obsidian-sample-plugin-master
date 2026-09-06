@@ -7,7 +7,7 @@ import { FloatingPanel, useUiPort, type UseCases } from '@/app/public';
 import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import type { TemplateField } from '@core/types/public';
-import { isPeriodAwareRecordType } from '@core/goal/public';
+import { getGoalLeaf, isPeriodAwareRecordType, resolveGoalIcon } from '@core/goal/public';
 import { FieldsEditor } from '../input/FieldsEditor';
 import { GoalTemplateModeSwitch } from './GoalTemplateModeSwitch';
 import { NativeSelectInput, NativeTextInput } from './GoalTemplateNativeControls';
@@ -26,6 +26,13 @@ import {
 } from './GoalTemplateEditorModel';
 
 // Goal Template 只定义字段、默认值与保存位置，不覆盖存储 grammar。
+function isGoalIdentityIconField(field: TemplateField): boolean {
+  const source = field as any;
+  const key = String(source.key || source.label || '').trim();
+  const semantic = String(source.semantic || source.semanticType || '').trim();
+  return key === 'icon' || key === '图标' || semantic === 'icon';
+}
+
 interface GoalTemplateEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -117,11 +124,13 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template
 
   if (!isOpen || !goal || !block) return null;
   const goalPath = goal.path;
+  const goalLeaf = getGoalLeaf(goalPath) || goalPath;
+  const goalIcon = resolveGoalIcon(goal);
 
   return (
     <FloatingPanel
       id={`goal-template-editor-${goal.path}-${block.id}`}
-      title={<span>模板：<strong>{goalPath}</strong> / {block.name}</span>}
+      title={<span>模板：<strong>{goalIcon ? `${goalIcon} ` : ''}{goalLeaf}</strong> / {block.name}</span>}
       onClose={onClose}
       defaultPosition={{ x: Math.max(24, window.innerWidth / 2 - 380), y: 72 }}
       portal={false}
@@ -141,9 +150,10 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template
         <div className="think-goal-template-editor__stack">
           <header className="think-editor-header">
             <div className="think-goal-template-editor__identity">
-              <div className="think-settings-title-strong">{goal.icon ? `${goal.icon} ` : ''}{goalPath}</div>
+              <div className="think-settings-title-strong">{goalIcon ? `${goalIcon} ` : ''}{goalLeaf}</div>
+              <div className="think-settings-caption" title={goalPath}>完整路径：{goalPath}</div>
               <div className="think-settings-caption">每个目标 × 记录类型最多只有一个模板。</div>
-              <div className="think-settings-caption">模板只定义这个目标下的录入字段、默认值与保存位置。</div>
+              <div className="think-settings-caption">模板只定义这个目标下的录入字段、默认值与保存位置；图标默认值统一继承 Goal.icon。</div>
             </div>
           </header>
 
@@ -178,7 +188,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template
             <div className="think-goal-template-editor__section-heading">表单字段</div>
             {mode === 'default' ? <div className="think-settings-caption">未配置表示删除这个目标的模板；没有模板时快捷录入不可用。</div> : null}
             {mode === 'disabled' ? <div className="think-settings-caption">隐藏表示显式禁止这个目标使用该记录类型录入。</div> : null}
-            <FieldsEditor fields={draft.fields || []} disabled={fieldEditDisabled} onChange={(fields: TemplateField[]) => updateDraft({ fields })} />
+            <FieldsEditor fields={draft.fields || []} disabled={fieldEditDisabled} isDefaultValueLocked={isGoalIdentityIconField} onChange={(fields: TemplateField[]) => updateDraft({ fields })} />
           </section>
 
           <footer className="think-settings-sticky-actions">

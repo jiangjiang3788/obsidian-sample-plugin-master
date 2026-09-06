@@ -38,6 +38,8 @@ interface QuickInputEditOptions {
  */
 export class QuickInputModal extends Modal {
   private static activeModal: QuickInputModal | null = null;
+  private static lastOpenSignature = '';
+  private static lastOpenAt = 0;
   private services: Services;
   private cleanupKeyboardDetection: (() => void) | null = null;
   private cleanupOutsideClickGuard: (() => void) | null = null;
@@ -54,6 +56,33 @@ export class QuickInputModal extends Modal {
     this.services = createServices();
   }
 
+
+  private getOpenSignature(): string {
+    const context = this.context || {};
+    return [
+      this.options?.mode || 'create',
+      this.blockId,
+      this.options?.editItem?.id || '',
+      this.options?.source || '',
+      String(context.goalPath || ''),
+      String(context.goalTemplateId || ''),
+    ].join('|');
+  }
+
+  /**
+   * Ignore an accidental second launch of the exact same QuickInput within one
+   * double-click window. Different records/contexts still replace the active modal.
+   */
+  open(): void {
+    const now = Date.now();
+    const signature = this.getOpenSignature();
+    if (signature === QuickInputModal.lastOpenSignature && now - QuickInputModal.lastOpenAt < 450) {
+      return;
+    }
+    QuickInputModal.lastOpenSignature = signature;
+    QuickInputModal.lastOpenAt = now;
+    super.open();
+  }
 
   private getCreateAvailabilityFailure(): string | null {
     if ((this.options?.mode || 'create') !== 'create') return null;

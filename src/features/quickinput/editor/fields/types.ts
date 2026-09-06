@@ -19,6 +19,7 @@ export interface QuickInputFieldRendererBaseProps {
   isMobileLike: boolean;
   onUpdate: QuickInputFieldUpdate;
   onRequestSubmit?: () => void;
+  autoFocusContent?: boolean;
 }
 
 export interface QuickInputFieldRendererProps extends Omit<QuickInputFieldRendererBaseProps, 'label' | 'displayLabel' | 'value' | 'rawValue'> {

@@ -12,10 +12,12 @@ import type {
 } from './types';
 
 export const BLOCK_VIEW_DEFAULT_CONFIG: BlockViewConfig = {
+  dateRole: 'default',
   view: 'BlockView', title: '块视图', collapsed: false, fields: [], group: 'categoryKey',
 };
 
 export const ENERGY_VIEW_DEFAULT_CONFIG: EnergyViewConfig = {
+  dateRole: 'default',
   windowDays: 7,
   recentSampleLimit: 5,
   maxGoals: 3,
@@ -30,10 +32,12 @@ export const ENERGY_VIEW_DEFAULT_CONFIG: EnergyViewConfig = {
 };
 
 export const EISENHOWER_VIEW_DEFAULT_CONFIG: EisenhowerViewConfig = {
+  dateRole: 'default',
   showUnclassified: true,
 };
 
 export const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG: EventTimelineViewConfig = {
+  dateRole: 'default',
   timeField: 'date',
   titleField: 'title',
   contentField: 'content',
@@ -45,14 +49,17 @@ export const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG: EventTimelineViewConfig = {
 };
 
 export const EXCEL_VIEW_DEFAULT_CONFIG: ExcelViewConfig = {
+  dateRole: 'default',
   view: 'ExcelView', title: '数据表格', collapsed: false, fields: [],
 };
 
 export const HEATMAP_VIEW_DEFAULT_CONFIG: HeatmapViewConfig = {
+  dateRole: 'default',
   displayMode: 'habit', sourceBlockId: '', goalPaths: [], maxDailyChecks: 10, allowManualEdit: true,
 };
 
 export const PROGRESS_VIEW_DEFAULT_CONFIG: ProgressViewConfig = {
+  dateRole: 'default',
   mode: 'goal',
   metric: 'recordCount',
   statusFilter: ['active', 'paused'],
@@ -67,6 +74,7 @@ export const PROGRESS_VIEW_DEFAULT_CONFIG: ProgressViewConfig = {
 };
 
 export const STATISTICS_VIEW_DEFAULT_CONFIG: StatisticsViewConfig = {
+  dateRole: 'default',
   groupBy: 'goal',
   metric: 'recordCount',
   chartType: 'bar',
@@ -79,10 +87,12 @@ export const STATISTICS_VIEW_DEFAULT_CONFIG: StatisticsViewConfig = {
 };
 
 export const TABLE_VIEW_DEFAULT_CONFIG: TableViewConfig = {
+  dateRole: 'default',
   view: 'TableView', title: '表格视图', collapsed: false, rowField: 'categoryKey', colField: 'date',
 };
 
 export const TIMELINE_VIEW_DEFAULT_CONFIG: TimelineViewConfig = {
+  dateRole: 'default',
   defaultHourHeight: 50,
   MAX_HOURS_PER_DAY: 24,
   UNTRACKED_LABEL: '未记录',

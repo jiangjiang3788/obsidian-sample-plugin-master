@@ -45,4 +45,22 @@ describe('Quick Input 动态字段渲染', () => {
     await act(async () => { input.dispatchEvent(new Event('input', { bubbles: true })); });
     expect(onUpdate).toHaveBeenCalledWith('内容', '新内容');
   });
+
+  it('可选字段即使有模板默认值，也允许再次点击当前选项把它清空', async () => {
+    const onUpdate = jest.fn();
+    const current = field('priority', 'singleSelect', {
+      defaultValue: 'high',
+      required: false,
+      options: [{ value: 'high', label: '高' }, { value: 'low', label: '低' }],
+    });
+    await act(async () => render(
+      <QuickInputFieldRenderer {...props(current, { priority: { value: 'high', label: '高' } }, onUpdate)} />,
+      host,
+    ));
+    const high = [...host.querySelectorAll('button')].find((button) => button.textContent?.includes('高')) as HTMLButtonElement;
+    expect(high).toBeTruthy();
+    await act(async () => high.click());
+    expect(onUpdate).toHaveBeenCalledWith('priority', '', true);
+  });
+
 });

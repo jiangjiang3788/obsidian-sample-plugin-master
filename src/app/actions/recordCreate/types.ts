@@ -41,6 +41,7 @@ export interface TimelineCreateParams {
   dayBlocks: TaskBlock[];
   day: string;
   event: MouseEvent | TouchEvent;
+  selectedRange?: { startMinute: number; endMinute: number } | null;
 }
 
 export interface HeatmapCreateParams {

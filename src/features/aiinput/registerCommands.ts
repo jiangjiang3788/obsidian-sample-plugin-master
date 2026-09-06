@@ -12,12 +12,12 @@
 
 import type { PluginHost } from '@core/ports/public';
 import { createServices } from '@/app/public';
-import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@core/ai/public';
+import { AiHttpClient } from '@core/ai/public';
 import { createTakeLatest } from '@shared/utils/public';
 
 import { createNaturalInputCommandRunner } from './aiNaturalInputCommand';
 import { createAiSpeedTestCommand } from './aiSpeedTestCommand';
-import { createZustandSettingsProvider } from './aiInputRuntime';
+import { createAiNaturalRecordParserFromStore } from './aiInputRuntime';
 
 /**
  * 注册 AI 输入相关命令。
@@ -27,10 +27,8 @@ export function registerAiInputCommands(plugin: PluginHost): void {
     const { zustandStore: store, uiPort: ui } = createServices();
 
     // AI 解析服务依赖 settings provider；feature 层不直接读取 repository/container。
-    const settingsProvider = createZustandSettingsProvider(store);
-    const cache = new AiConfigCache(settingsProvider);
+    const parser = createAiNaturalRecordParserFromStore(store);
     const http = new AiHttpClient();
-    const parser = new AiNaturalLanguageRecordParser(settingsProvider, cache, http);
 
     // 同一命令被重复触发时，自动取消上一次请求。
     const naturalInputTakeLatest = createTakeLatest('ai-natural-input');

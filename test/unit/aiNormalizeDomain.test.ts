@@ -44,4 +44,41 @@ describe('AI domain normalization', () => {
     expect(item.target.blockId).toBe('core.habit');
     expect(item.target.categoryKey).toBe('打卡');
   });
+
+  it('keeps every user template RecordType on the shared natural-record normalization path', () => {
+    const recordTypes = [
+      ['core.task', '任务'],
+      ['core.habit', '打卡'],
+      ['core.plan', '计划'],
+      ['core.review', '总结'],
+      ['core.thought', '思考'],
+      ['core.evidence', '事件'],
+      ['core.blocker', '阻碍项'],
+      ['core.milestone', '里程碑'],
+    ] as const;
+    const matrixSnapshot = {
+      blocks: recordTypes.map(([id, categoryKey]) => ({ id, name: categoryKey, categoryKey })),
+      goals: [{ path: goalPath }],
+      goalPresets: recordTypes.map(([blockId, categoryKey]) => ({
+        id: `goal-template.matrix.${blockId}`,
+        goalTemplateId: `goal-template.matrix.${blockId}`,
+        goalPath,
+        blockId,
+        categoryKey,
+      })),
+    };
+
+    for (const [blockId, categoryKey] of recordTypes) {
+      const batch: NaturalRecordBatch = {
+        items: [{ rawText: '', target: { blockId, goalPath }, fieldValues: { 内容: `${categoryKey}矩阵测试` } }],
+      };
+      const item = normalizeParsedBatch(batch, matrixSnapshot, `${categoryKey}矩阵测试`).items[0];
+      expect(item.target.blockId).toBe(blockId);
+      expect(item.target.categoryKey).toBe(categoryKey);
+      expect(item.target.goalPath).toBe(goalPath);
+      expect(item.target.goalTemplateId).toBe(`goal-template.matrix.${blockId}`);
+      expect(item.fieldValues).toEqual({ 内容: `${categoryKey}矩阵测试` });
+    }
+  });
+
 });

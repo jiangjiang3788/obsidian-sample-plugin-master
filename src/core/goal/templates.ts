@@ -2,6 +2,7 @@ import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 import type { GoalTemplateStorageRow, GoalDefinition, GoalSettings, PeriodPolicy } from './types';
 import { normalizeGoalPath } from './path';
 import { isPeriodAwareRecordType, normalizePeriodPolicyGranularity } from './period';
+import { stripGoalTemplateIconDefaults, stripGoalTemplateIconFieldDefaults } from './icon';
 
 /** One Goal path × one RecordType template. */
 export interface GoalTemplate {
@@ -53,10 +54,10 @@ export function normalizeGoalTemplateStorageRow(row: GoalTemplateStorageRow): Go
     description: row.description,
     periodPolicy: normalizeTemplatePeriodPolicy(row.recordTypeId, row),
     enabled: row.enabled !== false,
-    fields: row.fields,
+    fields: stripGoalTemplateIconFieldDefaults(row.fields),
     targetFile: row.targetFile,
     appendUnderHeader: row.appendUnderHeader,
-    defaultValues: row.defaultValues || {},
+    defaultValues: stripGoalTemplateIconDefaults(row.defaultValues) || {},
     requiredFields: row.requiredFields || [],
   };
 }
@@ -68,10 +69,10 @@ export function toGoalTemplateStorageRow(template: GoalTemplate): GoalTemplateSt
     description: template.description || undefined,
     periodPolicy: normalizeTemplatePeriodPolicy(template.recordTypeId, template),
     enabled: template.enabled !== false,
-    fields: template.fields?.length ? template.fields : undefined,
+    fields: stripGoalTemplateIconFieldDefaults(template.fields),
     targetFile: template.targetFile || undefined,
     appendUnderHeader: template.appendUnderHeader || undefined,
-    defaultValues: template.defaultValues && Object.keys(template.defaultValues).length ? template.defaultValues : undefined,
+    defaultValues: stripGoalTemplateIconDefaults(template.defaultValues),
     requiredFields: template.requiredFields?.length ? template.requiredFields : undefined,
   };
 }

@@ -1,6 +1,7 @@
 import type { UseCases } from '@/app/usecases';
 import type { UiPort } from '@core/ports/public';
 import type { RecordInputSource } from '@core/recordInput/public';
+import type { TimelineEditTarget, TimelineLogicalRange } from '@core/types/public';
 import { runUiRecordAction } from './runUiRecordAction';
 
 export interface CompleteFromViewParams {
@@ -11,16 +12,12 @@ export interface CompleteFromViewParams {
   showSuccessNotice?: boolean;
 }
 
-export interface UpdateTimeFromViewParams {
+export interface UpdateTimelineRangeFromViewParams {
   uiPort: UiPort;
   useCases: UseCases;
-  itemId: string;
+  target: TimelineEditTarget;
+  range: TimelineLogicalRange;
   showSuccessNotice?: boolean;
-  updates: {
-    time?: string | null;
-    endTime?: string | null;
-    duration?: number | string | null;
-  };
   source?: Extract<RecordInputSource, 'layout_renderer' | 'timer' | 'unknown'>;
 }
 
@@ -39,16 +36,16 @@ export async function completeFromView(params: CompleteFromViewParams): Promise<
   return ok;
 }
 
-export async function updateTimeFromView(params: UpdateTimeFromViewParams): Promise<boolean> {
+export async function updateTimelineRangeFromView(params: UpdateTimelineRangeFromViewParams): Promise<boolean> {
   const { ok } = await runUiRecordAction(
-    () => params.useCases.recordInput.submitUpdateRecordTime({
-      itemId: params.itemId,
-      updates: params.updates,
+    () => params.useCases.recordInput.submitUpdateTimelineRange({
+      target: params.target,
+      range: params.range,
       source: params.source ?? 'layout_renderer',
     }),
     {
       uiPort: params.uiPort,
-      failureMessage: '更新记录时间失败',
+      failureMessage: '更新时间轴区间失败',
       successNotice: params.showSuccessNotice,
     },
   );

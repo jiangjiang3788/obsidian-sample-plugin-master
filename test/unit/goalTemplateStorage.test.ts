@@ -57,8 +57,22 @@ describe('GoalTemplate storage helpers', () => {
     expect(compacted.targetFile).toBeUndefined();
     expect(compacted.appendUnderHeader).toBeUndefined();
     expect(compacted.requiredFields).toBeUndefined();
-    expect(compacted.defaultValues).toEqual({ icon: '🧩' });
+    expect(compacted.defaultValues).toBeUndefined();
     expect(compacted.periodPolicy).toBeUndefined();
+  });
+
+  it('drops legacy per-template icon defaults because Goal.icon is the only Goal identity icon', () => {
+    const template: GoalTemplate = {
+      id: getGoalTemplateId(goal.path, 'core.plan'),
+      goalPath: goal.path,
+      recordTypeId: 'core.plan',
+      enabled: true,
+      defaultValues: { icon: '🧩', 内容: '保留我' },
+      fields: (planBlock.fields as any[]).map((field) => field.key === 'icon' ? { ...field, defaultValue: '🧩' } : field) as any,
+    };
+    const compacted = compactGoalTemplateForStorage(template, { recordType: planBlock });
+    expect(compacted.defaultValues).toEqual({ 内容: '保留我' });
+    expect(compacted.fields?.find((field) => field.key === 'icon')?.defaultValue).toBeUndefined();
   });
 
   it('keeps periodPolicy only for period-aware blocks', () => {

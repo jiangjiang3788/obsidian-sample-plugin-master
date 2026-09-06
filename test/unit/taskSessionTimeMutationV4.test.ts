@@ -19,8 +19,8 @@ function session(overrides: Record<string, unknown> = {}) {
   } as any;
 }
 
-describe('TaskSession exact time mutation V4', () => {
-  it('re-anchors edited end clock to the edited start day instead of keeping the old end date', async () => {
+describe('TaskSession full-range mutation V4', () => {
+  it('persists the complete final range and derives duration from one truth source', async () => {
     let current = session();
     let savedPatch: Record<string, unknown> = {};
     const repository = {
@@ -32,16 +32,16 @@ describe('TaskSession exact time mutation V4', () => {
     } as any;
     const mutation = new TaskSessionMutation({} as any, repository);
 
-    await mutation.updateSessionTime(current.id, { time: '22:00', endTime: '23:30' });
+    await mutation.updateSessionTime(current.id, {
+      start: '2026-08-26T22:00',
+      end: '2026-08-26T23:30',
+    });
 
-    expect(savedPatch?.sessionDurationMinutes).toBe(90);
-    const start = Date.parse(String(savedPatch?.sessionStartedAt));
-    const end = Date.parse(String(savedPatch?.sessionEndedAt));
-    expect(end - start).toBe(90 * 60_000);
-    expect(new Date(end).getDate()).toBe(new Date(start).getDate());
+    expect(savedPatch.sessionDurationMinutes).toBe(90);
+    expect(Date.parse(String(savedPatch.sessionEndedAt)) - Date.parse(String(savedPatch.sessionStartedAt))).toBe(90 * 60_000);
   });
 
-  it('treats an earlier end clock as the following day', async () => {
+  it('keeps an explicit cross-midnight range instead of guessing from clock fields', async () => {
     let current = session();
     let savedPatch: Record<string, unknown> = {};
     const repository = {
@@ -53,11 +53,12 @@ describe('TaskSession exact time mutation V4', () => {
     } as any;
     const mutation = new TaskSessionMutation({} as any, repository);
 
-    await mutation.updateSessionTime(current.id, { time: '23:00', endTime: '01:00' });
+    await mutation.updateSessionTime(current.id, {
+      start: '2026-08-26T23:30',
+      end: '2026-08-27T01:15',
+    });
 
-    expect(savedPatch?.sessionDurationMinutes).toBe(120);
-    const start = Date.parse(String(savedPatch?.sessionStartedAt));
-    const end = Date.parse(String(savedPatch?.sessionEndedAt));
-    expect(end - start).toBe(120 * 60_000);
+    expect(savedPatch.sessionDurationMinutes).toBe(105);
+    expect(Date.parse(String(savedPatch.sessionEndedAt)) - Date.parse(String(savedPatch.sessionStartedAt))).toBe(105 * 60_000);
   });
 });

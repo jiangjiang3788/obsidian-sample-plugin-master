@@ -3,6 +3,7 @@ import type { CategoryConfig } from '@/core/config/views';
 import type { GoalDefinition } from './types';
 import { normalizeGoalPath, splitGoalPath } from './path';
 import { createGoalOrderIndex } from './order';
+import { resolveGoalIcon } from './icon';
 
 export const UNASSIGNED_GOAL_KEY = '未归属目标';
 
@@ -38,11 +39,6 @@ export function getItemGoalLabel(item: RecordViewItem, goals: GoalDefinition[] =
   if (key === UNASSIGNED_GOAL_KEY) return UNASSIGNED_GOAL_KEY;
   const goal = findGoalByPath(goals, key);
   return splitGoalPath(goal?.path || key).leafGoal || key;
-}
-
-function resolveGoalIcon(goal: GoalDefinition | null | undefined): string | undefined {
-  const direct = String(goal?.icon || '').trim();
-  return direct || undefined;
 }
 
 function stableColor(seed: string): string {

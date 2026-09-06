@@ -139,17 +139,17 @@
         "goalFirst": true,
         "presetFirst": false,
         "goalPaths": [
-          "照顾好自己/健康/粑粑",
-          "照顾好自己/健康/喝水",
-          "照顾好自己/健康/身体",
-          "照顾好自己/健康/睡眠",
-          "照顾好自己/健康/心情",
-          "照顾好自己/健康/姨妈",
-          "照顾好自己/健康/运动",
-          "我若安好便是晴天/生活/车车",
-          "武装大脑/思考/读书",
-          "照顾好自己/思考/专注",
-          "仪容仪表/健康/卫生"
+          "照顾好自己/粑粑",
+          "照顾好自己/喝水",
+          "照顾好自己/身体",
+          "照顾好自己/睡眠",
+          "照顾好自己/心情",
+          "照顾好自己/姨妈",
+          "照顾好自己/运动",
+          "我若安好便是晴天/车车",
+          "武装大脑/读书",
+          "武装大脑/了解自我/专注",
+          "照顾好自己/仪容仪表/卫生"
         ]
       },
       "fields": [
@@ -245,7 +245,7 @@
     {
       "id": "vi_mn9o962553qwhzp",
       "parentId": null,
-      "title": "table",
+      "title": "未完成任务",
       "viewType": "TableView",
       "viewConfig": {
         "groupBy": "goal",
@@ -254,7 +254,8 @@
         "topN": 10,
         "usePeriodField": false,
         "rowField": "coreBlock",
-        "colField": "rootGoal"
+        "colField": "rootGoal",
+        "dateRole": "task-completed"
       },
       "fields": [
         "goalPath",
@@ -405,33 +406,50 @@
       "id": "vi_mpi3dydfsejfio8",
       "parentId": null,
       "title": "事件时间线",
-      "viewType": "TableView",
+      "viewType": "TimelineView",
       "viewConfig": {
-        "view": "TableView",
-        "title": "表格视图",
-        "collapsed": false,
-        "rowField": "coreBlock",
-        "colField": "根目标"
+        "defaultHourHeight": 100,
+        "MAX_HOURS_PER_DAY": 24,
+        "UNTRACKED_LABEL": "未记录",
+        "categories": {
+          "工作": {
+            "name": "工作",
+            "color": "#60a5fa",
+            "files": [
+              "工作",
+              "Work"
+            ]
+          },
+          "学习": {
+            "name": "学习",
+            "color": "#34d399",
+            "files": [
+              "学习",
+              "Study"
+            ]
+          },
+          "生活": {
+            "name": "生活",
+            "color": "#fbbf24",
+            "files": [
+              "生活",
+              "Life"
+            ]
+          }
+        },
+        "progressOrder": [
+          "工作",
+          "学习",
+          "生活"
+        ]
       },
-      "fields": [
-        "coreBlock",
-        "goalPath",
-        "content",
-        "date",
-        "icon"
-      ],
+      "fields": [],
       "groupFields": [],
       "filters": [
         {
           "field": "coreBlock",
           "op": "=",
-          "value": "task",
-          "logic": "and"
-        },
-        {
-          "field": "status",
-          "op": "=",
-          "value": "open"
+          "value": "task"
         }
       ],
       "sort": [
@@ -465,40 +483,15 @@
     {
       "id": "vi_msr6vrojamvaf1t",
       "parentId": null,
-      "title": "成长",
-      "viewType": "ProgressView",
-      "viewConfig": {},
-      "fields": [],
-      "groupFields": [],
-      "filters": [],
-      "sort": [],
-      "collapsed": false
-    },
-    {
-      "id": "vi_msr6vt761p1ns9e",
-      "parentId": null,
-      "title": "精力",
-      "viewType": "EnergyView",
-      "viewConfig": {
-        "currentContext": "commute"
-      },
-      "fields": [],
-      "groupFields": [],
-      "filters": [],
-      "sort": [],
-      "collapsed": false
-    },
-    {
-      "id": "vi_mtawnjh9nrcrm9u",
-      "parentId": null,
-      "title": "6m",
+      "title": "完成任务",
       "viewType": "TableView",
       "viewConfig": {
         "view": "TableView",
         "title": "表格视图",
         "collapsed": false,
-        "rowField": "categoryKey",
-        "colField": "rootGoal"
+        "rowField": "coreBlock",
+        "colField": "rootGoal",
+        "dateRole": "task-completed"
       },
       "fields": [],
       "groupFields": [],
@@ -521,6 +514,18 @@
       ],
       "sort": [],
       "collapsed": false
+    },
+    {
+      "id": "vi_msr6vt761p1ns9e",
+      "parentId": null,
+      "title": "精力",
+      "viewType": "EnergyView",
+      "viewConfig": {},
+      "fields": [],
+      "groupFields": [],
+      "filters": [],
+      "sort": [],
+      "collapsed": false
     }
   ],
   "layouts": [
@@ -531,7 +536,9 @@
         "vi_msr6vt761p1ns9e",
         "vi_mmijitbq47u10wu",
         "vi_mm9z0oe1cvlr53c",
-        "vi_mmeolydjaga6z6u"
+        "vi_mmeolydjaga6z6u",
+        "vi_mn9o962553qwhzp",
+        "vi_msr6vrojamvaf1t"
       ],
       "displayMode": "freeform",
       "initialView": "天",
@@ -574,6 +581,20 @@
           "height": 416,
           "zIndex": 11,
           "collapsed": false
+        },
+        "vi_msr6vrojamvaf1t": {
+          "x": 0,
+          "y": 1552,
+          "width": 1616,
+          "height": 288,
+          "zIndex": 13
+        },
+        "vi_mn9o962553qwhzp": {
+          "x": 0,
+          "y": 1056,
+          "width": 1616,
+          "height": 480,
+          "zIndex": 14
         }
       }
     },
@@ -581,8 +602,7 @@
       "id": "layout_mpi3dfhyn14bsio",
       "name": "全局布局 2",
       "viewInstanceIds": [
-        "vi_mpi3dydfsejfio8",
-        "vi_mtawnjh9nrcrm9u"
+        "vi_mpi3dydfsejfio8"
       ],
       "displayMode": "list",
       "initialView": "季",
@@ -594,9 +614,10 @@
   "goalSettings": {
     "goals": [
       {
-        "path": "了解世界",
+        "path": "武装大脑/了解世界",
         "status": "active",
-        "sortOrder": 7,
+        "icon": "🤩",
+        "sortOrder": 10,
         "metrics": [
           {
             "key": "task.done",
@@ -608,395 +629,354 @@
         ]
       },
       {
-        "path": "了解自我",
-        "status": "active",
-        "sortOrder": 6
-      },
-      {
-        "path": "仪容仪表",
-        "status": "active",
-        "sortOrder": 4
-      },
-      {
-        "path": "工作能力",
-        "status": "active",
-        "sortOrder": 8
-      },
-      {
-        "path": "我若安好便是晴天",
-        "status": "active",
-        "sortOrder": 3
-      },
-      {
-        "path": "武装大脑",
-        "status": "active",
-        "sortOrder": 10
-      },
-      {
-        "path": "照顾好自己",
-        "status": "active",
-        "sortOrder": 2
-      },
-      {
-        "path": "爱好能力",
-        "status": "active",
-        "sortOrder": 9
-      },
-      {
-        "path": "了解世界/思考",
-        "status": "active",
-        "icon": "🧠",
-        "sortOrder": 0
-      },
-      {
-        "path": "了解世界/生活",
-        "status": "active",
-        "icon": "✨",
-        "sortOrder": 2
-      },
-      {
-        "path": "了解自我/思考",
-        "status": "active",
-        "icon": "🧠",
-        "sortOrder": 0
-      },
-      {
-        "path": "仪容仪表/健康",
-        "status": "active",
-        "icon": "💤",
-        "sortOrder": 1
-      },
-      {
-        "path": "工作能力/工作",
-        "status": "active",
-        "icon": "🖥",
-        "sortOrder": 4
-      },
-      {
-        "path": "我若安好便是晴天/生活",
-        "status": "active",
-        "icon": "✨",
-        "sortOrder": 2
-      },
-      {
-        "path": "武装大脑/思考",
-        "status": "active",
-        "icon": "🧠",
-        "sortOrder": 0
-      },
-      {
-        "path": "照顾好自己/健康",
-        "status": "active",
-        "icon": "💤",
-        "sortOrder": 1
-      },
-      {
-        "path": "照顾好自己/思考",
-        "status": "active",
-        "icon": "🧠",
-        "sortOrder": 0
-      },
-      {
-        "path": "爱好能力/电脑",
-        "status": "active",
-        "icon": "🖥",
-        "sortOrder": 3
-      },
-      {
-        "path": "了解世界/思考/垚垚",
-        "status": "active",
-        "icon": "👶",
-        "sortOrder": 1
-      },
-      {
-        "path": "了解世界/思考/婆婆",
-        "status": "active",
-        "icon": "🧓",
-        "sortOrder": 3
-      },
-      {
-        "path": "了解世界/思考/家庭",
-        "status": "active",
-        "icon": "👪",
-        "sortOrder": 4
-      },
-      {
-        "path": "了解世界/思考/时间整理",
-        "status": "active",
-        "icon": "🧠",
-        "sortOrder": 9
-      },
-      {
-        "path": "了解世界/思考/芦苇",
-        "status": "active",
-        "icon": "🔆",
-        "sortOrder": 5
-      },
-      {
-        "path": "了解世界/思考/阳阳",
-        "status": "active",
-        "icon": "👨",
-        "sortOrder": 2
-      },
-      {
-        "path": "了解世界/生活/垚垚",
-        "status": "active",
-        "icon": "👶",
-        "sortOrder": 4
-      },
-      {
-        "path": "了解自我/思考/自我",
+        "path": "武装大脑/了解自我",
         "status": "active",
         "icon": "🐈",
         "sortOrder": 0
       },
       {
-        "path": "仪容仪表/健康/剪头发",
+        "path": "照顾好自己/仪容仪表",
+        "status": "active",
+        "icon": "👩‍🦰",
+        "sortOrder": 0
+      },
+      {
+        "path": "工作能力",
+        "status": "active",
+        "icon": "🖥",
+        "sortOrder": 8,
+        "timePresetPercent": 10
+      },
+      {
+        "path": "我若安好便是晴天",
+        "status": "active",
+        "icon": "✨",
+        "sortOrder": 3,
+        "timePresetPercent": 20
+      },
+      {
+        "path": "武装大脑",
+        "status": "active",
+        "icon": "🧠",
+        "sortOrder": 10,
+        "timePresetPercent": 2
+      },
+      {
+        "path": "照顾好自己",
+        "status": "active",
+        "icon": "💖",
+        "sortOrder": 2,
+        "timePresetPercent": 53
+      },
+      {
+        "path": "爱好能力",
+        "status": "active",
+        "icon": "💻",
+        "sortOrder": 9,
+        "timePresetPercent": 15
+      },
+      {
+        "path": "我若安好便是晴天/生活",
+        "status": "active",
+        "icon": "✨",
+        "sortOrder": 20
+      },
+      {
+        "path": "照顾好自己/健康",
+        "status": "active",
+        "icon": "💤",
+        "sortOrder": 120
+      },
+      {
+        "path": "爱好能力/电脑",
+        "status": "active",
+        "icon": "🖥",
+        "sortOrder": 0
+      },
+      {
+        "path": "武装大脑/垚垚教育",
+        "status": "active",
+        "icon": "👶",
+        "sortOrder": 20
+      },
+      {
+        "path": "武装大脑/了解世界/婆婆",
+        "status": "active",
+        "icon": "🧓",
+        "sortOrder": 3
+      },
+      {
+        "path": "武装大脑/了解世界/家庭",
+        "status": "active",
+        "icon": "👪",
+        "sortOrder": 4
+      },
+      {
+        "path": "武装大脑/时间整理",
+        "status": "active",
+        "icon": "🧠",
+        "sortOrder": 60
+      },
+      {
+        "path": "武装大脑/了解世界/芦苇",
+        "status": "active",
+        "icon": "🔆",
+        "sortOrder": 5
+      },
+      {
+        "path": "武装大脑/了解世界/阳阳",
+        "status": "active",
+        "icon": "👨",
+        "sortOrder": 2
+      },
+      {
+        "path": "我若安好便是晴天/垚垚",
+        "status": "active",
+        "icon": "👶",
+        "sortOrder": 10,
+        "weeklyTargetMinutes": 1620
+      },
+      {
+        "path": "武装大脑/了解自我/自我",
+        "status": "active",
+        "icon": "🐈",
+        "sortOrder": 0
+      },
+      {
+        "path": "照顾好自己/仪容仪表/剪头发",
         "status": "active",
         "icon": "✂",
         "sortOrder": 11
       },
       {
-        "path": "仪容仪表/健康/剪指甲",
+        "path": "照顾好自己/仪容仪表/剪指甲",
         "status": "active",
         "icon": "✋",
         "sortOrder": 12
       },
       {
-        "path": "仪容仪表/健康/卫生",
+        "path": "照顾好自己/仪容仪表/卫生",
         "status": "active",
         "icon": "🛁",
+        "sortOrder": 10,
+        "weeklyTargetMinutes": 180
+      },
+      {
+        "path": "工作能力/其他",
+        "status": "active",
+        "icon": "📋",
+        "sortOrder": 30
+      },
+      {
+        "path": "工作能力/手续、对账",
+        "status": "active",
+        "icon": "📋",
+        "sortOrder": 40
+      },
+      {
+        "path": "工作能力/投标",
+        "status": "active",
+        "icon": "🎟",
+        "sortOrder": 20
+      },
+      {
+        "path": "工作能力/老板任务",
+        "status": "active",
+        "icon": "💥",
+        "sortOrder": 50
+      },
+      {
+        "path": "工作能力/设计",
+        "status": "active",
+        "icon": "🖥",
         "sortOrder": 10
       },
       {
-        "path": "仪容仪表/健康/洗澡",
-        "status": "active"
-      },
-      {
-        "path": "工作能力/工作/其他",
-        "status": "active",
-        "icon": "📋",
-        "sortOrder": 5
-      },
-      {
-        "path": "工作能力/工作/手续、对账",
-        "status": "active",
-        "icon": "📋",
-        "sortOrder": 4
-      },
-      {
-        "path": "工作能力/工作/投标",
-        "status": "active",
-        "icon": "🎟",
-        "sortOrder": 3
-      },
-      {
-        "path": "工作能力/工作/老板任务",
-        "status": "active",
-        "icon": "💥",
-        "sortOrder": 1
-      },
-      {
-        "path": "工作能力/工作/设计",
-        "status": "active",
-        "icon": "🖥",
-        "sortOrder": 2
-      },
-      {
-        "path": "工作能力/工作/通勤",
+        "path": "工作能力/通勤",
         "status": "active",
         "icon": "🛵",
         "sortOrder": 0
       },
       {
-        "path": "我若安好便是晴天/生活/娱乐",
+        "path": "我若安好便是晴天/娱乐",
         "status": "active",
         "icon": "📺",
-        "sortOrder": 1
+        "sortOrder": 30
       },
       {
-        "path": "我若安好便是晴天/生活/家务",
+        "path": "我若安好便是晴天/家务",
         "status": "active",
         "icon": "🧹",
-        "sortOrder": 6
+        "sortOrder": 70
       },
       {
-        "path": "我若安好便是晴天/生活/小手机",
+        "path": "我若安好便是晴天/小手机",
         "status": "active",
         "icon": "🍓",
-        "sortOrder": 2
+        "sortOrder": 40
       },
       {
-        "path": "我若安好便是晴天/生活/开车",
-        "status": "active"
-      },
-      {
-        "path": "我若安好便是晴天/生活/收纳",
-        "status": "active"
-      },
-      {
-        "path": "我若安好便是晴天/生活/整理",
-        "status": "active",
-        "icon": "📦",
-        "sortOrder": 5
-      },
-      {
-        "path": "我若安好便是晴天/生活/车车",
+        "path": "我若安好便是晴天/开车",
         "status": "active",
         "icon": "🚗",
-        "sortOrder": 3
+        "sortOrder": 80
       },
       {
-        "path": "我若安好便是晴天/生活/高级生活",
+        "path": "我若安好便是晴天/收纳",
+        "status": "active",
+        "icon": "📦",
+        "sortOrder": 90
+      },
+      {
+        "path": "我若安好便是晴天/整理",
+        "status": "active",
+        "icon": "📦",
+        "sortOrder": 60
+      },
+      {
+        "path": "我若安好便是晴天/车车",
+        "status": "active",
+        "icon": "🚗",
+        "sortOrder": 50
+      },
+      {
+        "path": "我若安好便是晴天/高级生活",
         "status": "active",
         "icon": "🔆",
         "sortOrder": 0
       },
       {
-        "path": "武装大脑/思考/复盘整理",
+        "path": "武装大脑/复盘整理",
         "status": "active",
         "icon": "🧠",
-        "sortOrder": 8
+        "sortOrder": 50
       },
       {
-        "path": "武装大脑/思考/思路整理",
+        "path": "武装大脑/思路整理",
         "status": "active",
         "icon": "🧠",
-        "sortOrder": 10
+        "sortOrder": 70
       },
       {
-        "path": "武装大脑/思考/整理复盘",
-        "status": "active"
+        "path": "武装大脑/整理笔记",
+        "status": "active",
+        "icon": "🧠",
+        "sortOrder": 40
       },
       {
-        "path": "武装大脑/思考/整理笔记",
-        "status": "active"
-      },
-      {
-        "path": "武装大脑/思考/读书",
+        "path": "武装大脑/读书",
         "status": "active",
         "icon": "📚",
-        "sortOrder": 7
+        "sortOrder": 30
       },
       {
-        "path": "照顾好自己/健康/三餐",
-        "status": "active"
-      },
-      {
-        "path": "照顾好自己/健康/习惯",
+        "path": "照顾好自己/习惯",
         "status": "active",
         "icon": "🥛",
-        "sortOrder": 3
+        "sortOrder": 90
       },
       {
-        "path": "照顾好自己/健康/午餐",
+        "path": "照顾好自己/午餐",
         "status": "active",
         "icon": "🍱",
-        "sortOrder": 1
+        "sortOrder": 50,
+        "weeklyTargetMinutes": 480
       },
       {
-        "path": "照顾好自己/健康/喝水",
-        "status": "active"
+        "path": "照顾好自己/喝水",
+        "status": "active",
+        "icon": "💧",
+        "sortOrder": 70,
+        "weeklyTargetMinutes": 30
       },
       {
-        "path": "照顾好自己/健康/姨妈",
+        "path": "照顾好自己/姨妈",
         "status": "active",
         "icon": "🩸",
-        "sortOrder": 9
+        "sortOrder": 110
       },
       {
-        "path": "照顾好自己/健康/心情",
+        "path": "照顾好自己/心情",
         "status": "active",
         "icon": "😄",
-        "sortOrder": 8
+        "sortOrder": 100
       },
       {
-        "path": "照顾好自己/健康/早餐",
+        "path": "照顾好自己/早餐",
         "status": "active",
         "icon": "🥚",
-        "sortOrder": 0
+        "sortOrder": 40,
+        "weeklyTargetMinutes": 240
       },
       {
-        "path": "照顾好自己/健康/晚餐",
+        "path": "照顾好自己/晚餐",
         "status": "active",
         "icon": "🥣",
-        "sortOrder": 2
+        "sortOrder": 60,
+        "weeklyTargetMinutes": 240
       },
       {
-        "path": "照顾好自己/健康/瑜伽",
-        "status": "active"
-      },
-      {
-        "path": "照顾好自己/健康/睡眠",
+        "path": "照顾好自己/睡眠",
         "status": "active",
         "icon": "💤",
-        "sortOrder": 6
+        "sortOrder": 10,
+        "weeklyTargetMinutes": 3360
       },
       {
-        "path": "照顾好自己/健康/粑粑",
+        "path": "照顾好自己/粑粑",
         "status": "active",
         "icon": "💩",
-        "sortOrder": 4
+        "sortOrder": 20,
+        "weeklyTargetMinutes": 180
       },
       {
-        "path": "照顾好自己/健康/身体",
+        "path": "照顾好自己/身体",
         "status": "active",
         "icon": "🔋",
-        "sortOrder": 7
+        "sortOrder": 80
       },
       {
-        "path": "照顾好自己/健康/运动",
+        "path": "照顾好自己/运动",
         "status": "active",
         "icon": "💪",
-        "sortOrder": 5
+        "sortOrder": 30,
+        "weeklyTargetMinutes": 180
       },
       {
-        "path": "照顾好自己/思考/专注",
+        "path": "武装大脑/了解自我/专注",
         "status": "active",
         "icon": "⏰",
         "sortOrder": 6
       },
       {
-        "path": "照顾好自己/思考/健康",
-        "status": "active"
-      },
-      {
-        "path": "爱好能力/电脑/AI",
+        "path": "爱好能力/AI",
         "status": "active",
         "icon": "🤖",
-        "sortOrder": 99
+        "sortOrder": 10
       },
       {
-        "path": "爱好能力/电脑/MediaPro",
-        "status": "active"
-      },
-      {
-        "path": "爱好能力/电脑/ob基础",
+        "path": "爱好能力/ob基础",
         "status": "active",
         "icon": "🎚",
-        "sortOrder": 0
+        "sortOrder": 30
       },
       {
-        "path": "爱好能力/电脑/整理",
+        "path": "爱好能力/整理",
         "status": "active",
         "icon": "✒",
-        "sortOrder": 1
+        "sortOrder": 20
       },
       {
-        "path": "爱好能力/电脑/点读",
-        "status": "active"
-      },
-      {
-        "path": "爱好能力/电脑/笔记系统",
+        "path": "爱好能力/笔记系统",
         "status": "active",
         "icon": "📕",
-        "sortOrder": 2
+        "sortOrder": 40
       },
       {
-        "path": "爱好能力/电脑/记录系统",
+        "path": "爱好能力/记录系统",
         "status": "active",
         "icon": "🎴",
-        "sortOrder": 3
+        "sortOrder": 50
       }
     ],
     "goalTemplates": [
@@ -1026,16 +1006,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💤"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "💤"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/身体",
+        "goalPath": "照顾好自己/身体",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -1060,16 +1036,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🔋"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🔋"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/睡眠",
+        "goalPath": "照顾好自己/睡眠",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -1094,16 +1066,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💤"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "💤"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/瑜伽",
+        "goalPath": "照顾好自己/运动",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -1128,47 +1096,9 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🧘"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🧘"
-        }
-      },
-      {
-        "goalPath": "照顾好自己/健康/运动",
-        "recordTypeId": "core.plan",
-        "enabled": true,
-        "periodPolicy": {
-          "enabled": true,
-          "granularity": "quarter"
-        },
-        "fields": [
-          {
-            "id": "field_mer94wbx",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mer95h6l",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💪"
-          }
-        ],
-        "defaultValues": {
-          "icon": "💪"
-        }
+        ]
       },
       {
         "goalPath": "照顾好自己/健康",
@@ -1196,16 +1126,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💤"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "💤"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/身体",
+        "goalPath": "照顾好自己/身体",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -1230,16 +1156,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🔋"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🔋"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/睡眠",
+        "goalPath": "照顾好自己/睡眠",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -1264,16 +1186,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💤"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "💤"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/三餐",
+        "goalPath": "照顾好自己/运动",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -1298,84 +1216,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🍱"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🍱"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/瑜伽",
-        "recordTypeId": "core.review",
-        "enabled": true,
-        "periodPolicy": {
-          "enabled": true,
-          "granularity": "year"
-        },
-        "fields": [
-          {
-            "id": "field_mer983il",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mer989rn",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🧘"
-          }
-        ],
-        "defaultValues": {
-          "icon": "🧘"
-        }
-      },
-      {
-        "goalPath": "照顾好自己/健康/运动",
-        "recordTypeId": "core.review",
-        "enabled": true,
-        "periodPolicy": {
-          "enabled": true,
-          "granularity": "year"
-        },
-        "fields": [
-          {
-            "id": "field_mer983il",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mer989rn",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💪"
-          }
-        ],
-        "defaultValues": {
-          "icon": "💪"
-        }
-      },
-      {
-        "goalPath": "照顾好自己/健康/心情",
+        "goalPath": "照顾好自己/心情",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -1438,16 +1284,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "😄"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "😄"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/身体",
+        "goalPath": "照顾好自己/身体",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -1498,16 +1340,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🔋"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🔋"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/思考/专注",
+        "goalPath": "武装大脑/了解自我/专注",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -1542,16 +1380,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "⏰"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "⏰"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/睡眠",
+        "goalPath": "照顾好自己/睡眠",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -1614,16 +1448,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💤"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "💤"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/早餐",
+        "goalPath": "照顾好自己/早餐",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -1658,16 +1488,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🥚"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🥚"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/午餐",
+        "goalPath": "照顾好自己/午餐",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -1702,16 +1528,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🍱"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🍱"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/晚餐",
+        "goalPath": "照顾好自己/晚餐",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -1746,16 +1568,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🥣"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🥣"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/姨妈",
+        "goalPath": "照顾好自己/姨妈",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -1790,16 +1608,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🩸"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🩸"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/粑粑",
+        "goalPath": "照顾好自己/粑粑",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -1840,16 +1654,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💩"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "💩"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/运动",
+        "goalPath": "照顾好自己/运动",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -1890,16 +1700,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💪"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "💪"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/喝水",
+        "goalPath": "照顾好自己/喝水",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -1931,112 +1737,188 @@
             "id": "core.field.icon",
             "key": "图标",
             "label": "图标",
-            "type": "text",
-            "defaultValue": "💧"
+            "type": "text"
           }
-        ],
-        "defaultValues": {
-          "icon": "💧"
-        }
+        ]
       },
       {
-        "goalPath": "照顾好自己/健康/身体",
+        "goalPath": "照顾好自己/身体",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "icon": "🔋"
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "urgent",
+          "priority": "medium",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "照顾好自己/思考/专注",
+        "goalPath": "武装大脑/了解自我/专注",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "icon": "⏰"
+          "brainDemand": "high",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "work"
+          ],
+          "recurrenceUnit": "month"
         }
       },
       {
-        "goalPath": "照顾好自己/健康/睡眠",
+        "goalPath": "照顾好自己/睡眠",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "icon": "💤",
-          "任务内容": "睡觉"
+          "任务内容": "睡觉",
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "urgent",
+          "priority": "medium",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "照顾好自己/健康/早餐",
+        "goalPath": "照顾好自己/早餐",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-2三餐.md",
         "defaultValues": {
-          "icon": "🥚",
-          "任务内容": "早餐"
+          "任务内容": "早餐",
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "urgent",
+          "priority": "medium",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "照顾好自己/健康/午餐",
+        "goalPath": "照顾好自己/午餐",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-2三餐.md",
         "defaultValues": {
-          "icon": "🍱",
-          "任务内容": "午餐"
+          "任务内容": "午餐",
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "urgent",
+          "priority": "medium",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "照顾好自己/健康/晚餐",
+        "goalPath": "照顾好自己/晚餐",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-2三餐.md",
         "defaultValues": {
-          "icon": "🥣",
-          "任务内容": "晚餐"
+          "任务内容": "晚餐",
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "urgent",
+          "priority": "medium",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "照顾好自己/思考/健康",
+        "goalPath": "照顾好自己/健康",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "icon": "🔋"
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "urgent",
+          "priority": "medium",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "照顾好自己/健康/粑粑",
+        "goalPath": "照顾好自己/粑粑",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "icon": "💩",
-          "任务内容": "拉粑粑"
+          "任务内容": "拉粑粑",
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "urgent",
+          "priority": "medium",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "照顾好自己/健康/运动",
+        "goalPath": "照顾好自己/运动",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "icon": "💪",
-          "任务内容": "八段锦"
+          "任务内容": "八段锦",
+          "brainDemand": "medium",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "urgent",
+          "priority": "medium",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "照顾好自己/健康/习惯",
+        "goalPath": "照顾好自己/习惯",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "icon": "💊"
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "urgent",
+          "priority": "medium",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "照顾好自己/健康/身体",
+        "goalPath": "照顾好自己/身体",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -2068,17 +1950,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🔋"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🔋"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "照顾好自己/健康/睡眠",
+        "goalPath": "照顾好自己/睡眠",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -2110,17 +1988,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💤"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "💤"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "照顾好自己/健康/瑜伽",
+        "goalPath": "照顾好自己/运动",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -2152,14 +2026,10 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🧘"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🧘"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
         "goalPath": "照顾好自己/健康",
@@ -2194,17 +2064,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💤"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "💤"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "照顾好自己/健康/习惯",
+        "goalPath": "照顾好自己/习惯",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -2236,17 +2102,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💊"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "💊"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "照顾好自己/健康/心情",
+        "goalPath": "照顾好自己/心情",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -2278,17 +2140,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "😄"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "😄"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "照顾好自己/健康/身体",
+        "goalPath": "照顾好自己/身体",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -2303,17 +2161,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🔋"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🔋"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "照顾好自己/健康/瑜伽",
+        "goalPath": "照顾好自己/睡眠",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -2328,17 +2182,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🧘"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🧘"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "照顾好自己/健康/睡眠",
+        "goalPath": "照顾好自己/运动",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -2353,39 +2203,10 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💤"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "💤"
-        }
-      },
-      {
-        "goalPath": "照顾好自己/健康/运动",
-        "recordTypeId": "core.evidence",
-        "enabled": true,
-        "fields": [
-          {
-            "id": "field_mewjlypl",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💪"
-          }
-        ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "💪"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
         "goalPath": "照顾好自己/健康",
@@ -2403,14 +2224,10 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💤"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "💤"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
         "goalPath": "我若安好便是晴天/生活",
@@ -2438,13 +2255,9 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "✨"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "✨"
-        }
+        ]
       },
       {
         "goalPath": "我若安好便是晴天/生活",
@@ -2472,16 +2285,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "✨"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "✨"
-        }
+        ]
       },
       {
-        "goalPath": "我若安好便是晴天/生活/车车",
+        "goalPath": "我若安好便是晴天/车车",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -2520,13 +2329,9 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🚗"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🚗"
-        }
+        ]
       },
       {
         "goalPath": "我若安好便是晴天/生活",
@@ -2534,85 +2339,146 @@
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "icon": "✨"
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "normal",
+          "urgency": "normal",
+          "priority": "high",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "我若安好便是晴天/生活/娱乐",
+        "goalPath": "我若安好便是晴天/娱乐",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "icon": "📺",
-          "任务内容": "玩手机"
+          "任务内容": "玩手机",
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "normal",
+          "urgency": "normal",
+          "priority": "high",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "我若安好便是晴天/生活/车车",
+        "goalPath": "我若安好便是晴天/车车",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "icon": "🚗",
-          "任务内容": "听小说"
+          "任务内容": "听小说",
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "normal",
+          "urgency": "normal",
+          "priority": "high",
+          "availabilityContexts": [
+            "home"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "我若安好便是晴天/生活/高级生活",
+        "goalPath": "我若安好便是晴天/高级生活",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "icon": "🔆"
+          "brainDemand": "medium",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "high",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "我若安好便是晴天/生活/小手机",
+        "goalPath": "我若安好便是晴天/小手机",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "icon": "🍓",
-          "任务内容": "小手机"
+          "任务内容": "小手机",
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "high",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "我若安好便是晴天/生活/家务",
+        "goalPath": "我若安好便是晴天/家务",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "icon": "🧹",
-          "任务内容": "打扫卫生"
+          "任务内容": "打扫卫生",
+          "brainDemand": "low",
+          "physicalDemand": "high",
+          "importance": "normal",
+          "urgency": "normal",
+          "priority": "high",
+          "availabilityContexts": [
+            "home"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "我若安好便是晴天/生活/整理",
+        "goalPath": "我若安好便是晴天/整理",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "icon": "📦",
-          "任务内容": "整理家"
+          "任务内容": "整理家",
+          "brainDemand": "low",
+          "physicalDemand": "high",
+          "importance": "normal",
+          "urgency": "normal",
+          "priority": "high",
+          "availabilityContexts": [
+            "home"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "我若安好便是晴天/生活/收纳",
+        "goalPath": "我若安好便是晴天/收纳",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "icon": "📦"
+          "brainDemand": "low",
+          "physicalDemand": "high",
+          "importance": "normal",
+          "urgency": "normal",
+          "priority": "high",
+          "availabilityContexts": [
+            "home"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "我若安好便是晴天/生活/开车",
+        "goalPath": "我若安好便是晴天/开车",
         "recordTypeId": "core.task",
         "enabled": true,
-        "targetFile": "01/2-3生活.md",
-        "defaultValues": {
-          "icon": "🚗"
-        }
+        "targetFile": "01/2-3生活.md"
       },
       {
         "goalPath": "我若安好便是晴天/生活",
@@ -2647,14 +2513,10 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "✨"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "✨"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
         "goalPath": "我若安好便是晴天/生活",
@@ -2672,17 +2534,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "✨"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "✨"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "仪容仪表/健康/剪指甲",
+        "goalPath": "照顾好自己/仪容仪表/剪指甲",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -2721,16 +2579,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "✋"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "✋"
-        }
+        ]
       },
       {
-        "goalPath": "仪容仪表/健康/剪头发",
+        "goalPath": "照顾好自己/仪容仪表/剪头发",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -2765,16 +2619,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "✂"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "✂"
-        }
+        ]
       },
       {
-        "goalPath": "仪容仪表/健康/卫生",
+        "goalPath": "照顾好自己/仪容仪表/卫生",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -2809,97 +2659,64 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🛁"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🛁"
-        }
+        ]
       },
       {
-        "goalPath": "仪容仪表/健康/洗澡",
-        "recordTypeId": "core.habit",
-        "enabled": true,
-        "fields": [
-          {
-            "id": "field_mewjpsd5",
-            "key": "评分",
-            "label": "评分",
-            "type": "rating",
-            "options": [
-              {
-                "value": "📚",
-                "label": "1"
-              }
-            ],
-            "semanticType": "ratingPair",
-            "auxKey": "image"
-          },
-          {
-            "id": "field_mewk7o3j",
-            "key": "日期",
-            "label": "日期",
-            "type": "date"
-          },
-          {
-            "id": "field_mewjqtxg",
-            "key": "内容",
-            "label": "内容",
-            "type": "textarea"
-          },
-          {
-            "id": "core.field.icon",
-            "key": "icon",
-            "label": "图标",
-            "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🛁"
-          }
-        ],
-        "defaultValues": {
-          "icon": "🛁"
-        }
-      },
-      {
-        "goalPath": "仪容仪表/健康/剪指甲",
+        "goalPath": "照顾好自己/仪容仪表/剪指甲",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "icon": "✋"
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "normal",
+          "urgency": "urgent",
+          "priority": "lowest",
+          "availabilityContexts": [
+            "home"
+          ],
+          "recurrenceUnit": "week"
         }
       },
       {
-        "goalPath": "仪容仪表/健康/剪头发",
+        "goalPath": "照顾好自己/仪容仪表/剪头发",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "icon": "✂"
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "normal",
+          "urgency": "urgent",
+          "priority": "lowest",
+          "availabilityContexts": [
+            "out"
+          ],
+          "recurrenceUnit": "week"
         }
       },
       {
-        "goalPath": "仪容仪表/健康/卫生",
+        "goalPath": "照顾好自己/仪容仪表/卫生",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-1健康.md",
         "defaultValues": {
-          "icon": "🛁",
-          "任务内容": "洗漱"
+          "任务内容": "洗漱",
+          "brainDemand": "low",
+          "physicalDemand": "low",
+          "importance": "normal",
+          "urgency": "urgent",
+          "priority": "lowest",
+          "availabilityContexts": [
+            "home"
+          ],
+          "recurrenceUnit": "week"
         }
       },
       {
-        "goalPath": "仪容仪表/健康/洗澡",
-        "recordTypeId": "core.task",
-        "enabled": true,
-        "targetFile": "01/2-1健康.md",
-        "defaultValues": {
-          "icon": "🛁"
-        }
-      },
-      {
-        "goalPath": "了解自我/思考/自我",
+        "goalPath": "武装大脑/了解自我/自我",
         "recordTypeId": "core.review",
         "description": "手动新增",
         "enabled": true,
@@ -2925,25 +2742,29 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🐈"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🐈"
-        }
+        ]
       },
       {
-        "goalPath": "了解自我/思考/自我",
+        "goalPath": "武装大脑/了解自我/自我",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "icon": "🐈"
+          "brainDemand": "high",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "work"
+          ],
+          "recurrenceUnit": "month"
         }
       },
       {
-        "goalPath": "了解自我/思考/自我",
+        "goalPath": "武装大脑/了解自我/自我",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -2975,17 +2796,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🐈"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🐈"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "了解自我/思考/自我",
+        "goalPath": "武装大脑/了解自我/自我",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -3000,283 +2817,253 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🐈"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🐈"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "了解自我/思考/自我",
+        "goalPath": "武装大脑/了解自我/自我",
         "recordTypeId": "core.blocker",
         "description": "手动新增",
         "enabled": true,
         "targetFile": "01/计划.md",
-        "appendUnderHeader": "## {goalPath}",
-        "defaultValues": {
-          "icon": "🐈"
-        }
+        "appendUnderHeader": "## {goalPath}"
       },
       {
-        "goalPath": "了解自我/思考/自我",
+        "goalPath": "武装大脑/了解自我/自我",
         "recordTypeId": "core.milestone",
         "description": "手动新增",
         "enabled": true,
-        "appendUnderHeader": "## {goalPath}",
-        "defaultValues": {
-          "icon": "🐈"
-        }
+        "appendUnderHeader": "## {goalPath}"
       },
       {
-        "goalPath": "了解世界/思考/婆婆",
+        "goalPath": "武装大脑/了解世界/婆婆",
         "recordTypeId": "core.plan",
         "description": "由「任务」预设复制到「计划」",
         "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
-        },
-        "defaultValues": {
-          "icon": "🧓"
         }
       },
       {
-        "goalPath": "了解世界/思考/垚垚",
+        "goalPath": "武装大脑/垚垚教育",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
-        },
-        "defaultValues": {
-          "icon": "👶"
         }
       },
       {
-        "goalPath": "了解世界/思考/芦苇",
+        "goalPath": "武装大脑/了解世界/芦苇",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
-        },
-        "defaultValues": {
-          "icon": "🌿"
         }
       },
       {
-        "goalPath": "了解世界/思考/婆婆",
+        "goalPath": "武装大脑/了解世界/婆婆",
         "recordTypeId": "core.review",
         "description": "由「任务」预设复制到「总结」",
         "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
-        },
-        "defaultValues": {
-          "icon": "🧓"
         }
       },
       {
-        "goalPath": "了解世界/思考/阳阳",
+        "goalPath": "武装大脑/了解世界/阳阳",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
-        },
-        "defaultValues": {
-          "icon": "👨"
         }
       },
       {
-        "goalPath": "了解世界/思考/垚垚",
+        "goalPath": "武装大脑/垚垚教育",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
-        },
-        "defaultValues": {
-          "icon": "👶"
         }
       },
       {
-        "goalPath": "了解世界/思考/家庭",
+        "goalPath": "武装大脑/了解世界/家庭",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
-        },
-        "defaultValues": {
-          "icon": "👪"
         }
       },
       {
-        "goalPath": "了解世界/思考/芦苇",
+        "goalPath": "武装大脑/了解世界/芦苇",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "week"
-        },
-        "defaultValues": {
-          "icon": "🌿"
         }
       },
       {
-        "goalPath": "了解世界/思考/时间整理",
+        "goalPath": "武装大脑/时间整理",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "icon": "🧠",
-          "任务内容": "时间整理"
+          "任务内容": "时间整理",
+          "brainDemand": "high",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "month"
         }
       },
       {
-        "goalPath": "了解世界/生活/垚垚",
+        "goalPath": "我若安好便是晴天/垚垚",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-3生活.md",
         "defaultValues": {
-          "icon": "👶",
-          "任务内容": "和垚垚玩"
+          "任务内容": "和垚垚玩",
+          "brainDemand": "medium",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "high",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "day"
         }
       },
       {
-        "goalPath": "了解世界/思考/阳阳",
+        "goalPath": "武装大脑/了解世界/阳阳",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "icon": "👨"
+          "brainDemand": "high",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "work"
+          ],
+          "recurrenceUnit": "month"
         }
       },
       {
-        "goalPath": "了解世界/思考/婆婆",
+        "goalPath": "武装大脑/了解世界/婆婆",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "icon": "🧓"
+          "brainDemand": "high",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "work"
+          ],
+          "recurrenceUnit": "month"
         }
       },
       {
-        "goalPath": "了解世界/思考/家庭",
+        "goalPath": "武装大脑/了解世界/家庭",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "icon": "👪"
+          "brainDemand": "high",
+          "physicalDemand": "low",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "work"
+          ],
+          "recurrenceUnit": "month"
         }
       },
       {
-        "goalPath": "了解世界/思考/婆婆",
+        "goalPath": "武装大脑/了解世界/婆婆",
         "recordTypeId": "core.thought",
         "description": "由「任务」预设复制到「思考」",
-        "enabled": true,
-        "defaultValues": {
-          "icon": "🧓"
-        }
+        "enabled": true
       },
       {
-        "goalPath": "了解世界/思考/阳阳",
+        "goalPath": "武装大脑/了解世界/阳阳",
         "recordTypeId": "core.thought",
-        "enabled": true,
-        "defaultValues": {
-          "icon": "👨"
-        }
+        "enabled": true
       },
       {
-        "goalPath": "了解世界/思考/家庭",
+        "goalPath": "武装大脑/了解世界/家庭",
         "recordTypeId": "core.thought",
-        "enabled": true,
-        "defaultValues": {
-          "icon": "👪"
-        }
+        "enabled": true
       },
       {
-        "goalPath": "了解世界/思考/芦苇",
+        "goalPath": "武装大脑/了解世界/芦苇",
         "recordTypeId": "core.thought",
-        "enabled": true,
-        "defaultValues": {
-          "icon": "🌿"
-        }
+        "enabled": true
       },
       {
-        "goalPath": "了解世界/思考/垚垚",
+        "goalPath": "武装大脑/垚垚教育",
         "recordTypeId": "core.thought",
-        "enabled": true,
-        "defaultValues": {
-          "icon": "👶"
-        }
+        "enabled": true
       },
       {
-        "goalPath": "了解世界/思考/婆婆",
+        "goalPath": "武装大脑/了解世界/婆婆",
         "recordTypeId": "core.evidence",
         "description": "由「任务」预设复制到「事件」",
-        "enabled": true,
-        "defaultValues": {
-          "icon": "🧓"
-        }
+        "enabled": true
       },
       {
-        "goalPath": "了解世界/生活/垚垚",
+        "goalPath": "我若安好便是晴天/垚垚",
         "recordTypeId": "core.evidence",
-        "enabled": true,
-        "defaultValues": {
-          "icon": "👶"
-        }
+        "enabled": true
       },
       {
-        "goalPath": "了解世界/思考/阳阳",
+        "goalPath": "武装大脑/了解世界/阳阳",
         "recordTypeId": "core.evidence",
-        "enabled": true,
-        "defaultValues": {
-          "icon": "👨"
-        }
+        "enabled": true
       },
       {
-        "goalPath": "了解世界/思考/芦苇",
+        "goalPath": "武装大脑/了解世界/芦苇",
         "recordTypeId": "core.evidence",
-        "enabled": true,
-        "defaultValues": {
-          "icon": "🌿"
-        }
+        "enabled": true
       },
       {
-        "goalPath": "了解世界/思考/时间整理",
+        "goalPath": "武装大脑/时间整理",
         "recordTypeId": "core.evidence",
-        "enabled": true,
-        "defaultValues": {
-          "icon": "🧠"
-        }
+        "enabled": true
       },
       {
-        "goalPath": "了解世界/思考/婆婆",
+        "goalPath": "武装大脑/了解世界/婆婆",
         "recordTypeId": "core.blocker",
         "description": "由「任务」预设复制到「阻碍项」",
-        "enabled": true,
-        "defaultValues": {
-          "icon": "🧓"
-        }
+        "enabled": true
       },
       {
-        "goalPath": "了解世界/思考/婆婆",
+        "goalPath": "武装大脑/了解世界/婆婆",
         "recordTypeId": "core.milestone",
         "description": "由「任务」预设复制到「里程碑」",
-        "enabled": true,
-        "defaultValues": {
-          "icon": "🧓"
-        }
+        "enabled": true
       },
       {
-        "goalPath": "工作能力/工作/其他",
+        "goalPath": "工作能力/其他",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -3301,16 +3088,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "📋"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "📋"
-        }
+        ]
       },
       {
-        "goalPath": "工作能力/工作/手续、对账",
+        "goalPath": "工作能力/手续、对账",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -3335,16 +3118,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "📋"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "📋"
-        }
+        ]
       },
       {
-        "goalPath": "工作能力/工作/投标",
+        "goalPath": "工作能力/投标",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -3369,16 +3148,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🎟"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🎟"
-        }
+        ]
       },
       {
-        "goalPath": "工作能力/工作/设计",
+        "goalPath": "工作能力/设计",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -3403,16 +3178,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🖥"
-        }
+        ]
       },
       {
-        "goalPath": "工作能力/工作/通勤",
+        "goalPath": "工作能力/通勤",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -3425,16 +3196,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🛵"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🛵"
-        }
+        ]
       },
       {
-        "goalPath": "工作能力/工作",
+        "goalPath": "工作能力",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -3459,16 +3226,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🖥"
-        }
+        ]
       },
       {
-        "goalPath": "工作能力/工作/设计",
+        "goalPath": "工作能力/设计",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -3493,16 +3256,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🖥"
-        }
+        ]
       },
       {
-        "goalPath": "工作能力/工作/投标",
+        "goalPath": "工作能力/投标",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -3527,16 +3286,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🎟"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🎟"
-        }
+        ]
       },
       {
-        "goalPath": "工作能力/工作/手续、对账",
+        "goalPath": "工作能力/手续、对账",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -3561,16 +3316,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "📋"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "📋"
-        }
+        ]
       },
       {
-        "goalPath": "工作能力/工作/其他",
+        "goalPath": "工作能力/其他",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -3595,16 +3346,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "📋"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "📋"
-        }
+        ]
       },
       {
-        "goalPath": "工作能力/工作/通勤",
+        "goalPath": "工作能力/通勤",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -3617,16 +3364,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🛵"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🛵"
-        }
+        ]
       },
       {
-        "goalPath": "工作能力/工作",
+        "goalPath": "工作能力",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -3651,83 +3394,378 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
+            "semantic": "icon"
+          }
+        ]
+      },
+      {
+        "goalPath": "工作能力/老板任务",
+        "recordTypeId": "core.task",
+        "enabled": true,
+        "targetFile": "01/2-6工作.md",
+        "defaultValues": {
+          "brainDemand": "medium",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "urgent",
+          "priority": "low",
+          "availabilityContexts": [
+            "work"
+          ],
+          "recurrenceUnit": "none"
+        }
+      },
+      {
+        "goalPath": "工作能力/其他",
+        "recordTypeId": "core.task",
+        "enabled": true,
+        "targetFile": "01/2-6工作.md",
+        "defaultValues": {
+          "brainDemand": "medium",
+          "physicalDemand": "medium",
+          "importance": "normal",
+          "urgency": "urgent",
+          "priority": "low",
+          "availabilityContexts": [
+            "work"
+          ],
+          "recurrenceUnit": "none"
+        }
+      },
+      {
+        "goalPath": "工作能力/手续、对账",
+        "recordTypeId": "core.task",
+        "enabled": true,
+        "targetFile": "01/2-6工作.md",
+        "defaultValues": {
+          "brainDemand": "medium",
+          "physicalDemand": "medium",
+          "importance": "normal",
+          "urgency": "urgent",
+          "priority": "low",
+          "availabilityContexts": [
+            "work"
+          ],
+          "recurrenceUnit": "none"
+        }
+      },
+      {
+        "goalPath": "工作能力/投标",
+        "recordTypeId": "core.task",
+        "enabled": true,
+        "targetFile": "01/2-6工作.md",
+        "defaultValues": {
+          "brainDemand": "high",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "urgent",
+          "priority": "low",
+          "availabilityContexts": [
+            "work"
+          ],
+          "recurrenceUnit": "none"
+        }
+      },
+      {
+        "goalPath": "工作能力/设计",
+        "recordTypeId": "core.task",
+        "enabled": true,
+        "targetFile": "01/2-6工作.md",
+        "defaultValues": {
+          "任务内容": "设计",
+          "brainDemand": "high",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "urgent",
+          "priority": "low",
+          "availabilityContexts": [
+            "work"
+          ],
+          "recurrenceUnit": "none"
+        }
+      },
+      {
+        "goalPath": "工作能力",
+        "recordTypeId": "core.task",
+        "enabled": true,
+        "targetFile": "01/2-6工作.md",
+        "defaultValues": {
+          "brainDemand": "medium",
+          "physicalDemand": "medium",
+          "importance": "normal",
+          "urgency": "urgent",
+          "priority": "low",
+          "availabilityContexts": [
+            "work"
+          ],
+          "recurrenceUnit": "none"
+        }
+      },
+      {
+        "goalPath": "工作能力/通勤",
+        "recordTypeId": "core.task",
+        "enabled": true,
+        "fields": [
+          {
+            "id": "core.task.status",
+            "key": "状态",
+            "label": "状态",
+            "type": "singleSelect",
+            "defaultValue": "done",
+            "options": [
+              {
+                "value": "open",
+                "label": "⏳ 未完成"
+              },
+              {
+                "value": "done",
+                "label": "✅ 已完成"
+              }
+            ]
+          },
+          {
+            "id": "core.task.content",
+            "key": "内容",
+            "label": "内容",
+            "type": "text",
+            "defaultValue": "通勤"
+          },
+          {
+            "id": "core.task.recurrenceUnit",
+            "key": "重复",
+            "label": "重复",
+            "type": "singleSelect",
+            "defaultValue": "none",
+            "options": [
+              {
+                "value": "none",
+                "label": "不重复"
+              },
+              {
+                "value": "day",
+                "label": "天"
+              },
+              {
+                "value": "week",
+                "label": "周"
+              },
+              {
+                "value": "month",
+                "label": "月"
+              },
+              {
+                "value": "quarter",
+                "label": "季"
+              },
+              {
+                "value": "year",
+                "label": "年"
+              }
+            ]
+          },
+          {
+            "id": "core.task.recurrenceInterval",
+            "key": "重复间隔",
+            "label": "重复间隔",
+            "type": "number",
+            "defaultValue": "1",
+            "min": 1
+          },
+          {
+            "id": "core.task.scheduledAt",
+            "key": "计划时间",
+            "label": "计划时间",
+            "type": "datetime"
+          },
+          {
+            "id": "core.task.expectedDurationMinutes",
+            "key": "预计时长（分钟）",
+            "label": "预计时长（分钟）",
+            "type": "number",
+            "defaultValue": "",
+            "min": 1
+          },
+          {
+            "id": "core.task.dueAt",
+            "key": "截止时间",
+            "label": "截止时间",
+            "type": "datetime"
+          },
+          {
+            "id": "core.task.priority",
+            "key": "优先级",
+            "label": "优先级",
+            "type": "singleSelect",
+            "defaultValue": "low",
+            "options": [
+              {
+                "value": "lowest",
+                "label": "最低"
+              },
+              {
+                "value": "low",
+                "label": "低"
+              },
+              {
+                "value": "medium",
+                "label": "中"
+              },
+              {
+                "value": "high",
+                "label": "高"
+              },
+              {
+                "value": "highest",
+                "label": "最高"
+              }
+            ]
+          },
+          {
+            "id": "core.task.importance",
+            "key": "重要程度",
+            "label": "重要程度",
+            "type": "singleSelect",
+            "defaultValue": "normal",
+            "options": [
+              {
+                "value": "important",
+                "label": "重要"
+              },
+              {
+                "value": "normal",
+                "label": "普通"
+              }
+            ]
+          },
+          {
+            "id": "core.task.urgency",
+            "key": "紧急程度",
+            "label": "紧急程度",
+            "type": "singleSelect",
+            "defaultValue": "urgent",
+            "options": [
+              {
+                "value": "urgent",
+                "label": "紧急"
+              },
+              {
+                "value": "normal",
+                "label": "不紧急"
+              }
+            ]
+          },
+          {
+            "id": "core.task.energyDemand",
+            "key": "精力要求",
+            "label": "精力要求",
+            "type": "singleSelect",
+            "options": [
+              {
+                "value": "low",
+                "label": "低"
+              },
+              {
+                "value": "medium",
+                "label": "中"
+              },
+              {
+                "value": "high",
+                "label": "高"
+              }
+            ]
+          },
+          {
+            "id": "core.task.brainDemand",
+            "key": "脑力要求",
+            "label": "脑力要求",
+            "type": "singleSelect",
+            "defaultValue": "low",
+            "options": [
+              {
+                "value": "low",
+                "label": "低"
+              },
+              {
+                "value": "medium",
+                "label": "中"
+              },
+              {
+                "value": "high",
+                "label": "高"
+              }
+            ]
+          },
+          {
+            "id": "core.task.physicalDemand",
+            "key": "体力要求",
+            "label": "体力要求",
+            "type": "singleSelect",
+            "defaultValue": "medium",
+            "options": [
+              {
+                "value": "low",
+                "label": "低"
+              },
+              {
+                "value": "medium",
+                "label": "中"
+              },
+              {
+                "value": "high",
+                "label": "高"
+              }
+            ]
+          },
+          {
+            "id": "core.task.availabilityContexts",
+            "key": "可用场景",
+            "label": "可用场景",
+            "type": "multiSelect",
+            "options": [
+              {
+                "value": "any",
+                "label": "任意"
+              },
+              {
+                "value": "work",
+                "label": "工作"
+              },
+              {
+                "value": "home",
+                "label": "家"
+              },
+              {
+                "value": "commute",
+                "label": "通勤"
+              },
+              {
+                "value": "out",
+                "label": "外出"
+              }
+            ]
+          },
+          {
+            "id": "core.task.recoveryIntent",
+            "key": "恢复意图",
+            "label": "恢复意图",
+            "type": "boolean"
           }
         ],
-        "defaultValues": {
-          "icon": "🖥"
-        }
-      },
-      {
-        "goalPath": "工作能力/工作/老板任务",
-        "recordTypeId": "core.task",
-        "enabled": true,
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
-          "icon": "💥"
+          "状态": "done",
+          "内容": "通勤",
+          "重复": "none",
+          "重复间隔": "1",
+          "优先级": "low",
+          "重要程度": "normal",
+          "紧急程度": "urgent",
+          "脑力要求": "low",
+          "体力要求": "medium"
         }
       },
       {
-        "goalPath": "工作能力/工作/其他",
-        "recordTypeId": "core.task",
-        "enabled": true,
-        "targetFile": "01/2-6工作.md",
-        "defaultValues": {
-          "icon": "📋"
-        }
-      },
-      {
-        "goalPath": "工作能力/工作/手续、对账",
-        "recordTypeId": "core.task",
-        "enabled": true,
-        "targetFile": "01/2-6工作.md",
-        "defaultValues": {
-          "icon": "📋"
-        }
-      },
-      {
-        "goalPath": "工作能力/工作/投标",
-        "recordTypeId": "core.task",
-        "enabled": true,
-        "targetFile": "01/2-6工作.md",
-        "defaultValues": {
-          "icon": "🎟"
-        }
-      },
-      {
-        "goalPath": "工作能力/工作/设计",
-        "recordTypeId": "core.task",
-        "enabled": true,
-        "targetFile": "01/2-6工作.md",
-        "defaultValues": {
-          "icon": "🖥",
-          "任务内容": "设计"
-        }
-      },
-      {
-        "goalPath": "工作能力/工作",
-        "recordTypeId": "core.task",
-        "enabled": true,
-        "targetFile": "01/2-6工作.md",
-        "defaultValues": {
-          "icon": "🖥"
-        }
-      },
-      {
-        "goalPath": "工作能力/工作/通勤",
-        "recordTypeId": "core.task",
-        "enabled": true,
-        "targetFile": "01/2-6工作.md",
-        "defaultValues": {
-          "icon": "🛵",
-          "任务内容": "通勤",
-          "时长": "15",
-          "expectedDurationMinutes": "15"
-        }
-      },
-      {
-        "goalPath": "工作能力/工作/设计",
+        "goalPath": "工作能力/设计",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -3759,17 +3797,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🖥"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "工作能力/工作/投标",
+        "goalPath": "工作能力/投标",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -3801,17 +3835,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🎟"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🎟"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "工作能力/工作/手续、对账",
+        "goalPath": "工作能力/手续、对账",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -3843,17 +3873,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "📋"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "📋"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "工作能力/工作/其他",
+        "goalPath": "工作能力/其他",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -3885,17 +3911,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "📋"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "📋"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "工作能力/工作/通勤",
+        "goalPath": "工作能力/通勤",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -3904,16 +3926,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🛵"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🛵"
-        }
+        ]
       },
       {
-        "goalPath": "工作能力/工作",
+        "goalPath": "工作能力",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -3945,17 +3963,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🖥"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "工作能力/工作/设计",
+        "goalPath": "工作能力/设计",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -3970,17 +3984,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🖥"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "工作能力/工作/投标",
+        "goalPath": "工作能力/投标",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -3995,17 +4005,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🎟"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🎟"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "工作能力/工作/手续、对账",
+        "goalPath": "工作能力/手续、对账",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -4020,17 +4026,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "📋"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "📋"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "工作能力/工作/老板任务",
+        "goalPath": "工作能力/老板任务",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -4045,17 +4047,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "💥"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "💥"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "工作能力/工作",
+        "goalPath": "工作能力",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -4070,17 +4068,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🖥"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "爱好能力/电脑/ob基础",
+        "goalPath": "爱好能力/ob基础",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -4105,16 +4099,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🎚"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🎚"
-        }
+        ]
       },
       {
-        "goalPath": "爱好能力/电脑/笔记系统",
+        "goalPath": "爱好能力/笔记系统",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -4139,16 +4129,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "📕"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "📕"
-        }
+        ]
       },
       {
-        "goalPath": "爱好能力/电脑/记录系统",
+        "goalPath": "爱好能力/记录系统",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -4173,16 +4159,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🎴"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🎴"
-        }
+        ]
       },
       {
-        "goalPath": "爱好能力/电脑/整理",
+        "goalPath": "爱好能力/整理",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
@@ -4207,13 +4189,9 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "✒"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "✒"
-        }
+        ]
       },
       {
         "goalPath": "爱好能力/电脑",
@@ -4241,16 +4219,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🖥"
-        }
+        ]
       },
       {
-        "goalPath": "爱好能力/电脑/整理",
+        "goalPath": "爱好能力/整理",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -4275,16 +4249,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "✒"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "✒"
-        }
+        ]
       },
       {
-        "goalPath": "爱好能力/电脑/记录系统",
+        "goalPath": "爱好能力/记录系统",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -4309,16 +4279,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🎴"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🎴"
-        }
+        ]
       },
       {
-        "goalPath": "爱好能力/电脑/笔记系统",
+        "goalPath": "爱好能力/笔记系统",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -4343,16 +4309,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "📕"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "📕"
-        }
+        ]
       },
       {
-        "goalPath": "爱好能力/电脑/ob基础",
+        "goalPath": "爱好能力/ob基础",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -4377,13 +4339,9 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🎚"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🎚"
-        }
+        ]
       },
       {
         "goalPath": "爱好能力/电脑",
@@ -4411,16 +4369,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🖥"
-        }
+        ]
       },
       {
-        "goalPath": "爱好能力/电脑/AI",
+        "goalPath": "爱好能力/AI",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -4445,13 +4399,9 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🤖"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🤖"
-        }
+        ]
       },
       {
         "goalPath": "爱好能力/电脑",
@@ -4459,74 +4409,104 @@
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "icon": "🖥"
+          "brainDemand": "medium",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "none"
         }
       },
       {
-        "goalPath": "爱好能力/电脑/ob基础",
+        "goalPath": "爱好能力/ob基础",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "icon": "🎚",
-          "任务内容": "ob"
+          "任务内容": "ob",
+          "brainDemand": "medium",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "none"
         }
       },
       {
-        "goalPath": "爱好能力/电脑/笔记系统",
+        "goalPath": "爱好能力/笔记系统",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "icon": "📕",
-          "任务内容": "笔记系统"
+          "任务内容": "笔记系统",
+          "brainDemand": "medium",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "none"
         }
       },
       {
-        "goalPath": "爱好能力/电脑/记录系统",
+        "goalPath": "爱好能力/记录系统",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "icon": "🎴",
-          "任务内容": "插件"
+          "任务内容": "插件",
+          "brainDemand": "medium",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "none"
         }
       },
       {
-        "goalPath": "爱好能力/电脑/整理",
+        "goalPath": "爱好能力/整理",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "icon": "✒"
+          "brainDemand": "medium",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "none"
         }
       },
       {
-        "goalPath": "爱好能力/电脑/AI",
+        "goalPath": "爱好能力/AI",
         "recordTypeId": "core.task",
         "description": "由旧记录补充迁移：电脑/AI",
         "enabled": true,
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "icon": "🤖"
-        }
-      },
-      {
-        "goalPath": "爱好能力/电脑/MediaPro",
-        "recordTypeId": "core.task",
-        "enabled": true,
-        "targetFile": "01/2-5电脑.md",
-        "defaultValues": {
-          "icon": "📢"
-        }
-      },
-      {
-        "goalPath": "爱好能力/电脑/点读",
-        "recordTypeId": "core.task",
-        "enabled": true,
-        "targetFile": "01/2-5电脑.md",
-        "defaultValues": {
-          "icon": "🔊"
+          "brainDemand": "medium",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "none"
         }
       },
       {
@@ -4562,17 +4542,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🖥"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "爱好能力/电脑/AI",
+        "goalPath": "爱好能力/AI",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -4604,17 +4580,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🤖"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🤖"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "爱好能力/电脑/记录系统",
+        "goalPath": "爱好能力/记录系统",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -4646,14 +4618,10 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🎴"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🎴"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
         "goalPath": "爱好能力/电脑",
@@ -4671,17 +4639,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🖥"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🖥"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "爱好能力/电脑/记录系统",
+        "goalPath": "爱好能力/记录系统",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -4696,17 +4660,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🎴"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🎴"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "爱好能力/电脑/AI",
+        "goalPath": "爱好能力/AI",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -4721,42 +4681,32 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🤖"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🤖"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "武装大脑/思考/思路整理",
+        "goalPath": "武装大脑/思路整理",
         "recordTypeId": "core.plan",
         "description": "由旧记录补充迁移：思考/思路整理",
         "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
-        },
-        "defaultValues": {
-          "icon": "🧠"
         }
       },
       {
-        "goalPath": "武装大脑/思考",
+        "goalPath": "武装大脑",
         "recordTypeId": "core.plan",
         "enabled": true,
         "periodPolicy": {
           "enabled": true,
           "granularity": "quarter"
-        },
-        "defaultValues": {
-          "icon": "🧠"
         }
       },
       {
-        "goalPath": "武装大脑/思考",
+        "goalPath": "武装大脑",
         "recordTypeId": "core.review",
         "enabled": true,
         "periodPolicy": {
@@ -4781,16 +4731,12 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🧠"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "🧠"
-        }
+        ]
       },
       {
-        "goalPath": "武装大脑/思考/读书",
+        "goalPath": "武装大脑/读书",
         "recordTypeId": "core.habit",
         "enabled": true,
         "fields": [
@@ -4825,74 +4771,100 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "📚"
+            "semantic": "icon"
           }
-        ],
-        "defaultValues": {
-          "icon": "📚"
-        }
+        ]
       },
       {
-        "goalPath": "武装大脑/思考/思路整理",
+        "goalPath": "武装大脑/思路整理",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "icon": "🧠",
-          "任务内容": "思路整理"
+          "任务内容": "思路整理",
+          "brainDemand": "high",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "month"
         }
       },
       {
-        "goalPath": "武装大脑/思考/复盘整理",
+        "goalPath": "武装大脑/复盘整理",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "icon": "🧠",
-          "任务内容": "复盘整理"
+          "任务内容": "复盘整理",
+          "brainDemand": "high",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "month"
         }
       },
       {
-        "goalPath": "武装大脑/思考/读书",
+        "goalPath": "武装大脑/读书",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "icon": "📚"
+          "brainDemand": "high",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "month"
         }
       },
       {
-        "goalPath": "武装大脑/思考",
+        "goalPath": "武装大脑",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "icon": "🧠"
+          "brainDemand": "high",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "month"
         }
       },
       {
-        "goalPath": "武装大脑/思考/整理笔记",
+        "goalPath": "武装大脑/整理笔记",
         "recordTypeId": "core.task",
         "enabled": true,
         "targetFile": "01/2-4思考.md",
         "defaultValues": {
-          "icon": "🧠",
-          "任务内容": "思路整理"
+          "任务内容": "思路整理",
+          "brainDemand": "high",
+          "physicalDemand": "medium",
+          "importance": "important",
+          "urgency": "normal",
+          "priority": "highest",
+          "availabilityContexts": [
+            "any"
+          ],
+          "recurrenceUnit": "month"
         }
       },
       {
-        "goalPath": "武装大脑/思考/整理复盘",
-        "recordTypeId": "core.task",
-        "enabled": true,
-        "targetFile": "01/2-4思考.md",
-        "defaultValues": {
-          "icon": "🧠",
-          "任务内容": "思路整理"
-        }
-      },
-      {
-        "goalPath": "武装大脑/思考",
+        "goalPath": "武装大脑",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -4924,17 +4896,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🧠"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🧠"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "武装大脑/思考/思路整理",
+        "goalPath": "武装大脑/思路整理",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
@@ -4966,17 +4934,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🧠"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🧠"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "武装大脑/思考",
+        "goalPath": "武装大脑",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -4991,17 +4955,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🧠"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🧠"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "武装大脑/思考/思路整理",
+        "goalPath": "武装大脑/思路整理",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -5016,17 +4976,13 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "🧠"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "🧠"
-        }
+        "targetFile": "01/闪念.md"
       },
       {
-        "goalPath": "武装大脑/思考/读书",
+        "goalPath": "武装大脑/读书",
         "recordTypeId": "core.evidence",
         "enabled": true,
         "fields": [
@@ -5041,22 +4997,27 @@
             "key": "icon",
             "label": "图标",
             "type": "text",
-            "semantic": "icon",
-            "defaultValue": "📚"
+            "semantic": "icon"
           }
         ],
-        "targetFile": "01/闪念.md",
-        "defaultValues": {
-          "icon": "📚"
-        }
+        "targetFile": "01/闪念.md"
       }
-    ]
+    ],
+    "timePresetRevisions": []
   },
   "energySettings": {
     "defaultGoalPath": "我若安好便是晴天"
   },
   "floatingTimerEnabled": true,
   "devConsoleStackEnabled": false,
+  "recentGoalPaths": [
+    "照顾好自己/早餐",
+    "爱好能力/ob基础",
+    "我若安好便是晴天/生活",
+    "爱好能力/AI",
+    "工作能力/通勤"
+  ],
+  "goalTaskDefaultsSeedVersion": 1,
   "categoryColors": {
     "总结": "#e5bf8a",
     "计划": "#9eeabe",

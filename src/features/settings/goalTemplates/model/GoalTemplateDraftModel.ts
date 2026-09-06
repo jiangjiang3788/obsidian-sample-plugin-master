@@ -1,8 +1,8 @@
 import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalTemplate } from '@core/goal/public';
-import { isPeriodAwareRecordType, normalizePeriodPolicyGranularity } from '@core/goal/public';
+import { isPeriodAwareRecordType, normalizePeriodPolicyGranularity, stripGoalTemplateIconDefaults, stripGoalTemplateIconFieldDefaults } from '@core/goal/public';
 import type { GoalTemplateDraftState } from './GoalTemplateEditorTypes';
-import { deriveRequiredFields } from './GoalTemplateFieldModel';
+import { applyGoalTemplateDefaultValuesToFields, deriveRequiredFields } from './GoalTemplateFieldModel';
 
 function cloneValue<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
@@ -31,7 +31,9 @@ export function makeDraftFromTemplate(
   template: GoalTemplate | null,
   block: TemplateRecordTypeDefinition | null,
 ): GoalTemplateDraftState {
-  const fields = cloneValue(template?.fields || block?.fields || []);
+  const baseFields = cloneValue(stripGoalTemplateIconFieldDefaults(template?.fields || block?.fields || []) || []);
+  const defaults = cloneValue(stripGoalTemplateIconDefaults(template?.defaultValues) || {});
+  const fields = applyGoalTemplateDefaultValuesToFields(baseFields, defaults);
   return {
     description: template?.description || '',
     granularity: readPeriodGranularity(template, block),
@@ -39,7 +41,7 @@ export function makeDraftFromTemplate(
     targetFile: template?.targetFile || block?.targetFile || '',
     appendUnderHeader: template?.appendUnderHeader || block?.appendUnderHeader || '## {{goalPath}}',
     requiredFields: cloneValue(template?.requiredFields || deriveRequiredFields(fields)),
-    defaultValues: cloneValue(template?.defaultValues || {}),
+    defaultValues: defaults,
   };
 }
 
@@ -48,7 +50,7 @@ export function makeNewDraft(block: TemplateRecordTypeDefinition | null): GoalTe
 }
 
 export function buildDefaultDraft(previous: GoalTemplateDraftState, block: TemplateRecordTypeDefinition | null): GoalTemplateDraftState {
-  const fields = cloneValue(block?.fields || []);
+  const fields = cloneValue(stripGoalTemplateIconFieldDefaults(block?.fields || []) || []);
   return {
     ...previous,
     fields,

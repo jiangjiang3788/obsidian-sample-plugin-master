@@ -26,6 +26,25 @@ export interface EnergyTaskExecutionMeta extends EnergyTaskExecutionStart {
   startedAt: number;
 }
 
+/**
+ * Optional low-friction Energy tracking for the current continuous work segment.
+ *
+ * This is deliberately separate from energyContext: energyContext belongs to
+ * Energy-view recommendation metadata (for example suggested duration), while
+ * energyTracking only says whether the current Timer segment has an explicit
+ * before-Energy snapshot that may later be paired with an after snapshot.
+ */
+export interface TimerEnergyTrackingState {
+  enabled: boolean;
+  baselineScore?: number;
+  baselineBrainScore?: number;
+  baselinePhysicalScore?: number;
+  baselineDate?: string;
+  baselineTime?: string;
+  baselineEnergyItemId?: string;
+  startedAt?: number;
+}
+
 export interface TaskSessionCreateInput {
   startedAt: string;
   endedAt: string;
@@ -47,8 +66,10 @@ export interface TimerState {
   elapsedSeconds: number;
   status: TimerStatus;
   source: TimerOrigin;
-  /** Present when this work block began from the Energy task surface. Runtime baseline only. */
+  /** Present when this work block began from the Energy task surface. Recommendation/display metadata only. */
   energyContext?: EnergyTaskExecutionMeta;
+  /** Optional before/after Energy tracking for the current continuous execution segment. */
+  energyTracking?: TimerEnergyTrackingState;
 }
 
 export function isActiveTimerState(timer: TimerState | null | undefined): timer is TimerState {

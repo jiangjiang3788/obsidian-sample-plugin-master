@@ -16,6 +16,10 @@ export interface ThinkSettings {
   aiSettings?: AiSettings;
   devConsoleStackEnabled?: boolean;
   categoryColors?: Record<string, string>;
+  /** 最近在 QuickInput 中明确选择的 Goal，最新在前。 */
+  recentGoalPaths?: string[];
+  /** One-time Goal -> Task default seed version. Prevents upgrade data from re-overwriting later user edits. */
+  goalTaskDefaultsSeedVersion?: number;
 }
 
 export const DEFAULT_SETTINGS: ThinkSettings = {
@@ -27,4 +31,6 @@ export const DEFAULT_SETTINGS: ThinkSettings = {
   floatingTimerEnabled: true,
   aiSettings: DEFAULT_AI_SETTINGS,
   devConsoleStackEnabled: false,
+  recentGoalPaths: [],
+  goalTaskDefaultsSeedVersion: 0,
 };

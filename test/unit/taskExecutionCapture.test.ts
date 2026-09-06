@@ -32,6 +32,23 @@ describe('Timeline completed execution capture contract', () => {
     });
   });
 
+  it('captures a create-only completed QuickInput range as a manual/unknown TaskSession fact', () => {
+    expect(buildTimelineCompletedExecutionSessionInput({
+      context: { __recordUiContext: { kind: 'quickinput_create', captureMode: 'completed_execution' } },
+      taskFields: {
+        status: 'done',
+        startAt: '2026-08-26T09:30',
+        endAt: '2026-08-26T10:00',
+      },
+    })).toEqual({
+      startedAt: new Date('2026-08-26T09:30').toISOString(),
+      endedAt: new Date('2026-08-26T10:00').toISOString(),
+      durationMinutes: 30,
+      result: 'task-completed',
+      source: 'unknown',
+    });
+  });
+
   it('does not create execution history for ordinary QuickInput even if the Task is done', () => {
     expect(buildTimelineCompletedExecutionSessionInput({
       context: {},
@@ -43,7 +60,7 @@ describe('Timeline completed execution capture contract', () => {
     })).toBeNull();
   });
 
-  it('does not fabricate a Session when the Timeline Task is still open or has no valid range', () => {
+  it('treats Timeline completed_execution as authoritative even when a stale form status is open', () => {
     expect(buildTimelineCompletedExecutionSessionInput({
       context: timelineContext,
       taskFields: {
@@ -51,8 +68,16 @@ describe('Timeline completed execution capture contract', () => {
         startAt: '2026-08-26T09:30',
         endAt: '2026-08-26T10:00',
       },
-    })).toBeNull();
+    })).toEqual({
+      startedAt: new Date('2026-08-26T09:30').toISOString(),
+      endedAt: new Date('2026-08-26T10:00').toISOString(),
+      durationMinutes: 30,
+      result: 'task-completed',
+      source: 'timeline',
+    });
+  });
 
+  it('still refuses to fabricate a Timeline Session when the execution range is invalid', () => {
     expect(buildTimelineCompletedExecutionSessionInput({
       context: timelineContext,
       taskFields: {

@@ -1,10 +1,14 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { ThinkIcon, ThinkIconButton } from '@shared/ui/public';
+import { OverlayPortal, ThinkIcon, ThinkIconButton, useOverlayLayer } from '@shared/ui/public';
 import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
+import { getGoalTimePresetInfo, resolveGoalIcon } from '@core/goal/public';
 import { GoalTemplateMatrixCell } from './GoalTemplateMatrixCell';
+import { GoalTimePresetInput } from './GoalTimePresetInput';
+import type { GoalTimePresetDraftPreviewHandler } from './GoalTimePresetInput';
+import { GoalTimePresetBalanceRow, getClosedTimePresetParents } from './GoalTimePresetBalanceRow';
 import {
   cleanDisplayText,
   getEventDropPosition,
@@ -30,8 +34,14 @@ export interface GoalTemplateMatrixGroupRowsProps {
   toggleTreePath: (path: string) => void;
   reorderGoalSiblings: (dragGoalPath: string, targetGoalPath: string, position: 'before' | 'after') => Promise<void>;
   handleDeleteGoal: (event: MouseEvent, goal: GoalDefinition) => Promise<void>;
+  handleEditGoalIcon: (event: MouseEvent, goal: GoalDefinition) => Promise<void>;
   openEditor: (goal: GoalDefinition, block: TemplateRecordTypeDefinition, template?: GoalTemplate | null) => void;
+  setGoalTimePresetPercent: (path: string, percent: number | null) => Promise<void>;
+  setGoalWeeklyTargetMinutes: (path: string, minutes: number | null) => Promise<void>;
+  previewGoals: GoalDefinition[];
+  onTimePresetDraftPreview: GoalTimePresetDraftPreviewHandler;
 }
+
 
 
 function GoalTemplateAddButton({ goal, blocks, openEditor }: {
@@ -40,49 +50,94 @@ function GoalTemplateAddButton({ goal, blocks, openEditor }: {
   openEditor: (goal: GoalDefinition, block: TemplateRecordTypeDefinition, template?: GoalTemplate | null) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLSpanElement>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const overlay = useOverlayLayer(open, 'goal-template-add-menu');
 
   useEffect(() => {
     if (!open) return;
-    const close = (event: MouseEvent) => {
-      if (rootRef.current?.contains(event.target as Node)) return;
-      setOpen(false);
+    const updatePosition = () => {
+      const button = buttonRef.current;
+      if (!button) return;
+      const rect = button.getBoundingClientRect();
+      const width = 164;
+      const estimatedHeight = Math.min(360, 12 + blocks.length * 36);
+      const margin = 8;
+      const left = Math.max(margin, Math.min(rect.left, window.innerWidth - width - margin));
+      const below = rect.bottom + 4;
+      const top = below + estimatedHeight <= window.innerHeight - margin
+        ? below
+        : Math.max(margin, rect.top - estimatedHeight - 4);
+      setPosition({ top, left });
     };
-    document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
-  }, [open]);
+    updatePosition();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, blocks.length]);
 
   if (blocks.length === 0) return null;
   return (
-    <span className="think-goal-template-matrix__add" ref={rootRef}>
-      <ThinkIconButton
+    <span className="think-goal-template-matrix__add">
+      <button
+        ref={buttonRef}
+        type="button"
         className="think-goal-template-matrix__add-button"
-        size="sm"
-        label="添加模板"
-        icon={<ThinkIcon name="plus" />}
+        aria-label="添加模板"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="添加模板"
         onClick={(event: MouseEvent) => {
           event.stopPropagation();
           setOpen((value) => !value);
         }}
         onMouseDown={(event: MouseEvent) => event.stopPropagation()}
-      />
+      >
+        <ThinkIcon name="plus" />
+      </button>
       {open ? (
-        <div className="think-goal-template-matrix__add-menu" role="menu" aria-label={`给 ${goal.path} 添加模板`}>
-          {blocks.map((block) => (
-            <button
-              key={block.id}
-              type="button"
-              className="think-goal-template-matrix__add-option"
-              onClick={(event) => {
+        <OverlayPortal>
+          <div
+            className="think-os think-os--settings think-goal-template-matrix__add-menu-layer"
+            style={{ zIndex: overlay.zIndex } as any}
+            onMouseDown={() => setOpen(false)}
+          >
+            <div
+              className="think-goal-template-matrix__add-menu"
+              role="menu"
+              aria-label={`给 ${goal.path} 添加模板`}
+              style={{ top: position.top, left: position.left } as any}
+              onMouseDown={(event: MouseEvent) => {
                 event.stopPropagation();
-                setOpen(false);
-                openEditor(goal, block, null);
+                overlay.focus();
               }}
             >
-              <span>{block.name}</span>
-            </button>
-          ))}
-        </div>
+              {blocks.map((block) => (
+                <button
+                  key={block.id}
+                  type="button"
+                  role="menuitem"
+                  className="think-goal-template-matrix__add-option"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setOpen(false);
+                    openEditor(goal, block, null);
+                  }}
+                >
+                  <span>{block.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </OverlayPortal>
       ) : null}
     </span>
   );
@@ -147,11 +202,15 @@ function GoalPathCell(props: {
   setGoalDrop: (value: GoalDropState) => void;
   toggleTreePath: (path: string) => void;
   handleDeleteGoal: (event: MouseEvent, goal: GoalDefinition) => Promise<void>;
+  handleEditGoalIcon: (event: MouseEvent, goal: GoalDefinition) => Promise<void>;
   visibleBlocks: TemplateRecordTypeDefinition[];
   templates: GoalTemplate[];
   openEditor: (goal: GoalDefinition, block: TemplateRecordTypeDefinition, template?: GoalTemplate | null) => void;
+  setGoalTimePresetPercent: (path: string, percent: number | null) => Promise<void>;
+  setGoalWeeklyTargetMinutes: (path: string, minutes: number | null) => Promise<void>;
+  onTimePresetDraftPreview: GoalTimePresetDraftPreviewHandler;
 }) {
-  const { goal, goals, expandedPaths, setDraggingGoalPath, setGoalDrop, toggleTreePath, handleDeleteGoal, visibleBlocks, templates, openEditor } = props;
+  const { goal, goals, expandedPaths, setDraggingGoalPath, setGoalDrop, toggleTreePath, handleDeleteGoal, handleEditGoalIcon, visibleBlocks, templates, openEditor, setGoalTimePresetPercent, setGoalWeeklyTargetMinutes, onTimePresetDraftPreview } = props;
   const path = getGoalDisplayPath(goal);
   const depth = getGoalDepth(goal);
   const hasChildren = goalHasChildren(goal, goals);
@@ -169,7 +228,24 @@ function GoalPathCell(props: {
         <span className="think-goal-template-matrix__indent" style={{ '--think-goal-depth': depth } as any} />
         <GoalDragHandle goal={goal} setDraggingGoalPath={setDraggingGoalPath} setGoalDrop={setGoalDrop} />
         <TreeToggle hasChildren={hasChildren} expanded={expanded} path={path} toggleTreePath={toggleTreePath} />
-        <span className="think-goal-template-matrix__goal-name">{cleanDisplayText(getGoalDisplayName(goal))}</span>
+        <button
+          type="button"
+          className="think-goal-template-matrix__goal-icon"
+          aria-label={`修改 ${path} 的目标图标`}
+          title="修改目标图标"
+          onClick={(event: MouseEvent) => handleEditGoalIcon(event, goal)}
+          onMouseDown={(event: MouseEvent) => event.stopPropagation()}
+        >
+          {resolveGoalIcon(goal) || '＋'}
+        </button>
+        <span
+          className="think-goal-template-matrix__goal-name"
+          title="双击修改目标图标"
+          onDblClick={(event: MouseEvent) => handleEditGoalIcon(event, goal)}
+        >
+          {cleanDisplayText(getGoalDisplayName(goal))}
+        </span>
+        <GoalTimePresetInput goal={goal} goals={goals} onRootCommit={setGoalTimePresetPercent} onChildCommit={setGoalWeeklyTargetMinutes} onDraftPreview={onTimePresetDraftPreview} />
         <GoalTemplateAddButton goal={goal} blocks={addableBlocks} openEditor={openEditor} />
         <ThinkIconButton
           className="think-goal-template-matrix__delete"
@@ -186,7 +262,7 @@ function GoalPathCell(props: {
 }
 
 function GoalTemplateMatrixGoalRow(props: GoalTemplateMatrixGroupRowsProps & { goal: GoalDefinition }) {
-  const { goal, goals, visibleBlocks, templates, expandedPaths, draggingGoalPath, goalDrop, setDraggingGoalPath, setGoalDrop, toggleTreePath, reorderGoalSiblings, handleDeleteGoal, openEditor } = props;
+  const { goal, goals, visibleBlocks, templates, expandedPaths, draggingGoalPath, goalDrop, setDraggingGoalPath, setGoalDrop, toggleTreePath, reorderGoalSiblings, handleDeleteGoal, handleEditGoalIcon, openEditor, setGoalTimePresetPercent, setGoalWeeklyTargetMinutes, onTimePresetDraftPreview } = props;
   const dropActive = goalDrop?.goalPath === getGoalDisplayPath(goal);
 
   return (
@@ -222,9 +298,13 @@ function GoalTemplateMatrixGoalRow(props: GoalTemplateMatrixGroupRowsProps & { g
         setGoalDrop={setGoalDrop}
         toggleTreePath={toggleTreePath}
         handleDeleteGoal={handleDeleteGoal}
+        handleEditGoalIcon={handleEditGoalIcon}
         visibleBlocks={visibleBlocks}
         templates={templates}
         openEditor={openEditor}
+        setGoalTimePresetPercent={setGoalTimePresetPercent}
+        setGoalWeeklyTargetMinutes={setGoalWeeklyTargetMinutes}
+        onTimePresetDraftPreview={onTimePresetDraftPreview}
       />
       {visibleBlocks.map((block) => (
         <td key={block.id} className="think-goal-template-matrix__block-cell">
@@ -244,6 +324,23 @@ export function GoalTemplateMatrixGroupRows(props: GoalTemplateMatrixGroupRowsPr
       </tr>,
     );
   }
-  props.group.forEach((goal) => rows.push(<GoalTemplateMatrixGoalRow key={goal.path} {...props} goal={goal} />));
+  props.group.forEach((goal, index) => {
+    rows.push(<GoalTemplateMatrixGoalRow key={goal.path} {...props} goal={goal} />);
+    const next = props.group[index + 1];
+    getClosedTimePresetParents(goal, next, props.previewGoals).forEach((parent) => {
+      const parentPath = getGoalDisplayPath(parent);
+      if (!props.expandedPaths.has(parentPath)) return;
+      const info = getGoalTimePresetInfo(parent.path, props.previewGoals);
+      if (!info?.configured || info.directChildrenCount <= 0) return;
+      rows.push(
+        <GoalTimePresetBalanceRow
+          key={`balance-${parent.path}-${index}`}
+          goal={parent}
+          goals={props.previewGoals}
+          visibleBlocks={props.visibleBlocks}
+        />,
+      );
+    });
+  });
   return rows;
 }

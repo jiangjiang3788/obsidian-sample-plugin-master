@@ -30,6 +30,8 @@ export function buildTimerSegmentSession(
     result,
     source: timer.source,
     suggestedDurationMinutes: timer.energyContext?.suggestedDurationMinutes,
-    startEnergyRecordId: timer.energyContext?.baselineEnergyItemId,
+    startEnergyRecordId: timer.energyTracking
+      ? (timer.energyTracking.enabled ? timer.energyTracking.baselineEnergyItemId : undefined)
+      : timer.energyContext?.baselineEnergyItemId,
   };
 }

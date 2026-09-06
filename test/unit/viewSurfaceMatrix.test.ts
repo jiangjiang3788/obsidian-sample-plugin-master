@@ -58,6 +58,12 @@ describe('View surface matrix', () => {
     expect(VIEW_EDITORS[viewName as keyof typeof VIEW_EDITORS]).toBeTruthy();
   });
 
+  it('gives every registered view the same default temporal semantic', () => {
+    for (const viewName of VIEW_OPTIONS) {
+      expect(VIEW_DEFINITIONS[viewName].defaultConfig).toMatchObject({ dateRole: 'default' });
+    }
+  });
+
   it('keeps the shared view query neutral across all user-visible Record types', () => {
     const result = queryViewBaseRecords({ items: USER_RECORDS });
     expect(result.map((item) => item.coreBlock)).toEqual(USER_RECORDS.map((item) => item.coreBlock));

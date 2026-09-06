@@ -92,7 +92,7 @@ export function QuickInputSingleSelectFieldRenderer({
       value={rawValue}
       compact={dense}
       onSelect={(choice) => {
-        const canClear = !field.required && !field.defaultValue;
+        const canClear = !field.required;
         onUpdate(field.key, canClear && isQuickInputChoiceSelected(rawValue, choice) ? '' : choice, true);
       }}
     />

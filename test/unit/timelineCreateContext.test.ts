@@ -7,14 +7,19 @@ import type { TaskBlock } from '@core/types/public';
 import { applyQuickInputFieldUpdate, applyQuickInputTimeDirectionChange, hydrateQuickInputTemplateDefaults } from '@/features/quickinput/editor/QuickInputEditorModel';
 import { buildQuickInputDisplayTemplate } from '@/features/quickinput/editor/model/displayTemplate';
 import type { QuickInputFieldSourceMap } from '@/features/quickinput/editor/model/types';
-import { resolveTimelineCreateContext } from '@/app/actions/recordCreate/timelineCreateAction';
+import { resolveTimelineCreateContext, resolveTimelineSelectedRangeContext } from '@/app/actions/recordCreate/timelineCreateAction';
 
 function block(input: Partial<TaskBlock> & Pick<TaskBlock, 'blockStartMinute' | 'blockEndMinute'>): TaskBlock {
   return {
     id: input.id || `block-${input.blockStartMinute}-${input.blockEndMinute}`,
     taskRecordId: input.taskRecordId || input.id || `task-${input.blockStartMinute}-${input.blockEndMinute}`,
+    timelineSource: input.timelineSource || 'task-range',
+    timelineEditTarget: input.timelineEditTarget || { kind: 'task-range', recordId: input.taskRecordId || input.id || `task-${input.blockStartMinute}-${input.blockEndMinute}` },
+    timelineRange: input.timelineRange || { start: '2026-05-13T00:00', end: '2026-05-13T00:05' },
     blockStartMinute: input.blockStartMinute,
     blockEndMinute: input.blockEndMinute,
+    isRangeStart: input.isRangeStart ?? true,
+    isRangeEnd: input.isRangeEnd ?? true,
     day: input.day || '2026-05-13',
     startMinute: input.startMinute ?? input.blockStartMinute,
     endMinute: input.endMinute ?? input.blockEndMinute,
@@ -46,6 +51,48 @@ function hydrateTaskContext(context: Record<string, unknown>, current: Record<st
 }
 
 describe('Timeline create context', () => {
+  it('uses an explicit drag range without neighbouring gap inference', () => {
+    const result = resolveTimelineSelectedRangeContext({
+      day: '2026-05-13',
+      startMinute: 9 * 60 + 15,
+      endMinute: 10 * 60 + 45,
+      maxHours: 24,
+    });
+
+    expect(result).toMatchObject({
+      startMinute: 555,
+      endMinute: 645,
+      context: {
+        status: 'done',
+        startAt: '2026-05-13T09:15',
+        endAt: '2026-05-13T10:45',
+        __recordUiContext: {
+          kind: 'timeline_create',
+          captureMode: 'completed_execution',
+          timeContext: { startSource: 'drag_selection', endSource: 'drag_selection' },
+        },
+      },
+    });
+  });
+
+  it('preserves a drag ending at 24:00 as next-day 00:00', () => {
+    const result = resolveTimelineSelectedRangeContext({
+      day: '2026-05-13',
+      startMinute: 23 * 60 + 45,
+      endMinute: 24 * 60,
+      maxHours: 24,
+    });
+
+    expect(result).toMatchObject({
+      startMinute: 1425,
+      endMinute: 1440,
+      context: {
+        startAt: '2026-05-13T23:45',
+        endAt: '2026-05-14T00:00',
+      },
+    });
+  });
+
   it('restores the old gap-filling behavior between tasks and is order-independent', () => {
     const result = resolveTimelineCreateContext({
       day: '2026-05-13',

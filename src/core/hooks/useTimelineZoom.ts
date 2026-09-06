@@ -63,8 +63,14 @@ export function useTimelineZoom(options: UseTimelineZoomOptions) {
         initialHourHeightRef.current = null;
     }, []);
 
+    const zoomToMax = useCallback(() => {
+        setHourHeight(maxHeight);
+    }, [maxHeight]);
+
     return {
         hourHeight,
+        maxHourHeight: maxHeight,
+        zoomToMax,
         zoomHandlers: {
             onWheel: handleWheel as any,
             onTouchStart: handleTouchStart as any,

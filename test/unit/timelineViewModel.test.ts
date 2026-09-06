@@ -12,7 +12,12 @@ import {
   buildTimelineDayColumns,
   buildTimelineTimeAxisRows,
 } from '@/features/views/runtime/TimelineView/TimelineDailyViewModel';
-import { buildDailyViewData } from '@core/utils/public';
+import {
+  buildDailyViewData,
+  buildTimelineBlockGesturePreview,
+  buildTimelineDragSelection,
+  dayjs,
+} from '@core/utils/public';
 import type { RecordViewItem, TimelineTask } from '@core/types/public';
 
 const moduleConfig = {
@@ -80,6 +85,8 @@ describe('TimelineViewModel', () => {
       id: task.id,
       taskRecordId: task.id,
       timelineSource: 'task-range',
+      timelineEditTarget: { kind: 'task-range', recordId: task.id },
+      timelineRange: { start: '2026-08-14T16:45', end: '2026-08-14T17:35' },
       actualStartDate: '2026-08-14',
       startTime: '16:45',
       endTime: '17:35',
@@ -155,6 +162,8 @@ describe('TimelineViewModel', () => {
       sessionRecordId: session.id,
       taskRecordId: task.id,
       timelineSource: 'task-session',
+      timelineEditTarget: { kind: 'task-session', recordId: session.id },
+      timelineRange: { start: session.sessionStartedAt, end: session.sessionEndedAt },
       startTime: '16:50',
       endTime: '17:20',
       duration: 30,
@@ -179,15 +188,95 @@ describe('TimelineViewModel', () => {
     ]);
     expect(buildTimelineTimeAxisRows(4, 24)).toEqual([
       { hour: 0, label: '00:00', height: '24px' },
-      { hour: 1, label: '', height: '24px' },
+      { hour: 1, label: '01:00', height: '24px' },
       { hour: 2, label: '02:00', height: '24px' },
-      { hour: 3, label: '', height: '24px' },
+      { hour: 3, label: '03:00', height: '24px' },
     ]);
     expect(buildTimelineTimeAxisRows(2.5, 24)).toEqual([
       { hour: 0, label: '00:00', height: '24px' },
-      { hour: 1, label: '', height: '24px' },
+      { hour: 1, label: '01:00', height: '24px' },
       { hour: 2, label: '02:00', height: '12px' },
     ]);
+  });
+
+  it('snaps drag selections to five-minute boundaries in either drag direction', () => {
+    expect(buildTimelineDragSelection(9 * 60 + 7, 10 * 60 + 2, 24)).toEqual({
+      startMinute: 9 * 60 + 5,
+      endMinute: 10 * 60 + 5,
+      durationMinutes: 60,
+    });
+    expect(buildTimelineDragSelection(10 * 60 + 2, 9 * 60 + 7, 24)).toEqual({
+      startMinute: 9 * 60 + 5,
+      endMinute: 10 * 60 + 5,
+      durationMinutes: 60,
+    });
+    expect(buildTimelineDragSelection(23 * 60 + 50, 23 * 60 + 59, 24)).toEqual({
+      startMinute: 23 * 60 + 50,
+      endMinute: 24 * 60,
+      durationMinutes: 10,
+    });
+  });
+
+
+  it('moves and resizes a logical range through one five-minute interaction model', () => {
+    const block = {
+      ...resolveTimelineTasks([{
+        id: 'task.direct-range', coreBlock: 'task', status: 'open', content: '直接操纵', title: '直接操纵',
+        tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+        startAt: '2026-08-26T09:00', endAt: '2026-08-26T10:00',
+        filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
+      } as any], [{
+        id: 'task.direct-range', coreBlock: 'task', status: 'open', content: '直接操纵', title: '直接操纵',
+        tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+        startAt: '2026-08-26T09:00', endAt: '2026-08-26T10:00',
+        filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
+      } as any])[0],
+      day: '2026-08-26', blockStartMinute: 540, blockEndMinute: 600,
+      isRangeStart: true, isRangeEnd: true,
+    } as any;
+
+    const moved = buildTimelineBlockGesturePreview({
+      block, mode: 'move', anchorMinute: 550, currentMinute: 578, maxHours: 24,
+    });
+    expect(moved).toMatchObject({ blockStartMinute: 570, blockEndMinute: 630, durationMinutes: 60 });
+    expect(dayjs(moved?.range.start).format('YYYY-MM-DD HH:mm')).toBe('2026-08-26 09:30');
+    expect(dayjs(moved?.range.end).format('YYYY-MM-DD HH:mm')).toBe('2026-08-26 10:30');
+
+    const resizedStart = buildTimelineBlockGesturePreview({
+      block, mode: 'resize-start', anchorMinute: 540, currentMinute: 570, maxHours: 24,
+    });
+    expect(dayjs(resizedStart?.range.start).format('HH:mm')).toBe('09:30');
+    expect(dayjs(resizedStart?.range.end).format('HH:mm')).toBe('10:00');
+    expect(resizedStart?.durationMinutes).toBe(30);
+
+    const resizedEnd = buildTimelineBlockGesturePreview({
+      block, mode: 'resize-end', anchorMinute: 600, currentMinute: 645, maxHours: 24,
+    });
+    expect(dayjs(resizedEnd?.range.start).format('HH:mm')).toBe('09:00');
+    expect(dayjs(resizedEnd?.range.end).format('HH:mm')).toBe('10:45');
+    expect(resizedEnd?.durationMinutes).toBe(105);
+  });
+
+  it('treats cross-midnight day blocks as projections of one logical range', () => {
+    const task = {
+      id: 'task.cross-midnight', coreBlock: 'task', status: 'done', content: '跨午夜', title: '跨午夜',
+      tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+      startAt: '2026-08-26T23:30', endAt: '2026-08-27T01:00',
+      filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
+    } as any;
+    const timelineTask = resolveTimelineTasks([task], [task])[0];
+    const daily = buildDailyViewData([timelineTask], [new Date(2026, 7, 26), new Date(2026, 7, 27)]);
+    const first = daily.blocksByDay['2026-08-26'][0];
+    const second = daily.blocksByDay['2026-08-27'][0];
+    expect(first).toMatchObject({ isRangeStart: true, isRangeEnd: false });
+    expect(second).toMatchObject({ isRangeStart: false, isRangeEnd: true });
+
+    const moved = buildTimelineBlockGesturePreview({
+      block: second, mode: 'move', anchorMinute: 30, currentMinute: 60, maxHours: 24,
+    });
+    expect(dayjs(moved?.range.start).format('YYYY-MM-DD HH:mm')).toBe('2026-08-27 00:00');
+    expect(dayjs(moved?.range.end).format('YYYY-MM-DD HH:mm')).toBe('2026-08-27 01:30');
+    expect(moved?.durationMinutes).toBe(90);
   });
 
   it('keeps historical Session completion result after the source Task is reopened', () => {
@@ -231,7 +320,9 @@ describe('TimelineViewModel', () => {
     const result = resolveTimelineTasks([task], [task, session]);
     expect(result.map((entry) => entry.timelineSource).sort()).toEqual(['task-plan', 'task-session']);
     expect(result.find((entry) => entry.timelineSource === 'task-plan')).toMatchObject({
-      id: `${task.id}:plan`, startTime: '09:00', endTime: '10:00', duration: 60,
+      id: `${task.id}:plan`,
+      timelineEditTarget: { kind: 'task-plan', recordId: task.id },
+      startTime: '09:00', endTime: '10:00', duration: 60,
     });
     expect(result.find((entry) => entry.timelineSource === 'task-session')).toMatchObject({
       id: session.id, startTime: '09:20', endTime: '09:50', duration: 30,
@@ -245,7 +336,13 @@ describe('TimelineViewModel', () => {
       scheduledAt: '2026-08-14T08:30', filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
     } as unknown as RecordViewItem;
     const point = resolveTimelineTasks([pointTask], [pointTask])[0];
-    expect(point).toMatchObject({ id: `${pointTask.id}:plan`, timelineSource: 'task-plan', duration: 0 });
+    expect(point).toMatchObject({
+      id: `${pointTask.id}:plan`,
+      timelineSource: 'task-plan',
+      timelineEditTarget: { kind: 'task-plan', recordId: pointTask.id },
+      timelineRange: { start: '2026-08-14T08:30' },
+      duration: 0,
+    });
 
     const planned = { ...point, id: 'planned-range', timelineSource: 'task-plan' as const, duration: 60, doneDate: '2026-08-14', fileName: '目标.md' } as TimelineTask;
     const actual = { ...point, id: 'actual-range', timelineSource: 'task-session' as const, duration: 30, doneDate: '2026-08-14', fileName: '目标.md' } as TimelineTask;
@@ -256,6 +353,52 @@ describe('TimelineViewModel', () => {
       injectedModel: { timelineTasks: [planned, actual] },
     });
     expect(renderModel.summaryCategoryHours['目标.md']).toBe(0.5);
+  });
+
+
+  it('builds Goal allocation from full TaskSession records, not filtered Timeline items or legacy Task ranges', () => {
+    const workTask = {
+      id: 'task.work', coreBlock: 'task', status: 'done', goalPath: '工作',
+      content: '工作', title: '工作', tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+      startAt: '2026-08-14T08:00:00', endAt: '2026-08-14T18:00:00',
+    } as unknown as RecordViewItem;
+    const healthTask = {
+      id: 'task.health', coreBlock: 'task', status: 'done', goalPath: '照顾好自己/身体健康',
+      content: '健康', title: '健康', tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+    } as unknown as RecordViewItem;
+    const workSession = {
+      id: 'task-session.work', coreBlock: 'task-session', taskId: workTask.id,
+      sessionStartedAt: '2026-08-14T09:00:00', sessionEndedAt: '2026-08-14T09:30:00', sessionDurationMinutes: 30,
+      sessionResult: 'task-completed', sessionSource: 'timer', title: '', content: '', tags: [], categoryKey: '任务工作块', created: 0, modified: 0, extra: {},
+    } as unknown as RecordViewItem;
+    const healthSession = {
+      id: 'task-session.health', coreBlock: 'task-session', taskId: healthTask.id,
+      sessionStartedAt: '2026-08-14T10:00:00', sessionEndedAt: '2026-08-14T10:30:00', sessionDurationMinutes: 30,
+      sessionResult: 'task-completed', sessionSource: 'timer', title: '', content: '', tags: [], categoryKey: '任务工作块', created: 0, modified: 0, extra: {},
+    } as unknown as RecordViewItem;
+
+    const renderModel = buildTimelineRenderModel({
+      // Simulate Timeline filters hiding the health Task. Goal allocation must still use all records.
+      items: [workTask],
+      records: [workTask, healthTask, workSession, healthSession],
+      module: moduleConfig,
+      dateRange: [new Date('2026-08-14T00:00:00'), new Date('2026-08-14T23:59:59.999')],
+      currentView: '周',
+      goalSettings: {
+        goals: [
+          { path: '照顾好自己', status: 'active', timePresetPercent: 40, createdAt: '', updatedAt: '' },
+          { path: '工作', status: 'active', timePresetPercent: 30, createdAt: '', updatedAt: '' },
+          { path: '照顾好自己/身体健康', status: 'active', weeklyTargetMinutes: 240, createdAt: '', updatedAt: '' },
+        ],
+        goalTemplates: [],
+      },
+    });
+
+    expect(renderModel.goalAllocationSummary?.trackedMinutes).toBe(60);
+    expect(renderModel.goalAllocationSummary?.rows.find((row) => row.path === '照顾好自己')?.minutes).toBe(30);
+    expect(renderModel.goalAllocationSummary?.rows.find((row) => row.path === '工作')?.minutes).toBe(30);
+    // The 10-hour Task start/end range above is Timeline fallback only and must never enter Goal actual.
+    expect(renderModel.goalAllocationSummary?.trackedMinutes).not.toBeGreaterThan(60);
   });
 
 });

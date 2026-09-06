@@ -5,6 +5,7 @@ import type { GoalTemplate } from './templates';
 import { isPeriodAwareRecordType, normalizePeriodPolicyGranularity } from './period';
 import { isSystemRecordContextField } from './contextFields';
 import { compactText } from '@/core/semantics/text';
+import { stripGoalTemplateIconDefaults, stripGoalTemplateIconFieldDefaults } from './icon';
 
 export interface CompactGoalTemplateOptions {
   recordType?: Pick<TemplateRecordTypeDefinition, 'id' | 'fields' | 'targetFile' | 'appendUnderHeader' | 'periodPolicy'> | null;
@@ -24,7 +25,7 @@ function isContextField(field: TemplateField): boolean {
 
 function stripContextFields(fields?: TemplateField[]): TemplateField[] | undefined {
   const result = (fields || []).filter((field) => !isContextField(field));
-  return result.length ? result : undefined;
+  return stripGoalTemplateIconFieldDefaults(result);
 }
 
 function stableJson(value: unknown): string {
@@ -91,8 +92,9 @@ function getFieldDefaultMap(fields?: TemplateField[]): Record<string, string> {
 function compactDefaultValues(values: Record<string, unknown> | undefined, baseFields: TemplateField[] | undefined): Record<string, unknown> | undefined {
   const baseDefaults = getFieldDefaultMap(baseFields);
   const result: Record<string, unknown> = {};
-  Object.entries(values || {}).forEach(([rawKey, raw]) => {
+  Object.entries(stripGoalTemplateIconDefaults(values) || {}).forEach(([rawKey, raw]) => {
     const key = rawKey === '图标' ? 'icon' : rawKey;
+    if (key === 'icon') return;
     if (CONTEXT_FIELD_KEYS.has(key)) return;
     const value = compactText(raw);
     if (!value) return;

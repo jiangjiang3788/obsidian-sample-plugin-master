@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'preact/hooks';
 import { DataStore } from '@core/services/public';
 import { devTime, devTimeEnd } from '@core/utils/public';
-import { normalizeRecordQueryDateRole, queryViewRecords } from '@core/view/public';
+import { normalizeViewDateRole, queryViewRecords } from '@core/view/public';
 import type { RecordViewItem, ViewInstance, FilterRule, SortRule } from '@core/types/public';
 
 interface UseViewDataProps {
@@ -56,7 +56,7 @@ export function useViewData({
             return [];
         }
 
-        const dateRole = normalizeRecordQueryDateRole(viewInstance.viewConfig?.dateRole);
+        const dateRole = normalizeViewDateRole(viewInstance.viewConfig?.dateRole);
         const dateField = typeof viewInstance.viewConfig?.dateField === 'string' ? viewInstance.viewConfig.dateField : undefined;
         const dateMode = ['standard', 'overview', 'strict'].includes(String(viewInstance.viewConfig?.dateMode || ''))
             ? viewInstance.viewConfig?.dateMode

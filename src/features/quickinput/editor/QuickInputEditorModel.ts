@@ -24,6 +24,7 @@ export { buildQuickInputEditorState } from './model/editorState';
 export {
   buildQuickInputDisplayTemplate,
   buildQuickInputPeriodUi,
+  resolveTaskQuickInputTimingMode,
   shouldShowQuickInputTimeDirectionControl,
 } from './model/displayTemplate';
 

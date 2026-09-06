@@ -7,6 +7,8 @@ import { createServices, type Services, mountWithServices, unmountPreact } from 
 import { AiChatModalContainer } from '@/features/aichat/AiChatModalContainer';
 import type { AiServices } from '@/features/aichat/types';
 import { prepareThinkModal } from './modalPreact';
+import { AiBatchConfirmModal } from './AiBatchConfirmModal';
+import { createAiNaturalRecordParserFromStore } from '@/features/aiinput/aiInputRuntime';
 
 // 对外继续导出 AiServices（便于上层注入依赖时标注类型）
 export type { AiServices } from '@/features/aichat/types';
@@ -44,13 +46,21 @@ export class AiChatModal extends Modal {
         this.contentEl.addEventListener('keydown', this.keydownStopper);
 
         const aiServices = this.ensureAiServices();
+        const naturalRecordParser = createAiNaturalRecordParserFromStore(this.services.zustandStore);
+        const enhancedAiServices: AiServices = {
+            ...aiServices,
+            captureNaturalRecords: ({ text, signal }) => naturalRecordParser.parse({ text, now: new Date(), signal, fastMode: false }),
+            openNaturalRecordBatchConfirm: ({ title, items, traceId }) => {
+                new AiBatchConfirmModal(this.app, { title, items, traceId }).open();
+            },
+        };
 
         // 初始化 sessionStore
         await aiServices.sessionStore.initialize();
 
         mountWithServices(
             this.contentEl,
-            <AiChatModalContainer closeModal={() => this.close()} services={aiServices} />,
+            <AiChatModalContainer closeModal={() => this.close()} services={enhancedAiServices} />,
             this.services
         );
     }

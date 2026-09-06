@@ -15,7 +15,7 @@ function baseSettings(): ThinkSettings {
       goalTemplates: [],
     },
     floatingTimerEnabled: true,
-  } as any;
+  } as never;
 }
 
 describe('GoalTemplateResolver Goal-only', () => {
@@ -51,16 +51,27 @@ describe('GoalTemplateResolver Goal-only', () => {
     settings.goalSettings!.goalTemplates.push({
       goalPath: '产品化/目标中心', recordTypeId: 'core.task', enabled: true,
       defaultValues: { priority: 'high' },
-    } as any);
+    } as never);
     const result = GoalTemplateResolver.resolve({ settings, blockId: 'core.task', goalPath: '产品化/目标中心' });
     expect(result.templateSourceType).toBe('goal-template');
     expect(result.template?.fields.find((field) => field.key === 'priority')?.defaultValue).toBe('high');
   });
 
+  it('uses Goal.icon as the capture icon default and ignores legacy GoalTemplate icon defaults', () => {
+    const settings = baseSettings();
+    settings.goalSettings!.goals[0]!.icon = '🧠';
+    settings.goalSettings!.goalTemplates.push({
+      goalPath: '产品化/目标中心', recordTypeId: 'core.thought', enabled: true,
+      defaultValues: { icon: '🧩' },
+    } as never);
+    const result = GoalTemplateResolver.resolve({ settings, recordTypeId: 'core.thought', goalPath: '产品化/目标中心' });
+    expect(result.template?.fields.find((field) => field.key === 'icon')?.defaultValue).toBe('🧠');
+  });
+
   it('does not inherit a parent Goal template when the child owns none', () => {
     const settings = baseSettings();
-    settings.goalSettings!.goals.push({ path: '产品化/目标中心/插件', status: 'active', metrics: [], createdAt: '', updatedAt: '' } as any);
-    settings.goalSettings!.goalTemplates.push({ goalPath: '产品化/目标中心', recordTypeId: 'core.task', enabled: true, targetFile: '01/父目标.md' } as any);
+    settings.goalSettings!.goals.push({ path: '产品化/目标中心/插件', status: 'active', metrics: [], createdAt: '', updatedAt: '' } as never);
+    settings.goalSettings!.goalTemplates.push({ goalPath: '产品化/目标中心', recordTypeId: 'core.task', enabled: true, targetFile: '01/父目标.md' } as never);
     const result = GoalTemplateResolver.resolve({ settings, blockId: 'core.task', goalPath: '产品化/目标中心/插件' });
     expect(result.templateSourceType).toBe('record-type');
     expect(result.template?.targetFile).toBe('01/目标.md');
@@ -69,7 +80,7 @@ describe('GoalTemplateResolver Goal-only', () => {
     const settings = baseSettings();
     settings.goalSettings!.goalTemplates.push({
       goalPath: '产品化/目标中心', recordTypeId: 'core.habit', enabled: false,
-    } as any);
+    } as never);
     const result = GoalTemplateResolver.resolve({ settings, recordTypeId: 'core.habit', goalPath: '产品化/目标中心' });
     expect(result.status).toBe('disabled');
     expect(result.template).toBeNull();
@@ -84,7 +95,7 @@ describe('GoalTemplateResolver Goal-only', () => {
       recordTypeId: 'core.task',
       enabled: true,
       requiredFields: ['expectedDurationMinutes'],
-    } as any);
+    } as never);
 
     const result = GoalTemplateResolver.resolve({
       settings,
@@ -93,6 +104,18 @@ describe('GoalTemplateResolver Goal-only', () => {
     });
 
     expect(result.template?.fields.find((field) => field.key === 'expectedDurationMinutes')?.required).toBe(false);
+  });
+
+
+  it('把多选场景默认值合并到 Task 字段，并保留为可被 QuickInput 正规化的文本值', () => {
+    const settings = baseSettings();
+    settings.goalSettings!.goalTemplates.push({
+      goalPath: '产品化/目标中心', recordTypeId: 'core.task', enabled: true,
+      defaultValues: { availabilityContexts: ['work', 'home'], recurrenceUnit: 'month' },
+    } as never);
+    const result = GoalTemplateResolver.resolve({ settings, blockId: 'core.task', goalPath: '产品化/目标中心' });
+    expect(result.template?.fields.find((field) => field.key === 'availabilityContexts')?.defaultValue).toBe('work,home');
+    expect(result.template?.fields.find((field) => field.key === 'recurrenceUnit')?.defaultValue).toBe('month');
   });
 
 });

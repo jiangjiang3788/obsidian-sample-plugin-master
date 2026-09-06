@@ -5,6 +5,7 @@
 export * from '../view-config/displayFields';
 export * from '../view-config/domainFields';
 export * from '../view-config/filterValueSemantics';
+export * from '../view-config/dateRole';
 export * from '../config/views';
 export { useTimelineZoom } from '../hooks/useTimelineZoom';
 

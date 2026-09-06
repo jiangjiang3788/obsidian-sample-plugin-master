@@ -1,0 +1,62 @@
+name: Think OS Test V9
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/cache@v4
+        with:
+          path: |
+            reports/testing/performance-history.json
+            reports/testing/performance-trend.md
+          key: think-os-test-history-${{ github.ref_name }}
+      - run: npm ci --silent
+      - name: 严格 CI 门禁
+        run: npm run 验证:CI:v9
+      - name: P0 真机
+        run: xvfb-run -a npm run 测试:真机:P0
+      - name: 发布质量报告
+        if: always()
+        run: node scripts/testing/generate-quality-report.mjs
+
+  extended:
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/cache@v4
+        with:
+          path: reports/testing
+          key: think-os-extended-history-${{ github.ref_name }}
+      - run: npm ci --silent
+      - name: P1 真机
+        run: xvfb-run -a npm run 测试:真机:P1
+      - name: P2 真机
+        run: xvfb-run -a npm run 测试:真机:P2
+      - name: 大仓库真机
+        run: xvfb-run -a npm run 测试:真机:大仓库
+      - name: 兼容矩阵
+        run: xvfb-run -a npm run 测试:真机:兼容矩阵
+      - name: 不稳定测试审计
+        run: npm run 测试:稳定性
+      - name: P0 真机稳定性
+        run: xvfb-run -a npm run 测试:真机:稳定性:P0
+      - name: 发布质量报告
+        if: always()
+        run: node scripts/testing/generate-quality-report.mjs --strict

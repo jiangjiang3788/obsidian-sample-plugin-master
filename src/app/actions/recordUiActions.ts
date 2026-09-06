@@ -15,11 +15,11 @@ export type {
   HeaderCreateParams,
 } from './recordCreate';
 
-export { openEditFromItem } from './recordEditActions';
+export { openEditFromItem, mergeRecordItemForEdit } from './recordEditActions';
 export type { EditFromItemParams } from './recordEditActions';
 
-export { completeFromView, updateTimeFromView } from './recordTaskActions';
-export type { CompleteFromViewParams, UpdateTimeFromViewParams } from './recordTaskActions';
+export { completeFromView, updateTimelineRangeFromView } from './recordTaskActions';
+export type { CompleteFromViewParams, UpdateTimelineRangeFromViewParams } from './recordTaskActions';
 
 export { commitExcelCellFromView } from './recordExcelActions';
 export type { CommitExcelCellFromViewParams, CommitExcelCellFromViewResult } from './recordExcelActions';

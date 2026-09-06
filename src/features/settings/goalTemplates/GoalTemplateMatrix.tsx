@@ -1,9 +1,9 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { ThinkButton, ThinkInput, ThinkNotice } from '@shared/ui/public';
+import { Modal, ThinkButton, ThinkInput, ThinkNotice } from '@shared/ui/public';
 import { getTemplateRecordTypes } from '@core/recordTypes/public';
-import { getGoalTemplates } from '@core/goal/public';
+import { getGoalTemplates, resolveGoalIcon } from '@core/goal/public';
 import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { selectSettings, useSelector, useUiPort, useUseCases } from '@/app/public';
@@ -38,6 +38,8 @@ export function GoalTemplateMatrix() {
   const [selected, setSelected] = useState<{ goal: GoalDefinition; block: TemplateRecordTypeDefinition; template: GoalTemplate | null } | null>(null);
   const [draggingGoalPath, setDraggingGoalPath] = useState<string | null>(null);
   const [goalDrop, setGoalDrop] = useState<GoalDropState>(null);
+  const [iconEditorGoal, setIconEditorGoal] = useState<GoalDefinition | null>(null);
+  const [iconDraft, setIconDraft] = useState('');
 
   useEffect(() => {
     setExpandedPaths((previous) => new Set(Array.from(previous).filter((path) => allGoalPaths.has(path))));
@@ -67,6 +69,23 @@ export function GoalTemplateMatrix() {
     ui.notice('目标排序已保存');
   };
 
+
+  const setGoalTimePresetPercent = async (path: string, percent: number | null) => {
+    try {
+      await useCases.goal.setGoalTimePresetPercent(path, percent);
+    } catch (error) {
+      ui.notice(`时间预设保存失败：${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  const setGoalWeeklyTargetMinutes = async (path: string, minutes: number | null) => {
+    try {
+      await useCases.goal.setGoalWeeklyTargetMinutes(path, minutes);
+    } catch (error) {
+      ui.notice(`目标时间保存失败：${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
   const handleDeleteGoal = async (event: MouseEvent, goal: GoalDefinition) => {
     event.preventDefault();
     event.stopPropagation();
@@ -80,6 +99,26 @@ export function GoalTemplateMatrix() {
       ? await (useCases.goal as any).deleteGoalCascade(goal.path)
       : (await Promise.all(targets.map((target) => useCases.goal.deleteGoal(target.path))), targets.length);
     ui.notice(descendants.length > 0 ? `已删除目标及子目标：${count} 个` : `已删除目标：${cleanDisplayText(path)}`);
+  };
+
+  const handleEditGoalIcon = async (event: MouseEvent, goal: GoalDefinition) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIconEditorGoal(goal);
+    setIconDraft(resolveGoalIcon(goal));
+  };
+
+  const closeGoalIconEditor = () => {
+    setIconEditorGoal(null);
+    setIconDraft('');
+  };
+
+  const saveGoalIcon = async () => {
+    if (!iconEditorGoal) return;
+    const icon = iconDraft.trim();
+    await useCases.goal.updateGoal(iconEditorGoal.path, { icon: icon || undefined });
+    ui.notice(icon ? `已更新目标图标：${icon} ${iconEditorGoal.path}` : `已清除目标图标：${iconEditorGoal.path}`);
+    closeGoalIconEditor();
   };
 
   return (
@@ -115,9 +154,38 @@ export function GoalTemplateMatrix() {
           toggleTreePath={toggleTreePath}
           reorderGoalSiblings={reorderGoalSiblings}
           handleDeleteGoal={handleDeleteGoal}
+          handleEditGoalIcon={handleEditGoalIcon}
           openEditor={openEditor}
+          setGoalTimePresetPercent={setGoalTimePresetPercent}
+          setGoalWeeklyTargetMinutes={setGoalWeeklyTargetMinutes}
         />
       )}
+
+      <Modal
+        isOpen={!!iconEditorGoal}
+        onClose={closeGoalIconEditor}
+        onSave={saveGoalIcon}
+        title={iconEditorGoal ? `目标图标：${cleanDisplayText(iconEditorGoal.path)}` : '目标图标'}
+        size="small"
+        saveButtonText="保存"
+      >
+        <div className="think-settings-stack">
+          <ThinkInput
+            autoFocus
+            value={iconDraft}
+            placeholder="例如：💪 / 🧠 / 📚"
+            aria-label="目标图标"
+            onInput={(event) => setIconDraft((event.currentTarget as HTMLInputElement).value)}
+            onKeyDown={(event: KeyboardEvent) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                void saveGoalIcon();
+              }
+            }}
+          />
+          <div className="think-settings-caption">输入 Emoji 或短文本；清空后保存即可移除图标。</div>
+        </div>
+      </Modal>
 
       <GoalTemplateEditorModal
         isOpen={!!selected}

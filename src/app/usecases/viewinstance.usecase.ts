@@ -7,6 +7,7 @@ import {
   normalizeDisplayFields,
   normalizeViewFilters,
   normalizeViewGroupFields,
+  normalizeViewConfigDomain,
   normalizeViewInstanceDomain,
   normalizeViewSort,
   removeDisplayField,
@@ -136,10 +137,10 @@ export class ViewInstanceUseCase {
                 if (!draft.viewInstances) return;
                 const vi = draft.viewInstances.find(v => v.id === id);
                 if (!vi) return;
-                vi.viewConfig = {
+                vi.viewConfig = normalizeViewConfigDomain({
                     ...(vi.viewConfig || {}),
                     ...patch,
-                };
+                }) || {};
             });
         } catch (error) {
             devError('[ViewInstanceUseCase] updateViewConfig 失败:', error);

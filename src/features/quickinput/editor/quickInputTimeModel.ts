@@ -95,11 +95,37 @@ export function applyQuickInputFieldUpdate(
     ? { value: optionValue?.value, label: optionValue?.label }
     : value;
   const draft = { ...formData, [key]: fieldValue, lastChanged: key };
+
+  // A completed Task is an execution fact, not the initial open instance of a
+  // recurring series. Clear any recurrence draft values when status switches to
+  // done so hidden Goal/template defaults cannot leak into persistence.
+  const statusValue = key === 'status' || key === '状态'
+    ? String(rawValue ?? '').trim().toLowerCase()
+    : '';
+  if (statusValue === 'done') {
+    draft.recurrenceUnit = { value: 'none', label: '不重复' };
+    delete draft['重复'];
+    delete draft.recurrenceInterval;
+    delete draft['重复间隔'];
+    delete draft.recurrenceAnchor;
+    delete draft['重复方式'];
+    delete draft['重复锚点'];
+  }
+
   const linked = applyQuickInputLinkedTimeChanges(draft, timeDirection);
   const nextSources: QuickInputFieldSourceMap = {
     ...fieldSources,
     [key]: "user",
   };
+  if (statusValue === 'done') {
+    nextSources.recurrenceUnit = 'system_auto';
+    delete nextSources['重复'];
+    delete nextSources.recurrenceInterval;
+    delete nextSources['重复间隔'];
+    delete nextSources.recurrenceAnchor;
+    delete nextSources['重复方式'];
+    delete nextSources['重复锚点'];
+  }
   linked.autoKeys.forEach((autoKey) => {
     if (autoKey !== key) nextSources[autoKey] = "system_auto";
   });

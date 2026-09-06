@@ -26,6 +26,7 @@ export const RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS = [
 export function isRecordInputMeaningfulValue(value: unknown): boolean {
   if (value === undefined || value === null) return false;
   if (typeof value === 'string') return value.trim() !== '';
+  if (Array.isArray(value)) return value.length > 0;
   return true;
 }
 
@@ -36,6 +37,10 @@ export function isRecordInputOptionLike(value: unknown): value is { value?: unkn
 export function isRecordInputSameValue(left: unknown, right: unknown): boolean {
   if (isRecordInputOptionLike(left) && isRecordInputOptionLike(right)) {
     return left.value === right.value && left.label === right.label;
+  }
+  if (Array.isArray(left) && Array.isArray(right)) {
+    if (left.length !== right.length) return false;
+    return left.every((value, index) => isRecordInputSameValue(value, right[index]));
   }
   return left === right;
 }

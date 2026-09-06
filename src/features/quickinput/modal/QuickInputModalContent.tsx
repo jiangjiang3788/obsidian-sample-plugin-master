@@ -141,7 +141,7 @@ export function QuickInputModalContent({
   const {
     liveOutputPlan,
     livePersistencePlan,
-  } = useQuickInputOutputPlan({ currentState, preparedRecord, editItem, mode: outputPlanMode });
+  } = useQuickInputOutputPlan({ currentState, preparedRecord, editItem, mode: outputPlanMode, context });
 
   const {
     originalGestureHint,
@@ -316,6 +316,7 @@ export function QuickInputModalContent({
           onRequestSubmit={handleSubmit}
           onEnergyCapture={handleEnergyCapture}
           isMobileLike={isMobileLike}
+          autoFocusContent={mode === 'create'}
         />
         {operationMode === 'edit' && editItem?.coreBlock === 'task' && normalizeTaskStatus(editItem.status) ? (
           <TaskLifecycleEditor

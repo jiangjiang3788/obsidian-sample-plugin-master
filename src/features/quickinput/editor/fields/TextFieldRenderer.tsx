@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 
-import { isTemplateMultiValueField } from '@core/fields/public';
+import { getTemplateFieldSemantic, isTemplateMultiValueField } from '@core/fields/public';
 
 import { QuickInputFieldFrame } from './FieldFrame';
 import { isQuickInputInlineRowField, isQuickInputTimeField } from './fieldSemantics';
@@ -50,9 +50,11 @@ export function QuickInputNativeFieldRenderer({
   isMobileLike,
   onUpdate,
   onRequestSubmit,
+  autoFocusContent = false,
 }: QuickInputFieldRendererBaseProps) {
   const inputType = field.type === 'textarea' ? 'textarea' : field.type || 'text';
   const minHeight = dense ? 96 : 118;
+  const shouldAutoFocus = autoFocusContent && getTemplateFieldSemantic(field) === 'body';
   const commonProps = {
     className: inputType === 'textarea' ? (dense ? 'think-native-input think-native-input--textarea think-qif-textarea is-dense' : 'think-native-input think-native-input--textarea think-qif-textarea') : 'think-native-input',
     value: String(value || ''),
@@ -82,6 +84,8 @@ export function QuickInputNativeFieldRenderer({
       rows={dense ? 4 : 5}
       enterkeyhint={isMobileLike ? 'enter' : 'done'}
       ref={(el: HTMLTextAreaElement | null) => setTextareaAutoHeight(el, minHeight)}
+      autoFocus={shouldAutoFocus}
+      data-quick-input-content={shouldAutoFocus ? 'true' : undefined}
     />
   ) : (
     <input
@@ -91,6 +95,8 @@ export function QuickInputNativeFieldRenderer({
       max={field.max}
       enterkeyhint={isMobileLike ? 'enter' : 'done'}
       className={isQuickInputTimeField(field) ? `${commonProps.className} think-qif-time-input` : commonProps.className}
+      autoFocus={shouldAutoFocus}
+      data-quick-input-content={shouldAutoFocus ? 'true' : undefined}
     />
   );
 

@@ -10,11 +10,11 @@ import { TaskTimeMutation } from './TaskTimeMutation';
 import { TaskQuadrantMutation } from './TaskQuadrantMutation';
 import type { EisenhowerQuadrant } from '@/core/records/task/taskQuadrant';
 import type { TaskSessionCreateInput } from '@/core/types/timer';
+import type { TimelineEditTarget, TimelineLogicalRange } from '@/core/types/timeline';
 import { RecordRepository } from '@/core/records/RecordRepository';
 import type {
     GoalTemplateMigrationResult,
     ItemMutationOptions,
-    ItemTimeUpdates,
     MigrationBackupResult,
 } from './types';
 
@@ -112,12 +112,12 @@ export class ItemService {
         return this.taskQuadrant.move(itemId, quadrant);
     }
 
-    async updateItemTime(
-        itemId: string,
-        updates: ItemTimeUpdates,
+    async updateTimelineRange(
+        target: TimelineEditTarget,
+        range: TimelineLogicalRange,
         _mutationOptions: ItemMutationOptions = {},
     ): Promise<void> {
-        await this.taskTime.update(itemId, updates);
+        await this.taskTime.updateTimelineRange(target, range);
     }
 
     upsertItemInlineFields(

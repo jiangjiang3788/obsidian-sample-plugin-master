@@ -109,4 +109,57 @@ describe('AI Chat 容器组合流程', () => {
     expect(host.querySelector('[role="alert"]')?.textContent).toContain('模拟服务不可用');
     expect(s.sessionStore.appendMessage).toHaveBeenCalledWith(expect.any(String), 'system', expect.stringContaining('模拟服务不可用'));
   });
+
+  it('明确要求建立单个任务时也复用同一条 AI 批量确认链', async () => {
+    const s = services(async () => ({ content: '不应该走普通 chat', referencedItemIds: [], model: 'fake-model', retrievalCount: 0 }));
+    s.captureNaturalRecords = jest.fn(async () => ({
+      items: [
+        { target: { blockId: 'core.task', goalPath: '武装大脑' }, fields: { content: '整理测试结果' } },
+      ],
+    }));
+    s.openNaturalRecordBatchConfirm = jest.fn();
+
+    await act(async () => render(<AiChatModalContainer closeModal={jest.fn()} services={s} />, host));
+    const textarea = await createConversation();
+    await inputText(textarea, '帮我建立成任务：整理测试结果');
+    await waitForUi(() => !(host.querySelector('button[aria-label="发送"]') as HTMLButtonElement)?.disabled, '输入后发送按钮仍不可用');
+    await act(async () => (host.querySelector('button[aria-label="发送"]') as HTMLButtonElement).click());
+
+    await waitForUi(() => s.captureNaturalRecords.mock.calls.length === 1, '单任务请求没有调用现有 AI 快速记录 parser');
+    await waitForUi(() => s.openNaturalRecordBatchConfirm.mock.calls.length === 1, '单任务请求没有打开既有确认 Modal');
+    expect(s.chatService.chat).not.toHaveBeenCalled();
+    expect(s.openNaturalRecordBatchConfirm).toHaveBeenCalledWith(expect.objectContaining({
+      title: '确认任务（1 条）',
+      items: [expect.objectContaining({ target: expect.objectContaining({ blockId: 'core.task' }) })],
+    }));
+  });
+
+  it('明确要求把 SOP 建成任务时复用 AI 批量记录，并支持一次返回多条任务', async () => {
+    const s = services(async () => ({ content: '不应该走普通 chat', referencedItemIds: [], model: 'fake-model', retrievalCount: 0 }));
+    s.captureNaturalRecords = jest.fn(async () => ({
+      items: [
+        { target: { blockId: 'core.task', goalPath: '武装大脑' }, fields: { content: '读第一遍' } },
+        { target: { blockId: 'core.task', goalPath: '武装大脑' }, fields: { content: '脱离资料复述' } },
+      ],
+    }));
+    s.openNaturalRecordBatchConfirm = jest.fn();
+
+    await act(async () => render(<AiChatModalContainer closeModal={jest.fn()} services={s} />, host));
+    const textarea = await createConversation();
+    await inputText(textarea, '我看到一个学习 SOP，帮我拆成任务');
+    await waitForUi(() => !(host.querySelector('button[aria-label="发送"]') as HTMLButtonElement)?.disabled, '输入后发送按钮仍不可用');
+    await act(async () => (host.querySelector('button[aria-label="发送"]') as HTMLButtonElement).click());
+
+    await waitForUi(() => s.captureNaturalRecords.mock.calls.length === 1, '没有调用现有 AI 快速记录 parser');
+    await waitForUi(() => s.openNaturalRecordBatchConfirm.mock.calls.length === 1, '没有打开既有批量确认 Modal');
+    expect(s.chatService.chat).not.toHaveBeenCalled();
+    expect(s.openNaturalRecordBatchConfirm).toHaveBeenCalledWith(expect.objectContaining({
+      title: '确认任务（2 条）',
+      items: expect.arrayContaining([
+        expect.objectContaining({ target: expect.objectContaining({ blockId: 'core.task' }) }),
+      ]),
+    }));
+    expect(s.sessionStore.appendMessage).toHaveBeenCalledWith(expect.any(String), 'assistant', '已拆成 2 条任务，已打开批量确认。');
+  });
+
 });

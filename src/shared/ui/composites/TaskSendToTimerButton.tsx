@@ -7,6 +7,7 @@ import { ThinkIconButton } from '../primitives/IconButton';
 interface TaskSendToTimerButtonProps {
     timerStatus?: 'running' | 'paused';
     onStart: () => void | Promise<void>;
+    repeat?: boolean;
 }
 
 /**
@@ -18,7 +19,7 @@ interface TaskSendToTimerButtonProps {
  * Runtime rows consume the shared Think icon-button primitive directly so their
  * action sizing and hover state stay aligned with the rest of the plugin.
  */
-export function TaskSendToTimerButton({ timerStatus, onStart }: TaskSendToTimerButtonProps) {
+export function TaskSendToTimerButton({ timerStatus, onStart, repeat = false }: TaskSendToTimerButtonProps) {
     if (timerStatus === 'running') {
         return (
             <ThinkIconButton
@@ -46,7 +47,7 @@ export function TaskSendToTimerButton({ timerStatus, onStart }: TaskSendToTimerB
 
     return (
         <ThinkIconButton
-            label="添加并开始计时"
+            label={repeat ? "再次执行并开始计时" : "添加并开始计时"}
             size="sm"
             className="task-timer-button"
             onClick={() => { void onStart(); }}

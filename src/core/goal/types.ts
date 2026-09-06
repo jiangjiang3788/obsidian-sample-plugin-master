@@ -33,6 +33,10 @@ export interface GoalDefinition {
   icon?: string;
   color?: string;
   sortOrder?: number;
+  /** Root Goal share of a natural 168-hour week. Root presets may leave reserve time. */
+  timePresetPercent?: number;
+  /** Optional stable weekly target for non-root Goals. Missing means actual-only, no preset. */
+  weeklyTargetMinutes?: number;
 }
 
 /**
@@ -53,12 +57,31 @@ export interface GoalTemplateStorageRow {
   requiredFields?: string[];
 }
 
+export interface GoalTimePresetSnapshotEntry {
+  timePresetPercent?: number;
+  weeklyTargetMinutes?: number;
+}
+
+/**
+ * Weekly-effective preset snapshot. A revision is rewritten within the same ISO week,
+ * so Timeline history reflects the preset that governed that week without keeping
+ * noisy per-keystroke audit history.
+ */
+export interface GoalTimePresetRevision {
+  /** Local-calendar Monday in YYYY-MM-DD form. */
+  effectiveWeekStart: string;
+  /** Full configured snapshot at that week; missing paths fall back to current preset. */
+  presets: Record<string, GoalTimePresetSnapshotEntry>;
+}
+
 export interface GoalSettings {
   goals: GoalDefinition[];
   goalTemplates: GoalTemplateStorageRow[];
+  timePresetRevisions?: GoalTimePresetRevision[];
 }
 
 export const DEFAULT_GOAL_SETTINGS: GoalSettings = {
   goals: [],
   goalTemplates: [],
+  timePresetRevisions: [],
 };

@@ -9,12 +9,11 @@ import {
   openCreateFromStatistics,
   openCreateFromTimeline,
   openEditFromItem,
-  updateTimeFromView,
+  mergeRecordItemForEdit,
+  updateTimelineRangeFromView,
 } from '@/app/actions/recordUiActions';
 import { openRecordOrigin, resolveVaultResourcePath } from '@/app/actions/obsidianRuntimeActions';
-import { TaskSessionTimeEditModal } from '@/app/ui/modals/TaskSessionTimeEditModal';
 import type {
-  EditTimelineBlockHandler,
   OpenCheckinManagerHandler,
   OpenHeatmapCreateHandler,
   OpenQuickCreateHandler,
@@ -22,7 +21,7 @@ import type {
   OpenRecordOriginHandler,
   OpenTimelineCreateHandler,
   ResolveResourcePathHandler,
-  UpdateTaskTimeHandler,
+  UpdateTimelineRangeHandler,
   UpdateTaskQuadrantHandler,
 } from '@shared/types/public';
 
@@ -36,8 +35,7 @@ export interface UseViewRuntimeHandlersParams {
 }
 
 export interface ViewRuntimeHandlers {
-  onUpdateTaskTime: UpdateTaskTimeHandler;
-  onEditTimelineBlock: EditTimelineBlockHandler;
+  onUpdateTimelineRange: UpdateTimelineRangeHandler;
   onTaskQuadrantChange: UpdateTaskQuadrantHandler;
   onQuickCreate: OpenQuickCreateHandler;
   onCategoryColorsChange: (nextColors: Record<string, string>) => void;
@@ -67,52 +65,19 @@ export function useViewRuntimeHandlers({
   const ui = useUiPort();
   const modal = useModalPort();
 
-  const onUpdateTaskTime = useCallback<UpdateTaskTimeHandler>(
-    async (recordId, updates) => {
-      const ok = await updateTimeFromView({
+  const onUpdateTimelineRange = useCallback<UpdateTimelineRangeHandler>(
+    async ({ target, range }) => {
+      const ok = await updateTimelineRangeFromView({
         uiPort: ui,
         useCases,
-        itemId: recordId,
-        updates: {
-          time: updates.time,
-          endTime: updates.endTime,
-          duration: updates.duration,
-        },
-        source: 'unknown',
+        target,
+        range,
+        source: 'layout_renderer',
       });
-
-      if (!ok) throw new Error('更新记录时间失败');
+      if (!ok) throw new Error('更新时间轴区间失败');
     },
     [ui, useCases]
   );
-
-  const onEditTimelineBlock = useCallback<EditTimelineBlockHandler>(async (block) => {
-    if (block.timelineSource === 'task-session' && block.sessionRecordId) {
-      const session = dataStore.getRecordById(block.sessionRecordId);
-      if (!session || session.coreBlock !== 'task-session' || !session.sessionStartedAt || !session.sessionEndedAt) {
-        ui.notice('找不到这段实际执行记录。');
-        return;
-      }
-      const value = await new TaskSessionTimeEditModal(app, {
-        startedAt: session.sessionStartedAt,
-        endedAt: session.sessionEndedAt,
-        title: '编辑实际执行时间',
-      }).openAndGetValue();
-      if (!value) return;
-      const ok = await updateTimeFromView({
-        uiPort: ui,
-        useCases,
-        itemId: session.id,
-        updates: value,
-        source: 'layout_renderer',
-      });
-      if (!ok) throw new Error('更新实际执行时间失败');
-      return;
-    }
-
-    const task = dataStore.getRecordById(block.taskRecordId);
-    if (task) openEditFromItem({ app, item: task, openedFrom: 'timeline' });
-  }, [app, dataStore, ui, useCases]);
 
   const onTaskQuadrantChange = useCallback<UpdateTaskQuadrantHandler>(async (recordId, quadrant) => {
     await useCases.recordInput.updateTaskQuadrant(recordId, quadrant);
@@ -135,8 +100,8 @@ export function useViewRuntimeHandlers({
   }, [useCases.settings]);
 
   const onOpenRecord = useCallback<OpenRecordHandler>((item: RecordViewItem) => {
-    const canonicalItem = dataStore.getRecordById(item.id) ?? item;
-    openEditFromItem({ app, item: canonicalItem });
+    const canonicalItem = dataStore.getRecordById(item.id);
+    openEditFromItem({ app, item: mergeRecordItemForEdit(canonicalItem, item) });
   }, [app, dataStore]);
 
   const onOpenRecordOrigin = useCallback<OpenRecordOriginHandler>((item: RecordViewItem) => {
@@ -157,6 +122,7 @@ export function useViewRuntimeHandlers({
       dayBlocks: payload.dayBlocks,
       day: payload.day,
       event: payload.event,
+      selectedRange: payload.selectedRange,
     });
   }, [app, ui]);
 
@@ -217,8 +183,7 @@ export function useViewRuntimeHandlers({
   }, [useCases, viewInstance.id]);
 
   return {
-    onUpdateTaskTime,
-    onEditTimelineBlock,
+    onUpdateTimelineRange,
     onTaskQuadrantChange,
     onQuickCreate,
     onCategoryColorsChange,

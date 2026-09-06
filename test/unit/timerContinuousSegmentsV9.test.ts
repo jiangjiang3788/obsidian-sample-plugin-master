@@ -172,4 +172,98 @@ describe('Timer 连续执行段 V9', () => {
     expect(addTimer).toHaveBeenCalledWith(expect.objectContaining({ taskId: targetTaskId, status: 'running' }));
   });
 
+
+  it('已完成的一次性 Task 点击开始会创建新的 open Task，再对新 Task 开始计时，旧记录保持历史事实', async () => {
+    const oldTaskId = 'task.01J00000000000000000000010';
+    const newTaskId = 'task.01J00000000000000000000011';
+    const records = new Map<string, Record<string, unknown>>([
+      [oldTaskId, {
+        id: oldTaskId,
+        coreBlock: 'task',
+        status: 'done',
+        content: '八段锦',
+        goalPath: '照顾好自己/运动',
+        completedAt: '2026-08-28T20:00:00',
+      }],
+    ]);
+    const timers: TimerState[] = [];
+    const addTimer = jest.fn(async (input: Omit<TimerState, 'id'>) => {
+      const created = { ...input, id: 'timer.repeat' } as TimerState;
+      timers.push(created);
+      return created;
+    });
+    const prepareEditRecord = jest.fn(() => ({
+      blockId: 'core.task',
+      template: { id: 'core.task' },
+      initialFormData: {
+        content: '八段锦',
+        goalPath: '照顾好自己/运动',
+        status: 'done',
+        completedAt: '2026-08-28T20:00:00',
+        expectedDurationMinutes: 30,
+      },
+    }));
+    const submitCreateRecord = jest.fn(async (params: { formData: Record<string, unknown> }) => {
+      expect(params.formData).toMatchObject({
+        content: '八段锦',
+        goalPath: '照顾好自己/运动',
+        status: 'open',
+        expectedDurationMinutes: 30,
+      });
+      expect(params.formData).not.toHaveProperty('completedAt');
+      records.set(newTaskId, { id: newTaskId, coreBlock: 'task', status: 'open', content: '八段锦' });
+      return { status: 'success' as const, affectedRecordId: newTaskId, followUp: { startTimerForRecordId: newTaskId } };
+    });
+    const useCases = {
+      timer: { getTimers: () => timers, removeTimer: jest.fn(), updateTimer: jest.fn(), addTimer },
+      recordInput: { prepareEditRecord, submitCreateRecord, submitTaskSession: jest.fn() },
+      taskRuntime: { completeTask: jest.fn() },
+    } as unknown as ConstructorParameters<typeof TimerService>[0];
+    const dataStore = {
+      getRecordById: (id: string) => records.get(id) ?? null,
+    } as unknown as ConstructorParameters<typeof TimerService>[1];
+    const ui = { notice: jest.fn() } as unknown as ConstructorParameters<typeof TimerService>[2];
+
+    await new TimerService(useCases, dataStore, ui).startOrResume(oldTaskId);
+
+    expect(prepareEditRecord).toHaveBeenCalledWith(expect.objectContaining({ item: expect.objectContaining({ id: oldTaskId }) }));
+    expect(submitCreateRecord).toHaveBeenCalledTimes(1);
+    expect(addTimer).toHaveBeenCalledWith(expect.objectContaining({ taskId: newTaskId, status: 'running' }));
+    expect(records.get(oldTaskId)).toMatchObject({ status: 'done', completedAt: '2026-08-28T20:00:00' });
+  });
+
+  it('点击历史周期 Task 时若系列已有当前 open Task，直接开始当前实例，不复制第二条周期任务', async () => {
+    const oldTaskId = 'task.01J00000000000000000000020';
+    const currentTaskId = 'task.01J00000000000000000000021';
+    const seriesId = 'taskseries.01J000000000000000000020';
+    const records = new Map<string, Record<string, unknown>>([
+      [oldTaskId, { id: oldTaskId, coreBlock: 'task', status: 'done', seriesId, content: '通勤' }],
+      [seriesId, { id: seriesId, coreBlock: 'task-series', currentTaskId }],
+      [currentTaskId, { id: currentTaskId, coreBlock: 'task', status: 'open', seriesId, content: '通勤' }],
+    ]);
+    const timers: TimerState[] = [];
+    const addTimer = jest.fn(async (input: Omit<TimerState, 'id'>) => {
+      const created = { ...input, id: 'timer.current-series' } as TimerState;
+      timers.push(created);
+      return created;
+    });
+    const prepareEditRecord = jest.fn();
+    const submitCreateRecord = jest.fn();
+    const useCases = {
+      timer: { getTimers: () => timers, removeTimer: jest.fn(), updateTimer: jest.fn(), addTimer },
+      recordInput: { prepareEditRecord, submitCreateRecord, submitTaskSession: jest.fn() },
+      taskRuntime: { completeTask: jest.fn() },
+    } as unknown as ConstructorParameters<typeof TimerService>[0];
+    const dataStore = {
+      getRecordById: (id: string) => records.get(id) ?? null,
+    } as unknown as ConstructorParameters<typeof TimerService>[1];
+    const ui = { notice: jest.fn() } as unknown as ConstructorParameters<typeof TimerService>[2];
+
+    await new TimerService(useCases, dataStore, ui).startOrResume(oldTaskId);
+
+    expect(prepareEditRecord).not.toHaveBeenCalled();
+    expect(submitCreateRecord).not.toHaveBeenCalled();
+    expect(addTimer).toHaveBeenCalledWith(expect.objectContaining({ taskId: currentTaskId, status: 'running' }));
+  });
+
 });

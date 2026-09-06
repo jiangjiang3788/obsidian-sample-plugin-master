@@ -44,7 +44,7 @@ describe('模块设置弹窗参数持久化生命周期', () => {
       filters: [{ field: 'status', op: 'equals', value: 'open' } as any],
       sort: [{ field: 'created', direction: 'desc' } as any],
     });
-    await useCase.updateViewConfig('view-v6', { pageSize: 50, compact: true });
+    await useCase.updateViewConfig('view-v6', { pageSize: 50, compact: true, dateRole: 'task-completed' });
 
     const restarted = new SettingsRepository(persistence);
     const restored = await restarted.load();
@@ -53,6 +53,6 @@ describe('模块设置弹窗参数持久化生命周期', () => {
     expect(view?.fields).toEqual(['content', 'status']);
     expect(view?.groupFields).toEqual(['goalPath']);
     expect(view?.filters).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'status', value: 'open' })]));
-    expect(view?.viewConfig).toMatchObject({ pageSize: 50, compact: true });
+    expect(view?.viewConfig).toMatchObject({ pageSize: 50, compact: true, dateRole: 'task-completed' });
   });
 });

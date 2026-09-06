@@ -22,6 +22,7 @@ export interface QuickInputEditorFieldsProps {
   onRequestSubmit?: () => void;
   isMobileLike?: boolean;
   showTimeDirectionControl?: boolean;
+  autoFocusContent?: boolean;
 }
 
 function scalarValue(value: unknown): string {
@@ -64,6 +65,7 @@ export function QuickInputEditorFields({
   onRequestSubmit,
   isMobileLike = false,
   showTimeDirectionControl = false,
+  autoFocusContent = false,
 }: QuickInputEditorFieldsProps) {
   const [tagDrafts, setTagDrafts] = useState<Record<string, string>>({});
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -80,6 +82,7 @@ export function QuickInputEditorFields({
     isMobileLike,
     tagDrafts,
     onTagDraftsChange: setTagDrafts,
+    autoFocusContent,
   };
 
   if (isTaskTemplate) {

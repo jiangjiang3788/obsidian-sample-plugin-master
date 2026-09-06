@@ -16,9 +16,17 @@ function taskBlock(start: number, end: number, id: string): TaskBlock {
   return {
     id,
     taskRecordId: id,
+    timelineSource: 'task-range',
+    timelineEditTarget: { kind: 'task-range', recordId: id },
+    timelineRange: {
+      start: `2026-05-13T${String(Math.floor(start / 60)).padStart(2, '0')}:${String(start % 60).padStart(2, '0')}`,
+      end: `2026-05-13T${String(Math.floor(end / 60)).padStart(2, '0')}:${String(end % 60).padStart(2, '0')}`,
+    },
     day: '2026-05-13',
     blockStartMinute: start,
     blockEndMinute: end,
+    isRangeStart: true,
+    isRangeEnd: true,
     startMinute: start,
     endMinute: end,
     duration: end - start,
@@ -101,6 +109,105 @@ describe('integration: Timeline click context -> Task persistence', () => {
     expect(session).toMatchObject({
       coreBlock: 'task-session',
       taskId: parsed?.id,
+      sessionDurationMinutes: 40,
+      sessionResult: 'task-completed',
+      sessionSource: 'timeline',
+    });
+  });
+
+  it('keeps Timeline completed context authoritative when a Goal Task template defaults duration to 15 minutes', () => {
+    const template = getRecordTypeById(RECORD_TYPE_IDS.TASK);
+    if (!template) throw new Error('Task template missing');
+
+    // Reproduce the real commute-style GoalTemplate conflict: the Timeline gap is 40
+    // minutes, while the selected Goal template proposes a 15-minute default.
+    const commuteTemplate = {
+      ...template,
+      fields: (template.fields || []).map((field) =>
+        field.key === 'expectedDurationMinutes'
+          ? { ...field, defaultValue: '15' }
+          : field),
+    };
+    const executionTemplate = buildQuickInputDisplayTemplate(
+      commuteTemplate,
+      RECORD_TYPE_IDS.TASK,
+      [],
+      { taskTimingMode: 'execution' },
+    );
+    if (!executionTemplate) throw new Error('Task execution display template missing');
+
+    const invocation = resolveTimelineCreateContext({
+      day: '2026-05-13',
+      clickedMinute: 90,
+      dayBlocks: [
+        taskBlock(40, 80, 'previous-task'),
+        taskBlock(120, 180, 'next-task'),
+      ],
+    });
+
+    const first = hydrateQuickInputTemplateDefaults({
+      template: executionTemplate,
+      context: invocation.context,
+      current: {},
+      fieldSources: {},
+      selectedGoal: null,
+      currentGoalPath: '工作能力/通勤',
+      currentGoalTitle: '通勤',
+      currentPeriod: null,
+      timeDirection: 'forward',
+    });
+    const second = hydrateQuickInputTemplateDefaults({
+      template: executionTemplate,
+      context: invocation.context,
+      current: first.formData,
+      fieldSources: first.fieldSources,
+      selectedGoal: null,
+      currentGoalPath: '工作能力/通勤',
+      currentGoalTitle: '通勤',
+      currentPeriod: null,
+      timeDirection: 'forward',
+    });
+
+    expect(first.formData).toMatchObject({
+      status: { value: 'done', label: '已完成' },
+      startAt: '2026-05-13T01:20',
+      endAt: '2026-05-13T02:00',
+      expectedDurationMinutes: 40,
+    });
+    expect(typeof first.formData.expectedDurationMinutes).toBe('number');
+    expect(first.fieldSources.status).toBe('context');
+    expect(second.changed).toBe(false);
+    expect(second.formData).toBe(first.formData);
+
+    const plan = buildRecordOutputPlan({
+      template: commuteTemplate,
+      formData: {
+        ...first.formData,
+        // Deliberately stale form status: completed Timeline context must still win at
+        // the persistence boundary rather than relying on UI/default ordering.
+        status: { value: 'open', label: '未完成' },
+        goalPath: '工作能力/通勤',
+        任务内容: '通勤',
+      },
+      context: invocation.context,
+    });
+
+    const blocks = splitRecordBlocks(plan.outputContent);
+    const taskLines = blocks[0].split(/\r?\n/);
+    const sessionLines = blocks[1].split(/\r?\n/);
+    const parsed = asTaskRecord(parseRecordBlock(plan.targetFilePath!, taskLines, 0, taskLines.length - 1, '记录'));
+    const session = asTaskSessionRecord(parseRecordBlock(plan.targetFilePath!, sessionLines, 0, sessionLines.length - 1, '记录'));
+
+    expect(parsed).toMatchObject({
+      coreBlock: 'task',
+      status: 'done',
+      goalPath: '工作能力/通勤',
+      completedAt: '2026-05-13T02:00',
+    });
+    expect(session).toMatchObject({
+      coreBlock: 'task-session',
+      taskId: parsed?.id,
+      goalPath: '工作能力/通勤',
       sessionDurationMinutes: 40,
       sessionResult: 'task-completed',
       sessionSource: 'timeline',

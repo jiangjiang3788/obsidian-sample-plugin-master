@@ -574,7 +574,8 @@
       ],
       "evidence": {
         "integration": [
-          "test/integration/quickInputFieldDefaultsComposition.test.ts"
+          "test/integration/quickInputFieldDefaultsComposition.test.ts",
+          "test/integration/aiRecordCaptureRuntimeMatrix.test.ts"
         ],
         "e2e": [
           "test/specs/quick-input-task.e2e.ts"
@@ -1435,7 +1436,8 @@
       ],
       "evidence": {
         "integration": [
-          "test/integration/taskSessionIntegrity.test.ts"
+          "test/integration/taskSessionIntegrity.test.ts",
+          "test/integration/timerEnergyRecordInputLinking.test.ts"
         ],
         "persistence": [
           "test/integration/taskSessionIntegrity.test.ts"
@@ -1444,7 +1446,9 @@
           "test/integration/timerRestartRecovery.test.ts"
         ],
         "regression": [
-          "test/integration/timerRestartRecovery.test.ts"
+          "test/integration/timerRestartRecovery.test.ts",
+          "test/unit/timerEnergyTrackingV10.test.ts",
+          "test/unit/timerEnergyCapturePrompt.test.tsx"
         ],
         "restart": [
           "test/integration/timerRestartRecovery.test.ts"
@@ -1454,10 +1458,12 @@
           "test/specs/timer-runtime.e2e.ts"
         ],
         "ui": [
-          "test/specs/edit-recovery-timer-ui.e2e.ts"
+          "test/specs/edit-recovery-timer-ui.e2e.ts",
+          "test/unit/timerEnergyCapturePrompt.test.tsx"
         ],
         "unit": [
-          "test/unit/timerRuntimeStateV2.test.ts"
+          "test/unit/timerRuntimeStateV2.test.ts",
+          "test/unit/timerEnergyTrackingV10.test.ts"
         ]
       },
       "note": "v4：补真实悬浮 Timer UI 的暂停→继续→完成任务按钮流；Runtime 重启与 TaskSession 仍由 v3 套件保护。"
@@ -1533,7 +1539,8 @@
         ],
         "unit": [
           "test/unit/energyActionPolicy.test.ts",
-          "test/unit/energyManagement.test.ts"
+          "test/unit/energyManagement.test.ts",
+          "test/unit/timerEnergyTrackingV10.test.ts"
         ],
         "e2e": [
           "test/specs/energy-quick-capture-ui.e2e.ts"
@@ -1651,11 +1658,13 @@
         ],
         "integration": [
           "test/integration/energyRestartLifecycle.test.ts",
-          "test/integration/recordTypePersistenceMatrix.test.ts"
+          "test/integration/recordTypePersistenceMatrix.test.ts",
+          "test/integration/timerEnergyRecordInputLinking.test.ts"
         ],
         "persistence": [
           "test/integration/energyRestartLifecycle.test.ts",
-          "test/integration/recordTypePersistenceMatrix.test.ts"
+          "test/integration/recordTypePersistenceMatrix.test.ts",
+          "test/integration/timerEnergyRecordInputLinking.test.ts"
         ],
         "restart": [
           "test/integration/energyRestartLifecycle.test.ts"
@@ -1755,7 +1764,8 @@
       ],
       "evidence": {
         "integration": [
-          "test/integration/aiNaturalParserFlow.test.ts"
+          "test/integration/aiNaturalParserFlow.test.ts",
+          "test/integration/aiRecordCaptureRuntimeMatrix.test.ts"
         ],
         "error": [
           "test/unit/aiNormalizeDomain.test.ts"
@@ -1795,7 +1805,8 @@
           "test/unit/aiBatchConfirmSideEffectBoundary.test.ts"
         ],
         "integration": [
-          "test/integration/aiBatchConfirmActionFlow.test.tsx"
+          "test/integration/aiBatchConfirmActionFlow.test.tsx",
+          "test/integration/aiRecordCaptureRuntimeMatrix.test.ts"
         ],
         "e2e": [
           "test/specs/ai-natural-input.e2e.ts"
@@ -1828,7 +1839,8 @@
           "test/unit/aiNormalizeDomain.test.ts"
         ],
         "integration": [
-          "test/integration/aiNaturalInputCommandFlow.test.ts"
+          "test/integration/aiNaturalInputCommandFlow.test.ts",
+          "test/integration/aiRecordCaptureRuntimeMatrix.test.ts"
         ],
         "e2e": [
           "test/specs/ai-natural-input.e2e.ts"

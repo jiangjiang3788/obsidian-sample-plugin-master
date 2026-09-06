@@ -64,6 +64,19 @@ describe('RecordInputFacade', () => {
     });
   });
 
+  it('marks create-only completed Task capture as execution context without overwriting Timeline provenance', () => {
+    const state = {
+      blockId: 'core.task',
+      formData: { status: { value: 'done', label: '已完成' }, startAt: '2026-08-26T09:30', endAt: '2026-08-26T10:00' },
+    };
+    expect(buildCreateRecordSubmitParamsFromEditorState({ state, source: 'quickinput' }).context).toMatchObject({
+      __recordUiContext: { kind: 'quickinput_create', captureMode: 'completed_execution' },
+    });
+
+    const timelineContext = { __recordUiContext: { kind: 'timeline_create', captureMode: 'completed_execution' } };
+    expect(buildCreateRecordSubmitParamsFromEditorState({ state, context: timelineContext, source: 'view_quick_create' }).context).toBe(timelineContext);
+  });
+
   it('builds QuickInput callback draft without mutating editor state', () => {
     const formData = { 内容: 'timer task' };
     const draft = buildRecordCreateDraftFromEditorState({

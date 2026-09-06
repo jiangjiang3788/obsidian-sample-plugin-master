@@ -1,6 +1,6 @@
 import "reflect-metadata";
 
-import { ensureReflectMetadata } from '@core/bootstrap/public';
+import { ensureReflectMetadata, applyGoalTaskDefaultsSeed } from '@core/bootstrap/public';
 
 // 立即执行环境检查
 ensureReflectMetadata();
@@ -199,7 +199,15 @@ export default class ThinkPlugin extends Plugin {
     }
 
     private async loadSettings(): Promise<ThinkSettings> {
-        return toCurrentThinkSettings(await this.loadData());
+        const current = toCurrentThinkSettings(await this.loadData());
+        const seeded = applyGoalTaskDefaultsSeed(current);
+        if (seeded.changed) {
+            // data.json inside an update/source archive is not an Obsidian settings migration.
+            // Persist the one-time seed into the user's actual installed plugin settings here.
+            await this.saveData(this.sanitizeSettingsForPersistence(seeded.settings));
+            devLog(`[ThinkPlugin][BOOT] Goal Task defaults seeded into ${seeded.appliedTemplateCount} direct Task templates`);
+        }
+        return seeded.settings;
     }
 
 

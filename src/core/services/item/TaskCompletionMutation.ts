@@ -6,10 +6,41 @@ import { asTaskRecord, asTaskSeriesRecord, type TaskDemandLevel, type TaskPriori
 import { canTransitionTaskStatus, getTaskStatus, nextTaskStatus, type TaskLifecycleCommand } from '@/core/records/task/taskStatus';
 import { buildNextOccurrenceDates, normalizeRecurrenceInfo, type RecurrenceInfo } from '@/core/records/task/taskRecurrence';
 import type { TaskSessionCreateInput } from '@/core/types/timer';
+import { asTaskSessionRecord } from '@/core/records/task/taskSession';
 import { TaskSessionMutation } from './TaskSessionMutation';
 import type { ItemMutationOptions } from './types';
 
 function timestampNow(): string { return new Date().toISOString(); }
+
+function buildLegacyActualRangeCompletionSession(
+  dataStore: DataStore,
+  task: TaskRecord,
+): TaskSessionCreateInput | null {
+  const startedAt = String(task.startAt || '').trim();
+  const endedAt = String(task.endAt || '').trim();
+  if (!startedAt || !endedAt) return null;
+
+  const startedMs = Date.parse(startedAt);
+  const endedMs = Date.parse(endedAt);
+  if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs <= startedMs) return null;
+
+  // Never duplicate an already-canonical execution history. This compatibility
+  // migration is only for old Tasks whose actual range still lives on Task itself.
+  const alreadyHasSession = dataStore.queryRecords()
+    .some((record) => asTaskSessionRecord(record)?.taskId === task.id);
+  if (alreadyHasSession) return null;
+
+  const durationMinutes = Math.round(((endedMs - startedMs) / 60_000) * 100) / 100;
+  if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) return null;
+
+  return {
+    startedAt: new Date(startedMs).toISOString(),
+    endedAt: new Date(endedMs).toISOString(),
+    durationMinutes,
+    result: 'task-completed',
+    source: 'unknown',
+  };
+}
 
 export interface TaskSeriesUpdate {
   recurrence?: Partial<RecurrenceInfo>;
@@ -195,7 +226,11 @@ export class TaskCompletionMutation {
       throw new Error(`task_transition_invalid:${status}:${command}`);
     }
 
-    const at = sessionInput?.endedAt || timestampNow();
+    const legacyActualSession = !sessionInput && command === 'complete'
+      ? buildLegacyActualRangeCompletionSession(this.dataStore, task)
+      : null;
+    const effectiveSessionInput = sessionInput ?? legacyActualSession ?? undefined;
+    const at = effectiveSessionInput?.endedAt || timestampNow();
     if (command === 'reopen') {
       if (task.seriesId) {
         const series = asTaskSeriesRecord(await this.repository.getById(task.seriesId));
@@ -206,10 +241,16 @@ export class TaskCompletionMutation {
     }
 
     const patch: Record<string, unknown> = { status: nextTaskStatus(command) };
-    const sessionOperation = sessionInput
-      ? this.taskSessions.prepareCreateOperation(task, sessionInput).operation
+    const sessionOperation = effectiveSessionInput
+      ? this.taskSessions.prepareCreateOperation(task, effectiveSessionInput).operation
       : null;
     if (command === 'complete') patch.completedAt = at;
+    if (legacyActualSession) {
+      // The migrated Session is now the execution authority. Remove only the legacy
+      // actual range; expectedDurationMinutes remains a planning/expectation fact.
+      patch.startAt = null;
+      patch.endAt = null;
+    }
     if (command === 'cancel') patch.cancelledAt = at;
     if (command === 'skip') patch.skippedAt = at;
     if (!task.seriesId || command === 'cancel') {

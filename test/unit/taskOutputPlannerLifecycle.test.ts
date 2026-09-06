@@ -43,6 +43,48 @@ describe('Task OutputPlanner lifecycle invariants', () => {
     expect(plan.outputContent).toContain('完成于:: 2026-08-14 17:35');
   });
 
+  it('ignores stale recurrence defaults for completed capture instead of creating a TaskSeries or throwing', () => {
+    const plan = buildRecordOutputPlan({
+      template: taskTemplate,
+      recordId: 'task.01KZZQ6G798KJN54XBGKJVH7YQ',
+      context: { __recordUiContext: { kind: 'quickinput_create', captureMode: 'completed_execution' } },
+      formData: {
+        status: 'done',
+        任务内容: '历史补记',
+        startAt: '2026-08-14T16:45',
+        endAt: '2026-08-14T17:35',
+        recurrenceUnit: 'day',
+      },
+    });
+
+    expect(plan.outputContent).not.toContain('记录类型:: task-series');
+    expect(plan.outputContent).not.toContain('系列ID::');
+    expect(plan.outputContent).toContain('记录类型:: task-session');
+    expect(plan.outputContent).not.toContain('开始时间:: 2026-08-14 16:45');
+    expect(plan.outputContent).not.toContain('结束时间:: 2026-08-14 17:35');
+  });
+
+  it('forces Timeline completed_execution to done and persists a Session even if form status is stale open', () => {
+    const plan = buildRecordOutputPlan({
+      template: taskTemplate,
+      recordId: 'task.01KZZQ6G798KJN54XBGKJVH7YT',
+      context: { __recordUiContext: { kind: 'timeline_create', captureMode: 'completed_execution' } },
+      formData: {
+        status: 'open',
+        任务内容: '时间轴补录不能降级成未完成',
+        startAt: '2026-08-14T16:45',
+        endAt: '2026-08-14T17:35',
+        recurrenceUnit: 'day',
+      },
+    });
+
+    expect(plan.outputContent).toContain('状态:: done');
+    expect(plan.outputContent).toContain('完成于:: 2026-08-14 17:35');
+    expect(plan.outputContent).toContain('记录类型:: task-session');
+    expect(plan.outputContent).toContain('结果:: task-completed');
+    expect(plan.outputContent).not.toContain('记录类型:: task-series');
+  });
+
   it('does not write completedAt for an open Task even when the Task has an end time', () => {
     const plan = buildRecordOutputPlan({
       template: taskTemplate,

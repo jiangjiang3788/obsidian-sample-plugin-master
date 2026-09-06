@@ -61,6 +61,7 @@ function buildTimelineTask(args: {
   sessionRecordId?: string;
   sessionResult?: 'work-block-ended' | 'task-completed';
   timelineSource: 'task-session' | 'task-plan' | 'task-range';
+  persistenceRecordId: string;
 }): TimelineTask | null {
   const startedMs = timestamp(args.startedAt);
   const endedMs = timestamp(args.endedAt);
@@ -81,6 +82,8 @@ function buildTimelineTask(args: {
     sessionResult: args.sessionResult,
     taskRecordId: args.task.id,
     timelineSource: args.timelineSource,
+    timelineEditTarget: { kind: args.timelineSource, recordId: args.persistenceRecordId },
+    timelineRange: { start: args.startedAt, end: args.endedAt },
     date: actualStartDate,
     doneDate: actualStartDate,
     startTime: new Date(startedMs).toTimeString().slice(0, 5),
@@ -117,6 +120,8 @@ function buildTimelinePointTask(
     sessionResult: undefined,
     taskRecordId: task.id,
     timelineSource,
+    timelineEditTarget: { kind: timelineSource, recordId: task.id },
+    timelineRange: { start: startedAt },
     date: actualStartDate,
     doneDate: actualStartDate,
     startTime: new Date(startedMs).toTimeString().slice(0, 5),
@@ -147,6 +152,7 @@ function projectSession(task: RecordViewItem, record: RecordViewItem): TimelineT
     sessionRecordId: session.id,
     sessionResult: session.sessionResult,
     timelineSource: 'task-session',
+    persistenceRecordId: session.id,
     startedAt: session.sessionStartedAt,
     endedAt: session.sessionEndedAt,
     durationMinutes: duration,
@@ -168,6 +174,7 @@ function projectTaskPlan(taskItem: RecordViewItem): TimelineTask | null {
     task,
     id: `${task.id}:plan`,
     timelineSource: 'task-plan',
+    persistenceRecordId: task.id,
     startedAt: task.scheduledAt,
     endedAt: new Date(startedMs + declaredDuration * 60_000).toISOString(),
     durationMinutes: declaredDuration,
@@ -205,6 +212,7 @@ function projectTaskRange(taskItem: RecordViewItem): TimelineTask | null {
     task,
     id: task.id,
     timelineSource: 'task-range',
+    persistenceRecordId: task.id,
     startedAt: task.startAt,
     endedAt,
     durationMinutes: duration,

@@ -1,8 +1,8 @@
 import { DEFAULT_SETTINGS } from '@/core/settings/ThinkSettings';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { DEFAULT_ENERGY_SETTINGS } from '@/core/energy';
-import { assertCanonicalGoalSettings, normalizeGoalPath } from '@/core/goal';
-import type { GoalDefinition, GoalSettings, GoalTemplateStorageRow } from '@/core/goal';
+import { assertCanonicalGoalSettings, normalizeGoalPath, stripGoalTemplateIconDefaults, stripGoalTemplateIconFieldDefaults } from '@/core/goal';
+import type { GoalDefinition, GoalSettings, GoalTemplateStorageRow, GoalTimePresetRevision, GoalTimePresetSnapshotEntry } from '@/core/goal';
 
 /**
  * Goal-only single-user settings policy.
@@ -26,6 +26,40 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function readLegacyTemplateIcon(entry: Record<string, unknown>): string {
+  const defaults = isRecord(entry.defaultValues) ? entry.defaultValues : {};
+  const direct = String(defaults.icon ?? defaults['图标'] ?? '').trim();
+  if (direct) return direct;
+  const fields = Array.isArray(entry.fields) ? entry.fields : [];
+  for (const rawField of fields) {
+    if (!isRecord(rawField)) continue;
+    const key = String(rawField.key ?? rawField.label ?? '').trim();
+    const semantic = String(rawField.semantic ?? rawField.semanticType ?? '').trim();
+    if (key !== 'icon' && key !== '图标' && semantic !== 'icon') continue;
+    const value = String(rawField.defaultValue ?? '').trim();
+    if (value) return value;
+  }
+  return '';
+}
+
+function backfillGoalIconsFromLegacyTemplates(goals: GoalDefinition[], rawTemplates: unknown[]): void {
+  const candidates = new Map<string, Set<string>>();
+  for (const rawEntry of rawTemplates) {
+    if (!isRecord(rawEntry)) continue;
+    const goalPath = normalizeGoalPath(String(rawEntry.goalPath ?? ''));
+    const icon = readLegacyTemplateIcon(rawEntry);
+    if (!goalPath || !icon) continue;
+    const set = candidates.get(goalPath) || new Set<string>();
+    set.add(icon);
+    candidates.set(goalPath, set);
+  }
+  for (const goal of goals) {
+    if (String(goal.icon || '').trim()) continue;
+    const icons = Array.from(candidates.get(goal.path) || []);
+    if (icons.length === 1) goal.icon = icons[0];
+  }
+}
+
 /** Hydrate compact persisted Goal rows into the existing runtime domain shape. */
 function hydrateGoalOnlySettings(value: unknown): GoalSettings {
   const raw = isRecord(value) ? value : {};
@@ -46,24 +80,27 @@ function hydrateGoalOnlySettings(value: unknown): GoalSettings {
       ...(typeof entry.icon === 'string' ? { icon: entry.icon } : null),
       ...(typeof entry.color === 'string' ? { color: entry.color } : null),
       ...(typeof entry.sortOrder === 'number' ? { sortOrder: entry.sortOrder } : null),
+      ...(typeof entry.timePresetPercent === 'number' ? { timePresetPercent: entry.timePresetPercent } : null),
+      ...(typeof entry.weeklyTargetMinutes === 'number' ? { weeklyTargetMinutes: entry.weeklyTargetMinutes } : null),
     } as GoalDefinition;
   });
   const goalPaths = new Set(goals.map((goal) => goal.path));
 
   const rawTemplates = Array.isArray(raw.goalTemplates) ? raw.goalTemplates : [];
+  backfillGoalIconsFromLegacyTemplates(goals, rawTemplates);
   const goalTemplates: GoalTemplateStorageRow[] = rawTemplates.map((entry) => {
     if (!isRecord(entry)) throw new Error('Invalid GoalTemplate row: expected object.');
     const goalPath = normalizeGoalPath(String(entry.goalPath ?? ''));
     const recordTypeId = String(entry.recordTypeId ?? '').trim();
     if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`GoalTemplate references missing Goal path (${goalPath || '<empty>'}).`);
     if (!recordTypeId) throw new Error(`GoalTemplate ${goalPath} is missing recordTypeId.`);
-    const fields = Array.isArray(entry.fields)
+    const fields = stripGoalTemplateIconFieldDefaults(Array.isArray(entry.fields)
       ? entry.fields.filter((field) => {
           if (!isRecord(field)) return false;
           return field.semantic !== 'goalPath' && field.key !== 'goalPath' && field.key !== '目标';
         }) as GoalTemplateStorageRow['fields']
-      : undefined;
-    const defaults = isRecord(entry.defaultValues) ? { ...entry.defaultValues } : undefined;
+      : undefined);
+    const defaults = stripGoalTemplateIconDefaults(isRecord(entry.defaultValues) ? { ...entry.defaultValues } : undefined);
     if (defaults) {
       delete defaults.goalPath;
       delete defaults['目标'];
@@ -82,7 +119,25 @@ function hydrateGoalOnlySettings(value: unknown): GoalSettings {
     };
   });
 
-  const hydrated = { goals, goalTemplates };
+  const rawRevisions = Array.isArray(raw.timePresetRevisions) ? raw.timePresetRevisions : [];
+  const timePresetRevisions: GoalTimePresetRevision[] = rawRevisions.map((entry) => {
+    if (!isRecord(entry)) throw new Error('Invalid timePresetRevision: expected object.');
+    const effectiveWeekStart = String(entry.effectiveWeekStart ?? '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(effectiveWeekStart)) throw new Error('Invalid timePresetRevision effectiveWeekStart.');
+    const rawPresets = isRecord(entry.presets) ? entry.presets : {};
+    const presets: Record<string, GoalTimePresetSnapshotEntry> = {};
+    for (const [rawPath, rawPreset] of Object.entries(rawPresets)) {
+      const path = normalizeGoalPath(rawPath);
+      if (!path || !isRecord(rawPreset)) continue;
+      const preset: GoalTimePresetSnapshotEntry = {};
+      if (typeof rawPreset.timePresetPercent === 'number') preset.timePresetPercent = rawPreset.timePresetPercent;
+      if (typeof rawPreset.weeklyTargetMinutes === 'number') preset.weeklyTargetMinutes = rawPreset.weeklyTargetMinutes;
+      if (Object.keys(preset).length) presets[path] = preset;
+    }
+    return { effectiveWeekStart, presets };
+  }).sort((a, b) => a.effectiveWeekStart.localeCompare(b.effectiveWeekStart));
+
+  const hydrated = { goals, goalTemplates, timePresetRevisions };
   assertCanonicalGoalSettings(hydrated);
   return hydrated;
 }
@@ -114,11 +169,11 @@ export function isCurrentThinkSettings(value: unknown): value is ThinkSettings {
 }
 
 function persistGoalOnlySettings(settings: ThinkSettings): Record<string, unknown> {
-  const runtime = settings.goalSettings || { goals: [], goalTemplates: [] };
+  const runtime = settings.goalSettings || { goals: [], goalTemplates: [], timePresetRevisions: [] };
   const goals = (runtime.goals || []).map((goal) => {
     const path = normalizeGoalPath(goal.path);
     if (!path) throw new Error('Cannot persist Goal without canonical path.');
-    const source = goal as GoalDefinition & { icon?: string; color?: string; sortOrder?: number };
+    const source = goal as GoalDefinition & { icon?: string; color?: string; sortOrder?: number; timePresetPercent?: number; weeklyTargetMinutes?: number };
     return {
       path,
       status: goal.status,
@@ -126,6 +181,8 @@ function persistGoalOnlySettings(settings: ThinkSettings): Record<string, unknow
       ...(source.icon ? { icon: source.icon } : null),
       ...(source.color ? { color: source.color } : null),
       ...(typeof source.sortOrder === 'number' ? { sortOrder: source.sortOrder } : null),
+      ...(typeof source.timePresetPercent === 'number' ? { timePresetPercent: source.timePresetPercent } : null),
+      ...(typeof source.weeklyTargetMinutes === 'number' ? { weeklyTargetMinutes: source.weeklyTargetMinutes } : null),
       ...(goal.metrics?.length ? { metrics: goal.metrics } : null),
     };
   });
@@ -133,11 +190,11 @@ function persistGoalOnlySettings(settings: ThinkSettings): Record<string, unknow
   const goalTemplates = (runtime.goalTemplates || []).map((template) => {
     const path = normalizeGoalPath(template.goalPath);
     if (!path) throw new Error('Cannot persist GoalTemplate without canonical Goal path.');
-    const fields = (template.fields || []).filter((field) => {
+    const fields = stripGoalTemplateIconFieldDefaults((template.fields || []).filter((field) => {
       const record = field as unknown as Record<string, unknown>;
       return record.semantic !== 'goalPath' && record.key !== 'goalPath' && record.key !== '目标';
-    });
-    const defaults = { ...(template.defaultValues || {}) } as Record<string, unknown>;
+    })) || [];
+    const defaults = { ...(stripGoalTemplateIconDefaults(template.defaultValues) || {}) } as Record<string, unknown>;
     for (const key of ['goalPath', '目标']) delete defaults[key];
     return {
       goalPath: path,
@@ -152,7 +209,14 @@ function persistGoalOnlySettings(settings: ThinkSettings): Record<string, unknow
       ...(template.requiredFields?.length ? { requiredFields: template.requiredFields } : null),
     };
   });
-  return { goals, goalTemplates };
+  const timePresetRevisions = (runtime.timePresetRevisions || []).map((revision) => ({
+    effectiveWeekStart: revision.effectiveWeekStart,
+    presets: Object.fromEntries(Object.entries(revision.presets || {}).map(([path, preset]) => [normalizeGoalPath(path), {
+      ...(typeof preset.timePresetPercent === 'number' ? { timePresetPercent: preset.timePresetPercent } : null),
+      ...(typeof preset.weeklyTargetMinutes === 'number' ? { weeklyTargetMinutes: preset.weeklyTargetMinutes } : null),
+    }]).filter(([path]) => !!path)),
+  }));
+  return { goals, goalTemplates, timePresetRevisions };
 }
 
 /** Persist only the current Goal-only data shape. */

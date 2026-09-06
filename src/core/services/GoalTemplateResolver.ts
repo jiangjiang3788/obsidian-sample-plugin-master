@@ -1,7 +1,7 @@
 import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import type { GoalDefinition, GoalSettings } from '@/core/goal';
-import { findDirectGoalTemplate, getGoalTemplates, normalizeGoalPath, resolveTemplatePeriodPolicy } from '@/core/goal';
+import { applyGoalIconToCaptureFields, findDirectGoalTemplate, getGoalTemplates, normalizeGoalPath, resolveTemplatePeriodPolicy } from '@/core/goal';
 import { getTemplateRecordTypeById } from '@/core/recordTypes/public';
 
 export type GoalTemplateSourceType = 'record-type' | 'goal-template' | null;
@@ -95,6 +95,11 @@ function mergeTemplate(
   return merged;
 }
 
+function applyGoalIdentityIcon(template: RecordCaptureTemplate, goal: GoalDefinition | null): RecordCaptureTemplate {
+  const fields = applyGoalIconToCaptureFields(template.fields, goal);
+  return fields === template.fields ? template : { ...template, fields };
+}
+
 /**
  * Single capture-template resolver.
  *
@@ -152,7 +157,7 @@ export class GoalTemplateResolver {
     if (direct) {
       return {
         status: 'available',
-        template: mergeTemplate(baseTemplate, direct),
+        template: applyGoalIdentityIcon(mergeTemplate(baseTemplate, direct), goal),
         goal,
         templateId: direct.id,
         templateSourceType: 'goal-template',
@@ -174,9 +179,10 @@ export class GoalTemplateResolver {
     }
 
     const policy = resolveTemplatePeriodPolicy(baseTemplate as any);
-    const template = policy
+    const baseResolved = policy
       ? { ...(baseTemplate as any), periodPolicy: policy }
       : { ...(baseTemplate as any), periodPolicy: undefined, granularity: undefined };
+    const template = applyGoalIdentityIcon(baseResolved, goal);
     return {
       status: 'available',
       template,

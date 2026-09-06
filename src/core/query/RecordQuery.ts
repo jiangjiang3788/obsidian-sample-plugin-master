@@ -6,16 +6,13 @@ import { dayjs } from '@/core/utils/date';
 import { filterByKeyword, filterByPeriod, filterByRules, sortItems } from '@/core/utils/itemFilter';
 import { groupItemsByFields } from '@/core/utils/itemGrouping';
 import { isSameIsoWeek, toIsoDateTuple } from '@/core/utils/timelineRange';
+import { normalizeViewDateRole, type ViewDateRole } from '@/core/view-config/dateRole';
 
 export type RecordQueryDateMode = 'standard' | 'overview' | 'strict';
-export type RecordQueryDateRole = 'default' | 'task-scheduled' | 'task-due' | 'task-completed' | 'task-actual';
+export type RecordQueryDateRole = ViewDateRole;
 
-export function normalizeRecordQueryDateRole(value: unknown): RecordQueryDateRole | undefined {
-  const normalized = String(value || '').trim();
-  return ['default', 'task-scheduled', 'task-due', 'task-completed', 'task-actual'].includes(normalized)
-    ? normalized as RecordQueryDateRole
-    : undefined;
-}
+/** @deprecated Prefer normalizeViewDateRole for view configuration code. */
+export const normalizeRecordQueryDateRole = normalizeViewDateRole;
 
 export interface RecordQueryDateConstraint {
   range: [Date, Date];

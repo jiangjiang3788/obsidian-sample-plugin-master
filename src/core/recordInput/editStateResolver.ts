@@ -227,9 +227,30 @@ export function buildEditRecordState(
   });
 
   const parsedSnapshot = buildParsedRecordSnapshot(item);
-  const initialFormData = resolvedDependencies.template
+  const initialFormData: Record<string, unknown> = resolvedDependencies.template
     ? buildInitialFormData(resolvedDependencies.template, item, parsedSnapshot)
     : {};
+
+  // Editing must remain recoverable even when a View hands us a lean Task
+  // projection or template resolution is temporarily incomplete. The canonical
+  // Task body is a persistence fact, so seed it from the Record snapshot instead
+  // of allowing QuickInput to render an apparently empty task.
+  if (item.coreBlock === 'task') {
+    const taskBody = String(
+      parsedSnapshot.semantic.editableText
+      || parsedSnapshot.semantic.content
+      || parsedSnapshot.semantic.title
+      || item.extra?.['内容']
+      || item.extra?.['正文']
+      || '',
+    ).trim();
+    if (taskBody && !String(initialFormData['任务内容'] ?? '').trim()) {
+      initialFormData['任务内容'] = taskBody;
+    }
+    if (parsedSnapshot.semantic.goalPath && !String(initialFormData.goalPath ?? '').trim()) {
+      initialFormData.goalPath = parsedSnapshot.semantic.goalPath;
+    }
+  }
   recordDebugLog(
     "编辑初始值",
     "ParsedRecordSnapshot 到 initialFormData 的回填结果",

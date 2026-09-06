@@ -3,6 +3,7 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { EditableRecordSnapshot, RecordOutputPlan, RecordPersistencePlan } from './recordSnapshot';
 import type { TaskSessionCreateInput } from './timer';
 import type { TaskSeriesEditIntent } from '@/core/records/task/taskSeriesEdit';
+import type { TimelineEditTarget, TimelineLogicalRange } from './timeline';
 
 export type RecordOperation =
   | 'create'
@@ -147,17 +148,9 @@ export interface SubmitTaskSessionParams {
   source?: Extract<RecordInputSource, 'timer' | 'unknown'>;
 }
 
-export interface SubmitUpdateRecordTimeParams {
-  itemId: string;
-  updates: {
-    time?: string | null;
-    start?: string | null;
-    endTime?: string | null;
-    end?: string | null;
-    duration?: number | string | null;
-    date?: string | null;
-    direction?: 'forward' | 'backward';
-  };
+export interface SubmitUpdateTimelineRangeParams {
+  target: TimelineEditTarget;
+  range: TimelineLogicalRange;
   signal?: AbortSignal;
   source?: Extract<RecordInputSource, 'timer' | 'layout_renderer' | 'unknown'>;
 }

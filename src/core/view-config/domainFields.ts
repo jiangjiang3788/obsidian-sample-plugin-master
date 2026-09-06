@@ -1,4 +1,5 @@
 import type { FilterRule, SortRule, ViewInstance } from '@/core/view/ViewConfig';
+import { normalizeViewDateRole } from './dateRole';
 
 /**
  * View domain field policy
@@ -115,6 +116,9 @@ export function normalizeViewConfigDomain(viewConfig: Record<string, any> | unde
   for (const key of ['rowField', 'colField', 'valueField', 'dateField', 'groupField']) {
     if (next[key]) next[key] = normalizeViewFieldKey(next[key]);
   }
+  const dateRole = normalizeViewDateRole(next.dateRole);
+  if (dateRole) next.dateRole = dateRole;
+  else delete next.dateRole;
   if (Array.isArray(next.categories) && next.categories.length === 0) delete next.categories;
   if (Array.isArray(next.goalPaths) && next.goalPaths.length === 0) delete next.goalPaths;
   return next;

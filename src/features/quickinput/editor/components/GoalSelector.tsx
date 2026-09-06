@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 
-import { normalizeGoalPath, type GoalDefinition } from '@core/goal/public';
+import { normalizeGoalPath, resolveGoalIcon, type GoalDefinition } from '@core/goal/public';
 import { ThinkIcon } from '@shared/ui/public';
 import type { HierarchySingleSelectOption } from './HierarchySingleSelect';
 
@@ -11,6 +11,7 @@ export interface GoalSelectorOption extends HierarchySingleSelectOption {
 
 export interface GoalSelectorProps {
   goals: GoalSelectorOption[];
+  recentGoalPaths?: string[];
   selectedGoalPath?: string | null;
   onSelect: (goal: GoalSelectorOption | null) => void;
   onCreateGoal?: (goalPath: string) => Promise<void> | void;
@@ -93,7 +94,7 @@ function buildGoalHierarchy(goals: GoalSelectorOption[]) {
  * capped at three columns. Search/recent/card/two-line presentation is
  * intentionally excluded from this field.
  */
-export function GoalSelector({ goals, selectedGoalPath, onSelect, dense = false }: GoalSelectorProps) {
+export function GoalSelector({ goals, recentGoalPaths = [], selectedGoalPath, onSelect, dense = false }: GoalSelectorProps) {
   const normalizedSelected = normalizeGoalPath(selectedGoalPath) || null;
   const { byValue, childrenByParent } = useMemo(() => buildGoalHierarchy(goals), [goals]);
   const [expandedPath, setExpandedPath] = useState<string | null>(() => normalizedSelected);
@@ -138,6 +139,10 @@ export function GoalSelector({ goals, selectedGoalPath, onSelect, dense = false 
   const isOnActiveBranch = (value: string) => Boolean(
     activePath && (activePath === value || activePath.startsWith(`${value}/`)),
   );
+  const recentOptions = recentGoalPaths
+    .map((path) => byValue.get(normalizeGoalPath(path) || ''))
+    .filter((option): option is GoalSelectorOption => Boolean(option && !option.synthetic))
+    .slice(0, 5);
 
   const renderOption = (option: GoalSelectorOption, levelIndex: number) => {
     const hasChildren = (childrenByParent.get(option.value) || []).length > 0;
@@ -163,7 +168,10 @@ export function GoalSelector({ goals, selectedGoalPath, onSelect, dense = false 
           if (selectable) onSelect(option);
         }}
       >
-        <span className="think-combobox-option__label">{label}</span>
+        <span className="think-quick-input-goal-row__main">
+          <span className="think-quick-input-goal-row__icon" aria-hidden="true">{resolveGoalIcon(option.goal)}</span>
+          <span className="think-combobox-option__label">{label}</span>
+        </span>
         <span className="think-quick-input-goal-row__actions" aria-hidden="true">
           {selected ? <ThinkIcon name="check" /> : null}
           {hasChildren ? <ThinkIcon name="chevron-right" /> : null}
@@ -176,6 +184,25 @@ export function GoalSelector({ goals, selectedGoalPath, onSelect, dense = false 
 
   return (
     <div className={`think-quick-input-goal-selector${dense ? ' is-dense' : ''}`}>
+      {recentOptions.length ? (
+        <div className="think-quick-input-goal-recent" aria-label="最近目标">
+          <span className="think-quick-input-goal-recent__label">最近</span>
+          <div className="think-quick-input-goal-recent__items">
+            {recentOptions.map((option) => (
+              <button
+                type="button"
+                key={`recent:${option.value}`}
+                className="think-quick-input-goal-recent__chip"
+                title={option.value.replaceAll('/', ' › ')}
+                onClick={() => { setExpandedPath(option.value); onSelect(option); }}
+              >
+                <span aria-hidden="true">{resolveGoalIcon(option.goal)}</span>
+                <span>{String(option.label || leafLabel(option.value))}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       {activePathLabel ? (
         <div className="think-quick-input-goal-active-path" title={activePathLabel} aria-live="polite">
           {activePathLabel}

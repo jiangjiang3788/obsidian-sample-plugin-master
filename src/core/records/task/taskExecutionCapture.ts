@@ -1,8 +1,9 @@
 import type { TaskSessionCreateInput } from './taskSession';
 
-export interface TimelineCompletedExecutionCaptureContext {
-  kind: 'timeline_create';
+export interface CompletedExecutionCaptureContext {
+  kind: 'timeline_create' | 'quickinput_create';
   captureMode: 'completed_execution';
+  source: 'timeline' | 'unknown';
 }
 
 function readRecord(value: unknown): Record<string, unknown> {
@@ -19,12 +20,25 @@ function readString(value: unknown): string {
   return String(value ?? '').trim();
 }
 
-function readTimelineCompletedExecutionContext(
+function readCompletedExecutionContext(
   context?: Record<string, unknown> | null,
-): TimelineCompletedExecutionCaptureContext | null {
+): CompletedExecutionCaptureContext | null {
   const ui = readRecord(context?.__recordUiContext);
-  if (ui.kind !== 'timeline_create' || ui.captureMode !== 'completed_execution') return null;
-  return { kind: 'timeline_create', captureMode: 'completed_execution' };
+  if (ui.captureMode !== 'completed_execution') return null;
+  if (ui.kind === 'timeline_create') {
+    return { kind: 'timeline_create', captureMode: 'completed_execution', source: 'timeline' };
+  }
+  if (ui.kind === 'quickinput_create') {
+    return { kind: 'quickinput_create', captureMode: 'completed_execution', source: 'unknown' };
+  }
+  return null;
+}
+
+
+export function isTimelineCompletedExecutionContext(
+  context?: Record<string, unknown> | null,
+): boolean {
+  return readCompletedExecutionContext(context)?.kind === 'timeline_create';
 }
 
 function normalizeDateTime(value: unknown): { iso: string; ms: number } | null {
@@ -40,20 +54,25 @@ function durationMinutes(startedMs: number, endedMs: number): number {
 }
 
 /**
- * Translate Timeline's invocation context into the canonical execution fact.
+ * Translate create-only completed-execution context into the canonical execution fact.
  *
  * Important boundaries:
- * - Timeline/QuickInput still owns interactive forward/backward time calculation.
+ * - QuickInput still owns interactive forward/backward time calculation.
  * - This function only consumes the finalized Task values after that calculation.
  * - Missing/invalid ranges do not fabricate a Session; the Task create path stays valid.
- * - Legacy Task startAt/endAt remains readable for old records, but new Timeline execution facts belong to TaskSession.
+ * - Legacy Task startAt/endAt remains readable for old records, but new completed-create execution facts belong to TaskSession.
  */
 export function buildTimelineCompletedExecutionSessionInput(input: {
   context?: Record<string, unknown> | null;
   taskFields: Record<string, unknown>;
 }): TaskSessionCreateInput | null {
-  if (!readTimelineCompletedExecutionContext(input.context)) return null;
-  if (readString(input.taskFields.status).toLowerCase() !== 'done') return null;
+  const captureContext = readCompletedExecutionContext(input.context);
+  if (!captureContext) return null;
+  // Timeline `completed_execution` is an invocation contract, not a template hint.
+  // A stale/open form status must not downgrade a historical execution into a planned
+  // Task. Manual QuickInput completed capture still requires an explicit done status.
+  if (captureContext.kind !== 'timeline_create'
+    && readString(input.taskFields.status).toLowerCase() !== 'done') return null;
 
   const started = normalizeDateTime(input.taskFields.startAt);
   const ended = normalizeDateTime(input.taskFields.endAt);
@@ -67,7 +86,7 @@ export function buildTimelineCompletedExecutionSessionInput(input: {
     endedAt: ended.iso,
     durationMinutes: duration,
     result: 'task-completed',
-    source: 'timeline',
+    source: captureContext.source,
   };
 }
 
@@ -78,14 +97,14 @@ export interface TimelineCompletedExecutionPersistence {
 }
 
 /**
- * V4 execution cutover for Timeline quick-capture.
+ * Execution cutover for completed Task creation.
  *
  * The finalized reverse/forward range is first captured as a TaskSession. Once a
  * valid Session exists, the Task itself must not duplicate that actual range or
  * store actual duration in expectedDurationMinutes. completedAt remains a Task
  * lifecycle fact and is anchored to the execution end.
  *
- * Ordinary QuickInput and legacy records are intentionally untouched.
+ * Existing-record edit remains untouched because only create flows add the capture context.
  */
 export function buildTimelineCompletedExecutionPersistence(input: {
   context?: Record<string, unknown> | null;
@@ -95,6 +114,7 @@ export function buildTimelineCompletedExecutionPersistence(input: {
   if (!session) return { taskFields: { ...input.taskFields }, session: null };
 
   const taskFields = { ...input.taskFields };
+  if (isTimelineCompletedExecutionContext(input.context)) taskFields.status = 'done';
   delete taskFields.startAt;
   delete taskFields.endAt;
   delete taskFields.expectedDurationMinutes;

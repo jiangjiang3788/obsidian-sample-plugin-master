@@ -23,6 +23,14 @@ export function clampTimelineMinute(value: number, maxHours = 24): number {
   return Math.min(visibleEnd - 1, Math.max(TIMELINE_DAY_START_MINUTE, Math.floor(value)));
 }
 
+/** Range boundaries are allowed to land on the exclusive visible end (for example 24:00). */
+export function clampTimelineBoundaryMinute(value: number, maxHours = 24): number {
+  const visibleEnd = timelineVisibleEndMinute(maxHours);
+  if (visibleEnd <= 0) return TIMELINE_DAY_START_MINUTE;
+  if (!Number.isFinite(value)) return TIMELINE_DAY_START_MINUTE;
+  return Math.min(visibleEnd, Math.max(TIMELINE_DAY_START_MINUTE, Math.floor(value)));
+}
+
 export function timelineMinuteFromOffset(offsetPx: number, hourHeight: number, maxHours = 24): number {
   if (!Number.isFinite(offsetPx) || !Number.isFinite(hourHeight) || hourHeight <= 0) {
     return TIMELINE_DAY_START_MINUTE;
@@ -44,4 +52,15 @@ export function timelineMinuteToLocalDateTime(day: string, minute: number): stri
   // This is a wall-clock coordinate, not elapsed-time arithmetic. Building the local
   // datetime text directly keeps 00:00..23:59 stable even on DST transition days.
   return `${normalizedDay}T${String(hour).padStart(2, '0')}:${String(minuteOfHour).padStart(2, '0')}`;
+}
+
+/** Convert a range boundary, preserving the exclusive 24:00 endpoint as next-day 00:00. */
+export function timelineBoundaryMinuteToLocalDateTime(day: string, minute: number, maxHours = 24): string {
+  const normalizedMinute = clampTimelineBoundaryMinute(minute, maxHours);
+  const dayOffset = Math.floor(normalizedMinute / TIMELINE_MINUTES_PER_DAY);
+  const minuteOfDay = normalizedMinute % TIMELINE_MINUTES_PER_DAY;
+  const targetDay = dayjs(day).startOf('day').add(dayOffset, 'day').format('YYYY-MM-DD');
+  const hour = Math.floor(minuteOfDay / 60);
+  const minuteOfHour = minuteOfDay % 60;
+  return `${targetDay}T${String(hour).padStart(2, '0')}:${String(minuteOfHour).padStart(2, '0')}`;
 }

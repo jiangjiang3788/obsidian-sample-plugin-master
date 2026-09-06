@@ -22,6 +22,12 @@ import {
   compactGoalTemplateForStorage,
   cleanupGoalTemplateStorage,
   requireGoalPath,
+  getGoalWeeklyTargetMinutes,
+  getParentGoalPath,
+  getRootTimePresetTotals,
+  normalizeGoalTimePresetPercent,
+  normalizeWeeklyTargetMinutes,
+  upsertGoalTimePresetRevision,
 } from '@core/goal/public';
 import { getTemplateRecordTypeById } from '@core/recordTypes/public';
 import { devError } from '@core/utils/public';
@@ -54,6 +60,7 @@ function ensureGoalSettings(settings?: GoalSettings): GoalSettings {
   return {
     goals: [...(settings?.goals || [])],
     goalTemplates: [...(settings?.goalTemplates || [])],
+    timePresetRevisions: [...(settings?.timePresetRevisions || [])],
   };
 }
 
@@ -77,6 +84,7 @@ function collectGoalCascadePaths(goals: GoalDefinition[], path: string): string[
     .filter((goal) => goal.path === targetPath || goal.path.startsWith(`${targetPath}/`))
     .map((goal) => goal.path);
 }
+
 
 export class GoalUseCase {
   constructor(private store: AppStoreApi) {}
@@ -103,9 +111,12 @@ export class GoalUseCase {
       const state = this.store.getState();
       if (!state.isInitialized) return;
       const canonicalPath = requireGoalPath(path);
-      const safePatch = { ...patch } as Partial<Omit<GoalDefinition, 'path'>> & { granularity?: unknown; path?: unknown };
+      const safePatch = { ...patch } as Partial<Omit<GoalDefinition, 'path'>> & { granularity?: unknown; path?: unknown; timePresetPercent?: unknown; weeklyTargetMinutes?: unknown };
       delete safePatch.granularity;
       delete safePatch.path;
+      // Time preset changes go through dedicated validation methods.
+      delete safePatch.timePresetPercent;
+      delete safePatch.weeklyTargetMinutes;
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
         const target = draft.goalSettings.goals.find((goal) => goal.path === canonicalPath);
@@ -118,13 +129,123 @@ export class GoalUseCase {
     }
   }
 
+
+  async setGoalTimePresetPercent(path: string, percent: number | null): Promise<void> {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) return;
+      const canonicalPath = requireGoalPath(path);
+      if (getParentGoalPath(canonicalPath) !== null) throw new Error('只有顶层目标使用百分比时间预设。');
+      await state.updateSettings((draft) => {
+        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
+        const target = draft.goalSettings.goals.find((goal) => goal.path === canonicalPath);
+        if (!target) return;
+        const normalized = percent === null ? null : normalizeGoalTimePresetPercent(percent);
+        if (percent !== null && normalized === null) throw new Error('目标百分比必须在 0–100 之间。');
+        const previous = target.timePresetPercent;
+        if (normalized === null) delete target.timePresetPercent;
+        else target.timePresetPercent = normalized;
+        const totals = getRootTimePresetTotals(draft.goalSettings.goals);
+        if (totals.overcommittedPercent > 0.0001) {
+          if (previous === undefined) delete target.timePresetPercent;
+          else target.timePresetPercent = previous;
+          throw new Error(`顶层时间预设超过 100%，当前超出 ${totals.overcommittedPercent}%`);
+        }
+        const childTarget = draft.goalSettings.goals
+          .filter((goal) => goal.status !== 'archived' && getParentGoalPath(goal.path) === canonicalPath)
+          .reduce((sum, goal) => sum + (getGoalWeeklyTargetMinutes(goal.path, draft.goalSettings.goals) || 0), 0);
+        const parentTarget = getGoalWeeklyTargetMinutes(canonicalPath, draft.goalSettings.goals) || 0;
+        if (childTarget > parentTarget + 0.01) {
+          if (previous === undefined) delete target.timePresetPercent;
+          else target.timePresetPercent = previous;
+          throw new Error(`子目标预设合计已超过新的父目标时间 ${Math.round(parentTarget / 60 * 10) / 10}h/周。`);
+        }
+        target.updatedAt = nowIso();
+        draft.goalSettings.timePresetRevisions = upsertGoalTimePresetRevision(
+          draft.goalSettings.timePresetRevisions,
+          draft.goalSettings.goals,
+        );
+      });
+    } catch (error) {
+      devError('[GoalUseCase] setGoalTimePresetPercent failed:', error);
+      throw error;
+    }
+  }
+
+  async setGoalWeeklyTargetMinutes(path: string, minutes: number | null): Promise<void> {
+    try {
+      const state = this.store.getState();
+      if (!state.isInitialized) return;
+      const canonicalPath = requireGoalPath(path);
+      const parentPath = getParentGoalPath(canonicalPath);
+      if (!parentPath) throw new Error('顶层目标请使用百分比时间预设。');
+      await state.updateSettings((draft) => {
+        draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
+        const target = draft.goalSettings.goals.find((goal) => goal.path === canonicalPath);
+        if (!target) return;
+        const parentTarget = getGoalWeeklyTargetMinutes(parentPath, draft.goalSettings.goals);
+        if (parentTarget === null) throw new Error('请先设置父目标时间。');
+        const normalized = minutes === null ? null : normalizeWeeklyTargetMinutes(minutes);
+        if (minutes !== null && normalized === null) throw new Error('目标时间必须大于等于 0。');
+        const previous = target.weeklyTargetMinutes;
+        if (normalized === null) delete target.weeklyTargetMinutes;
+        else target.weeklyTargetMinutes = normalized;
+        const childSum = draft.goalSettings.goals
+          .filter((goal) => goal.status !== 'archived' && getParentGoalPath(goal.path) === parentPath)
+          .reduce((sum, goal) => sum + (getGoalWeeklyTargetMinutes(goal.path, draft.goalSettings.goals) || 0), 0);
+        if (childSum > parentTarget + 0.01) {
+          if (previous === undefined) delete target.weeklyTargetMinutes;
+          else target.weeklyTargetMinutes = previous;
+          throw new Error(`子目标预设合计超过父目标 ${Math.round(parentTarget / 60 * 10) / 10}h/周。`);
+        }
+        const ownChildren = draft.goalSettings.goals
+          .filter((goal) => goal.status !== 'archived' && getParentGoalPath(goal.path) === canonicalPath)
+          .reduce((sum, goal) => sum + (getGoalWeeklyTargetMinutes(goal.path, draft.goalSettings.goals) || 0), 0);
+        const ownTarget = getGoalWeeklyTargetMinutes(canonicalPath, draft.goalSettings.goals) || 0;
+        if (ownChildren > ownTarget + 0.01) {
+          if (previous === undefined) delete target.weeklyTargetMinutes;
+          else target.weeklyTargetMinutes = previous;
+          throw new Error('新的目标时间小于已设置的子目标时间合计。');
+        }
+        target.updatedAt = nowIso();
+        draft.goalSettings.timePresetRevisions = upsertGoalTimePresetRevision(
+          draft.goalSettings.timePresetRevisions,
+          draft.goalSettings.goals,
+        );
+      });
+    } catch (error) {
+      devError('[GoalUseCase] setGoalWeeklyTargetMinutes failed:', error);
+      throw error;
+    }
+  }
+
+
   async archiveGoal(path: string): Promise<void> {
-    await this.updateGoal(path, { status: 'archived' });
+    const state = this.store.getState();
+    if (!state.isInitialized) return;
+    const canonicalPath = requireGoalPath(path);
+    await state.updateSettings((draft) => {
+      draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
+      const target = draft.goalSettings.goals.find((goal) => goal.path === canonicalPath);
+      if (!target) return;
+      target.status = 'archived';
+      target.updatedAt = nowIso();
+    });
   }
 
   async restoreGoal(path: string): Promise<void> {
-    await this.updateGoal(path, { status: 'active' });
+    const state = this.store.getState();
+    if (!state.isInitialized) return;
+    const canonicalPath = requireGoalPath(path);
+    await state.updateSettings((draft) => {
+      draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
+      const target = draft.goalSettings.goals.find((goal) => goal.path === canonicalPath);
+      if (!target) return;
+      target.status = 'active';
+      target.updatedAt = nowIso();
+    });
   }
+
 
   async updateGoalMetrics(path: string, metrics: GoalMetricContract[]): Promise<void> {
     await this.updateGoal(path, { metrics });

@@ -10,7 +10,7 @@ const recordGesture = read('src/shared/ui/utils/recordOrigin.ts');
 const grouped = read('src/shared/ui/GroupedContainer.tsx');
 const itemLink = read('src/features/views/runtime/components/items/ItemLink.tsx');
 const taskRow = read('src/features/views/runtime/components/items/TaskRow.tsx');
-const timelineBody = read('src/features/views/runtime/components/timeline/DayColumnBody.tsx');
+const timelineTaskBlock = read('src/features/views/runtime/components/timeline/TimelineTaskBlock.tsx');
 const heatmapCell = read('src/features/views/runtime/components/heatmap/HeatmapCell.tsx');
 const statsChart = read('src/features/views/runtime/components/statistics/ChartBlock.tsx');
 const energyTasks = read('src/features/views/runtime/EnergyTaskList.tsx');
@@ -40,7 +40,7 @@ if (!recordGesture.includes('RECORD_GESTURE_HINT')) {
 for (const [name, source] of [
   ['ItemLink', itemLink],
   ['TaskRow', taskRow],
-  ['Timeline task block', timelineBody],
+  ['Timeline task block', timelineTaskBlock],
 ]) {
   if (!source.includes('createRecordGestureHandlers')) failures.push(`${name} must use shared Record gestures`);
   if (!source.includes('onKeyDown')) failures.push(`${name} must expose keyboard activation`);

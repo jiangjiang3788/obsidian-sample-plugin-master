@@ -50,6 +50,7 @@ export function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenR
     const taskItem = dataStore.queryItems().find((item) => item.id === timer.taskId);
     const recurringTask = taskItem ? isTaskRecurring(taskItem) : false;
     const clock = timerClock(timer, elapsedSeconds);
+    const hasEnergyBaseline = timerService.hasActiveEnergyBaseline(timer);
 
     useEffect(() => {
         let interval: number | null = null;
@@ -75,23 +76,32 @@ export function TimerRow({ timer, timerService, dataStore, onOpenRecord, onOpenR
                     onTouchEnd={titleGesture ? (titleGesture.onTouchEnd as any) : undefined}
                     onKeyDown={titleGesture ? (titleGesture.onKeyDown as any) : undefined}
                 >{taskItem?.title || '任务已不存在'}</div>
+                <div className="think-timer-row__energy">
+                    <ThinkButton
+                        size="sm"
+                        variant="ghost"
+                        disabled={!taskItem || timer.status !== 'running' || hasEnergyBaseline}
+                        title={hasEnergyBaseline ? '本次连续工作段已记录开始精力' : (timer.status === 'running' ? '记录本次连续工作段的开始精力' : '先继续任务，再记录开始精力')}
+                        onClick={() => void timerService.captureCurrentSegmentEnergy(timer.id)}
+                    >精力</ThinkButton>
+                </div>
                 <span className={`think-timer-row__clock${clock.countdown ? ' think-timer-row__countdown' : ''}`} title={clock.title}>{clock.label}</span>
                 <div className="think-timer-row__actions">
                     {timer.status === 'running' ? (
-                        <ThinkIconButton label="暂停" size="sm" onClick={() => timerService.pause(timer.id)} icon={<PauseIcon fontSize="small" />} />
+                        <ThinkIconButton label="暂停" size="sm" onClick={() => void timerService.pause(timer.id)} icon={<PauseIcon fontSize="small" />} />
                     ) : (
-                        <ThinkIconButton label="继续" size="sm" onClick={() => timerService.resume(timer.id)} icon={<PlayArrowIcon fontSize="small" />} />
+                        <ThinkIconButton label="继续" size="sm" onClick={() => void timerService.resume(timer.id)} icon={<PlayArrowIcon fontSize="small" />} />
                     )}
                     {recurringTask ? (
-                        <ThinkIconButton label="完成本次" size="sm" onClick={() => timerService.stopAndApply(timer.id)} icon={<StopIcon fontSize="small" />} />
+                        <ThinkIconButton label="完成本次" size="sm" onClick={() => void timerService.stopAndApply(timer.id)} icon={<StopIcon fontSize="small" />} />
                     ) : (
                         <>
-                            <ThinkIconButton label="结束本次" size="sm" onClick={() => timerService.endWorkBlock(timer.id)} icon={<StopIcon fontSize="small" />} />
-                            <ThinkButton size="sm" variant="ghost" onClick={() => timerService.stopAndApply(timer.id)}>完成任务</ThinkButton>
+                            <ThinkIconButton label="结束本次" size="sm" onClick={() => void timerService.endWorkBlock(timer.id)} icon={<StopIcon fontSize="small" />} />
+                            <ThinkButton size="sm" variant="ghost" onClick={() => void timerService.stopAndApply(timer.id)}>完成任务</ThinkButton>
                         </>
                     )}
                     <ThinkIconButton label="编辑任务" size="sm" onClick={handleEdit} icon={<EditIcon fontSize="small" />} />
-                    <ThinkIconButton label="取消任务" size="sm" tone="danger" onClick={() => timerService.cancel(timer.id)} icon={<DeleteForeverIcon fontSize="small" />} />
+                    <ThinkIconButton label="移除计时" size="sm" tone="danger" onClick={() => void timerService.cancel(timer.id)} icon={<DeleteForeverIcon fontSize="small" />} />
                 </div>
             </div>
         </div>

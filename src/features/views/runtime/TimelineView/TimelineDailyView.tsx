@@ -1,17 +1,22 @@
 /** @jsxImportSource preact */
-import type { EditTimelineBlockHandler, OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/public';
-import type { UpdateTaskTimeHandler } from '@shared/types/public';
-import { ProgressBlock, DayColumnHeader, DayColumnBody } from '../components/timeline';
+import type { JSX } from 'preact';
+import type { OpenRecordHandler, OpenRecordOriginHandler, UpdateTimelineRangeHandler } from '@shared/types/public';
+import type { GoalTimeAllocationSummary } from '@core/goal/public';
+import { DayColumnHeader, DayColumnBody, TimelineOverallSummary, TimelineTimeAxis } from '../components/timeline';
 import type { DailyViewData } from './TimelineViewTypes';
 import { buildTimelineDayColumns, buildTimelineTimeAxisRows } from './TimelineDailyViewModel';
-
+import type { TimelineCurrentView } from './TimelineViewModel';
 type ZoomHandlers = Record<string, any>;
-
 interface TimelineDailyViewProps {
   zoomHandlers: ZoomHandlers;
+  onZoomToMax?: () => void;
+  maxHourHeight?: number;
   timeAxisWidth: number;
   summaryCategoryHours: Record<string, number>;
   totalSummaryHours: number;
+  goalAllocationSummary?: GoalTimeAllocationSummary | null;
+  goalAllocationByDay?: Record<string, GoalTimeAllocationSummary>;
+  currentView?: TimelineCurrentView;
   dailyViewData: DailyViewData;
   categoriesConfig: Record<string, { files?: string[]; color?: string }>;
   hourHeight: number;
@@ -20,18 +25,22 @@ interface TimelineDailyViewProps {
   progressOrder: string[];
   untrackedLabel: string;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
-  onUpdateTaskTime?: UpdateTaskTimeHandler;
-  onEditTimelineBlock?: EditTimelineBlockHandler;
+  onUpdateTimelineRange?: UpdateTimelineRangeHandler;
   onOpenRecord?: OpenRecordHandler;
   onNotice?: (message: string) => void;
-  onColumnClick: (day: string, e: MouseEvent | TouchEvent) => void;
+  onColumnClick: (day: string, e: MouseEvent | TouchEvent, selectedRange?: { startMinute: number; endMinute: number } | null) => void;
 }
 
 export function TimelineDailyView({
   zoomHandlers,
+  onZoomToMax,
+  maxHourHeight,
   timeAxisWidth,
   summaryCategoryHours,
   totalSummaryHours,
+  goalAllocationSummary = null,
+  goalAllocationByDay = {},
+  currentView = '天',
   dailyViewData,
   categoriesConfig,
   hourHeight,
@@ -40,32 +49,30 @@ export function TimelineDailyView({
   progressOrder,
   untrackedLabel,
   onOpenRecordOrigin,
-  onUpdateTaskTime,
-  onEditTimelineBlock,
+  onUpdateTimelineRange,
   onOpenRecord,
   onNotice,
   onColumnClick,
 }: TimelineDailyViewProps) {
   const dayColumns = buildTimelineDayColumns(dailyViewData);
   const timeAxisRows = buildTimelineTimeAxisRows(maxHours, hourHeight);
-
   return (
-    <div class="timeline-view-wrapper think-viz-surface" {...zoomHandlers}>
+    <div
+      class="timeline-view-wrapper think-viz-surface"
+      style={{ '--timeline-hour-height': `${hourHeight}px`, '--timeline-quarter-hour-height': `${hourHeight / 4}px`, '--timeline-five-minute-height': `${hourHeight / 12}px` } as JSX.CSSProperties}
+      {...zoomHandlers}
+    >
       <div class="timeline-sticky-header">
-        <div class="summary-progress-container" style={{ flex: `0 0 ${timeAxisWidth}px` }}>
-          <div class="summary-title">总结</div>
-          <div class="summary-content">
-            {totalSummaryHours > 0 && (
-              <ProgressBlock
-                categoryHours={summaryCategoryHours}
-                order={progressOrder}
-                totalHours={totalSummaryHours}
-                colorMap={colorMap}
-                untrackedLabel={untrackedLabel}
-              />
-            )}
-          </div>
-        </div>
+        <TimelineOverallSummary
+          width={timeAxisWidth}
+          goalSummary={goalAllocationSummary}
+          currentView={currentView}
+          categoryHours={summaryCategoryHours}
+          totalHours={totalSummaryHours}
+          progressOrder={progressOrder}
+          colorMap={colorMap}
+          untrackedLabel={untrackedLabel}
+        />
 
         {dayColumns.map(({ day, blocks }) => (
           <DayColumnHeader
@@ -76,18 +83,21 @@ export function TimelineDailyView({
             colorMap={colorMap}
             untrackedLabel={untrackedLabel}
             progressOrder={progressOrder}
+            goalAllocationSummary={goalAllocationByDay[day]}
+            currentView={currentView}
           />
         ))}
       </div>
 
       <div class="timeline-scrollable-body">
-        <div class="time-axis" style={{ flex: `0 0 ${timeAxisWidth}px` }}>
-          {timeAxisRows.map((row) => (
-            <div key={row.hour} class="time-axis-hour" style={{ height: row.height }}>
-              {row.label}
-            </div>
-          ))}
-        </div>
+        <TimelineTimeAxis
+          rows={timeAxisRows}
+          width={timeAxisWidth}
+          hourHeight={hourHeight}
+          maxHours={maxHours}
+          maxHourHeight={maxHourHeight}
+          onZoomToMax={onZoomToMax}
+        />
 
         {dayColumns.map(({ day, blocks }) => (
           <DayColumnBody
@@ -99,8 +109,7 @@ export function TimelineDailyView({
             categoriesConfig={categoriesConfig}
             colorMap={colorMap}
             maxHours={maxHours}
-            onUpdateTaskTime={onUpdateTaskTime}
-            onEditTask={onEditTimelineBlock}
+            onUpdateTimelineRange={onUpdateTimelineRange}
             onOpenRecord={onOpenRecord}
             onNotice={onNotice}
             onColumnClick={onColumnClick}

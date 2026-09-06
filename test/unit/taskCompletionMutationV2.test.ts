@@ -53,9 +53,10 @@ function activeSeries(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   } as RecordViewItem;
 }
 
-function harness(task: RecordViewItem, series?: RecordViewItem) {
+function harness(task: RecordViewItem, series?: RecordViewItem, extraRecords: RecordViewItem[] = []) {
   const records = new Map<string, RecordViewItem>([[task.id, task]]);
   if (series) records.set(series.id, series);
+  extraRecords.forEach((record) => records.set(record.id, record));
   const updates: Array<{ recordId: string; patch: Record<string, unknown> }> = [];
   const batches: any[][] = [];
   const repository = {
@@ -71,7 +72,10 @@ function harness(task: RecordViewItem, series?: RecordViewItem) {
       return { writtenPaths: ['Tasks.md'], createdRecordIds: operations.filter(op => op.kind === 'create').map(op => op.record.recordId) };
     },
   };
-  const dataStore = { getRecordLocation: (id: string) => records.has(id) ? { path: 'Tasks.md', startLine: 1, endLine: 10, modified: 1 } : null };
+  const dataStore = {
+    getRecordLocation: (id: string) => records.has(id) ? { path: 'Tasks.md', startLine: 1, endLine: 10, modified: 1 } : null,
+    queryRecords: () => [...records.values()],
+  };
   return { mutation: new TaskCompletionMutation(dataStore as any, repository as any), updates, batches };
 }
 
@@ -83,6 +87,46 @@ describe('TaskCompletionMutation v2', () => {
     expect(updates[0].patch.status).toBe('done');
     expect(typeof updates[0].patch.completedAt).toBe('string');
     expect(batches).toHaveLength(0);
+  });
+
+  it('完成已有明确实际时间段的旧 Task 时，把该事实迁移成 task-completed TaskSession', async () => {
+    const { mutation, updates, batches } = harness(openTask({
+      goalPath: '工作能力/通勤',
+      startAt: '2026-08-11T09:10:00.000Z',
+      endAt: '2026-08-11T09:40:00.000Z',
+      expectedDurationMinutes: 15,
+    }));
+
+    await mutation.completeItem(taskId);
+
+    expect(updates).toHaveLength(0);
+    expect(batches).toHaveLength(1);
+    expect(batches[0]).toHaveLength(2);
+    expect(batches[0][0]).toMatchObject({
+      kind: 'update',
+      recordId: taskId,
+      patch: {
+        status: 'done',
+        completedAt: '2026-08-11T09:40:00.000Z',
+        startAt: null,
+        endAt: null,
+      },
+    });
+    expect(batches[0][1]).toMatchObject({
+      kind: 'create',
+      record: {
+        coreBlock: 'task-session',
+        fields: {
+          taskId,
+          goalPath: '工作能力/通勤',
+          sessionStartedAt: '2026-08-11T09:10:00.000Z',
+          sessionEndedAt: '2026-08-11T09:40:00.000Z',
+          sessionDurationMinutes: 30,
+          sessionResult: 'task-completed',
+          sessionSource: 'unknown',
+        },
+      },
+    });
   });
 
   it('advances an active Series atomically and takes future defaults from Series', async () => {

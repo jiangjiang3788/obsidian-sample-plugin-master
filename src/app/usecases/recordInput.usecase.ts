@@ -21,11 +21,11 @@ import type {
   SubmitDeleteRecordParams,
   SubmitTaskSessionParams,
   SubmitUpdateRecordParams,
-  SubmitUpdateRecordTimeParams,
+  SubmitUpdateTimelineRangeParams,
 } from '@core/recordInput/public';
 import { buildRefreshPlan } from './recordInput/paths';
 import { submitFinalizedRecordMutation } from './recordInput/submitPipeline';
-import { normalizeTimeUpdates } from './recordInput/time';
+import { normalizeTimelineRangeUpdate } from './recordInput/timelineRange';
 import { mapSubmitError } from './recordInput/error';
 import {
   CreateRecordWorkflow,
@@ -58,7 +58,7 @@ export class RecordInputUseCase {
     return new CreateRecordWorkflow(this.getWorkflowRuntime()).submit(params);
   }
 
-  async submitEnergySnapshot(params: EnergySnapshotInput & { signal?: AbortSignal }): Promise<RecordSubmitResult> {
+  async submitEnergySnapshot(params: EnergySnapshotInput & { signal?: AbortSignal; linkFinishedSession?: boolean }): Promise<RecordSubmitResult> {
     const record = buildEnergySnapshotRecord(params);
     if (!record.goalPath) {
       return buildValidationErrorResult('create', [{
@@ -93,7 +93,9 @@ export class RecordInputUseCase {
       );
       const refresh = buildRefreshPlan([path]);
       await applyRecordRefreshPlan(this.deps.dataStore, refresh);
-      const linkedSession = await this.deps.itemService.linkEnergySnapshot(record.recordId);
+      const linkedSession = params.linkFinishedSession === false
+        ? null
+        : await this.deps.itemService.linkEnergySnapshot(record.recordId);
       return buildSuccessResult('create', {
         affectedPath: path,
         affectedRecordId: record.recordId,
@@ -197,35 +199,37 @@ export class RecordInputUseCase {
     });
   }
 
-  async submitUpdateRecordTime(params: SubmitUpdateRecordTimeParams): Promise<RecordSubmitResult> {
-    const normalizedUpdates = normalizeTimeUpdates(params.updates);
-    if ('error' in normalizedUpdates) {
-      return buildValidationErrorResult('time_update', [normalizedUpdates.error]);
+  async submitUpdateTimelineRange(params: SubmitUpdateTimelineRangeParams): Promise<RecordSubmitResult> {
+    const normalizedRange = normalizeTimelineRangeUpdate(params);
+    if ('error' in normalizedRange) {
+      return buildValidationErrorResult('time_update', [normalizedRange.error]);
     }
 
     return submitFinalizedRecordMutation({
       dataStore: this.deps.dataStore,
       operation: 'time_update',
       signal: params.signal,
-      refreshPathsOnError: () => [this.deps.dataStore.getRecordLocation(params.itemId)?.path || null],
+      refreshPathsOnError: () => [this.deps.dataStore.getRecordLocation(params.target.recordId)?.path || null],
       run: async () => {
-        const path = this.deps.dataStore.getRecordLocation(params.itemId)?.path;
-        if (!path) throw new Error(`record_location_unavailable:${params.itemId}`);
-        await this.deps.itemService.updateItemTime(params.itemId, normalizedUpdates, { autoRefresh: false });
+        const path = this.deps.dataStore.getRecordLocation(params.target.recordId)?.path;
+        if (!path) throw new Error(`record_location_unavailable:${params.target.recordId}`);
+        await this.deps.itemService.updateTimelineRange(params.target, normalizedRange, { autoRefresh: false });
+        const durationMinutes = normalizedRange.end
+          ? Math.round(((Date.parse(normalizedRange.end) - Date.parse(normalizedRange.start)) / 60_000) * 100) / 100
+          : null;
         return buildSuccessResult('time_update', {
           affectedPath: path,
-          affectedRecordId: params.itemId,
+          affectedRecordId: params.target.recordId,
           refresh: buildRefreshPlan([path]),
           feedback: {
-            notice: normalizedUpdates.duration != null
-              ? `时间已更新为 ${normalizedUpdates.duration} 分钟。`
-              : '记录时间已更新。',
+            notice: durationMinutes != null
+              ? `时间轴区间已更新为 ${durationMinutes} 分钟。`
+              : '时间轴时间点已更新。',
           },
         });
       },
     });
   }
-
 
 
   private getWorkflowRuntime() {

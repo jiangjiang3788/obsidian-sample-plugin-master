@@ -10,6 +10,7 @@ import { AiChatModalView } from './AiChatModalView';
 import type { AiServices } from './types';
 import { CancelledError, createTakeLatest } from '@shared/utils/public';
 import { useIsMounted } from '@shared/hooks/public';
+import { buildTaskCaptureText, isExplicitTaskCaptureRequest } from './chatRecordCaptureIntent';
 
 export interface AiChatModalContainerProps {
     closeModal: () => void;
@@ -159,6 +160,31 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
         await sessionStore.appendMessage(sessionId, 'user', userMessage);
 
         try {
+            if (isExplicitTaskCaptureRequest(userMessage) && services.captureNaturalRecords && services.openNaturalRecordBatchConfirm) {
+                const captureText = buildTaskCaptureText(userMessage, selectedGoalPath);
+                const batch = await takeLatestRef.current.run((signal) =>
+                    services.captureNaturalRecords!({ text: captureText, signal })
+                );
+                const items = (batch.items || []).map((item) => ({
+                    ...item,
+                    target: {
+                        ...item.target,
+                        blockId: 'core.task',
+                        ...(selectedGoalPath ? { goalPath: selectedGoalPath, goalTemplateId: undefined } : null),
+                    },
+                }));
+                if (!items.length) throw new Error('AI 未识别出可创建的任务');
+                services.openNaturalRecordBatchConfirm({
+                    title: `确认任务（${items.length} 条）`,
+                    items,
+                    traceId: `ai-chat-capture-${Date.now().toString(36)}`,
+                });
+                if (isMountedRef.current) {
+                    await sessionStore.appendMessage(sessionId, 'assistant', `已拆成 ${items.length} 条任务，已打开批量确认。`);
+                }
+                return;
+            }
+
             // 构建历史消息
             const currentMessages = sessionStore.getMessages(sessionId);
             const history: OpenAIChatMessage[] = currentMessages

@@ -8,7 +8,7 @@ import {
 } from '@core/goal/public';
 import type { GoalTemplateDraftState, GoalTemplateEditMode } from './GoalTemplateEditorTypes';
 import { buildDraftPeriodPolicy } from './GoalTemplateDraftModel';
-import { deriveRequiredFields, equalStringSet, fieldsHaveSameStructure, getFieldDefaultMap } from './GoalTemplateFieldModel';
+import { collectGoalTemplateDefaultValuesFromFields, deriveRequiredFields, equalStringSet, fieldsHaveSameStructure, getFieldDefaultMap } from './GoalTemplateFieldModel';
 import { compactText } from '@core/semantics/public';
 import { isSystemRecordContextField } from '@core/goal/public';
 
@@ -23,7 +23,9 @@ function cleanDefaultValuesOverride(
 ): Record<string, unknown> | undefined {
   const baseDefaults = getFieldDefaultMap(block?.fields as TemplateField[] | undefined);
   const result: Record<string, unknown> = {};
-  Object.entries(draft.defaultValues || {}).forEach(([key, raw]) => {
+  const fieldDefaults = collectGoalTemplateDefaultValuesFromFields(draft.fields || []);
+  Object.entries(fieldDefaults).forEach(([key, raw]) => {
+    if (key === 'icon' || key === '图标') return;
     if (FORBIDDEN_CONTEXT_KEYS.has(key) || isSystemRecordContextField(key)) return;
     const value = compactText(raw);
     if (!value) return;

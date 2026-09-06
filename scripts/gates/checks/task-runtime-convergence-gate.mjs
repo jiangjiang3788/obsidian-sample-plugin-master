@@ -26,7 +26,10 @@ if (!taskActions.includes('params.useCases.taskRuntime.completeTask')) failures.
 if (!quickInput.includes("useCases.taskRuntime.runLifecycle({ taskId: itemId, command, source: 'quickinput' })")) failures.push('QuickInput lifecycle actions must route through TaskRuntimeUseCase');
 if (!quickInput.includes("useCases.taskRuntime.runLifecycle({ taskId: itemId, command: 'skip', source: 'quickinput' })")) failures.push('Recurring skip must route through TaskRuntimeUseCase');
 if (!timer.includes('this.useCases.taskRuntime.completeTask')) failures.push('Timer panel completion must route through TaskRuntimeUseCase');
-if (!completionMutation.includes('const at = sessionInput?.endedAt || timestampNow()')) failures.push('Task lifecycle timestamps must anchor to Session endedAt when an execution Session exists');
+if (!(
+  completionMutation.includes('const effectiveSessionInput = sessionInput ?? legacyActualSession ?? undefined')
+  && completionMutation.includes('const at = effectiveSessionInput?.endedAt || timestampNow()')
+)) failures.push('Task lifecycle timestamps must anchor to the effective execution Session endedAt, including migrated legacy actual ranges');
 if (!completionMutation.includes('cancelItemWithSession') || !completionMutation.includes('skipItemWithSession')) failures.push('cancel/skip lifecycle transitions must support atomic final work-block Session capture');
 
 // No UI/application surface may directly call submitCompleteRecord. The RecordInput

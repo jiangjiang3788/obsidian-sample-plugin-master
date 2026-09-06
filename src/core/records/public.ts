@@ -20,3 +20,5 @@ export * from './task/taskQuadrant';
 export * from './task/taskDate';
 
 export * from './RecordDraft';
+
+export { buildRepeatedTaskFormData } from './task/taskRepeat';

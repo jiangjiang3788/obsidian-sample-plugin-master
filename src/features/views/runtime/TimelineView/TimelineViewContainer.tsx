@@ -3,9 +3,10 @@
 import { h } from 'preact';
 import { useCallback, useMemo } from 'preact/hooks';
 import type { RecordViewItem } from '@core/types/public';
+import type { GoalSettings } from '@core/goal/public';
 import { useTimelineZoom } from '@core/view/public';
-import type { EditTimelineBlockHandler, OpenRecordHandler, OpenRecordOriginHandler, OpenTimelineCreateHandler } from '@shared/types/public';
-import type { UpdateTaskTimeHandler } from '@shared/types/public';
+import type { OpenRecordHandler, OpenRecordOriginHandler, OpenTimelineCreateHandler } from '@shared/types/public';
+import type { UpdateTimelineRangeHandler } from '@shared/types/public';
 import { TimelineViewView } from './TimelineViewView';
 import { buildTimelineRenderModel, type TimelineCurrentView } from './TimelineViewModel';
 
@@ -15,14 +16,14 @@ interface TimelineViewProps {
   module: any;
   currentView: TimelineCurrentView;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
-  /** 由 feature 层注入：用于“对齐/精确编辑”等需要写回的操作 */
-  onUpdateTaskTime?: UpdateTaskTimeHandler;
-  onEditTimelineBlock?: EditTimelineBlockHandler;
+  /** 由 app 层注入：所有 Timeline move / resize / align 统一写回完整逻辑区间。 */
+  onUpdateTimelineRange?: UpdateTimelineRangeHandler;
   /** 由 feature/app 层注入：Timeline 点击创建记录。 */
   onCreateFromTimeline?: OpenTimelineCreateHandler;
   onOpenRecord?: OpenRecordHandler;
   onNotice?: (message: string) => void;
   records?: RecordViewItem[];
+  goalSettings?: GoalSettings;
 }
 
 const TIME_AXIS_WIDTH = 90;
@@ -33,27 +34,28 @@ export function TimelineView({
   module,
   currentView,
   onOpenRecordOrigin,
-  onUpdateTaskTime,
-  onEditTimelineBlock,
+  onUpdateTimelineRange,
   onCreateFromTimeline,
   onOpenRecord,
   onNotice,
   records,
+  goalSettings,
 }: TimelineViewProps) {
   const renderModel = useMemo(
-    () => buildTimelineRenderModel({ items, records, dateRange, module, currentView }),
-    [items, records, dateRange, module, currentView]
+    () => buildTimelineRenderModel({ items, records, dateRange, module, currentView, goalSettings }),
+    [items, records, dateRange, module, currentView, goalSettings]
   );
 
-  const { hourHeight, zoomHandlers } = useTimelineZoom({
+  const { hourHeight, maxHourHeight, zoomToMax, zoomHandlers } = useTimelineZoom({
     defaultHeight: renderModel.config.defaultHourHeight,
   });
 
   const handleColumnClick = useCallback(
-    (day: string, e: MouseEvent | TouchEvent) => {
+    (day: string, e: MouseEvent | TouchEvent, selectedRange?: { startMinute: number; endMinute: number } | null) => {
       onCreateFromTimeline?.({
         day,
         event: e,
+        selectedRange,
         hourHeight,
         maxHours: renderModel.config.MAX_HOURS_PER_DAY,
         // Retrospective creation resolves gaps from actual execution only. Planned
@@ -73,16 +75,21 @@ export function TimelineView({
       progressOrder={renderModel.config.progressOrder}
       untrackedLabel={renderModel.config.UNTRACKED_LABEL}
       zoomHandlers={zoomHandlers}
+      onZoomToMax={zoomToMax}
+      maxHourHeight={maxHourHeight}
       timeAxisWidth={TIME_AXIS_WIDTH}
       summaryCategoryHours={renderModel.summaryCategoryHours}
       totalSummaryHours={renderModel.totalSummaryHours}
+      goalAllocationSummary={renderModel.goalAllocationSummary}
+      goalAllocationByDay={renderModel.goalAllocationByDay}
+      hasGoalAllocation={renderModel.hasGoalAllocation}
+      currentView={currentView}
       dailyViewData={renderModel.dailyViewData}
       categoriesConfig={renderModel.config.categories}
       hourHeight={hourHeight}
       maxHours={renderModel.config.MAX_HOURS_PER_DAY}
       onOpenRecordOrigin={onOpenRecordOrigin}
-      onUpdateTaskTime={onUpdateTaskTime}
-      onEditTimelineBlock={onEditTimelineBlock}
+      onUpdateTimelineRange={onUpdateTimelineRange}
       onOpenRecord={onOpenRecord}
       onNotice={onNotice}
       onColumnClick={handleColumnClick}

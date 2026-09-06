@@ -26,8 +26,7 @@ describe('所有注册 View 的 Task runtime 动作接线', () => {
       const timerService = { startOrResume: jest.fn(async () => undefined) };
       const timers = [{ id: 'timer.contract', taskId: 'task.contract', status: 'running' }];
       const handlers = {
-        onUpdateTaskTime: jest.fn(),
-        onEditTimelineBlock: jest.fn(),
+        onUpdateTimelineRange: jest.fn(),
         onTaskQuadrantChange: jest.fn(),
         onQuickCreate: jest.fn(),
         onCategoryColorsChange: jest.fn(),

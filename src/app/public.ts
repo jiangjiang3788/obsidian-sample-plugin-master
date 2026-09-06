@@ -53,8 +53,9 @@ export {
   openCreateFromHeatmap,
   openCreateFromStatistics,
   openEditFromItem,
+  mergeRecordItemForEdit,
   completeFromView,
-  updateTimeFromView,
+  updateTimelineRangeFromView,
   commitExcelCellFromView,
 } from './actions/recordUiActions';
 export { getVaultName, openRecordOrigin, resolveVaultResourcePath } from './actions/obsidianRuntimeActions';
@@ -67,7 +68,7 @@ export type {
   HeaderCreateParams,
   EditFromItemParams,
   CompleteFromViewParams,
-  UpdateTimeFromViewParams,
+  UpdateTimelineRangeFromViewParams,
   CommitExcelCellFromViewParams,
   CommitExcelCellFromViewResult,
 } from './actions/recordUiActions';

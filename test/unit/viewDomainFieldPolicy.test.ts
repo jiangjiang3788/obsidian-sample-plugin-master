@@ -37,6 +37,8 @@ describe('view domain field policy', () => {
       categories: [{ name: '闪念/感受' }],
     });
     expect(normalizeViewConfigDomain({ categories: [], goalPaths: [] })).toEqual({});
+    expect(normalizeViewConfigDomain({ dateRole: 'task-completed' })).toEqual({ dateRole: 'task-completed' });
+    expect(normalizeViewConfigDomain({ dateRole: 'unknown-time-role' })).toEqual({});
   });
 
   it('resolves explicit status and structured cadence', () => {

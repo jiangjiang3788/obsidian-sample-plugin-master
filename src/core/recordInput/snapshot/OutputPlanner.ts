@@ -9,7 +9,7 @@ import { encodeRecordBlock, encodeRecordDraft } from '@/core/records/codec';
 import { buildCustomCaptureFields, buildGenericRecordDraft } from '@/core/records/RecordDraft';
 import { getRecordSchemaDefinition } from '@/core/records/schema';
 import { splitHierarchyPathValue } from '@/core/semantics/path';
-import { buildTimelineCompletedExecutionPersistence } from '@/core/records/task/taskExecutionCapture';
+import { buildTimelineCompletedExecutionPersistence, isTimelineCompletedExecutionContext } from '@/core/records/task/taskExecutionCapture';
 import { buildTaskSessionFields } from '@/core/records/task/taskSession';
 
 function normalizeNonEmptyPath(value: string | null | undefined): string | null {
@@ -148,8 +148,17 @@ export function buildRecordOutputPlan(input: {
   if (coreBlock === 'task') {
     const statusOption = readOptionText(renderData['状态'] ?? renderData.status);
     const candidateStatus = String(statusOption.value || statusOption.label || 'open').trim().toLowerCase();
-    const status = ['open', 'done', 'cancelled', 'skipped'].includes(candidateStatus) ? candidateStatus : 'open';
-    const recurrence = readStructuredTaskRecurrence(renderData);
+    // A Timeline completed-execution invocation is authoritative. Force lifecycle
+    // completion before recurrence/output branching so a stale template status cannot
+    // create an open Task or accidentally arm a recurring series.
+    const status = isTimelineCompletedExecutionContext(input.context)
+      ? 'done'
+      : (['open', 'done', 'cancelled', 'skipped'].includes(candidateStatus) ? candidateStatus : 'open');
+    const requestedRecurrence = readStructuredTaskRecurrence(renderData);
+    // Completed capture is an execution fact. A stale template/Goal recurrence
+    // default must never turn that historical Task into the initial instance of
+    // a series (the old combination caused task_series_initial_instance_must_be_open).
+    const recurrence = status === 'done' ? null : requestedRecurrence;
     if (!recurrence && status === 'skipped') throw new Error('task_status_skipped_requires_series');
     if (recurrence && status !== 'open') throw new Error('task_series_initial_instance_must_be_open');
     const scheduledAt = normalizeLocalDateTime(

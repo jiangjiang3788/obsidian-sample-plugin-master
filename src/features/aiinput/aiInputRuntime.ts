@@ -4,6 +4,7 @@ import type { ISettingsProvider } from '@core/services/public';
 import { getZustandState, type AppStoreInstance } from '@/app/public';
 
 import { getTemplateRecordTypes } from '@core/recordTypes/public';
+import { AiConfigCache, AiHttpClient, AiNaturalLanguageRecordParser } from '@core/ai/public';
 export interface AiInputUiPort {
     notice: (message: string, timeout?: number) => { setMessage?: (message: string) => void; hide?: () => void } | void;
 }
@@ -20,6 +21,15 @@ export function createZustandSettingsProvider(store: AppStoreInstance): ISetting
 }
 
 export { elapsedMs, nowMs };
+
+
+export function createAiNaturalRecordParserFromStore(store: AppStoreInstance): AiNaturalLanguageRecordParser {
+    const settingsProvider = createZustandSettingsProvider(store);
+    const cache = new AiConfigCache(settingsProvider);
+    const http = new AiHttpClient();
+    return new AiNaturalLanguageRecordParser(settingsProvider, cache, http);
+}
+
 
 export function createAiInputTraceId(prefix = 'aiinput'): string {
     return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;

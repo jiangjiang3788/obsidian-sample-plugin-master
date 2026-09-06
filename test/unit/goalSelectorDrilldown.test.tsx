@@ -23,7 +23,7 @@ const goals: GoalSelectorOption[] = [
   { id: '武装大脑', value: '武装大脑', label: '武装大脑', synthetic: true, order: 7 },
 
   // Two different branches intentionally contain a Goal named “健康”.
-  { id: '照顾好自己/思考/健康', value: '照顾好自己/思考/健康', label: '健康', order: 8 },
+  { id: '照顾好自己/思考/健康', value: '照顾好自己/思考/健康', label: '健康', order: 8, goal: { path: '照顾好自己/思考/健康', status: 'active', createdAt: '', updatedAt: '', icon: '💤' } as any },
   { id: '照顾好自己/思考/专注', value: '照顾好自己/思考/专注', label: '专注', order: 9 },
 
   // Five levels deep to lock the selector to data-driven depth rather than 3 columns.
@@ -82,6 +82,15 @@ describe('GoalSelector inline root-first hierarchy UX', () => {
     await act(async () => optionByPath(host, '仪容仪表/健康').click());
     expect(optionByPath(host, '仪容仪表/健康/卫生')).toBeTruthy();
     expect(host.querySelectorAll('[aria-label^="目标第"]')).toHaveLength(3);
+  });
+
+  it('shows Goal.icon before real Goal labels and keeps synthetic navigation slots empty', async () => {
+    await act(async () => render(<GoalSelector goals={goals} onSelect={jest.fn()} />, host));
+    await act(async () => optionByPath(host, '照顾好自己').click());
+    await act(async () => optionByPath(host, '照顾好自己/思考').click());
+    const real = optionByPath(host, '照顾好自己/思考/健康');
+    expect(real.querySelector('.think-quick-input-goal-row__icon')?.textContent).toBe('💤');
+    expect(optionByPath(host, '照顾好自己/思考').querySelector('.think-quick-input-goal-row__icon')?.textContent).toBe('');
   });
 
   it('supports arbitrary hierarchy depth beyond three columns', async () => {

@@ -97,6 +97,8 @@ export interface QuickInputEditorProps {
   onRequestSubmit?: () => void;
   onEnergyCapture?: (request: QuickInputEnergyCaptureRequest) => Promise<void> | void;
   isMobileLike?: boolean;
+  /** 仅普通创建 Modal 使用；AI 批量确认不自动抢焦点。 */
+  autoFocusContent?: boolean;
 }
 
 export interface ApplyQuickInputFieldUpdateInput {

@@ -34,6 +34,42 @@ const TASK_END_FIELD: TemplateField = { id: 'core.task.endAt', key: 'endAt', lab
 const TASK_DURATION_FIELD: TemplateField = { id: 'core.task.expectedDurationMinutes', key: 'expectedDurationMinutes', label: '预计时长（分钟）', type: 'number', semantic: 'duration', min: 1 };
 
 export type TaskQuickInputTimingMode = 'plan' | 'execution';
+
+function readScalarValue(value: unknown): string {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const option = value as Record<string, unknown>;
+    return String(option.value ?? option.label ?? '').trim();
+  }
+  return String(value ?? '').trim();
+}
+
+/**
+ * Task time fields are chosen from semantic intent, not from the surface that opened QuickInput.
+ * Timeline retrospective capture is always execution. Ordinary create switches to execution
+ * as soon as the user marks the new Task done. Existing Task edit keeps plan fields; actual
+ * TaskSession editing remains a separate execution-record workflow.
+ */
+export function resolveTaskQuickInputTimingMode(input: {
+  context?: Record<string, unknown> | null;
+  formData?: Record<string, unknown> | null;
+  recordInputMode?: 'create' | 'edit';
+  effectiveBlockId?: string | null;
+}): TaskQuickInputTimingMode {
+  const blockId = String(input.effectiveBlockId || '').replace(/^core\./, '');
+  if (blockId && blockId !== 'task') return 'plan';
+
+  const uiContext = input.context?.__recordUiContext;
+  if (uiContext && typeof uiContext === 'object' && !Array.isArray(uiContext)) {
+    const ui = uiContext as Record<string, unknown>;
+    if (ui.kind === 'timeline_create' && ui.captureMode === 'completed_execution') return 'execution';
+  }
+
+  if ((input.recordInputMode ?? 'create') === 'create') {
+    const status = readScalarValue(input.formData?.status ?? input.formData?.['状态']).toLowerCase();
+    if (status === 'done') return 'execution';
+  }
+  return 'plan';
+}
 export interface QuickInputDisplayTemplateOptions {
   taskTimingMode?: TaskQuickInputTimingMode;
   recordInputMode?: 'create' | 'edit';
@@ -79,14 +115,17 @@ function normalizeTaskFields(fields: TemplateField[], timingMode: TaskQuickInput
     return true;
   });
 
-  // Task 创建表单的单选字段统一以第一项为默认值。
-  // 这是 UI 录入策略，不改变底层 schema 对历史值的兼容能力。
+  // Task 创建表单：GoalTemplate / RecordType 已明确配置的默认值优先。
+  // 只有字段没有任何默认值时，才退回“第一项”这一 UI 录入策略。
+  // 不能在 display 层把 GoalTemplate.defaultValues 覆盖掉，否则模板设置正确、
+  // QuickInput 却永远显示第一项（最低/重要/紧急/低...）。
   const normalizedRest = rest.map((field) => {
     if (!['select', 'singleSelect', 'radio'].includes(field.type) || !field.options?.length) return field;
+    const configuredDefault = String(field.defaultValue ?? '').trim();
     return {
       ...field,
       autoSelectFirst: true,
-      defaultValue: field.options[0]?.value,
+      defaultValue: configuredDefault || field.options[0]?.value,
     };
   });
 
@@ -94,15 +133,25 @@ function normalizeTaskFields(fields: TemplateField[], timingMode: TaskQuickInput
   const status: TemplateField = {
     ...TASK_STATUS_FIELD,
     ...(statusExisting || {}),
+    // Task lifecycle is a system field. Keep one canonical key even when an old
+    // GoalTemplate carried a legacy/translated key. Timeline context and persistence
+    // both speak `status`, so allowing this key to drift breaks completed capture.
+    key: 'status',
     label: '状态',
     type: 'singleSelect',
     semantic: 'status',
     autoSelectFirst: true,
-    defaultValue: 'open',
+    // Execution capture represents work that already happened. It must not fall back
+    // to the ordinary planned-task default merely because a template hydration missed
+    // the invocation context on one render.
+    defaultValue: timingMode === 'execution' ? 'done' : 'open',
     options: TASK_STATUS_FIELD.options,
   };
   const body: TemplateField = { ...TASK_CONTENT_FIELD, ...(bodyExisting || {}), label: '内容', type: 'text', semantic: 'body' };
-  const recurrenceOptions = recurrenceExisting?.options?.length ? recurrenceExisting.options : TASK_RECURRENCE_FIELD.options;
+  const configuredRecurrenceOptions = recurrenceExisting?.options?.length ? recurrenceExisting.options : TASK_RECURRENCE_FIELD.options;
+  const recurrenceOptions = (configuredRecurrenceOptions || []).some((option) => String(option.value) === 'none')
+    ? configuredRecurrenceOptions
+    : [{ value: 'none', label: '不重复' }, ...(configuredRecurrenceOptions || [])];
   const recurrence: TemplateField = {
     ...TASK_RECURRENCE_FIELD,
     ...(recurrenceExisting || {}),
@@ -110,7 +159,10 @@ function normalizeTaskFields(fields: TemplateField[], timingMode: TaskQuickInput
     type: 'singleSelect',
     semantic: 'recurrence',
     autoSelectFirst: true,
-    defaultValue: recurrenceOptions?.[0]?.value ?? 'none',
+    // Creating a TaskSeries is a structural operation, so recurrence must be an
+    // explicit capture decision. GoalTemplate defaults can still describe other
+    // Task defaults, but they must not silently arm a recurring series.
+    defaultValue: 'none',
     options: recurrenceOptions,
   };
   const recurrenceInterval: TemplateField = { ...TASK_RECURRENCE_INTERVAL_FIELD, ...(recurrenceIntervalExisting || {}), label: '重复间隔', type: 'number', min: recurrenceIntervalExisting?.min ?? 1, defaultValue: recurrenceIntervalExisting?.defaultValue || '1' };
@@ -147,7 +199,8 @@ function normalizeTaskFields(fields: TemplateField[], timingMode: TaskQuickInput
       ];
 
   const lifecycleFields = recordInputMode === 'edit' ? [] : [status];
-  return [...lifecycleFields, body, recurrence, recurrenceInterval, recurrenceAnchor, ...timingFields, ...normalizedRest];
+  const recurrenceFields = timingMode === 'execution' ? [] : [recurrence, recurrenceInterval, recurrenceAnchor];
+  return [...lifecycleFields, body, ...recurrenceFields, ...timingFields, ...normalizedRest];
 }
 
 export function buildQuickInputDisplayTemplate(

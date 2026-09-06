@@ -144,6 +144,25 @@
 
 .think-quick-input-editor .think-quick-input-goal-selector.is-dense { gap: var(--think-space-2); }
 
+
+.think-quick-input-editor .think-quick-input-goal-recent {
+  display: flex; align-items: center; gap: var(--think-space-2); min-width: 0;
+}
+.think-quick-input-editor .think-quick-input-goal-recent__label {
+  flex: 0 0 auto; color: var(--think-text-secondary); font-size: var(--think-font-size-sm); font-weight: 600;
+}
+.think-quick-input-editor .think-quick-input-goal-recent__items {
+  display: flex; gap: var(--think-space-1); min-width: 0; overflow-x: auto; scrollbar-width: thin;
+}
+.think-quick-input-editor .think-quick-input-goal-recent__chip {
+  display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto;
+  min-height: 28px; padding: 3px 8px; border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm); background: var(--think-bg-surface-1); color: var(--think-text-primary);
+}
+.think-quick-input-editor .think-quick-input-goal-recent__chip:hover,
+.think-quick-input-editor .think-quick-input-goal-recent__chip:focus-visible {
+  background: var(--think-bg-surface-2); border-color: var(--think-border-strong);
+}
 .think-quick-input-editor .think-quick-input-goal-active-path {
   min-width: 0;
   overflow: hidden;
@@ -276,4 +295,23 @@
     flex-basis: 50%;
     min-width: 160px;
   }
+}
+
+/* Goal identity icon: QuickInput renders only Goal.icon; synthetic hierarchy nodes
+ * reserve the same slot without inventing an icon. */
+.think-quick-input-editor .think-quick-input-goal-row__main {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.think-quick-input-editor .think-quick-input-goal-row__icon {
+  width: 1.5em;
+  min-width: 1.5em;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 1.5em;
+  line-height: 1;
 }

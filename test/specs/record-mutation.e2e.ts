@@ -55,7 +55,11 @@ describe('Think OS 真机 Runtime：Record 修改 / 时间 / 删除 / 路径迁�
       originalFile: FILE,
       movedFile: MOVED_FILE,
     });
-    await obsidianPage.write(FILE, externalTaskMarkdown(RECORD_ID, '修改前', E2E_LEAF_GOAL));
+    await obsidianPage.write(
+      FILE,
+      externalTaskMarkdown(RECORD_ID, '修改前', E2E_LEAF_GOAL)
+        .replace('<!-- end -->', '开始时间:: 2026-08-24 08:00\n结束时间:: 2026-08-24 08:30\n<!-- end -->'),
+    );
     await waitForRecord(RECORD_ID);
   });
 
@@ -66,13 +70,9 @@ describe('Think OS 真机 Runtime：Record 修改 / 时间 / 删除 / 路径迁�
       const item = manager.dataStore.getRecordById(recordId);
       if (!item) throw new Error('未找到记录');
 
-      const timeResult = await manager.useCases.recordInput.submitUpdateRecordTime({
-        itemId: recordId,
-        updates: {
-          start: '2026-08-24T09:00',
-          end: '2026-08-24T09:45',
-          duration: 45,
-        },
+      const timeResult = await manager.useCases.recordInput.submitUpdateTimelineRange({
+        target: { kind: 'task-range', recordId },
+        range: { start: '2026-08-24T09:00', end: '2026-08-24T09:45' },
         source: 'unknown',
       });
 
@@ -102,7 +102,7 @@ describe('Think OS 真机 Runtime：Record 修改 / 时间 / 删除 / 路径迁�
     expect(markdown).toContain('内容:: 修改后');
     expect(markdown).toContain('开始时间:: 2026-08-24 09:00');
     expect(markdown).toContain('结束时间:: 2026-08-24 09:45');
-    expect(markdown).toContain('预计时长:: 45');
+    expect(markdown).not.toContain('预计时长:: 45');
 
     await browser.reloadObsidian();
     await waitForThinkReady();

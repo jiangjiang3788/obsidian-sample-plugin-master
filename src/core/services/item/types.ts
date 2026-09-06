@@ -2,12 +2,6 @@ export interface ItemMutationOptions {
     autoRefresh?: boolean;
 }
 
-export interface ItemTimeUpdates {
-    time?: string;
-    endTime?: string;
-    duration?: number;
-}
-
 export interface GoalTemplateMigrationResult {
     path: string;
     beforeText: string;

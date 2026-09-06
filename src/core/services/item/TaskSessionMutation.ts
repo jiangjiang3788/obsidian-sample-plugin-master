@@ -5,29 +5,11 @@ import { createRecordId } from '@/core/records/RecordId';
 import { asTaskRecord, type TaskRecord } from '@/core/records/task/taskDomain';
 import { asTaskSessionRecord, buildTaskSessionFields, type TaskSessionCreateInput } from '@/core/records/task/taskSession';
 import { readEnergyItemSnapshot } from '@/core/energy/item';
-import type { ItemTimeUpdates } from './types';
+import type { TimelineLogicalRange } from '@/core/types/timeline';
 
 
 
 const ENERGY_FEEDBACK_WINDOW_MINUTES = 120;
-
-function parseClock(value: string): { hours: number; minutes: number } | null {
-  const match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})$/);
-  if (!match) return null;
-  const hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
-  return { hours, minutes };
-}
-
-function withLocalClock(iso: string, value: string): number {
-  const clock = parseClock(value);
-  if (!clock) throw new Error('task_session_clock_invalid');
-  const date = new Date(iso);
-  if (!Number.isFinite(date.getTime())) throw new Error('task_session_time_invalid');
-  date.setHours(clock.hours, clock.minutes, 0, 0);
-  return date.getTime();
-}
 
 function energyOccurrenceMs(item: RecordViewItem): number | null {
   const snapshot = readEnergyItemSnapshot(item);
@@ -58,30 +40,23 @@ export class TaskSessionMutation {
     return created;
   }
 
-  async updateSessionTime(sessionId: string, updates: ItemTimeUpdates): Promise<RecordViewItem> {
+  /**
+   * Update one TaskSession from a complete logical range.
+   *
+   * The public domain capability keeps the stable `updateSessionTime` name required by
+   * TaskSession consumers, while callers pass start/end as the single source of truth.
+   */
+  async updateSessionTime(sessionId: string, range: TimelineLogicalRange): Promise<RecordViewItem> {
     const session = asTaskSessionRecord(await this.repository.getById(sessionId));
     if (!session) throw new Error(`task_session_required:${sessionId}`);
+    if (!range.end) throw new Error('task_session_range_end_required');
 
-    let startedMs = Date.parse(session.sessionStartedAt);
-    let endedMs = Date.parse(session.sessionEndedAt);
-    const originalDuration = session.sessionDurationMinutes;
-
-    if (updates.time) startedMs = withLocalClock(session.sessionStartedAt, updates.time);
-    if (updates.endTime) {
-      // Exact clock editing is anchored to the (possibly edited) start day.
-      // Only an end clock earlier than the start clock crosses midnight; never inherit
-      // the old end date because that can accidentally create 24h+ sessions.
-      endedMs = withLocalClock(new Date(startedMs).toISOString(), updates.endTime);
-      if (endedMs < startedMs) endedMs += 86_400_000;
-    } else if (updates.duration != null || updates.time) {
-      const duration = updates.duration != null ? updates.duration : originalDuration;
-      if (!Number.isFinite(duration) || duration <= 0) throw new Error('task_session_duration_invalid');
-      endedMs = startedMs + duration * 60_000;
-    }
-
+    const startedMs = Date.parse(range.start);
+    const endedMs = Date.parse(range.end);
     if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs <= startedMs) {
       throw new Error('task_session_time_order_invalid');
     }
+
     const durationMinutes = Math.round(((endedMs - startedMs) / 60_000) * 100) / 100;
     await this.repository.update(session.id, {
       sessionStartedAt: new Date(startedMs).toISOString(),

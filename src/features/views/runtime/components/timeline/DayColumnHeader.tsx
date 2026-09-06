@@ -6,6 +6,9 @@ import { dayjs } from '@core/utils/public';
 import { buildDailyCategoryHours } from '@core/utils/public';
 import { ProgressBlock } from './ProgressBlock';
 import type { TaskBlock } from '@core/types/public';
+import type { GoalTimeAllocationSummary } from '@core/goal/public';
+import { GoalAllocationBlock } from './GoalAllocationBlock';
+import type { GoalAllocationTimelineView } from './GoalAllocationBlock';
 
 interface DayColumnHeaderProps {
     day: string;
@@ -14,6 +17,8 @@ interface DayColumnHeaderProps {
     colorMap: Record<string, string>;
     untrackedLabel: string;
     progressOrder?: string[];
+    goalAllocationSummary?: GoalTimeAllocationSummary;
+    currentView?: GoalAllocationTimelineView;
 }
 
 export function DayColumnHeader({ 
@@ -22,7 +27,9 @@ export function DayColumnHeader({
     categoriesConfig, 
     colorMap, 
     untrackedLabel, 
-    progressOrder 
+    progressOrder,
+    goalAllocationSummary,
+    currentView = '天',
 }: DayColumnHeaderProps) {
     const { categoryHours, totalDayHours } = useMemo(() => {
         return buildDailyCategoryHours(blocks, categoriesConfig, untrackedLabel);
@@ -34,13 +41,22 @@ export function DayColumnHeader({
                 {dayjs(day).format('MM-DD ddd')}
             </div>
             <div class="daily-progress-bar">
-                <ProgressBlock 
-                    categoryHours={categoryHours} 
-                    order={progressOrder} 
-                    totalHours={totalDayHours} 
-                    colorMap={colorMap} 
-                    untrackedLabel={untrackedLabel} 
-                />
+                {goalAllocationSummary ? (
+                    <GoalAllocationBlock
+                        summary={goalAllocationSummary}
+                        currentView={currentView}
+                        metric="deviation"
+                        hideZeroActual
+                    />
+                ) : (
+                    <ProgressBlock 
+                        categoryHours={categoryHours} 
+                        order={progressOrder} 
+                        totalHours={totalDayHours} 
+                        colorMap={colorMap} 
+                        untrackedLabel={untrackedLabel} 
+                    />
+                )}
             </div>
         </div>
     );

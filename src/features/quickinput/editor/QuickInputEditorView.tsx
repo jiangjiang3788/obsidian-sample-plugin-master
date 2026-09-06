@@ -1,5 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
+import { useEffect, useRef } from 'preact/hooks';
 
 import { QuickInputEditorFields } from './components/Fields';
 import { GoalSelector, type GoalSelectorOption } from './components/GoalSelector';
@@ -15,6 +16,7 @@ export interface QuickInputEditorViewProps {
   onBlockChange: (blockId: string) => void;
 
   goals: GoalSelectorOption[];
+  recentGoalPaths?: string[];
   selectedGoalPath: string | null;
   onSelectGoal: (goal: GoalSelectorOption | null) => void;
   onCreateGoal?: (goalPath: string) => Promise<void> | void;
@@ -34,6 +36,7 @@ export interface QuickInputEditorViewProps {
   templateSourceType?: 'record-type' | 'goal-template' | null;
   fieldSourceSummary?: Record<string, number>;
   currentPeriodLabel?: string | null;
+  autoFocusContent?: boolean;
 }
 
 export function QuickInputEditorView({
@@ -43,6 +46,7 @@ export function QuickInputEditorView({
   currentBlockId,
   onBlockChange,
   goals,
+  recentGoalPaths = [],
   selectedGoalPath,
   onSelectGoal,
   onCreateGoal,
@@ -59,10 +63,55 @@ export function QuickInputEditorView({
   showTimeDirectionControl = false,
   currentGoalPath = null,
   templateSourceType = null,
+  autoFocusContent = false,
 }: QuickInputEditorViewProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const didAutoFocusRef = useRef(false);
+
+  // Obsidian may apply its own modal focus after the Preact tree mounts, so the
+  // native `autoFocus` attribute alone is not deterministic. Focus the Task
+  // body imperatively after mount, with a couple of short retries while the
+  // modal settles. Once the user interacts with the form we stop retrying, and
+  // Goal/template hydration later in the session never steals focus back.
+  useEffect(() => {
+    if (!autoFocusContent || !template || didAutoFocusRef.current) return;
+    const root = rootRef.current;
+    if (!root) return;
+
+    let cancelled = false;
+    let userInteracted = false;
+    const markUserInteraction = () => { userInteracted = true; };
+    root.addEventListener('pointerdown', markUserInteraction, true);
+    root.addEventListener('keydown', markUserInteraction, true);
+
+    const focusContent = () => {
+      if (cancelled || userInteracted || didAutoFocusRef.current) return;
+      const target = root.querySelector('[data-quick-input-content="true"]') as HTMLInputElement | HTMLTextAreaElement | null;
+      if (!target || target.disabled) return;
+      try {
+        target.focus({ preventScroll: true });
+      } catch {
+        target.focus();
+      }
+      if (document.activeElement === target) {
+        const end = String(target.value ?? '').length;
+        try { target.setSelectionRange(end, end); } catch { /* non-text controls are not tagged */ }
+        didAutoFocusRef.current = true;
+      }
+    };
+
+    const timers = [0, 40, 120].map((delay) => window.setTimeout(focusContent, delay));
+    return () => {
+      cancelled = true;
+      timers.forEach((timer) => window.clearTimeout(timer));
+      root.removeEventListener('pointerdown', markUserInteraction, true);
+      root.removeEventListener('keydown', markUserInteraction, true);
+    };
+  }, [autoFocusContent, Boolean(template)]);
+
   if (!template) {
     return (
-      <div className={`think-quick-input-editor${dense ? ' is-dense' : ''}`}>
+      <div ref={rootRef} className={`think-quick-input-editor${dense ? ' is-dense' : ''}`}>
         <div className="think-quick-input-context-grid">
           {allowBlockSwitch && blocks.length > 1 && (
             <QuickInputFormRow label="记录类型">
@@ -78,6 +127,7 @@ export function QuickInputEditorView({
             <QuickInputFormRow label="目标">
               <GoalSelector
                 goals={goals}
+                recentGoalPaths={recentGoalPaths}
                 selectedGoalPath={selectedGoalPath}
                 onSelect={onSelectGoal}
                 onCreateGoal={onCreateGoal}
@@ -98,7 +148,7 @@ export function QuickInputEditorView({
   const isTaskTemplate = String(currentBlockId || template?.recordTypeId || template?.id || '').replace(/^core\./, '') === 'task';
 
   return (
-    <div className={`think-quick-input-editor${dense ? ' is-dense' : ''}`}>
+    <div ref={rootRef} className={`think-quick-input-editor${dense ? ' is-dense' : ''}`}>
       <div className="think-quick-input-context-grid">
           {allowBlockSwitch && blocks.length > 1 && (
             <QuickInputFormRow label="记录类型">
@@ -114,6 +164,7 @@ export function QuickInputEditorView({
             <div className="think-quick-input-context-row__stack">
               <GoalSelector
                 goals={goals}
+                recentGoalPaths={recentGoalPaths}
                 selectedGoalPath={selectedGoalPath}
                 onSelect={onSelectGoal}
                 onCreateGoal={onCreateGoal}
@@ -141,6 +192,7 @@ export function QuickInputEditorView({
           onRequestSubmit={onRequestSubmit}
           isMobileLike={isMobileLike}
           showTimeDirectionControl={showTimeDirectionControl}
+          autoFocusContent={autoFocusContent}
         />
       </div>
     </div>

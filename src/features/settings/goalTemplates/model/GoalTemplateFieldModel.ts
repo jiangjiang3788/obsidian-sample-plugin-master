@@ -2,6 +2,7 @@ import type { TemplateField } from '@core/types/public';
 import type { UnknownRecord } from '@core/utils/public';
 import { isUnknownRecord } from '@core/utils/public';
 import { compactText } from '@core/semantics/public';
+import { isTemplateMultiValueField, templateFieldValueToArray, templateFieldValueToString } from '@core/fields/public';
 
 export function deriveRequiredFields(fields: TemplateField[]): string[] {
   return (fields || [])
@@ -65,6 +66,39 @@ export function getFieldDefaultMap(fields: TemplateField[] | undefined): Record<
     if (!key) continue;
     const value = field.defaultValue;
     if (value !== undefined && value !== null && compactText(value) !== '') result[key] = compactText(value);
+  }
+  return result;
+}
+
+
+export function applyGoalTemplateDefaultValuesToFields(
+  fields: TemplateField[],
+  defaultValues?: Record<string, unknown>,
+): TemplateField[] {
+  const defaults = defaultValues || {};
+  return (fields || []).map((field) => {
+    const key = compactText(field.key || field.label);
+    const label = compactText(field.label);
+    const hasKey = key && Object.prototype.hasOwnProperty.call(defaults, key);
+    const hasLabel = label && Object.prototype.hasOwnProperty.call(defaults, label);
+    if (!hasKey && !hasLabel) return field;
+    const raw = hasKey ? defaults[key] : defaults[label];
+    return { ...field, defaultValue: templateFieldValueToString(raw) };
+  });
+}
+
+export function collectGoalTemplateDefaultValuesFromFields(
+  fields: TemplateField[],
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const field of fields || []) {
+    const key = compactText(field.key || field.label);
+    if (!key) continue;
+    const raw = field.defaultValue;
+    if (raw === undefined || raw === null || compactText(raw) === '') continue;
+    result[key] = isTemplateMultiValueField(field)
+      ? templateFieldValueToArray(raw)
+      : raw;
   }
   return result;
 }

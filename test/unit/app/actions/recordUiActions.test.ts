@@ -39,7 +39,8 @@ import {
   openCreateFromTimeline,
   openCreateFromViewHeader,
   openEditFromItem,
-  updateTimeFromView,
+  mergeRecordItemForEdit,
+  updateTimelineRangeFromView,
 } from '@/app/actions/recordUiActions';
 import { QuickInputModal } from '@/app/ui/modals/QuickInputModal';
 import { dayjs } from '@core/public';
@@ -273,7 +274,7 @@ describe('recordUiActions', () => {
       }),
       undefined,
       false,
-      expect.objectContaining({ mode: 'edit', editItem: item }),
+      expect.objectContaining({ mode: 'edit', editItem: expect.objectContaining({ id: 'item-1', coreBlock: 'task' }) }),
     );
   });
 
@@ -298,27 +299,83 @@ describe('recordUiActions', () => {
     expect(notice).toHaveBeenCalledWith('写回失败');
   });
 
-  it('submits time updates through the record input usecase', async () => {
+  it('submits one semantic Timeline range change through the record input usecase', async () => {
     const notice = jest.fn();
-    const submitUpdateRecordTime = jest.fn().mockResolvedValue({
+    const submitUpdateTimelineRange = jest.fn().mockResolvedValue({
       status: 'success',
       feedback: { notice: '已更新时间' },
     });
+    const target = { kind: 'task-plan' as const, recordId: 'task-1' };
+    const range = { start: '2026-08-26T09:00', end: '2026-08-26T10:00' };
 
-    const result = await updateTimeFromView({
+    const result = await updateTimelineRangeFromView({
       uiPort: { notice } as never,
-      useCases: { recordInput: { submitUpdateRecordTime } } as never,
-      itemId: 'task-1',
+      useCases: { recordInput: { submitUpdateTimelineRange } } as never,
+      target,
+      range,
       showSuccessNotice: true,
-      updates: { time: '09:00', endTime: '10:00', duration: 60 },
     });
 
     expect(result).toBe(true);
-    expect(submitUpdateRecordTime).toHaveBeenCalledWith({
-      itemId: 'task-1',
-      updates: { time: '09:00', endTime: '10:00', duration: 60 },
+    expect(submitUpdateTimelineRange).toHaveBeenCalledWith({
+      target,
+      range,
       source: 'layout_renderer',
     });
     expect(notice).toHaveBeenCalledWith('已更新时间');
   });
+
+  it('合并 View 投影和 canonical Record 后，Table 等视图打开历史 Task 不会丢失可编辑正文', () => {
+    const canonical = {
+      id: 'task.table-1',
+      coreBlock: 'task',
+      status: 'done',
+      title: '',
+      content: '',
+      editableText: '',
+      extra: {},
+    } as never;
+    const rendered = {
+      id: 'task.table-1',
+      coreBlock: 'task',
+      status: 'done',
+      title: '八段锦',
+      content: '八段锦',
+      goalPath: '照顾好自己/运动',
+      extra: { 内容: '八段锦' },
+    } as never;
+
+    const merged = mergeRecordItemForEdit(canonical, rendered);
+
+    expect(merged.content).toBe('八段锦');
+    expect(merged.editableText).toBe('八段锦');
+    expect(merged.goalPath).toBe('照顾好自己/运动');
+  });
+
+  it('编辑边界会用可见标题补齐缺失正文，避免 QuickInput 打开空白 Task', () => {
+    const item = {
+      id: 'task.table-2',
+      coreBlock: 'task',
+      status: 'done',
+      title: '整理收藏夹',
+      content: '',
+      editableText: '',
+      extra: {},
+    } as never;
+
+    openEditFromItem({ app: {}, item });
+
+    expect(QuickInputModal).toHaveBeenLastCalledWith(
+      {},
+      'core.task',
+      expect.any(Object),
+      undefined,
+      false,
+      expect.objectContaining({
+        mode: 'edit',
+        editItem: expect.objectContaining({ content: '整理收藏夹', editableText: '整理收藏夹' }),
+      }),
+    );
+  });
+
 });

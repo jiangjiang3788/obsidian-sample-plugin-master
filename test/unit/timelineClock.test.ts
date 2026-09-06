@@ -3,8 +3,10 @@
  * @covers F092/unit
  */
 import {
+  clampTimelineBoundaryMinute,
   clampTimelineMinute,
   timelineMinuteFromOffset,
+  timelineBoundaryMinuteToLocalDateTime,
   timelineMinuteToLocalDateTime,
   timelineOffsetFromMinute,
   timelineVisibleEndMinute,
@@ -23,8 +25,10 @@ describe('Timeline natural-day clock', () => {
     expect(timelineVisibleEndMinute(24)).toBe(1440);
     expect(clampTimelineMinute(-1)).toBe(0);
     expect(clampTimelineMinute(1440)).toBe(1439);
+    expect(clampTimelineBoundaryMinute(1440)).toBe(1440);
     expect(timelineMinuteToLocalDateTime('2026-08-26', 0)).toBe('2026-08-26T00:00');
     expect(timelineMinuteToLocalDateTime('2026-08-26', 1439)).toBe('2026-08-26T23:59');
+    expect(timelineBoundaryMinuteToLocalDateTime('2026-08-26', 1440)).toBe('2026-08-27T00:00');
     expect(timelineMinuteFromOffset(9999, 50, 12)).toBe(719);
   });
 });

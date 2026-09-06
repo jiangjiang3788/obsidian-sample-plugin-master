@@ -43,6 +43,44 @@ export interface BuildUpdateRecordSubmitParamsInput {
   signal?: AbortSignal;
 }
 
+function readRecordInputScalar(value: unknown): string {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const option = value as Record<string, unknown>;
+    return String(option.value ?? option.label ?? '').trim();
+  }
+  return String(value ?? '').trim();
+}
+
+/**
+ * Mark create-only completed Task capture so the persistence layer can move an
+ * explicit actual range into TaskSession. This metadata is invocation context
+ * only and never becomes a Record field. Existing Timeline context keeps its
+ * more specific provenance.
+ */
+export function buildCreateRecordExecutionContext(
+  state: RecordInputEditorStateLike,
+  context?: Record<string, unknown>,
+): Record<string, unknown> | undefined {
+  const blockId = String(state.blockId || '').replace(/^core\./, '');
+  const formData = state.formData || {};
+  const status = readRecordInputScalar(formData.status ?? formData['状态']).toLowerCase();
+  if (blockId !== 'task' || status !== 'done') return context;
+
+  const existingUi = context?.__recordUiContext;
+  if (existingUi && typeof existingUi === 'object' && !Array.isArray(existingUi)) {
+    const ui = existingUi as Record<string, unknown>;
+    if (ui.kind === 'timeline_create' && ui.captureMode === 'completed_execution') return context;
+  }
+
+  return {
+    ...(context || {}),
+    __recordUiContext: {
+      kind: 'quickinput_create',
+      captureMode: 'completed_execution',
+    },
+  };
+}
+
 export function hasRecordInputRequiredValue(value: unknown): boolean {
   if (value === null || value === undefined) return false;
   if (Array.isArray(value)) return value.some((entry) => hasRecordInputRequiredValue(entry));
@@ -93,7 +131,7 @@ export function buildCreateRecordSubmitParamsFromEditorState({
   return {
     blockId: String(state.blockId || ''),
     formData: { ...(state.formData || {}) },
-    context,
+    context: buildCreateRecordExecutionContext(state, context),
     meta: state.meta,
     signal,
     source: source ?? 'quickinput',

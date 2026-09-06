@@ -1,5 +1,5 @@
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
-import { getGoalOrderPath, getGoalOrderLabel, sortGoalsBySettingsOrder, getGoalTemplateDisplayName, readGoalTemplateIcon } from '@core/goal/public';
+import { getGoalOrderPath, getGoalOrderLabel, sortGoalsBySettingsOrder, getGoalTemplateDisplayName, resolveGoalIcon } from '@core/goal/public';
 import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 
 export type GoalTemplateCellStatus = 'default' | 'override' | 'disabled' | 'warning';
@@ -99,7 +99,7 @@ export function goalTemplateKey(template: GoalTemplate): string {
 }
 
 export function goalTemplateIcon(template: GoalTemplate, goal: GoalDefinition): string {
-  return readGoalTemplateIcon(template, goal.icon) || goal.icon || '◇';
+  return resolveGoalIcon(goal) || '◇';
 }
 
 export function presetSearchText(template: GoalTemplate, goal: GoalDefinition): string {

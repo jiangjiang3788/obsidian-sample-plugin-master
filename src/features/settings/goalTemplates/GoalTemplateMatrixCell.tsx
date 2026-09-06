@@ -2,6 +2,7 @@
 import { h } from 'preact';
 import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
+import { getGoalLeaf, resolveGoalIcon } from '@core/goal/public';
 import { GoalPresetCard } from './GoalPresetCard';
 import { buildGoalTemplateCell, goalTemplateKey } from './goalTemplateMatrixModel';
 
@@ -31,6 +32,7 @@ export function GoalTemplateMatrixCell({ goal, block, templates, openEditor }: G
   }
 
   if (template && template.enabled === false) {
+    const leaf = getGoalLeaf(goal.path) || goal.path;
     return (
       <button
         type="button"
@@ -38,7 +40,10 @@ export function GoalTemplateMatrixCell({ goal, block, templates, openEditor }: G
         title="该目标下已隐藏此记录类型，点击修改"
         onClick={() => openEditor(goal, block, template)}
       >
-        <span className="think-goal-template-matrix__disabled-label">已隐藏</span>
+        <span className="think-goal-preset__identity">
+          <span className="think-goal-preset__icon" aria-hidden="true">{resolveGoalIcon(goal) || '◇'}</span>
+          <span className="think-goal-preset__goal">{leaf}</span>
+        </span>
       </button>
     );
   }

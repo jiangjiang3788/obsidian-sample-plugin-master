@@ -6,18 +6,22 @@ import { AddCircleOutlineIcon, ThinkButton } from '@shared/ui/public';
 import { TimerRow } from './TimerRow';
 import type { DataStore } from '@core/services/public';
 import type { RecordViewItem } from '@core/types/public';
-import type { TimerService } from '@features/timer/TimerService';
+import type { TimerEnergyCaptureRequest, TimerService } from '@features/timer/TimerService';
 import type { TimerState } from '@/app/public';
+import { TimerEnergyCapturePrompt } from './TimerEnergyCapturePrompt';
 
 interface TimerViewViewProps {
     timerService: TimerService;
     dataStore: DataStore;
     timers: TimerState[];
     isVisible: boolean;
-    setVisible: (v: boolean) => void;
     onOpenRecord: (item: RecordViewItem) => void;
     onOpenRecordOrigin: (item: RecordViewItem) => void;
     onCreateNewTask: () => void;
+    energyCaptureRequest: TimerEnergyCaptureRequest | null;
+    onEnergyCapture: (score: number) => void;
+    onSkipEnergyCapture: () => void;
+    onClose: () => void;
 }
 
 export function TimerViewView({
@@ -25,10 +29,13 @@ export function TimerViewView({
     dataStore,
     timers,
     isVisible,
-    setVisible,
     onOpenRecord,
     onOpenRecordOrigin,
     onCreateNewTask,
+    energyCaptureRequest,
+    onEnergyCapture,
+    onSkipEnergyCapture,
+    onClose,
 }: TimerViewViewProps) {
     return (
         <FloatingPanel
@@ -40,7 +47,7 @@ export function TimerViewView({
             bodyPadding={0}
             visible={isVisible}
             closeOnOutsideClick={false}
-            onClose={() => setVisible(false)}
+            onClose={onClose}
             headerActions={
                 <ThinkButton size="sm" leadingIcon={<AddCircleOutlineIcon fontSize="small" />} onClick={onCreateNewTask}>
                     新任务
@@ -63,6 +70,13 @@ export function TimerViewView({
                     <div className="think-timer-empty-state">暂无计时任务</div>
                 )}
             </div>
+            {energyCaptureRequest ? (
+                <TimerEnergyCapturePrompt
+                    request={energyCaptureRequest}
+                    onSubmit={onEnergyCapture}
+                    onSkip={onSkipEnergyCapture}
+                />
+            ) : null}
         </FloatingPanel>
     );
 }

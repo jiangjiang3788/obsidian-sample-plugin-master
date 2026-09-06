@@ -1,0 +1,141 @@
+/* Timeline Goal time-budget / balance presentation. Kept separate from the
+ * Timeline geometry stylesheet so each feature stylesheet stays within release budgets.
+ */
+
+/* 1.0.74 Goal allocation summary. Keep every Goal on one line; detailed budget,
+ * deviation and child breakdown are intentionally exposed through title tooltips.
+ */
+.timeline-goal-allocation-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--think-space-2);
+}
+.timeline-goal-allocation-line {
+  --timeline-goal-allocation-color: var(--think-data-neutral);
+  position: relative;
+  width: 100%;
+  height: 16px;
+  overflow: hidden;
+  border-radius: var(--think-radius-pill);
+  background: var(--think-viz-track);
+  font-variant-numeric: tabular-nums;
+}
+.timeline-goal-allocation-line:hover {
+  outline: 1px solid color-mix(in srgb, var(--timeline-goal-allocation-color) 38%, transparent);
+  outline-offset: -1px;
+}
+.timeline-goal-allocation-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  min-width: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--timeline-goal-allocation-color) 46%, transparent);
+}
+.timeline-goal-allocation-budget-marker {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  z-index: 1;
+  width: 1px;
+  background: var(--think-text-primary);
+  opacity: 0.38;
+  transform: translateX(-0.5px);
+  pointer-events: none;
+}
+.timeline-goal-allocation-text {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 3px;
+  padding-inline: 5px;
+  color: var(--think-text-primary);
+  font-size: var(--think-viz-font-axis);
+  font-weight: var(--think-font-weight-medium);
+  line-height: 16px;
+  white-space: nowrap;
+}
+.timeline-goal-allocation-icon { flex: 0 0 auto; line-height: 1; }
+.timeline-goal-allocation-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.timeline-goal-allocation-metric { flex: 0 0 auto; }
+.timeline-goal-allocation-line.is-unallocated {
+  --timeline-goal-allocation-color: var(--think-data-neutral);
+  color: var(--think-text-secondary);
+}
+.timeline-goal-summary-view {
+  width: min(420px, 100%);
+  min-width: 220px;
+}
+.timeline-goal-summary-heading {
+  min-height: var(--think-viz-row-height-sm);
+  display: flex;
+  align-items: center;
+  padding-inline: var(--think-space-2);
+  border-bottom: 1px solid var(--think-viz-guide-strong);
+  color: var(--think-text-primary);
+  font-size: var(--think-viz-font-label);
+  font-weight: var(--think-font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@container (max-width: 480px) {
+  .timeline-goal-allocation-block { padding: var(--think-space-1); }
+  .timeline-goal-allocation-text { padding-inline: 4px; gap: 2px; }
+}
+
+/* Time Balance presentation.
+ * The bar keeps the original Timeline semantics:
+ * confirmed Goal time / natural time, with a vertical preset marker.
+ * Only the deviation number communicates balance state.
+ */
+.timeline-summary-table__month-label {
+  display: inline-block;
+  font-size: 0.86em;
+  line-height: 1.15;
+  font-weight: var(--think-font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Keep Goal identity fully readable. Do not lower icon/label contrast. */
+.timeline-goal-allocation-icon,
+.timeline-goal-allocation-label {
+  opacity: 1;
+}
+.timeline-goal-allocation-metric {
+  opacity: 1;
+  font-weight: var(--think-font-weight-semibold);
+}
+
+/* Exact presentation contract:
+ * balanced (conclusive, within ±10%) -> green
+ * high/low (conclusive, outside ±10%) -> red
+ * insufficient/pending -> neutral gray
+ * unconfigured/unallocated -> faint gray
+ */
+.timeline-goal-allocation-line.is-balanced .timeline-goal-allocation-metric {
+  color: var(--text-success, var(--color-green));
+}
+.timeline-goal-allocation-line.is-low .timeline-goal-allocation-metric,
+.timeline-goal-allocation-line.is-high .timeline-goal-allocation-metric {
+  color: var(--text-error, var(--color-red));
+}
+.timeline-goal-allocation-line.is-insufficient .timeline-goal-allocation-metric,
+.timeline-goal-allocation-line.is-pending .timeline-goal-allocation-metric {
+  color: var(--text-muted);
+}
+.timeline-goal-allocation-line.is-unconfigured .timeline-goal-allocation-metric,
+.timeline-goal-allocation-line.is-unallocated .timeline-goal-allocation-metric {
+  color: var(--text-faint, var(--text-muted));
+}

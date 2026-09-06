@@ -197,6 +197,15 @@ export function useQuickInputSubmitController({
         }
       }
 
+      if (feedbackResult.status === 'success' && operationMode === 'create') {
+        // "最近 Goal" should mean a Goal that was actually used to create a record,
+        // not every row the user clicked while browsing the Goal selector.
+        // Persisting settings on every click caused repeated full data.json writes and
+        // global settings notifications, which became very expensive after many clicks.
+        const createdGoalPath = String(getCurrentState().goalPath || '').trim();
+        if (createdGoalPath) void useCases.settings.rememberRecentGoalPath(createdGoalPath);
+      }
+
       if (feedbackResult.status === 'success' && operationMode === 'create' && onSubmitSuccess) {
         try {
           await onSubmitSuccess(feedbackResult, buildCreateDraft());

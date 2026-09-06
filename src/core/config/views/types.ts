@@ -1,5 +1,7 @@
+import type { ViewTemporalConfig } from '../../view-config/dateRole';
+
 /** StatisticsView 的默认配置。 */
-export interface StatisticsViewConfig {
+export interface StatisticsViewConfig extends ViewTemporalConfig {
   /** 目标中心：统计视图只按目标分组；时间与其他筛选统一由控制栏/视图筛选提供。 */
   groupBy: 'goal';
   metric: 'recordCount' | 'taskCount' | 'doneTaskCount' | 'habitCount' | 'blockerCount' | 'milestoneCount';
@@ -15,7 +17,7 @@ export interface StatisticsViewConfig {
 }
 
 /** HeatmapView 默认配置（供视图 + 编辑器复用）。 */
-export interface HeatmapViewConfig {
+export interface HeatmapViewConfig extends ViewTemporalConfig {
   displayMode: 'habit' | 'count';
   sourceBlockId: string;
   goalPaths: string[];
@@ -24,7 +26,7 @@ export interface HeatmapViewConfig {
 }
 
 /** ProgressView 默认配置（独立成长/积分视图）。 */
-export interface ProgressViewConfig {
+export interface ProgressViewConfig extends ViewTemporalConfig {
   /** Progress 只保留目标经验模式。 */
   mode?: 'goal';
   metric?: 'completionRate' | 'taskDone' | 'habitCount' | 'milestoneCount' | 'blockerCount' | 'recordCount';
@@ -40,7 +42,7 @@ export interface ProgressViewConfig {
 }
 
 /** EnergyView 默认配置（独立精力状态 / 时间线 / 观察分析视图）。 */
-export interface EnergyViewConfig {
+export interface EnergyViewConfig extends ViewTemporalConfig {
   /** 最近时间线窗口。当前 core timeline 允许 1–31 天。 */
   windowDays: number;
   /** 最近记录列表数量。 */
@@ -65,12 +67,12 @@ export interface EnergyViewConfig {
 
 
 /** Eisenhower 四象限默认配置。 */
-export interface EisenhowerViewConfig {
+export interface EisenhowerViewConfig extends ViewTemporalConfig {
   showUnclassified: boolean;
 }
 
 /** TableView 默认配置（供视图 + 编辑器复用）。 */
-export interface TableViewConfig {
+export interface TableViewConfig extends ViewTemporalConfig {
   view: 'TableView';
   title: string;
   collapsed: boolean;
@@ -89,7 +91,7 @@ export interface CategoryConfig {
 }
 
 /** TimelineView 默认配置（供视图 + 编辑器复用）。 */
-export interface TimelineViewConfig {
+export interface TimelineViewConfig extends ViewTemporalConfig {
   defaultHourHeight: number;
   MAX_HOURS_PER_DAY: number;
   UNTRACKED_LABEL: string;
@@ -98,7 +100,7 @@ export interface TimelineViewConfig {
 }
 
 /** BlockView 默认配置（供视图 + 编辑器复用）。 */
-export interface BlockViewConfig {
+export interface BlockViewConfig extends ViewTemporalConfig {
   view: 'BlockView';
   title: string;
   collapsed: boolean;
@@ -107,7 +109,7 @@ export interface BlockViewConfig {
 }
 
 /** ExcelView 默认配置（供视图 + 编辑器复用）。 */
-export interface ExcelViewConfig {
+export interface ExcelViewConfig extends ViewTemporalConfig {
   view: 'ExcelView';
   title: string;
   collapsed: boolean;
@@ -115,7 +117,7 @@ export interface ExcelViewConfig {
 }
 
 /** EventTimelineView 默认配置（供视图 + 编辑器复用）。 */
-export interface EventTimelineViewConfig {
+export interface EventTimelineViewConfig extends ViewTemporalConfig {
   timeField: string;
   titleField: string;
   contentField: string;
