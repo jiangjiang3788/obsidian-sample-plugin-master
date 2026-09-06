@@ -85,6 +85,6 @@ export function buildNextOccurrenceDates(task: RecurrenceTaskTimeFields, recurre
   if (recurrence.anchor === 'due') {
     if (task.dueAt) result.dueAt = nextAnchor; else result.dueDate = nextAnchor.slice(0, 10);
   } else { result.dueAt = shift(task.dueAt); result.dueDate = shift(task.dueDate)?.slice(0, 10); }
-  if (recurrence.anchor === 'completion' && !result.scheduledAt && !result.scheduledDate && !result.startAt && !result.startDate && !result.dueAt && !result.dueDate) result.startAt = nextAnchor;
+  if (recurrence.anchor === 'completion' && !result.scheduledAt && !result.scheduledDate && !result.startAt && !result.startDate && !result.dueAt && !result.dueDate) result.scheduledAt = nextAnchor;
   return result;
 }

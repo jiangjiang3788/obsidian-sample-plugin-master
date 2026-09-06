@@ -12,7 +12,7 @@ import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
 import { devWarn } from '@core/utils/devLogger';
 
 const TIMER_STATE_PATH = 'think-plugin-timer-state.json';
-const TIMER_RUNTIME_SCHEMA_VERSION = 2;
+const TIMER_RUNTIME_SCHEMA_VERSION = 3;
 
 interface PersistedTimerRuntimeState {
   schemaVersion: number;
@@ -46,7 +46,7 @@ export class TimerStateService {
       if (!content) return [];
 
       const parsed = JSON.parse(content) as Partial<PersistedTimerRuntimeState>;
-      // Breaking cutover: legacy array payloads and old completed/history entries are discarded.
+      // Breaking cutover: legacy arrays and pre-segmented runtime envelopes are discarded. Persistent TaskSession history is never stored here.
       if (!parsed || parsed.schemaVersion !== TIMER_RUNTIME_SCHEMA_VERSION || !Array.isArray(parsed.timers)) return [];
       return parsed.timers.filter(isTimerRuntimeState);
     } catch (error) {

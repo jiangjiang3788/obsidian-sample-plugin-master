@@ -1,4 +1,5 @@
 import type { AppStoreApi } from './AppStoreApi';
+import type { EisenhowerQuadrant, TaskLifecycleCommand } from '@core/records/public';
 import { DataStore, InputService, ItemService } from '@core/services/public';
 import { RecordInputKernel } from '@core/recordInput/public';
 import { applyRecordRefreshPlan, buildSuccessResult, buildValidationErrorResult } from '@core/recordInput/public';
@@ -106,6 +107,46 @@ export class RecordInputUseCase {
 
   async submitUpdateRecord(params: SubmitUpdateRecordParams): Promise<RecordSubmitResult> {
     return new UpdateRecordWorkflow(this.getWorkflowRuntime()).submit(params);
+  }
+
+  async updateTaskQuadrant(itemId: string, quadrant: EisenhowerQuadrant): Promise<void> {
+    await this.deps.itemService.updateTaskQuadrant(itemId, quadrant);
+  }
+
+  async stopTaskSeries(seriesId: string): Promise<void> {
+    await this.deps.itemService.stopTaskSeries(seriesId, { cancelCurrent: false });
+  }
+
+  async submitTaskLifecycle(
+    itemId: string,
+    command: Exclude<TaskLifecycleCommand, 'complete'>,
+    session?: SubmitCompleteRecordParams['session'],
+  ): Promise<RecordSubmitResult> {
+    return submitFinalizedRecordMutation({
+      dataStore: this.deps.dataStore,
+      operation: 'update',
+      refreshPathsOnError: () => [this.deps.dataStore.getRecordLocation(itemId)?.path || null],
+      run: async () => {
+        const path = this.deps.dataStore.getRecordLocation(itemId)?.path;
+        if (!path) throw new Error(`record_location_unavailable:${itemId}`);
+        if (command === 'cancel') {
+          if (session) await this.deps.itemService.cancelItemWithSession(itemId, session);
+          else await this.deps.itemService.cancelItem(itemId);
+        } else if (command === 'reopen') await this.deps.itemService.reopenItem(itemId);
+        else if (command === 'skip') {
+          if (session) await this.deps.itemService.skipItemWithSession(itemId, session);
+          else await this.deps.itemService.skipItem(itemId);
+        }
+        else throw new Error(`task_lifecycle_command_invalid:${command}`);
+        const notice = command === 'cancel' ? '任务已取消。' : command === 'reopen' ? '任务已重新打开。' : '已跳过本次任务。';
+        return buildSuccessResult('update', {
+          affectedPath: path,
+          affectedRecordId: itemId,
+          refresh: buildRefreshPlan([path]),
+          feedback: { notice },
+        });
+      },
+    });
   }
 
   async submitDeleteRecord(params: SubmitDeleteRecordParams): Promise<RecordSubmitResult> {

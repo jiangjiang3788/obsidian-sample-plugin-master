@@ -36,7 +36,7 @@ describe('模板字段 → 默认值水合 → 用户修改 → 提交表单组�
       timeDirection: 'forward',
     } as any);
     expect(updated.fieldSources.优先级).toBe('user');
-    const finalized = finalizeQuickInputFormData(updated.formData, 'forward');
+    const finalized = finalizeQuickInputFormData(updated.formData);
     expect(finalized.优先级).toEqual({ value: 'high', label: '高' });
   });
 });

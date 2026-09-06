@@ -8,21 +8,21 @@
  */
 
 import { singleton, inject } from 'tsyringe';
-import MiniSearch, { SearchResult } from 'minisearch';
+import { LocalRetrievalIndex } from './retrieval/LocalRetrievalIndex';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { DataStore } from '@/core/services/DataStore';
 import { devLog, devWarn, devError } from '../utils/devLogger';
 import { applyRetrievalFilters } from './retrieval/RetrievalFilters';
-import { createRetrievalMiniSearch, itemToSearchDocument } from './retrieval/RetrievalIndex';
+import { createRetrievalIndex, itemToSearchDocument } from './retrieval/RetrievalIndex';
 import { searchResultToItem } from './retrieval/RetrievalResultMapper';
-import type { RetrievalFilters, RetrievalResult, RetrievalSearchResult, SearchIndexDocument } from './retrieval/RetrievalTypes';
+import type { RetrievalFilters, RetrievalIndexResult, RetrievalResult, RetrievalSearchResult } from './retrieval/RetrievalTypes';
 import { DEFAULT_RETRIEVAL_LIMIT } from './retrieval/RetrievalTypes';
 
 export type { RetrievalFilters, RetrievalResult, RetrievalSearchResult } from './retrieval/RetrievalTypes';
 
 @singleton()
 export class RetrievalService {
-    private miniSearch: MiniSearch<SearchIndexDocument> | null = null;
+    private searchIndex: LocalRetrievalIndex | null = null;
     private indexedItemIds: Set<string> = new Set();
     private indexedItemsById: Map<string, RecordViewItem> = new Map();
     private lastIndexTime: number = 0;
@@ -30,11 +30,11 @@ export class RetrievalService {
     constructor(
         @inject(DataStore) private dataStore: DataStore
     ) {
-        this.initMiniSearch();
+        this.initSearchIndex();
     }
 
-    private initMiniSearch(): void {
-        this.miniSearch = createRetrievalMiniSearch();
+    private initSearchIndex(): void {
+        this.searchIndex = createRetrievalIndex();
     }
 
     /**
@@ -50,7 +50,7 @@ export class RetrievalService {
             return;
         }
 
-        this.initMiniSearch();
+        this.initSearchIndex();
         this.indexedItemIds.clear();
         this.indexedItemsById.clear();
 
@@ -60,7 +60,7 @@ export class RetrievalService {
                 this.indexedItemsById.set(item.id, item);
                 return itemToSearchDocument(item);
             });
-            this.miniSearch!.addAll(documents);
+            this.searchIndex!.addAll(documents);
             validItems.forEach(item => this.indexedItemIds.add(item.id));
 
             this.lastIndexTime = Date.now();
@@ -79,7 +79,7 @@ export class RetrievalService {
     }
 
     needsRebuild(): boolean {
-        return !this.miniSearch || this.indexedItemIds.size === 0;
+        return !this.searchIndex || this.indexedItemIds.size === 0;
     }
 
     ensureIndex(): void {
@@ -98,12 +98,12 @@ export class RetrievalService {
     search(query: string, filters?: RetrievalFilters): RetrievalSearchResult {
         this.ensureIndex();
 
-        if (!this.miniSearch || !query.trim()) {
+        if (!this.searchIndex || !query.trim()) {
             return { items: [], results: [], totalMatched: 0 };
         }
 
         try {
-            const searchResults = this.miniSearch.search(query, {});
+            const searchResults = this.searchIndex.search(query);
             const totalFiltered = applyRetrievalFilters(searchResults, filters, this.indexedItemsById);
             const totalMatched = totalFiltered.length;
             const limited = totalFiltered.slice(0, filters?.limit ?? DEFAULT_RETRIEVAL_LIMIT);
@@ -118,7 +118,7 @@ export class RetrievalService {
         }
     }
 
-    private mapSearchResults(searchResults: SearchResult[]): RetrievalResult[] {
+    private mapSearchResults(searchResults: RetrievalIndexResult[]): RetrievalResult[] {
         return searchResults.map(sr => ({
             item: searchResultToItem(sr, this.indexedItemsById),
             score: sr.score,

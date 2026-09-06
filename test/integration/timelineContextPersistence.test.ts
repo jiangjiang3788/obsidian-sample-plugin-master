@@ -5,10 +5,11 @@
  * @covers F126/integration
  */
 import { resolveTimelineCreateContext } from '@/app/actions/recordCreate/timelineCreateAction';
-import { hydrateQuickInputTemplateDefaults } from '@/features/quickinput/editor/QuickInputEditorModel';
+import { applyQuickInputFieldUpdate, applyQuickInputTimeDirectionChange, buildQuickInputDisplayTemplate, hydrateQuickInputTemplateDefaults } from '@/features/quickinput/editor/QuickInputEditorModel';
 import { buildRecordOutputPlan } from '@/core/recordInput/snapshot/OutputPlanner';
 import { getRecordTypeById, RECORD_TYPE_IDS } from '@core/recordTypes/public';
 import { parseRecordBlock } from '@/core/utils/parser';
+import { asTaskRecord, asTaskSessionRecord } from '@/core/records/public';
 import type { TaskBlock } from '@core/types/public';
 
 function taskBlock(start: number, end: number, id: string): TaskBlock {
@@ -34,10 +35,17 @@ function taskBlock(start: number, end: number, id: string): TaskBlock {
   };
 }
 
+function splitRecordBlocks(markdown: string): string[] {
+  const matches = markdown.match(/<!-- start -->[\s\S]*?<!-- end -->/g);
+  return matches || [];
+}
+
 describe('integration: Timeline click context -> Task persistence', () => {
   it('persists the inferred previous-end/next-start gap through QuickInput hydration and Markdown parsing', () => {
     const template = getRecordTypeById(RECORD_TYPE_IDS.TASK);
     if (!template) throw new Error('Task template missing');
+    const executionTemplate = buildQuickInputDisplayTemplate(template, RECORD_TYPE_IDS.TASK, [], { taskTimingMode: 'execution' });
+    if (!executionTemplate) throw new Error('Task execution display template missing');
 
     const invocation = resolveTimelineCreateContext({
       day: '2026-05-13',
@@ -49,7 +57,7 @@ describe('integration: Timeline click context -> Task persistence', () => {
     });
 
     const hydrated = hydrateQuickInputTemplateDefaults({
-      template,
+      template: executionTemplate,
       context: invocation.context,
       current: {},
       fieldSources: {},
@@ -67,10 +75,14 @@ describe('integration: Timeline click context -> Task persistence', () => {
         goalPath: '测试/时间轴上下文',
         任务内容: '自动补齐上一段空白时间',
       },
+      context: invocation.context,
     });
 
-    const lines = plan.outputContent.trim().split(/\r?\n/);
-    const parsed = parseRecordBlock(plan.targetFilePath, lines, 0, lines.length - 1, '记录');
+    const blocks = splitRecordBlocks(plan.outputContent);
+    const taskLines = blocks[0].split(/\r?\n/);
+    const sessionLines = blocks[1].split(/\r?\n/);
+    const parsed = asTaskRecord(parseRecordBlock(plan.targetFilePath!, taskLines, 0, taskLines.length - 1, '记录'));
+    const session = asTaskSessionRecord(parseRecordBlock(plan.targetFilePath!, sessionLines, 0, sessionLines.length - 1, '记录'));
 
     expect(hydrated.formData).toMatchObject({
       startAt: '2026-05-13T01:20',
@@ -80,8 +92,97 @@ describe('integration: Timeline click context -> Task persistence', () => {
     expect(parsed).not.toBeNull();
     expect(parsed?.coreBlock).toBe('task');
     expect(parsed?.goalPath).toBe('测试/时间轴上下文');
-    expect(parsed?.startAt).toBe('2026-05-13T01:20');
-    expect(parsed?.endAt).toBe('2026-05-13T02:00');
-    expect(parsed?.expectedDurationMinutes).toBe(40);
+    expect(parsed?.startAt).toBeUndefined();
+    expect(parsed?.endAt).toBeUndefined();
+    expect(parsed?.expectedDurationMinutes).toBeUndefined();
+    expect(parsed?.status).toBe('done');
+    expect(parsed?.completedAt).toBe('2026-05-13T02:00');
+    expect(blocks).toHaveLength(2);
+    expect(session).toMatchObject({
+      coreBlock: 'task-session',
+      taskId: parsed?.id,
+      sessionDurationMinutes: 40,
+      sessionResult: 'task-completed',
+      sessionSource: 'timeline',
+    });
+  });
+
+  it('persists a retrospective Task created from Timeline using now minus X minutes', () => {
+    const template = getRecordTypeById(RECORD_TYPE_IDS.TASK);
+    if (!template) throw new Error('Task template missing');
+    const executionTemplate = buildQuickInputDisplayTemplate(template, RECORD_TYPE_IDS.TASK, [], { taskTimingMode: 'execution' });
+    if (!executionTemplate) throw new Error('Task execution display template missing');
+
+    const invocation = resolveTimelineCreateContext({
+      day: '2026-05-13',
+      clickedMinute: 240,
+      dayBlocks: [taskBlock(120, 180, 'previous-task')],
+    });
+
+    const hydrated = hydrateQuickInputTemplateDefaults({
+      template: executionTemplate,
+      context: invocation.context,
+      current: {},
+      fieldSources: {},
+      selectedGoal: null,
+      currentGoalPath: null,
+      currentGoalTitle: null,
+      currentPeriod: null,
+      timeDirection: 'forward',
+    });
+
+    const backward = applyQuickInputTimeDirectionChange({
+      formData: hydrated.formData,
+      fieldSources: hydrated.fieldSources,
+      nextDirection: 'backward',
+      timeFieldSet: 'task',
+      defaultEndTime: '2026-05-13T04:00',
+    });
+
+    const resized = applyQuickInputFieldUpdate({
+      formData: backward.formData,
+      fieldSources: backward.fieldSources,
+      key: 'expectedDurationMinutes',
+      value: 30,
+      timeDirection: 'backward',
+    });
+
+    expect(resized.formData).toMatchObject({
+      startAt: '2026-05-13T03:30',
+      endAt: '2026-05-13T04:00',
+      expectedDurationMinutes: 30,
+    });
+
+    const plan = buildRecordOutputPlan({
+      template,
+      formData: {
+        ...resized.formData,
+        goalPath: '测试/时间轴上下文',
+        任务内容: '回填刚刚完成的 30 分钟',
+      },
+      context: invocation.context,
+    });
+
+    const blocks = splitRecordBlocks(plan.outputContent);
+    const taskLines = blocks[0].split(/\r?\n/);
+    const sessionLines = blocks[1].split(/\r?\n/);
+    const parsed = asTaskRecord(parseRecordBlock(plan.targetFilePath!, taskLines, 0, taskLines.length - 1, '记录'));
+    const session = asTaskSessionRecord(parseRecordBlock(plan.targetFilePath!, sessionLines, 0, sessionLines.length - 1, '记录'));
+
+    expect(parsed?.startAt).toBeUndefined();
+    expect(parsed?.endAt).toBeUndefined();
+    expect(parsed?.expectedDurationMinutes).toBeUndefined();
+    expect(parsed?.completedAt).toBe('2026-05-13T04:00');
+    expect(parsed?.status).toBe('done');
+    expect(blocks).toHaveLength(2);
+    expect(session).toMatchObject({
+      coreBlock: 'task-session',
+      taskId: parsed?.id,
+      sessionDurationMinutes: 30,
+      sessionResult: 'task-completed',
+      sessionSource: 'timeline',
+    });
+    expect(session?.sessionStartedAt).toBe(new Date('2026-05-13T03:30').toISOString());
+    expect(session?.sessionEndedAt).toBe(new Date('2026-05-13T04:00').toISOString());
   });
 });

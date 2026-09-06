@@ -1,13 +1,14 @@
 import type { TemplateField } from '@core/types/public';
 import { getTemplateFieldSemantic } from '@core/fields/public';
+import { TASK_STATUS_PRESENTATION } from '@core/records/public';
 
 import type { QuickInputPeriodLike, QuickInputFormData, QuickInputTemplateLike } from './types';
 
 const TASK_STATUS_FIELD: TemplateField = {
   id: 'core.task.status', key: 'status', label: '状态', type: 'singleSelect', semantic: 'status', defaultValue: 'open', autoSelectFirst: true,
   options: [
-    { value: 'open', label: '未完成' },
-    { value: 'done', label: '已完成' },
+    { value: 'open', label: `${TASK_STATUS_PRESENTATION.open.emoji} ${TASK_STATUS_PRESENTATION.open.label}` },
+    { value: 'done', label: `${TASK_STATUS_PRESENTATION.done.emoji} ${TASK_STATUS_PRESENTATION.done.label}` },
   ],
 };
 const TASK_CONTENT_FIELD: TemplateField = { id: 'core.task.content', key: '任务内容', label: '内容', type: 'text', semantic: 'body' };
@@ -19,9 +20,24 @@ const TASK_RECURRENCE_FIELD: TemplateField = {
   ],
 };
 const TASK_RECURRENCE_INTERVAL_FIELD: TemplateField = { id: 'core.task.recurrenceInterval', key: 'recurrenceInterval', label: '重复间隔', type: 'number', min: 1, defaultValue: '1' };
-const TASK_START_FIELD: TemplateField = { id: 'core.task.startAt', key: 'startAt', label: '开始/预计时间', type: 'datetime', semantic: 'startTime' };
-const TASK_END_FIELD: TemplateField = { id: 'core.task.endAt', key: 'endAt', label: '结束时间', type: 'datetime', semantic: 'endTime' };
-const TASK_DURATION_FIELD: TemplateField = { id: 'core.task.expectedDurationMinutes', key: 'expectedDurationMinutes', label: '时长（分钟）', type: 'number', semantic: 'duration', min: 1 };
+const TASK_RECURRENCE_ANCHOR_FIELD: TemplateField = {
+  id: 'core.task.recurrenceAnchor', key: 'recurrenceAnchor', label: '重复方式', type: 'singleSelect', defaultValue: 'scheduled', autoSelectFirst: true,
+  options: [
+    { value: 'scheduled', label: '固定计划' },
+    { value: 'completion', label: '完成后重复' },
+  ],
+};
+const TASK_SCHEDULED_FIELD: TemplateField = { id: 'core.task.scheduledAt', key: 'scheduledAt', label: '计划时间', type: 'datetime', semantic: 'startTime' };
+const TASK_DUE_FIELD: TemplateField = { id: 'core.task.dueAt', key: 'dueAt', label: '截止时间', type: 'datetime' };
+const TASK_START_FIELD: TemplateField = { id: 'core.task.startAt', key: 'startAt', label: '实际开始', type: 'datetime', semantic: 'startTime' };
+const TASK_END_FIELD: TemplateField = { id: 'core.task.endAt', key: 'endAt', label: '实际结束', type: 'datetime', semantic: 'endTime' };
+const TASK_DURATION_FIELD: TemplateField = { id: 'core.task.expectedDurationMinutes', key: 'expectedDurationMinutes', label: '预计时长（分钟）', type: 'number', semantic: 'duration', min: 1 };
+
+export type TaskQuickInputTimingMode = 'plan' | 'execution';
+export interface QuickInputDisplayTemplateOptions {
+  taskTimingMode?: TaskQuickInputTimingMode;
+  recordInputMode?: 'create' | 'edit';
+}
 
 function keyOf(field: TemplateField): string {
   return String(field.key || field.label || '').trim();
@@ -35,26 +51,31 @@ function findField(fields: TemplateField[], predicate: (field: TemplateField) =>
   return fields.find(predicate);
 }
 
-function normalizeTaskFields(fields: TemplateField[]): TemplateField[] {
-  const legacyStartKeys = new Set(['scheduledAt', '计划时间', 'scheduledDate', '计划日期', 'startAt', '开始时间', '开始/预计时间']);
+function normalizeTaskFields(fields: TemplateField[], timingMode: TaskQuickInputTimingMode = 'plan', recordInputMode: 'create' | 'edit' = 'create'): TemplateField[] {
+  const scheduledKeys = new Set(['scheduledAt', '计划时间', 'scheduledDate', '计划日期']);
+  const legacyStartKeys = new Set(['startAt', '开始时间', '开始/预计时间']);
   const legacyEndKeys = new Set(['endAt', '结束时间']);
-  const hiddenLegacyKeys = new Set(['dueAt', '截止时间', 'dueDate', '截止日期', 'startDate', '开始日期', 'recurrenceAnchor', '重复锚点']);
+  const dueKeys = new Set(['dueAt', '截止时间', 'dueDate', '截止日期']);
+  const hiddenLegacyKeys = new Set(['startDate', '开始日期']);
 
   const statusExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === 'status' || keyOf(field) === 'status');
   const bodyExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === 'body');
   const recurrenceExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === 'recurrence' || keyOf(field) === 'recurrenceUnit');
   const recurrenceIntervalExisting = findField(fields, (field) => keyOf(field) === 'recurrenceInterval' || keyOf(field) === '重复间隔');
-  const durationExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === 'duration' || ['expectedDurationMinutes', '预计时长', '时长', '时长（分钟）'].includes(keyOf(field)));
+  const recurrenceAnchorExisting = findField(fields, (field) => keyOf(field) === 'recurrenceAnchor' || keyOf(field) === '重复锚点' || keyOf(field) === '重复方式');
+  const durationExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === 'duration' || ['expectedDurationMinutes', '预计时长', '预计时长（分钟）', '时长', '时长（分钟）'].includes(keyOf(field)));
+  const scheduledExisting = findField(fields, (field) => scheduledKeys.has(keyOf(field)));
   const startExisting = findField(fields, (field) => legacyStartKeys.has(keyOf(field)));
   const endExisting = findField(fields, (field) => legacyEndKeys.has(keyOf(field)));
+  const dueExisting = findField(fields, (field) => dueKeys.has(keyOf(field)));
 
   const reserved = new Set<TemplateField>([
-    statusExisting, bodyExisting, recurrenceExisting, recurrenceIntervalExisting, startExisting, endExisting, durationExisting,
+    statusExisting, bodyExisting, recurrenceExisting, recurrenceIntervalExisting, recurrenceAnchorExisting, scheduledExisting, startExisting, endExisting, dueExisting, durationExisting,
   ].filter(Boolean) as TemplateField[]);
 
   const rest = fields.filter((field) => {
     if (reserved.has(field)) return false;
-    if (hiddenLegacyKeys.has(keyOf(field))) return false;
+    if (hiddenLegacyKeys.has(keyOf(field)) || scheduledKeys.has(keyOf(field)) || dueKeys.has(keyOf(field)) || legacyStartKeys.has(keyOf(field)) || legacyEndKeys.has(keyOf(field))) return false;
     return true;
   });
 
@@ -93,17 +114,47 @@ function normalizeTaskFields(fields: TemplateField[]): TemplateField[] {
     options: recurrenceOptions,
   };
   const recurrenceInterval: TemplateField = { ...TASK_RECURRENCE_INTERVAL_FIELD, ...(recurrenceIntervalExisting || {}), label: '重复间隔', type: 'number', min: recurrenceIntervalExisting?.min ?? 1, defaultValue: recurrenceIntervalExisting?.defaultValue || '1' };
-  const start: TemplateField = { ...TASK_START_FIELD, ...(startExisting || {}), key: 'startAt', label: '开始/预计时间', type: 'datetime', semantic: 'startTime' };
-  const end: TemplateField = { ...TASK_END_FIELD, ...(endExisting || {}), key: 'endAt', label: '结束时间', type: 'datetime', semantic: 'endTime' };
-  const duration: TemplateField = { ...TASK_DURATION_FIELD, ...(durationExisting || {}), key: 'expectedDurationMinutes', label: '时长（分钟）', type: 'number', semantic: 'duration', min: durationExisting?.min ?? 1 };
+  const recurrenceAnchor: TemplateField = {
+    ...TASK_RECURRENCE_ANCHOR_FIELD,
+    ...(recurrenceAnchorExisting || {}),
+    key: 'recurrenceAnchor',
+    label: '重复方式',
+    type: 'singleSelect',
+    defaultValue: recurrenceAnchorExisting?.defaultValue || 'scheduled',
+    options: recurrenceAnchorExisting?.options?.length ? recurrenceAnchorExisting.options : TASK_RECURRENCE_ANCHOR_FIELD.options,
+  };
+  const duration: TemplateField = {
+    ...TASK_DURATION_FIELD,
+    ...(durationExisting || {}),
+    key: 'expectedDurationMinutes',
+    label: timingMode === 'execution' ? '时长（分钟）' : '预计时长（分钟）',
+    type: 'number',
+    semantic: 'duration',
+    min: durationExisting?.min ?? 1,
+    required: false,
+  };
 
-  return [status, body, recurrence, recurrenceInterval, start, end, duration, ...normalizedRest];
+  const timingFields: TemplateField[] = timingMode === 'execution'
+    ? [
+        { ...TASK_START_FIELD, ...(startExisting || scheduledExisting || {}), key: 'startAt', label: '实际开始', type: 'datetime', semantic: 'startTime' },
+        { ...TASK_END_FIELD, ...(endExisting || {}), key: 'endAt', label: '实际结束', type: 'datetime', semantic: 'endTime' },
+        duration,
+      ]
+    : [
+        { ...TASK_SCHEDULED_FIELD, ...(scheduledExisting || startExisting || {}), key: 'scheduledAt', label: '计划时间', type: 'datetime', semantic: 'startTime' },
+        duration,
+        { ...TASK_DUE_FIELD, ...(dueExisting || {}), key: 'dueAt', label: '截止时间', type: 'datetime', semantic: undefined },
+      ];
+
+  const lifecycleFields = recordInputMode === 'edit' ? [] : [status];
+  return [...lifecycleFields, body, recurrence, recurrenceInterval, recurrenceAnchor, ...timingFields, ...normalizedRest];
 }
 
 export function buildQuickInputDisplayTemplate(
   rawTemplate: QuickInputTemplateLike | null | undefined,
   effectiveBlockId: string | null | undefined,
   goalFieldOptions: Array<{ value: string; label: string }>,
+  options: QuickInputDisplayTemplateOptions = {},
 ): QuickInputTemplateLike | null {
   if (!rawTemplate?.fields?.length) return rawTemplate ?? null;
   const task = isTaskTemplate(rawTemplate, effectiveBlockId);
@@ -120,7 +171,7 @@ export function buildQuickInputDisplayTemplate(
   return {
     ...rawTemplate,
     recordTypeId: effectiveBlockId || rawTemplate.recordTypeId,
-    fields: task ? normalizeTaskFields(mappedFields) : mappedFields,
+    fields: task ? normalizeTaskFields(mappedFields, options.taskTimingMode ?? 'plan', options.recordInputMode ?? 'create') : mappedFields,
   };
 }
 
@@ -129,7 +180,9 @@ export function shouldShowQuickInputTimeDirectionControl(
 ): boolean {
   if (!template?.fields) return false;
   const keys = new Set((template.fields || []).map((field: TemplateField) => field.key || field.label));
-  return keys.has('时间') && keys.has('结束') && keys.has('时长');
+  const hasLegacyTriple = keys.has('时间') && keys.has('结束') && keys.has('时长');
+  const hasTaskTriple = keys.has('startAt') && keys.has('endAt') && keys.has('expectedDurationMinutes');
+  return hasLegacyTriple || hasTaskTriple;
 }
 
 export function buildQuickInputPeriodUi(currentPeriod: QuickInputPeriodLike | null): {

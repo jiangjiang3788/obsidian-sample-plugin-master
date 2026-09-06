@@ -5,6 +5,7 @@ export type ThinkIconName =
   | 'arrow-up'
   | 'calendar'
   | 'copy'
+  | 'database'
   | 'check'
   | 'chevron-down'
   | 'chevron-up'
@@ -41,6 +42,8 @@ function renderIcon(name: ThinkIconName) {
       return <path d="m18 15-6-6-6 6" />;
     case 'copy':
       return <><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>;
+    case 'database':
+      return <><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M3 5v7c0 1.7 4 3 9 3s9-1.3 9-3V5" /><path d="M3 12v7c0 1.7 4 3 9 3s9-1.3 9-3v-7" /></>;
     case 'calendar':
       return <><path d="M8 2v4M16 2v4M3 10h18" /><rect x="3" y="4" width="18" height="18" rx="2" /></>;
     case 'filter':

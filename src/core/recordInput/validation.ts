@@ -6,6 +6,17 @@ function issue(code: string, message: string, field?: string): RecordSubmitIssue
   return { code, message, field };
 }
 
+
+function isTaskOptionalDurationField(template: ValidateRecordInputParams['template'], field: { key?: string; label?: string; semantic?: string }): boolean {
+  const recordTypeId = String(template?.recordTypeId || template?.id || '').trim().replace(/^core\./, '');
+  if (recordTypeId !== 'task') return false;
+  const key = String(field.key || '').trim();
+  const label = String(field.label || '').trim();
+  return field.semantic === 'duration'
+    || key === 'expectedDurationMinutes'
+    || ['预计时长', '时长', '时长（分钟）'].includes(key)
+    || ['预计时长', '时长', '时长（分钟）'].includes(label);
+}
 function hasRequiredValue(value: unknown): boolean {
   if (value === undefined || value === null) return false;
   if (Array.isArray(value)) return value.some((entry) => hasRequiredValue(entry));
@@ -45,7 +56,7 @@ export function validateRecordInput(input: ValidateRecordInputParams): RecordVal
     // to QuickInput UI helpers. AI/batch/API callers can bypass the editor UI,
     // so keeping this invariant here prevents incomplete records from being
     // persisted silently.
-    if (field.required && !hasValue) {
+    if (field.required && !hasValue && !isTaskOptionalDurationField(input.template, field)) {
       errors.push(issue(
         'record_field_required',
         `请填写必填字段：${field.label || field.key}`,

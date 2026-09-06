@@ -100,6 +100,8 @@ export const MILESTONE_SCHEMA = simpleGoalRecord('milestone', '里程碑');
 
 const TASK_DEMAND_FIELDS = [
   f('优先级', 'domain-fact', 'target', 'enum', 'User-declared Task priority.', { aliases: ['priority'], allowedValues: ['lowest', 'low', 'medium', 'high', 'highest'] }),
+  f('重要程度', 'domain-fact', 'target', 'enum', 'Eisenhower importance classification. Missing means unclassified.', { aliases: ['importance'], allowedValues: ['important', 'normal'] }),
+  f('紧急程度', 'domain-fact', 'target', 'enum', 'Eisenhower urgency classification. Missing means unclassified.', { aliases: ['urgency'], allowedValues: ['urgent', 'normal'] }),
   f('预计时长', 'domain-fact', 'target', 'number', 'User-declared duration in minutes. It can complete a manual Task time range when endAt is absent; TaskSession remains the source for multi-session timer history.', { aliases: ['expectedDurationMinutes'] }),
   f('精力要求', 'domain-fact', 'target', 'enum', 'Declared overall energy demand.', { aliases: ['energyDemand'], allowedValues: ['low', 'medium', 'high'] }),
   f('脑力要求', 'domain-fact', 'target', 'enum', 'Declared cognitive demand.', { aliases: ['brainDemand'], allowedValues: ['low', 'medium', 'high'] }),
@@ -122,8 +124,8 @@ export const TASK_SCHEMA: RecordSchemaContract = {
     ...GOAL,
     f('系列ID', 'canonical-reference', 'target', 'record-id', 'Optional TaskSeries reference.', { aliases: ['seriesId'] }),
     f('计划时间', 'domain-fact', 'target', 'datetime', 'Scheduled execution timestamp.', { aliases: ['scheduledAt'] }),
-    f('开始时间', 'domain-fact', 'target', 'datetime', 'Declared start timestamp.', { aliases: ['startAt'] }),
-    f('结束时间', 'domain-fact', 'target', 'datetime', 'Declared end timestamp. Together with startAt it may represent a manually recorded time range; TaskSession remains preferred when session history exists.', { aliases: ['endAt'] }),
+    f('开始时间', 'domain-fact', 'target', 'datetime', 'Legacy/manual Task range start. New planning writes use scheduledAt; actual execution writes use TaskSession.', { aliases: ['startAt'] }),
+    f('结束时间', 'domain-fact', 'target', 'datetime', 'Legacy/manual Task range end. Kept for compatibility; actual execution writes use TaskSession.', { aliases: ['endAt'] }),
     f('截止时间', 'domain-fact', 'target', 'datetime', 'Due timestamp.', { aliases: ['dueAt'] }),
     f('计划日期', 'domain-fact', 'target', 'date', 'Date-only scheduled execution fact used by current records.', { aliases: ['scheduledDate'] }),
     f('开始日期', 'domain-fact', 'target', 'date', 'Date-only declared start fact used by current records.', { aliases: ['startDate'] }),
@@ -172,7 +174,7 @@ export const TASK_SESSION_SCHEMA: RecordSchemaContract = {
     f('结束于', 'domain-fact', 'target', 'datetime', 'Actual session end.', { required: true, aliases: ['sessionEndedAt'] }),
     f('时长', 'domain-fact', 'target', 'number', 'Actual session duration in minutes.', { required: true, aliases: ['sessionDurationMinutes'] }),
     f('结果', 'domain-fact', 'target', 'enum', 'Session outcome.', { required: true, aliases: ['sessionResult'], allowedValues: ['work-block-ended', 'task-completed'] }),
-    f('来源', 'measurement-provenance', 'target', 'enum', 'Execution capture source.', { required: true, aliases: ['sessionSource'], allowedValues: ['timer', 'energy-view', 'unknown'] }),
+    f('来源', 'measurement-provenance', 'target', 'enum', 'Execution capture source.', { required: true, aliases: ['sessionSource'], allowedValues: ['timer', 'energy-view', 'timeline', 'unknown'] }),
     f('建议时长', 'domain-fact', 'target', 'number', 'Suggested duration snapshot at execution time.', { aliases: ['suggestedDurationMinutes'] }),
     f('开始精力记录ID', 'canonical-reference', 'target', 'record-id', 'Energy snapshot at session start.', { aliases: ['startEnergyRecordId'] }),
     f('结束精力记录ID', 'canonical-reference', 'target', 'record-id', 'Energy snapshot linked after session.', { aliases: ['endEnergyRecordId'] }),

@@ -20,11 +20,11 @@ must('scripts/testing/generate-quality-report.mjs', ['发布质量报告.md', '�
 must('test/system/test-governance.json', ['warningRegressionRatio', 'jestRepeat', 'e2eP0Repeat']);
 must('scripts/testing/audit-fault-lab.mjs', ['@fault', '故障实验室审计']);
 must('scripts/testing/generate-fault-lab-report.mjs', ['故障实验室报告.md', '待补齐运行证据']);
-const workflowDir = '.github/workflows';
-if (process.env.CI || fs.existsSync(workflowDir)) {
+const isCiRuntime = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+if (isCiRuntime) {
   must('.github/workflows/think-os-test-v9.yml', ['验证:CI:v9', '测试:稳定性', '测试:真机:稳定性:P0', '发布质量报告', 'actions/cache@v4']);
 } else {
-  console.log('【测试结果治理审计】当前是本地插件工作区，未携带 .github 工作流；跳过 CI 文件存在性检查。');
+  console.log('【测试结果治理审计】当前不是 CI 运行环境；跳过 CI 工作流文件存在性检查。');
 }
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));

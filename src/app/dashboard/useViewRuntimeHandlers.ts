@@ -12,7 +12,9 @@ import {
   updateTimeFromView,
 } from '@/app/actions/recordUiActions';
 import { openRecordOrigin, resolveVaultResourcePath } from '@/app/actions/obsidianRuntimeActions';
+import { TaskSessionTimeEditModal } from '@/app/ui/modals/TaskSessionTimeEditModal';
 import type {
+  EditTimelineBlockHandler,
   OpenCheckinManagerHandler,
   OpenHeatmapCreateHandler,
   OpenQuickCreateHandler,
@@ -21,6 +23,7 @@ import type {
   OpenTimelineCreateHandler,
   ResolveResourcePathHandler,
   UpdateTaskTimeHandler,
+  UpdateTaskQuadrantHandler,
 } from '@shared/types/public';
 
 export interface UseViewRuntimeHandlersParams {
@@ -34,6 +37,8 @@ export interface UseViewRuntimeHandlersParams {
 
 export interface ViewRuntimeHandlers {
   onUpdateTaskTime: UpdateTaskTimeHandler;
+  onEditTimelineBlock: EditTimelineBlockHandler;
+  onTaskQuadrantChange: UpdateTaskQuadrantHandler;
   onQuickCreate: OpenQuickCreateHandler;
   onCategoryColorsChange: (nextColors: Record<string, string>) => void;
   onOpenRecord: OpenRecordHandler;
@@ -81,6 +86,38 @@ export function useViewRuntimeHandlers({
     [ui, useCases]
   );
 
+  const onEditTimelineBlock = useCallback<EditTimelineBlockHandler>(async (block) => {
+    if (block.timelineSource === 'task-session' && block.sessionRecordId) {
+      const session = dataStore.getRecordById(block.sessionRecordId);
+      if (!session || session.coreBlock !== 'task-session' || !session.sessionStartedAt || !session.sessionEndedAt) {
+        ui.notice('找不到这段实际执行记录。');
+        return;
+      }
+      const value = await new TaskSessionTimeEditModal(app, {
+        startedAt: session.sessionStartedAt,
+        endedAt: session.sessionEndedAt,
+        title: '编辑实际执行时间',
+      }).openAndGetValue();
+      if (!value) return;
+      const ok = await updateTimeFromView({
+        uiPort: ui,
+        useCases,
+        itemId: session.id,
+        updates: value,
+        source: 'layout_renderer',
+      });
+      if (!ok) throw new Error('更新实际执行时间失败');
+      return;
+    }
+
+    const task = dataStore.getRecordById(block.taskRecordId);
+    if (task) openEditFromItem({ app, item: task, openedFrom: 'timeline' });
+  }, [app, dataStore, ui, useCases]);
+
+  const onTaskQuadrantChange = useCallback<UpdateTaskQuadrantHandler>(async (recordId, quadrant) => {
+    await useCases.recordInput.updateTaskQuadrant(recordId, quadrant);
+  }, [useCases.recordInput]);
+
   const onQuickCreate = useCallback<OpenQuickCreateHandler>((payload) => {
     openCreateFromStatistics({
       app,
@@ -116,6 +153,7 @@ export function useViewRuntimeHandlers({
       app,
       uiPort: ui,
       hourHeight: payload.hourHeight,
+      maxHours: payload.maxHours,
       dayBlocks: payload.dayBlocks,
       day: payload.day,
       event: payload.event,
@@ -180,6 +218,8 @@ export function useViewRuntimeHandlers({
 
   return {
     onUpdateTaskTime,
+    onEditTimelineBlock,
+    onTaskQuadrantChange,
     onQuickCreate,
     onCategoryColorsChange,
     onOpenRecord,

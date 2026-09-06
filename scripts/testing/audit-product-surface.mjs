@@ -31,11 +31,14 @@ const editorSource = 'src/features/settings/views/editors/registry.tsx';
 const runtimeViews = objectKeys(read(runtimeSource), 'VIEW_RUNTIME_BINDINGS');
 const editorViews = objectKeys(read(editorSource), 'VIEW_EDITORS');
 if (!sameSet(runtimeViews, editorViews)) errors.push(`视图运行时与设置编辑器注册不一致：运行时=${runtimeViews.join('、')}；编辑器=${editorViews.join('、')}`);
-if (runtimeViews.length !== 9) errors.push(`当前应有 9 种用户视图，实际注册 ${runtimeViews.length} 种。`);
 const viewFeatureMap = {
   BlockView: 'F080', TableView: 'F081', ExcelView: 'F082', TimelineView: 'F083',
   EventTimelineView: 'F084', StatisticsView: 'F085', HeatmapView: 'F086', ProgressView: 'F087', EnergyView: 'F088',
+  EisenhowerView: 'F093',
 };
+if (runtimeViews.length !== Object.keys(viewFeatureMap).length) {
+  errors.push(`用户视图注册数量与功能地图不一致：运行时 ${runtimeViews.length} 种，功能地图 ${Object.keys(viewFeatureMap).length} 种。`);
+}
 for (const view of runtimeViews) {
   const id = viewFeatureMap[view];
   if (!id) errors.push(`视图 ${view} 没有功能地图映射。`);

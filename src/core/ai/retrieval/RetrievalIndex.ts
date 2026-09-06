@@ -1,31 +1,11 @@
-import MiniSearch from 'minisearch';
+import { LocalRetrievalIndex } from './LocalRetrievalIndex';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { readFieldValue } from '@/core/fields/FieldValueResolver';
 import type { SearchIndexDocument } from './RetrievalTypes';
-import { SEARCH_FIELDS, STORE_FIELDS } from './RetrievalTypes';
-import { collectSearchableExtraText, normalizeRetrievalText, tokenizeRetrievalText } from './RetrievalText';
+import { collectSearchableExtraText, normalizeRetrievalText } from './RetrievalText';
 
-export function createRetrievalMiniSearch(): MiniSearch<SearchIndexDocument> {
-    return new MiniSearch<SearchIndexDocument>({
-        fields: SEARCH_FIELDS as string[],
-        storeFields: STORE_FIELDS as string[],
-        extractField: (document: SearchIndexDocument, fieldName: string) => {
-            return normalizeRetrievalText(document[fieldName as keyof SearchIndexDocument]);
-        },
-        searchOptions: {
-            boost: {
-                title: 2,
-                editableText: 1.8,
-                goalPath: 1.5,
-                tags: 1.3,
-                categoryKey: 1.2,
-                extraText: 0.8,
-            },
-            fuzzy: 0.2,
-            prefix: true,
-        },
-        tokenize: tokenizeRetrievalText,
-    });
+export function createRetrievalIndex(): LocalRetrievalIndex {
+    return new LocalRetrievalIndex();
 }
 
 export function itemToSearchDocument(item: RecordViewItem): SearchIndexDocument {

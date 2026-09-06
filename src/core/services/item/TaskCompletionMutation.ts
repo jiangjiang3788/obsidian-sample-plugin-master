@@ -16,6 +16,8 @@ export interface TaskSeriesUpdate {
   content?: string;
   goalPath?: string | null;
   priority?: TaskPriority | null;
+  importance?: TaskSeriesRecord['importance'] | null;
+  urgency?: TaskSeriesRecord['urgency'] | null;
   expectedDurationMinutes?: number | null;
   energyDemand?: TaskDemandLevel | null;
   brainDemand?: TaskDemandLevel | null;
@@ -38,6 +40,8 @@ function nextTaskFields(task: TaskRecord, series: TaskSeriesRecord, completedAt:
     goalPath: series.goalPath,
     createdAt: completedAt,
     priority: series.priority,
+    importance: series.importance,
+    urgency: series.urgency,
     expectedDurationMinutes: series.expectedDurationMinutes,
     energyDemand: series.energyDemand,
     brainDemand: series.brainDemand,
@@ -79,7 +83,15 @@ export class TaskCompletionMutation {
   }
 
   async cancelItem(itemId: string): Promise<void> { await this.transition(itemId, 'cancel'); }
+  async cancelItemWithSession(itemId: string, session: TaskSessionCreateInput): Promise<void> {
+    if (session.result !== 'work-block-ended') throw new Error('task_session_cancel_result_required');
+    await this.transition(itemId, 'cancel', session);
+  }
   async skipItem(itemId: string): Promise<void> { await this.transition(itemId, 'skip'); }
+  async skipItemWithSession(itemId: string, session: TaskSessionCreateInput): Promise<void> {
+    if (session.result !== 'work-block-ended') throw new Error('task_session_skip_result_required');
+    await this.transition(itemId, 'skip', session);
+  }
   async reopenItem(itemId: string): Promise<void> { await this.transition(itemId, 'reopen'); }
 
   async updateSeries(
@@ -109,6 +121,8 @@ export class TaskCompletionMutation {
       ['content', 'content'],
       ['goalPath', 'goalPath'],
       ['priority', 'priority'],
+      ['importance', 'importance'],
+      ['urgency', 'urgency'],
       ['expectedDurationMinutes', 'expectedDurationMinutes'],
       ['energyDemand', 'energyDemand'],
       ['brainDemand', 'brainDemand'],
@@ -181,7 +195,7 @@ export class TaskCompletionMutation {
       throw new Error(`task_transition_invalid:${status}:${command}`);
     }
 
-    const at = timestampNow();
+    const at = sessionInput?.endedAt || timestampNow();
     if (command === 'reopen') {
       if (task.seriesId) {
         const series = asTaskSeriesRecord(await this.repository.getById(task.seriesId));

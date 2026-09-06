@@ -22,9 +22,12 @@ import { splitTaskIntoDayBlocks } from '@core/utils/timelineBlocks';
  * - blocksByDay：按 YYYY-MM-DD 分组后的 TaskBlock 列表（已按 startMinute 排序）
  */
 export function buildDailyViewData(timelineTasks: TimelineTask[], dateRange: [Date, Date]) {
-  const start = dayjs(dateRange[0]);
-  const end = dayjs(dateRange[1]);
-  const diff = end.diff(start, 'day');
+  // A Timeline day is always a natural local day. Incoming Date values may carry
+  // arbitrary clock components; normalize them before constructing day columns so
+  // every column owns the same 00:00 -> 24:00 coordinate system.
+  const start = dayjs(dateRange[0]).startOf('day');
+  const end = dayjs(dateRange[1]).startOf('day');
+  const diff = Math.max(0, end.diff(start, 'day'));
   const dateRangeDays = Array.from({ length: diff + 1 }, (_, i) => start.add(i, 'day'));
   const map: Record<string, TaskBlock[]> = {};
   const range: [dayjs.Dayjs, dayjs.Dayjs] = [start, end];

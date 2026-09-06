@@ -1,11 +1,11 @@
 // src/features/settings/views/runtime/timeline-parser.ts
-// Timeline projection accepts two execution representations:
-// 1) persisted TaskSession records (timer / energy execution history), and
-// 2) a Task's own startAt/endAt range for manual quick-entry records.
+// Timeline projection renders planning and execution as separate layers:
+// 1) Task.scheduledAt + expectedDurationMinutes as the planned layer,
+// 2) persisted TaskSession records as authoritative actual execution, and
+// 3) legacy Task startAt/endAt ranges as actual compatibility fallback.
 //
-// If a Task has at least one valid TaskSession, Session history wins and the Task's
-// own range is not projected again. This prevents duplicate blocks while keeping
-// manual records visible without forcing users to understand TaskSession.
+// A planned slot remains visible alongside actual Sessions. Legacy Task ranges are
+// suppressed only when a valid Session exists, preventing duplicate actual blocks.
 
 import type { RecordViewItem } from '@core/types/public';
 import { splitTaskIntoDayBlocks } from '@core/utils/public';
@@ -59,7 +59,8 @@ function buildTimelineTask(args: {
   endedAt: string;
   durationMinutes: number;
   sessionRecordId?: string;
-  timelineSource: 'task-session' | 'task-range';
+  sessionResult?: 'work-block-ended' | 'task-completed';
+  timelineSource: 'task-session' | 'task-plan' | 'task-range';
 }): TimelineTask | null {
   const startedMs = timestamp(args.startedAt);
   const endedMs = timestamp(args.endedAt);
@@ -77,6 +78,7 @@ function buildTimelineTask(args: {
     ...args.task,
     id: args.id,
     sessionRecordId: args.sessionRecordId,
+    sessionResult: args.sessionResult,
     taskRecordId: args.task.id,
     timelineSource: args.timelineSource,
     date: actualStartDate,
@@ -88,6 +90,41 @@ function buildTimelineTask(args: {
     // Keep endMinute monotonic across midnight. splitTaskIntoDayBlocks() will split it per day.
     endMinute: startMinute + args.durationMinutes,
     pureText: displayText(args.task),
+    fileName,
+    actualStartDate,
+  };
+}
+
+function buildTimelinePointTask(
+  task: RecordViewItem,
+  startedAt: string,
+  timelineSource: 'task-point' | 'task-plan' = 'task-point',
+  projectionId = task.id,
+): TimelineTask | null {
+  const startedMs = timestamp(startedAt);
+  if (startedMs == null) return null;
+  const actualStartDate = localDate(startedAt);
+  const startMinute = localMinute(startedAt);
+  if (!actualStartDate || startMinute == null) return null;
+
+  const fileName = taskFileName(task);
+  if (!fileName) return null;
+
+  return {
+    ...task,
+    id: projectionId,
+    sessionRecordId: undefined,
+    sessionResult: undefined,
+    taskRecordId: task.id,
+    timelineSource,
+    date: actualStartDate,
+    doneDate: actualStartDate,
+    startTime: new Date(startedMs).toTimeString().slice(0, 5),
+    endTime: undefined,
+    duration: 0,
+    startMinute,
+    endMinute: startMinute,
+    pureText: displayText(task),
     fileName,
     actualStartDate,
   };
@@ -108,10 +145,32 @@ function projectSession(task: RecordViewItem, record: RecordViewItem): TimelineT
     task,
     id: session.id,
     sessionRecordId: session.id,
+    sessionResult: session.sessionResult,
     timelineSource: 'task-session',
     startedAt: session.sessionStartedAt,
     endedAt: session.sessionEndedAt,
     durationMinutes: duration,
+  });
+}
+
+function projectTaskPlan(taskItem: RecordViewItem): TimelineTask | null {
+  const task = asTaskRecord(taskItem);
+  if (!task || !task.scheduledAt) return null;
+
+  const startedMs = timestamp(task.scheduledAt);
+  if (startedMs == null) return null;
+  const declaredDuration = Number(task.expectedDurationMinutes);
+  if (!Number.isFinite(declaredDuration) || declaredDuration <= 0) {
+    return buildTimelinePointTask(task, task.scheduledAt, 'task-plan', `${task.id}:plan`);
+  }
+
+  return buildTimelineTask({
+    task,
+    id: `${task.id}:plan`,
+    timelineSource: 'task-plan',
+    startedAt: task.scheduledAt,
+    endedAt: new Date(startedMs + declaredDuration * 60_000).toISOString(),
+    durationMinutes: declaredDuration,
   });
 }
 
@@ -133,7 +192,11 @@ function projectTaskRange(taskItem: RecordViewItem): TimelineTask | null {
     duration = (endedMs - startedMs) / 60000;
   } else {
     const declaredDuration = Number(task.expectedDurationMinutes);
-    if (!Number.isFinite(declaredDuration) || declaredDuration <= 0) return null;
+    if (!Number.isFinite(declaredDuration) || declaredDuration <= 0) {
+      // A planned/open Task may only have a startAt. Keep it visible as a point
+      // marker without inventing occupancy or persisting a fake duration.
+      return buildTimelinePointTask(task, task.startAt);
+    }
     duration = declaredDuration;
     endedAt = new Date(startedMs + declaredDuration * 60000).toISOString();
   }
@@ -149,23 +212,22 @@ function projectTaskRange(taskItem: RecordViewItem): TimelineTask | null {
 }
 
 /**
- * Convert persisted execution facts into TimelineTask projections.
+ * Project Task planning and execution into Timeline layers.
  *
- * Priority:
- * - TaskSession is authoritative when valid Session records exist for a Task.
- * - Otherwise a Task with startAt + endAt (or startAt + expectedDurationMinutes)
- *   is treated as a manual time-range record and is displayed directly.
+ * - Task.scheduledAt (+ expectedDurationMinutes when present) is the planned layer.
+ * - TaskSession is the authoritative actual-execution layer.
+ * - Legacy Task.startAt/endAt remains an actual compatibility fallback only when the
+ *   Task has no persisted Session history. New actual writes do not use that range.
  *
- * Task lifecycle status is intentionally not consulted. open/done describes lifecycle;
- * start/end describes time occupancy. They are independent facts.
+ * Planning and actual execution may be visible at the same time. Task lifecycle status
+ * is independent from both layers; Session history owns its own execution result.
  */
 export function processItemsToTimelineTasks(records: RecordViewItem[]): TimelineTask[] {
   const byId = new Map(records.map((record) => [record.id, record] as const));
   const timelineTasks: TimelineTask[] = [];
   const taskIdsWithProjectedSessions = new Set<string>();
 
-  // Session projection comes first so it can suppress the Task-range fallback only when
-  // there is an actually valid, renderable Session.
+  // Actual execution history is always projected from Sessions first.
   for (const record of records) {
     const session = asTaskSessionRecord(record);
     if (!session) continue;
@@ -179,9 +241,18 @@ export function processItemsToTimelineTasks(records: RecordViewItem[]): Timeline
   }
 
   for (const record of records) {
-    if (record.coreBlock !== 'task' || taskIdsWithProjectedSessions.has(record.id)) continue;
-    const projected = projectTaskRange(record);
-    if (projected) timelineTasks.push(projected);
+    if (record.coreBlock !== 'task') continue;
+
+    // Planning is an independent layer. A Task may have both a planned slot and
+    // one or more actual Sessions without either suppressing the other.
+    const planned = projectTaskPlan(record);
+    if (planned) timelineTasks.push(planned);
+
+    // Legacy/manual Task ranges remain readable only as an actual fallback when
+    // no Session history exists. New actual writes no longer use these fields.
+    if (taskIdsWithProjectedSessions.has(record.id)) continue;
+    const legacy = projectTaskRange(record);
+    if (legacy) timelineTasks.push(legacy);
   }
 
   return timelineTasks;

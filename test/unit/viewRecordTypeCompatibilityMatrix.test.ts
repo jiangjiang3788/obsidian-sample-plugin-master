@@ -115,7 +115,7 @@ describe('RecordType x View compatibility matrix', () => {
     const model = buildEnergyViewModel({
       items,
       records: items,
-      module: { id: 'energy-matrix', title: '精力', viewType: 'EnergyView', viewConfig: {} },
+      module: { viewConfig: {} },
       currentView: '天',
       dateRange: [new Date('2026-08-24T00:00:00'), new Date('2026-08-24T23:59:59')],
       goals: [],

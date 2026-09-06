@@ -68,7 +68,7 @@
     "test:e2e:p1": "node scripts/testing/run-e2e-with-build-zh.mjs p1",
     "verify:p0:v4": "npm run test:system:strict && npm run test:p0:data-safety && npm run test:p0:v4 && npm run test:performance && npm run test:e2e:p0",
     "verify:p1:v4": "npm run test:p1:v4 && npm run test:e2e:p1",
-    "测试": "node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.core.config.js --runInBand",
+    "测试": "npm --silent test",
     "测试:持续": "node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.core.config.js --watch --runInBand",
     "测试:单元": "node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.unit.config.js --runInBand",
     "测试:组合": "node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.integration.config.js --runInBand",
@@ -155,7 +155,12 @@
     "测试:帮助": "node ./scripts/testing/test-help.mjs",
     "测试:真机:核心": "node scripts/testing/run-e2e-with-build-zh.mjs p0",
     "测试:真机:全部": "node scripts/testing/run-e2e-with-build-zh.mjs all",
-    "测试:真机:诊断": "node scripts/testing/run-e2e-diagnostic.mjs"
+    "测试:真机:诊断": "node scripts/testing/run-e2e-diagnostic.mjs",
+    "test:full": "npm --silent run 测试:完整",
+    "test:smoke": "npm --silent run 测试:真机",
+    "test:release": "npm --silent run 测试:发布",
+    "test:help": "node ./scripts/testing/test-help.mjs",
+    "pretest": "node ./scripts/testing/check-test-ready-zh.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -164,7 +169,6 @@
     "@mui/material": "^7.2.0",
     "dayjs": "^1.11.13",
     "immer": "^10.1.1",
-    "minisearch": "^7.2.0",
     "preact": "^10.26.9",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0",
@@ -174,8 +178,6 @@
   "devDependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@preact/preset-vite": "^2.10.2",
-    "@rollup/plugin-replace": "^6.0.2",
     "@types/jest": "^30.0.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.19.43",
@@ -202,6 +204,7 @@
     "vite": "^7.0.6",
     "vite-tsconfig-paths": "^5.1.4",
     "wdio-obsidian-reporter": "^2.1.2",
-    "wdio-obsidian-service": "^2.1.2"
+    "wdio-obsidian-service": "^2.1.2",
+    "@prefresh/vite": "^2.4.12"
   }
 }

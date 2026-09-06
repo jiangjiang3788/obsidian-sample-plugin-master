@@ -35,7 +35,7 @@ function 创建真实数据链环境() {
   const metadata: MetadataPort = { getHeadings: jest.fn(async () => []) };
   const fileStat: FileStatPort = { stat: jest.fn(async (path) => stats.get(path) ?? null) };
   const storage: IPluginStorage = {
-    readJSON: jest.fn(async <T,>(path: string) => cache.has(path) ? JSON.parse(JSON.stringify(cache.get(path))) as T : null),
+    readJSON: async <T,>(path: string) => cache.has(path) ? JSON.parse(JSON.stringify(cache.get(path))) as T : null,
     writeJSON: jest.fn(async (path, value) => { cache.set(path, JSON.parse(JSON.stringify(value))); }),
     remove: jest.fn(async (path) => { cache.delete(path); }),
   };

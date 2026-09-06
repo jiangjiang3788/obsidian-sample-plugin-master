@@ -46,11 +46,18 @@ export function parseRecordBlock(
   if (isTaskSeries && !recurrenceInfo) return null;
   const sessionDuration = normalizeTaskSessionDurationMinutes(parsed.sessionDurationMinutes);
   if (isTaskSession && (!parsed.taskId || !parsed.sessionStartedAt || !parsed.sessionEndedAt || sessionDuration == null || !parsed.sessionResult || !parsed.sessionSource)) return null;
-  const canonicalDate = localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate
-    || localCalendarDate(parsed.dueAt) || parsed.dueDate
-    || localCalendarDate(parsed.startAt) || parsed.startDate
-    || parsed.date
-    || localCalendarDate(parsed.sessionStartedAt);
+  const canonicalDate = isTask
+    ? (localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate
+      || localCalendarDate(parsed.dueAt) || parsed.dueDate
+      || localCalendarDate(parsed.startAt) || parsed.startDate
+      || localCalendarDate(parsed.createdAt)
+      || localCalendarDate(parsed.completedAt)
+      || localCalendarDate(parsed.endAt)
+      || parsed.date)
+    : (localCalendarDate(parsed.sessionStartedAt) || parsed.date
+      || localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate
+      || localCalendarDate(parsed.dueAt) || parsed.dueDate
+      || localCalendarDate(parsed.startAt) || parsed.startDate);
   const schema = getRecordSchemaDefinition(parsed.coreBlock);
   const derivedCategory = parsed.coreBlock === 'thought' && parsed.recordSubtype
     ? `闪念/${parsed.recordSubtype}`
@@ -73,6 +80,8 @@ export function parseRecordBlock(
     folder: parentFolder,
     coreBlock: parsed.coreBlock,
     priority: parsed.priority,
+    importance: parsed.importance,
+    urgency: parsed.urgency,
     createdAt: parsed.createdAt,
     scheduledAt: parsed.scheduledAt,
     startAt: parsed.startAt,
@@ -119,7 +128,9 @@ export function parseRecordBlock(
     item.expectedDurationMinutes = parsed.expectedDurationMinutes;
   }
 
-  item.startISO = parsed.sessionStartedAt || parsed.startAt || parsed.scheduledAt || parsed.startDate || parsed.scheduledDate || parsed.dueAt || parsed.dueDate || parsed.date;
+  item.startISO = parsed.sessionStartedAt
+    || (isTask ? (parsed.scheduledAt || parsed.scheduledDate || parsed.startAt || parsed.startDate) : undefined)
+    || parsed.startAt || parsed.startDate || parsed.scheduledAt || parsed.scheduledDate || parsed.dueAt || parsed.dueDate || parsed.date;
   item.endISO = parsed.sessionEndedAt || parsed.endAt || parsed.completedAt || parsed.cancelledAt || parsed.dueAt || parsed.dueDate || item.startISO;
   if (item.startISO) item.startMs = Date.parse(item.startISO);
   if (item.endISO) item.endMs = Date.parse(item.endISO);

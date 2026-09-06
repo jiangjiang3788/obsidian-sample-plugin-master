@@ -41,6 +41,8 @@ const PATCH_FIELDS: Record<string, { label: string; aliases: string[] }> = {
   cancelledAt: { label: '取消于', aliases: ['取消于', 'cancelledAt'] },
   skippedAt: { label: '跳过于', aliases: ['跳过于', 'skippedAt'] },
   priority: { label: '优先级', aliases: ['优先级', 'priority'] },
+  importance: { label: '重要程度', aliases: ['重要程度', 'importance'] },
+  urgency: { label: '紧急程度', aliases: ['紧急程度', 'urgency'] },
   expectedDurationMinutes: { label: '预计时长', aliases: ['预计时长', 'expectedDurationMinutes'] },
   energyDemand: { label: '精力要求', aliases: ['精力要求', 'energyDemand'] },
   brainDemand: { label: '脑力要求', aliases: ['脑力要求', 'brainDemand'] },

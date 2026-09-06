@@ -5,6 +5,7 @@ import type { QuickInputEditorState } from '../editor';
 import { buildRecordSubmitFeedbackPresentation } from '@core/utils/public';
 import { buildRecordSubmitRecoveryPresentation, type RecordSubmitRecoveryPresentation } from '@core/utils/public';
 import type { RecordViewItem, QuickInputSaveData } from '@core/types/public';
+import { detachTaskSeriesIdentityForDuplicate, type TaskSeriesEditIntent } from '@core/records/public';
 import {
   assertRecordInputRequiredFields,
   buildCreateRecordSubmitParamsFromEditorState,
@@ -42,6 +43,7 @@ export interface QuickInputSubmitControllerParams {
   livePersistencePlan: RecordPersistencePlan | null;
   isMobileLike: boolean;
   showNotice: ShowQuickInputNotice;
+  taskSeriesEditIntent?: TaskSeriesEditIntent | null;
 }
 
 export interface QuickInputSubmitController {
@@ -90,6 +92,7 @@ export function useQuickInputSubmitController({
   livePersistencePlan,
   isMobileLike,
   showNotice,
+  taskSeriesEditIntent,
 }: QuickInputSubmitControllerParams): QuickInputSubmitController {
   const [pendingAction, setPendingAction] = useState<QuickInputPendingAction>(null);
   const [lastConflictResult, setLastConflictResult] = useState<RecordSubmitResult | null>(null);
@@ -150,18 +153,25 @@ export function useQuickInputSubmitController({
         const latestState = getCurrentState();
         assertRecordInputRequiredFields(latestState);
         if (isQuickInputUpdateOperation(operationMode) && editItem) {
-          return await useCases.recordInput.submitUpdateRecord(buildUpdateRecordSubmitParamsFromEditorState({
+          const updateParams = buildUpdateRecordSubmitParamsFromEditorState({
             state: latestState,
             item: editItem,
             expectedOutputPlan: liveOutputPlan,
             expectedPersistencePlan: livePersistencePlan,
             signal,
             source: 'quickinput',
-          }));
+          });
+          if (taskSeriesEditIntent) {
+            updateParams.meta = { ...(updateParams.meta || {}), taskSeriesEdit: taskSeriesEditIntent };
+          }
+          return await useCases.recordInput.submitUpdateRecord(updateParams);
         }
 
+        const createState = operationMode === 'duplicate'
+          ? { ...latestState, formData: detachTaskSeriesIdentityForDuplicate(latestState.formData) }
+          : latestState;
         return await useCases.recordInput.submitCreateRecord(buildCreateRecordSubmitParamsFromEditorState({
-          state: latestState,
+          state: createState,
           context: operationMode === 'duplicate' ? undefined : context,
           signal,
           source: source ?? 'quickinput',
@@ -222,6 +232,7 @@ export function useQuickInputSubmitController({
     resetSubmitGateSoon,
     source,
     useCases,
+    taskSeriesEditIntent,
   ]);
 
   const handleDelete = useCallback(async () => {

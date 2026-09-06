@@ -44,9 +44,16 @@ export interface SearchIndexDocument {
     modified?: number;
 }
 
+export interface RetrievalIndexResult extends SearchIndexDocument {
+    score: number;
+    match: Record<string, string[]>;
+}
+
+export type SearchIndexField = keyof SearchIndexDocument;
+
 export const DEFAULT_RETRIEVAL_LIMIT = 100;
 
-export const SEARCH_FIELDS: Array<keyof SearchIndexDocument> = [
+export const SEARCH_FIELDS: SearchIndexField[] = [
     'title',
     'content',
     'editableText',
@@ -63,24 +70,3 @@ export const SEARCH_FIELDS: Array<keyof SearchIndexDocument> = [
     'extraText',
 ];
 
-export const STORE_FIELDS: Array<keyof SearchIndexDocument> = [
-    'id',
-    'title',
-    'content',
-    'editableText',
-    'fullData',
-    'tags',
-    'goalPath',
-    'rootGoal',
-    'leafGoal',
-    'categoryKey',
-    'baseCategory',
-    'leafCategory',
-    'coreBlock',
-    'fileName',
-    'folder',
-    'header',
-    'dateMs',
-    'created',
-    'modified',
-];

@@ -126,7 +126,12 @@ export function hydrateQuickInputTemplateDefaults({
 
     const contextValue = context?.[field.key] ?? context?.[field.label];
     if (contextValue !== undefined) {
-      if (!hasMeaningfulExisting || existingSource !== 'user') {
+      // Invocation context (for example Timeline gap suggestions) is seed data, not a lock.
+      // After the user edits one member of a linked time triple, the other members may be
+      // marked system_auto. Re-applying the original context here would immediately undo
+      // that linked calculation and make the time inputs look uneditable.
+      // A user-owned empty value also stays empty so clearing a suggested time is possible.
+      if (existingSource === 'context' || (!hasMeaningfulExisting && existingSource !== 'user')) {
         assignValue(
           key,
           isSelectableField(field) ? resolveSelectableValue(field, contextValue) : contextValue,

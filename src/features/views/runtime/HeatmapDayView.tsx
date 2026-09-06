@@ -38,7 +38,7 @@ export function HeatmapDayView({
                 {goalGroupsToDisplay.map((goalGroup) => (
                     <section class="heatmap-goal-section heatmap-day-section" key={goalGroup.goalPath}>
                         <div class="heatmap-goal-title-row">
-                            <div class="heatmap-day-section-title" role="heading" aria-level="3">{goalGroup.label}</div>
+                            <div class="heatmap-day-section-title" role="heading" aria-level={3}>{goalGroup.label}</div>
                         </div>
                         <div class="heatmap-day-section-grid">
                             {goalGroup.entries.map((entry) => {
@@ -73,7 +73,7 @@ export function HeatmapDayView({
         <div class="heatmap-day-view">
             {dayGroups.map((group) => (
                 <section class="heatmap-day-section" key={group.title}>
-                    <div class="heatmap-day-section-title" role="heading" aria-level="3">{group.title}</div>
+                    <div class="heatmap-day-section-title" role="heading" aria-level={3}>{group.title}</div>
                     <div class="heatmap-day-section-grid">
                         {group.entries.map((entry) => {
                             const ratingMapping = resolveCellRatingMapping(entry.goalPath);

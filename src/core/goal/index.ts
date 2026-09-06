@@ -18,7 +18,7 @@ export type { GoalOrderIndex } from './order';
 export type { GoalPathParts } from './path';
 export { resolveDerivedPeriod, normalizePeriodGranularity, isPeriodAwareRecordType, normalizePeriodPolicyGranularity, resolveTemplatePeriodPolicy } from './period';
 export { SYSTEM_RECORD_CONTEXT_FIELD_KEYS, isSystemRecordContextField } from './contextFields';
-export { getGoalTemplates, getGoalTemplateId, getGoalTemplateCandidateGoalPaths, findGoalTemplate, findDirectGoalTemplate, normalizeGoalTemplateStorageRow, toGoalTemplateStorageRow, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage } from './templates';
+export { getGoalTemplates, getGoalTemplateId, findGoalTemplate, findDirectGoalTemplate, normalizeGoalTemplateStorageRow, toGoalTemplateStorageRow, upsertGoalTemplateInSettings, removeGoalTemplateFromSettings, removeGoalTemplatesForGoal, cleanupGoalTemplateStorage } from './templates';
 export { getGoalTemplateDisplayInfo, getGoalTemplateDisplayName, isGeneratedGoalTemplateName, readGoalTemplateIcon } from './templateDisplay';
 export type { GoalTemplateDisplayInfo } from './templateDisplay';
 export { goalTemplateHasCustomOverrides, inferGoalTemplateEditMode } from './templateMode';

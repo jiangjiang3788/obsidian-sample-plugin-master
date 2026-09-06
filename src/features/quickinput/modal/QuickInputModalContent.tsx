@@ -20,6 +20,9 @@ import { useQuickInputOriginalNavigation } from './quickInputOriginalLink';
 import type { ShowQuickInputNotice } from './quickInputNotice';
 import { useQuickInputOutputPlan } from './useQuickInputOutputPlan';
 import { useQuickInputSubmitController } from './useQuickInputSubmit';
+import { RecurringTaskSeriesEditor } from './RecurringTaskSeriesEditor';
+import { normalizeRecurrenceInfo, normalizeTaskStatus, type RecurrenceInfo, type TaskLifecycleCommand, type TaskSeriesEditScope } from '@core/records/public';
+import { TaskLifecycleEditor } from './TaskLifecycleEditor';
 
 export interface QuickInputModalContentProps {
   getResourcePath: (path: string) => string;
@@ -70,7 +73,13 @@ export function QuickInputModalContent({
   }, [useCases, initialBlockId, context, mode, editItem, onSave, source]);
 
   const [isRescanningRecoveryPaths, setIsRescanningRecoveryPaths] = useState(false);
+  const [isStoppingSeries, setIsStoppingSeries] = useState(false);
+  const [isSkippingRecurringTask, setIsSkippingRecurringTask] = useState(false);
+  const [isChangingTaskLifecycle, setIsChangingTaskLifecycle] = useState(false);
   const [editOperationMode, setEditOperationMode] = useState<Extract<QuickInputOperationMode, 'edit' | 'convert' | 'duplicate'>>('edit');
+  const initialSeriesRecurrence: RecurrenceInfo = normalizeRecurrenceInfo(editItem?.recurrenceInfo) || { unit: 'day', interval: 1, anchor: 'scheduled' };
+  const [taskSeriesEditScope, setTaskSeriesEditScope] = useState<TaskSeriesEditScope>('current');
+  const [taskSeriesRecurrence, setTaskSeriesRecurrence] = useState<RecurrenceInfo>(initialSeriesRecurrence);
   const [editorResetVersion, setEditorResetVersion] = useState(0);
   const operationMode: QuickInputOperationMode = mode === 'create' ? 'create' : editOperationMode;
   const editorSessionMode = operationMode;
@@ -92,8 +101,10 @@ export function QuickInputModalContent({
     if (previousEditIdentityRef.current === editIdentity) return;
     previousEditIdentityRef.current = editIdentity;
     setEditOperationMode('edit');
+    setTaskSeriesEditScope('current');
+    setTaskSeriesRecurrence(normalizeRecurrenceInfo(editItem?.recurrenceInfo) || { unit: 'day', interval: 1, anchor: 'scheduled' });
     setEditorResetVersion((version) => version + 1);
-  }, [editIdentity]);
+  }, [editIdentity, editItem?.recurrenceInfo]);
 
   const handleOperationModeChange = useCallback((nextMode: QuickInputOperationMode) => {
     if (nextMode === 'create') return;
@@ -118,6 +129,13 @@ export function QuickInputModalContent({
       && (!createRequiresDirectGoalTemplate || currentState.templateSourceType === 'goal-template'),
   );
   const currentBlockName = currentRecordType?.name || currentState.template?.name || currentState.blockId || '请选择记录类型';
+  const isRecurringTaskEdit = operationMode === 'edit'
+    && editItem?.coreBlock === 'task'
+    && Boolean(String(editItem.seriesId || '').trim())
+    && Boolean(normalizeRecurrenceInfo(editItem.recurrenceInfo));
+  const taskSeriesEditIntent = isRecurringTaskEdit
+    ? { scope: taskSeriesEditScope, recurrence: taskSeriesRecurrence }
+    : null;
   const isEnergyDirect = mode === 'create' && currentState.blockId === ENERGY_RECORD_TYPE_ID;
   const isTimerCreate = mode === 'create' && (source === 'timer' || !!onSave);
   const {
@@ -157,12 +175,68 @@ export function QuickInputModalContent({
     livePersistencePlan,
     isMobileLike,
     showNotice,
+    taskSeriesEditIntent,
   });
 
   const handleEditorStateChange = useCallback((state: QuickInputEditorState) => {
     editorStateRef.current = state;
     setEditorState(state);
   }, []);
+
+  const handleSkipRecurringTask = useCallback(async () => {
+    const itemId = String(editItem?.id || '').trim();
+    if (!itemId || isSkippingRecurringTask) return;
+    if (!window.confirm('确认跳过本次周期任务吗？本次会标记为已跳过，并按系列规则生成下一次任务。')) return;
+    setIsSkippingRecurringTask(true);
+    try {
+      const result = await useCases.taskRuntime.runLifecycle({ taskId: itemId, command: 'skip', source: 'quickinput' });
+      const presentation = buildRecordSubmitFeedbackPresentation(result, '跳过周期任务失败');
+      if (presentation.message) showNotice(presentation.message, presentation.tone);
+      if (result.status === 'success' || result.status === 'partial_success') closeModal();
+    } catch (error: unknown) {
+      showNotice(error instanceof Error ? error.message : '跳过周期任务失败');
+    } finally {
+      setIsSkippingRecurringTask(false);
+    }
+  }, [closeModal, editItem?.id, isSkippingRecurringTask, showNotice, useCases]);
+
+  const handleStopSeries = useCallback(async () => {
+    const seriesId = String(editItem?.seriesId || '').trim();
+    if (!seriesId || isStoppingSeries) return;
+    if (!window.confirm('确认停止这个周期任务吗？当前这次任务会保留，但以后不再自动生成下一次。')) return;
+    setIsStoppingSeries(true);
+    try {
+      await useCases.recordInput.stopTaskSeries(seriesId);
+      showNotice('已停止重复；当前任务仍保留。', 'success');
+      closeModal();
+    } catch (error: unknown) {
+      showNotice(error instanceof Error ? error.message : '停止周期任务失败');
+    } finally {
+      setIsStoppingSeries(false);
+    }
+  }, [closeModal, editItem?.seriesId, isStoppingSeries, showNotice, useCases]);
+
+  const handleTaskLifecycleCommand = useCallback(async (command: TaskLifecycleCommand) => {
+    const itemId = String(editItem?.id || '').trim();
+    if (!itemId || isChangingTaskLifecycle) return;
+    const labels: Partial<Record<TaskLifecycleCommand, string>> = {
+      complete: '确认完成这个任务吗？',
+      cancel: '确认取消这个任务吗？',
+      reopen: '确认重新打开这个任务吗？',
+    };
+    if (labels[command] && !window.confirm(labels[command]!)) return;
+    setIsChangingTaskLifecycle(true);
+    try {
+      const result = await useCases.taskRuntime.runLifecycle({ taskId: itemId, command, source: 'quickinput' });
+      const presentation = buildRecordSubmitFeedbackPresentation(result, '任务状态修改失败');
+      if (presentation.message) showNotice(presentation.message, presentation.tone);
+      if (result.status === 'success') closeModal();
+    } catch (error: unknown) {
+      showNotice(error instanceof Error ? error.message : '任务状态修改失败');
+    } finally {
+      setIsChangingTaskLifecycle(false);
+    }
+  }, [closeModal, editItem?.id, isChangingTaskLifecycle, showNotice, useCases]);
 
   const handleEnergyCapture = useCallback(async (request: QuickInputEnergyCaptureRequest) => {
     const now = dayjs();
@@ -243,6 +317,26 @@ export function QuickInputModalContent({
           onEnergyCapture={handleEnergyCapture}
           isMobileLike={isMobileLike}
         />
+        {operationMode === 'edit' && editItem?.coreBlock === 'task' && normalizeTaskStatus(editItem.status) ? (
+          <TaskLifecycleEditor
+            status={normalizeTaskStatus(editItem.status)!}
+            recurring={Boolean(String(editItem.seriesId || '').trim())}
+            busy={isChangingTaskLifecycle}
+            onCommand={handleTaskLifecycleCommand}
+          />
+        ) : null}
+        {isRecurringTaskEdit ? (
+          <RecurringTaskSeriesEditor
+            scope={taskSeriesEditScope}
+            recurrence={taskSeriesRecurrence}
+            onScopeChange={setTaskSeriesEditScope}
+            onRecurrenceChange={setTaskSeriesRecurrence}
+            onSkipCurrent={handleSkipRecurringTask}
+            onStopSeries={handleStopSeries}
+            skipping={isSkippingRecurringTask}
+            stopping={isStoppingSeries}
+          />
+        ) : null}
       </div>
 
       {!isEnergyDirect && <QuickInputModalFooter
@@ -256,6 +350,7 @@ export function QuickInputModalContent({
         onSubmitClick={handleSubmit}
         onSubmitPointerDown={handleSubmitPointerDown}
         onPreserveDesktopInputFocus={preserveDesktopInputFocus}
+        allowDelete={!isRecurringTaskEdit}
       />}
     </div>
   );

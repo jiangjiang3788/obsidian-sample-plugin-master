@@ -42,7 +42,7 @@ describe('Quick Input 动态字段渲染', () => {
     await act(async () => render(<QuickInputFieldRenderer {...props(field('内容', 'text', { required: true }), { 内容: '旧内容' }, onUpdate)} />, host));
     const input = host.querySelector('input') as HTMLInputElement;
     input.value = '新内容';
-    await act(async () => input.dispatchEvent(new Event('input', { bubbles: true })));
+    await act(async () => { input.dispatchEvent(new Event('input', { bubbles: true })); });
     expect(onUpdate).toHaveBeenCalledWith('内容', '新内容');
   });
 });

@@ -7,6 +7,13 @@ import { prepareTemplateSubmit } from '../templateSubmit';
 import { throwIfAborted } from '../submitPipeline';
 import type { RecordInputWorkflowRuntime } from './types';
 
+
+export function buildCreateRecordFollowUp(createdRecord: { id: string; coreBlock?: string; status?: string }): { startTimerForRecordId: string } | undefined {
+  return createdRecord.coreBlock === 'task' && createdRecord.status === 'open'
+    ? { startTimerForRecordId: createdRecord.id }
+    : undefined;
+}
+
 export class CreateRecordWorkflow {
   constructor(private runtime: RecordInputWorkflowRuntime) {}
 
@@ -35,12 +42,14 @@ export class CreateRecordWorkflow {
       const preview = this.runtime.deps.inputService.previewTemplateExecution(
         resolved.template,
         normalized.normalizedFormData,
+        undefined,
+        params.context,
       );
       if (!preview.recordId) throw new Error('record_id_required_before_create');
       const path = await this.runtime.deps.inputService.executeTemplate(
         resolved.template,
         normalized.normalizedFormData,
-        { signal: params.signal, recordId: preview.recordId || undefined },
+        { signal: params.signal, recordId: preview.recordId || undefined, context: params.context },
       );
 
       const refreshPlan = buildRefreshPlan([path]);
@@ -54,7 +63,9 @@ export class CreateRecordWorkflow {
         affectedRecordId: createdRecord?.id,
         refresh: refreshPlan,
         feedback: { notice: '✅ 已创建' },
-        followUp: createdRecord.coreBlock === 'task' ? { startTimerForRecordId: createdRecord.id } : undefined,
+        // Only a newly created open Task should offer/start execution. Timeline quick-capture
+        // creates historical completed Tasks and must never start a timer for them.
+        followUp: buildCreateRecordFollowUp(createdRecord),
         warnings,
       });
     } catch (error) {

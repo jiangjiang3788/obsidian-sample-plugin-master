@@ -218,8 +218,8 @@ export class GoalUseCase {
       await state.updateSettings((draft) => {
         draft.goalSettings = ensureGoalSettings(draft.goalSettings || DEFAULT_GOAL_SETTINGS);
         const next = { ...template, id: getGoalTemplateId(template.goalPath, template.recordTypeId) };
-        const coreBlock = getTemplateRecordTypeById(next.recordTypeId);
-        draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, compactGoalTemplateForStorage(next, { coreBlock }));
+        const recordType = getTemplateRecordTypeById(next.recordTypeId);
+        draft.goalSettings = upsertGoalTemplateInSettings(draft.goalSettings, compactGoalTemplateForStorage(next, { recordType }));
       });
     } catch (error) {
       devError('[GoalUseCase] upsertGoalTemplate failed:', error);

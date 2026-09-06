@@ -47,10 +47,35 @@ describe('RecordNormalizer', () => {
 
 
   it('Goal hierarchy derives root/leaf only from goalPath', () => {
-    const item = normalizeRecordItem(baseItem({ goalPath: '照顾好自己/健康/睡眠', header: '错误/标题' }), { filePath: 'x.md' } as any);
+    const item = normalizeRecordItem(baseItem({ goalPath: '照顾好自己/健康/睡眠', header: '错误/标题' }), { filePath: 'x.md' } as Parameters<typeof normalizeRecordItem>[1]);
     expect(item.goalPath).toBe('照顾好自己/健康/睡眠');
     expect(item.rootGoal).toBe('照顾好自己');
     expect(item.leafGoal).toBe('睡眠');
+  });
+
+  it('任务完成后默认日期保持计划事实稳定，不跳到完成日期', () => {
+    const item = normalizeRecordItem(baseItem({
+      status: 'done',
+      scheduledAt: '2026-08-20T09:00',
+      dueAt: '2026-08-21T18:00',
+      completedAt: '2026-08-22T10:30',
+      doneDate: '2026-08-22',
+    }), { filePath: 'x.md' } as Parameters<typeof normalizeRecordItem>[1]);
+
+    expect(item.date).toBe('2026-08-20T09:00');
+    expect(item.dateSource).toBe('scheduled');
+  });
+
+  it('没有计划时间时 Task 默认日期优先截止/旧开始/创建，完成时间只做最后兼容兜底', () => {
+    const due = normalizeRecordItem(baseItem({
+      status: 'done', dueAt: '2026-08-21T18:00', completedAt: '2026-08-22T10:30',
+    }), { filePath: 'x.md' } as Parameters<typeof normalizeRecordItem>[1]);
+    expect(due.dateSource).toBe('due');
+
+    const created = normalizeRecordItem(baseItem({
+      status: 'done', createdAt: '2026-08-19T08:00', completedAt: '2026-08-22T10:30',
+    }), { filePath: 'x.md' } as Parameters<typeof normalizeRecordItem>[1]);
+    expect(created.dateSource).toBe('created');
   });
 
 });

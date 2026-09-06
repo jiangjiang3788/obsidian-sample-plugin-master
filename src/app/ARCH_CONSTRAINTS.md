@@ -29,6 +29,10 @@ Think OS uses one canonical classification dimension: a human-readable slash-sep
 - Task `startAt`, `endAt` and `expectedDurationMinutes` describe a manual/planned interval.
 - TaskSession is execution history and takes precedence when Timeline has sessions for that Task.
 - A Task interval may appear on Timeline when no TaskSession exists.
+- Timeline completed-capture creates actual execution as a TaskSession in the same create write as the Task.
+- V1 keeps Task `startAt` / `endAt` as a compatibility projection; reverse-time editing remains owned by the Task time model and must not be reimplemented in persistence.
+- V4 cutover: Timeline completed-execution capture persists the finalized actual interval only as `TaskSession`; the newly created Task keeps lifecycle metadata (`completedAt`) but does not duplicate that actual range into `startAt` / `endAt` / `expectedDurationMinutes`. Legacy/manual Task ranges remain readable.
+- Historical Timeline Session presentation is determined by `sessionResult`, not by the Task's current lifecycle status.
 
 ## Settings and persistence
 

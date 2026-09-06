@@ -411,7 +411,7 @@
         "title": "表格视图",
         "collapsed": false,
         "rowField": "coreBlock",
-        "colField": "rootGoal"
+        "colField": "根目标"
       },
       "fields": [
         "coreBlock",
@@ -479,10 +479,46 @@
       "parentId": null,
       "title": "精力",
       "viewType": "EnergyView",
-      "viewConfig": {},
+      "viewConfig": {
+        "currentContext": "commute"
+      },
       "fields": [],
       "groupFields": [],
       "filters": [],
+      "sort": [],
+      "collapsed": false
+    },
+    {
+      "id": "vi_mtawnjh9nrcrm9u",
+      "parentId": null,
+      "title": "6m",
+      "viewType": "TableView",
+      "viewConfig": {
+        "view": "TableView",
+        "title": "表格视图",
+        "collapsed": false,
+        "rowField": "categoryKey",
+        "colField": "rootGoal"
+      },
+      "fields": [],
+      "groupFields": [],
+      "filters": [
+        {
+          "field": "coreBlock",
+          "op": "in",
+          "value": [
+            "task"
+          ],
+          "logic": "and"
+        },
+        {
+          "field": "status",
+          "op": "in",
+          "value": [
+            "done"
+          ]
+        }
+      ],
       "sort": [],
       "collapsed": false
     }
@@ -545,7 +581,8 @@
       "id": "layout_mpi3dfhyn14bsio",
       "name": "全局布局 2",
       "viewInstanceIds": [
-        "vi_mpi3dydfsejfio8"
+        "vi_mpi3dydfsejfio8",
+        "vi_mtawnjh9nrcrm9u"
       ],
       "displayMode": "list",
       "initialView": "季",

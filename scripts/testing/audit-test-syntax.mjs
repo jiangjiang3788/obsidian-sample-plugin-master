@@ -11,7 +11,7 @@ try {
   ts = require('typescript');
 } catch {
   console.error('\n【测试语法审计】无法加载 TypeScript。');
-  console.error('【测试语法审计】请先安装项目依赖（npm ci），再执行本审计。');
+  console.error('【测试语法审计】请先安装项目依赖（npm install），再执行本审计。');
   process.exit(2);
 }
 

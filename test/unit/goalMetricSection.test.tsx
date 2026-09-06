@@ -5,9 +5,10 @@
 /** @jsxImportSource preact */
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
+import type { GoalMetricContract } from '@/core/goal/types';
 import { flushUi, inputText, waitForUi } from '../support/uiTestUtils';
 
-const mockUpdateGoalMetrics = jest.fn(async () => {});
+const mockUpdateGoalMetrics = jest.fn(async (_goalPath: string, _metrics: GoalMetricContract[]) => {});
 const mockState: any = {
   settings: {
     goalSettings: {
@@ -40,11 +41,7 @@ describe('Goal 指标设置界面', () => {
     await act(async () => existingMetric.click());
     await flushUi();
 
-    const getTargetInput = () => {
-      const rows = [...host.querySelectorAll('.think-settings-row')];
-      const targetRow = rows.find((row) => row.textContent?.includes('目标值'));
-      return targetRow?.querySelector('input') as HTMLInputElement | null;
-    };
+    const getTargetInput = () => host.querySelector('input[aria-label="目标值"]') as HTMLInputElement | null;
     const targetInput = getTargetInput();
     expect(targetInput).toBeTruthy();
     await inputText(targetInput!, '12');
@@ -57,7 +54,7 @@ describe('Goal 指标设置界面', () => {
     await act(async () => save.click());
     await waitForUi(() => mockUpdateGoalMetrics.mock.calls.length === 1, '点击保存指标后没有提交更新');
 
-    const [goalPath, metrics] = mockUpdateGoalMetrics.mock.calls[0];
+    const [goalPath, metrics] = mockUpdateGoalMetrics.mock.calls[0]!;
     expect(goalPath).toBe('健康');
     expect(metrics).toHaveLength(1);
     expect(metrics[0]).toMatchObject({ key: 'task.done', label: '完成任务', direction: 'increase', targetValue: 12, unit: '个' });
@@ -66,7 +63,7 @@ describe('Goal 指标设置界面', () => {
   it('双击指标会提交删除后的指标集合', async () => {
     await act(async () => render(<GoalMetricSection />, host));
     const chip = host.querySelector('.think-chip') as HTMLButtonElement;
-    await act(async () => chip.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })));
+    await act(async () => { chip.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); });
     await waitForUi(() => mockUpdateGoalMetrics.mock.calls.length === 1, '双击指标后没有提交删除');
     expect(mockUpdateGoalMetrics).toHaveBeenCalledWith('健康', []);
   });

@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 // src/features/settings/views/runtime/timeline/TimelineViewView.tsx
-import type { OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/public';
+import type { EditTimelineBlockHandler, OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/public';
 import type { UpdateTaskTimeHandler } from '@shared/types/public';
 
 import { TimelineSummaryTable } from '../timeline/components/TimelineSummaryTable';
@@ -35,6 +35,7 @@ interface TimelineViewViewProps {
 
   onOpenRecordOrigin?: OpenRecordOriginHandler;
   onUpdateTaskTime?: UpdateTaskTimeHandler;
+  onEditTimelineBlock?: EditTimelineBlockHandler;
   onOpenRecord?: OpenRecordHandler;
   onNotice?: (message: string) => void;
   onColumnClick: (day: string, e: MouseEvent | TouchEvent) => void;
@@ -60,12 +61,15 @@ export function TimelineViewView(props: TimelineViewViewProps) {
     maxHours,
     onOpenRecordOrigin,
     onUpdateTaskTime,
+    onEditTimelineBlock,
     onOpenRecord,
     onNotice,
     onColumnClick,
   } = props;
 
-  if (timelineTasksCount === 0) {
+  // 日/周/月视图即使没有任务也必须保留可点击时间网格，
+  // 否则用户无法从空时间轴创建“第一个任务”。
+  if (isSummaryView && timelineTasksCount === 0) {
     return <div class="timeline-empty-state think-viz-empty">当前范围内没有数据。</div>;
   }
 
@@ -99,6 +103,7 @@ export function TimelineViewView(props: TimelineViewViewProps) {
       untrackedLabel={untrackedLabel}
       onOpenRecordOrigin={onOpenRecordOrigin}
       onUpdateTaskTime={onUpdateTaskTime}
+      onEditTimelineBlock={onEditTimelineBlock}
       onOpenRecord={onOpenRecord}
       onNotice={onNotice}
       onColumnClick={onColumnClick}

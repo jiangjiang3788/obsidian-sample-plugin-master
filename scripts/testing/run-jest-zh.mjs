@@ -79,7 +79,7 @@ if (argv.some((item) => String(item).includes('jest.performance.config.js'))) {
 if (!invocation.exists) {
   console.error('【测试命令】没有找到 Jest。当前项目的测试依赖尚未安装完整。');
   console.error(`【测试命令】检查路径：${invocation.entry}`);
-  console.error('【测试命令】请先在项目目录运行：npm ci');
+  console.error('【测试命令】请先在项目目录运行：npm install');
   process.exitCode = 1;
 } else {
   console.log('【测试命令】正在运行，请不要关闭终端……');

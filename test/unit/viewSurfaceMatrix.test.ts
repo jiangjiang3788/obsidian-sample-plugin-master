@@ -4,15 +4,16 @@ import { VIEW_EDITORS } from '@/features/settings/views/editors/registry';
 import type { RecordViewItem } from '@core/types/public';
 
 const EXPECTED_VIEWS = {
-  BlockView: { label: '块视图', headerCreate: false },
-  TableView: { label: '表格', headerCreate: false },
-  ExcelView: { label: '数据表格', headerCreate: false },
-  TimelineView: { label: '时间轴', headerCreate: true },
-  StatisticsView: { label: '统计', headerCreate: true },
-  HeatmapView: { label: '打卡', headerCreate: true },
-  EventTimelineView: { label: '事件时间线', headerCreate: false },
-  ProgressView: { label: '成长', headerCreate: false },
-  EnergyView: { label: '精力', headerCreate: true },
+  BlockView: { label: '块视图', headerCreate: false, export: true },
+  TableView: { label: '表格', headerCreate: false, export: true },
+  ExcelView: { label: '数据表格', headerCreate: false, export: true },
+  TimelineView: { label: '时间轴', headerCreate: true, export: true },
+  StatisticsView: { label: '统计', headerCreate: true, export: true },
+  HeatmapView: { label: '打卡', headerCreate: true, export: true },
+  EventTimelineView: { label: '事件时间线', headerCreate: false, export: true },
+  ProgressView: { label: '成长', headerCreate: false, export: true },
+  EnergyView: { label: '精力', headerCreate: true, export: true },
+  EisenhowerView: { label: '四象限', headerCreate: false, export: false },
 } as const;
 
 const USER_RECORDS: RecordViewItem[] = [
@@ -42,7 +43,7 @@ const USER_RECORDS: RecordViewItem[] = [
 })) as RecordViewItem[];
 
 describe('View surface matrix', () => {
-  it('keeps all nine product views registered in core, runtime and settings editor', () => {
+  it('keeps all ten product views registered in core, runtime and settings editor', () => {
     expect(VIEW_OPTIONS).toEqual(Object.keys(EXPECTED_VIEWS));
     expect(Object.keys(VIEW_RUNTIME_BINDINGS).sort()).toEqual(Object.keys(EXPECTED_VIEWS).sort());
     expect(Object.keys(VIEW_EDITORS).sort()).toEqual(Object.keys(EXPECTED_VIEWS).sort());
@@ -52,7 +53,7 @@ describe('View surface matrix', () => {
     const definition = VIEW_DEFINITIONS[viewName as keyof typeof VIEW_DEFINITIONS];
     expect(definition.label).toBe(expected.label);
     expect(definition.capabilities.headerCreate).toBe(expected.headerCreate);
-    expect(definition.capabilities.export).toBe(true);
+    expect(definition.capabilities.export).toBe(expected.export);
     expect(VIEW_RUNTIME_BINDINGS[viewName as keyof typeof VIEW_RUNTIME_BINDINGS]).toBeTruthy();
     expect(VIEW_EDITORS[viewName as keyof typeof VIEW_EDITORS]).toBeTruthy();
   });

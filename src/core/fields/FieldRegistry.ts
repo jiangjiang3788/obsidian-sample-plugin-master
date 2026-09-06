@@ -71,6 +71,12 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   cadence: text({ key: 'cadence', label: '任务周期', category: 'core', source: 'derived', semantic: 'recurrence', inputType: 'singleSelect', aliases: ['任务周期', 'cadence'], description: '由 Task Series 结构化 recurrence 派生：routine/day/week/month/quarter/year。' }),
   date: { key: 'date', label: '日期', valueType: 'date', inputType: 'date', category: 'core', source: 'item', semantic: 'date', aliases: ['日期', 'date'], description: '记录的主要日期' },
   priority: text({ key: 'priority', label: '优先级', category: 'core', source: 'item', semantic: 'priority' }),
+  importance: text({ key: 'importance', label: '重要程度', category: 'core', source: 'item', semantic: 'none', inputType: 'singleSelect', aliases: ['重要程度', 'importance'], options: [
+    { value: 'important', label: '重要' }, { value: 'normal', label: '普通' },
+  ] }),
+  urgency: text({ key: 'urgency', label: '紧急程度', category: 'core', source: 'item', semantic: 'none', inputType: 'singleSelect', aliases: ['紧急程度', 'urgency'], options: [
+    { value: 'urgent', label: '紧急' }, { value: 'normal', label: '不紧急' },
+  ] }),
   icon: { key: 'icon', label: '图标', valueType: 'icon', inputType: 'text', category: 'core', source: 'item', semantic: 'icon' },
   recurrence: text({ key: 'recurrence', label: '重复规则', category: 'core', source: 'derived', semantic: 'recurrence', description: 'Task Series 结构化 recurrence 的只读展示投影。' }),
   period: text({ key: 'period', label: '字段粒度', category: 'core', source: 'item', semantic: 'period', inputType: 'singleSelect', description: '时间粒度：年/季/月/周/天' }),
@@ -130,7 +136,7 @@ export const VIEW_FIELD_PICKER_KEYS = new Set([
   'goalPath', 'rootGoal', 'leafGoal',
   'coreBlock', 'recordSubtype', 'status', 'cadence',
   'date', 'scheduledAt', 'startAt', 'endAt', 'dueAt', 'scheduledDate', 'startDate', 'dueDate', 'completedAt',
-  'priority', 'expectedDurationMinutes', 'energyDemand', 'brainDemand', 'physicalDemand', 'availabilityContexts', 'recoveryIntent',
+  'priority', 'importance', 'urgency', 'expectedDurationMinutes', 'energyDemand', 'brainDemand', 'physicalDemand', 'availabilityContexts', 'recoveryIntent',
   'rating', 'image', 'icon',
   'period.label', 'recurrence',
   'file.path', 'file.basename', 'file.folder', 'header',

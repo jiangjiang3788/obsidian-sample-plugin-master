@@ -168,6 +168,36 @@
   white-space: nowrap;
 }
 
+.timeline-task-status {
+  flex: 0 0 auto;
+  width: 1.1em;
+  text-align: center;
+  font-weight: var(--think-font-weight-semibold);
+  line-height: 1;
+}
+
+/* Lifecycle status is independent from timeline occupancy, but it must be visible. */
+.timeline-task-block--open .timeline-task-link {
+  outline: 1px dashed color-mix(in srgb, var(--timeline-task-color, var(--think-accent)) 72%, transparent);
+  outline-offset: -1px;
+}
+
+.timeline-task-block--open .timeline-task-content {
+  background: color-mix(in srgb, var(--timeline-task-color, var(--think-accent)) 7%, transparent);
+}
+
+.timeline-task-block--open .timeline-task-status {
+  opacity: 0.72;
+}
+
+.timeline-task-block--done .timeline-task-content {
+  background: color-mix(in srgb, var(--timeline-task-color, var(--think-accent)) 18%, transparent);
+}
+
+.timeline-task-block--done .timeline-task-status {
+  font-weight: var(--think-font-weight-bold);
+}
+
 .task-buttons {
   position: absolute;
   top: 50%;
@@ -238,4 +268,48 @@
   .summary-title {
     font-size: var(--think-viz-font-meta);
   }
+}
+
+/* startAt-only Tasks are rendered as point markers without inventing duration. */
+.timeline-task-block--point {
+  min-height: 22px;
+  z-index: var(--think-z-raised);
+}
+.timeline-task-block--point .timeline-task-link {
+  border-radius: var(--think-radius-pill);
+}
+.timeline-task-block--point .timeline-task-indicator {
+  flex-basis: 4px;
+}
+.timeline-task-block--point .timeline-task-content {
+  padding-block: 2px;
+}
+
+/* Non-completed terminal states are distinct from an open Task. */
+.timeline-task-block--cancelled .timeline-task-content,
+.timeline-task-block--skipped .timeline-task-content {
+  background: color-mix(in srgb, var(--think-bg-surface-2) 86%, transparent);
+  color: var(--think-text-secondary);
+}
+.timeline-task-block--cancelled .timeline-task-link,
+.timeline-task-block--skipped .timeline-task-link {
+  outline: 1px dotted var(--think-border-strong);
+  outline-offset: -1px;
+}
+.timeline-task-block--cancelled .timeline-task-title,
+.timeline-task-block--skipped .timeline-task-title {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+
+/* V8: planned Task slots are a derived layer, visually distinct from actual Sessions. */
+.timeline-task-block.timeline-task-block--planned {
+  border-style: dashed;
+  opacity: 0.62;
+  background: color-mix(in srgb, var(--timeline-task-color) 10%, transparent);
+}
+
+.timeline-task-block.timeline-task-block--planned .timeline-task-indicator {
+  opacity: 0.55;
 }

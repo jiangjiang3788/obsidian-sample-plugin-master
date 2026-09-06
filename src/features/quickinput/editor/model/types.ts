@@ -112,6 +112,12 @@ export interface ApplyQuickInputTimeDirectionChangeInput {
   formData: QuickInputFormData;
   fieldSources: QuickInputFieldSourceMap;
   nextDirection: TimeDirection;
+  /**
+   * 空白 Task 表单还没有 startAt/endAt/expectedDurationMinutes 值时，
+   * 仅靠 formData 无法判断应使用哪套时间字段，因此由 UI 显式传入字段集。
+   */
+  timeFieldSet?: 'task' | 'legacy';
+  /** 测试或调用方可注入“当前结束时间”，避免时间相关测试依赖真实时钟。 */
   defaultEndTime?: string;
 }
 

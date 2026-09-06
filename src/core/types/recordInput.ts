@@ -2,6 +2,7 @@ import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { EditableRecordSnapshot, RecordOutputPlan, RecordPersistencePlan } from './recordSnapshot';
 import type { TaskSessionCreateInput } from './timer';
+import type { TaskSeriesEditIntent } from '@/core/records/task/taskSeriesEdit';
 
 export type RecordOperation =
   | 'create'
@@ -29,6 +30,7 @@ export type RecordInputSource =
 
 export interface RecordInputMeta {
   timeDirection?: 'forward' | 'backward';
+  taskSeriesEdit?: TaskSeriesEditIntent;
 }
 
 export interface RecordSubmitIssue {
@@ -109,9 +111,7 @@ export interface SubmitCreateRecordParams {
   blockId: string;
   formData: Record<string, unknown>;
   context?: Record<string, unknown>;
-  meta?: {
-    timeDirection?: 'forward' | 'backward';
-  };
+  meta?: RecordInputMeta;
   signal?: AbortSignal;
   source?: Extract<RecordInputSource, 'quickinput' | 'ai_batch' | 'timer' | 'unknown' | 'view_quick_create'>;
 }
@@ -120,9 +120,7 @@ export interface SubmitUpdateRecordParams {
   item: RecordViewItem;
   blockId: string;
   formData: Record<string, unknown>;
-  meta?: {
-    timeDirection?: 'forward' | 'backward';
-  };
+  meta?: RecordInputMeta;
   expectedOutputPlan?: Pick<RecordOutputPlan, 'targetFilePath' | 'targetHeader'> | null;
   expectedPersistencePlan?: Pick<RecordPersistencePlan, 'originalPath' | 'pathChanged' | 'writeMode'> | null;
   signal?: AbortSignal;
@@ -138,13 +136,8 @@ export interface SubmitDeleteRecordParams {
 export interface SubmitCompleteRecordParams {
   itemId: string;
   session?: TaskSessionCreateInput;
-  options?: {
-    duration?: number;
-    startTime?: string | null;
-    endTime?: string | null;
-  };
   signal?: AbortSignal;
-  source?: Extract<RecordInputSource, 'timer' | 'layout_renderer' | 'unknown'>;
+  source?: Extract<RecordInputSource, 'quickinput' | 'timer' | 'layout_renderer' | 'unknown'>;
 }
 
 export interface SubmitTaskSessionParams {

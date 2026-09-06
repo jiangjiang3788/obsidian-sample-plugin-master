@@ -34,6 +34,7 @@ function scanFile(rel) {
 
 for (const rel of [
   'scripts/testing/test-system-report.mjs',
+  'scripts/testing/check-test-ready-zh.mjs',
   'scripts/testing/run-jest-zh.mjs',
   'scripts/testing/run-e2e-suite.mjs',
   'scripts/testing/run-e2e-with-build-zh.mjs',
@@ -89,6 +90,15 @@ for (const key of ['测试', '测试:单元', '测试:组合', '测试:覆盖率
   if (!pkg.scripts?.[key]) problems.push(`缺少中文测试命令：${key}`);
 }
 
+if (!String(pkg.scripts?.test || '').includes('jest.core.config.js')) problems.push('npm test 没有指向日常单元 + 组合 Jest 配置。');
+if (String(pkg.scripts?.['测试'] || '') !== 'npm --silent test') problems.push('中文“测试”别名没有收敛到 npm test。');
+for (const key of ['test:full', 'test:smoke', 'test:release', 'test:help']) {
+  if (!pkg.scripts?.[key]) problems.push(`缺少常用 npm 测试入口：${key}`);
+}
+if (!pkg.scripts?.pretest || !String(pkg.scripts.pretest).includes('check-test-ready-zh.mjs')) {
+  problems.push('npm test 缺少中文依赖准备检查。');
+}
+
 for (const [name, command] of Object.entries(pkg.scripts || {})) {
   if ((name === 'test:e2e' || name.startsWith('test:e2e:') || name === '测试:真机' || name.startsWith('测试:真机:'))
       && String(command).includes('build:debug')
@@ -112,6 +122,7 @@ if (problems.length) {
   if (problems.length > 80) console.error(`  - ……其余 ${problems.length - 80} 项请查看脚本输出。`);
   process.exit(1);
 }
+console.log('- npm test 日常入口：单元 + 组合，中文依赖检查');
 console.log('- Jest 汇总与失败标签：中文');
 console.log('- 覆盖率汇总：中文');
 console.log('- 真实 Obsidian E2E 公共输出：中文');

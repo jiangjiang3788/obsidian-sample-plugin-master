@@ -212,7 +212,10 @@ function check_energy_recommendation_v2_gate() {
     if (!completion.includes(field)) failures.push(`next recurring occurrence must inherit canonical ${field}`);
   }
   if (!energyView.includes('baselineEnergyItemId: baseline.itemId')) failures.push('Energy start must preserve the source Energy Record id for before/after learning');
-  if (!updateWorkflow.includes('updateTaskSeries(seriesId, taskSeriesDefaults(renderData)')) failures.push('editing a recurring Task must synchronize recommendation defaults back to TaskSeries');
+  if (!updateWorkflow.includes("intent.scope === 'current_and_future' ? taskSeriesDefaults(renderData) : {}")
+    || !updateWorkflow.includes('updateTaskSeries(plan.seriesId, plan.update')) {
+    failures.push('editing current-and-future recurring Tasks must synchronize recommendation defaults back to TaskSeries');
+  }
   if (!timer.includes('Math.max(1, Math.min(240')) failures.push('Timer must preserve one-minute Energy countdowns');
   if (!taskView.includes('model.recommendations') || !taskView.includes('recommendationReason') || !taskView.includes('title={taskHover(task)}')) failures.push('Top recommendations must be visible while explanation stays in hover text');
   if (!taskView.includes('onContextChange') || !taskView.includes("value: 'work'") || !taskView.includes("value: 'home'")) failures.push('Energy task surface must expose a lightweight current-context selector');

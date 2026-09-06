@@ -1,37 +1,51 @@
 // vite.config.ts
 import { defineConfig } from 'vite';
-import preact from '@preact/preset-vite';
-import replace from '@rollup/plugin-replace';
+import prefresh from '@prefresh/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
+/**
+ * Think OS is an Obsidian plugin built in Vite library mode, not an HTML/SSR app.
+ * Keep the build toolchain intentionally small:
+ * - Vite handles TS/TSX transpilation.
+ * - @prefresh/vite provides Preact HMR support for development.
+ * - React compatibility aliases are declared explicitly below.
+ *
+ * Do not reintroduce @preact/preset-vite here unless the plugin actually gains
+ * an HTML prerender/SSR use case. The preset imports vite-prerender-plugin as part
+ * of its application preset dependency graph, which is unnecessary for this
+ * library build and makes config loading depend on prerender-only packages.
+ */
 export default defineConfig(({ mode }) => ({
     plugins: [
-        preact(),
+        prefresh(),
         tsconfigPaths(),
-        replace({
-            'process.env.NODE_ENV': JSON.stringify('production'),
-            preventAssignment: true,
-        }),
     ],
 
-        resolve: {
-            extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
-            alias: {
-                // 解析保持与 tsconfig paths 一致
-                // （@/ @core/ @app/ ... 由 vite-tsconfig-paths 提供）
-                // dayjs ESM 别名
-                'dayjs': 'dayjs/esm',
-                'dayjs/plugin/quarterOfYear': 'dayjs/esm/plugin/quarterOfYear',
-                'dayjs/plugin/weekOfYear': 'dayjs/esm/plugin/weekOfYear',
-                'dayjs/plugin/customParseFormat': 'dayjs/esm/plugin/customParseFormat',
-                'dayjs/plugin/isoWeek': 'dayjs/esm/plugin/isoWeek',
-                'dayjs/plugin/isSameOrBefore': 'dayjs/esm/plugin/isSameOrBefore',
-                // React 别名到 Preact
-                'react': 'preact/compat',
-                'react-dom': 'preact/compat',
-                'react/jsx-runtime': 'preact/jsx-runtime',
-            },
+    // Library mode does not replace process.env.* by default. Keep the previous
+    // production constant semantics using Vite's native define support instead
+    // of @rollup/plugin-replace.
+    define: {
+        'process.env.NODE_ENV': JSON.stringify('production'),
+    },
+
+    resolve: {
+        extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+        alias: {
+            // 解析保持与 tsconfig paths 一致
+            // （@/ @core/ @app/ ... 由 vite-tsconfig-paths 提供）
+            // dayjs ESM 别名
+            'dayjs': 'dayjs/esm',
+            'dayjs/plugin/quarterOfYear': 'dayjs/esm/plugin/quarterOfYear',
+            'dayjs/plugin/weekOfYear': 'dayjs/esm/plugin/weekOfYear',
+            'dayjs/plugin/customParseFormat': 'dayjs/esm/plugin/customParseFormat',
+            'dayjs/plugin/isoWeek': 'dayjs/esm/plugin/isoWeek',
+            'dayjs/plugin/isSameOrBefore': 'dayjs/esm/plugin/isSameOrBefore',
+            // React 别名到 Preact（不依赖 application preset）
+            'react': 'preact/compat',
+            'react-dom': 'preact/compat',
+            'react/jsx-runtime': 'preact/jsx-runtime',
         },
+    },
 
     build: {
         outDir: 'dist',
@@ -43,48 +57,43 @@ export default defineConfig(({ mode }) => ({
             fileName: () => 'main.js',
         },
         sourcemap: mode !== 'release',
-        minify: mode === 'release' ? 'esbuild' : false, // release 压缩；普通 build/debug 保持易调试 sourcemap
+        minify: mode === 'release' ? 'esbuild' : false,
 
         rollupOptions: {
             external: ['obsidian'],
-            treeshake: { 
+            treeshake: {
                 moduleSideEffects: (id) => {
                     // 保留 reflect-metadata 和 dayjs 的副作用
-                    return id === 'reflect-metadata' || 
+                    return id === 'reflect-metadata' ||
                            id.includes('reflect-metadata') ||
                            id.includes('dayjs');
-                }
+                },
             },
-            // 确保 reflect-metadata 优先加载
             output: {
                 sourcemapPathTransform: (relativeSourcePath: string) => {
-                    // 让 DevTools 更容易显示为 src/** 的路径（避免 ../.. 或绝对路径）
                     const p = relativeSourcePath.replace(/\\/g, '/');
                     return p.replace(/^\.(?:\.\/)+/, '').replace(/^\/+/, '');
                 },
-
                 assetFileNames: 'styles.css',
                 manualChunks: undefined,
-                // 强制 reflect-metadata 在最前面
                 inlineDynamicImports: true,
-                // 确保 reflect-metadata 不被优化掉
                 globals: {
-                    'reflect-metadata': 'Reflect'
+                    'reflect-metadata': 'Reflect',
                 },
-                // 强制包含 reflect-metadata
-                exports: 'named'
+                exports: 'named',
             },
         },
-        // 确保 reflect-metadata 被包含
         commonjsOptions: {
-            include: [/reflect-metadata/, /hoist-non-react-statics/, /prop-types/, /react-is/]
-        }
+            include: [/reflect-metadata/, /hoist-non-react-statics/, /prop-types/, /react-is/],
+        },
     },
 
     optimizeDeps: {
         include: ['preact', 'preact/hooks', 'reflect-metadata', 'tsyringe'],
     },
 
+    // Preserve the existing classic Preact JSX transform. The project already
+    // uses this convention and many TSX files explicitly import `h`.
     esbuild: {
         jsxFactory: 'h',
         jsxFragment: 'Fragment',

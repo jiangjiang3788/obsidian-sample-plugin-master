@@ -6,8 +6,16 @@
  * @covers F017/error
  * @covers F043/error
  */
-import { CreateRecordWorkflow } from '@/app/usecases/recordInput/workflows/CreateRecordWorkflow';
+import { buildCreateRecordFollowUp, CreateRecordWorkflow } from '@/app/usecases/recordInput/workflows/CreateRecordWorkflow';
 import { UpdateRecordWorkflow } from '@/app/usecases/recordInput/workflows/UpdateRecordWorkflow';
+
+describe('record input create follow-up', () => {
+  it('starts a timer only for a newly created open Task', () => {
+    expect(buildCreateRecordFollowUp({ id: 'task-open', coreBlock: 'task', status: 'open' })).toEqual({ startTimerForRecordId: 'task-open' });
+    expect(buildCreateRecordFollowUp({ id: 'task-done', coreBlock: 'task', status: 'done' })).toBeUndefined();
+    expect(buildCreateRecordFollowUp({ id: 'event-1', coreBlock: 'evidence', status: 'open' })).toBeUndefined();
+  });
+});
 
 describe('record input workflow error boundary', () => {
   const preparationFailure = new Error('legacy_ai_value_prepare_failed');

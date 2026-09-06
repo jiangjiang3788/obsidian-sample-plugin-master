@@ -27,7 +27,7 @@ describe('精力视图到任务推荐的组合链路', () => {
     const model = buildEnergyViewModel({
       items: [energy, task],
       records: [energy, task],
-      module: { id: 'energy-view-v6', title: '精力', viewType: 'EnergyView', viewConfig: { currentContext: 'work' } },
+      module: { viewConfig: { currentContext: 'work' } },
       goals,
       timers: [],
       currentView: '天',

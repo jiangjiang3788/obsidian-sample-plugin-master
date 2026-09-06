@@ -95,7 +95,7 @@ export function HeatmapViewContent({
                 {goalGroupsToDisplay.map((goalGroup) => (
                     <section class="heatmap-goal-section" key={goalGroup.goalPath}>
                         <div class="heatmap-goal-title-row">
-                            <div class="heatmap-goal-title" role="heading" aria-level="3">{goalGroup.label}</div>
+                            <div class="heatmap-goal-title" role="heading" aria-level={3}>{goalGroup.label}</div>
                         </div>
                         <div class="heatmap-goal-list">
                             {goalGroup.entries.map((entry) => renderGoalRow({

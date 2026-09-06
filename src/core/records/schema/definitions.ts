@@ -1,3 +1,4 @@
+import { TASK_STATUS_PRESENTATION } from '@/core/records/task/taskStatus';
 import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 import type { RecordSchemaContract, RecordSchemaDefinition } from './types';
 import {
@@ -47,7 +48,8 @@ function define(
 
 const TASK_FIELDS: TemplateField[] = [
   { id: 'core.task.status', key: 'status', label: '状态', type: 'singleSelect', semantic: 'status', defaultValue: 'open', autoSelectFirst: true, options: [
-    { value: 'open', label: '未完成' }, { value: 'done', label: '已完成' },
+    { value: 'open', label: `${TASK_STATUS_PRESENTATION.open.emoji} ${TASK_STATUS_PRESENTATION.open.label}` },
+    { value: 'done', label: `${TASK_STATUS_PRESENTATION.done.emoji} ${TASK_STATUS_PRESENTATION.done.label}` },
   ] },
   { id: 'core.task.content', key: '任务内容', label: '内容', type: 'text', semantic: 'body' },
   { id: 'core.task.recurrenceUnit', key: 'recurrenceUnit', label: '重复', type: 'singleSelect', semantic: 'recurrence', defaultValue: 'none', autoSelectFirst: true, options: [
@@ -56,12 +58,19 @@ const TASK_FIELDS: TemplateField[] = [
   { id: 'core.task.recurrenceInterval', key: 'recurrenceInterval', label: '重复间隔', type: 'number', min: 1, defaultValue: '1' },
 
 
-  // 时间是任务主字段，与状态互相独立；填写结束时间不会自动完成任务。其余需求/场景字段由 UI 放入“更多选项”。
-  { id: 'core.task.startAt', key: 'startAt', label: '开始/预计时间', type: 'datetime', semantic: 'date' },
-  { id: 'core.task.endAt', key: 'endAt', label: '结束时间', type: 'datetime', semantic: 'date' },
-  { id: 'core.task.expectedDurationMinutes', key: 'expectedDurationMinutes', label: '时长（分钟）', type: 'number', semantic: 'duration', min: 1 },
+  // Task owns planning facts. Actual execution intervals belong to TaskSession;
+  // Timeline retrospective capture synthesizes its own execution-time fields.
+  { id: 'core.task.scheduledAt', key: 'scheduledAt', label: '计划时间', type: 'datetime', semantic: 'startTime' },
+  { id: 'core.task.expectedDurationMinutes', key: 'expectedDurationMinutes', label: '预计时长（分钟）', type: 'number', semantic: 'duration', min: 1 },
+  { id: 'core.task.dueAt', key: 'dueAt', label: '截止时间', type: 'datetime' },
   { id: 'core.task.priority', key: 'priority', label: '优先级', type: 'singleSelect', autoSelectFirst: true, options: [
     { value: 'lowest', label: '最低' }, { value: 'low', label: '低' }, { value: 'medium', label: '中' }, { value: 'high', label: '高' }, { value: 'highest', label: '最高' },
+  ] },
+  { id: 'core.task.importance', key: 'importance', label: '重要程度', type: 'singleSelect', options: [
+    { value: 'important', label: '重要' }, { value: 'normal', label: '普通' },
+  ] },
+  { id: 'core.task.urgency', key: 'urgency', label: '紧急程度', type: 'singleSelect', options: [
+    { value: 'urgent', label: '紧急' }, { value: 'normal', label: '不紧急' },
   ] },
   { id: 'core.task.energyDemand', key: 'energyDemand', label: '精力要求', type: 'singleSelect', autoSelectFirst: true, options: [
     { value: 'low', label: '低' }, { value: 'medium', label: '中' }, { value: 'high', label: '高' },

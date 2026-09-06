@@ -6,14 +6,8 @@
 import { devLog, devWarn } from '@core/utils/public';
 
 function isDevBuild(): boolean {
-    // Vite provides import.meta.env in build; fallback for tests/Node.
-    try {
-        const env = (import.meta as any)?.env;
-        if (typeof env?.DEV === 'boolean') return env.DEV;
-    } catch {
-        // ignore
-    }
-
+    // Keep diagnostics parseable in both Vite ESM and Jest CJS. The debug switch is
+    // opt-in anyway, so Node's NODE_ENV is enough to suppress it in production tools.
     return typeof process !== 'undefined'
         ? process.env.NODE_ENV !== 'production'
         : true;

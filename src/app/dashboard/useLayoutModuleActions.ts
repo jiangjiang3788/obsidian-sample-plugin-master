@@ -1,7 +1,6 @@
 import { useCallback } from 'preact/hooks';
 import type { ActionService } from '@core/services/public';
 import type { FilterRule, RecordViewItem, Layout, ViewInstance } from '@core/types/public';
-import type { TimerController } from '@shared/types/public';
 import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/utils/public';
 import { completeFromView, openCreateFromViewHeader } from '@/app/actions/recordUiActions';
 import { openModuleSettingsWidget } from '@features/settings/layout/ModuleSettingsModal';
@@ -16,7 +15,6 @@ export interface UseLayoutModuleActionsParams {
   modulesDataCache: { current: Record<string, RecordViewItem[]> };
   ui: any;
   useCases: any;
-  timerService: TimerController;
 }
 
 export function useLayoutModuleActions({
@@ -29,7 +27,6 @@ export function useLayoutModuleActions({
   modulesDataCache,
   ui,
   useCases,
-  timerService,
 }: UseLayoutModuleActionsParams) {
   const handleExport = useCallback((viewId: string, viewTitle: string) => {
     const items = modulesDataCache.current?.[viewId];
@@ -70,19 +67,13 @@ export function useLayoutModuleActions({
   }, [actionService, app, layoutDate, layoutView]);
 
   const handleMarkItemDone = useCallback((itemId: string) => {
-    void (async () => {
-      if (timerService.completeTask) {
-        await timerService.completeTask(itemId);
-        return;
-      }
-      await completeFromView({
-        uiPort: ui,
-        useCases,
-        itemId,
-        source: 'layout_renderer',
-      });
-    })();
-  }, [timerService, ui, useCases]);
+    void completeFromView({
+      uiPort: ui,
+      useCases,
+      itemId,
+      source: 'layout_renderer',
+    });
+  }, [ui, useCases]);
 
   const handleSettingsClick = useCallback((viewInstance: ViewInstance) => {
     openModuleSettingsWidget(viewInstance);

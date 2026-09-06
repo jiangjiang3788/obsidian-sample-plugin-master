@@ -1,6 +1,7 @@
 import type {
   BlockViewConfig,
   EnergyViewConfig,
+  EisenhowerViewConfig,
   EventTimelineViewConfig,
   ExcelViewConfig,
   HeatmapViewConfig,
@@ -26,6 +27,10 @@ export const ENERGY_VIEW_DEFAULT_CONFIG: EnergyViewConfig = {
   showPatterns: true,
   showManagement: true,
   currentContext: 'any',
+};
+
+export const EISENHOWER_VIEW_DEFAULT_CONFIG: EisenhowerViewConfig = {
+  showUnclassified: true,
 };
 
 export const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG: EventTimelineViewConfig = {

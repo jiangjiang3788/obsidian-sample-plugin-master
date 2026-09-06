@@ -1,4 +1,4 @@
-import type { SearchResult } from 'minisearch';
+import type { RetrievalIndexResult } from './RetrievalTypes';
 import { asUnknownRecord, readNumber, readString, readUnknown } from '../../utils/unknownRecord';
 import type { UnknownRecord } from '../../utils/unknownRecord';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
@@ -29,19 +29,19 @@ export function collectSearchableExtraText(item: RecordViewItem): string {
         .join(' ');
 }
 
-export function getSearchResultRecord(sr: SearchResult): UnknownRecord | undefined {
+export function getSearchResultRecord(sr: RetrievalIndexResult): UnknownRecord | undefined {
     return asUnknownRecord(sr);
 }
 
-export function getSearchResultId(sr: SearchResult): string {
+export function getSearchResultId(sr: RetrievalIndexResult): string {
     return String(readUnknown(getSearchResultRecord(sr), 'id') ?? '');
 }
 
-export function readSearchResultText(sr: SearchResult, key: string): string {
+export function readSearchResultText(sr: RetrievalIndexResult, key: string): string {
     return normalizeRetrievalText(readUnknown(getSearchResultRecord(sr), key));
 }
 
-export function readSearchResultNumber(sr: SearchResult, key: string): number | undefined {
+export function readSearchResultNumber(sr: RetrievalIndexResult, key: string): number | undefined {
     return readNumber(getSearchResultRecord(sr), key);
 }
 

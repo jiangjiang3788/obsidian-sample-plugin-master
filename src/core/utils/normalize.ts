@@ -2,9 +2,7 @@
 // 统一 date/dateMs/dateSource（categoryKey 已由 parser 决定；此处只兜底）
 
 import { RecordViewItem } from '@/core/records/RecordEntity';
-
-const ORDER = ['done','due','scheduled','start','created','end'] as const;
-type DateKey = typeof ORDER[number];
+import { getTaskDateFact } from '@/core/records/task/taskDate';
 
 /** 统一计算出 date/dateMs/dateSource；并兜底 categoryKey */
 export function normalizeItemDates(it: RecordViewItem): void {
@@ -20,25 +18,15 @@ export function normalizeItemDates(it: RecordViewItem): void {
     return;
   }
 
-  // Task：按优先级推导统一日期
-  const pick: Record<DateKey, string | undefined> = {
-    done     : it.doneDate,
-    due      : it.dueAt ?? it.dueDate,
-    scheduled: it.scheduledAt ?? it.scheduledDate,
-    start    : it.startAt ?? it.startDate ?? it.startISO,
-    created  : it.createdAt ?? it.createdDate,
-    end      : it.endAt ?? it.endISO,
-  };
-
-  for (const k of ORDER) {
-    const iso = pick[k];
-    if (iso) {
-      it.date = iso;
-      it.dateSource = k;
-      const t = Date.parse(iso);
-      if (!isNaN(t)) it.dateMs = t;
-      break;
-    }
+  // Task generic views receive one stable primary date for backward compatibility.
+  // Planned/due/completed views must query their explicit fact instead of relying on
+  // this projection. Completion therefore does not move an existing Task to a new day.
+  const fact = getTaskDateFact(it, 'default');
+  if (fact.value) {
+    it.date = fact.value;
+    it.dateSource = fact.source;
+    const t = Date.parse(fact.value);
+    if (!isNaN(t)) it.dateMs = t;
   }
 
   // categoryKey is display metadata only; Task status is never encoded here.

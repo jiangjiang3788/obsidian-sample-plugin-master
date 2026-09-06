@@ -4,7 +4,7 @@ import { h } from 'preact';
 import { useCallback, useMemo } from 'preact/hooks';
 import type { RecordViewItem } from '@core/types/public';
 import { useTimelineZoom } from '@core/view/public';
-import type { OpenRecordHandler, OpenRecordOriginHandler, OpenTimelineCreateHandler } from '@shared/types/public';
+import type { EditTimelineBlockHandler, OpenRecordHandler, OpenRecordOriginHandler, OpenTimelineCreateHandler } from '@shared/types/public';
 import type { UpdateTaskTimeHandler } from '@shared/types/public';
 import { TimelineViewView } from './TimelineViewView';
 import { buildTimelineRenderModel, type TimelineCurrentView } from './TimelineViewModel';
@@ -17,6 +17,7 @@ interface TimelineViewProps {
   onOpenRecordOrigin?: OpenRecordOriginHandler;
   /** 由 feature 层注入：用于“对齐/精确编辑”等需要写回的操作 */
   onUpdateTaskTime?: UpdateTaskTimeHandler;
+  onEditTimelineBlock?: EditTimelineBlockHandler;
   /** 由 feature/app 层注入：Timeline 点击创建记录。 */
   onCreateFromTimeline?: OpenTimelineCreateHandler;
   onOpenRecord?: OpenRecordHandler;
@@ -33,6 +34,7 @@ export function TimelineView({
   currentView,
   onOpenRecordOrigin,
   onUpdateTaskTime,
+  onEditTimelineBlock,
   onCreateFromTimeline,
   onOpenRecord,
   onNotice,
@@ -53,10 +55,13 @@ export function TimelineView({
         day,
         event: e,
         hourHeight,
-        dayBlocks: renderModel.dailyViewData?.blocksByDay[day] || [],
+        maxHours: renderModel.config.MAX_HOURS_PER_DAY,
+        // Retrospective creation resolves gaps from actual execution only. Planned
+        // slots are guidance and must not become hard boundaries for what really happened.
+        dayBlocks: (renderModel.dailyViewData?.blocksByDay[day] || []).filter((block) => block.timelineSource !== 'task-plan'),
       });
     },
-    [onCreateFromTimeline, hourHeight, renderModel.dailyViewData]
+    [onCreateFromTimeline, hourHeight, renderModel.config.MAX_HOURS_PER_DAY, renderModel.dailyViewData]
   );
 
   return (
@@ -77,6 +82,7 @@ export function TimelineView({
       maxHours={renderModel.config.MAX_HOURS_PER_DAY}
       onOpenRecordOrigin={onOpenRecordOrigin}
       onUpdateTaskTime={onUpdateTaskTime}
+      onEditTimelineBlock={onEditTimelineBlock}
       onOpenRecord={onOpenRecord}
       onNotice={onNotice}
       onColumnClick={handleColumnClick}

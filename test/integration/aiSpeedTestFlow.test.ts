@@ -5,7 +5,7 @@
 const mockGetZustandState = jest.fn((store: any, selector: (state: any) => unknown) => selector(store.getState()));
 
 jest.mock('@/app/public', () => ({
-  getZustandState: (...args: any[]) => mockGetZustandState(...args),
+  getZustandState: (store: unknown, selector: (state: unknown) => unknown) => mockGetZustandState(store, selector),
 }));
 
 import { AiHttpClient, type AiHttpTransport } from '@/core/ai/AiHttpClient';

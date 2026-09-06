@@ -176,6 +176,14 @@ export function buildInitialEditFormData(input: {
   if (input.item.coreBlock === 'task') {
     if (isPresent(input.item.status)) result.status = input.item.status;
     if (isPresent(input.item.seriesId)) result.seriesId = input.item.seriesId;
+    // Legacy/manual actual ranges remain compatibility facts until explicitly edited
+    // through Timeline. Ordinary planning edits must not silently convert them into
+    // scheduledAt or delete them while replacing the Record block.
+    if (isPresent(input.item.startAt)) result.startAt = input.item.startAt;
+    if (isPresent(input.item.endAt)) result.endAt = input.item.endAt;
+    if (isPresent(input.item.completedAt)) result.completedAt = input.item.completedAt;
+    if (isPresent(input.item.cancelledAt)) result.cancelledAt = input.item.cancelledAt;
+    if (isPresent(input.item.skippedAt)) result.skippedAt = input.item.skippedAt;
   }
   return result;
 }

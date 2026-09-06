@@ -10,6 +10,7 @@ import type { RecordCaptureTemplate, TemplateField } from '@/core/recordInput/Ca
 import { buildRecordOutputPlan } from '@/core/recordInput/snapshot/OutputPlanner';
 import { buildEnergySnapshotMarkdown } from '@core/energy/public';
 import { parseRecordBlock } from '@/core/utils/parser';
+import { asHabitRecord, asTaskRecord } from '@/core/records/public';
 
 function option(value: string, label = value) {
   return { value, label };
@@ -20,10 +21,12 @@ function sampleValue(field: TemplateField): unknown {
     case 'core.task.status': return option('open', '未完成');
     case 'core.task.recurrenceUnit': return option('none', '不重复');
     case 'core.task.recurrenceInterval': return 1;
-    case 'core.task.startAt': return '2026-08-24T09:00';
-    case 'core.task.endAt': return '2026-08-24T09:30';
+    case 'core.task.scheduledAt': return '2026-08-24T09:00';
     case 'core.task.expectedDurationMinutes': return 30;
+    case 'core.task.dueAt': return '2026-08-24T09:30';
     case 'core.task.priority': return option('medium', '中');
+    case 'core.task.importance': return option('important', '重要');
+    case 'core.task.urgency': return option('urgent', '紧急');
     case 'core.task.energyDemand': return option('medium', '中');
     case 'core.task.brainDemand': return option('medium', '中');
     case 'core.task.physicalDemand': return option('medium', '中');
@@ -64,7 +67,7 @@ describe('integration: every user capture type persists and parses back', () => 
         formData: buildFormData(recordType),
       });
 
-      const parsed = parseWholeBlock(plan.targetFilePath, plan.outputContent);
+      const parsed = parseWholeBlock(plan.targetFilePath!, plan.outputContent);
       expect(parsed).not.toBeNull();
       expect(parsed?.coreBlock).toBe(recordType.coreBlock);
       expect(parsed?.goalPath).toBe('测试/完整回归');
@@ -73,12 +76,16 @@ describe('integration: every user capture type persists and parses back', () => 
       expect(plan.targetHeader).toBe('## 测试/完整回归');
 
       if (id === 'core.task') {
-        expect(parsed?.status).toBe('open');
-        expect(parsed?.startAt).toBe('2026-08-24T09:00');
-        expect(parsed?.endAt).toBe('2026-08-24T09:30');
-        expect(parsed?.expectedDurationMinutes).toBe(30);
+        const task = asTaskRecord(parsed);
+        expect(task).not.toBeNull();
+        expect(task?.status).toBe('open');
+        expect(task?.scheduledAt).toBe('2026-08-24T09:00');
+        expect(task?.dueAt).toBe('2026-08-24T09:30');
+        expect(task?.expectedDurationMinutes).toBe(30);
+        expect(task?.startAt).toBeUndefined();
+        expect(task?.endAt).toBeUndefined();
       }
-      if (id === 'core.habit') expect(parsed?.rating).toBe(4);
+      if (id === 'core.habit') expect(asHabitRecord(parsed)?.rating).toBe(4);
     },
   );
 

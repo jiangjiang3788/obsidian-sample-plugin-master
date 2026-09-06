@@ -30,7 +30,7 @@ describe('Think OS 真机：插件生命周期', () => {
 
   it('插件禁用后清理，重新启用后能再次完整启动', async () => {
     await obsidianPage.disablePlugin(THINK_PLUGIN_ID);
-    await browser.waitUntil(async () => browser.executeObsidian(({ app }, id) => !Boolean((app as any).plugins?.plugins?.[id]), THINK_PLUGIN_ID), {
+    await browser.waitUntil(async () => browser.executeObsidian(({ app }, id) => !(app as any).plugins?.plugins?.[id], THINK_PLUGIN_ID), {
       timeout: 10_000,
       interval: 250,
       timeoutMsg: 'Think OS 未能完成卸载。',

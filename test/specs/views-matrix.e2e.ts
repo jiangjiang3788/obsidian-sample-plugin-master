@@ -25,6 +25,7 @@
  * @covers F089/e2e
  * @covers F091/e2e
  * @covers F092/e2e
+ * @covers F093/e2e
  * @covers F090/e2e
  * @covers F104/ui
  * @covers F104/e2e
@@ -33,14 +34,14 @@ import { $, browser } from '@wdio/globals';
 import { obsidianPage } from 'wdio-obsidian-service';
 import { externalTaskMarkdown, THINK_PLUGIN_ID, waitForThinkReady } from './support/thinkE2e';
 
-const LAYOUT_NAME = 'E2E 九视图';
-const FILE = 'E2E/九视图.md';
-const DATA_FILE = 'E2E/九视图数据.md';
+const LAYOUT_NAME = 'E2E 十视图';
+const FILE = 'E2E/十视图.md';
+const DATA_FILE = 'E2E/十视图数据.md';
 const RECORD_ID = 'e2e-view-export-task';
-const EXPORT_CONTENT = 'E2E 九视图导出任务';
+const EXPORT_CONTENT = 'E2E 十视图导出任务';
 const VIEWS = [
   ['BlockView', '块视图'], ['TableView', '表格'], ['ExcelView', '数据表格'], ['TimelineView', '时间轴'],
-  ['EventTimelineView', '事件时间线'], ['StatisticsView', '统计'], ['HeatmapView', '打卡'], ['ProgressView', '成长'], ['EnergyView', '精力'],
+  ['EventTimelineView', '事件时间线'], ['StatisticsView', '统计'], ['HeatmapView', '打卡'], ['ProgressView', '成长'], ['EnergyView', '精力'], ['EisenhowerView', '四象限'],
 ] as const;
 
 async function openFile(name: string): Promise<void> {
@@ -58,7 +59,7 @@ async function openFile(name: string): Promise<void> {
   }
 }
 
-describe('Think OS 真机 UI：九种 View 矩阵', () => {
+describe('Think OS 真机 UI：十种 View 矩阵', () => {
   before(async () => {
     await waitForThinkReady();
     try { await obsidianPage.delete('E2E'); } catch {}
@@ -73,9 +74,9 @@ describe('Think OS 真机 UI：九种 View 矩阵', () => {
         try { await manager.useCases.viewInstance.deleteView(view.id); } catch {}
       }
       const layout = await manager.useCases.layout.addLayout(layoutName);
-      if (!layout) throw new Error('无法创建 E2E 九视图布局');
+      if (!layout) throw new Error('无法创建 E2E 十视图布局');
       await manager.useCases.layout.updateLayout(layout.id, { globalFilters: [{ field: 'content', op: 'includes', value: 'E2E' }] });
-      for (const [viewType, label] of views as any[]) {
+      for (const [viewType, label] of views) {
         const view = await manager.useCases.viewInstance.createView(`E2E视图-${label}`, viewType);
         if (!view) throw new Error(`无法创建 E2E 视图：${label}`);
         await manager.useCases.layout.addViewInstanceToLayout(layout.id, view.id);
@@ -86,11 +87,11 @@ describe('Think OS 真机 UI：九种 View 矩阵', () => {
       const plugin = (app as any).plugins.plugins[pluginId] as any;
       await plugin.serviceManager.dataStore.clearCacheAndRescan('full');
     }, THINK_PLUGIN_ID);
-    await obsidianPage.write(FILE, `# 九视图真机测试\n\n\`\`\`think\n{"layout":"${LAYOUT_NAME}"}\n\`\`\`\n`);
+    await obsidianPage.write(FILE, `# 十视图真机测试\n\n\`\`\`think\n{"layout":"${LAYOUT_NAME}"}\n\`\`\`\n`);
   });
 
-  it('真实 think 代码块装载同一布局中的九种 View，并且每个模块都能进入实际内容容器', async () => {
-    await openFile('九视图');
+  it('真实 think 代码块装载同一布局中的十种 View，并且每个模块都能进入实际内容容器', async () => {
+    await openFile('十视图');
     const thinkBlock = await $('.block-language-think');
     await thinkBlock.waitForExist({ timeout: 15_000 });
 
@@ -103,12 +104,12 @@ describe('Think OS 真机 UI：九种 View 矩阵', () => {
       const gate = await content.$('.think-view-viewport-gate');
       await gate.waitForExist({ timeout: 10_000 });
     }
-    expect((await $$('section.think-module')).length).toBeGreaterThanOrEqual(9);
+    expect((await $$('section.think-module')).length).toBeGreaterThanOrEqual(10);
   });
 
 
   it('真实工具栏可切换时间范围，日期标签会随用户操作变化', async () => {
-    await openFile('九视图');
+    await openFile('十视图');
     const toolbar = await $('.think-os--layout .tp-toolbar');
     await toolbar.waitForExist({ timeout: 15_000 });
     const label = await toolbar.$('.tp-toolbar-date-display');
@@ -126,7 +127,7 @@ describe('Think OS 真机 UI：九种 View 矩阵', () => {
   });
 
   it('块视图的“导出为 Markdown”把真实 Record 写入剪贴板', async () => {
-    await openFile('九视图');
+    await openFile('十视图');
     await browser.execute(() => {
       (window as any).__thinkE2EClipboard = '';
       const writeText = async (text: string) => { (window as any).__thinkE2EClipboard = String(text); };
@@ -151,7 +152,7 @@ describe('Think OS 真机 UI：九种 View 矩阵', () => {
   });
 
   it('时间轴头部“创建记录”会打开真实 Quick Input，而不只是调用内部函数', async () => {
-    await openFile('九视图');
+    await openFile('十视图');
     const module = await $('section[aria-label="E2E视图-时间轴 视图"]');
     await module.waitForExist({ timeout: 15_000 });
     const createButton = await module.$('button[aria-label="创建记录"]');
@@ -165,7 +166,7 @@ describe('Think OS 真机 UI：九种 View 矩阵', () => {
 
 
   it('布局全局筛选从真实设置进入 RuleBuilder，用户可在界面删除规则并写回布局', async () => {
-    await openFile('九视图');
+    await openFile('十视图');
     const filterButton = await $('.think-os--layout .tp-toolbar-data-filter button*=数据筛选');
     await filterButton.waitForClickable({ timeout: 10_000 });
     expect(await filterButton.getText()).toContain('(1)');

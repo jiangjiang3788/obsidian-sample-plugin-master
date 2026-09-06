@@ -6,7 +6,7 @@
 const mockGetZustandState = jest.fn((store: any, selector: (state: any) => unknown) => selector(store.getState()));
 
 jest.mock('@/app/public', () => ({
-  getZustandState: (...args: any[]) => mockGetZustandState(...args),
+  getZustandState: (store: unknown, selector: (state: unknown) => unknown) => mockGetZustandState(store, selector),
 }));
 
 import { createAiSpeedTestCommand } from '@/features/aiinput/aiSpeedTestCommand';
@@ -33,7 +33,7 @@ function makeStore(overrides: Record<string, unknown> = {}) {
 function makeUi() {
   const hide = jest.fn();
   const setMessage = jest.fn();
-  const notice = jest.fn(() => ({ hide, setMessage }));
+  const notice = jest.fn((_message: string, _timeoutMs?: number) => ({ hide, setMessage }));
   return { ui: { notice } as any, notice, hide, setMessage };
 }
 

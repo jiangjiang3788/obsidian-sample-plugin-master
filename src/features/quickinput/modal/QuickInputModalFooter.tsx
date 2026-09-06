@@ -16,6 +16,7 @@ export interface QuickInputModalFooterProps {
   onSubmitClick?: () => void;
   onSubmitPointerDown: (event: MouseEvent | PointerEvent) => void;
   onPreserveDesktopInputFocus: (event: MouseEvent | PointerEvent) => void;
+  allowDelete?: boolean;
 }
 
 export function QuickInputModalFooter({
@@ -29,8 +30,9 @@ export function QuickInputModalFooter({
   onSubmitClick,
   onSubmitPointerDown,
   onPreserveDesktopInputFocus,
+  allowDelete = true,
 }: QuickInputModalFooterProps) {
-  const showDelete = operationMode === 'edit' || operationMode === 'convert';
+  const showDelete = allowDelete && (operationMode === 'edit' || operationMode === 'convert');
 
   return (
     <div className={`think-modal__footer think-modal__footer--quick-input${isMobileLike ? ' is-mobile-like' : ''}`}>

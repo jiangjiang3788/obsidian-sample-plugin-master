@@ -79,7 +79,7 @@ function check_task_domain_v2_gate() {
   requireText('src/core/services/item/TaskCompletionMutation.ts', 'series.currentTaskId !== task.id');
   requireText('src/core/services/item/TaskCompletionMutation.ts', "series.status === 'stopped'");
   requireText('src/core/services/item/TaskCompletionMutation.ts', 'Series owns future-instance defaults');
-  requireText('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 15');
+  requireText('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 16');
 
   if (failures.length) {
     console.error('[task-domain-v2-gate] failed');
@@ -105,7 +105,7 @@ function check_task_session_v2_gate() {
   forbid('src/core/types/timer.ts', [/awaiting-energy/, /feedback-recorded/, /energyFeedback\??:/, /completedAt\??:/]);
   requireText('src/core/types/timer.ts', "export type TimerStatus = 'running' | 'paused'");
   requireText('src/core/types/timer.ts', 'startedAt: number');
-  requireText('src/core/services/TimerStateService.ts', 'TIMER_RUNTIME_SCHEMA_VERSION = 2');
+  requireText('src/core/services/TimerStateService.ts', 'TIMER_RUNTIME_SCHEMA_VERSION = 3');
   forbid('src/core/services/TimerStateService.ts', [/feedback-recorded/, /awaiting-energy/]);
   requireText('src/core/records/RecordEntity.ts', "coreBlock: 'task-session'");
   requireText('src/core/records/task/taskSession.ts', 'type TaskSessionRecord = RuntimeTaskSessionRecord');
@@ -114,13 +114,14 @@ function check_task_session_v2_gate() {
   requireText('src/core/services/item/TaskCompletionMutation.ts', 'completeItemWithSession');
   requireText('src/core/services/item/TaskCompletionMutation.ts', 'operations.push(sessionOperation)');
   requireText('src/features/timer/TimerService.ts', 'submitTaskSession');
-  requireText('src/features/timer/TimerService.ts', "'task-completed'");
+  requireText('src/app/usecases/taskRuntime.usecase.ts', "'task-completed'");
+  requireText('src/core/records/task/taskTimerSession.ts', 'buildTimerSegmentSession');
   forbid('src/features/timer/TimerService.ts', [/awaiting-energy/, /feedback-recorded/, /energyFeedback/, /submitUpdateRecordTime/, /-\s*\[\s*\]/]);
   forbid('src/app/usecases/recordInput.usecase.ts', [/attachEnergyTaskFeedback/, /feedback-recorded/, /awaiting-energy/]);
   forbid('src/core/energy/recommendationLearning.ts', [/TimerState/, /feedback-recorded/, /energyFeedback/]);
   requireText('src/core/energy/record.ts', "recordId: createRecordId('energy')");
   requireText('src/core/energy/record.ts', "coreBlock: 'energy'");
-  requireText('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 15');
+  requireText('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 16');
 
   if (failures.length) {
     console.error('[task-session-v2-gate] failed');
@@ -193,7 +194,7 @@ function check_task_consumer_v2_gate() {
   requireText('src/core/recordInput/EditBackfillMapper.ts', 'result.status = input.item.status');
   requireText('src/core/recordInput/EditBackfillMapper.ts', 'result.seriesId = input.item.seriesId');
   requireText('src/core/recordInput/snapshot/OutputPlanner.ts', 'task_series_recurrence_edit_requires_series_command');
-  requireText('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 15');
+  requireText('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 16');
   requireText('src/core/types/cache.ts', 'expectedDurationMinutes?: number');
   requireText('src/core/types/cache.ts', 'scheduledDate?: string');
 
@@ -266,7 +267,7 @@ function check_no_task_line_runtime_gate() {
   if (/\brecurrence\??\s*:\s*string\b/.test(recordEntity)) failures.push('RecordEntity.ts: recurrence string projection must not exist');
 
   const cache = fs.readFileSync('src/core/types/cache.ts', 'utf8');
-  if (!cache.includes('CURRENT_CACHE_SCHEMA_VERSION = 15')) failures.push('cache.ts: cache schema must be v14 after integrity persistence hardening');
+  if (!cache.includes('CURRENT_CACHE_SCHEMA_VERSION = 16')) failures.push('cache.ts: cache schema must match the current persisted CachedItem shape');
   if (/\btype\??\s*:\s*['"]task['"]\s*\|\s*['"]block['"]/.test(cache)) failures.push('cache.ts: cached Item.type legacy projection must not exist');
   if (/\brecurrence\??\s*:\s*string\b/.test(cache)) failures.push('cache.ts: cached recurrence string projection must not exist');
 

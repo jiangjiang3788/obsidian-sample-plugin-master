@@ -1,6 +1,6 @@
 import type { FilterRule, SortRule } from '@/core/view/ViewConfig';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
-import { executeRecordQuery, type RecordQuerySpec } from './RecordQuery';
+import { executeRecordQuery, type RecordQueryDateMode, type RecordQueryDateRole, type RecordQuerySpec } from './RecordQuery';
 
 export interface ViewRecordQueryInput {
   items: RecordViewItem[];
@@ -12,6 +12,11 @@ export interface ViewRecordQueryInput {
   layoutView: string;
   isOverviewMode?: boolean;
   useFieldGranularity?: boolean;
+  /** Optional explicit date fact for views such as planned/due/completed/actual history. */
+  dateRole?: RecordQueryDateRole;
+  dateField?: string;
+  dateMode?: RecordQueryDateMode;
+  datePrecision?: 'day' | 'minute';
 }
 
 export function buildViewRecordQuery(input: ViewRecordQueryInput): RecordQuerySpec {
@@ -22,11 +27,13 @@ export function buildViewRecordQuery(input: ViewRecordQueryInput): RecordQuerySp
     sort: input.sort || [],
     date: {
       range: input.dateRange,
-      field: 'date',
-      mode: input.isOverviewMode ? 'overview' : 'standard',
+      field: input.dateField || 'date',
+      role: input.dateRole || 'default',
+      mode: input.dateMode || (input.isOverviewMode ? 'overview' : 'standard'),
       granularity: input.layoutView,
       useFieldGranularity: !!input.useFieldGranularity,
       periodValue: periodFilter?.value,
+      precision: input.datePrecision || 'day',
     },
   };
 }

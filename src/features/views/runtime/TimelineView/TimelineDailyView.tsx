@@ -1,5 +1,5 @@
 /** @jsxImportSource preact */
-import type { OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/public';
+import type { EditTimelineBlockHandler, OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/public';
 import type { UpdateTaskTimeHandler } from '@shared/types/public';
 import { ProgressBlock, DayColumnHeader, DayColumnBody } from '../components/timeline';
 import type { DailyViewData } from './TimelineViewTypes';
@@ -21,6 +21,7 @@ interface TimelineDailyViewProps {
   untrackedLabel: string;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
   onUpdateTaskTime?: UpdateTaskTimeHandler;
+  onEditTimelineBlock?: EditTimelineBlockHandler;
   onOpenRecord?: OpenRecordHandler;
   onNotice?: (message: string) => void;
   onColumnClick: (day: string, e: MouseEvent | TouchEvent) => void;
@@ -40,6 +41,7 @@ export function TimelineDailyView({
   untrackedLabel,
   onOpenRecordOrigin,
   onUpdateTaskTime,
+  onEditTimelineBlock,
   onOpenRecord,
   onNotice,
   onColumnClick,
@@ -69,7 +71,7 @@ export function TimelineDailyView({
           <DayColumnHeader
             key={day}
             day={day}
-            blocks={blocks}
+            blocks={blocks.filter((block) => block.timelineSource !== 'task-plan')}
             categoriesConfig={categoriesConfig}
             colorMap={colorMap}
             untrackedLabel={untrackedLabel}
@@ -98,6 +100,7 @@ export function TimelineDailyView({
             colorMap={colorMap}
             maxHours={maxHours}
             onUpdateTaskTime={onUpdateTaskTime}
+            onEditTask={onEditTimelineBlock}
             onOpenRecord={onOpenRecord}
             onNotice={onNotice}
             onColumnClick={onColumnClick}

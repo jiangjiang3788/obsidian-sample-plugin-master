@@ -7,9 +7,9 @@ jest.mock('@/app/ui/modals/QuickInputModal', () => ({
 }));
 
 jest.mock('@core/public', () => {
-  const dayjs = require('dayjs');
-  const isoWeek = require('dayjs/plugin/isoWeek');
-  const quarterOfYear = require('dayjs/plugin/quarterOfYear');
+  const dayjs = jest.requireActual<typeof import('dayjs')>('dayjs');
+  const isoWeek = jest.requireActual<typeof import('dayjs/plugin/isoWeek')>('dayjs/plugin/isoWeek');
+  const quarterOfYear = jest.requireActual<typeof import('dayjs/plugin/quarterOfYear')>('dayjs/plugin/quarterOfYear');
   dayjs.extend(isoWeek);
   dayjs.extend(quarterOfYear);
 
@@ -42,6 +42,7 @@ import {
   updateTimeFromView,
 } from '@/app/actions/recordUiActions';
 import { QuickInputModal } from '@/app/ui/modals/QuickInputModal';
+import { dayjs } from '@core/public';
 
 describe('recordUiActions', () => {
   beforeEach(() => {
@@ -70,6 +71,7 @@ describe('recordUiActions', () => {
       app: { name: 'app' },
       uiPort: { notice: jest.fn() } as never,
       hourHeight: 60,
+      maxHours: 24,
       dayBlocks: [
         { blockStartMinute: 40, blockEndMinute: 80 },
         { blockStartMinute: 120, blockEndMinute: 180 },
@@ -148,7 +150,6 @@ describe('recordUiActions', () => {
   });
 
   it('carries Statistics cell period/category/Goal/filter context into QuickInput', () => {
-    const dayjs = require('dayjs');
     const notice = jest.fn();
     const opened = openCreateFromStatistics({
       app: { name: 'app' },
@@ -216,7 +217,7 @@ describe('recordUiActions', () => {
       app: { name: 'app' },
       actionService: { getQuickInputConfigForView: jest.fn(() => config) } as never,
       viewInstance: { viewType: 'TimelineView' } as never,
-      dateContext: require('dayjs')('2026-05-14'),
+      dateContext: dayjs('2026-05-14'),
       periodContext: '周',
     });
 
@@ -276,23 +277,22 @@ describe('recordUiActions', () => {
     );
   });
 
-  it('submits complete updates through the record input usecase and reports failure feedback', async () => {
+  it('所有 View 完成入口都通过 task runtime 解析 Timer context，并报告失败反馈', async () => {
     const notice = jest.fn();
-    const submitCompleteRecord = jest.fn().mockResolvedValue({
+    const completeTask = jest.fn().mockResolvedValue({
       status: 'error',
       errors: [{ message: '写回失败' }],
     });
 
     const result = await completeFromView({
       uiPort: { notice } as never,
-      useCases: { recordInput: { submitCompleteRecord } } as never,
+      useCases: { taskRuntime: { completeTask } } as never,
       itemId: 'task-1',
     });
 
     expect(result).toBe(false);
-    expect(submitCompleteRecord).toHaveBeenCalledWith({
-      itemId: 'task-1',
-      options: undefined,
+    expect(completeTask).toHaveBeenCalledWith({
+      taskId: 'task-1',
       source: 'layout_renderer',
     });
     expect(notice).toHaveBeenCalledWith('写回失败');

@@ -7,6 +7,8 @@ import { MigrationBackupService } from './MigrationBackupService';
 import { TaskCompletionMutation, type TaskSeriesUpdate } from './TaskCompletionMutation';
 import { TaskSessionMutation } from './TaskSessionMutation';
 import { TaskTimeMutation } from './TaskTimeMutation';
+import { TaskQuadrantMutation } from './TaskQuadrantMutation';
+import type { EisenhowerQuadrant } from '@/core/records/task/taskQuadrant';
 import type { TaskSessionCreateInput } from '@/core/types/timer';
 import { RecordRepository } from '@/core/records/RecordRepository';
 import type {
@@ -27,6 +29,7 @@ export class ItemService {
     private readonly taskCompletion: TaskCompletionMutation;
     private readonly taskSessions: TaskSessionMutation;
     private readonly taskTime: TaskTimeMutation;
+    private readonly taskQuadrant: TaskQuadrantMutation;
     private readonly inlineFields: InlineFieldMutation;
     private readonly goalTemplateMigration: GoalTemplateMigrationMutation;
     private readonly migrationBackup: MigrationBackupService;
@@ -38,6 +41,7 @@ export class ItemService {
         const recordRepository = new RecordRepository(vault, dataStore);
         this.taskSessions = new TaskSessionMutation(dataStore, recordRepository);
         this.taskTime = new TaskTimeMutation(recordRepository, this.taskSessions);
+        this.taskQuadrant = new TaskQuadrantMutation(recordRepository);
         this.taskCompletion = new TaskCompletionMutation(dataStore, recordRepository, this.taskSessions);
         this.inlineFields = new InlineFieldMutation(recordRepository);
         this.goalTemplateMigration = new GoalTemplateMigrationMutation(recordRepository);
@@ -72,8 +76,16 @@ export class ItemService {
         return this.taskCompletion.cancelItem(itemId);
     }
 
+    cancelItemWithSession(itemId: string, session: TaskSessionCreateInput): Promise<void> {
+        return this.taskCompletion.cancelItemWithSession(itemId, session);
+    }
+
     skipItem(itemId: string): Promise<void> {
         return this.taskCompletion.skipItem(itemId);
+    }
+
+    skipItemWithSession(itemId: string, session: TaskSessionCreateInput): Promise<void> {
+        return this.taskCompletion.skipItemWithSession(itemId, session);
     }
 
     reopenItem(itemId: string): Promise<void> {
@@ -94,6 +106,10 @@ export class ItemService {
         options: { includeCurrent?: boolean } = {},
     ): Promise<void> {
         return this.taskCompletion.updateSeries(seriesId, update, options);
+    }
+
+    updateTaskQuadrant(itemId: string, quadrant: EisenhowerQuadrant): Promise<void> {
+        return this.taskQuadrant.move(itemId, quadrant);
     }
 
     async updateItemTime(

@@ -32,6 +32,9 @@ function finalizeTimeFieldsByTemplate(
   fields: any[],
   direction: TaskTimeDirection,
 ): Record<string, unknown> {
+  const hasExplicitEndField = fields.some((field) => fieldSemanticMatches(field, 'endTime') || fieldMatches(field, ['结束', '结束时间', 'end', 'endtime', 'endTime', 'endAt']));
+  if (!hasExplicitEndField) return { ...formData };
+
   const startKey = findFieldKey(fields, ['时间', '开始', '开始时间', '开始/预计时间', 'time', 'start', 'starttime', 'startTime', 'startAt'], '时间', 'startTime');
   const endKey = findFieldKey(fields, ['结束', '结束时间', 'end', 'endtime', 'endTime', 'endAt'], '结束', 'endTime');
   const durationKey = findFieldKey(fields, ['时长', '时长（分钟）', '预计时长', 'duration', 'minutes', '持续时间', 'expectedDurationMinutes'], '时长', 'duration');

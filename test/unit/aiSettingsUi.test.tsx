@@ -47,7 +47,7 @@ describe('AI 设置界面', () => {
     };
     const setInput = async (input: HTMLInputElement, value: string) => {
       input.value = value;
-      await act(async () => input.dispatchEvent(new Event('input', { bubbles: true })));
+      await act(async () => { input.dispatchEvent(new Event('input', { bubbles: true })); });
     };
     await setInput(rowInput('API 端点'), 'https://example.test/v1');
     await setInput(rowInput('API 密钥'), 'test-key');

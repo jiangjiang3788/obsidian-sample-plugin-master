@@ -37,6 +37,7 @@ export interface RecordEntity {
 
   date?: string;
   dateMs?: number;
+  /** Compatibility projection source. Task-specific views should query explicit date facts. */
   dateSource?: 'done' | 'due' | 'scheduled' | 'start' | 'created' | 'end' | 'block';
   startISO?: string;
   endISO?: string;
@@ -93,6 +94,8 @@ export interface HabitRecord extends RecordEntity {
 
 export type TaskRecordStatus = 'open' | 'done' | 'cancelled' | 'skipped';
 export type RecordTaskPriority = 'lowest' | 'low' | 'medium' | 'high' | 'highest';
+export type TaskImportance = 'important' | 'normal';
+export type TaskUrgency = 'urgent' | 'normal';
 export type TaskAvailabilityContext = 'any' | 'work' | 'home' | 'commute' | 'out';
 
 export interface TaskRecordEntity extends RecordEntity {
@@ -102,6 +105,8 @@ export interface TaskRecordEntity extends RecordEntity {
   /** Derived from TaskSeries for consumers; never persisted on Task instances. */
   recurrenceInfo?: RecurrenceInfo;
   priority?: RecordTaskPriority;
+  importance?: TaskImportance;
+  urgency?: TaskUrgency;
   expectedDurationMinutes?: number;
   energyDemand?: string;
   brainDemand?: string;
@@ -129,6 +134,8 @@ export interface TaskSeriesRecordEntity extends RecordEntity {
   status: 'active' | 'stopped';
   recurrenceInfo: RecurrenceInfo;
   priority?: RecordTaskPriority;
+  importance?: TaskImportance;
+  urgency?: TaskUrgency;
   expectedDurationMinutes?: number;
   energyDemand?: string;
   brainDemand?: string;
@@ -148,7 +155,7 @@ export interface TaskSessionRecordEntity extends RecordEntity {
   sessionEndedAt: string;
   sessionDurationMinutes: number;
   sessionResult: 'work-block-ended' | 'task-completed';
-  sessionSource: 'timer' | 'energy-view' | 'unknown';
+  sessionSource: 'timer' | 'energy-view' | 'timeline' | 'unknown';
   suggestedDurationMinutes?: number;
   startEnergyRecordId?: string;
   endEnergyRecordId?: string;
@@ -187,6 +194,8 @@ export interface RecordViewItem extends RecordEntity {
   currentTaskId?: string;
   rolloverPolicy?: 'carry';
   priority?: RecordTaskPriority;
+  importance?: TaskImportance;
+  urgency?: TaskUrgency;
   expectedDurationMinutes?: number;
   energyDemand?: string;
   brainDemand?: string;

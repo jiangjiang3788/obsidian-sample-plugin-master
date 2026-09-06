@@ -53,6 +53,19 @@ function pickEditableText(item: RecordViewItem): string | null {
   return item.content?.trim() || item.title || null;
 }
 
+function taskDurationForEdit(item: RecordViewItem): number | null {
+  if (item.coreBlock !== 'task') return item.duration ?? null;
+  if (typeof item.expectedDurationMinutes === 'number' && Number.isFinite(item.expectedDurationMinutes) && item.expectedDurationMinutes > 0) {
+    return item.expectedDurationMinutes;
+  }
+  const startMs = item.startAt ? new Date(item.startAt).getTime() : Number.NaN;
+  const endMs = item.endAt ? new Date(item.endAt).getTime() : Number.NaN;
+  if (Number.isFinite(startMs) && Number.isFinite(endMs) && endMs > startMs) {
+    return Math.round((endMs - startMs) / 60000);
+  }
+  return item.duration ?? null;
+}
+
 export function buildParsedRecordSnapshot(item: RecordViewItem): ParsedRecordSnapshot {
   const path = item.source?.path ?? item.file?.path ?? null;
   const line = item.source?.startLine ?? (typeof item.file?.line === 'number' ? item.file.line : null);
@@ -70,9 +83,11 @@ export function buildParsedRecordSnapshot(item: RecordViewItem): ParsedRecordSna
       period: item.period || null,
       tags: [...(item.tags || [])],
       goalPath: item.goalPath || null,
-      startTime: item.startTime || null,
-      endTime: item.endTime || null,
-      duration: item.duration ?? null,
+      startTime: (item.coreBlock === 'task'
+        ? (item.scheduledAt || (item.startAt && !item.endAt ? item.startAt : undefined))
+        : item.startTime) || item.startTime || null,
+      endTime: (item.coreBlock === 'task' ? item.endAt : item.endTime) || item.endTime || null,
+      duration: taskDurationForEdit(item),
       categoryKey: item.categoryKey || null,
     },
     extra: { ...(item.extra || {}) },

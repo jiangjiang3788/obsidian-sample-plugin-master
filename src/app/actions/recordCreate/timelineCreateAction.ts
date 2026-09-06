@@ -1,7 +1,13 @@
 import { RECORD_TYPE_IDS } from '@core/recordTypes/public';
 import type { QuickInputConfig } from '@core/services/public';
 import type { TaskBlock } from '@core/types/public';
-import { dayjs, minutesToTime } from '@core/utils/public';
+import {
+  clampTimelineMinute,
+  minutesToTime,
+  TIMELINE_DAY_START_MINUTE,
+  timelineMinuteFromOffset,
+  timelineMinuteToLocalDateTime,
+} from '@core/utils/public';
 
 import { openCreateModal } from './openCreateModal';
 import type { TimelineCreateParams } from './types';
@@ -16,18 +22,9 @@ function getEventClientY(event: MouseEvent | TouchEvent): number {
   return (event as MouseEvent).clientY;
 }
 
-function clampDayMinute(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  return Math.min(1439, Math.max(0, Math.floor(value)));
-}
-
 function blockIdentity(block: TaskBlock | null): string | null {
   if (!block) return null;
   return String(block.taskRecordId || block.id || '').trim() || null;
-}
-
-function minuteToLocalDateTime(day: string, minute: number): string {
-  return dayjs(day).startOf('day').add(clampDayMinute(minute), 'minute').format('YYYY-MM-DDTHH:mm');
 }
 
 export interface TimelineCreateContextResolution {
@@ -40,21 +37,24 @@ export interface TimelineCreateContextResolution {
 }
 
 /**
- * Resolve the Timeline click into an explicit QuickInput context.
+ * Resolve one click into the blank interval that contains it.
  *
- * Product contract:
- * - before the first block: start at the clicked minute, end at the next block;
- * - between blocks: start at the previous block end, end at the next block start;
- * - after the last block: start at the previous block end and leave end open;
- * - canonical Task datetime fields are the source of truth; legacy clock keys are
- *   retained only so old GoalTemplate field aliases keep receiving the same context.
+ * Timeline is a natural-day execution log:
+ * - every day starts at 00:00 (minute 0), never at the first existing Task;
+ * - before the first block, the blank interval starts at 00:00;
+ * - between blocks, it starts at the previous block end and ends at the next block start;
+ * - after the last block (or on an empty day), the click itself becomes the provisional end;
+ * - Timeline capture defaults to a completed, backward-linked Task because it represents
+ *   recording something that already happened. Ordinary QuickInput keeps its normal open default.
  */
 export function resolveTimelineCreateContext(input: {
   day: string;
   clickedMinute: number;
   dayBlocks: TaskBlock[];
+  maxHours?: number;
 }): TimelineCreateContextResolution {
-  const clickedMinute = clampDayMinute(input.clickedMinute);
+  const maxHours = input.maxHours ?? 24;
+  const clickedMinute = clampTimelineMinute(input.clickedMinute, maxHours);
   const blocks = [...(input.dayBlocks || [])]
     .filter((block) => Number.isFinite(block.blockStartMinute) && Number.isFinite(block.blockEndMinute))
     .sort((a, b) => a.blockStartMinute - b.blockStartMinute || a.blockEndMinute - b.blockEndMinute);
@@ -66,27 +66,33 @@ export function resolveTimelineCreateContext(input: {
     .filter((block) => block.blockStartMinute >= clickedMinute)
     .sort((a, b) => a.blockStartMinute - b.blockStartMinute || a.blockEndMinute - b.blockEndMinute)[0] || null;
 
-  const suggestedStartMinute = clampDayMinute(previousBlock?.blockEndMinute ?? clickedMinute);
-  const nextStartMinute = nextBlock ? clampDayMinute(nextBlock.blockStartMinute) : null;
+  const suggestedStartMinute = clampTimelineMinute(previousBlock?.blockEndMinute ?? TIMELINE_DAY_START_MINUTE, maxHours);
+  const nextStartMinute = nextBlock ? clampTimelineMinute(nextBlock.blockStartMinute, maxHours) : null;
+  const clickedEndMinute = clickedMinute > suggestedStartMinute ? clickedMinute : null;
   const suggestedEndMinute = nextStartMinute !== null && nextStartMinute > suggestedStartMinute
     ? nextStartMinute
-    : null;
+    : clickedEndMinute;
 
-  const startAt = minuteToLocalDateTime(input.day, suggestedStartMinute);
+  const startAt = timelineMinuteToLocalDateTime(input.day, suggestedStartMinute);
   const context: Record<string, unknown> = {
     日期: input.day,
+    status: 'done',
+    __timeDirection: 'backward',
     startAt,
     // Legacy aliases remain invocation context only. New Task UI uses startAt/endAt.
     时间: minutesToTime(suggestedStartMinute),
     __recordUiContext: {
       kind: 'timeline_create',
+      captureMode: 'completed_execution',
       timeContext: {
         date: input.day,
         clickedMinute,
         suggestedStartMinute,
         suggestedEndMinute,
-        startSource: previousBlock ? 'previous_block_end' : 'clicked_slot',
-        endSource: suggestedEndMinute !== null ? 'next_block_start' : 'open_end',
+        startSource: previousBlock ? 'previous_block_end' : 'day_start',
+        endSource: nextStartMinute !== null && nextStartMinute > suggestedStartMinute
+          ? 'next_block_start'
+          : (suggestedEndMinute !== null ? 'clicked_slot' : 'open_end'),
         previousBlockId: blockIdentity(previousBlock),
         nextBlockId: blockIdentity(nextBlock),
       },
@@ -94,7 +100,7 @@ export function resolveTimelineCreateContext(input: {
   };
 
   if (suggestedEndMinute !== null) {
-    context.endAt = minuteToLocalDateTime(input.day, suggestedEndMinute);
+    context.endAt = timelineMinuteToLocalDateTime(input.day, suggestedEndMinute);
     context['结束'] = minutesToTime(suggestedEndMinute);
   }
 
@@ -114,12 +120,12 @@ export function buildTimelineCreateConfig(params: TimelineCreateParams): QuickIn
 
   const rect = targetEl.getBoundingClientRect();
   const clientY = getEventClientY(params.event);
-  const y = clientY - rect.top;
-  const clickedMinute = Math.floor((y / params.hourHeight) * 60);
+  const clickedMinute = timelineMinuteFromOffset(clientY - rect.top, params.hourHeight, params.maxHours);
   const resolved = resolveTimelineCreateContext({
     day: params.day,
     clickedMinute,
     dayBlocks: params.dayBlocks,
+    maxHours: params.maxHours,
   });
 
   return {

@@ -2,19 +2,19 @@
  * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
  * @covers F076/unit
  */
-import type { SearchResult } from 'minisearch';
+import type { RetrievalIndexResult } from '../../src/core/ai/retrieval/RetrievalTypes';
 import type { RecordViewItem } from '../../src/core/records/RecordEntity';
 import { applyRetrievalFilters } from '../../src/core/ai/retrieval/RetrievalFilters';
 import { collectSearchableExtraText, normalizeRetrievalText, tokenizeRetrievalText } from '../../src/core/ai/retrieval/RetrievalText';
 
-const searchResult = (id: string, fields: Record<string, unknown> = {}): SearchResult => ({
+const searchResult = (id: string, fields: Record<string, unknown> = {}): RetrievalIndexResult => ({
   id,
   score: 1,
   terms: ['任务'],
   queryTerms: ['任务'],
   match: {},
   ...fields,
-} as unknown as SearchResult);
+} as unknown as RetrievalIndexResult);
 
 const item = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   id: 'item-1',

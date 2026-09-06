@@ -85,8 +85,8 @@ function SampleDetail({ selection, management, onBack, onOpenRecord, onOpenRecor
 
       <div class="think-energy-detail__section">
         <strong>当时</strong>
-        {activity ? <p>前后活动　{activity.title}{activity.durationMinutes ? ` · ${activity.durationMinutes}min` : ''}</p> : <p>附近没有可靠活动</p>}
-        {signals && <p>当天　　　{signals}</p>}
+        {activity ? <p>前后活动 · {activity.title}{activity.durationMinutes ? ` · ${activity.durationMinutes}min` : ''}</p> : <p>附近没有可靠活动</p>}
+        {signals && <p>当天 · {signals}</p>}
       </div>
 
       {impact && <div class="think-energy-detail__impact"><span>活动影响</span><strong>{impact}</strong></div>}
@@ -111,7 +111,7 @@ function DayDetail({ selection, onBack, onOpenRecord, onOpenRecordOrigin }: Prop
       )}
       <div class="think-energy-detail__section">
         <strong>当天记录</strong>
-        {day.samples.map((sample) => <RecordAction key={sample.id} item={sample.item} label={`${sample.time}　综合 ${sample.score}`} className="think-energy-detail__record-row" onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />)}
+        {day.samples.map((sample) => <RecordAction key={sample.id} item={sample.item} label={`${sample.time} · 综合 ${sample.score}`} className="think-energy-detail__record-row" onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />)}
       </div>
       {latest && onOpenRecord && <RecordAction item={latest.item} label="打开最后一条记录 →" onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />}
     </aside>

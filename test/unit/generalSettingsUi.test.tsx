@@ -38,7 +38,7 @@ describe('通用设置界面', () => {
     const row = [...host.querySelectorAll('.think-settings-row')].find((node) => node.textContent?.includes('悬浮计时器'))!;
     const checkbox = row.querySelector('input[type="checkbox"]') as HTMLInputElement;
     checkbox.checked = false;
-    await act(async () => checkbox.dispatchEvent(new Event('change', { bubbles: true })));
+    await act(async () => { checkbox.dispatchEvent(new Event('change', { bubbles: true })); });
     expect(mockUseCases.settings.setFloatingTimerEnabled).toHaveBeenCalledWith(false);
   });
 
@@ -46,7 +46,7 @@ describe('通用设置界面', () => {
     await act(async () => render(<GeneralSettings />, host));
     const nameInput = host.querySelector('input[placeholder="新分类名称"]') as HTMLInputElement;
     nameInput.value = '学习';
-    await act(async () => nameInput.dispatchEvent(new Event('input', { bubbles: true })));
+    await act(async () => { nameInput.dispatchEvent(new Event('input', { bubbles: true })); });
     const add = [...host.querySelectorAll('button')].find((button) => button.textContent?.trim() === '添加') as HTMLButtonElement;
     await act(async () => add.click());
     expect(mockUseCases.settings.updateCategoryColors).toHaveBeenCalledWith(expect.objectContaining({ 工作: '#123456', 学习: '#cccccc' }));

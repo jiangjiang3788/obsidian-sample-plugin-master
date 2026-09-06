@@ -1,6 +1,25 @@
 export type TaskStatus = 'open' | 'done' | 'cancelled' | 'skipped';
 export type TaskLifecycleCommand = 'complete' | 'cancel' | 'skip' | 'reopen';
 
+export interface TaskStatusPresentation {
+  status: TaskStatus;
+  label: string;
+  emoji: string;
+  className: TaskStatus;
+}
+
+/**
+ * Task lifecycle presentation belongs to the Task domain, not to Timeline UI.
+ * Persisted values stay stable (`open`/`done`/...), while every surface can reuse
+ * the same emoji + label vocabulary.
+ */
+export const TASK_STATUS_PRESENTATION: Record<TaskStatus, TaskStatusPresentation> = {
+  open: { status: 'open', label: '未完成', emoji: '⏳', className: 'open' },
+  done: { status: 'done', label: '已完成', emoji: '✅', className: 'done' },
+  cancelled: { status: 'cancelled', label: '已取消', emoji: '❌', className: 'cancelled' },
+  skipped: { status: 'skipped', label: '已跳过', emoji: '⏭️', className: 'skipped' },
+};
+
 type TaskStatusCarrier = { coreBlock?: string; status?: string };
 type IdentifiedTaskStatusCarrier = TaskStatusCarrier & { id: string };
 
@@ -12,12 +31,21 @@ export function isTaskSeriesRecord(item: Pick<TaskStatusCarrier, 'coreBlock'> | 
   return item?.coreBlock === 'task-series';
 }
 
-export function getTaskStatus(item: TaskStatusCarrier): TaskStatus | null {
-  if (!isTaskRecord(item)) return null;
-  const status = String(item.status || '').trim().toLowerCase();
+export function normalizeTaskStatus(value: unknown): TaskStatus | null {
+  const status = String(value || '').trim().toLowerCase();
   return status === 'open' || status === 'done' || status === 'cancelled' || status === 'skipped'
     ? status
     : null;
+}
+
+export function getTaskStatusPresentation(value: unknown): TaskStatusPresentation {
+  const status = normalizeTaskStatus(value) ?? 'open';
+  return TASK_STATUS_PRESENTATION[status];
+}
+
+export function getTaskStatus(item: TaskStatusCarrier): TaskStatus | null {
+  if (!isTaskRecord(item)) return null;
+  return normalizeTaskStatus(item.status);
 }
 
 export function assertTaskStatus(item: IdentifiedTaskStatusCarrier): TaskStatus {

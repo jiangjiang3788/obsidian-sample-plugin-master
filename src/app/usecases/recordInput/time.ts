@@ -1,45 +1,11 @@
 import { applyTaskTimePolicy } from '@core/utils/public';
-import type { RecordSubmitIssue, SubmitCompleteRecordParams, SubmitUpdateRecordTimeParams } from '@core/recordInput/public';
+import type { RecordSubmitIssue, SubmitUpdateRecordTimeParams } from '@core/recordInput/public';
 import { issue } from './issues';
 
 export interface TimeUpdatePayload {
   time?: string;
   endTime?: string;
   duration?: number;
-}
-
-export type CompletionOptionsForItemService = { duration?: number; startTime?: string; endTime?: string };
-
-export function normalizeCompletionOptions(options?: SubmitCompleteRecordParams['options']): CompletionOptionsForItemService | undefined {
-  if (!options) return undefined;
-
-  const normalized = {
-    duration: typeof options.duration === 'number' ? options.duration : undefined,
-    startTime: options.startTime ?? undefined,
-    endTime: options.endTime ?? undefined,
-  };
-
-  if (normalized.duration == null && !normalized.startTime && !normalized.endTime) {
-    return undefined;
-  }
-
-  if (normalized.duration != null) {
-    const normalizedTriple = applyTaskTimePolicy({
-      startTime: normalized.startTime,
-      endTime: normalized.endTime,
-      duration: normalized.duration,
-      mode: 'finalize',
-      direction: 'forward',
-    });
-
-    return {
-      duration: normalizedTriple.duration ?? normalized.duration,
-      startTime: normalizedTriple.startTime,
-      endTime: normalizedTriple.endTime ?? normalized.endTime,
-    };
-  }
-
-  return normalized;
 }
 
 export function normalizeTimeUpdates(

@@ -9,5 +9,7 @@ runGateGroup("architecture", [
   "release-governance-gate.mjs",
   "runtime-boundaries-gate.mjs",
   "domain-convergence-gate.mjs",
-  "dependency-public-gate.mjs"
+  "dependency-public-gate.mjs",
+  "build-toolchain-gate.mjs",
+  "dependency-provenance-gate.mjs"
 ]);

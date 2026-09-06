@@ -39,10 +39,10 @@ function createEnvironment() {
   const metadata: MetadataPort = { getHeadings: jest.fn(async () => []) };
   const fileStat: FileStatPort = { stat: jest.fn(async (path) => stats.get(path) ?? null) };
   const storage: IPluginStorage = {
-    readJSON: jest.fn(async <T,>(path: string) => {
+    readJSON: async <T,>(path: string) => {
       const value = storageFiles.get(path);
       return value == null ? null : JSON.parse(JSON.stringify(value)) as T;
-    }),
+    },
     writeJSON: jest.fn(async (path, data) => { storageFiles.set(path, JSON.parse(JSON.stringify(data))); }),
     remove: jest.fn(async (path) => { storageFiles.delete(path); }),
   };

@@ -19,7 +19,13 @@ function usesTaskDateTimeFields(data: QuickInputFormData, changedKey?: string | 
   return Object.values(TASK_TIME_KEYS).some((key) => Object.prototype.hasOwnProperty.call(data, key));
 }
 
-function linkedTimeKeysFor(data: QuickInputFormData, changedKey?: string | null) {
+function linkedTimeKeysFor(
+  data: QuickInputFormData,
+  changedKey?: string | null,
+  preferredFieldSet?: 'task' | 'legacy',
+) {
+  if (preferredFieldSet === 'task') return TASK_TIME_KEYS;
+  if (preferredFieldSet === 'legacy') return LEGACY_TIME_KEYS;
   return usesTaskDateTimeFields(data, changedKey) ? TASK_TIME_KEYS : LEGACY_TIME_KEYS;
 }
 
@@ -114,21 +120,47 @@ export function applyQuickInputTimeDirectionChange(
   input: ApplyQuickInputTimeDirectionChangeInput,
 ) {
   const { formData, fieldSources, nextDirection } = input;
+  const keys = linkedTimeKeysFor(formData, undefined, input.timeFieldSet);
   const draft = { ...formData };
   let usedDefaultEnd = false;
-  if (nextDirection === "backward" && !draft["结束"]) {
-    draft["结束"] = input.defaultEndTime || dayjs().format("HH:mm");
-    usedDefaultEnd = true;
+
+  if (nextDirection === "backward") {
+    if (!draft[keys.endKey]) {
+      draft[keys.endKey] = input.defaultEndTime || (
+        keys.endKey === TASK_TIME_KEYS.endKey
+          ? dayjs().format("YYYY-MM-DDTHH:mm")
+          : dayjs().format("HH:mm")
+      );
+      usedDefaultEnd = true;
+    }
+
+    // 切换到“反向”本身就表示：
+    // 以结束时间（缺省为当前时间）和时长为真源，重新推导开始时间。
+    if (draft[keys.durationKey] !== undefined && draft[keys.durationKey] !== null && draft[keys.durationKey] !== '') {
+      draft.lastChanged = keys.durationKey;
+    }
   }
-  const linked = applyQuickInputLinkedTimeChanges(draft, nextDirection);
+
+  const changedKey = typeof draft.lastChanged === 'string' ? draft.lastChanged : undefined;
+  const changes = computeLinkedTimeChanges(
+    draft,
+    keys,
+    changedKey,
+    { durationOutput: "number", direction: nextDirection },
+  );
+  const merged = { ...draft, ...changes };
+  if ("lastChanged" in merged) delete merged.lastChanged;
+
   const nextSources: QuickInputFieldSourceMap = { ...fieldSources };
-  if (usedDefaultEnd && !fieldSources["结束"])
-    nextSources["结束"] = "system_auto";
-  linked.autoKeys.forEach((autoKey) => {
-    nextSources[autoKey] = "system_auto";
+  if (usedDefaultEnd && !fieldSources[keys.endKey]) {
+    nextSources[keys.endKey] = "system_auto";
+  }
+  Object.keys(changes).forEach((autoKey) => {
+    if (autoKey !== keys.endKey || !usedDefaultEnd) nextSources[autoKey] = "system_auto";
   });
+
   return {
-    formData: linked.formData,
+    formData: merged,
     fieldSources: nextSources,
     timeDirection: nextDirection,
   };

@@ -37,6 +37,7 @@ export interface TimelineCreateParams {
   app: QuickInputApp;
   uiPort: UiPort;
   hourHeight: number;
+  maxHours: number;
   dayBlocks: TaskBlock[];
   day: string;
   event: MouseEvent | TouchEvent;

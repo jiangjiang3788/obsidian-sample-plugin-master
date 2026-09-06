@@ -16,6 +16,8 @@ Implementation history lives under `docs/reports/`. No phase report should be pl
 
 Quick input renders single-select options as product labels while persisting canonical values. Template-backed Record creation requires an enabled direct GoalTemplate for the selected `recordTypeId + goalPath`; ancestor Goals are navigation only, and the runtime never guesses another target or RecordType.
 
+Quick Input conflict recovery actions include opening the original record, rescanning affected paths, retrying the save, and dismissing the recovery panel; recovery never silently overwrites an external change.
+
 Release verification is intentionally reproducible: run `npm run verify:ci` for the full checks and `npm run build:release` for the release bundle/package boundary.
 
 ## Test system v1

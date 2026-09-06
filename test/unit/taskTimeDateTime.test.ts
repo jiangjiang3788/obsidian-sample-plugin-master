@@ -6,6 +6,7 @@ import {
   deriveDurationFromRange,
   deriveEndFromStartAndDuration,
   deriveStartFromEndAndDuration,
+  applyTaskTimePolicy,
 } from '../../src/core/records/task/taskTime';
 
 describe('task datetime duration policy', () => {
@@ -24,4 +25,33 @@ describe('task datetime duration policy', () => {
   it('keeps legacy HH:mm overnight behavior', () => {
     expect(deriveDurationFromRange('23:40', '07:20')).toBe(460);
   });
+
+  it('applies backward policy as end minus duration for canonical datetime values', () => {
+    expect(applyTaskTimePolicy({
+      endTime: '2026-08-26T01:45',
+      duration: 30,
+      direction: 'backward',
+      mode: 'finalize',
+    })).toEqual({
+      startTime: '2026-08-26T01:15',
+      endTime: '2026-08-26T01:45',
+      duration: 30,
+    });
+  });
+
+  it('keeps end authoritative when duration changes in backward interactive mode', () => {
+    expect(applyTaskTimePolicy({
+      startTime: '2026-08-26T01:00',
+      endTime: '2026-08-26T01:45',
+      duration: 30,
+      direction: 'backward',
+      lastChanged: 'duration',
+      mode: 'interactive',
+    })).toEqual({
+      startTime: '2026-08-26T01:15',
+      endTime: '2026-08-26T01:45',
+      duration: 30,
+    });
+  });
+
 });

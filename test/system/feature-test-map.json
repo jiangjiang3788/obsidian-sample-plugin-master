@@ -2389,6 +2389,48 @@
       "note": ""
     },
     {
+      "id": "F093",
+      "area": "展示视图",
+      "name": "任务紧急重要四象限",
+      "risk": "P2",
+      "sources": [
+        "src/core/records/task/taskQuadrant.ts",
+        "src/features/views/runtime/EisenhowerView",
+        "src/core/services/item/TaskQuadrantMutation.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "persistence",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/taskQuadrantV3.test.ts"
+        ],
+        "ui": [
+          "test/unit/eisenhowerViewV3.test.tsx"
+        ],
+        "integration": [
+          "test/integration/taskQuadrantPersistenceV3.test.ts"
+        ],
+        "persistence": [
+          "test/integration/taskQuadrantPersistenceV3.test.ts"
+        ],
+        "e2e": [
+          "test/specs/views-matrix.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/taskQuadrantV3.test.ts",
+          "test/unit/eisenhowerViewV3.test.tsx",
+          "test/integration/taskQuadrantPersistenceV3.test.ts"
+        ]
+      },
+      "note": "V3：四象限是 Task importance/urgency 的派生独立视图；quadrant 不持久化，未分类保持空值。"
+    },
+    {
       "id": "F100",
       "area": "布局系统",
       "name": "Freeform 布局模型、坐标与 ZIndex",

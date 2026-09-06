@@ -40,7 +40,7 @@ export function QuickInputTimeFieldsSection({
               checked={timeDirection === 'backward'}
               onChange={(event) => onTimeDirectionChange?.((event.currentTarget as HTMLInputElement).checked ? 'backward' : 'forward')}
             />
-            反向（结束 - 时长 = 时间）
+            反向（结束时间 - 时长 = 开始时间）
           </label>
         </div>
       )}

@@ -9,11 +9,6 @@ export interface CompleteFromViewParams {
   itemId: string;
   source?: Extract<RecordInputSource, 'layout_renderer' | 'timer' | 'unknown'>;
   showSuccessNotice?: boolean;
-  options?: {
-    duration?: number;
-    startTime?: string | null;
-    endTime?: string | null;
-  };
 }
 
 export interface UpdateTimeFromViewParams {
@@ -31,9 +26,8 @@ export interface UpdateTimeFromViewParams {
 
 export async function completeFromView(params: CompleteFromViewParams): Promise<boolean> {
   const { ok } = await runUiRecordAction(
-    () => params.useCases.recordInput.submitCompleteRecord({
-      itemId: params.itemId,
-      options: params.options,
+    () => params.useCases.taskRuntime.completeTask({
+      taskId: params.itemId,
       source: params.source ?? 'layout_renderer',
     }),
     {

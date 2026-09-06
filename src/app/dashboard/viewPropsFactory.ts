@@ -68,6 +68,8 @@ export function buildViewProps({
     onEnergyContextChange: viewType === 'EnergyView' ? handlers.onEnergyContextChange : undefined,
     onMarkDone,
     onUpdateTaskTime: handlers.onUpdateTaskTime,
+    onEditTimelineBlock: viewType === 'TimelineView' ? handlers.onEditTimelineBlock : undefined,
+    onTaskQuadrantChange: viewType === 'EisenhowerView' ? handlers.onTaskQuadrantChange : undefined,
     onOpenStatisticsPopover: viewType === 'StatisticsView' ? onOpenStatisticsPopover : undefined,
     onCloseStatisticsPopover: viewType === 'StatisticsView' ? onCloseStatisticsPopover : undefined,
     categoryColors: viewType === 'StatisticsView' ? categoryColors : undefined,

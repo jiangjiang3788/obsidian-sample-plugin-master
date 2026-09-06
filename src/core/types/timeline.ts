@@ -15,8 +15,10 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 export interface TimelineTask extends RecordViewItem {
   /** Persisted TaskSession Record ID. Manual Task-range projections do not have one. */
   sessionRecordId?: string;
-  /** Projection source used to distinguish execution sessions from manual Task time ranges. */
-  timelineSource?: 'task-session' | 'task-range';
+  /** Historical execution result owned by the Session, independent of the Task's current lifecycle status. */
+  sessionResult?: 'work-block-ended' | 'task-completed';
+  /** Projection source used to distinguish planned, actual and legacy/manual time representations. */
+  timelineSource?: 'task-session' | 'task-plan' | 'task-range' | 'task-point';
   /** Source Task identity used when opening/editing Task metadata. */
   taskRecordId: string;
   startMinute: number;

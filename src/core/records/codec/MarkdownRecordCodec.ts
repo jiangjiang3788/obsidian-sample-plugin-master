@@ -8,6 +8,7 @@ import {
 } from './FieldValueCodec';
 import type { RecordDraft } from '@/core/records/RecordDraft';
 import { getRecordFieldContract, getRecordSchemaDefinition } from '@/core/records/schema';
+import { TASK_FIELD_ORDER, TASK_SERIES_FIELD_ORDER } from './TaskCodecContract';
 export interface ParsedRecordMetadata {
   recordId?: string;
   title: string;
@@ -34,6 +35,8 @@ export interface ParsedRecordMetadata {
   rating?: number;
   image?: string;
   priority?: 'lowest' | 'low' | 'medium' | 'high' | 'highest';
+  importance?: 'important' | 'normal';
+  urgency?: 'urgent' | 'normal';
   expectedDurationMinutes?: number;
   energyDemand?: string;
   brainDemand?: string;
@@ -52,7 +55,7 @@ export interface ParsedRecordMetadata {
   sessionEndedAt?: string;
   sessionDurationMinutes?: number;
   sessionResult?: 'work-block-ended' | 'task-completed';
-  sessionSource?: 'timer' | 'energy-view' | 'unknown';
+  sessionSource?: 'timer' | 'energy-view' | 'timeline' | 'unknown';
   suggestedDurationMinutes?: number;
   startEnergyRecordId?: string;
   endEnergyRecordId?: string;
@@ -153,6 +156,8 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
   let skippedAt: string | undefined;
   let createdAt: string | undefined;
   let priority: ParsedRecordMetadata['priority'];
+  let importance: ParsedRecordMetadata['importance'];
+  let urgency: ParsedRecordMetadata['urgency'];
   let expectedDurationMinutes: number | undefined;
   let energyDemand: string | undefined;
   let brainDemand: string | undefined;
@@ -231,7 +236,7 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
         }
         else if (coreBlock === 'task-session' && key === '来源') {
           const source = value.trim().toLowerCase();
-          if (['timer','energy-view','unknown'].includes(source)) sessionSource = source as ParsedRecordMetadata['sessionSource'];
+          if (['timer','energy-view','timeline','unknown'].includes(source)) sessionSource = source as ParsedRecordMetadata['sessionSource'];
         }
         else if (coreBlock === 'task-session' && key === '建议时长') suggestedDurationMinutes = decodeMarkdownNumber(value);
         else if (coreBlock === 'task-session' && key === '开始精力记录id') startEnergyRecordId = value.trim() || undefined;
@@ -257,6 +262,14 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
         else if (key === '优先级') {
           const p = value.trim().toLowerCase();
           if (['lowest','low','medium','high','highest'].includes(p)) priority = p as ParsedRecordMetadata['priority'];
+        }
+        else if (key === '重要程度') {
+          const candidate = value.trim().toLowerCase();
+          if (candidate === 'important' || candidate === 'normal') importance = candidate;
+        }
+        else if (key === '紧急程度') {
+          const candidate = value.trim().toLowerCase();
+          if (candidate === 'urgent' || candidate === 'normal') urgency = candidate;
         }
         else if (key === '预计时长') expectedDurationMinutes = decodeMarkdownNumber(value);
         else if (key === '精力要求') energyDemand = value.trim().toLowerCase() || undefined;
@@ -302,7 +315,7 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
     recordId, title: buildTitle(content, finalTags), content: content.trim(),
     status, date, scheduledAt, startAt, endAt, dueAt, scheduledDate, startDate, dueDate,
     completedAt, cancelledAt, skippedAt, createdAt, tags: finalTags, goalPath,
-    coreBlock, recordSubtype, extra, icon, rating, image, priority, expectedDurationMinutes, energyDemand, brainDemand, physicalDemand, availabilityContexts, recoveryIntent, seriesId,
+    coreBlock, recordSubtype, extra, icon, rating, image, priority, importance, urgency, expectedDurationMinutes, energyDemand, brainDemand, physicalDemand, availabilityContexts, recoveryIntent, seriesId,
     recurrenceUnit, recurrenceInterval, recurrenceAnchor, seriesStartDate, currentTaskId, rolloverPolicy,
     taskId, sessionStartedAt, sessionEndedAt, sessionDurationMinutes, sessionResult, sessionSource,
     suggestedDurationMinutes, startEnergyRecordId, endEnergyRecordId, energyDelta, brainDelta, physicalDelta,
@@ -316,19 +329,6 @@ function markdownScalar(value: unknown): string {
   return String(value).trim();
 }
 
-const TASK_FIELD_ORDER: Array<[string, string[]]> = [
-  ['状态', ['状态','status']], ['目标', ['目标','goalPath']],
-  ['创建于', ['创建于','createdAt']],
-  ['开始时间', ['开始时间','startAt']], ['结束时间', ['结束时间','endAt']],
-  ['优先级', ['优先级','priority']], ['预计时长', ['预计时长','expectedDurationMinutes']],
-  ['精力要求', ['精力要求','energyDemand']], ['脑力要求', ['脑力要求','brainDemand']],
-  ['体力要求', ['体力要求','physicalDemand']], ['可用场景', ['可用场景','availabilityContexts']], ['恢复意图', ['恢复意图','recoveryIntent']],
-  ['计划时间', ['计划时间','scheduledAt']], ['截止时间', ['截止时间','dueAt']],
-  ['计划日期', ['计划日期','scheduledDate']], ['开始日期', ['开始日期','startDate']], ['截止日期', ['截止日期','dueDate']],
-  ['完成于', ['完成于','completedAt']], ['取消于', ['取消于','cancelledAt']], ['跳过于', ['跳过于','skippedAt']],
-  ['系列ID', ['系列ID','seriesId']],
-];
-
 const TASK_SESSION_FIELD_ORDER: Array<[string, string[]]> = [
   ['任务ID', ['任务ID','taskId']], ['系列ID', ['系列ID','seriesId']],
   ['目标', ['目标','goalPath']],
@@ -337,16 +337,6 @@ const TASK_SESSION_FIELD_ORDER: Array<[string, string[]]> = [
   ['建议时长', ['建议时长','suggestedDurationMinutes']], ['开始精力记录ID', ['开始精力记录ID','startEnergyRecordId']],
   ['结束精力记录ID', ['结束精力记录ID','endEnergyRecordId']], ['精力变化', ['精力变化','energyDelta']],
   ['脑力变化', ['脑力变化','brainDelta']], ['体力变化', ['体力变化','physicalDelta']],
-];
-
-const TASK_SERIES_FIELD_ORDER: Array<[string, string[]]> = [
-  ['状态', ['状态','status']], ['目标', ['目标','goalPath']],
-  ['优先级', ['优先级','priority']], ['预计时长', ['预计时长','expectedDurationMinutes']],
-  ['精力要求', ['精力要求','energyDemand']], ['脑力要求', ['脑力要求','brainDemand']], ['体力要求', ['体力要求','physicalDemand']],
-  ['可用场景', ['可用场景','availabilityContexts']], ['恢复意图', ['恢复意图','recoveryIntent']],
-  ['重复单位', ['重复单位','recurrenceUnit']], ['重复间隔', ['重复间隔','recurrenceInterval']],
-  ['重复锚点', ['重复锚点','recurrenceAnchor']], ['系列开始日期', ['系列开始日期','seriesStartDate']],
-  ['当前任务ID', ['当前任务ID','currentTaskId']], ['滚动策略', ['滚动策略','rolloverPolicy']],
 ];
 
 function firstValue(fields: Record<string, unknown>, keys: string[]): string {

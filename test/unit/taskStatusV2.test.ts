@@ -6,6 +6,7 @@
 import {
   canTransitionTaskStatus,
   getTaskStatus,
+  getTaskStatusPresentation,
   isTaskOpen,
   nextTaskStatus,
 } from '@core/records/public';
@@ -28,6 +29,13 @@ function task(status: string, seriesId?: string): RecordViewItem {
 }
 
 describe('Task status v2', () => {
+  it('owns one emoji vocabulary for lifecycle presentation', () => {
+    expect(getTaskStatusPresentation('open')).toMatchObject({ label: '未完成', emoji: '⏳' });
+    expect(getTaskStatusPresentation('done')).toMatchObject({ label: '已完成', emoji: '✅' });
+    expect(getTaskStatusPresentation('cancelled')).toMatchObject({ label: '已取消', emoji: '❌' });
+    expect(getTaskStatusPresentation('skipped')).toMatchObject({ label: '已跳过', emoji: '⏭️' });
+  });
+
   it('uses only explicit Task status', () => {
     expect(getTaskStatus(task('open'))).toBe('open');
     expect(isTaskOpen(task('open'))).toBe(true);

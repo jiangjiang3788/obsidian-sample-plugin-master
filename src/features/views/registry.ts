@@ -10,6 +10,7 @@ import {
   HeatmapView,
   ProgressView,
   EnergyView,
+  EisenhowerView,
 } from './runtime';
 
 /**
@@ -26,6 +27,7 @@ export const VIEW_RUNTIME_BINDINGS = {
   HeatmapView,
   ProgressView,
   EnergyView,
+  EisenhowerView,
 } satisfies Record<ViewName, ComponentType<any>>;
 
 export function getViewRuntimeComponent(viewType: ViewName): ComponentType<any> {

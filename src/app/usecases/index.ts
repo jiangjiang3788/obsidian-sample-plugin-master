@@ -28,6 +28,7 @@ import { ViewInstanceUseCase, createViewInstanceUseCase } from './viewinstance.u
 import { TimerUseCase, createTimerUseCase } from './timer.usecase';
 import { RecordInputUseCase, createRecordInputUseCase } from './recordInput.usecase';
 import { GoalUseCase, createGoalUseCase } from './goal.usecase';
+import { TaskRuntimeUseCase, createTaskRuntimeUseCase } from './taskRuntime.usecase';
 import type { DataStore, InputService, ItemService, TimerStateService } from '@core/services/public';
 
 /**
@@ -46,6 +47,7 @@ export interface UseCases {
     timer: TimerUseCase;
     recordInput: RecordInputUseCase;
     goal: GoalUseCase;
+    taskRuntime: TaskRuntimeUseCase;
 }
 
 /**
@@ -78,17 +80,20 @@ export interface UseCaseDeps {
  * @returns UseCases 集合
  */
 export function createUseCases(store: AppStoreApi, deps: UseCaseDeps): UseCases {
+    const timer = createTimerUseCase(store, deps.timerStateService);
+    const recordInput = createRecordInputUseCase(store, {
+        inputService: deps.inputService,
+        itemService: deps.itemService,
+        dataStore: deps.dataStore,
+    });
     return {
         settings: createSettingsUseCase(store),
         layout: createLayoutUseCase(store),
         viewInstance: createViewInstanceUseCase(store),
-        timer: createTimerUseCase(store, deps.timerStateService),
-        recordInput: createRecordInputUseCase(store, {
-            inputService: deps.inputService,
-            itemService: deps.itemService,
-            dataStore: deps.dataStore,
-        }),
+        timer,
+        recordInput,
         goal: createGoalUseCase(store),
+        taskRuntime: createTaskRuntimeUseCase(deps.dataStore, timer, recordInput),
     };
 }
 
@@ -99,5 +104,7 @@ export { ViewInstanceUseCase } from './viewinstance.usecase';
 export { TimerUseCase } from './timer.usecase';
 export { RecordInputUseCase } from './recordInput.usecase';
 export { GoalUseCase } from './goal.usecase';
+export { TaskRuntimeUseCase } from './taskRuntime.usecase';
+export type { CompleteTaskRuntimeParams, TaskRuntimeActionSource, TaskRuntimeLifecycleParams } from './taskRuntime.usecase';
 
 // UI 层请从 '@/app/public' 获取 useUseCases（冻结阶段唯一出口）

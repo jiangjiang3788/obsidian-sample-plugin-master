@@ -80,4 +80,41 @@ describe('RecordQuery R6', () => {
     });
     expect(result.map(item => item.id)).toEqual(['a']);
   });
+
+  test('explicit Task date roles keep planned, due, completed and actual execution facts separate', () => {
+    const facts = [
+      record({
+        id: 'task-facts', coreBlock: 'task', status: 'done',
+        scheduledAt: '2026-08-10T09:00', dueAt: '2026-08-11T18:00', completedAt: '2026-08-12T10:00',
+        date: '2026-08-10',
+      }),
+      record({
+        id: 'session-facts', coreBlock: 'task-session', taskId: 'task-facts',
+        sessionStartedAt: '2026-08-13T14:00', sessionEndedAt: '2026-08-13T14:30',
+        sessionDurationMinutes: 30, sessionResult: 'task-completed', sessionSource: 'timer',
+        date: '2026-08-13',
+      }),
+    ];
+
+    expect(queryRecordItems(facts, {
+      date: { range: [new Date('2026-08-10'), new Date('2026-08-10T23:59:59')], role: 'task-scheduled' },
+    }).map(item => item.id)).toEqual(['task-facts']);
+    expect(queryRecordItems(facts, {
+      date: { range: [new Date('2026-08-11'), new Date('2026-08-11T23:59:59')], role: 'task-due' },
+    }).map(item => item.id)).toEqual(['task-facts']);
+    expect(queryRecordItems(facts, {
+      date: { range: [new Date('2026-08-12'), new Date('2026-08-12T23:59:59')], role: 'task-completed' },
+    }).map(item => item.id)).toEqual(['task-facts']);
+    expect(queryRecordItems(facts, {
+      date: { range: [new Date('2026-08-13'), new Date('2026-08-13T23:59:59')], role: 'task-actual' },
+    }).map(item => item.id)).toEqual(['session-facts']);
+  });
+
+  test('explicit Task date roles are strict and do not keep unrelated open backlog Tasks', () => {
+    const result = queryRecordItems(items, {
+      date: { range: [new Date('2026-08-11'), new Date('2026-08-12T23:59:59')], role: 'task-scheduled' },
+    });
+    expect(result).toEqual([]);
+  });
+
 });

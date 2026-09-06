@@ -76,4 +76,23 @@ describe('GoalTemplateResolver Goal-only', () => {
     expect(result.templateSourceType).toBe('goal-template');
   });
 
+
+  it('does not allow a Goal template to make Task expected duration required', () => {
+    const settings = baseSettings();
+    settings.goalSettings!.goalTemplates.push({
+      goalPath: '产品化/目标中心',
+      recordTypeId: 'core.task',
+      enabled: true,
+      requiredFields: ['expectedDurationMinutes'],
+    } as any);
+
+    const result = GoalTemplateResolver.resolve({
+      settings,
+      recordTypeId: 'core.task',
+      goalPath: '产品化/目标中心',
+    });
+
+    expect(result.template?.fields.find((field) => field.key === 'expectedDurationMinutes')?.required).toBe(false);
+  });
+
 });

@@ -7,7 +7,7 @@ import { THINK_PLUGIN_ID, clearE2EState, waitForThinkReady } from './support/thi
 
 const GOAL = 'E2E/精力设置';
 
-async function openEnergyRecordTypeSettings(): Promise<WebdriverIO.Element> {
+async function openEnergyRecordTypeSettings() {
   await browser.executeObsidianCommand('think-os:think-open-control-center');
   const root = await $('.think-setting-root--workspace');
   await root.waitForExist({ timeout: 10_000 });

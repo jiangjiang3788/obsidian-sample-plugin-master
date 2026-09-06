@@ -1,0 +1,93 @@
+.think-eisenhower-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-3);
+  min-height: 0;
+  padding: var(--think-space-3);
+}
+
+.think-eisenhower-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--think-space-2);
+  color: var(--text-muted);
+}
+
+.think-eisenhower-summary strong { color: var(--text-normal); }
+
+.think-eisenhower-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--think-space-3);
+}
+
+.think-eisenhower-zone {
+  min-width: 0;
+  min-height: 150px;
+  padding: var(--think-space-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--think-radius-md);
+  background: var(--background-secondary);
+}
+
+.think-eisenhower-zone.is-unclassified {
+  min-height: 96px;
+}
+
+.think-eisenhower-zone.is-dragover {
+  border-style: dashed;
+}
+
+.think-eisenhower-zone__header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--think-space-2);
+  margin-bottom: var(--think-space-2);
+  font-weight: 600;
+}
+
+.think-eisenhower-zone__count {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.think-eisenhower-zone__cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-2);
+}
+
+.think-eisenhower-card {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--think-space-2);
+  padding: var(--think-space-2) var(--think-space-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--think-radius-sm);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  text-align: left;
+  cursor: grab;
+}
+
+.think-eisenhower-card:hover {
+  background: var(--background-modifier-hover);
+}
+
+.think-eisenhower-card:active { cursor: grabbing; }
+
+.think-eisenhower-card__status { flex: 0 0 auto; }
+.think-eisenhower-card__title { min-width: 0; overflow-wrap: anywhere; }
+
+.think-eisenhower-zone__empty {
+  padding: var(--think-space-3);
+  color: var(--text-faint);
+  text-align: center;
+  font-size: var(--font-ui-smaller);
+}
+
+@media (max-width: 720px) {
+  .think-eisenhower-grid { grid-template-columns: 1fr; }
+}

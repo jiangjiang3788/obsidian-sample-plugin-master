@@ -4180,6 +4180,8 @@ const BLOCKER_SCHEMA = simpleGoalRecord("blocker", "阻碍");
 const MILESTONE_SCHEMA = simpleGoalRecord("milestone", "里程碑");
 const TASK_DEMAND_FIELDS = [
   f$3("优先级", "domain-fact", "target", "enum", "User-declared Task priority.", { aliases: ["priority"], allowedValues: ["lowest", "low", "medium", "high", "highest"] }),
+  f$3("重要程度", "domain-fact", "target", "enum", "Eisenhower importance classification. Missing means unclassified.", { aliases: ["importance"], allowedValues: ["important", "normal"] }),
+  f$3("紧急程度", "domain-fact", "target", "enum", "Eisenhower urgency classification. Missing means unclassified.", { aliases: ["urgency"], allowedValues: ["urgent", "normal"] }),
   f$3("预计时长", "domain-fact", "target", "number", "User-declared duration in minutes. It can complete a manual Task time range when endAt is absent; TaskSession remains the source for multi-session timer history.", { aliases: ["expectedDurationMinutes"] }),
   f$3("精力要求", "domain-fact", "target", "enum", "Declared overall energy demand.", { aliases: ["energyDemand"], allowedValues: ["low", "medium", "high"] }),
   f$3("脑力要求", "domain-fact", "target", "enum", "Declared cognitive demand.", { aliases: ["brainDemand"], allowedValues: ["low", "medium", "high"] }),
@@ -4200,8 +4202,8 @@ const TASK_SCHEMA = {
     ...GOAL,
     f$3("系列ID", "canonical-reference", "target", "record-id", "Optional TaskSeries reference.", { aliases: ["seriesId"] }),
     f$3("计划时间", "domain-fact", "target", "datetime", "Scheduled execution timestamp.", { aliases: ["scheduledAt"] }),
-    f$3("开始时间", "domain-fact", "target", "datetime", "Declared start timestamp.", { aliases: ["startAt"] }),
-    f$3("结束时间", "domain-fact", "target", "datetime", "Declared end timestamp. Together with startAt it may represent a manually recorded time range; TaskSession remains preferred when session history exists.", { aliases: ["endAt"] }),
+    f$3("开始时间", "domain-fact", "target", "datetime", "Legacy/manual Task range start. New planning writes use scheduledAt; actual execution writes use TaskSession.", { aliases: ["startAt"] }),
+    f$3("结束时间", "domain-fact", "target", "datetime", "Legacy/manual Task range end. Kept for compatibility; actual execution writes use TaskSession.", { aliases: ["endAt"] }),
     f$3("截止时间", "domain-fact", "target", "datetime", "Due timestamp.", { aliases: ["dueAt"] }),
     f$3("计划日期", "domain-fact", "target", "date", "Date-only scheduled execution fact used by current records.", { aliases: ["scheduledDate"] }),
     f$3("开始日期", "domain-fact", "target", "date", "Date-only declared start fact used by current records.", { aliases: ["startDate"] }),
@@ -4248,7 +4250,7 @@ const TASK_SESSION_SCHEMA = {
     f$3("结束于", "domain-fact", "target", "datetime", "Actual session end.", { required: true, aliases: ["sessionEndedAt"] }),
     f$3("时长", "domain-fact", "target", "number", "Actual session duration in minutes.", { required: true, aliases: ["sessionDurationMinutes"] }),
     f$3("结果", "domain-fact", "target", "enum", "Session outcome.", { required: true, aliases: ["sessionResult"], allowedValues: ["work-block-ended", "task-completed"] }),
-    f$3("来源", "measurement-provenance", "target", "enum", "Execution capture source.", { required: true, aliases: ["sessionSource"], allowedValues: ["timer", "energy-view", "unknown"] }),
+    f$3("来源", "measurement-provenance", "target", "enum", "Execution capture source.", { required: true, aliases: ["sessionSource"], allowedValues: ["timer", "energy-view", "timeline", "unknown"] }),
     f$3("建议时长", "domain-fact", "target", "number", "Suggested duration snapshot at execution time.", { aliases: ["suggestedDurationMinutes"] }),
     f$3("开始精力记录ID", "canonical-reference", "target", "record-id", "Energy snapshot at session start.", { aliases: ["startEnergyRecordId"] }),
     f$3("结束精力记录ID", "canonical-reference", "target", "record-id", "Energy snapshot linked after session.", { aliases: ["endEnergyRecordId"] }),
@@ -4281,6 +4283,46 @@ const ENERGY_SCHEMA = {
     f$3("来源", "measurement-provenance", "target", "string", "Capture surface/source.", { aliases: ["source"] })
   ]
 };
+const TASK_STATUS_PRESENTATION = {
+  open: { status: "open", label: "未完成", emoji: "⏳", className: "open" },
+  done: { status: "done", label: "已完成", emoji: "✅", className: "done" },
+  cancelled: { status: "cancelled", label: "已取消", emoji: "❌", className: "cancelled" },
+  skipped: { status: "skipped", label: "已跳过", emoji: "⏭️", className: "skipped" }
+};
+function isTaskRecord(item) {
+  return item?.coreBlock === "task";
+}
+function normalizeTaskStatus(value) {
+  const status = String(value || "").trim().toLowerCase();
+  return status === "open" || status === "done" || status === "cancelled" || status === "skipped" ? status : null;
+}
+function getTaskStatusPresentation(value) {
+  const status = normalizeTaskStatus(value) ?? "open";
+  return TASK_STATUS_PRESENTATION[status];
+}
+function getTaskStatus(item) {
+  if (!isTaskRecord(item)) return null;
+  return normalizeTaskStatus(item.status);
+}
+function isTaskCompleted(item) {
+  return getTaskStatus(item) === "done";
+}
+function isTaskOpen(item) {
+  return getTaskStatus(item) === "open";
+}
+function canTransitionTaskStatus(from2, command, options) {
+  if (command === "reopen") return from2 === "done" || from2 === "cancelled" || from2 === "skipped";
+  if (from2 !== "open") return false;
+  if (command === "skip") return options.recurring;
+  if (command === "cancel") return !options.recurring;
+  return command === "complete";
+}
+function nextTaskStatus(command) {
+  if (command === "complete") return "done";
+  if (command === "cancel") return "cancelled";
+  if (command === "skip") return "skipped";
+  return "open";
+}
 const RECORD_TYPE_IDS = {
   TASK: "core.task",
   PLAN: "core.plan",
@@ -4308,8 +4350,8 @@ function define(contract, capture) {
 }
 const TASK_FIELDS = [
   { id: "core.task.status", key: "status", label: "状态", type: "singleSelect", semantic: "status", defaultValue: "open", autoSelectFirst: true, options: [
-    { value: "open", label: "未完成" },
-    { value: "done", label: "已完成" }
+    { value: "open", label: `${TASK_STATUS_PRESENTATION.open.emoji} ${TASK_STATUS_PRESENTATION.open.label}` },
+    { value: "done", label: `${TASK_STATUS_PRESENTATION.done.emoji} ${TASK_STATUS_PRESENTATION.done.label}` }
   ] },
   { id: "core.task.content", key: "任务内容", label: "内容", type: "text", semantic: "body" },
   { id: "core.task.recurrenceUnit", key: "recurrenceUnit", label: "重复", type: "singleSelect", semantic: "recurrence", defaultValue: "none", autoSelectFirst: true, options: [
@@ -4321,16 +4363,25 @@ const TASK_FIELDS = [
     { value: "year", label: "年" }
   ] },
   { id: "core.task.recurrenceInterval", key: "recurrenceInterval", label: "重复间隔", type: "number", min: 1, defaultValue: "1" },
-  // 时间是任务主字段，与状态互相独立；填写结束时间不会自动完成任务。其余需求/场景字段由 UI 放入“更多选项”。
-  { id: "core.task.startAt", key: "startAt", label: "开始/预计时间", type: "datetime", semantic: "date" },
-  { id: "core.task.endAt", key: "endAt", label: "结束时间", type: "datetime", semantic: "date" },
-  { id: "core.task.expectedDurationMinutes", key: "expectedDurationMinutes", label: "时长（分钟）", type: "number", semantic: "duration", min: 1 },
+  // Task owns planning facts. Actual execution intervals belong to TaskSession;
+  // Timeline retrospective capture synthesizes its own execution-time fields.
+  { id: "core.task.scheduledAt", key: "scheduledAt", label: "计划时间", type: "datetime", semantic: "startTime" },
+  { id: "core.task.expectedDurationMinutes", key: "expectedDurationMinutes", label: "预计时长（分钟）", type: "number", semantic: "duration", min: 1 },
+  { id: "core.task.dueAt", key: "dueAt", label: "截止时间", type: "datetime" },
   { id: "core.task.priority", key: "priority", label: "优先级", type: "singleSelect", autoSelectFirst: true, options: [
     { value: "lowest", label: "最低" },
     { value: "low", label: "低" },
     { value: "medium", label: "中" },
     { value: "high", label: "高" },
     { value: "highest", label: "最高" }
+  ] },
+  { id: "core.task.importance", key: "importance", label: "重要程度", type: "singleSelect", options: [
+    { value: "important", label: "重要" },
+    { value: "normal", label: "普通" }
+  ] },
+  { id: "core.task.urgency", key: "urgency", label: "紧急程度", type: "singleSelect", options: [
+    { value: "urgent", label: "紧急" },
+    { value: "normal", label: "不紧急" }
   ] },
   { id: "core.task.energyDemand", key: "energyDemand", label: "精力要求", type: "singleSelect", autoSelectFirst: true, options: [
     { value: "low", label: "低" },
@@ -4468,6 +4519,50 @@ function getRecordFieldContract(coreBlock, fieldKey) {
   if (!schema) return null;
   return FIELD_INDEX.get(schema.coreBlock)?.get(normalizeKey(fieldKey)) || null;
 }
+const TASK_FIELD_ORDER = [
+  ["状态", ["状态", "status"]],
+  ["目标", ["目标", "goalPath"]],
+  ["创建于", ["创建于", "createdAt"]],
+  ["开始时间", ["开始时间", "startAt"]],
+  ["结束时间", ["结束时间", "endAt"]],
+  ["优先级", ["优先级", "priority"]],
+  ["重要程度", ["重要程度", "importance"]],
+  ["紧急程度", ["紧急程度", "urgency"]],
+  ["预计时长", ["预计时长", "expectedDurationMinutes"]],
+  ["精力要求", ["精力要求", "energyDemand"]],
+  ["脑力要求", ["脑力要求", "brainDemand"]],
+  ["体力要求", ["体力要求", "physicalDemand"]],
+  ["可用场景", ["可用场景", "availabilityContexts"]],
+  ["恢复意图", ["恢复意图", "recoveryIntent"]],
+  ["计划时间", ["计划时间", "scheduledAt"]],
+  ["截止时间", ["截止时间", "dueAt"]],
+  ["计划日期", ["计划日期", "scheduledDate"]],
+  ["开始日期", ["开始日期", "startDate"]],
+  ["截止日期", ["截止日期", "dueDate"]],
+  ["完成于", ["完成于", "completedAt"]],
+  ["取消于", ["取消于", "cancelledAt"]],
+  ["跳过于", ["跳过于", "skippedAt"]],
+  ["系列ID", ["系列ID", "seriesId"]]
+];
+const TASK_SERIES_FIELD_ORDER = [
+  ["状态", ["状态", "status"]],
+  ["目标", ["目标", "goalPath"]],
+  ["优先级", ["优先级", "priority"]],
+  ["重要程度", ["重要程度", "importance"]],
+  ["紧急程度", ["紧急程度", "urgency"]],
+  ["预计时长", ["预计时长", "expectedDurationMinutes"]],
+  ["精力要求", ["精力要求", "energyDemand"]],
+  ["脑力要求", ["脑力要求", "brainDemand"]],
+  ["体力要求", ["体力要求", "physicalDemand"]],
+  ["可用场景", ["可用场景", "availabilityContexts"]],
+  ["恢复意图", ["恢复意图", "recoveryIntent"]],
+  ["重复单位", ["重复单位", "recurrenceUnit"]],
+  ["重复间隔", ["重复间隔", "recurrenceInterval"]],
+  ["重复锚点", ["重复锚点", "recurrenceAnchor"]],
+  ["系列开始日期", ["系列开始日期", "seriesStartDate"]],
+  ["当前任务ID", ["当前任务ID", "currentTaskId"]],
+  ["滚动策略", ["滚动策略", "rolloverPolicy"]]
+];
 function decodeMarkdownString(value, preset = FIELD_CODEC_PRESETS.text) {
   const decoded = decodeMarkdownFieldValue(value, preset);
   const encoded = encodeFieldValueForMarkdown(decoded, preset).trim();
@@ -4552,6 +4647,8 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
   let skippedAt;
   let createdAt;
   let priority;
+  let importance;
+  let urgency;
   let expectedDurationMinutes;
   let energyDemand;
   let brainDemand;
@@ -4619,7 +4716,7 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
         if (["work-block-ended", "task-completed"].includes(result)) sessionResult = result;
       } else if (coreBlock === "task-session" && key === "来源") {
         const source = value.trim().toLowerCase();
-        if (["timer", "energy-view", "unknown"].includes(source)) sessionSource = source;
+        if (["timer", "energy-view", "timeline", "unknown"].includes(source)) sessionSource = source;
       } else if (coreBlock === "task-session" && key === "建议时长") suggestedDurationMinutes = decodeMarkdownNumber(value);
       else if (coreBlock === "task-session" && key === "开始精力记录id") startEnergyRecordId = value.trim() || void 0;
       else if (coreBlock === "task-session" && key === "结束精力记录id") endEnergyRecordId = value.trim() || void 0;
@@ -4644,6 +4741,12 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
       else if (key === "优先级") {
         const p2 = value.trim().toLowerCase();
         if (["lowest", "low", "medium", "high", "highest"].includes(p2)) priority = p2;
+      } else if (key === "重要程度") {
+        const candidate = value.trim().toLowerCase();
+        if (candidate === "important" || candidate === "normal") importance = candidate;
+      } else if (key === "紧急程度") {
+        const candidate = value.trim().toLowerCase();
+        if (candidate === "urgent" || candidate === "normal") urgency = candidate;
       } else if (key === "预计时长") expectedDurationMinutes = decodeMarkdownNumber(value);
       else if (key === "精力要求") energyDemand = value.trim().toLowerCase() || void 0;
       else if (key === "脑力要求") brainDemand = value.trim().toLowerCase() || void 0;
@@ -4703,6 +4806,8 @@ function decodeRecordContentLines(contentLines, _parentFolder) {
     rating,
     image,
     priority,
+    importance,
+    urgency,
     expectedDurationMinutes,
     energyDemand,
     brainDemand,
@@ -4736,29 +4841,6 @@ function markdownScalar(value) {
   if (typeof value === "object") return "";
   return String(value).trim();
 }
-const TASK_FIELD_ORDER = [
-  ["状态", ["状态", "status"]],
-  ["目标", ["目标", "goalPath"]],
-  ["创建于", ["创建于", "createdAt"]],
-  ["开始时间", ["开始时间", "startAt"]],
-  ["结束时间", ["结束时间", "endAt"]],
-  ["优先级", ["优先级", "priority"]],
-  ["预计时长", ["预计时长", "expectedDurationMinutes"]],
-  ["精力要求", ["精力要求", "energyDemand"]],
-  ["脑力要求", ["脑力要求", "brainDemand"]],
-  ["体力要求", ["体力要求", "physicalDemand"]],
-  ["可用场景", ["可用场景", "availabilityContexts"]],
-  ["恢复意图", ["恢复意图", "recoveryIntent"]],
-  ["计划时间", ["计划时间", "scheduledAt"]],
-  ["截止时间", ["截止时间", "dueAt"]],
-  ["计划日期", ["计划日期", "scheduledDate"]],
-  ["开始日期", ["开始日期", "startDate"]],
-  ["截止日期", ["截止日期", "dueDate"]],
-  ["完成于", ["完成于", "completedAt"]],
-  ["取消于", ["取消于", "cancelledAt"]],
-  ["跳过于", ["跳过于", "skippedAt"]],
-  ["系列ID", ["系列ID", "seriesId"]]
-];
 const TASK_SESSION_FIELD_ORDER = [
   ["任务ID", ["任务ID", "taskId"]],
   ["系列ID", ["系列ID", "seriesId"]],
@@ -4774,23 +4856,6 @@ const TASK_SESSION_FIELD_ORDER = [
   ["精力变化", ["精力变化", "energyDelta"]],
   ["脑力变化", ["脑力变化", "brainDelta"]],
   ["体力变化", ["体力变化", "physicalDelta"]]
-];
-const TASK_SERIES_FIELD_ORDER = [
-  ["状态", ["状态", "status"]],
-  ["目标", ["目标", "goalPath"]],
-  ["优先级", ["优先级", "priority"]],
-  ["预计时长", ["预计时长", "expectedDurationMinutes"]],
-  ["精力要求", ["精力要求", "energyDemand"]],
-  ["脑力要求", ["脑力要求", "brainDemand"]],
-  ["体力要求", ["体力要求", "physicalDemand"]],
-  ["可用场景", ["可用场景", "availabilityContexts"]],
-  ["恢复意图", ["恢复意图", "recoveryIntent"]],
-  ["重复单位", ["重复单位", "recurrenceUnit"]],
-  ["重复间隔", ["重复间隔", "recurrenceInterval"]],
-  ["重复锚点", ["重复锚点", "recurrenceAnchor"]],
-  ["系列开始日期", ["系列开始日期", "seriesStartDate"]],
-  ["当前任务ID", ["当前任务ID", "currentTaskId"]],
-  ["滚动策略", ["滚动策略", "rolloverPolicy"]]
 ];
 function firstValue(fields, keys) {
   for (const key of keys) {
@@ -5031,6 +5096,14 @@ function readEnergyItemSnapshot(item) {
 function energySnapshotOccurrenceKey(snapshot) {
   return `${snapshot.date || ""}T${snapshot.time || "00:00"}`;
 }
+const TASK_SESSION_RESULT_PRESENTATION = {
+  "work-block-ended": { result: "work-block-ended", label: "工作块已结束", emoji: "▶️", className: "open", status: "open" },
+  "task-completed": { result: "task-completed", label: "本次执行已完成任务", emoji: "✅", className: "done", status: "done" }
+};
+function getTaskSessionResultPresentation(value) {
+  const result = String(value || "").trim();
+  return TASK_SESSION_RESULT_PRESENTATION[result] || null;
+}
 function normalizeTaskSessionDurationMinutes(value) {
   const number2 = Number(value);
   if (!Number.isFinite(number2) || number2 < 0) return null;
@@ -5038,12 +5111,12 @@ function normalizeTaskSessionDurationMinutes(value) {
 }
 function buildTaskSessionFields(task, input) {
   const durationMinutes2 = normalizeTaskSessionDurationMinutes(input.durationMinutes);
-  if (durationMinutes2 == null) throw new Error("task_session_duration_invalid");
+  if (durationMinutes2 == null || durationMinutes2 <= 0) throw new Error("task_session_duration_invalid");
   if (!input.startedAt || !Number.isFinite(Date.parse(input.startedAt))) throw new Error("task_session_started_at_invalid");
   if (!input.endedAt || !Number.isFinite(Date.parse(input.endedAt))) throw new Error("task_session_ended_at_invalid");
   if (Date.parse(input.endedAt) < Date.parse(input.startedAt)) throw new Error("task_session_time_order_invalid");
   if (!["work-block-ended", "task-completed"].includes(input.result)) throw new Error("task_session_result_invalid");
-  if (!["timer", "energy-view", "unknown"].includes(input.source)) throw new Error("task_session_source_invalid");
+  if (!["timer", "energy-view", "timeline", "unknown"].includes(input.source)) throw new Error("task_session_source_invalid");
   return {
     taskId: task.id,
     seriesId: task.seriesId,
@@ -5065,7 +5138,7 @@ function asTaskSessionRecord(record) {
   if (!candidate.sessionEndedAt || !Number.isFinite(Date.parse(candidate.sessionEndedAt))) return null;
   if (normalizeTaskSessionDurationMinutes(candidate.sessionDurationMinutes) == null) return null;
   if (!["work-block-ended", "task-completed"].includes(String(candidate.sessionResult || ""))) return null;
-  if (!["timer", "energy-view", "unknown"].includes(String(candidate.sessionSource || ""))) return null;
+  if (!["timer", "energy-view", "timeline", "unknown"].includes(String(candidate.sessionSource || ""))) return null;
   return record;
 }
 function localSessionDay(value) {
@@ -5284,33 +5357,6 @@ function buildEnergyActionRecommendations(context, candidates) {
     consideredCount: candidates.length
   };
 }
-function isTaskRecord(item) {
-  return item?.coreBlock === "task";
-}
-function getTaskStatus(item) {
-  if (!isTaskRecord(item)) return null;
-  const status = String(item.status || "").trim().toLowerCase();
-  return status === "open" || status === "done" || status === "cancelled" || status === "skipped" ? status : null;
-}
-function isTaskCompleted(item) {
-  return getTaskStatus(item) === "done";
-}
-function isTaskOpen(item) {
-  return getTaskStatus(item) === "open";
-}
-function canTransitionTaskStatus(from2, command, options) {
-  if (command === "reopen") return from2 === "done" || from2 === "cancelled" || from2 === "skipped";
-  if (from2 !== "open") return false;
-  if (command === "skip") return options.recurring;
-  if (command === "cancel") return !options.recurring;
-  return command === "complete";
-}
-function nextTaskStatus(command) {
-  if (command === "complete") return "done";
-  if (command === "cancel") return "cancelled";
-  if (command === "skip") return "skipped";
-  return "open";
-}
 const RECURRENCE_UNITS = /* @__PURE__ */ new Set(["day", "week", "month", "quarter", "year"]);
 const RECURRENCE_ANCHORS = /* @__PURE__ */ new Set(["scheduled", "start", "due", "completion"]);
 function normalizeRecurrenceInfo(value) {
@@ -5385,7 +5431,7 @@ function buildNextOccurrenceDates(task, recurrence, completedAtISO) {
     result.dueAt = shift(task.dueAt);
     result.dueDate = shift(task.dueDate)?.slice(0, 10);
   }
-  if (recurrence.anchor === "completion" && !result.scheduledAt && !result.scheduledDate && !result.startAt && !result.startDate && !result.dueAt && !result.dueDate) result.startAt = nextAnchor;
+  if (recurrence.anchor === "completion" && !result.scheduledAt && !result.scheduledDate && !result.startAt && !result.startDate && !result.dueAt && !result.dueDate) result.scheduledAt = nextAnchor;
   return result;
 }
 const DEFAULT_HIGH_BEFORE_GAP = 60;
@@ -6982,6 +7028,9 @@ const ENERGY_VIEW_DEFAULT_CONFIG = {
   showManagement: true,
   currentContext: "any"
 };
+const EISENHOWER_VIEW_DEFAULT_CONFIG = {
+  showUnclassified: true
+};
 const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG = {
   timeField: "date",
   titleField: "title",
@@ -7241,6 +7290,12 @@ const VIEW_DEFINITIONS = {
     layout: { freeformWidth: 720, freeformHeight: 620, deferredMinHeight: 440 },
     capabilities: { headerCreate: true, export: true },
     exportConfig: BLOCK_EXPORT_DEFAULT_CONFIG
+  },
+  EisenhowerView: {
+    label: "四象限",
+    defaultConfig: EISENHOWER_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 760, freeformHeight: 560, deferredMinHeight: 480 },
+    capabilities: { headerCreate: false, export: false }
   }
 };
 const VIEW_OPTIONS = Object.freeze(
@@ -7320,6 +7375,14 @@ const FIELD_REGISTRY = {
   cadence: text$1({ key: "cadence", label: "任务周期", category: "core", source: "derived", semantic: "recurrence", inputType: "singleSelect", aliases: ["任务周期", "cadence"], description: "由 Task Series 结构化 recurrence 派生：routine/day/week/month/quarter/year。" }),
   date: { key: "date", label: "日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["日期", "date"], description: "记录的主要日期" },
   priority: text$1({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
+  importance: text$1({ key: "importance", label: "重要程度", category: "core", source: "item", semantic: "none", inputType: "singleSelect", aliases: ["重要程度", "importance"], options: [
+    { value: "important", label: "重要" },
+    { value: "normal", label: "普通" }
+  ] }),
+  urgency: text$1({ key: "urgency", label: "紧急程度", category: "core", source: "item", semantic: "none", inputType: "singleSelect", aliases: ["紧急程度", "urgency"], options: [
+    { value: "urgent", label: "紧急" },
+    { value: "normal", label: "不紧急" }
+  ] }),
   icon: { key: "icon", label: "图标", valueType: "icon", inputType: "text", category: "core", source: "item", semantic: "icon" },
   recurrence: text$1({ key: "recurrence", label: "重复规则", category: "core", source: "derived", semantic: "recurrence", description: "Task Series 结构化 recurrence 的只读展示投影。" }),
   period: text$1({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
@@ -7390,6 +7453,8 @@ const VIEW_FIELD_PICKER_KEYS = /* @__PURE__ */ new Set([
   "dueDate",
   "completedAt",
   "priority",
+  "importance",
+  "urgency",
   "expectedDurationMinutes",
   "energyDemand",
   "brainDemand",
@@ -7590,12 +7655,12 @@ function asUnknownRecord(value) {
 function readUnknown(record, key) {
   return record?.[key];
 }
-function readString(record, key) {
+function readString$1(record, key) {
   const value = readUnknown(record, key);
   return typeof value === "string" ? value : void 0;
 }
 function readTrimmedString(record, key) {
-  const value = readString(record, key)?.trim();
+  const value = readString$1(record, key)?.trim();
   return value ? value : void 0;
 }
 function readNumber(record, key) {
@@ -7635,13 +7700,13 @@ function readFileField(item, field) {
   return readUnknown(fileRecord, key);
 }
 function readCategoryPath(item) {
-  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).path;
+  return splitHierarchyPath(readString$1(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).path;
 }
 function readRootCategory(item) {
-  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).root;
+  return splitHierarchyPath(readString$1(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).root;
 }
 function readLeafCategory(item) {
-  return splitHierarchyPath(readString(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).leaf;
+  return splitHierarchyPath(readString$1(asUnknownRecord(item), "categoryPath") ?? item.categoryKey).leaf;
 }
 function readImageField(item) {
   return normalizeImageValue(item.image ?? item.extra?.["图片"] ?? item.extra?.["image"]);
@@ -7736,6 +7801,18 @@ function pickEditableText(item) {
   if (typeof extraBody === "string" && extraBody.trim()) return extraBody.trim();
   return item.content?.trim() || item.title || null;
 }
+function taskDurationForEdit(item) {
+  if (item.coreBlock !== "task") return item.duration ?? null;
+  if (typeof item.expectedDurationMinutes === "number" && Number.isFinite(item.expectedDurationMinutes) && item.expectedDurationMinutes > 0) {
+    return item.expectedDurationMinutes;
+  }
+  const startMs = item.startAt ? new Date(item.startAt).getTime() : Number.NaN;
+  const endMs = item.endAt ? new Date(item.endAt).getTime() : Number.NaN;
+  if (Number.isFinite(startMs) && Number.isFinite(endMs) && endMs > startMs) {
+    return Math.round((endMs - startMs) / 6e4);
+  }
+  return item.duration ?? null;
+}
 function buildParsedRecordSnapshot(item) {
   const path = item.source?.path ?? item.file?.path ?? null;
   const line2 = item.source?.startLine ?? (typeof item.file?.line === "number" ? item.file.line : null);
@@ -7753,9 +7830,9 @@ function buildParsedRecordSnapshot(item) {
       period: item.period || null,
       tags: [...item.tags || []],
       goalPath: item.goalPath || null,
-      startTime: item.startTime || null,
-      endTime: item.endTime || null,
-      duration: item.duration ?? null,
+      startTime: (item.coreBlock === "task" ? item.scheduledAt || (item.startAt && !item.endAt ? item.startAt : void 0) : item.startTime) || item.startTime || null,
+      endTime: (item.coreBlock === "task" ? item.endAt : item.endTime) || item.endTime || null,
+      duration: taskDurationForEdit(item),
       categoryKey: item.categoryKey || null
     },
     extra: { ...item.extra || {} }
@@ -8534,19 +8611,19 @@ function durationMs(start2) {
 function elapsedMs(start2) {
   return `${durationMs(start2).toFixed(2)}ms`;
 }
-function throttle(fn3, wait2 = 250) {
-  let last2 = 0, timer = null;
+function throttle(fn3, wait = 250) {
+  let last = 0, timer = null;
   return function(...args) {
     const now2 = Date.now();
-    if (now2 - last2 >= wait2) {
-      last2 = now2;
+    if (now2 - last >= wait) {
+      last = now2;
       fn3.apply(this, args);
     } else {
       clearTimeout(timer);
       timer = setTimeout(() => {
-        last2 = Date.now();
+        last = Date.now();
         fn3.apply(this, args);
-      }, wait2 - (now2 - last2));
+      }, wait - (now2 - last));
     }
   };
 }
@@ -9553,7 +9630,7 @@ function safeExtend(schema, shape2) {
   });
   return clone(schema, def);
 }
-function merge$2(a2, b2) {
+function merge$1(a2, b2) {
   if (a2._zod.def.checks?.length) {
     throw new Error(".merge() cannot be used on object schemas containing refinements. Use .safeExtend() instead.");
   }
@@ -13347,7 +13424,7 @@ const ZodObject = /* @__PURE__ */ $constructor("ZodObject", (inst, def) => {
       return safeExtend(this, incoming);
     },
     merge(other) {
-      return merge$2(this, other);
+      return merge$1(this, other);
     },
     pick(mask) {
       return pick(this, mask);
@@ -13911,7 +13988,7 @@ function toRecordViewItem(record) {
 }
 const METADATA_PORT_TOKEN = "MetadataPort";
 const FILESTAT_PORT_TOKEN = "FileStatPort";
-const CURRENT_CACHE_SCHEMA_VERSION = 15;
+const CURRENT_CACHE_SCHEMA_VERSION = 16;
 function toCachedItem(it) {
   return {
     id: it.id,
@@ -13929,6 +14006,8 @@ function toCachedItem(it) {
     categoryKey: it.categoryKey,
     recurrenceInfo: it.recurrenceInfo,
     priority: it.priority,
+    importance: it.importance,
+    urgency: it.urgency,
     expectedDurationMinutes: it.expectedDurationMinutes,
     energyDemand: it.energyDemand,
     brainDemand: it.brainDemand,
@@ -13991,6 +14070,8 @@ function fromCachedItem(c2) {
     categoryKey: c2.categoryKey,
     recurrenceInfo: c2.recurrenceInfo,
     priority: c2.priority,
+    importance: c2.importance,
+    urgency: c2.urgency,
     expectedDurationMinutes: c2.expectedDurationMinutes,
     energyDemand: c2.energyDemand,
     brainDemand: c2.brainDemand,
@@ -14163,7 +14244,7 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
   if (isTaskSeries && !recurrenceInfo) return null;
   const sessionDuration = normalizeTaskSessionDurationMinutes(parsed.sessionDurationMinutes);
   if (isTaskSession && (!parsed.taskId || !parsed.sessionStartedAt || !parsed.sessionEndedAt || sessionDuration == null || !parsed.sessionResult || !parsed.sessionSource)) return null;
-  const canonicalDate = localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate || parsed.date || localCalendarDate(parsed.sessionStartedAt);
+  const canonicalDate = isTask ? localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate || localCalendarDate(parsed.createdAt) || localCalendarDate(parsed.completedAt) || localCalendarDate(parsed.endAt) || parsed.date : localCalendarDate(parsed.sessionStartedAt) || parsed.date || localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate;
   const schema = getRecordSchemaDefinition(parsed.coreBlock);
   const derivedCategory = parsed.coreBlock === "thought" && parsed.recordSubtype ? `闪念/${parsed.recordSubtype}` : schema?.categoryKey || parentFolder;
   const categoryKey = derivedCategory;
@@ -14184,6 +14265,8 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
     folder: parentFolder,
     coreBlock: parsed.coreBlock,
     priority: parsed.priority,
+    importance: parsed.importance,
+    urgency: parsed.urgency,
     createdAt: parsed.createdAt,
     scheduledAt: parsed.scheduledAt,
     startAt: parsed.startAt,
@@ -14228,14 +14311,43 @@ function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
   if (parsed.expectedDurationMinutes !== void 0) {
     item.expectedDurationMinutes = parsed.expectedDurationMinutes;
   }
-  item.startISO = parsed.sessionStartedAt || parsed.startAt || parsed.scheduledAt || parsed.startDate || parsed.scheduledDate || parsed.dueAt || parsed.dueDate || parsed.date;
+  item.startISO = parsed.sessionStartedAt || (isTask ? parsed.scheduledAt || parsed.scheduledDate || parsed.startAt || parsed.startDate : void 0) || parsed.startAt || parsed.startDate || parsed.scheduledAt || parsed.scheduledDate || parsed.dueAt || parsed.dueDate || parsed.date;
   item.endISO = parsed.sessionEndedAt || parsed.endAt || parsed.completedAt || parsed.cancelledAt || parsed.dueAt || parsed.dueDate || item.startISO;
   if (item.startISO) item.startMs = Date.parse(item.startISO);
   if (item.endISO) item.endMs = Date.parse(item.endISO);
   if (item.period && item.date) item.periodCount = getPeriodCount(item.period, dayjs(item.date));
   return item;
 }
-const ORDER = ["done", "due", "scheduled", "start", "created", "end"];
+function firstDate(...values2) {
+  for (const value of values2) {
+    const normalized2 = String(value || "").trim();
+    if (normalized2) return normalized2;
+  }
+  return void 0;
+}
+function getTaskDateFact(task, role = "default") {
+  if (role === "scheduled") {
+    return { value: firstDate(task.scheduledAt, task.scheduledDate), source: "scheduled" };
+  }
+  if (role === "due") {
+    return { value: firstDate(task.dueAt, task.dueDate), source: "due" };
+  }
+  if (role === "completed") {
+    return { value: firstDate(task.completedAt, task.doneDate), source: "done" };
+  }
+  const candidates = [
+    ["scheduled", firstDate(task.scheduledAt, task.scheduledDate)],
+    ["due", firstDate(task.dueAt, task.dueDate)],
+    ["start", firstDate(task.startAt, task.startDate, task.startISO)],
+    ["created", firstDate(task.createdAt, task.createdDate)],
+    ["done", firstDate(task.completedAt, task.doneDate)],
+    ["end", firstDate(task.endAt, task.endISO)]
+  ];
+  for (const [source, value] of candidates) {
+    if (value) return { value, source };
+  }
+  return {};
+}
 function normalizeItemDates(it) {
   if (it.coreBlock !== "task") {
     if (it.date) {
@@ -14246,23 +14358,12 @@ function normalizeItemDates(it) {
     if (!it.categoryKey) it.categoryKey = "";
     return;
   }
-  const pick2 = {
-    done: it.doneDate,
-    due: it.dueAt ?? it.dueDate,
-    scheduled: it.scheduledAt ?? it.scheduledDate,
-    start: it.startAt ?? it.startDate ?? it.startISO,
-    created: it.createdAt ?? it.createdDate,
-    end: it.endAt ?? it.endISO
-  };
-  for (const k2 of ORDER) {
-    const iso = pick2[k2];
-    if (iso) {
-      it.date = iso;
-      it.dateSource = k2;
-      const t3 = Date.parse(iso);
-      if (!isNaN(t3)) it.dateMs = t3;
-      break;
-    }
+  const fact = getTaskDateFact(it, "default");
+  if (fact.value) {
+    it.date = fact.value;
+    it.dateSource = fact.source;
+    const t3 = Date.parse(fact.value);
+    if (!isNaN(t3)) it.dateMs = t3;
   }
   if (!it.categoryKey) it.categoryKey = "任务";
 }
@@ -14479,10 +14580,10 @@ function matchRule(item, rule) {
   if (rule.op === "empty") return isEmptyValue$1(v1);
   if (rule.op === "notEmpty") return !isEmptyValue$1(v1);
   if (canonicalField === "title") {
-    v1 = readString(itemRecord, "titleLower") ?? String(v1 ?? "").toLowerCase();
+    v1 = readString$1(itemRecord, "titleLower") ?? String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
   } else if (canonicalField === "content") {
-    v1 = readString(itemRecord, "contentLower") ?? String(v1 ?? "").toLowerCase();
+    v1 = readString$1(itemRecord, "contentLower") ?? String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
   } else if (["goalPath", "rootGoal", "leafGoal"].includes(canonicalField)) {
     v1 = String(v1 ?? "").toLowerCase();
@@ -14492,7 +14593,7 @@ function matchRule(item, rule) {
       v2 = String(v2 ?? "").toLowerCase();
     }
   } else if (canonicalField === "fullData") {
-    v1 = readString(itemRecord, "fullDataLower") ?? String(v1 ?? "").toLowerCase();
+    v1 = readString$1(itemRecord, "fullDataLower") ?? String(v1 ?? "").toLowerCase();
     v2 = String(v2 ?? "").toLowerCase();
   } else if (canonicalField === "tags") {
     const listLower = readStringArray(itemRecord, "tagsLower").length ? readStringArray(itemRecord, "tagsLower") : Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : [];
@@ -14567,9 +14668,9 @@ function filterByKeyword(items, kw) {
   const s2 = kw.trim().toLowerCase();
   return items.filter((it) => {
     const itemRecord = asUnknownRecord(it);
-    const titleLower = readString(itemRecord, "titleLower") ?? (it.title || "").toLowerCase();
-    const contentLower = readString(itemRecord, "contentLower") ?? (it.content || "").toLowerCase();
-    const fullDataLower = readString(itemRecord, "fullDataLower") ?? (it.fullData || it.rawSource || "").toLowerCase();
+    const titleLower = readString$1(itemRecord, "titleLower") ?? (it.title || "").toLowerCase();
+    const contentLower = readString$1(itemRecord, "contentLower") ?? (it.content || "").toLowerCase();
+    const fullDataLower = readString$1(itemRecord, "fullDataLower") ?? (it.fullData || it.rawSource || "").toLowerCase();
     const tagsLower = (it.tags || []).join(" ").toLowerCase();
     const semanticText = [it.goalPath, it.coreBlock, it.status].filter(Boolean).join(" ").toLowerCase();
     return (titleLower + " " + contentLower + " " + fullDataLower + " " + tagsLower + " " + semanticText).includes(s2);
@@ -14763,6 +14864,10 @@ function collectCategoriesFromViews(viewInstances, predefinedCategories = []) {
   predefinedCategories.forEach((cat) => categorySet.add(cat));
   return Array.from(categorySet).sort();
 }
+function normalizeRecordQueryDateRole(value) {
+  const normalized2 = String(value || "").trim();
+  return ["default", "task-scheduled", "task-due", "task-completed", "task-actual"].includes(normalized2) ? normalized2 : void 0;
+}
 function isClosedTask(item) {
   if (item.coreBlock !== "task") return false;
   return item.status === "done" || item.status === "cancelled" || item.status === "skipped";
@@ -14793,17 +14898,32 @@ function isWithinMinuteRange(value, range) {
   const valueMs = parsed.valueOf();
   return valueMs >= startMs && valueMs <= endMs;
 }
+function readDateConstraintValue(item, constraint) {
+  const role = constraint.role || "default";
+  if (role === "task-scheduled") {
+    return item.coreBlock === "task" ? item.scheduledAt ?? item.scheduledDate : void 0;
+  }
+  if (role === "task-due") {
+    return item.coreBlock === "task" ? item.dueAt ?? item.dueDate : void 0;
+  }
+  if (role === "task-completed") {
+    return item.coreBlock === "task" ? item.completedAt ?? item.doneDate : void 0;
+  }
+  if (role === "task-actual") {
+    return item.coreBlock === "task-session" ? item.sessionStartedAt : void 0;
+  }
+  return readField(item, constraint.field || "date");
+}
 function applyStrictDateConstraint(items, constraint) {
-  const field = constraint.field || "date";
   const inRange = constraint.precision === "minute" ? isWithinMinuteRange : isWithinDayRange;
-  return items.filter((item) => inRange(readField(item, field), constraint.range));
+  return items.filter((item) => inRange(readDateConstraintValue(item, constraint), constraint.range));
 }
 function applyOverviewDateConstraint(items, constraint) {
   const contextDate = dayjs(constraint.range[1]);
   const field = constraint.field || "date";
   return items.filter((item) => {
     if (field === "date" && isOpenTask(item)) return true;
-    const rawDate = readField(item, field);
+    const rawDate = readDateConstraintValue(item, constraint);
     if (!rawDate) return field === "date" ? !isClosedTask(item) : false;
     const itemDate = dayjs(rawDate);
     if (!itemDate.isValid()) return field === "date" ? !isClosedTask(item) : false;
@@ -14832,7 +14952,7 @@ function applyStandardDateConstraint(items, constraint) {
   if (period != null && String(period).trim()) result = filterByPeriod(result, String(period));
   return result.filter((item) => {
     if (isOpenTask(item)) return true;
-    const rawDate = readField(item, field);
+    const rawDate = readDateConstraintValue(item, constraint);
     if (!rawDate) return !isClosedTask(item);
     const parsed = dayjs(rawDate);
     if (!parsed.isValid()) return !isClosedTask(item);
@@ -14841,7 +14961,8 @@ function applyStandardDateConstraint(items, constraint) {
 }
 function applyDateConstraint(items, constraint) {
   if (!constraint) return items;
-  const mode = constraint.mode || (constraint.field && constraint.field !== "date" ? "strict" : "standard");
+  const explicitRole = (constraint.role || "default") !== "default";
+  const mode = explicitRole ? "strict" : constraint.mode || (constraint.field && constraint.field !== "date" ? "strict" : "standard");
   if (mode === "overview") return applyOverviewDateConstraint(items, constraint);
   if (mode === "strict") return applyStrictDateConstraint(items, constraint);
   return applyStandardDateConstraint(items, constraint);
@@ -14858,7 +14979,8 @@ function buildDateConstraintCacheKey(constraint) {
     granularity: constraint.granularity || "",
     useFieldGranularity: !!constraint.useFieldGranularity,
     periodValue: constraint.periodValue == null ? "" : String(constraint.periodValue),
-    precision: constraint.precision || "day"
+    precision: constraint.precision || "day",
+    role: constraint.role || "default"
   });
 }
 function applyDateConstraintCached(items, constraint) {
@@ -15402,7 +15524,7 @@ function normalizeRetrievalText(value) {
   if (typeof value === "object") {
     const record = asUnknownRecord(value);
     if (!record) return "";
-    const src = readString(record, "src");
+    const src = readString$1(record, "src");
     if (src) return src;
     const values2 = readUnknown(record, "values");
     if (Array.isArray(values2)) return normalizeRetrievalText(values2);
@@ -15465,1814 +15587,6 @@ function matchesCoreBlock(sr, item, filters) {
   const coreBlock = normalizeRetrievalText(item?.coreBlock ?? readSearchResultText(sr, "coreBlock"));
   return !!coreBlock && requestedCoreBlocks.map(normalizeRetrievalText).includes(coreBlock);
 }
-const ENTRIES = "ENTRIES";
-const KEYS = "KEYS";
-const VALUES = "VALUES";
-const LEAF = "";
-class TreeIterator {
-  constructor(set2, type) {
-    const node2 = set2._tree;
-    const keys = Array.from(node2.keys());
-    this.set = set2;
-    this._type = type;
-    this._path = keys.length > 0 ? [{ node: node2, keys }] : [];
-  }
-  next() {
-    const value = this.dive();
-    this.backtrack();
-    return value;
-  }
-  dive() {
-    if (this._path.length === 0) {
-      return { done: true, value: void 0 };
-    }
-    const { node: node2, keys } = last$1(this._path);
-    if (last$1(keys) === LEAF) {
-      return { done: false, value: this.result() };
-    }
-    const child = node2.get(last$1(keys));
-    this._path.push({ node: child, keys: Array.from(child.keys()) });
-    return this.dive();
-  }
-  backtrack() {
-    if (this._path.length === 0) {
-      return;
-    }
-    const keys = last$1(this._path).keys;
-    keys.pop();
-    if (keys.length > 0) {
-      return;
-    }
-    this._path.pop();
-    this.backtrack();
-  }
-  key() {
-    return this.set._prefix + this._path.map(({ keys }) => last$1(keys)).filter((key) => key !== LEAF).join("");
-  }
-  value() {
-    return last$1(this._path).node.get(LEAF);
-  }
-  result() {
-    switch (this._type) {
-      case VALUES:
-        return this.value();
-      case KEYS:
-        return this.key();
-      default:
-        return [this.key(), this.value()];
-    }
-  }
-  [Symbol.iterator]() {
-    return this;
-  }
-}
-const last$1 = (array2) => {
-  return array2[array2.length - 1];
-};
-const fuzzySearch = (node2, query, maxDistance) => {
-  const results = /* @__PURE__ */ new Map();
-  if (query === void 0)
-    return results;
-  const n2 = query.length + 1;
-  const m2 = n2 + maxDistance;
-  const matrix = new Uint8Array(m2 * n2).fill(maxDistance + 1);
-  for (let j2 = 0; j2 < n2; ++j2)
-    matrix[j2] = j2;
-  for (let i2 = 1; i2 < m2; ++i2)
-    matrix[i2 * n2] = i2;
-  recurse(node2, query, maxDistance, results, matrix, 1, n2, "");
-  return results;
-};
-const recurse = (node2, query, maxDistance, results, matrix, m2, n2, prefix2) => {
-  const offset2 = m2 * n2;
-  key: for (const key of node2.keys()) {
-    if (key === LEAF) {
-      const distance = matrix[offset2 - 1];
-      if (distance <= maxDistance) {
-        results.set(prefix2, [node2.get(key), distance]);
-      }
-    } else {
-      let i2 = m2;
-      for (let pos = 0; pos < key.length; ++pos, ++i2) {
-        const char2 = key[pos];
-        const thisRowOffset = n2 * i2;
-        const prevRowOffset = thisRowOffset - n2;
-        let minDistance = matrix[thisRowOffset];
-        const jmin = Math.max(0, i2 - maxDistance - 1);
-        const jmax = Math.min(n2 - 1, i2 + maxDistance);
-        for (let j2 = jmin; j2 < jmax; ++j2) {
-          const different = char2 !== query[j2];
-          const rpl = matrix[prevRowOffset + j2] + +different;
-          const del = matrix[prevRowOffset + j2 + 1] + 1;
-          const ins = matrix[thisRowOffset + j2] + 1;
-          const dist = matrix[thisRowOffset + j2 + 1] = Math.min(rpl, del, ins);
-          if (dist < minDistance)
-            minDistance = dist;
-        }
-        if (minDistance > maxDistance) {
-          continue key;
-        }
-      }
-      recurse(node2.get(key), query, maxDistance, results, matrix, i2, n2, prefix2 + key);
-    }
-  }
-};
-class SearchableMap {
-  /**
-   * The constructor is normally called without arguments, creating an empty
-   * map. In order to create a {@link SearchableMap} from an iterable or from an
-   * object, check {@link SearchableMap.from} and {@link
-   * SearchableMap.fromObject}.
-   *
-   * The constructor arguments are for internal use, when creating derived
-   * mutable views of a map at a prefix.
-   */
-  constructor(tree = /* @__PURE__ */ new Map(), prefix2 = "") {
-    this._size = void 0;
-    this._tree = tree;
-    this._prefix = prefix2;
-  }
-  /**
-   * Creates and returns a mutable view of this {@link SearchableMap},
-   * containing only entries that share the given prefix.
-   *
-   * ### Usage:
-   *
-   * ```javascript
-   * let map = new SearchableMap()
-   * map.set("unicorn", 1)
-   * map.set("universe", 2)
-   * map.set("university", 3)
-   * map.set("unique", 4)
-   * map.set("hello", 5)
-   *
-   * let uni = map.atPrefix("uni")
-   * uni.get("unique") // => 4
-   * uni.get("unicorn") // => 1
-   * uni.get("hello") // => undefined
-   *
-   * let univer = map.atPrefix("univer")
-   * univer.get("unique") // => undefined
-   * univer.get("universe") // => 2
-   * univer.get("university") // => 3
-   * ```
-   *
-   * @param prefix  The prefix
-   * @return A {@link SearchableMap} representing a mutable view of the original
-   * Map at the given prefix
-   */
-  atPrefix(prefix2) {
-    if (!prefix2.startsWith(this._prefix)) {
-      throw new Error("Mismatched prefix");
-    }
-    const [node2, path] = trackDown(this._tree, prefix2.slice(this._prefix.length));
-    if (node2 === void 0) {
-      const [parentNode, key] = last(path);
-      for (const k2 of parentNode.keys()) {
-        if (k2 !== LEAF && k2.startsWith(key)) {
-          const node3 = /* @__PURE__ */ new Map();
-          node3.set(k2.slice(key.length), parentNode.get(k2));
-          return new SearchableMap(node3, prefix2);
-        }
-      }
-    }
-    return new SearchableMap(node2, prefix2);
-  }
-  /**
-   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/clear
-   */
-  clear() {
-    this._size = void 0;
-    this._tree.clear();
-  }
-  /**
-   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/delete
-   * @param key  Key to delete
-   */
-  delete(key) {
-    this._size = void 0;
-    return remove(this._tree, key);
-  }
-  /**
-   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/entries
-   * @return An iterator iterating through `[key, value]` entries.
-   */
-  entries() {
-    return new TreeIterator(this, ENTRIES);
-  }
-  /**
-   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach
-   * @param fn  Iteration function
-   */
-  forEach(fn3) {
-    for (const [key, value] of this) {
-      fn3(key, value, this);
-    }
-  }
-  /**
-   * Returns a Map of all the entries that have a key within the given edit
-   * distance from the search key. The keys of the returned Map are the matching
-   * keys, while the values are two-element arrays where the first element is
-   * the value associated to the key, and the second is the edit distance of the
-   * key to the search key.
-   *
-   * ### Usage:
-   *
-   * ```javascript
-   * let map = new SearchableMap()
-   * map.set('hello', 'world')
-   * map.set('hell', 'yeah')
-   * map.set('ciao', 'mondo')
-   *
-   * // Get all entries that match the key 'hallo' with a maximum edit distance of 2
-   * map.fuzzyGet('hallo', 2)
-   * // => Map(2) { 'hello' => ['world', 1], 'hell' => ['yeah', 2] }
-   *
-   * // In the example, the "hello" key has value "world" and edit distance of 1
-   * // (change "e" to "a"), the key "hell" has value "yeah" and edit distance of 2
-   * // (change "e" to "a", delete "o")
-   * ```
-   *
-   * @param key  The search key
-   * @param maxEditDistance  The maximum edit distance (Levenshtein)
-   * @return A Map of the matching keys to their value and edit distance
-   */
-  fuzzyGet(key, maxEditDistance) {
-    return fuzzySearch(this._tree, key, maxEditDistance);
-  }
-  /**
-   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/get
-   * @param key  Key to get
-   * @return Value associated to the key, or `undefined` if the key is not
-   * found.
-   */
-  get(key) {
-    const node2 = lookup(this._tree, key);
-    return node2 !== void 0 ? node2.get(LEAF) : void 0;
-  }
-  /**
-   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/has
-   * @param key  Key
-   * @return True if the key is in the map, false otherwise
-   */
-  has(key) {
-    const node2 = lookup(this._tree, key);
-    return node2 !== void 0 && node2.has(LEAF);
-  }
-  /**
-   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/keys
-   * @return An `Iterable` iterating through keys
-   */
-  keys() {
-    return new TreeIterator(this, KEYS);
-  }
-  /**
-   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/set
-   * @param key  Key to set
-   * @param value  Value to associate to the key
-   * @return The {@link SearchableMap} itself, to allow chaining
-   */
-  set(key, value) {
-    if (typeof key !== "string") {
-      throw new Error("key must be a string");
-    }
-    this._size = void 0;
-    const node2 = createPath(this._tree, key);
-    node2.set(LEAF, value);
-    return this;
-  }
-  /**
-   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/size
-   */
-  get size() {
-    if (this._size) {
-      return this._size;
-    }
-    this._size = 0;
-    const iter = this.entries();
-    while (!iter.next().done)
-      this._size += 1;
-    return this._size;
-  }
-  /**
-   * Updates the value at the given key using the provided function. The function
-   * is called with the current value at the key, and its return value is used as
-   * the new value to be set.
-   *
-   * ### Example:
-   *
-   * ```javascript
-   * // Increment the current value by one
-   * searchableMap.update('somekey', (currentValue) => currentValue == null ? 0 : currentValue + 1)
-   * ```
-   *
-   * If the value at the given key is or will be an object, it might not require
-   * re-assignment. In that case it is better to use `fetch()`, because it is
-   * faster.
-   *
-   * @param key  The key to update
-   * @param fn  The function used to compute the new value from the current one
-   * @return The {@link SearchableMap} itself, to allow chaining
-   */
-  update(key, fn3) {
-    if (typeof key !== "string") {
-      throw new Error("key must be a string");
-    }
-    this._size = void 0;
-    const node2 = createPath(this._tree, key);
-    node2.set(LEAF, fn3(node2.get(LEAF)));
-    return this;
-  }
-  /**
-   * Fetches the value of the given key. If the value does not exist, calls the
-   * given function to create a new value, which is inserted at the given key
-   * and subsequently returned.
-   *
-   * ### Example:
-   *
-   * ```javascript
-   * const map = searchableMap.fetch('somekey', () => new Map())
-   * map.set('foo', 'bar')
-   * ```
-   *
-   * @param key  The key to update
-   * @param initial  A function that creates a new value if the key does not exist
-   * @return The existing or new value at the given key
-   */
-  fetch(key, initial) {
-    if (typeof key !== "string") {
-      throw new Error("key must be a string");
-    }
-    this._size = void 0;
-    const node2 = createPath(this._tree, key);
-    let value = node2.get(LEAF);
-    if (value === void 0) {
-      node2.set(LEAF, value = initial());
-    }
-    return value;
-  }
-  /**
-   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/values
-   * @return An `Iterable` iterating through values.
-   */
-  values() {
-    return new TreeIterator(this, VALUES);
-  }
-  /**
-   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/@@iterator
-   */
-  [Symbol.iterator]() {
-    return this.entries();
-  }
-  /**
-   * Creates a {@link SearchableMap} from an `Iterable` of entries
-   *
-   * @param entries  Entries to be inserted in the {@link SearchableMap}
-   * @return A new {@link SearchableMap} with the given entries
-   */
-  static from(entries) {
-    const tree = new SearchableMap();
-    for (const [key, value] of entries) {
-      tree.set(key, value);
-    }
-    return tree;
-  }
-  /**
-   * Creates a {@link SearchableMap} from the iterable properties of a JavaScript object
-   *
-   * @param object  Object of entries for the {@link SearchableMap}
-   * @return A new {@link SearchableMap} with the given entries
-   */
-  static fromObject(object2) {
-    return SearchableMap.from(Object.entries(object2));
-  }
-}
-const trackDown = (tree, key, path = []) => {
-  if (key.length === 0 || tree == null) {
-    return [tree, path];
-  }
-  for (const k2 of tree.keys()) {
-    if (k2 !== LEAF && key.startsWith(k2)) {
-      path.push([tree, k2]);
-      return trackDown(tree.get(k2), key.slice(k2.length), path);
-    }
-  }
-  path.push([tree, key]);
-  return trackDown(void 0, "", path);
-};
-const lookup = (tree, key) => {
-  if (key.length === 0 || tree == null) {
-    return tree;
-  }
-  for (const k2 of tree.keys()) {
-    if (k2 !== LEAF && key.startsWith(k2)) {
-      return lookup(tree.get(k2), key.slice(k2.length));
-    }
-  }
-};
-const createPath = (node2, key) => {
-  const keyLength = key.length;
-  outer: for (let pos = 0; node2 && pos < keyLength; ) {
-    for (const k2 of node2.keys()) {
-      if (k2 !== LEAF && key[pos] === k2[0]) {
-        const len = Math.min(keyLength - pos, k2.length);
-        let offset2 = 1;
-        while (offset2 < len && key[pos + offset2] === k2[offset2])
-          ++offset2;
-        const child2 = node2.get(k2);
-        if (offset2 === k2.length) {
-          node2 = child2;
-        } else {
-          const intermediate = /* @__PURE__ */ new Map();
-          intermediate.set(k2.slice(offset2), child2);
-          node2.set(key.slice(pos, pos + offset2), intermediate);
-          node2.delete(k2);
-          node2 = intermediate;
-        }
-        pos += offset2;
-        continue outer;
-      }
-    }
-    const child = /* @__PURE__ */ new Map();
-    node2.set(key.slice(pos), child);
-    return child;
-  }
-  return node2;
-};
-const remove = (tree, key) => {
-  const [node2, path] = trackDown(tree, key);
-  if (node2 === void 0) {
-    return;
-  }
-  node2.delete(LEAF);
-  if (node2.size === 0) {
-    cleanup(path);
-  } else if (node2.size === 1) {
-    const [key2, value] = node2.entries().next().value;
-    merge$1(path, key2, value);
-  }
-};
-const cleanup = (path) => {
-  if (path.length === 0) {
-    return;
-  }
-  const [node2, key] = last(path);
-  node2.delete(key);
-  if (node2.size === 0) {
-    cleanup(path.slice(0, -1));
-  } else if (node2.size === 1) {
-    const [key2, value] = node2.entries().next().value;
-    if (key2 !== LEAF) {
-      merge$1(path.slice(0, -1), key2, value);
-    }
-  }
-};
-const merge$1 = (path, key, value) => {
-  if (path.length === 0) {
-    return;
-  }
-  const [node2, nodeKey] = last(path);
-  node2.set(nodeKey + key, value);
-  node2.delete(nodeKey);
-};
-const last = (array2) => {
-  return array2[array2.length - 1];
-};
-const OR = "or";
-const AND = "and";
-const AND_NOT = "and_not";
-class MiniSearch {
-  /**
-   * @param options  Configuration options
-   *
-   * ### Examples:
-   *
-   * ```javascript
-   * // Create a search engine that indexes the 'title' and 'text' fields of your
-   * // documents:
-   * const miniSearch = new MiniSearch({ fields: ['title', 'text'] })
-   * ```
-   *
-   * ### ID Field:
-   *
-   * ```javascript
-   * // Your documents are assumed to include a unique 'id' field, but if you want
-   * // to use a different field for document identification, you can set the
-   * // 'idField' option:
-   * const miniSearch = new MiniSearch({ idField: 'key', fields: ['title', 'text'] })
-   * ```
-   *
-   * ### Options and defaults:
-   *
-   * ```javascript
-   * // The full set of options (here with their default value) is:
-   * const miniSearch = new MiniSearch({
-   *   // idField: field that uniquely identifies a document
-   *   idField: 'id',
-   *
-   *   // extractField: function used to get the value of a field in a document.
-   *   // By default, it assumes the document is a flat object with field names as
-   *   // property keys and field values as string property values, but custom logic
-   *   // can be implemented by setting this option to a custom extractor function.
-   *   extractField: (document, fieldName) => document[fieldName],
-   *
-   *   // tokenize: function used to split fields into individual terms. By
-   *   // default, it is also used to tokenize search queries, unless a specific
-   *   // `tokenize` search option is supplied. When tokenizing an indexed field,
-   *   // the field name is passed as the second argument.
-   *   tokenize: (string, _fieldName) => string.split(SPACE_OR_PUNCTUATION),
-   *
-   *   // processTerm: function used to process each tokenized term before
-   *   // indexing. It can be used for stemming and normalization. Return a falsy
-   *   // value in order to discard a term. By default, it is also used to process
-   *   // search queries, unless a specific `processTerm` option is supplied as a
-   *   // search option. When processing a term from a indexed field, the field
-   *   // name is passed as the second argument.
-   *   processTerm: (term, _fieldName) => term.toLowerCase(),
-   *
-   *   // searchOptions: default search options, see the `search` method for
-   *   // details
-   *   searchOptions: undefined,
-   *
-   *   // fields: document fields to be indexed. Mandatory, but not set by default
-   *   fields: undefined
-   *
-   *   // storeFields: document fields to be stored and returned as part of the
-   *   // search results.
-   *   storeFields: []
-   * })
-   * ```
-   */
-  constructor(options) {
-    if ((options === null || options === void 0 ? void 0 : options.fields) == null) {
-      throw new Error('MiniSearch: option "fields" must be provided');
-    }
-    const autoVacuum = options.autoVacuum == null || options.autoVacuum === true ? defaultAutoVacuumOptions : options.autoVacuum;
-    this._options = {
-      ...defaultOptions$1,
-      ...options,
-      autoVacuum,
-      searchOptions: { ...defaultSearchOptions, ...options.searchOptions || {} },
-      autoSuggestOptions: { ...defaultAutoSuggestOptions, ...options.autoSuggestOptions || {} }
-    };
-    this._index = new SearchableMap();
-    this._documentCount = 0;
-    this._documentIds = /* @__PURE__ */ new Map();
-    this._idToShortId = /* @__PURE__ */ new Map();
-    this._fieldIds = {};
-    this._fieldLength = /* @__PURE__ */ new Map();
-    this._avgFieldLength = [];
-    this._nextId = 0;
-    this._storedFields = /* @__PURE__ */ new Map();
-    this._dirtCount = 0;
-    this._currentVacuum = null;
-    this._enqueuedVacuum = null;
-    this._enqueuedVacuumConditions = defaultVacuumConditions;
-    this.addFields(this._options.fields);
-  }
-  /**
-   * Adds a document to the index
-   *
-   * @param document  The document to be indexed
-   */
-  add(document2) {
-    const { extractField, stringifyField, tokenize, processTerm, fields, idField } = this._options;
-    const id = extractField(document2, idField);
-    if (id == null) {
-      throw new Error(`MiniSearch: document does not have ID field "${idField}"`);
-    }
-    if (this._idToShortId.has(id)) {
-      throw new Error(`MiniSearch: duplicate ID ${id}`);
-    }
-    const shortDocumentId = this.addDocumentId(id);
-    this.saveStoredFields(shortDocumentId, document2);
-    for (const field of fields) {
-      const fieldValue = extractField(document2, field);
-      if (fieldValue == null)
-        continue;
-      const tokens = tokenize(stringifyField(fieldValue, field), field);
-      const fieldId = this._fieldIds[field];
-      const uniqueTerms = new Set(tokens).size;
-      this.addFieldLength(shortDocumentId, fieldId, this._documentCount - 1, uniqueTerms);
-      for (const term of tokens) {
-        const processedTerm = processTerm(term, field);
-        if (Array.isArray(processedTerm)) {
-          for (const t3 of processedTerm) {
-            this.addTerm(fieldId, shortDocumentId, t3);
-          }
-        } else if (processedTerm) {
-          this.addTerm(fieldId, shortDocumentId, processedTerm);
-        }
-      }
-    }
-  }
-  /**
-   * Adds all the given documents to the index
-   *
-   * @param documents  An array of documents to be indexed
-   */
-  addAll(documents) {
-    for (const document2 of documents)
-      this.add(document2);
-  }
-  /**
-   * Adds all the given documents to the index asynchronously.
-   *
-   * Returns a promise that resolves (to `undefined`) when the indexing is done.
-   * This method is useful when index many documents, to avoid blocking the main
-   * thread. The indexing is performed asynchronously and in chunks.
-   *
-   * @param documents  An array of documents to be indexed
-   * @param options  Configuration options
-   * @return A promise resolving to `undefined` when the indexing is done
-   */
-  addAllAsync(documents, options = {}) {
-    const { chunkSize = 10 } = options;
-    const acc = { chunk: [], promise: Promise.resolve() };
-    const { chunk, promise } = documents.reduce(({ chunk: chunk2, promise: promise2 }, document2, i2) => {
-      chunk2.push(document2);
-      if ((i2 + 1) % chunkSize === 0) {
-        return {
-          chunk: [],
-          promise: promise2.then(() => new Promise((resolve) => setTimeout(resolve, 0))).then(() => this.addAll(chunk2))
-        };
-      } else {
-        return { chunk: chunk2, promise: promise2 };
-      }
-    }, acc);
-    return promise.then(() => this.addAll(chunk));
-  }
-  /**
-   * Removes the given document from the index.
-   *
-   * The document to remove must NOT have changed between indexing and removal,
-   * otherwise the index will be corrupted.
-   *
-   * This method requires passing the full document to be removed (not just the
-   * ID), and immediately removes the document from the inverted index, allowing
-   * memory to be released. A convenient alternative is {@link
-   * MiniSearch#discard}, which needs only the document ID, and has the same
-   * visible effect, but delays cleaning up the index until the next vacuuming.
-   *
-   * @param document  The document to be removed
-   */
-  remove(document2) {
-    const { tokenize, processTerm, extractField, stringifyField, fields, idField } = this._options;
-    const id = extractField(document2, idField);
-    if (id == null) {
-      throw new Error(`MiniSearch: document does not have ID field "${idField}"`);
-    }
-    const shortId = this._idToShortId.get(id);
-    if (shortId == null) {
-      throw new Error(`MiniSearch: cannot remove document with ID ${id}: it is not in the index`);
-    }
-    for (const field of fields) {
-      const fieldValue = extractField(document2, field);
-      if (fieldValue == null)
-        continue;
-      const tokens = tokenize(stringifyField(fieldValue, field), field);
-      const fieldId = this._fieldIds[field];
-      const uniqueTerms = new Set(tokens).size;
-      this.removeFieldLength(shortId, fieldId, this._documentCount, uniqueTerms);
-      for (const term of tokens) {
-        const processedTerm = processTerm(term, field);
-        if (Array.isArray(processedTerm)) {
-          for (const t3 of processedTerm) {
-            this.removeTerm(fieldId, shortId, t3);
-          }
-        } else if (processedTerm) {
-          this.removeTerm(fieldId, shortId, processedTerm);
-        }
-      }
-    }
-    this._storedFields.delete(shortId);
-    this._documentIds.delete(shortId);
-    this._idToShortId.delete(id);
-    this._fieldLength.delete(shortId);
-    this._documentCount -= 1;
-  }
-  /**
-   * Removes all the given documents from the index. If called with no arguments,
-   * it removes _all_ documents from the index.
-   *
-   * @param documents  The documents to be removed. If this argument is omitted,
-   * all documents are removed. Note that, for removing all documents, it is
-   * more efficient to call this method with no arguments than to pass all
-   * documents.
-   */
-  removeAll(documents) {
-    if (documents) {
-      for (const document2 of documents)
-        this.remove(document2);
-    } else if (arguments.length > 0) {
-      throw new Error("Expected documents to be present. Omit the argument to remove all documents.");
-    } else {
-      this._index = new SearchableMap();
-      this._documentCount = 0;
-      this._documentIds = /* @__PURE__ */ new Map();
-      this._idToShortId = /* @__PURE__ */ new Map();
-      this._fieldLength = /* @__PURE__ */ new Map();
-      this._avgFieldLength = [];
-      this._storedFields = /* @__PURE__ */ new Map();
-      this._nextId = 0;
-    }
-  }
-  /**
-   * Discards the document with the given ID, so it won't appear in search results
-   *
-   * It has the same visible effect of {@link MiniSearch.remove} (both cause the
-   * document to stop appearing in searches), but a different effect on the
-   * internal data structures:
-   *
-   *   - {@link MiniSearch#remove} requires passing the full document to be
-   *   removed as argument, and removes it from the inverted index immediately.
-   *
-   *   - {@link MiniSearch#discard} instead only needs the document ID, and
-   *   works by marking the current version of the document as discarded, so it
-   *   is immediately ignored by searches. This is faster and more convenient
-   *   than {@link MiniSearch#remove}, but the index is not immediately
-   *   modified. To take care of that, vacuuming is performed after a certain
-   *   number of documents are discarded, cleaning up the index and allowing
-   *   memory to be released.
-   *
-   * After discarding a document, it is possible to re-add a new version, and
-   * only the new version will appear in searches. In other words, discarding
-   * and re-adding a document works exactly like removing and re-adding it. The
-   * {@link MiniSearch.replace} method can also be used to replace a document
-   * with a new version.
-   *
-   * #### Details about vacuuming
-   *
-   * Repetite calls to this method would leave obsolete document references in
-   * the index, invisible to searches. Two mechanisms take care of cleaning up:
-   * clean up during search, and vacuuming.
-   *
-   *   - Upon search, whenever a discarded ID is found (and ignored for the
-   *   results), references to the discarded document are removed from the
-   *   inverted index entries for the search terms. This ensures that subsequent
-   *   searches for the same terms do not need to skip these obsolete references
-   *   again.
-   *
-   *   - In addition, vacuuming is performed automatically by default (see the
-   *   `autoVacuum` field in {@link Options}) after a certain number of
-   *   documents are discarded. Vacuuming traverses all terms in the index,
-   *   cleaning up all references to discarded documents. Vacuuming can also be
-   *   triggered manually by calling {@link MiniSearch#vacuum}.
-   *
-   * @param id  The ID of the document to be discarded
-   */
-  discard(id) {
-    const shortId = this._idToShortId.get(id);
-    if (shortId == null) {
-      throw new Error(`MiniSearch: cannot discard document with ID ${id}: it is not in the index`);
-    }
-    this._idToShortId.delete(id);
-    this._documentIds.delete(shortId);
-    this._storedFields.delete(shortId);
-    (this._fieldLength.get(shortId) || []).forEach((fieldLength, fieldId) => {
-      this.removeFieldLength(shortId, fieldId, this._documentCount, fieldLength);
-    });
-    this._fieldLength.delete(shortId);
-    this._documentCount -= 1;
-    this._dirtCount += 1;
-    this.maybeAutoVacuum();
-  }
-  maybeAutoVacuum() {
-    if (this._options.autoVacuum === false) {
-      return;
-    }
-    const { minDirtFactor, minDirtCount, batchSize, batchWait } = this._options.autoVacuum;
-    this.conditionalVacuum({ batchSize, batchWait }, { minDirtCount, minDirtFactor });
-  }
-  /**
-   * Discards the documents with the given IDs, so they won't appear in search
-   * results
-   *
-   * It is equivalent to calling {@link MiniSearch#discard} for all the given
-   * IDs, but with the optimization of triggering at most one automatic
-   * vacuuming at the end.
-   *
-   * Note: to remove all documents from the index, it is faster and more
-   * convenient to call {@link MiniSearch.removeAll} with no argument, instead
-   * of passing all IDs to this method.
-   */
-  discardAll(ids2) {
-    const autoVacuum = this._options.autoVacuum;
-    try {
-      this._options.autoVacuum = false;
-      for (const id of ids2) {
-        this.discard(id);
-      }
-    } finally {
-      this._options.autoVacuum = autoVacuum;
-    }
-    this.maybeAutoVacuum();
-  }
-  /**
-   * It replaces an existing document with the given updated version
-   *
-   * It works by discarding the current version and adding the updated one, so
-   * it is functionally equivalent to calling {@link MiniSearch#discard}
-   * followed by {@link MiniSearch#add}. The ID of the updated document should
-   * be the same as the original one.
-   *
-   * Since it uses {@link MiniSearch#discard} internally, this method relies on
-   * vacuuming to clean up obsolete document references from the index, allowing
-   * memory to be released (see {@link MiniSearch#discard}).
-   *
-   * @param updatedDocument  The updated document to replace the old version
-   * with
-   */
-  replace(updatedDocument) {
-    const { idField, extractField } = this._options;
-    const id = extractField(updatedDocument, idField);
-    this.discard(id);
-    this.add(updatedDocument);
-  }
-  /**
-   * Triggers a manual vacuuming, cleaning up references to discarded documents
-   * from the inverted index
-   *
-   * Vacuuming is only useful for applications that use the {@link
-   * MiniSearch#discard} or {@link MiniSearch#replace} methods.
-   *
-   * By default, vacuuming is performed automatically when needed (controlled by
-   * the `autoVacuum` field in {@link Options}), so there is usually no need to
-   * call this method, unless one wants to make sure to perform vacuuming at a
-   * specific moment.
-   *
-   * Vacuuming traverses all terms in the inverted index in batches, and cleans
-   * up references to discarded documents from the posting list, allowing memory
-   * to be released.
-   *
-   * The method takes an optional object as argument with the following keys:
-   *
-   *   - `batchSize`: the size of each batch (1000 by default)
-   *
-   *   - `batchWait`: the number of milliseconds to wait between batches (10 by
-   *   default)
-   *
-   * On large indexes, vacuuming could have a non-negligible cost: batching
-   * avoids blocking the thread for long, diluting this cost so that it is not
-   * negatively affecting the application. Nonetheless, this method should only
-   * be called when necessary, and relying on automatic vacuuming is usually
-   * better.
-   *
-   * It returns a promise that resolves (to undefined) when the clean up is
-   * completed. If vacuuming is already ongoing at the time this method is
-   * called, a new one is enqueued immediately after the ongoing one, and a
-   * corresponding promise is returned. However, no more than one vacuuming is
-   * enqueued on top of the ongoing one, even if this method is called more
-   * times (enqueuing multiple ones would be useless).
-   *
-   * @param options  Configuration options for the batch size and delay. See
-   * {@link VacuumOptions}.
-   */
-  vacuum(options = {}) {
-    return this.conditionalVacuum(options);
-  }
-  conditionalVacuum(options, conditions) {
-    if (this._currentVacuum) {
-      this._enqueuedVacuumConditions = this._enqueuedVacuumConditions && conditions;
-      if (this._enqueuedVacuum != null) {
-        return this._enqueuedVacuum;
-      }
-      this._enqueuedVacuum = this._currentVacuum.then(() => {
-        const conditions2 = this._enqueuedVacuumConditions;
-        this._enqueuedVacuumConditions = defaultVacuumConditions;
-        return this.performVacuuming(options, conditions2);
-      });
-      return this._enqueuedVacuum;
-    }
-    if (this.vacuumConditionsMet(conditions) === false) {
-      return Promise.resolve();
-    }
-    this._currentVacuum = this.performVacuuming(options);
-    return this._currentVacuum;
-  }
-  async performVacuuming(options, conditions) {
-    const initialDirtCount = this._dirtCount;
-    if (this.vacuumConditionsMet(conditions)) {
-      const batchSize = options.batchSize || defaultVacuumOptions.batchSize;
-      const batchWait = options.batchWait || defaultVacuumOptions.batchWait;
-      let i2 = 1;
-      for (const [term, fieldsData] of this._index) {
-        for (const [fieldId, fieldIndex] of fieldsData) {
-          for (const [shortId] of fieldIndex) {
-            if (this._documentIds.has(shortId)) {
-              continue;
-            }
-            if (fieldIndex.size <= 1) {
-              fieldsData.delete(fieldId);
-            } else {
-              fieldIndex.delete(shortId);
-            }
-          }
-        }
-        if (this._index.get(term).size === 0) {
-          this._index.delete(term);
-        }
-        if (i2 % batchSize === 0) {
-          await new Promise((resolve) => setTimeout(resolve, batchWait));
-        }
-        i2 += 1;
-      }
-      this._dirtCount -= initialDirtCount;
-    }
-    await null;
-    this._currentVacuum = this._enqueuedVacuum;
-    this._enqueuedVacuum = null;
-  }
-  vacuumConditionsMet(conditions) {
-    if (conditions == null) {
-      return true;
-    }
-    let { minDirtCount, minDirtFactor } = conditions;
-    minDirtCount = minDirtCount || defaultAutoVacuumOptions.minDirtCount;
-    minDirtFactor = minDirtFactor || defaultAutoVacuumOptions.minDirtFactor;
-    return this.dirtCount >= minDirtCount && this.dirtFactor >= minDirtFactor;
-  }
-  /**
-   * Is `true` if a vacuuming operation is ongoing, `false` otherwise
-   */
-  get isVacuuming() {
-    return this._currentVacuum != null;
-  }
-  /**
-   * The number of documents discarded since the most recent vacuuming
-   */
-  get dirtCount() {
-    return this._dirtCount;
-  }
-  /**
-   * A number between 0 and 1 giving an indication about the proportion of
-   * documents that are discarded, and can therefore be cleaned up by vacuuming.
-   * A value close to 0 means that the index is relatively clean, while a higher
-   * value means that the index is relatively dirty, and vacuuming could release
-   * memory.
-   */
-  get dirtFactor() {
-    return this._dirtCount / (1 + this._documentCount + this._dirtCount);
-  }
-  /**
-   * Returns `true` if a document with the given ID is present in the index and
-   * available for search, `false` otherwise
-   *
-   * @param id  The document ID
-   */
-  has(id) {
-    return this._idToShortId.has(id);
-  }
-  /**
-   * Returns the stored fields (as configured in the `storeFields` constructor
-   * option) for the given document ID. Returns `undefined` if the document is
-   * not present in the index.
-   *
-   * @param id  The document ID
-   */
-  getStoredFields(id) {
-    const shortId = this._idToShortId.get(id);
-    if (shortId == null) {
-      return void 0;
-    }
-    return this._storedFields.get(shortId);
-  }
-  /**
-   * Search for documents matching the given search query.
-   *
-   * The result is a list of scored document IDs matching the query, sorted by
-   * descending score, and each including data about which terms were matched and
-   * in which fields.
-   *
-   * ### Basic usage:
-   *
-   * ```javascript
-   * // Search for "zen art motorcycle" with default options: terms have to match
-   * // exactly, and individual terms are joined with OR
-   * miniSearch.search('zen art motorcycle')
-   * // => [ { id: 2, score: 2.77258, match: { ... } }, { id: 4, score: 1.38629, match: { ... } } ]
-   * ```
-   *
-   * ### Restrict search to specific fields:
-   *
-   * ```javascript
-   * // Search only in the 'title' field
-   * miniSearch.search('zen', { fields: ['title'] })
-   * ```
-   *
-   * ### Field boosting:
-   *
-   * ```javascript
-   * // Boost a field
-   * miniSearch.search('zen', { boost: { title: 2 } })
-   * ```
-   *
-   * ### Prefix search:
-   *
-   * ```javascript
-   * // Search for "moto" with prefix search (it will match documents
-   * // containing terms that start with "moto" or "neuro")
-   * miniSearch.search('moto neuro', { prefix: true })
-   * ```
-   *
-   * ### Fuzzy search:
-   *
-   * ```javascript
-   * // Search for "ismael" with fuzzy search (it will match documents containing
-   * // terms similar to "ismael", with a maximum edit distance of 0.2 term.length
-   * // (rounded to nearest integer)
-   * miniSearch.search('ismael', { fuzzy: 0.2 })
-   * ```
-   *
-   * ### Combining strategies:
-   *
-   * ```javascript
-   * // Mix of exact match, prefix search, and fuzzy search
-   * miniSearch.search('ismael mob', {
-   *  prefix: true,
-   *  fuzzy: 0.2
-   * })
-   * ```
-   *
-   * ### Advanced prefix and fuzzy search:
-   *
-   * ```javascript
-   * // Perform fuzzy and prefix search depending on the search term. Here
-   * // performing prefix and fuzzy search only on terms longer than 3 characters
-   * miniSearch.search('ismael mob', {
-   *  prefix: term => term.length > 3
-   *  fuzzy: term => term.length > 3 ? 0.2 : null
-   * })
-   * ```
-   *
-   * ### Combine with AND:
-   *
-   * ```javascript
-   * // Combine search terms with AND (to match only documents that contain both
-   * // "motorcycle" and "art")
-   * miniSearch.search('motorcycle art', { combineWith: 'AND' })
-   * ```
-   *
-   * ### Combine with AND_NOT:
-   *
-   * There is also an AND_NOT combinator, that finds documents that match the
-   * first term, but do not match any of the other terms. This combinator is
-   * rarely useful with simple queries, and is meant to be used with advanced
-   * query combinations (see later for more details).
-   *
-   * ### Filtering results:
-   *
-   * ```javascript
-   * // Filter only results in the 'fiction' category (assuming that 'category'
-   * // is a stored field)
-   * miniSearch.search('motorcycle art', {
-   *   filter: (result) => result.category === 'fiction'
-   * })
-   * ```
-   *
-   * ### Wildcard query
-   *
-   * Searching for an empty string (assuming the default tokenizer) returns no
-   * results. Sometimes though, one needs to match all documents, like in a
-   * "wildcard" search. This is possible by passing the special value
-   * {@link MiniSearch.wildcard} as the query:
-   *
-   * ```javascript
-   * // Return search results for all documents
-   * miniSearch.search(MiniSearch.wildcard)
-   * ```
-   *
-   * Note that search options such as `filter` and `boostDocument` are still
-   * applied, influencing which results are returned, and their order:
-   *
-   * ```javascript
-   * // Return search results for all documents in the 'fiction' category
-   * miniSearch.search(MiniSearch.wildcard, {
-   *   filter: (result) => result.category === 'fiction'
-   * })
-   * ```
-   *
-   * ### Advanced combination of queries:
-   *
-   * It is possible to combine different subqueries with OR, AND, and AND_NOT,
-   * and even with different search options, by passing a query expression
-   * tree object as the first argument, instead of a string.
-   *
-   * ```javascript
-   * // Search for documents that contain "zen" and ("motorcycle" or "archery")
-   * miniSearch.search({
-   *   combineWith: 'AND',
-   *   queries: [
-   *     'zen',
-   *     {
-   *       combineWith: 'OR',
-   *       queries: ['motorcycle', 'archery']
-   *     }
-   *   ]
-   * })
-   *
-   * // Search for documents that contain ("apple" or "pear") but not "juice" and
-   * // not "tree"
-   * miniSearch.search({
-   *   combineWith: 'AND_NOT',
-   *   queries: [
-   *     {
-   *       combineWith: 'OR',
-   *       queries: ['apple', 'pear']
-   *     },
-   *     'juice',
-   *     'tree'
-   *   ]
-   * })
-   * ```
-   *
-   * Each node in the expression tree can be either a string, or an object that
-   * supports all {@link SearchOptions} fields, plus a `queries` array field for
-   * subqueries.
-   *
-   * Note that, while this can become complicated to do by hand for complex or
-   * deeply nested queries, it provides a formalized expression tree API for
-   * external libraries that implement a parser for custom query languages.
-   *
-   * @param query  Search query
-   * @param searchOptions  Search options. Each option, if not given, defaults to the corresponding value of `searchOptions` given to the constructor, or to the library default.
-   */
-  search(query, searchOptions = {}) {
-    const { searchOptions: globalSearchOptions } = this._options;
-    const searchOptionsWithDefaults = { ...globalSearchOptions, ...searchOptions };
-    const rawResults = this.executeQuery(query, searchOptions);
-    const results = [];
-    for (const [docId, { score, terms, match: match5 }] of rawResults) {
-      const quality = terms.length || 1;
-      const result = {
-        id: this._documentIds.get(docId),
-        score: score * quality,
-        terms: Object.keys(match5),
-        queryTerms: terms,
-        match: match5
-      };
-      Object.assign(result, this._storedFields.get(docId));
-      if (searchOptionsWithDefaults.filter == null || searchOptionsWithDefaults.filter(result)) {
-        results.push(result);
-      }
-    }
-    if (query === MiniSearch.wildcard && searchOptionsWithDefaults.boostDocument == null) {
-      return results;
-    }
-    results.sort(byScore);
-    return results;
-  }
-  /**
-   * Provide suggestions for the given search query
-   *
-   * The result is a list of suggested modified search queries, derived from the
-   * given search query, each with a relevance score, sorted by descending score.
-   *
-   * By default, it uses the same options used for search, except that by
-   * default it performs prefix search on the last term of the query, and
-   * combine terms with `'AND'` (requiring all query terms to match). Custom
-   * options can be passed as a second argument. Defaults can be changed upon
-   * calling the {@link MiniSearch} constructor, by passing a
-   * `autoSuggestOptions` option.
-   *
-   * ### Basic usage:
-   *
-   * ```javascript
-   * // Get suggestions for 'neuro':
-   * miniSearch.autoSuggest('neuro')
-   * // => [ { suggestion: 'neuromancer', terms: [ 'neuromancer' ], score: 0.46240 } ]
-   * ```
-   *
-   * ### Multiple words:
-   *
-   * ```javascript
-   * // Get suggestions for 'zen ar':
-   * miniSearch.autoSuggest('zen ar')
-   * // => [
-   * //  { suggestion: 'zen archery art', terms: [ 'zen', 'archery', 'art' ], score: 1.73332 },
-   * //  { suggestion: 'zen art', terms: [ 'zen', 'art' ], score: 1.21313 }
-   * // ]
-   * ```
-   *
-   * ### Fuzzy suggestions:
-   *
-   * ```javascript
-   * // Correct spelling mistakes using fuzzy search:
-   * miniSearch.autoSuggest('neromancer', { fuzzy: 0.2 })
-   * // => [ { suggestion: 'neuromancer', terms: [ 'neuromancer' ], score: 1.03998 } ]
-   * ```
-   *
-   * ### Filtering:
-   *
-   * ```javascript
-   * // Get suggestions for 'zen ar', but only within the 'fiction' category
-   * // (assuming that 'category' is a stored field):
-   * miniSearch.autoSuggest('zen ar', {
-   *   filter: (result) => result.category === 'fiction'
-   * })
-   * // => [
-   * //  { suggestion: 'zen archery art', terms: [ 'zen', 'archery', 'art' ], score: 1.73332 },
-   * //  { suggestion: 'zen art', terms: [ 'zen', 'art' ], score: 1.21313 }
-   * // ]
-   * ```
-   *
-   * @param queryString  Query string to be expanded into suggestions
-   * @param options  Search options. The supported options and default values
-   * are the same as for the {@link MiniSearch#search} method, except that by
-   * default prefix search is performed on the last term in the query, and terms
-   * are combined with `'AND'`.
-   * @return  A sorted array of suggestions sorted by relevance score.
-   */
-  autoSuggest(queryString, options = {}) {
-    options = { ...this._options.autoSuggestOptions, ...options };
-    const suggestions = /* @__PURE__ */ new Map();
-    for (const { score, terms } of this.search(queryString, options)) {
-      const phrase = terms.join(" ");
-      const suggestion = suggestions.get(phrase);
-      if (suggestion != null) {
-        suggestion.score += score;
-        suggestion.count += 1;
-      } else {
-        suggestions.set(phrase, { score, terms, count: 1 });
-      }
-    }
-    const results = [];
-    for (const [suggestion, { score, terms, count }] of suggestions) {
-      results.push({ suggestion, terms, score: score / count });
-    }
-    results.sort(byScore);
-    return results;
-  }
-  /**
-   * Total number of documents available to search
-   */
-  get documentCount() {
-    return this._documentCount;
-  }
-  /**
-   * Number of terms in the index
-   */
-  get termCount() {
-    return this._index.size;
-  }
-  /**
-   * Deserializes a JSON index (serialized with `JSON.stringify(miniSearch)`)
-   * and instantiates a MiniSearch instance. It should be given the same options
-   * originally used when serializing the index.
-   *
-   * ### Usage:
-   *
-   * ```javascript
-   * // If the index was serialized with:
-   * let miniSearch = new MiniSearch({ fields: ['title', 'text'] })
-   * miniSearch.addAll(documents)
-   *
-   * const json = JSON.stringify(miniSearch)
-   * // It can later be deserialized like this:
-   * miniSearch = MiniSearch.loadJSON(json, { fields: ['title', 'text'] })
-   * ```
-   *
-   * @param json  JSON-serialized index
-   * @param options  configuration options, same as the constructor
-   * @return An instance of MiniSearch deserialized from the given JSON.
-   */
-  static loadJSON(json, options) {
-    if (options == null) {
-      throw new Error("MiniSearch: loadJSON should be given the same options used when serializing the index");
-    }
-    return this.loadJS(JSON.parse(json), options);
-  }
-  /**
-   * Async equivalent of {@link MiniSearch.loadJSON}
-   *
-   * This function is an alternative to {@link MiniSearch.loadJSON} that returns
-   * a promise, and loads the index in batches, leaving pauses between them to avoid
-   * blocking the main thread. It tends to be slower than the synchronous
-   * version, but does not block the main thread, so it can be a better choice
-   * when deserializing very large indexes.
-   *
-   * @param json  JSON-serialized index
-   * @param options  configuration options, same as the constructor
-   * @return A Promise that will resolve to an instance of MiniSearch deserialized from the given JSON.
-   */
-  static async loadJSONAsync(json, options) {
-    if (options == null) {
-      throw new Error("MiniSearch: loadJSON should be given the same options used when serializing the index");
-    }
-    return this.loadJSAsync(JSON.parse(json), options);
-  }
-  /**
-   * Returns the default value of an option. It will throw an error if no option
-   * with the given name exists.
-   *
-   * @param optionName  Name of the option
-   * @return The default value of the given option
-   *
-   * ### Usage:
-   *
-   * ```javascript
-   * // Get default tokenizer
-   * MiniSearch.getDefault('tokenize')
-   *
-   * // Get default term processor
-   * MiniSearch.getDefault('processTerm')
-   *
-   * // Unknown options will throw an error
-   * MiniSearch.getDefault('notExisting')
-   * // => throws 'MiniSearch: unknown option "notExisting"'
-   * ```
-   */
-  static getDefault(optionName) {
-    if (defaultOptions$1.hasOwnProperty(optionName)) {
-      return getOwnProperty(defaultOptions$1, optionName);
-    } else {
-      throw new Error(`MiniSearch: unknown option "${optionName}"`);
-    }
-  }
-  /**
-   * @ignore
-   */
-  static loadJS(js, options) {
-    const { index, documentIds, fieldLength, storedFields, serializationVersion } = js;
-    const miniSearch = this.instantiateMiniSearch(js, options);
-    miniSearch._documentIds = objectToNumericMap(documentIds);
-    miniSearch._fieldLength = objectToNumericMap(fieldLength);
-    miniSearch._storedFields = objectToNumericMap(storedFields);
-    for (const [shortId, id] of miniSearch._documentIds) {
-      miniSearch._idToShortId.set(id, shortId);
-    }
-    for (const [term, data] of index) {
-      const dataMap = /* @__PURE__ */ new Map();
-      for (const fieldId of Object.keys(data)) {
-        let indexEntry = data[fieldId];
-        if (serializationVersion === 1) {
-          indexEntry = indexEntry.ds;
-        }
-        dataMap.set(parseInt(fieldId, 10), objectToNumericMap(indexEntry));
-      }
-      miniSearch._index.set(term, dataMap);
-    }
-    return miniSearch;
-  }
-  /**
-   * @ignore
-   */
-  static async loadJSAsync(js, options) {
-    const { index, documentIds, fieldLength, storedFields, serializationVersion } = js;
-    const miniSearch = this.instantiateMiniSearch(js, options);
-    miniSearch._documentIds = await objectToNumericMapAsync(documentIds);
-    miniSearch._fieldLength = await objectToNumericMapAsync(fieldLength);
-    miniSearch._storedFields = await objectToNumericMapAsync(storedFields);
-    for (const [shortId, id] of miniSearch._documentIds) {
-      miniSearch._idToShortId.set(id, shortId);
-    }
-    let count = 0;
-    for (const [term, data] of index) {
-      const dataMap = /* @__PURE__ */ new Map();
-      for (const fieldId of Object.keys(data)) {
-        let indexEntry = data[fieldId];
-        if (serializationVersion === 1) {
-          indexEntry = indexEntry.ds;
-        }
-        dataMap.set(parseInt(fieldId, 10), await objectToNumericMapAsync(indexEntry));
-      }
-      if (++count % 1e3 === 0)
-        await wait(0);
-      miniSearch._index.set(term, dataMap);
-    }
-    return miniSearch;
-  }
-  /**
-   * @ignore
-   */
-  static instantiateMiniSearch(js, options) {
-    const { documentCount, nextId, fieldIds, averageFieldLength, dirtCount, serializationVersion } = js;
-    if (serializationVersion !== 1 && serializationVersion !== 2) {
-      throw new Error("MiniSearch: cannot deserialize an index created with an incompatible version");
-    }
-    const miniSearch = new MiniSearch(options);
-    miniSearch._documentCount = documentCount;
-    miniSearch._nextId = nextId;
-    miniSearch._idToShortId = /* @__PURE__ */ new Map();
-    miniSearch._fieldIds = fieldIds;
-    miniSearch._avgFieldLength = averageFieldLength;
-    miniSearch._dirtCount = dirtCount || 0;
-    miniSearch._index = new SearchableMap();
-    return miniSearch;
-  }
-  /**
-   * @ignore
-   */
-  executeQuery(query, searchOptions = {}) {
-    if (query === MiniSearch.wildcard) {
-      return this.executeWildcardQuery(searchOptions);
-    }
-    if (typeof query !== "string") {
-      const options2 = { ...searchOptions, ...query, queries: void 0 };
-      const results2 = query.queries.map((subquery) => this.executeQuery(subquery, options2));
-      return this.combineResults(results2, options2.combineWith);
-    }
-    const { tokenize, processTerm, searchOptions: globalSearchOptions } = this._options;
-    const options = { tokenize, processTerm, ...globalSearchOptions, ...searchOptions };
-    const { tokenize: searchTokenize, processTerm: searchProcessTerm } = options;
-    const terms = searchTokenize(query).flatMap((term) => searchProcessTerm(term)).filter((term) => !!term);
-    const queries = terms.map(termToQuerySpec(options));
-    const results = queries.map((query2) => this.executeQuerySpec(query2, options));
-    return this.combineResults(results, options.combineWith);
-  }
-  /**
-   * @ignore
-   */
-  executeQuerySpec(query, searchOptions) {
-    const options = { ...this._options.searchOptions, ...searchOptions };
-    const boosts = (options.fields || this._options.fields).reduce((boosts2, field) => ({ ...boosts2, [field]: getOwnProperty(options.boost, field) || 1 }), {});
-    const { boostDocument, weights, maxFuzzy, bm25: bm25params } = options;
-    const { fuzzy: fuzzyWeight, prefix: prefixWeight } = { ...defaultSearchOptions.weights, ...weights };
-    const data = this._index.get(query.term);
-    const results = this.termResults(query.term, query.term, 1, query.termBoost, data, boosts, boostDocument, bm25params);
-    let prefixMatches;
-    let fuzzyMatches;
-    if (query.prefix) {
-      prefixMatches = this._index.atPrefix(query.term);
-    }
-    if (query.fuzzy) {
-      const fuzzy = query.fuzzy === true ? 0.2 : query.fuzzy;
-      const maxDistance = fuzzy < 1 ? Math.min(maxFuzzy, Math.round(query.term.length * fuzzy)) : fuzzy;
-      if (maxDistance)
-        fuzzyMatches = this._index.fuzzyGet(query.term, maxDistance);
-    }
-    if (prefixMatches) {
-      for (const [term, data2] of prefixMatches) {
-        const distance = term.length - query.term.length;
-        if (!distance) {
-          continue;
-        }
-        fuzzyMatches === null || fuzzyMatches === void 0 ? void 0 : fuzzyMatches.delete(term);
-        const weight = prefixWeight * term.length / (term.length + 0.3 * distance);
-        this.termResults(query.term, term, weight, query.termBoost, data2, boosts, boostDocument, bm25params, results);
-      }
-    }
-    if (fuzzyMatches) {
-      for (const term of fuzzyMatches.keys()) {
-        const [data2, distance] = fuzzyMatches.get(term);
-        if (!distance) {
-          continue;
-        }
-        const weight = fuzzyWeight * term.length / (term.length + distance);
-        this.termResults(query.term, term, weight, query.termBoost, data2, boosts, boostDocument, bm25params, results);
-      }
-    }
-    return results;
-  }
-  /**
-   * @ignore
-   */
-  executeWildcardQuery(searchOptions) {
-    const results = /* @__PURE__ */ new Map();
-    const options = { ...this._options.searchOptions, ...searchOptions };
-    for (const [shortId, id] of this._documentIds) {
-      const score = options.boostDocument ? options.boostDocument(id, "", this._storedFields.get(shortId)) : 1;
-      results.set(shortId, {
-        score,
-        terms: [],
-        match: {}
-      });
-    }
-    return results;
-  }
-  /**
-   * @ignore
-   */
-  combineResults(results, combineWith = OR) {
-    if (results.length === 0) {
-      return /* @__PURE__ */ new Map();
-    }
-    const operator = combineWith.toLowerCase();
-    const combinator = combinators[operator];
-    if (!combinator) {
-      throw new Error(`Invalid combination operator: ${combineWith}`);
-    }
-    return results.reduce(combinator) || /* @__PURE__ */ new Map();
-  }
-  /**
-   * Allows serialization of the index to JSON, to possibly store it and later
-   * deserialize it with {@link MiniSearch.loadJSON}.
-   *
-   * Normally one does not directly call this method, but rather call the
-   * standard JavaScript `JSON.stringify()` passing the {@link MiniSearch}
-   * instance, and JavaScript will internally call this method. Upon
-   * deserialization, one must pass to {@link MiniSearch.loadJSON} the same
-   * options used to create the original instance that was serialized.
-   *
-   * ### Usage:
-   *
-   * ```javascript
-   * // Serialize the index:
-   * let miniSearch = new MiniSearch({ fields: ['title', 'text'] })
-   * miniSearch.addAll(documents)
-   * const json = JSON.stringify(miniSearch)
-   *
-   * // Later, to deserialize it:
-   * miniSearch = MiniSearch.loadJSON(json, { fields: ['title', 'text'] })
-   * ```
-   *
-   * @return A plain-object serializable representation of the search index.
-   */
-  toJSON() {
-    const index = [];
-    for (const [term, fieldIndex] of this._index) {
-      const data = {};
-      for (const [fieldId, freqs] of fieldIndex) {
-        data[fieldId] = Object.fromEntries(freqs);
-      }
-      index.push([term, data]);
-    }
-    return {
-      documentCount: this._documentCount,
-      nextId: this._nextId,
-      documentIds: Object.fromEntries(this._documentIds),
-      fieldIds: this._fieldIds,
-      fieldLength: Object.fromEntries(this._fieldLength),
-      averageFieldLength: this._avgFieldLength,
-      storedFields: Object.fromEntries(this._storedFields),
-      dirtCount: this._dirtCount,
-      index,
-      serializationVersion: 2
-    };
-  }
-  /**
-   * @ignore
-   */
-  termResults(sourceTerm, derivedTerm, termWeight, termBoost, fieldTermData, fieldBoosts, boostDocumentFn, bm25params, results = /* @__PURE__ */ new Map()) {
-    if (fieldTermData == null)
-      return results;
-    for (const field of Object.keys(fieldBoosts)) {
-      const fieldBoost = fieldBoosts[field];
-      const fieldId = this._fieldIds[field];
-      const fieldTermFreqs = fieldTermData.get(fieldId);
-      if (fieldTermFreqs == null)
-        continue;
-      let matchingFields = fieldTermFreqs.size;
-      const avgFieldLength = this._avgFieldLength[fieldId];
-      for (const docId of fieldTermFreqs.keys()) {
-        if (!this._documentIds.has(docId)) {
-          this.removeTerm(fieldId, docId, derivedTerm);
-          matchingFields -= 1;
-          continue;
-        }
-        const docBoost = boostDocumentFn ? boostDocumentFn(this._documentIds.get(docId), derivedTerm, this._storedFields.get(docId)) : 1;
-        if (!docBoost)
-          continue;
-        const termFreq = fieldTermFreqs.get(docId);
-        const fieldLength = this._fieldLength.get(docId)[fieldId];
-        const rawScore = calcBM25Score(termFreq, matchingFields, this._documentCount, fieldLength, avgFieldLength, bm25params);
-        const weightedScore = termWeight * termBoost * fieldBoost * docBoost * rawScore;
-        const result = results.get(docId);
-        if (result) {
-          result.score += weightedScore;
-          assignUniqueTerm(result.terms, sourceTerm);
-          const match5 = getOwnProperty(result.match, derivedTerm);
-          if (match5) {
-            match5.push(field);
-          } else {
-            result.match[derivedTerm] = [field];
-          }
-        } else {
-          results.set(docId, {
-            score: weightedScore,
-            terms: [sourceTerm],
-            match: { [derivedTerm]: [field] }
-          });
-        }
-      }
-    }
-    return results;
-  }
-  /**
-   * @ignore
-   */
-  addTerm(fieldId, documentId, term) {
-    const indexData = this._index.fetch(term, createMap);
-    let fieldIndex = indexData.get(fieldId);
-    if (fieldIndex == null) {
-      fieldIndex = /* @__PURE__ */ new Map();
-      fieldIndex.set(documentId, 1);
-      indexData.set(fieldId, fieldIndex);
-    } else {
-      const docs = fieldIndex.get(documentId);
-      fieldIndex.set(documentId, (docs || 0) + 1);
-    }
-  }
-  /**
-   * @ignore
-   */
-  removeTerm(fieldId, documentId, term) {
-    if (!this._index.has(term)) {
-      this.warnDocumentChanged(documentId, fieldId, term);
-      return;
-    }
-    const indexData = this._index.fetch(term, createMap);
-    const fieldIndex = indexData.get(fieldId);
-    if (fieldIndex == null || fieldIndex.get(documentId) == null) {
-      this.warnDocumentChanged(documentId, fieldId, term);
-    } else if (fieldIndex.get(documentId) <= 1) {
-      if (fieldIndex.size <= 1) {
-        indexData.delete(fieldId);
-      } else {
-        fieldIndex.delete(documentId);
-      }
-    } else {
-      fieldIndex.set(documentId, fieldIndex.get(documentId) - 1);
-    }
-    if (this._index.get(term).size === 0) {
-      this._index.delete(term);
-    }
-  }
-  /**
-   * @ignore
-   */
-  warnDocumentChanged(shortDocumentId, fieldId, term) {
-    for (const fieldName of Object.keys(this._fieldIds)) {
-      if (this._fieldIds[fieldName] === fieldId) {
-        this._options.logger("warn", `MiniSearch: document with ID ${this._documentIds.get(shortDocumentId)} has changed before removal: term "${term}" was not present in field "${fieldName}". Removing a document after it has changed can corrupt the index!`, "version_conflict");
-        return;
-      }
-    }
-  }
-  /**
-   * @ignore
-   */
-  addDocumentId(documentId) {
-    const shortDocumentId = this._nextId;
-    this._idToShortId.set(documentId, shortDocumentId);
-    this._documentIds.set(shortDocumentId, documentId);
-    this._documentCount += 1;
-    this._nextId += 1;
-    return shortDocumentId;
-  }
-  /**
-   * @ignore
-   */
-  addFields(fields) {
-    for (let i2 = 0; i2 < fields.length; i2++) {
-      this._fieldIds[fields[i2]] = i2;
-    }
-  }
-  /**
-   * @ignore
-   */
-  addFieldLength(documentId, fieldId, count, length2) {
-    let fieldLengths = this._fieldLength.get(documentId);
-    if (fieldLengths == null)
-      this._fieldLength.set(documentId, fieldLengths = []);
-    fieldLengths[fieldId] = length2;
-    const averageFieldLength = this._avgFieldLength[fieldId] || 0;
-    const totalFieldLength = averageFieldLength * count + length2;
-    this._avgFieldLength[fieldId] = totalFieldLength / (count + 1);
-  }
-  /**
-   * @ignore
-   */
-  removeFieldLength(documentId, fieldId, count, length2) {
-    if (count === 1) {
-      this._avgFieldLength[fieldId] = 0;
-      return;
-    }
-    const totalFieldLength = this._avgFieldLength[fieldId] * count - length2;
-    this._avgFieldLength[fieldId] = totalFieldLength / (count - 1);
-  }
-  /**
-   * @ignore
-   */
-  saveStoredFields(documentId, doc) {
-    const { storeFields, extractField } = this._options;
-    if (storeFields == null || storeFields.length === 0) {
-      return;
-    }
-    let documentFields = this._storedFields.get(documentId);
-    if (documentFields == null)
-      this._storedFields.set(documentId, documentFields = {});
-    for (const fieldName of storeFields) {
-      const fieldValue = extractField(doc, fieldName);
-      if (fieldValue !== void 0)
-        documentFields[fieldName] = fieldValue;
-    }
-  }
-}
-MiniSearch.wildcard = /* @__PURE__ */ Symbol("*");
-const getOwnProperty = (object2, property) => Object.prototype.hasOwnProperty.call(object2, property) ? object2[property] : void 0;
-const combinators = {
-  [OR]: (a2, b2) => {
-    for (const docId of b2.keys()) {
-      const existing = a2.get(docId);
-      if (existing == null) {
-        a2.set(docId, b2.get(docId));
-      } else {
-        const { score, terms, match: match5 } = b2.get(docId);
-        existing.score = existing.score + score;
-        existing.match = Object.assign(existing.match, match5);
-        assignUniqueTerms(existing.terms, terms);
-      }
-    }
-    return a2;
-  },
-  [AND]: (a2, b2) => {
-    const combined = /* @__PURE__ */ new Map();
-    for (const docId of b2.keys()) {
-      const existing = a2.get(docId);
-      if (existing == null)
-        continue;
-      const { score, terms, match: match5 } = b2.get(docId);
-      assignUniqueTerms(existing.terms, terms);
-      combined.set(docId, {
-        score: existing.score + score,
-        terms: existing.terms,
-        match: Object.assign(existing.match, match5)
-      });
-    }
-    return combined;
-  },
-  [AND_NOT]: (a2, b2) => {
-    for (const docId of b2.keys())
-      a2.delete(docId);
-    return a2;
-  }
-};
-const defaultBM25params = { k: 1.2, b: 0.7, d: 0.5 };
-const calcBM25Score = (termFreq, matchingCount, totalCount, fieldLength, avgFieldLength, bm25params) => {
-  const { k: k2, b: b2, d: d2 } = bm25params;
-  const invDocFreq = Math.log(1 + (totalCount - matchingCount + 0.5) / (matchingCount + 0.5));
-  return invDocFreq * (d2 + termFreq * (k2 + 1) / (termFreq + k2 * (1 - b2 + b2 * fieldLength / avgFieldLength)));
-};
-const termToQuerySpec = (options) => (term, i2, terms) => {
-  const fuzzy = typeof options.fuzzy === "function" ? options.fuzzy(term, i2, terms) : options.fuzzy || false;
-  const prefix2 = typeof options.prefix === "function" ? options.prefix(term, i2, terms) : options.prefix === true;
-  const termBoost = typeof options.boostTerm === "function" ? options.boostTerm(term, i2, terms) : 1;
-  return { term, fuzzy, prefix: prefix2, termBoost };
-};
-const defaultOptions$1 = {
-  idField: "id",
-  extractField: (document2, fieldName) => document2[fieldName],
-  stringifyField: (fieldValue, fieldName) => fieldValue.toString(),
-  tokenize: (text2) => text2.split(SPACE_OR_PUNCTUATION),
-  processTerm: (term) => term.toLowerCase(),
-  fields: void 0,
-  searchOptions: void 0,
-  storeFields: [],
-  logger: (level, message) => {
-    if (typeof (console === null || console === void 0 ? void 0 : console[level]) === "function")
-      console[level](message);
-  },
-  autoVacuum: true
-};
-const defaultSearchOptions = {
-  combineWith: OR,
-  prefix: false,
-  fuzzy: false,
-  maxFuzzy: 6,
-  boost: {},
-  weights: { fuzzy: 0.45, prefix: 0.375 },
-  bm25: defaultBM25params
-};
-const defaultAutoSuggestOptions = {
-  combineWith: AND,
-  prefix: (term, i2, terms) => i2 === terms.length - 1
-};
-const defaultVacuumOptions = { batchSize: 1e3, batchWait: 10 };
-const defaultVacuumConditions = { minDirtFactor: 0.1, minDirtCount: 20 };
-const defaultAutoVacuumOptions = { ...defaultVacuumOptions, ...defaultVacuumConditions };
-const assignUniqueTerm = (target, term) => {
-  if (!target.includes(term))
-    target.push(term);
-};
-const assignUniqueTerms = (target, source) => {
-  for (const term of source) {
-    if (!target.includes(term))
-      target.push(term);
-  }
-};
-const byScore = ({ score: a2 }, { score: b2 }) => b2 - a2;
-const createMap = () => /* @__PURE__ */ new Map();
-const objectToNumericMap = (object2) => {
-  const map = /* @__PURE__ */ new Map();
-  for (const key of Object.keys(object2)) {
-    map.set(parseInt(key, 10), object2[key]);
-  }
-  return map;
-};
-const objectToNumericMapAsync = async (object2) => {
-  const map = /* @__PURE__ */ new Map();
-  let count = 0;
-  for (const key of Object.keys(object2)) {
-    map.set(parseInt(key, 10), object2[key]);
-    if (++count % 1e3 === 0) {
-      await wait(0);
-    }
-  }
-  return map;
-};
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const SPACE_OR_PUNCTUATION = /[\n\r\p{Z}\p{P}]+/u;
 const DEFAULT_RETRIEVAL_LIMIT = 100;
 const SEARCH_FIELDS = [
   "title",
@@ -17290,48 +15604,127 @@ const SEARCH_FIELDS = [
   "header",
   "extraText"
 ];
-const STORE_FIELDS = [
-  "id",
-  "title",
-  "content",
-  "editableText",
-  "fullData",
-  "tags",
-  "goalPath",
-  "rootGoal",
-  "leafGoal",
-  "categoryKey",
-  "baseCategory",
-  "leafCategory",
-  "coreBlock",
-  "fileName",
-  "folder",
-  "header",
-  "dateMs",
-  "created",
-  "modified"
-];
-function createRetrievalMiniSearch() {
-  return new MiniSearch({
-    fields: SEARCH_FIELDS,
-    storeFields: STORE_FIELDS,
-    extractField: (document2, fieldName) => {
-      return normalizeRetrievalText(document2[fieldName]);
-    },
-    searchOptions: {
-      boost: {
-        title: 2,
-        editableText: 1.8,
-        goalPath: 1.5,
-        tags: 1.3,
-        categoryKey: 1.2,
-        extraText: 0.8
-      },
-      fuzzy: 0.2,
-      prefix: true
-    },
-    tokenize: tokenizeRetrievalText
-  });
+const FIELD_BOOSTS = {
+  title: 2,
+  editableText: 1.8,
+  goalPath: 1.5,
+  tags: 1.3,
+  categoryKey: 1.2,
+  extraText: 0.8
+};
+const DEFAULT_FIELD_BOOST = 1;
+const PREFIX_SCORE = 0.82;
+const FUZZY_RATIO = 0.2;
+const MIN_FUZZY_TERM_LENGTH = 4;
+class LocalRetrievalIndex {
+  preparedDocuments = [];
+  addAll(documents) {
+    this.preparedDocuments = documents.map((document2) => ({
+      document: document2,
+      fieldTokens: prepareFieldTokens(document2)
+    }));
+  }
+  search(query) {
+    const queryTokens = tokenizeRetrievalText(normalizeRetrievalText(query));
+    if (!queryTokens.length) return [];
+    const results = [];
+    for (const prepared of this.preparedDocuments) {
+      const scored = scorePreparedDocument(prepared, queryTokens);
+      if (scored.score <= 0) continue;
+      results.push({
+        ...prepared.document,
+        score: scored.score,
+        match: scored.match
+      });
+    }
+    return results.sort(compareResults);
+  }
+}
+function prepareFieldTokens(document2) {
+  const result = /* @__PURE__ */ new Map();
+  for (const field of SEARCH_FIELDS) {
+    const value = normalizeRetrievalText(document2[field]);
+    result.set(field, tokenizeRetrievalText(value));
+  }
+  return result;
+}
+function scorePreparedDocument(prepared, queryTokens) {
+  let score = 0;
+  const match5 = {};
+  for (const queryToken of queryTokens) {
+    let bestTokenScore = 0;
+    const matchedFields = [];
+    for (const field of SEARCH_FIELDS) {
+      const fieldBoost = FIELD_BOOSTS[field] ?? DEFAULT_FIELD_BOOST;
+      const tokens = prepared.fieldTokens.get(field) ?? [];
+      const fieldScore = bestFieldMatch(queryToken, tokens) * fieldBoost;
+      if (fieldScore <= 0) continue;
+      if (fieldScore > bestTokenScore) bestTokenScore = fieldScore;
+      matchedFields.push(field);
+    }
+    if (bestTokenScore > 0) {
+      score += bestTokenScore;
+      match5[queryToken] = [...new Set(matchedFields)];
+    }
+  }
+  return {
+    score: score / Math.max(queryTokens.length, 1),
+    match: match5
+  };
+}
+function bestFieldMatch(queryToken, documentTokens) {
+  let best = 0;
+  for (const documentToken of documentTokens) {
+    if (documentToken === queryToken) return 1;
+    if (documentToken.startsWith(queryToken)) {
+      best = Math.max(best, PREFIX_SCORE);
+      continue;
+    }
+    const fuzzyScore = fuzzyMatchScore(queryToken, documentToken);
+    if (fuzzyScore > best) best = fuzzyScore;
+  }
+  return best;
+}
+function fuzzyMatchScore(queryToken, documentToken) {
+  if (queryToken.length < MIN_FUZZY_TERM_LENGTH || documentToken.length < MIN_FUZZY_TERM_LENGTH) return 0;
+  const maxLength = Math.max(queryToken.length, documentToken.length);
+  const maxDistance = Math.max(1, Math.floor(maxLength * FUZZY_RATIO));
+  if (Math.abs(queryToken.length - documentToken.length) > maxDistance) return 0;
+  const distance = boundedLevenshtein(queryToken, documentToken, maxDistance);
+  if (distance > maxDistance) return 0;
+  return 1 - distance / maxLength;
+}
+function boundedLevenshtein(left2, right2, maxDistance) {
+  if (left2 === right2) return 0;
+  if (Math.abs(left2.length - right2.length) > maxDistance) return maxDistance + 1;
+  let previous = Array.from({ length: right2.length + 1 }, (_2, index) => index);
+  for (let i2 = 1; i2 <= left2.length; i2++) {
+    const current2 = new Array(right2.length + 1);
+    current2[0] = i2;
+    let rowMin = current2[0];
+    for (let j2 = 1; j2 <= right2.length; j2++) {
+      const substitutionCost = left2[i2 - 1] === right2[j2 - 1] ? 0 : 1;
+      current2[j2] = Math.min(
+        current2[j2 - 1] + 1,
+        previous[j2] + 1,
+        previous[j2 - 1] + substitutionCost
+      );
+      rowMin = Math.min(rowMin, current2[j2]);
+    }
+    if (rowMin > maxDistance) return maxDistance + 1;
+    previous = current2;
+  }
+  return previous[right2.length];
+}
+function compareResults(left2, right2) {
+  if (right2.score !== left2.score) return right2.score - left2.score;
+  const rightModified = right2.modified ?? right2.created ?? 0;
+  const leftModified = left2.modified ?? left2.created ?? 0;
+  if (rightModified !== leftModified) return rightModified - leftModified;
+  return left2.id.localeCompare(right2.id);
+}
+function createRetrievalIndex() {
+  return new LocalRetrievalIndex();
 }
 function itemToSearchDocument(item) {
   return {
@@ -17392,15 +15785,15 @@ var __decorateParam$9 = (index, decorator) => (target, key) => decorator(target,
 let RetrievalService = class {
   constructor(dataStore) {
     this.dataStore = dataStore;
-    this.initMiniSearch();
+    this.initSearchIndex();
   }
   dataStore;
-  miniSearch = null;
+  searchIndex = null;
   indexedItemIds = /* @__PURE__ */ new Set();
   indexedItemsById = /* @__PURE__ */ new Map();
   lastIndexTime = 0;
-  initMiniSearch() {
-    this.miniSearch = createRetrievalMiniSearch();
+  initSearchIndex() {
+    this.searchIndex = createRetrievalIndex();
   }
   /**
    * 构建/重建索引。
@@ -17413,7 +15806,7 @@ let RetrievalService = class {
       devLog("RetrievalService: 没有可索引的 items");
       return;
     }
-    this.initMiniSearch();
+    this.initSearchIndex();
     this.indexedItemIds.clear();
     this.indexedItemsById.clear();
     try {
@@ -17422,7 +15815,7 @@ let RetrievalService = class {
         this.indexedItemsById.set(item.id, item);
         return itemToSearchDocument(item);
       });
-      this.miniSearch.addAll(documents);
+      this.searchIndex.addAll(documents);
       validItems.forEach((item) => this.indexedItemIds.add(item.id));
       this.lastIndexTime = Date.now();
       devLog(`RetrievalService: 索引完成，共 ${validItems.length} 条，耗时 ${Date.now() - startTime}ms`);
@@ -17438,7 +15831,7 @@ let RetrievalService = class {
     return this.dataStore.queryItems([], []);
   }
   needsRebuild() {
-    return !this.miniSearch || this.indexedItemIds.size === 0;
+    return !this.searchIndex || this.indexedItemIds.size === 0;
   }
   ensureIndex() {
     if (this.needsRebuild()) {
@@ -17453,11 +15846,11 @@ let RetrievalService = class {
   }
   search(query, filters) {
     this.ensureIndex();
-    if (!this.miniSearch || !query.trim()) {
+    if (!this.searchIndex || !query.trim()) {
       return { items: [], results: [], totalMatched: 0 };
     }
     try {
-      const searchResults = this.miniSearch.search(query, {});
+      const searchResults = this.searchIndex.search(query);
       const totalFiltered = applyRetrievalFilters(searchResults, filters, this.indexedItemsById);
       const totalMatched = totalFiltered.length;
       const limited = totalFiltered.slice(0, filters?.limit ?? DEFAULT_RETRIEVAL_LIMIT);
@@ -18548,6 +16941,12 @@ const DATE_FORMAT = "YYYY-MM-DD";
 function splitTaskIntoDayBlocks(task, dateRange) {
   const blocks = [];
   if (!task.doneDate) return [];
+  if (task.timelineSource === "task-point") {
+    const pointDate = dayjs(task.actualStartDate);
+    if (pointDate.isBefore(dateRange[0], "day") || pointDate.isAfter(dateRange[1], "day")) return [];
+    const minute = task.startMinute % 1440;
+    return [{ ...task, day: pointDate.format(DATE_FORMAT), blockStartMinute: minute, blockEndMinute: minute }];
+  }
   let currentDate = dayjs(task.actualStartDate);
   let currentStartMinute = task.startMinute % 1440;
   let remainingDuration = task.duration;
@@ -18577,10 +16976,39 @@ function splitTaskIntoDayBlocks(task, dateRange) {
   }
   return blocks;
 }
+const TIMELINE_DAY_START_MINUTE = 0;
+function timelineVisibleEndMinute(maxHours = 24) {
+  const normalizedHours = Number.isFinite(maxHours) ? Math.max(0, Math.min(24, maxHours)) : 24;
+  return Math.round(normalizedHours * 60);
+}
+function clampTimelineMinute(value, maxHours = 24) {
+  const visibleEnd = timelineVisibleEndMinute(maxHours);
+  if (visibleEnd <= 0) return TIMELINE_DAY_START_MINUTE;
+  if (!Number.isFinite(value)) return TIMELINE_DAY_START_MINUTE;
+  return Math.min(visibleEnd - 1, Math.max(TIMELINE_DAY_START_MINUTE, Math.floor(value)));
+}
+function timelineMinuteFromOffset(offsetPx, hourHeight, maxHours = 24) {
+  if (!Number.isFinite(offsetPx) || !Number.isFinite(hourHeight) || hourHeight <= 0) {
+    return TIMELINE_DAY_START_MINUTE;
+  }
+  return clampTimelineMinute(Math.max(0, offsetPx) / hourHeight * 60, maxHours);
+}
+function timelineOffsetFromMinute(minute, hourHeight) {
+  if (!Number.isFinite(hourHeight) || hourHeight <= 0) return 0;
+  const normalizedMinute = Number.isFinite(minute) ? Math.max(TIMELINE_DAY_START_MINUTE, minute) : TIMELINE_DAY_START_MINUTE;
+  return normalizedMinute / 60 * hourHeight;
+}
+function timelineMinuteToLocalDateTime(day, minute) {
+  const normalizedDay = dayjs(day).startOf("day").format("YYYY-MM-DD");
+  const normalizedMinute = clampTimelineMinute(minute);
+  const hour = Math.floor(normalizedMinute / 60);
+  const minuteOfHour = normalizedMinute % 60;
+  return `${normalizedDay}T${String(hour).padStart(2, "0")}:${String(minuteOfHour).padStart(2, "0")}`;
+}
 function buildDailyViewData(timelineTasks, dateRange) {
-  const start2 = dayjs(dateRange[0]);
-  const end2 = dayjs(dateRange[1]);
-  const diff = end2.diff(start2, "day");
+  const start2 = dayjs(dateRange[0]).startOf("day");
+  const end2 = dayjs(dateRange[1]).startOf("day");
+  const diff = Math.max(0, end2.diff(start2, "day"));
   const dateRangeDays = Array.from({ length: diff + 1 }, (_2, i2) => start2.add(i2, "day"));
   const map = {};
   const range = [start2, end2];
@@ -19259,6 +17687,57 @@ function buildGenericRecordDraft(coreBlock, renderData, captureFields) {
   }
   return { coreBlock, fields };
 }
+function readRecord$1(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+function readString(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const option = value;
+    return String(option.value ?? option.label ?? "").trim();
+  }
+  return String(value ?? "").trim();
+}
+function readTimelineCompletedExecutionContext(context) {
+  const ui = readRecord$1(context?.__recordUiContext);
+  if (ui.kind !== "timeline_create" || ui.captureMode !== "completed_execution") return null;
+  return { kind: "timeline_create", captureMode: "completed_execution" };
+}
+function normalizeDateTime(value) {
+  const raw = readString(value).replace(" ", "T");
+  if (!raw) return null;
+  const ms = Date.parse(raw);
+  if (!Number.isFinite(ms)) return null;
+  return { iso: new Date(ms).toISOString(), ms };
+}
+function durationMinutes(startedMs, endedMs) {
+  return Math.round((endedMs - startedMs) / 6e4 * 100) / 100;
+}
+function buildTimelineCompletedExecutionSessionInput(input) {
+  if (!readTimelineCompletedExecutionContext(input.context)) return null;
+  if (readString(input.taskFields.status).toLowerCase() !== "done") return null;
+  const started = normalizeDateTime(input.taskFields.startAt);
+  const ended = normalizeDateTime(input.taskFields.endAt);
+  if (!started || !ended || ended.ms <= started.ms) return null;
+  const duration2 = durationMinutes(started.ms, ended.ms);
+  if (!Number.isFinite(duration2) || duration2 <= 0) return null;
+  return {
+    startedAt: started.iso,
+    endedAt: ended.iso,
+    durationMinutes: duration2,
+    result: "task-completed",
+    source: "timeline"
+  };
+}
+function buildTimelineCompletedExecutionPersistence(input) {
+  const session = buildTimelineCompletedExecutionSessionInput(input);
+  if (!session) return { taskFields: { ...input.taskFields }, session: null };
+  const taskFields = { ...input.taskFields };
+  delete taskFields.startAt;
+  delete taskFields.endAt;
+  delete taskFields.expectedDurationMinutes;
+  taskFields.completedAt = readString(taskFields.completedAt) || session.endedAt;
+  return { taskFields, session };
+}
 function normalizeNonEmptyPath(value) {
   const trimmed = String(value || "").trim();
   return trimmed || null;
@@ -19296,7 +17775,7 @@ function readStructuredTaskRecurrence(renderData) {
   if (!["day", "week", "month", "quarter", "year"].includes(rawUnit)) throw new Error(`task_recurrence_unit_invalid:${rawUnit}`);
   const interval = Number(renderData["重复间隔"] ?? renderData.recurrenceInterval ?? 1);
   if (!Number.isInteger(interval) || interval < 1) throw new Error(`task_recurrence_interval_invalid:${interval}`);
-  const rawAnchor = readScalarOption(renderData["重复锚点"] ?? renderData.recurrenceAnchor ?? "start").toLowerCase();
+  const rawAnchor = readScalarOption(renderData["重复锚点"] ?? renderData.recurrenceAnchor ?? "scheduled").toLowerCase();
   if (!["scheduled", "start", "due", "completion"].includes(rawAnchor)) throw new Error(`task_recurrence_anchor_invalid:${rawAnchor}`);
   return { unit: rawUnit, interval, anchor: rawAnchor };
 }
@@ -19372,27 +17851,40 @@ function buildRecordOutputPlan(input) {
     const recurrence = readStructuredTaskRecurrence(renderData);
     if (!recurrence && status === "skipped") throw new Error("task_status_skipped_requires_series");
     if (recurrence && status !== "open") throw new Error("task_series_initial_instance_must_be_open");
-    const startAt = normalizeLocalDateTime(
-      renderData["开始/预计时间"] ?? renderData["开始时间"] ?? renderData.startAt ?? renderData["计划时间"] ?? renderData.scheduledAt ?? renderData["计划日期"] ?? renderData.scheduledDate
+    const scheduledAt = normalizeLocalDateTime(
+      renderData["计划时间"] ?? renderData.scheduledAt ?? renderData["计划日期"] ?? renderData.scheduledDate
     );
-    const endAt = normalizeLocalDateTime(renderData["结束时间"] ?? renderData.endAt);
-    const declaredDuration = renderData["时长（分钟）"] ?? renderData["时长"] ?? renderData["预计时长"] ?? renderData.expectedDurationMinutes;
+    const dueAt = normalizeLocalDateTime(
+      renderData["截止时间"] ?? renderData.dueAt ?? renderData["截止日期"] ?? renderData.dueDate
+    );
+    const startAt = normalizeLocalDateTime(renderData["实际开始"] ?? renderData["开始时间"] ?? renderData["开始/预计时间"] ?? renderData.startAt);
+    const endAt = normalizeLocalDateTime(renderData["实际结束"] ?? renderData["结束时间"] ?? renderData.endAt);
+    const declaredDuration = renderData["预计时长（分钟）"] ?? renderData["时长（分钟）"] ?? renderData["时长"] ?? renderData["预计时长"] ?? renderData.expectedDurationMinutes;
     const capturedAt = (/* @__PURE__ */ new Date()).toISOString();
     const taskFields = {
       status,
       content: renderData["任务内容"] ?? renderData["内容"] ?? renderData.content,
       goalPath: renderData.goalPath,
       priority: renderData["优先级"] ?? renderData.priority,
+      importance: renderData["重要程度"] ?? renderData.importance,
+      urgency: renderData["紧急程度"] ?? renderData.urgency,
       energyDemand: renderData["精力要求"] ?? renderData.energyDemand,
       brainDemand: renderData["脑力要求"] ?? renderData.brainDemand,
       physicalDemand: renderData["体力要求"] ?? renderData.physicalDemand,
       availabilityContexts: renderData["可用场景"] ?? renderData.availabilityContexts,
       recoveryIntent: renderData["恢复意图"] ?? renderData.recoveryIntent,
+      scheduledAt,
+      dueAt,
       startAt,
       endAt,
       expectedDurationMinutes: declaredDuration || durationMinutesBetween(startAt, endAt),
       createdAt: renderData["创建于"] ?? renderData.createdAt ?? capturedAt,
-      completedAt: status === "done" ? renderData["完成于"] ?? renderData.completedAt ?? capturedAt : void 0,
+      // A completed Task with an explicit endAt is historical execution data.
+      // Use that end as the completion fact unless the user supplied completedAt;
+      // falling back to capture time is only appropriate when no execution end exists.
+      completedAt: status === "done" ? renderData["完成于"] ?? renderData.completedAt ?? endAt ?? capturedAt : void 0,
+      cancelledAt: status === "cancelled" ? renderData["取消于"] ?? renderData.cancelledAt : void 0,
+      skippedAt: status === "skipped" ? renderData["跳过于"] ?? renderData.skippedAt : void 0,
       seriesId: renderData.seriesId ?? renderData["系列ID"]
     };
     const customTaskFields = buildCustomCaptureFields("task", renderData, input.template.fields);
@@ -19422,7 +17914,7 @@ function buildRecordOutputPlan(input) {
       const seriesId = createRecordId("task-series");
       taskFields.seriesId = seriesId;
       const seriesStartDate = String(
-        localDatePart(String(taskFields.startAt || "")) || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)
+        localDatePart(String(taskFields.scheduledAt || "")) || localDatePart(String(taskFields.startAt || "")) || localDatePart(String(taskFields.dueAt || "")) || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)
       );
       const seriesBlock = encodeRecordBlock({
         recordId: seriesId,
@@ -19432,6 +17924,8 @@ function buildRecordOutputPlan(input) {
           content: taskFields.content,
           goalPath: taskFields.goalPath,
           priority: taskFields.priority,
+          importance: taskFields.importance,
+          urgency: taskFields.urgency,
           expectedDurationMinutes: taskFields.expectedDurationMinutes,
           energyDemand: taskFields.energyDemand,
           brainDemand: taskFields.brainDemand,
@@ -19450,7 +17944,28 @@ function buildRecordOutputPlan(input) {
 
 ${taskBlock}`;
     } else {
-      outputContent = encodeRecordBlock({ recordId, coreBlock: "task", fields: taskFields });
+      const timelineExecution = buildTimelineCompletedExecutionPersistence({
+        context: input.context,
+        taskFields
+      });
+      const taskBlock = encodeRecordBlock({ recordId, coreBlock: "task", fields: timelineExecution.taskFields });
+      if (!timelineExecution.session) {
+        outputContent = taskBlock;
+      } else {
+        const sessionId = createRecordId("task-session");
+        const sessionBlock = encodeRecordBlock({
+          recordId: sessionId,
+          coreBlock: "task-session",
+          fields: buildTaskSessionFields({
+            id: recordId,
+            seriesId: existingSeriesId || void 0,
+            goalPath: String(taskFields.goalPath || "").trim() || void 0
+          }, timelineExecution.session)
+        });
+        outputContent = `${taskBlock}
+
+${sessionBlock}`;
+      }
     }
   } else if (schema?.family === "generic") {
     const draft = buildGenericRecordDraft(schema.coreBlock, renderData, input.template.fields);
@@ -19543,9 +18058,9 @@ let InputService = class {
   }
   vault;
   dataStore;
-  previewTemplateExecution(template, formData, recordId) {
+  previewTemplateExecution(template, formData, recordId, context) {
     if (!template) throw new Error("传入了无效的模板对象。");
-    const outputPlan = buildRecordOutputPlan({ template, formData, recordId });
+    const outputPlan = buildRecordOutputPlan({ template, formData, recordId, context });
     return {
       recordId: outputPlan.recordId,
       renderData: outputPlan.renderData,
@@ -19557,7 +18072,7 @@ let InputService = class {
   async executeTemplate(template, formData, options = {}) {
     const signal = options.signal;
     this.throwIfAborted(signal);
-    const preview = this.previewTemplateExecution(template, formData, options.recordId);
+    const preview = this.previewTemplateExecution(template, formData, options.recordId, options.context);
     const { outputContent, targetFilePath, header } = preview;
     if (!targetFilePath) throw new Error("模板未定义目标文件路径 (targetFile)。");
     return this.appendDirectRecord(targetFilePath, outputContent, header, options);
@@ -19787,14 +18302,14 @@ class TaskSessionMutation {
     const originalDuration = session.sessionDurationMinutes;
     if (updates.time) startedMs = withLocalClock$1(session.sessionStartedAt, updates.time);
     if (updates.endTime) {
-      endedMs = withLocalClock$1(session.sessionEndedAt, updates.endTime);
+      endedMs = withLocalClock$1(new Date(startedMs).toISOString(), updates.endTime);
       if (endedMs < startedMs) endedMs += 864e5;
     } else if (updates.duration != null || updates.time) {
       const duration2 = updates.duration != null ? updates.duration : originalDuration;
-      if (!Number.isFinite(duration2) || duration2 < 0) throw new Error("task_session_duration_invalid");
+      if (!Number.isFinite(duration2) || duration2 <= 0) throw new Error("task_session_duration_invalid");
       endedMs = startedMs + duration2 * 6e4;
     }
-    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs < startedMs) {
+    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs <= startedMs) {
       throw new Error("task_session_time_order_invalid");
     }
     const durationMinutes2 = Math.round((endedMs - startedMs) / 6e4 * 100) / 100;
@@ -19874,6 +18389,8 @@ function nextTaskFields(task, series, completedAt, nextDates) {
     goalPath: series.goalPath,
     createdAt: completedAt,
     priority: series.priority,
+    importance: series.importance,
+    urgency: series.urgency,
     expectedDurationMinutes: series.expectedDurationMinutes,
     energyDemand: series.energyDemand,
     brainDemand: series.brainDemand,
@@ -19908,8 +18425,16 @@ class TaskCompletionMutation {
   async cancelItem(itemId) {
     await this.transition(itemId, "cancel");
   }
+  async cancelItemWithSession(itemId, session) {
+    if (session.result !== "work-block-ended") throw new Error("task_session_cancel_result_required");
+    await this.transition(itemId, "cancel", session);
+  }
   async skipItem(itemId) {
     await this.transition(itemId, "skip");
+  }
+  async skipItemWithSession(itemId, session) {
+    if (session.result !== "work-block-ended") throw new Error("task_session_skip_result_required");
+    await this.transition(itemId, "skip", session);
   }
   async reopenItem(itemId) {
     await this.transition(itemId, "reopen");
@@ -19935,6 +18460,8 @@ class TaskCompletionMutation {
       ["content", "content"],
       ["goalPath", "goalPath"],
       ["priority", "priority"],
+      ["importance", "importance"],
+      ["urgency", "urgency"],
       ["expectedDurationMinutes", "expectedDurationMinutes"],
       ["energyDemand", "energyDemand"],
       ["brainDemand", "brainDemand"],
@@ -19993,7 +18520,7 @@ class TaskCompletionMutation {
     if (!canTransitionTaskStatus(status, command, { recurring })) {
       throw new Error(`task_transition_invalid:${status}:${command}`);
     }
-    const at = timestampNow();
+    const at = sessionInput?.endedAt || timestampNow();
     if (command === "reopen") {
       if (task.seriesId) {
         const series2 = asTaskSeriesRecord(await this.repository.getById(task.seriesId));
@@ -20127,6 +18654,57 @@ class TaskTimeMutation {
     return updated;
   }
 }
+const TASK_QUADRANT_PRESENTATION = {
+  q1: { quadrant: "q1", emoji: "🔥", label: "紧急且重要", shortLabel: "紧急重要" },
+  q2: { quadrant: "q2", emoji: "🎯", label: "重要但不紧急", shortLabel: "重要不紧急" },
+  q3: { quadrant: "q3", emoji: "⚡", label: "紧急但不重要", shortLabel: "紧急不重要" },
+  q4: { quadrant: "q4", emoji: "🌿", label: "不紧急且不重要", shortLabel: "不紧急不重要" },
+  unclassified: { quadrant: "unclassified", emoji: "📥", label: "未分类", shortLabel: "未分类" }
+};
+function normalizeTaskImportance(value) {
+  const normalized2 = String(value ?? "").trim().toLowerCase();
+  return normalized2 === "important" || normalized2 === "normal" ? normalized2 : null;
+}
+function normalizeTaskUrgency(value) {
+  const normalized2 = String(value ?? "").trim().toLowerCase();
+  return normalized2 === "urgent" || normalized2 === "normal" ? normalized2 : null;
+}
+function deriveEisenhowerQuadrant(task) {
+  if (!task || task.coreBlock !== "task") return "unclassified";
+  const importance = normalizeTaskImportance(task.importance);
+  const urgency = normalizeTaskUrgency(task.urgency);
+  if (!importance || !urgency) return "unclassified";
+  if (importance === "important" && urgency === "urgent") return "q1";
+  if (importance === "important" && urgency === "normal") return "q2";
+  if (importance === "normal" && urgency === "urgent") return "q3";
+  return "q4";
+}
+function taskClassificationForQuadrant(quadrant) {
+  switch (quadrant) {
+    case "q1":
+      return { importance: "important", urgency: "urgent" };
+    case "q2":
+      return { importance: "important", urgency: "normal" };
+    case "q3":
+      return { importance: "normal", urgency: "urgent" };
+    case "q4":
+      return { importance: "normal", urgency: "normal" };
+    default:
+      return { importance: null, urgency: null };
+  }
+}
+class TaskQuadrantMutation {
+  constructor(repository) {
+    this.repository = repository;
+  }
+  repository;
+  async move(taskId, quadrant) {
+    const task = asTaskRecord(await this.repository.getById(taskId));
+    if (!task) throw new Error(`task_record_required:${taskId}`);
+    const classification = taskClassificationForQuadrant(quadrant);
+    await this.repository.update(taskId, classification);
+  }
+}
 class RecordTransactionRecoveryError extends Error {
   constructor(originalError, writtenPaths, recoveryFailedPaths) {
     super(`record_transaction_recovery_required:${recoveryFailedPaths.join(",")}`, { cause: originalError });
@@ -20198,6 +18776,8 @@ const PATCH_FIELDS = {
   cancelledAt: { label: "取消于", aliases: ["取消于", "cancelledAt"] },
   skippedAt: { label: "跳过于", aliases: ["跳过于", "skippedAt"] },
   priority: { label: "优先级", aliases: ["优先级", "priority"] },
+  importance: { label: "重要程度", aliases: ["重要程度", "importance"] },
+  urgency: { label: "紧急程度", aliases: ["紧急程度", "urgency"] },
   expectedDurationMinutes: { label: "预计时长", aliases: ["预计时长", "expectedDurationMinutes"] },
   energyDemand: { label: "精力要求", aliases: ["精力要求", "energyDemand"] },
   brainDemand: { label: "脑力要求", aliases: ["脑力要求", "brainDemand"] },
@@ -20401,6 +18981,7 @@ let ItemService = class {
   taskCompletion;
   taskSessions;
   taskTime;
+  taskQuadrant;
   inlineFields;
   goalTemplateMigration;
   migrationBackup;
@@ -20408,6 +18989,7 @@ let ItemService = class {
     const recordRepository = new RecordRepository(vault, dataStore);
     this.taskSessions = new TaskSessionMutation(dataStore, recordRepository);
     this.taskTime = new TaskTimeMutation(recordRepository, this.taskSessions);
+    this.taskQuadrant = new TaskQuadrantMutation(recordRepository);
     this.taskCompletion = new TaskCompletionMutation(dataStore, recordRepository, this.taskSessions);
     this.inlineFields = new InlineFieldMutation(recordRepository);
     this.goalTemplateMigration = new GoalTemplateMigrationMutation(recordRepository);
@@ -20428,8 +19010,14 @@ let ItemService = class {
   cancelItem(itemId) {
     return this.taskCompletion.cancelItem(itemId);
   }
+  cancelItemWithSession(itemId, session) {
+    return this.taskCompletion.cancelItemWithSession(itemId, session);
+  }
   skipItem(itemId) {
     return this.taskCompletion.skipItem(itemId);
+  }
+  skipItemWithSession(itemId, session) {
+    return this.taskCompletion.skipItemWithSession(itemId, session);
   }
   reopenItem(itemId) {
     return this.taskCompletion.reopenItem(itemId);
@@ -20442,6 +19030,9 @@ let ItemService = class {
   }
   updateTaskSeries(seriesId, update, options = {}) {
     return this.taskCompletion.updateSeries(seriesId, update, options);
+  }
+  updateTaskQuadrant(itemId, quadrant) {
+    return this.taskQuadrant.move(itemId, quadrant);
   }
   async updateItemTime(itemId, updates, _mutationOptions = {}) {
     await this.taskTime.update(itemId, updates);
@@ -20689,7 +19280,7 @@ var __decorateClass$5 = (decorators, target, key, kind) => {
 };
 var __decorateParam$4 = (index, decorator) => (target, key) => decorator(target, key, index);
 const TIMER_STATE_PATH = "think-plugin-timer-state.json";
-const TIMER_RUNTIME_SCHEMA_VERSION = 2;
+const TIMER_RUNTIME_SCHEMA_VERSION = 3;
 function isTimerRuntimeState(entry) {
   if (!entry || typeof entry !== "object") return false;
   const timer = entry;
@@ -23015,11 +21606,13 @@ function buildViewRecordQuery(input) {
     sort: input.sort || [],
     date: {
       range: input.dateRange,
-      field: "date",
-      mode: input.isOverviewMode ? "overview" : "standard",
+      field: input.dateField || "date",
+      role: input.dateRole || "default",
+      mode: input.dateMode || (input.isOverviewMode ? "overview" : "standard"),
       granularity: input.layoutView,
       useFieldGranularity: !!input.useFieldGranularity,
-      periodValue: periodFilter?.value
+      periodValue: periodFilter?.value,
+      precision: input.datePrecision || "day"
     }
   };
 }
@@ -23687,7 +22280,7 @@ function buildUpdateRecordSubmitParamsFromEditorState({
     expectedOutputPlan: expectedOutputPlan ?? null,
     expectedPersistencePlan: expectedPersistencePlan ?? null,
     signal,
-    source: source ?? "quickinput"
+    source
   };
 }
 function buildRecordDraftContext(...parts) {
@@ -23821,14 +22414,19 @@ function findGoal(goalSettings, goalPath) {
 function mergeTemplate(base, patch) {
   const required2 = new Set(patch.requiredFields || []);
   const defaultValues = patch.defaultValues || {};
+  const isTaskTemplate2 = String(base.recordTypeId || base.id || "").replace(/^core\./, "") === "task";
   const fields = [...patch.fields ?? base.fields].map((field) => {
     const key = field.key || field.label;
     const defaultValue2 = defaultValues[key] ?? defaultValues[field.label || ""];
-    return {
+    const mergedField = {
       ...field,
       ...defaultValue2 !== void 0 ? { defaultValue: String(defaultValue2) } : null,
       ...required2.has(key) || required2.has(field.label || "") ? { required: true } : null
     };
+    if (isTaskTemplate2 && ["expectedDurationMinutes", "预计时长", "时长", "时长（分钟）"].includes(String(key || ""))) {
+      mergedField.required = false;
+    }
+    return mergedField;
   });
   const merged = {
     ...base,
@@ -24303,6 +22901,11 @@ function buildInitialEditFormData(input) {
   if (input.item.coreBlock === "task") {
     if (isPresent(input.item.status)) result.status = input.item.status;
     if (isPresent(input.item.seriesId)) result.seriesId = input.item.seriesId;
+    if (isPresent(input.item.startAt)) result.startAt = input.item.startAt;
+    if (isPresent(input.item.endAt)) result.endAt = input.item.endAt;
+    if (isPresent(input.item.completedAt)) result.completedAt = input.item.completedAt;
+    if (isPresent(input.item.cancelledAt)) result.cancelledAt = input.item.cancelledAt;
+    if (isPresent(input.item.skippedAt)) result.skippedAt = input.item.skippedAt;
   }
   return result;
 }
@@ -24510,6 +23113,8 @@ function parseDurationValue(value) {
   return Number.isFinite(parsed) ? parsed : void 0;
 }
 function finalizeTimeFieldsByTemplate(formData, fields, direction) {
+  const hasExplicitEndField = fields.some((field) => fieldSemanticMatches(field, "endTime") || fieldMatches(field, ["结束", "结束时间", "end", "endtime", "endTime", "endAt"]));
+  if (!hasExplicitEndField) return { ...formData };
   const startKey = findFieldKey(fields, ["时间", "开始", "开始时间", "开始/预计时间", "time", "start", "starttime", "startTime", "startAt"], "时间", "startTime");
   const endKey = findFieldKey(fields, ["结束", "结束时间", "end", "endtime", "endTime", "endAt"], "结束", "endTime");
   const durationKey = findFieldKey(fields, ["时长", "时长（分钟）", "预计时长", "duration", "minutes", "持续时间", "expectedDurationMinutes"], "时长", "duration");
@@ -24572,6 +23177,13 @@ function normalizeRecordInput(input) {
 function issue$1(code, message, field) {
   return { code, message, field };
 }
+function isTaskOptionalDurationField(template, field) {
+  const recordTypeId = String(template?.recordTypeId || template?.id || "").trim().replace(/^core\./, "");
+  if (recordTypeId !== "task") return false;
+  const key = String(field.key || "").trim();
+  const label = String(field.label || "").trim();
+  return field.semantic === "duration" || key === "expectedDurationMinutes" || ["预计时长", "时长", "时长（分钟）"].includes(key) || ["预计时长", "时长", "时长（分钟）"].includes(label);
+}
 function hasRequiredValue(value) {
   if (value === void 0 || value === null) return false;
   if (Array.isArray(value)) return value.some((entry) => hasRequiredValue(entry));
@@ -24600,7 +23212,7 @@ function validateRecordInput(input) {
   for (const field of input.template.fields || []) {
     const rawValue = input.formData[field.key] ?? input.formData[field.label || ""];
     const hasValue2 = hasRequiredValue(rawValue);
-    if (field.required && !hasValue2) {
+    if (field.required && !hasValue2 && !isTaskOptionalDurationField(input.template, field)) {
       errors.push(issue$1(
         "record_field_required",
         `请填写必填字段：${field.label || field.key}`,
@@ -25059,10 +23671,10 @@ function buildLag(points, windowStart) {
 }
 function pairSession(session, pointById) {
   const first2 = asTaskSessionRecord(session.items[0]);
-  const last2 = asTaskSessionRecord(session.items[session.items.length - 1]);
-  if (!first2?.startEnergyRecordId || !last2?.endEnergyRecordId) return null;
+  const last = asTaskSessionRecord(session.items[session.items.length - 1]);
+  if (!first2?.startEnergyRecordId || !last?.endEnergyRecordId) return null;
   const before = pointById.get(first2.startEnergyRecordId);
-  const after = pointById.get(last2.endEnergyRecordId);
+  const after = pointById.get(last.endEnergyRecordId);
   if (!before || !after || before.itemId === after.itemId) return null;
   return {
     session,
@@ -25595,6 +24207,9 @@ function prepareTemplateSubmit(params) {
     }
   };
 }
+function buildCreateRecordFollowUp(createdRecord) {
+  return createdRecord.coreBlock === "task" && createdRecord.status === "open" ? { startTimerForRecordId: createdRecord.id } : void 0;
+}
 class CreateRecordWorkflow {
   constructor(runtime) {
     this.runtime = runtime;
@@ -25618,13 +24233,15 @@ class CreateRecordWorkflow {
       throwIfAborted$1(params.signal);
       const preview = this.runtime.deps.inputService.previewTemplateExecution(
         resolved.template,
-        normalized2.normalizedFormData
+        normalized2.normalizedFormData,
+        void 0,
+        params.context
       );
       if (!preview.recordId) throw new Error("record_id_required_before_create");
       const path = await this.runtime.deps.inputService.executeTemplate(
         resolved.template,
         normalized2.normalizedFormData,
-        { signal: params.signal, recordId: preview.recordId || void 0 }
+        { signal: params.signal, recordId: preview.recordId || void 0, context: params.context }
       );
       const refreshPlan = buildRefreshPlan([path]);
       const scannedByPath = await applyRecordRefreshPlan(this.runtime.deps.dataStore, refreshPlan);
@@ -25636,7 +24253,9 @@ class CreateRecordWorkflow {
         affectedRecordId: createdRecord?.id,
         refresh: refreshPlan,
         feedback: { notice: "✅ 已创建" },
-        followUp: createdRecord.coreBlock === "task" ? { startTimerForRecordId: createdRecord.id } : void 0,
+        // Only a newly created open Task should offer/start execution. Timeline quick-capture
+        // creates historical completed Tasks and must never start a timer for them.
+        followUp: buildCreateRecordFollowUp(createdRecord),
         warnings
       });
     } catch (error) {
@@ -25650,6 +24269,12 @@ class DeleteRecordWorkflow {
   }
   runtime;
   async submit(params) {
+    if (params.item.coreBlock === "task" && String(params.item.seriesId || "").trim()) {
+      return buildValidationErrorResult("delete", [{
+        code: "recurring_task_delete_requires_lifecycle_command",
+        message: "周期任务当前实例不能直接删除，请使用“跳过本次”或“停止重复”。"
+      }]);
+    }
     return submitFinalizedRecordMutation({
       dataStore: this.runtime.deps.dataStore,
       operation: "delete",
@@ -25728,6 +24353,41 @@ class RecordMigrationTransaction {
     }
   }
 }
+function roundedMinutes(totalSeconds) {
+  return Math.max(0, Math.round(Math.max(0, totalSeconds) / 60 * 100) / 100);
+}
+function buildTimerSegmentSession(timer, endedAt, result) {
+  if (timer.status !== "running") return null;
+  if (!Number.isFinite(timer.startTime) || !Number.isFinite(endedAt) || endedAt <= timer.startTime) return null;
+  const durationMinutes2 = roundedMinutes((endedAt - timer.startTime) / 1e3);
+  if (!Number.isFinite(durationMinutes2) || durationMinutes2 <= 0) return null;
+  return {
+    startedAt: new Date(timer.startTime).toISOString(),
+    endedAt: new Date(endedAt).toISOString(),
+    durationMinutes: durationMinutes2,
+    result,
+    source: timer.source,
+    suggestedDurationMinutes: timer.energyContext?.suggestedDurationMinutes,
+    startEnergyRecordId: timer.energyContext?.baselineEnergyItemId
+  };
+}
+const SCOPES = /* @__PURE__ */ new Set(["current", "current_and_future", "series_rules"]);
+function normalizeTaskSeriesEditIntent(value) {
+  if (!value || typeof value !== "object") return null;
+  const candidate = value;
+  const scope = String(candidate.scope || "");
+  if (!SCOPES.has(scope)) return null;
+  return {
+    scope,
+    recurrence: candidate.recurrence ? { ...candidate.recurrence } : void 0
+  };
+}
+function detachTaskSeriesIdentityForDuplicate(formData) {
+  const next2 = { ...formData };
+  delete next2.seriesId;
+  delete next2["系列ID"];
+  return next2;
+}
 function normalizePlanText(value) {
   return String(value ?? "").trim();
 }
@@ -25795,17 +24455,74 @@ function boolValue(value) {
   const normalized2 = String(value ?? "").trim().toLowerCase();
   return ["true", "1", "yes", "是", "on"].includes(normalized2);
 }
-function taskSeriesDefaults(renderData) {
+function hasAnyKey(data, keys) {
+  return keys.some((key) => Object.prototype.hasOwnProperty.call(data, key));
+}
+function normalizedTaskStatus(value) {
+  return optionScalar(value).toLowerCase();
+}
+function buildTaskLifecycleBypassIssue(item, formData) {
+  if (item.coreBlock !== "task") return null;
+  const current2 = normalizedTaskStatus(item.status);
+  const requested = normalizedTaskStatus(formData.status ?? formData["状态"] ?? current2);
+  if (!requested || requested === current2) return null;
   return {
-    content: optionScalar(renderData["任务内容"] ?? renderData["内容"] ?? renderData.content),
-    goalPath: nullableText(renderData.goalPath ?? renderData["目标"]),
-    priority: nullableText(renderData["优先级"] ?? renderData.priority),
-    expectedDurationMinutes: durationValue(renderData["预计时长"] ?? renderData.expectedDurationMinutes),
-    energyDemand: nullableText(renderData["精力要求"] ?? renderData.energyDemand),
-    brainDemand: nullableText(renderData["脑力要求"] ?? renderData.brainDemand),
-    physicalDemand: nullableText(renderData["体力要求"] ?? renderData.physicalDemand),
-    availabilityContexts: contextValues(renderData["可用场景"] ?? renderData.availabilityContexts),
-    recoveryIntent: boolValue(renderData["恢复意图"] ?? renderData.recoveryIntent)
+    code: "task_status_requires_lifecycle_command",
+    field: "status",
+    message: "已有任务的状态不能通过普通编辑直接修改；请使用完成、取消、重新打开或跳过命令。"
+  };
+}
+function taskSeriesDefaults(renderData) {
+  const update = {};
+  if (hasAnyKey(renderData, ["任务内容", "内容", "content"])) {
+    update.content = optionScalar(renderData["任务内容"] ?? renderData["内容"] ?? renderData.content);
+  }
+  if (hasAnyKey(renderData, ["goalPath", "目标"])) {
+    update.goalPath = nullableText(renderData.goalPath ?? renderData["目标"]);
+  }
+  if (hasAnyKey(renderData, ["优先级", "priority"])) {
+    update.priority = nullableText(renderData["优先级"] ?? renderData.priority);
+  }
+  if (hasAnyKey(renderData, ["重要程度", "importance"])) {
+    update.importance = nullableText(renderData["重要程度"] ?? renderData.importance);
+  }
+  if (hasAnyKey(renderData, ["紧急程度", "urgency"])) {
+    update.urgency = nullableText(renderData["紧急程度"] ?? renderData.urgency);
+  }
+  if (hasAnyKey(renderData, ["预计时长", "expectedDurationMinutes"])) {
+    update.expectedDurationMinutes = durationValue(renderData["预计时长"] ?? renderData.expectedDurationMinutes);
+  }
+  if (hasAnyKey(renderData, ["精力要求", "energyDemand"])) {
+    update.energyDemand = nullableText(renderData["精力要求"] ?? renderData.energyDemand);
+  }
+  if (hasAnyKey(renderData, ["脑力要求", "brainDemand"])) {
+    update.brainDemand = nullableText(renderData["脑力要求"] ?? renderData.brainDemand);
+  }
+  if (hasAnyKey(renderData, ["体力要求", "physicalDemand"])) {
+    update.physicalDemand = nullableText(renderData["体力要求"] ?? renderData.physicalDemand);
+  }
+  if (hasAnyKey(renderData, ["可用场景", "availabilityContexts"])) {
+    update.availabilityContexts = contextValues(renderData["可用场景"] ?? renderData.availabilityContexts);
+  }
+  if (hasAnyKey(renderData, ["恢复意图", "recoveryIntent"])) {
+    update.recoveryIntent = boolValue(renderData["恢复意图"] ?? renderData.recoveryIntent);
+  }
+  return update;
+}
+function buildExplicitTaskSeriesEditPlan(params, renderData) {
+  const intent = normalizeTaskSeriesEditIntent(params.meta?.taskSeriesEdit);
+  if (!intent || intent.scope === "current") return null;
+  const seriesId = String(params.item.seriesId || "").trim();
+  if (params.item.coreBlock !== "task" || !seriesId) {
+    return { error: "task_series_edit_requires_recurring_task" };
+  }
+  return {
+    seriesId,
+    scope: intent.scope,
+    update: {
+      ...intent.scope === "current_and_future" ? taskSeriesDefaults(renderData) : {},
+      ...intent.recurrence ? { recurrence: intent.recurrence } : {}
+    }
   };
 }
 class UpdateRecordWorkflow {
@@ -25813,18 +24530,39 @@ class UpdateRecordWorkflow {
     this.runtime = runtime;
   }
   runtime;
-  async syncRecurringTaskSeries(params, renderData) {
-    const seriesId = String(params.item.seriesId || "").trim();
-    if (params.item.coreBlock !== "task" || !seriesId) return null;
+  async applyExplicitSeriesEdit(params, renderData) {
+    const plan = buildExplicitTaskSeriesEditPlan(params, renderData);
+    if (!plan) return null;
+    if ("error" in plan) {
+      return {
+        code: plan.error,
+        message: "只有周期任务才能修改系列规则。"
+      };
+    }
     try {
-      await this.runtime.deps.itemService.updateTaskSeries(seriesId, taskSeriesDefaults(renderData), { includeCurrent: false });
+      await this.runtime.deps.itemService.updateTaskSeries(plan.seriesId, plan.update, { includeCurrent: false });
       return null;
     } catch (error) {
       return {
-        code: "task_series_defaults_sync_failed",
-        message: `当前任务已保存，但周期任务默认值同步失败：${error?.message || String(error)}`
+        code: "task_series_explicit_update_failed",
+        message: `周期任务系列保存失败：${error?.message || String(error)}`
       };
     }
+  }
+  async submitSeriesRulesOnly(params, renderData, warnings) {
+    const intent = normalizeTaskSeriesEditIntent(params.meta?.taskSeriesEdit);
+    if (!intent || intent.scope !== "series_rules") return null;
+    const issue2 = await this.applyExplicitSeriesEdit(params, renderData);
+    if (issue2) return buildValidationErrorResult("update", [issue2], warnings);
+    const seriesId = String(params.item.seriesId || "").trim();
+    const seriesPath = this.runtime.deps.dataStore.getRecordLocation(seriesId)?.path || getItemFilePath(params.item);
+    return finalizeRecordSubmitResult(this.runtime.deps.dataStore, buildSuccessResult("update", {
+      affectedPath: seriesPath,
+      affectedRecordId: seriesId,
+      refresh: buildRefreshPlan([seriesPath]),
+      feedback: { notice: "已保存周期系列规则；当前任务和历史任务未改动。" },
+      warnings: warnings || []
+    }));
   }
   async submit(params) {
     let warnings = [];
@@ -25841,11 +24579,15 @@ class UpdateRecordWorkflow {
       if (!prepared.ok) return prepared.result;
       const { resolved, normalized: normalized2 } = prepared.submit;
       warnings = prepared.submit.warnings;
+      const lifecycleIssue = buildTaskLifecycleBypassIssue(params.item, normalized2.normalizedFormData);
+      if (lifecycleIssue) return buildValidationErrorResult("update", [lifecycleIssue], warnings);
       const outputPlan = buildRecordOutputPlan({
         template: resolved.template,
         formData: normalized2.normalizedFormData,
         recordId: params.item.id
       });
+      const seriesRulesOnly = await this.submitSeriesRulesOnly(params, outputPlan.renderData, warnings);
+      if (seriesRulesOnly) return seriesRulesOnly;
       const persistencePlan = buildRecordPersistencePlan({
         mode: "edit",
         originalPath: getItemFilePath(params.item),
@@ -25872,13 +24614,13 @@ class UpdateRecordWorkflow {
           signal: params.signal
         });
         if (result.status === "success" || result.status === "partial_success") {
-          const seriesIssue2 = await this.syncRecurringTaskSeries(params, outputPlan.renderData);
+          const seriesIssue2 = await this.applyExplicitSeriesEdit(params, outputPlan.renderData);
           if (seriesIssue2) {
             return {
               ...result,
               status: "partial_success",
               warnings: [...result.warnings || [], seriesIssue2],
-              feedback: { notice: "当前任务已保存，但周期任务默认值同步失败。" }
+              feedback: { notice: "当前任务已保存，但周期系列同步失败。" }
             };
           }
         }
@@ -25890,7 +24632,7 @@ class UpdateRecordWorkflow {
         normalized2.normalizedFormData,
         { signal: params.signal, autoRefresh: false }
       );
-      const seriesIssue = await this.syncRecurringTaskSeries(params, outputPlan.renderData);
+      const seriesIssue = await this.applyExplicitSeriesEdit(params, outputPlan.renderData);
       const baseWarnings = warnings || [];
       const nextWarnings = seriesIssue ? [...baseWarnings, seriesIssue] : baseWarnings;
       return finalizeRecordSubmitResult(this.runtime.deps.dataStore, buildSuccessResult("update", {
@@ -25898,7 +24640,7 @@ class UpdateRecordWorkflow {
         affectedPath: path,
         affectedRecordId: params.item.id,
         refresh: buildRefreshPlan([path]),
-        feedback: { notice: seriesIssue ? "当前任务已保存，但周期任务默认值同步失败。" : "✅ 已保存修改" },
+        feedback: { notice: seriesIssue ? "当前任务已保存，但周期系列同步失败。" : "✅ 已保存修改" },
         warnings: nextWarnings
       }));
     } catch (error) {
@@ -25974,6 +24716,38 @@ class RecordInputUseCase {
   }
   async submitUpdateRecord(params) {
     return new UpdateRecordWorkflow(this.getWorkflowRuntime()).submit(params);
+  }
+  async updateTaskQuadrant(itemId, quadrant) {
+    await this.deps.itemService.updateTaskQuadrant(itemId, quadrant);
+  }
+  async stopTaskSeries(seriesId) {
+    await this.deps.itemService.stopTaskSeries(seriesId, { cancelCurrent: false });
+  }
+  async submitTaskLifecycle(itemId, command, session) {
+    return submitFinalizedRecordMutation({
+      dataStore: this.deps.dataStore,
+      operation: "update",
+      refreshPathsOnError: () => [this.deps.dataStore.getRecordLocation(itemId)?.path || null],
+      run: async () => {
+        const path = this.deps.dataStore.getRecordLocation(itemId)?.path;
+        if (!path) throw new Error(`record_location_unavailable:${itemId}`);
+        if (command === "cancel") {
+          if (session) await this.deps.itemService.cancelItemWithSession(itemId, session);
+          else await this.deps.itemService.cancelItem(itemId);
+        } else if (command === "reopen") await this.deps.itemService.reopenItem(itemId);
+        else if (command === "skip") {
+          if (session) await this.deps.itemService.skipItemWithSession(itemId, session);
+          else await this.deps.itemService.skipItem(itemId);
+        } else throw new Error(`task_lifecycle_command_invalid:${command}`);
+        const notice = command === "cancel" ? "任务已取消。" : command === "reopen" ? "任务已重新打开。" : "已跳过本次任务。";
+        return buildSuccessResult("update", {
+          affectedPath: path,
+          affectedRecordId: itemId,
+          refresh: buildRefreshPlan([path]),
+          feedback: { notice }
+        });
+      }
+    });
   }
   async submitDeleteRecord(params) {
     return new DeleteRecordWorkflow(this.getWorkflowRuntime()).submit(params);
@@ -26248,19 +25022,103 @@ class GoalUseCase {
 function createGoalUseCase(store) {
   return new GoalUseCase(store);
 }
+class TaskRuntimeUseCase {
+  constructor(dataStore, timer, recordInput) {
+    this.dataStore = dataStore;
+    this.timer = timer;
+    this.recordInput = recordInput;
+  }
+  dataStore;
+  timer;
+  recordInput;
+  async completeTask(params) {
+    return this.runLifecycle({ ...params, command: "complete" });
+  }
+  async runLifecycle(params) {
+    const taskId = String(params.taskId || "").trim();
+    const task = taskId ? this.dataStore.getRecordById(taskId) : null;
+    const operation = params.command === "complete" ? "complete" : "update";
+    if (!task || task.coreBlock !== "task") {
+      return buildValidationErrorResult(operation, [{
+        code: "task_runtime_context_missing",
+        field: "taskId",
+        message: "找不到要操作的任务上下文。"
+      }]);
+    }
+    if (params.command !== "reopen" && task.status !== "open") {
+      return buildValidationErrorResult(operation, [{
+        code: "task_runtime_not_open",
+        field: "status",
+        message: "只有未完成任务才能执行这个操作。"
+      }]);
+    }
+    const taskTimers = this.timer.getTimers().filter((entry) => entry.taskId === taskId);
+    if (taskTimers.length > 1) {
+      return buildValidationErrorResult(operation, [{
+        code: "task_runtime_timer_context_ambiguous",
+        message: "同一个任务存在多个活动计时上下文，请先恢复计时状态后重试。"
+      }]);
+    }
+    const activeTimer = taskTimers[0];
+    if (params.expectedTimerId && activeTimer?.id !== params.expectedTimerId) {
+      return buildValidationErrorResult(operation, [{
+        code: "task_runtime_timer_context_changed",
+        message: "当前计时上下文已经变化，请重新操作。"
+      }]);
+    }
+    if (params.command === "reopen" && activeTimer) {
+      return buildValidationErrorResult(operation, [{
+        code: "task_runtime_reopen_timer_conflict",
+        message: "任务仍存在活动计时上下文，不能直接重新打开。"
+      }]);
+    }
+    const sessionResult = params.command === "complete" ? "task-completed" : "work-block-ended";
+    const session = activeTimer ? buildTimerSegmentSession(activeTimer, Date.now(), sessionResult) ?? void 0 : void 0;
+    const result = params.command === "complete" ? await this.recordInput.submitCompleteRecord({
+      itemId: taskId,
+      session,
+      source: activeTimer ? "timer" : params.source ?? "unknown"
+    }) : await this.recordInput.submitTaskLifecycle(taskId, params.command, session);
+    if ((result.status === "success" || result.status === "partial_success") && activeTimer) {
+      try {
+        await this.timer.removeTimer(activeTimer.id);
+      } catch (error) {
+        return {
+          ...result,
+          status: "partial_success",
+          warnings: [
+            ...result.warnings || [],
+            {
+              code: "task_runtime_timer_cleanup_failed",
+              message: error instanceof Error ? error.message : "任务状态已更新，但计时运行态清理失败。"
+            }
+          ],
+          feedback: { notice: "任务状态已更新，但计时运行态清理失败；重新加载后会再次校验。" }
+        };
+      }
+    }
+    return result;
+  }
+}
+function createTaskRuntimeUseCase(dataStore, timer, recordInput) {
+  return new TaskRuntimeUseCase(dataStore, timer, recordInput);
+}
 const USECASES_TOKEN = "UseCases";
 function createUseCases(store, deps) {
+  const timer = createTimerUseCase(store, deps.timerStateService);
+  const recordInput = createRecordInputUseCase(store, {
+    inputService: deps.inputService,
+    itemService: deps.itemService,
+    dataStore: deps.dataStore
+  });
   return {
     settings: createSettingsUseCase(store),
     layout: createLayoutUseCase(store),
     viewInstance: createViewInstanceUseCase(store),
-    timer: createTimerUseCase(store, deps.timerStateService),
-    recordInput: createRecordInputUseCase(store, {
-      inputService: deps.inputService,
-      itemService: deps.itemService,
-      dataStore: deps.dataStore
-    }),
-    goal: createGoalUseCase(store)
+    timer,
+    recordInput,
+    goal: createGoalUseCase(store),
+    taskRuntime: createTaskRuntimeUseCase(deps.dataStore, timer, recordInput)
   };
 }
 const runtimeCache = /* @__PURE__ */ new Map();
@@ -28480,12 +27338,12 @@ function getContainerQuery(theme, shorthand) {
 }
 function cssContainerQueries(themeInput) {
   const toContainerQuery = (mediaQuery, name) => mediaQuery.replace("@media", name ? `@container ${name}` : "@container");
-  function attachCq(node3, name) {
-    node3.up = (...args) => toContainerQuery(themeInput.breakpoints.up(...args), name);
-    node3.down = (...args) => toContainerQuery(themeInput.breakpoints.down(...args), name);
-    node3.between = (...args) => toContainerQuery(themeInput.breakpoints.between(...args), name);
-    node3.only = (...args) => toContainerQuery(themeInput.breakpoints.only(...args), name);
-    node3.not = (...args) => {
+  function attachCq(node22, name) {
+    node22.up = (...args) => toContainerQuery(themeInput.breakpoints.up(...args), name);
+    node22.down = (...args) => toContainerQuery(themeInput.breakpoints.down(...args), name);
+    node22.between = (...args) => toContainerQuery(themeInput.breakpoints.between(...args), name);
+    node22.only = (...args) => toContainerQuery(themeInput.breakpoints.only(...args), name);
+    node22.not = (...args) => {
       const result = toContainerQuery(themeInput.breakpoints.not(...args), name);
       if (result.includes("not all and")) {
         return result.replace("not all and ", "").replace("min-width:", "width<").replace("max-width:", "width>").replace("and", "or");
@@ -31016,12 +29874,12 @@ const assignNestedKeys = (obj, keys, value, arrayKeys = []) => {
   });
 };
 const walkObjectDeep = (obj, callback, shouldSkipPaths) => {
-  function recurse2(object2, parentKeys = [], arrayKeys = []) {
+  function recurse(object2, parentKeys = [], arrayKeys = []) {
     Object.entries(object2).forEach(([key, value]) => {
       if (!shouldSkipPaths || shouldSkipPaths && !shouldSkipPaths([...parentKeys, key])) {
         if (value !== void 0 && value !== null) {
           if (typeof value === "object" && Object.keys(value).length > 0) {
-            recurse2(value, [...parentKeys, key], Array.isArray(value) ? [...arrayKeys, key] : arrayKeys);
+            recurse(value, [...parentKeys, key], Array.isArray(value) ? [...arrayKeys, key] : arrayKeys);
           } else {
             callback([...parentKeys, key], value, arrayKeys);
           }
@@ -31029,7 +29887,7 @@ const walkObjectDeep = (obj, callback, shouldSkipPaths) => {
       }
     });
   }
-  recurse2(obj);
+  recurse(obj);
 };
 const getCssValue = (keys, value) => {
   if (typeof value === "number") {
@@ -32907,14 +31765,14 @@ function createSvgIcon(path, displayName) {
   Component.muiName = SvgIcon.muiName;
   return /* @__PURE__ */ N(/* @__PURE__ */ D(Component));
 }
-function debounce$1(func, wait2 = 166) {
+function debounce$1(func, wait = 166) {
   let timeout;
   function debounced(...args) {
     const later = () => {
       func.apply(this, args);
     };
     clearTimeout(timeout);
-    timeout = setTimeout(later, wait2);
+    timeout = setTimeout(later, wait);
   }
   debounced.clear = () => {
     clearTimeout(timeout);
@@ -33162,13 +32020,13 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
     this.cancelNextCallback();
   };
   _proto.getTimeouts = function getTimeouts() {
-    var timeout = this.props.timeout;
+    var timeout2 = this.props.timeout;
     var exit, enter, appear;
-    exit = enter = appear = timeout;
-    if (timeout != null && typeof timeout !== "number") {
-      exit = timeout.exit;
-      enter = timeout.enter;
-      appear = timeout.appear !== void 0 ? timeout.appear : enter;
+    exit = enter = appear = timeout2;
+    if (timeout2 != null && typeof timeout2 !== "number") {
+      exit = timeout2.exit;
+      enter = timeout2.enter;
+      appear = timeout2.appear !== void 0 ? timeout2.appear : enter;
     }
     return {
       exit,
@@ -33278,10 +32136,10 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
     };
     return this.nextCallback;
   };
-  _proto.onTransitionEnd = function onTransitionEnd(timeout, handler) {
+  _proto.onTransitionEnd = function onTransitionEnd(timeout2, handler) {
     this.setNextCallback(handler);
     var node2 = this.props.nodeRef ? this.props.nodeRef.current : gn.findDOMNode(this);
-    var doesNotHaveTimeoutOrListener = timeout == null && !this.props.addEndListener;
+    var doesNotHaveTimeoutOrListener = timeout2 == null && !this.props.addEndListener;
     if (!node2 || doesNotHaveTimeoutOrListener) {
       setTimeout(this.nextCallback, 0);
       return;
@@ -33290,8 +32148,8 @@ var Transition = /* @__PURE__ */ (function(_React$Component) {
       var _ref3 = this.props.nodeRef ? [this.nextCallback] : [node2, this.nextCallback], maybeNode = _ref3[0], maybeNextCallback = _ref3[1];
       this.props.addEndListener(maybeNode, maybeNextCallback);
     }
-    if (timeout != null) {
-      setTimeout(this.nextCallback, timeout);
+    if (timeout2 != null) {
+      setTimeout(this.nextCallback, timeout2);
     }
   };
   _proto.render = function render() {
@@ -34894,7 +33752,7 @@ const IconButtonLoadingIndicator = styled("span", {
     }
   }]
 }));
-const IconButton$1 = /* @__PURE__ */ D(function IconButton(inProps, ref) {
+const IconButton$1 = /* @__PURE__ */ D(function IconButton2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiIconButton"
@@ -35069,7 +33927,7 @@ const defaultVariantMapping = {
   body2: "p",
   inherit: "p"
 };
-const Typography$1 = /* @__PURE__ */ D(function Typography(inProps, ref) {
+const Typography$1 = /* @__PURE__ */ D(function Typography2(inProps, ref) {
   const {
     color: color2,
     ...themeProps
@@ -36715,7 +35573,7 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
     children: typeof children === "function" ? children(childProps) : children
   });
 });
-const Popper$1 = /* @__PURE__ */ D(function Popper(props, forwardedRef) {
+const Popper$1 = /* @__PURE__ */ D(function Popper2(props, forwardedRef) {
   const {
     anchorEl,
     children,
@@ -36791,7 +35649,7 @@ const PopperRoot = styled(Popper$1, {
   name: "MuiPopper",
   slot: "Root"
 })({});
-const Popper2 = /* @__PURE__ */ D(function Popper3(inProps, ref) {
+const Popper = /* @__PURE__ */ D(function Popper22(inProps, ref) {
   const isRtl = useRtl();
   const props = useDefaultProps({
     props: inProps,
@@ -37174,7 +36032,7 @@ const ChipLabel = styled("span", {
 function isDeleteKeyboardEvent(keyboardEvent) {
   return keyboardEvent.key === "Backspace" || keyboardEvent.key === "Delete";
 }
-const Chip$1 = /* @__PURE__ */ D(function Chip(inProps, ref) {
+const Chip$1 = /* @__PURE__ */ D(function Chip2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiChip"
@@ -38739,7 +37597,7 @@ const ButtonLoadingIconPlaceholder = styled("span", {
   width: "1em",
   height: "1em"
 });
-const Button$1 = /* @__PURE__ */ D(function Button(inProps, ref) {
+const Button$1 = /* @__PURE__ */ D(function Button2(inProps, ref) {
   const contextProps = x$1(ButtonGroupContext);
   const buttonGroupButtonContextPositionClassName = x$1(ButtonGroupButtonContext);
   const resolvedProps = resolveProps(contextProps, inProps);
@@ -39151,7 +38009,7 @@ const CheckboxRoot = styled(SwitchBase, {
 const defaultCheckedIcon = /* @__PURE__ */ u2(CheckBoxIcon, {});
 const defaultIcon = /* @__PURE__ */ u2(CheckBoxOutlineBlankIcon, {});
 const defaultIndeterminateIcon = /* @__PURE__ */ u2(IndeterminateCheckBoxIcon, {});
-const Checkbox$1 = /* @__PURE__ */ D(function Checkbox(inProps, ref) {
+const Checkbox$1 = /* @__PURE__ */ D(function Checkbox2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiCheckbox"
@@ -39833,7 +38691,7 @@ const ModalBackdrop = styled(Backdrop, {
 })({
   zIndex: -1
 });
-const Modal$1 = /* @__PURE__ */ D(function Modal(inProps, ref) {
+const Modal$1 = /* @__PURE__ */ D(function Modal2(inProps, ref) {
   const props = useDefaultProps({
     name: "MuiModal",
     props: inProps
@@ -40545,7 +39403,7 @@ const AsteriskComponent$1 = styled("span", {
     color: (theme.vars || theme).palette.error.main
   }
 })));
-const FormControlLabel$1 = /* @__PURE__ */ D(function FormControlLabel(inProps, ref) {
+const FormControlLabel$1 = /* @__PURE__ */ D(function FormControlLabel2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiFormControlLabel"
@@ -40666,7 +39524,7 @@ const FormGroupRoot = styled("div", {
     }
   }]
 });
-const FormGroup$1 = /* @__PURE__ */ D(function FormGroup(inProps, ref) {
+const FormGroup$1 = /* @__PURE__ */ D(function FormGroup2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiFormGroup"
@@ -41790,7 +40648,7 @@ const PopoverPaper = styled(Paper, {
   // We disable the focus ring for mouse, touch and keyboard users.
   outline: 0
 });
-const Popover$1 = /* @__PURE__ */ D(function Popover(inProps, ref) {
+const Popover$1 = /* @__PURE__ */ D(function Popover2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiPopover"
@@ -42393,7 +41251,7 @@ const NativeSelectIcon = styled(StyledSelectIcon, {
     return [styles2.icon, ownerState.variant && styles2[`icon${capitalize(ownerState.variant)}`], ownerState.open && styles2.iconOpen];
   }
 })({});
-const NativeSelectInput$1 = /* @__PURE__ */ D(function NativeSelectInput(props, ref) {
+const NativeSelectInput$1 = /* @__PURE__ */ D(function NativeSelectInput2(props, ref) {
   const {
     className,
     disabled,
@@ -43445,7 +42303,7 @@ const useUtilityClasses$1 = (ownerState) => {
   };
   return composeClasses(slots, getTooltipUtilityClass, classes);
 };
-const TooltipPopper = styled(Popper2, {
+const TooltipPopper = styled(Popper, {
   name: "MuiTooltip",
   slot: "Popper",
   overridesResolver: (props, styles2) => {
@@ -43707,7 +42565,7 @@ function composeEventHandler(handler, eventHandler) {
     handler(event, ...params);
   };
 }
-const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
+const Tooltip$1 = /* @__PURE__ */ D(function Tooltip2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiTooltip"
@@ -44029,7 +42887,7 @@ const Tooltip$1 = /* @__PURE__ */ D(function Tooltip(inProps, ref) {
   });
   return /* @__PURE__ */ u2(S, {
     children: [/* @__PURE__ */ mn(children, childrenProps), /* @__PURE__ */ u2(PopperSlot, {
-      as: PopperComponentProp ?? Popper2,
+      as: PopperComponentProp ?? Popper,
       placement,
       anchorEl: followCursor ? {
         getBoundingClientRect: () => ({
@@ -44096,7 +42954,7 @@ const TextFieldRoot = styled(FormControl, {
   name: "MuiTextField",
   slot: "Root"
 })({});
-const TextField$1 = /* @__PURE__ */ D(function TextField(inProps, ref) {
+const TextField$1 = /* @__PURE__ */ D(function TextField2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
     name: "MuiTextField"
@@ -44274,16 +43132,16 @@ const TextField$1 = /* @__PURE__ */ D(function TextField(inProps, ref) {
 });
 const Box = Box$1;
 const Stack = Stack$1;
-const Typography2 = Typography$1;
-const TextField2 = TextField$1;
-const Button2 = Button$1;
-const IconButton2 = IconButton$1;
-const Tooltip2 = Tooltip$1;
-const Checkbox2 = Checkbox$1;
-const FormControlLabel2 = FormControlLabel$1;
-const FormGroup2 = FormGroup$1;
-const Chip2 = Chip$1;
-const Popover2 = Popover$1;
+const Typography = Typography$1;
+const TextField = TextField$1;
+const Button = Button$1;
+const IconButton = IconButton$1;
+const Tooltip = Tooltip$1;
+const Checkbox = Checkbox$1;
+const FormControlLabel = FormControlLabel$1;
+const FormGroup = FormGroup$1;
+const Chip = Chip$1;
+const Popover = Popover$1;
 const ThemeProvider = ThemeProvider$1;
 function ThinkButton({
   variant = "secondary",
@@ -44442,7 +43300,7 @@ function OverlayPortal({ children, container }) {
   if (typeof document === "undefined") return null;
   return $(children, container || getOverlayHost());
 }
-function Modal2({
+function Modal({
   isOpen,
   onClose,
   title,
@@ -44754,7 +43612,7 @@ function FilterPopover({
     ),
     showPartial && /* @__PURE__ */ u2("div", { className: "think-filter-popover__selected-chips", children: [
       selectedKeys.slice(0, chipLimit).map((key) => /* @__PURE__ */ u2(
-        Chip2,
+        Chip,
         {
           label: getChipLabel(key),
           size: "small",
@@ -44763,10 +43621,10 @@ function FilterPopover({
         },
         key
       )),
-      selectedKeys.length > chipLimit && /* @__PURE__ */ u2(Chip2, { label: `+${selectedKeys.length - chipLimit}`, size: "small", sx: { height: "20px", fontSize: "0.75rem" } })
+      selectedKeys.length > chipLimit && /* @__PURE__ */ u2(Chip, { label: `+${selectedKeys.length - chipLimit}`, size: "small", sx: { height: "20px", fontSize: "0.75rem" } })
     ] }),
     /* @__PURE__ */ u2(
-      Popover2,
+      Popover,
       {
         open,
         anchorEl,
@@ -44774,12 +43632,12 @@ function FilterPopover({
         anchorOrigin: { vertical: "bottom", horizontal: "left" },
         transformOrigin: { vertical: "top", horizontal: "left" },
         children: /* @__PURE__ */ u2(Box, { sx: { p: 2, minWidth: "250px", maxWidth: "400px", maxHeight: "500px", overflowY: "auto" }, children: [
-          /* @__PURE__ */ u2(Typography2, { variant: "subtitle2", gutterBottom: true, children: popoverTitle }),
+          /* @__PURE__ */ u2(Typography, { variant: "subtitle2", gutterBottom: true, children: popoverTitle }),
           /* @__PURE__ */ u2(Box, { sx: { mb: 1, display: "flex", gap: 1 }, children: [
-            /* @__PURE__ */ u2(Button2, { size: "small", onClick: onSelectAll, children: "全选" }),
-            /* @__PURE__ */ u2(Button2, { size: "small", onClick: onClearAll, children: "清空" })
+            /* @__PURE__ */ u2(Button, { size: "small", onClick: onSelectAll, children: "全选" }),
+            /* @__PURE__ */ u2(Button, { size: "small", onClick: onClearAll, children: "清空" })
           ] }),
-          isEmpty2 ? /* @__PURE__ */ u2(Typography2, { variant: "body2", color: "text.secondary", sx: { py: 2 }, children: emptyText }) : children
+          isEmpty2 ? /* @__PURE__ */ u2(Typography, { variant: "body2", color: "text.secondary", sx: { py: 2 }, children: emptyText }) : children
         ] })
       }
     )
@@ -45909,7 +44767,7 @@ function ListEditor({ value, onChange, placeholder = "新项目", type = "text" 
   return /* @__PURE__ */ u2(Stack, { spacing: 0.5, children: [
     list.map((item, index) => /* @__PURE__ */ u2(Stack, { direction: "row", spacing: 0.5, alignItems: "center", children: [
       /* @__PURE__ */ u2(
-        TextField2,
+        TextField,
         {
           value: item,
           onInput: (e2) => handleChange(index, e2.target.value),
@@ -45925,9 +44783,9 @@ function ListEditor({ value, onChange, placeholder = "新项目", type = "text" 
           } : {}
         }
       ),
-      /* @__PURE__ */ u2(IconButton2, { onClick: () => removeItem(index), size: "small", color: "error", title: "删除此项", children: /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" }) })
+      /* @__PURE__ */ u2(IconButton, { onClick: () => removeItem(index), size: "small", color: "error", title: "删除此项", children: /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" }) })
     ] }, index)),
-    /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "flex-start", children: /* @__PURE__ */ u2(IconButton2, { onClick: addItem, size: "small", color: "primary", title: "添加新项", children: /* @__PURE__ */ u2(AddIcon, {}) }) })
+    /* @__PURE__ */ u2(Stack, { direction: "row", justifyContent: "flex-start", children: /* @__PURE__ */ u2(IconButton, { onClick: addItem, size: "small", color: "primary", title: "添加新项", children: /* @__PURE__ */ u2(AddIcon, {}) }) })
   ] });
 }
 function renderPlainFallback(containerEl, content) {
@@ -46071,13 +44929,7 @@ function closeAllFloatingWidgets() {
     closeFloatingWidget(id);
   }
 }
-const __vite_import_meta_env__ = { "BASE_URL": "/", "DEV": false, "MODE": "development", "PROD": true, "SSR": false };
 function isDevBuild() {
-  try {
-    const env = __vite_import_meta_env__;
-    if (typeof env?.DEV === "boolean") return env.DEV;
-  } catch {
-  }
   return typeof process !== "undefined" ? false : true;
 }
 function isDiDebugEnabled() {
@@ -46912,7 +45764,7 @@ function QuickInputTimeFieldsSection({
           onChange: (event) => onTimeDirectionChange?.(event.currentTarget.checked ? "backward" : "forward")
         }
       ),
-      "反向（结束 - 时长 = 时间）"
+      "反向（结束时间 - 时长 = 开始时间）"
     ] }) })
   ] });
 }
@@ -46969,17 +45821,33 @@ function QuickInputEditorFields({
   };
   if (isTaskTemplate2) {
     const taskFields = fields.filter((field) => !isQuickInputSystemContextField(field));
+    const recurringEdit = Boolean(String(formData.seriesId || formData["系列ID"] || "").trim());
     const recurrenceUnit = scalarValue(formData.recurrenceUnit ?? formData["重复"]);
-    const repeats = !!recurrenceUnit && recurrenceUnit !== "none";
-    const primaryFields = taskFields.filter((field) => taskPrimaryRank(field) < 99).sort((left2, right2) => taskPrimaryRank(left2) - taskPrimaryRank(right2));
-    const recurrenceDetailFields = repeats ? taskFields.filter((field) => ["recurrenceInterval", "重复间隔"].includes(String(field?.key || field?.label || ""))) : [];
+    const repeats = !recurringEdit && !!recurrenceUnit && recurrenceUnit !== "none";
+    const primaryFields = taskFields.filter((field) => taskPrimaryRank(field) < 99).filter((field) => !(recurringEdit && taskPrimarySlot(field) === "recurrence")).sort((left2, right2) => taskPrimaryRank(left2) - taskPrimaryRank(right2));
+    const recurrenceDetailFields = repeats ? taskFields.filter((field) => ["recurrenceInterval", "重复间隔", "recurrenceAnchor", "重复方式", "重复锚点"].includes(String(field?.key || field?.label || ""))) : [];
+    const taskTimeFields = primaryFields.filter((field) => {
+      const slot = taskPrimarySlot(field);
+      return slot === "start" || slot === "end" || slot === "duration";
+    });
+    const taskNonTimePrimaryFields = primaryFields.filter((field) => !taskTimeFields.includes(field));
     const excluded = /* @__PURE__ */ new Set([...primaryFields, ...recurrenceDetailFields]);
     const advancedFields = taskFields.filter((field) => {
       if (excluded.has(field)) return false;
-      return !["recurrenceInterval", "重复间隔"].includes(String(field?.key || field?.label || ""));
+      return !["recurrenceInterval", "重复间隔", "recurrenceAnchor", "重复方式", "重复锚点"].includes(String(field?.key || field?.label || ""));
     });
     return /* @__PURE__ */ u2("div", { className: `think-qif-fields-stack${dense ? " is-dense" : ""}`, children: [
-      primaryFields.map((field) => /* @__PURE__ */ u2("div", { className: "think-qif-fields-stack__item", children: /* @__PURE__ */ u2(QuickInputFieldRenderer, { field, ...rendererProps }) }, field.id)),
+      taskNonTimePrimaryFields.map((field) => /* @__PURE__ */ u2("div", { className: "think-qif-fields-stack__item", children: /* @__PURE__ */ u2(QuickInputFieldRenderer, { field, ...rendererProps }) }, field.id)),
+      /* @__PURE__ */ u2(
+        QuickInputTimeFieldsSection,
+        {
+          timeFields: taskTimeFields,
+          timeDirection,
+          onTimeDirectionChange,
+          showTimeDirectionControl,
+          ...rendererProps
+        }
+      ),
       recurrenceDetailFields.map((field) => /* @__PURE__ */ u2("div", { className: "think-qif-fields-stack__item think-qif-recurrence-detail", children: /* @__PURE__ */ u2(QuickInputFieldRenderer, { field, ...rendererProps }) }, field.id)),
       advancedFields.length ? /* @__PURE__ */ u2(
         ThinkDisclosure,
@@ -47380,7 +46248,7 @@ function hydrateQuickInputTemplateDefaults({
     const canRefresh = !hasMeaningfulExisting || isRefreshableSource(existingSource);
     const contextValue = context?.[field.key] ?? context?.[field.label];
     if (contextValue !== void 0) {
-      if (!hasMeaningfulExisting || existingSource !== "user") {
+      if (existingSource === "context" || !hasMeaningfulExisting && existingSource !== "user") {
         assignValue(
           key,
           isSelectableField(field) ? resolveSelectableValue(field, contextValue) : contextValue,
@@ -47436,7 +46304,7 @@ function hydrateQuickInputTemplateDefaults({
 function deriveQuickInputInitialSelection(initialFormData, context) {
   return {
     selectedGoalPath: resolveRecordGoalPath({ formData: initialFormData, context }),
-    timeDirection: initialFormData?.__timeDirection === "backward" ? "backward" : "forward"
+    timeDirection: initialFormData?.__timeDirection === "backward" || context?.__timeDirection === "backward" ? "backward" : "forward"
   };
 }
 function buildQuickInputEditorState(input) {
@@ -47472,8 +46340,8 @@ const TASK_STATUS_FIELD = {
   defaultValue: "open",
   autoSelectFirst: true,
   options: [
-    { value: "open", label: "未完成" },
-    { value: "done", label: "已完成" }
+    { value: "open", label: `${TASK_STATUS_PRESENTATION.open.emoji} ${TASK_STATUS_PRESENTATION.open.label}` },
+    { value: "done", label: `${TASK_STATUS_PRESENTATION.done.emoji} ${TASK_STATUS_PRESENTATION.done.label}` }
   ]
 };
 const TASK_CONTENT_FIELD = { id: "core.task.content", key: "任务内容", label: "内容", type: "text", semantic: "body" };
@@ -47495,9 +46363,23 @@ const TASK_RECURRENCE_FIELD = {
   ]
 };
 const TASK_RECURRENCE_INTERVAL_FIELD = { id: "core.task.recurrenceInterval", key: "recurrenceInterval", label: "重复间隔", type: "number", min: 1, defaultValue: "1" };
-const TASK_START_FIELD = { id: "core.task.startAt", key: "startAt", label: "开始/预计时间", type: "datetime", semantic: "startTime" };
-const TASK_END_FIELD = { id: "core.task.endAt", key: "endAt", label: "结束时间", type: "datetime", semantic: "endTime" };
-const TASK_DURATION_FIELD = { id: "core.task.expectedDurationMinutes", key: "expectedDurationMinutes", label: "时长（分钟）", type: "number", semantic: "duration", min: 1 };
+const TASK_RECURRENCE_ANCHOR_FIELD = {
+  id: "core.task.recurrenceAnchor",
+  key: "recurrenceAnchor",
+  label: "重复方式",
+  type: "singleSelect",
+  defaultValue: "scheduled",
+  autoSelectFirst: true,
+  options: [
+    { value: "scheduled", label: "固定计划" },
+    { value: "completion", label: "完成后重复" }
+  ]
+};
+const TASK_SCHEDULED_FIELD = { id: "core.task.scheduledAt", key: "scheduledAt", label: "计划时间", type: "datetime", semantic: "startTime" };
+const TASK_DUE_FIELD = { id: "core.task.dueAt", key: "dueAt", label: "截止时间", type: "datetime" };
+const TASK_START_FIELD = { id: "core.task.startAt", key: "startAt", label: "实际开始", type: "datetime", semantic: "startTime" };
+const TASK_END_FIELD = { id: "core.task.endAt", key: "endAt", label: "实际结束", type: "datetime", semantic: "endTime" };
+const TASK_DURATION_FIELD = { id: "core.task.expectedDurationMinutes", key: "expectedDurationMinutes", label: "预计时长（分钟）", type: "number", semantic: "duration", min: 1 };
 function keyOf(field) {
   return String(field.key || field.label || "").trim();
 }
@@ -47507,29 +46389,37 @@ function isTaskTemplate(rawTemplate, effectiveBlockId) {
 function findField(fields, predicate) {
   return fields.find(predicate);
 }
-function normalizeTaskFields(fields) {
-  const legacyStartKeys = /* @__PURE__ */ new Set(["scheduledAt", "计划时间", "scheduledDate", "计划日期", "startAt", "开始时间", "开始/预计时间"]);
+function normalizeTaskFields(fields, timingMode = "plan", recordInputMode = "create") {
+  const scheduledKeys = /* @__PURE__ */ new Set(["scheduledAt", "计划时间", "scheduledDate", "计划日期"]);
+  const legacyStartKeys = /* @__PURE__ */ new Set(["startAt", "开始时间", "开始/预计时间"]);
   const legacyEndKeys = /* @__PURE__ */ new Set(["endAt", "结束时间"]);
-  const hiddenLegacyKeys = /* @__PURE__ */ new Set(["dueAt", "截止时间", "dueDate", "截止日期", "startDate", "开始日期", "recurrenceAnchor", "重复锚点"]);
+  const dueKeys = /* @__PURE__ */ new Set(["dueAt", "截止时间", "dueDate", "截止日期"]);
+  const hiddenLegacyKeys = /* @__PURE__ */ new Set(["startDate", "开始日期"]);
   const statusExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === "status" || keyOf(field) === "status");
   const bodyExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === "body");
   const recurrenceExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === "recurrence" || keyOf(field) === "recurrenceUnit");
   const recurrenceIntervalExisting = findField(fields, (field) => keyOf(field) === "recurrenceInterval" || keyOf(field) === "重复间隔");
-  const durationExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === "duration" || ["expectedDurationMinutes", "预计时长", "时长", "时长（分钟）"].includes(keyOf(field)));
+  const recurrenceAnchorExisting = findField(fields, (field) => keyOf(field) === "recurrenceAnchor" || keyOf(field) === "重复锚点" || keyOf(field) === "重复方式");
+  const durationExisting = findField(fields, (field) => getTemplateFieldSemantic(field) === "duration" || ["expectedDurationMinutes", "预计时长", "预计时长（分钟）", "时长", "时长（分钟）"].includes(keyOf(field)));
+  const scheduledExisting = findField(fields, (field) => scheduledKeys.has(keyOf(field)));
   const startExisting = findField(fields, (field) => legacyStartKeys.has(keyOf(field)));
   const endExisting = findField(fields, (field) => legacyEndKeys.has(keyOf(field)));
+  const dueExisting = findField(fields, (field) => dueKeys.has(keyOf(field)));
   const reserved = new Set([
     statusExisting,
     bodyExisting,
     recurrenceExisting,
     recurrenceIntervalExisting,
+    recurrenceAnchorExisting,
+    scheduledExisting,
     startExisting,
     endExisting,
+    dueExisting,
     durationExisting
   ].filter(Boolean));
   const rest = fields.filter((field) => {
     if (reserved.has(field)) return false;
-    if (hiddenLegacyKeys.has(keyOf(field))) return false;
+    if (hiddenLegacyKeys.has(keyOf(field)) || scheduledKeys.has(keyOf(field)) || dueKeys.has(keyOf(field)) || legacyStartKeys.has(keyOf(field)) || legacyEndKeys.has(keyOf(field))) return false;
     return true;
   });
   const normalizedRest = rest.map((field) => {
@@ -47563,12 +46453,38 @@ function normalizeTaskFields(fields) {
     options: recurrenceOptions
   };
   const recurrenceInterval = { ...TASK_RECURRENCE_INTERVAL_FIELD, ...recurrenceIntervalExisting || {}, label: "重复间隔", type: "number", min: recurrenceIntervalExisting?.min ?? 1, defaultValue: recurrenceIntervalExisting?.defaultValue || "1" };
-  const start2 = { ...TASK_START_FIELD, ...startExisting || {}, key: "startAt", label: "开始/预计时间", type: "datetime", semantic: "startTime" };
-  const end2 = { ...TASK_END_FIELD, ...endExisting || {}, key: "endAt", label: "结束时间", type: "datetime", semantic: "endTime" };
-  const duration2 = { ...TASK_DURATION_FIELD, ...durationExisting || {}, key: "expectedDurationMinutes", label: "时长（分钟）", type: "number", semantic: "duration", min: durationExisting?.min ?? 1 };
-  return [status, body, recurrence, recurrenceInterval, start2, end2, duration2, ...normalizedRest];
+  const recurrenceAnchor = {
+    ...TASK_RECURRENCE_ANCHOR_FIELD,
+    ...recurrenceAnchorExisting || {},
+    key: "recurrenceAnchor",
+    label: "重复方式",
+    type: "singleSelect",
+    defaultValue: recurrenceAnchorExisting?.defaultValue || "scheduled",
+    options: recurrenceAnchorExisting?.options?.length ? recurrenceAnchorExisting.options : TASK_RECURRENCE_ANCHOR_FIELD.options
+  };
+  const duration2 = {
+    ...TASK_DURATION_FIELD,
+    ...durationExisting || {},
+    key: "expectedDurationMinutes",
+    label: timingMode === "execution" ? "时长（分钟）" : "预计时长（分钟）",
+    type: "number",
+    semantic: "duration",
+    min: durationExisting?.min ?? 1,
+    required: false
+  };
+  const timingFields = timingMode === "execution" ? [
+    { ...TASK_START_FIELD, ...startExisting || scheduledExisting || {}, key: "startAt", label: "实际开始", type: "datetime", semantic: "startTime" },
+    { ...TASK_END_FIELD, ...endExisting || {}, key: "endAt", label: "实际结束", type: "datetime", semantic: "endTime" },
+    duration2
+  ] : [
+    { ...TASK_SCHEDULED_FIELD, ...scheduledExisting || startExisting || {}, key: "scheduledAt", label: "计划时间", type: "datetime", semantic: "startTime" },
+    duration2,
+    { ...TASK_DUE_FIELD, ...dueExisting || {}, key: "dueAt", label: "截止时间", type: "datetime", semantic: void 0 }
+  ];
+  const lifecycleFields = recordInputMode === "edit" ? [] : [status];
+  return [...lifecycleFields, body, recurrence, recurrenceInterval, recurrenceAnchor, ...timingFields, ...normalizedRest];
 }
-function buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, goalFieldOptions) {
+function buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, goalFieldOptions, options = {}) {
   if (!rawTemplate?.fields?.length) return rawTemplate ?? null;
   const task = isTaskTemplate(rawTemplate, effectiveBlockId);
   const mappedFields = rawTemplate.fields.map((field) => {
@@ -47582,13 +46498,15 @@ function buildQuickInputDisplayTemplate(rawTemplate, effectiveBlockId, goalField
   return {
     ...rawTemplate,
     recordTypeId: effectiveBlockId || rawTemplate.recordTypeId,
-    fields: task ? normalizeTaskFields(mappedFields) : mappedFields
+    fields: task ? normalizeTaskFields(mappedFields, options.taskTimingMode ?? "plan", options.recordInputMode ?? "create") : mappedFields
   };
 }
 function shouldShowQuickInputTimeDirectionControl(template) {
   if (!template?.fields) return false;
   const keys = new Set((template.fields || []).map((field) => field.key || field.label));
-  return keys.has("时间") && keys.has("结束") && keys.has("时长");
+  const hasLegacyTriple = keys.has("时间") && keys.has("结束") && keys.has("时长");
+  const hasTaskTriple = keys.has("startAt") && keys.has("endAt") && keys.has("expectedDurationMinutes");
+  return hasLegacyTriple || hasTaskTriple;
 }
 function buildQuickInputPeriodUi(currentPeriod) {
   return {
@@ -47625,7 +46543,9 @@ function usesTaskDateTimeFields(data, changedKey) {
   if (changedKey && Object.values(TASK_TIME_KEYS).includes(changedKey)) return true;
   return Object.values(TASK_TIME_KEYS).some((key) => Object.prototype.hasOwnProperty.call(data, key));
 }
-function linkedTimeKeysFor(data, changedKey) {
+function linkedTimeKeysFor(data, changedKey, preferredFieldSet) {
+  if (preferredFieldSet === "task") return TASK_TIME_KEYS;
+  if (preferredFieldSet === "legacy") return LEGACY_TIME_KEYS;
   return usesTaskDateTimeFields(data, changedKey) ? TASK_TIME_KEYS : LEGACY_TIME_KEYS;
 }
 function applyQuickInputLinkedTimeChanges(draft, direction) {
@@ -47679,21 +46599,36 @@ function applyQuickInputFieldUpdate(input) {
 }
 function applyQuickInputTimeDirectionChange(input) {
   const { formData, fieldSources, nextDirection } = input;
+  const keys = linkedTimeKeysFor(formData, void 0, input.timeFieldSet);
   const draft = { ...formData };
   let usedDefaultEnd = false;
-  if (nextDirection === "backward" && !draft["结束"]) {
-    draft["结束"] = input.defaultEndTime || dayjs().format("HH:mm");
-    usedDefaultEnd = true;
+  if (nextDirection === "backward") {
+    if (!draft[keys.endKey]) {
+      draft[keys.endKey] = input.defaultEndTime || (keys.endKey === TASK_TIME_KEYS.endKey ? dayjs().format("YYYY-MM-DDTHH:mm") : dayjs().format("HH:mm"));
+      usedDefaultEnd = true;
+    }
+    if (draft[keys.durationKey] !== void 0 && draft[keys.durationKey] !== null && draft[keys.durationKey] !== "") {
+      draft.lastChanged = keys.durationKey;
+    }
   }
-  const linked = applyQuickInputLinkedTimeChanges(draft, nextDirection);
+  const changedKey = typeof draft.lastChanged === "string" ? draft.lastChanged : void 0;
+  const changes = computeLinkedTimeChanges(
+    draft,
+    keys,
+    changedKey,
+    { durationOutput: "number", direction: nextDirection }
+  );
+  const merged = { ...draft, ...changes };
+  if ("lastChanged" in merged) delete merged.lastChanged;
   const nextSources = { ...fieldSources };
-  if (usedDefaultEnd && !fieldSources["结束"])
-    nextSources["结束"] = "system_auto";
-  linked.autoKeys.forEach((autoKey) => {
-    nextSources[autoKey] = "system_auto";
+  if (usedDefaultEnd && !fieldSources[keys.endKey]) {
+    nextSources[keys.endKey] = "system_auto";
+  }
+  Object.keys(changes).forEach((autoKey) => {
+    if (autoKey !== keys.endKey || !usedDefaultEnd) nextSources[autoKey] = "system_auto";
   });
   return {
-    formData: linked.formData,
+    formData: merged,
     fieldSources: nextSources,
     timeDirection: nextDirection
   };
@@ -48194,12 +47129,18 @@ function QuickInputEditor({
   const currentPeriodUi = T$1(() => buildQuickInputPeriodUi(currentPeriod), [currentPeriod?.id, currentPeriod?.label, currentPeriod?.granularity]);
   const currentPeriodFields = currentPeriodUi.fields;
   const currentPeriodOptions = currentPeriodUi.options;
+  const taskTimingMode = T$1(() => {
+    const uiContext = context?.__recordUiContext;
+    if (!uiContext || typeof uiContext !== "object" || Array.isArray(uiContext)) return "plan";
+    const ui = uiContext;
+    return ui.kind === "timeline_create" && ui.captureMode === "completed_execution" ? "execution" : "plan";
+  }, [context]);
   const template = T$1(
     () => {
       if (isEnergyDirect) return null;
-      return buildQuickInputDisplayTemplate(displayRawTemplate, displayEffectiveBlockId, goalFieldOptions);
+      return buildQuickInputDisplayTemplate(displayRawTemplate, displayEffectiveBlockId, goalFieldOptions, { taskTimingMode, recordInputMode: recordInputMode === "create" ? "create" : "edit" });
     },
-    [displayRawTemplate, displayEffectiveBlockId, goalFieldOptions, isEnergyDirect]
+    [displayRawTemplate, displayEffectiveBlockId, goalFieldOptions, isEnergyDirect, taskTimingMode, recordInputMode]
   );
   const showTimeDirectionControl = T$1(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
   y(() => {
@@ -48250,7 +47191,13 @@ function QuickInputEditor({
     });
   };
   const handleTimeDirectionChange = (nextDirection) => {
-    const updated = applyQuickInputTimeDirectionChange({ formData, fieldSources, nextDirection });
+    const isTaskTimeForm = String(displayEffectiveBlockId || currentBlockId || "").replace(/^core\./, "") === "task";
+    const updated = applyQuickInputTimeDirectionChange({
+      formData,
+      fieldSources,
+      nextDirection,
+      timeFieldSet: isTaskTimeForm ? "task" : "legacy"
+    });
     dispatchSession({
       type: "changeTimeDirection",
       timeDirection: updated.timeDirection,
@@ -48415,9 +47362,10 @@ function QuickInputModalFooter({
   onDelete,
   onSubmitClick,
   onSubmitPointerDown,
-  onPreserveDesktopInputFocus
+  onPreserveDesktopInputFocus,
+  allowDelete = true
 }) {
-  const showDelete = operationMode === "edit" || operationMode === "convert";
+  const showDelete = allowDelete && (operationMode === "edit" || operationMode === "convert");
   return /* @__PURE__ */ u2("div", { className: `think-modal__footer think-modal__footer--quick-input${isMobileLike ? " is-mobile-like" : ""}`, children: /* @__PURE__ */ u2("div", { className: "think-quick-input-footer-row", children: [
     /* @__PURE__ */ u2("div", { className: "think-quick-input-footer-danger-zone", children: showDelete ? /* @__PURE__ */ u2(
       ThinkButton,
@@ -48604,7 +47552,8 @@ function useQuickInputSubmitController({
   liveOutputPlan,
   livePersistencePlan,
   isMobileLike,
-  showNotice
+  showNotice,
+  taskSeriesEditIntent
 }) {
   const [pendingAction, setPendingAction] = d(null);
   const [lastConflictResult, setLastConflictResult] = d(null);
@@ -48656,17 +47605,22 @@ function useQuickInputSubmitController({
         const latestState2 = getCurrentState();
         assertRecordInputRequiredFields(latestState2);
         if (isQuickInputUpdateOperation(operationMode) && editItem) {
-          return await useCases.recordInput.submitUpdateRecord(buildUpdateRecordSubmitParamsFromEditorState({
+          const updateParams = buildUpdateRecordSubmitParamsFromEditorState({
             state: latestState2,
             item: editItem,
             expectedOutputPlan: liveOutputPlan,
             expectedPersistencePlan: livePersistencePlan,
             signal,
             source: "quickinput"
-          }));
+          });
+          if (taskSeriesEditIntent) {
+            updateParams.meta = { ...updateParams.meta || {}, taskSeriesEdit: taskSeriesEditIntent };
+          }
+          return await useCases.recordInput.submitUpdateRecord(updateParams);
         }
+        const createState = operationMode === "duplicate" ? { ...latestState2, formData: detachTaskSeriesIdentityForDuplicate(latestState2.formData) } : latestState2;
         return await useCases.recordInput.submitCreateRecord(buildCreateRecordSubmitParamsFromEditorState({
-          state: latestState2,
+          state: createState,
           context: operationMode === "duplicate" ? void 0 : context,
           signal,
           source: source ?? "quickinput"
@@ -48720,7 +47674,8 @@ function useQuickInputSubmitController({
     rememberConflict,
     resetSubmitGateSoon,
     source,
-    useCases
+    useCases,
+    taskSeriesEditIntent
   ]);
   const handleDelete = q$1(async () => {
     if (pendingActionRef.current) return;
@@ -48780,6 +47735,139 @@ function useQuickInputSubmitController({
     clearRecovery
   };
 }
+const UNIT_OPTIONS = [
+  { value: "day", label: "天" },
+  { value: "week", label: "周" },
+  { value: "month", label: "月" },
+  { value: "quarter", label: "季" },
+  { value: "year", label: "年" }
+];
+const SCOPE_HELP = {
+  current: "只保存当前这一次任务。周期规则和以后任务保持不变。",
+  current_and_future: "保存当前任务，并把内容/预计时长等默认值和周期规则用于以后任务。历史任务不回写。",
+  series_rules: "只修改重复规则；当前任务、历史任务以及系列默认内容/优先级等都不改。"
+};
+function fixedModeAnchor(anchor) {
+  return anchor === "completion" ? "scheduled" : anchor;
+}
+function RecurringTaskSeriesEditor({
+  scope,
+  recurrence,
+  onScopeChange,
+  onRecurrenceChange,
+  onSkipCurrent,
+  onStopSeries,
+  skipping = false,
+  stopping = false
+}) {
+  const editable = scope !== "current";
+  const mode = recurrence.anchor === "completion" ? "after_completion" : "fixed";
+  const compatibilityAnchor = recurrence.anchor === "start" ? "当前系列沿用旧规则：按开始时间推进。你不切换重复方式就会原样保留。" : recurrence.anchor === "due" ? "当前系列沿用旧规则：按截止时间推进。你不切换重复方式就会原样保留。" : "";
+  return /* @__PURE__ */ u2("section", { className: "think-quick-input-series-editor", "aria-label": "周期任务设置", children: [
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-series-editor__header", children: /* @__PURE__ */ u2("div", { children: [
+      /* @__PURE__ */ u2("div", { className: "think-quick-input-series-editor__title", children: "🔁 周期设置" }),
+      /* @__PURE__ */ u2("div", { className: "think-quick-input-series-editor__subtitle", children: "先选这次修改影响到哪里，再保存。" })
+    ] }) }),
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-series-editor__scope", children: [
+      /* @__PURE__ */ u2("span", { className: "think-quick-input-series-editor__label", children: "作用范围" }),
+      /* @__PURE__ */ u2(
+        ThinkSegmentedControl,
+        {
+          label: "周期任务编辑作用范围",
+          value: scope,
+          options: [
+            { value: "current", label: "仅本次" },
+            { value: "current_and_future", label: "本次及以后" },
+            { value: "series_rules", label: "系列规则" }
+          ],
+          onChange: (value) => onScopeChange(value)
+        }
+      )
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-series-editor__help", children: SCOPE_HELP[scope] }),
+    /* @__PURE__ */ u2("div", { className: `think-quick-input-series-editor__rules${editable ? "" : " is-disabled"}`, children: [
+      /* @__PURE__ */ u2("div", { className: "think-quick-input-series-editor__row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-quick-input-series-editor__label", children: "重复方式" }),
+        /* @__PURE__ */ u2(
+          ThinkSegmentedControl,
+          {
+            label: "重复方式",
+            value: mode,
+            options: [
+              { value: "fixed", label: "固定计划" },
+              { value: "after_completion", label: "完成后重复" }
+            ],
+            onChange: (value) => {
+              if (!editable) return;
+              onRecurrenceChange({
+                ...recurrence,
+                anchor: value === "after_completion" ? "completion" : fixedModeAnchor(recurrence.anchor)
+              });
+            }
+          }
+        )
+      ] }),
+      /* @__PURE__ */ u2("div", { className: "think-quick-input-series-editor__row", children: [
+        /* @__PURE__ */ u2("span", { className: "think-quick-input-series-editor__label", children: "每隔" }),
+        /* @__PURE__ */ u2("div", { className: "think-quick-input-series-editor__interval", children: [
+          /* @__PURE__ */ u2(
+            ThinkInput,
+            {
+              type: "number",
+              min: 1,
+              step: 1,
+              value: String(recurrence.interval),
+              disabled: !editable,
+              onInput: (event) => {
+                const next2 = Math.max(1, Math.round(Number(event.currentTarget.value) || 1));
+                onRecurrenceChange({ ...recurrence, interval: next2 });
+              }
+            }
+          ),
+          /* @__PURE__ */ u2(
+            ThinkSelect,
+            {
+              value: recurrence.unit,
+              disabled: !editable,
+              onChange: (event) => onRecurrenceChange({
+                ...recurrence,
+                unit: event.currentTarget.value
+              }),
+              children: UNIT_OPTIONS.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
+            }
+          )
+        ] })
+      ] }),
+      compatibilityAnchor ? /* @__PURE__ */ u2("div", { className: "think-quick-input-series-editor__compat", children: compatibilityAnchor }) : null
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-series-editor__danger", children: [
+      /* @__PURE__ */ u2("div", { className: "think-quick-input-series-editor__help", children: "周期任务不要直接删除当前实例：跳过会生成下一次；停止重复会保留当前任务但不再生成后续。" }),
+      /* @__PURE__ */ u2("div", { className: "think-quick-input-series-editor__lifecycle-actions", children: [
+        /* @__PURE__ */ u2(ThinkButton, { type: "button", size: "sm", variant: "secondary", disabled: skipping || stopping, onClick: onSkipCurrent, children: skipping ? "跳过中…" : "⏭️ 跳过本次" }),
+        /* @__PURE__ */ u2(ThinkButton, { type: "button", size: "sm", variant: "danger", disabled: stopping || skipping, onClick: onStopSeries, children: stopping ? "停止中…" : "停止重复" })
+      ] })
+    ] })
+  ] });
+}
+function TaskLifecycleEditor({ status, recurring, busy = false, onCommand }) {
+  const presentation = getTaskStatusPresentation(status);
+  const canReopen = status !== "open" && !recurring;
+  return /* @__PURE__ */ u2("section", { className: "think-quick-input-task-lifecycle", "aria-label": "任务状态", children: [
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-task-lifecycle__header", children: [
+      /* @__PURE__ */ u2("div", { className: "think-quick-input-task-lifecycle__title", children: "任务状态" }),
+      /* @__PURE__ */ u2("div", { className: "think-quick-input-task-lifecycle__status", children: [
+        presentation.emoji,
+        " ",
+        presentation.label
+      ] })
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-task-lifecycle__help", children: "状态变化走任务生命周期命令，不会被普通“保存修改”偷偷改写。" }),
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-task-lifecycle__actions", children: status === "open" ? /* @__PURE__ */ u2(S, { children: [
+      /* @__PURE__ */ u2(ThinkButton, { type: "button", size: "sm", variant: "primary", disabled: busy, onClick: () => onCommand("complete"), children: "✅ 完成任务" }),
+      !recurring ? /* @__PURE__ */ u2(ThinkButton, { type: "button", size: "sm", variant: "danger", disabled: busy, onClick: () => onCommand("cancel"), children: "❌ 取消任务" }) : null
+    ] }) : canReopen ? /* @__PURE__ */ u2(ThinkButton, { type: "button", size: "sm", variant: "secondary", disabled: busy, onClick: () => onCommand("reopen"), children: "↩️ 重新打开" }) : null })
+  ] });
+}
 function QuickInputModalContent({
   getResourcePath,
   initialBlockId,
@@ -48811,7 +47899,13 @@ function QuickInputModalContent({
     });
   }, [useCases, initialBlockId, context, mode, editItem, onSave, source]);
   const [isRescanningRecoveryPaths, setIsRescanningRecoveryPaths] = d(false);
+  const [isStoppingSeries, setIsStoppingSeries] = d(false);
+  const [isSkippingRecurringTask, setIsSkippingRecurringTask] = d(false);
+  const [isChangingTaskLifecycle, setIsChangingTaskLifecycle] = d(false);
   const [editOperationMode, setEditOperationMode] = d("edit");
+  const initialSeriesRecurrence = normalizeRecurrenceInfo(editItem?.recurrenceInfo) || { unit: "day", interval: 1, anchor: "scheduled" };
+  const [taskSeriesEditScope, setTaskSeriesEditScope] = d("current");
+  const [taskSeriesRecurrence, setTaskSeriesRecurrence] = d(initialSeriesRecurrence);
   const [editorResetVersion, setEditorResetVersion] = d(0);
   const operationMode = mode === "create" ? "create" : editOperationMode;
   const editorSessionMode = operationMode;
@@ -48832,8 +47926,10 @@ function QuickInputModalContent({
     if (previousEditIdentityRef.current === editIdentity) return;
     previousEditIdentityRef.current = editIdentity;
     setEditOperationMode("edit");
+    setTaskSeriesEditScope("current");
+    setTaskSeriesRecurrence(normalizeRecurrenceInfo(editItem?.recurrenceInfo) || { unit: "day", interval: 1, anchor: "scheduled" });
     setEditorResetVersion((version2) => version2 + 1);
-  }, [editIdentity]);
+  }, [editIdentity, editItem?.recurrenceInfo]);
   const handleOperationModeChange = q$1((nextMode) => {
     if (nextMode === "create") return;
     setEditOperationMode((previousMode) => {
@@ -48851,6 +47947,8 @@ function QuickInputModalContent({
     currentState.blockId && currentState.template && (!currentRecordTypeRequiresGoal || currentState.goalPath) && (!createRequiresDirectGoalTemplate || currentState.templateSourceType === "goal-template")
   );
   const currentBlockName = currentRecordType?.name || currentState.template?.name || currentState.blockId || "请选择记录类型";
+  const isRecurringTaskEdit = operationMode === "edit" && editItem?.coreBlock === "task" && Boolean(String(editItem.seriesId || "").trim()) && Boolean(normalizeRecurrenceInfo(editItem.recurrenceInfo));
+  const taskSeriesEditIntent = isRecurringTaskEdit ? { scope: taskSeriesEditScope, recurrence: taskSeriesRecurrence } : null;
   const isEnergyDirect = mode === "create" && currentState.blockId === ENERGY_RECORD_TYPE_ID;
   const isTimerCreate = mode === "create" && (source === "timer" || !!onSave);
   const {
@@ -48886,12 +47984,65 @@ function QuickInputModalContent({
     liveOutputPlan,
     livePersistencePlan,
     isMobileLike,
-    showNotice
+    showNotice,
+    taskSeriesEditIntent
   });
   const handleEditorStateChange = q$1((state) => {
     editorStateRef.current = state;
     setEditorState(state);
   }, []);
+  const handleSkipRecurringTask = q$1(async () => {
+    const itemId = String(editItem?.id || "").trim();
+    if (!itemId || isSkippingRecurringTask) return;
+    if (!window.confirm("确认跳过本次周期任务吗？本次会标记为已跳过，并按系列规则生成下一次任务。")) return;
+    setIsSkippingRecurringTask(true);
+    try {
+      const result = await useCases.taskRuntime.runLifecycle({ taskId: itemId, command: "skip", source: "quickinput" });
+      const presentation = buildRecordSubmitFeedbackPresentation(result, "跳过周期任务失败");
+      if (presentation.message) showNotice(presentation.message, presentation.tone);
+      if (result.status === "success" || result.status === "partial_success") closeModal();
+    } catch (error) {
+      showNotice(error instanceof Error ? error.message : "跳过周期任务失败");
+    } finally {
+      setIsSkippingRecurringTask(false);
+    }
+  }, [closeModal, editItem?.id, isSkippingRecurringTask, showNotice, useCases]);
+  const handleStopSeries = q$1(async () => {
+    const seriesId = String(editItem?.seriesId || "").trim();
+    if (!seriesId || isStoppingSeries) return;
+    if (!window.confirm("确认停止这个周期任务吗？当前这次任务会保留，但以后不再自动生成下一次。")) return;
+    setIsStoppingSeries(true);
+    try {
+      await useCases.recordInput.stopTaskSeries(seriesId);
+      showNotice("已停止重复；当前任务仍保留。", "success");
+      closeModal();
+    } catch (error) {
+      showNotice(error instanceof Error ? error.message : "停止周期任务失败");
+    } finally {
+      setIsStoppingSeries(false);
+    }
+  }, [closeModal, editItem?.seriesId, isStoppingSeries, showNotice, useCases]);
+  const handleTaskLifecycleCommand = q$1(async (command) => {
+    const itemId = String(editItem?.id || "").trim();
+    if (!itemId || isChangingTaskLifecycle) return;
+    const labels = {
+      complete: "确认完成这个任务吗？",
+      cancel: "确认取消这个任务吗？",
+      reopen: "确认重新打开这个任务吗？"
+    };
+    if (labels[command] && !window.confirm(labels[command])) return;
+    setIsChangingTaskLifecycle(true);
+    try {
+      const result = await useCases.taskRuntime.runLifecycle({ taskId: itemId, command, source: "quickinput" });
+      const presentation = buildRecordSubmitFeedbackPresentation(result, "任务状态修改失败");
+      if (presentation.message) showNotice(presentation.message, presentation.tone);
+      if (result.status === "success") closeModal();
+    } catch (error) {
+      showNotice(error instanceof Error ? error.message : "任务状态修改失败");
+    } finally {
+      setIsChangingTaskLifecycle(false);
+    }
+  }, [closeModal, editItem?.id, isChangingTaskLifecycle, showNotice, useCases]);
   const handleEnergyCapture = q$1(async (request) => {
     const now2 = dayjs();
     const isRetrospective = request.captureMode === "retrospective";
@@ -48956,22 +48107,46 @@ function QuickInputModalContent({
         onDismiss: clearRecovery
       }
     ),
-    /* @__PURE__ */ u2("div", { class: "think-modal__body", children: /* @__PURE__ */ u2(
-      QuickInputEditor,
-      {
-        getResourcePath,
-        initialBlockId: preparedRecord.blockId || initialBlockId,
-        initialFormData: preparedRecord.initialFormData,
-        context: mode === "edit" ? void 0 : context,
-        recordInputMode: editorSessionMode,
-        allowBlockSwitch: operationMode === "convert" || operationMode === "duplicate" ? true : mode === "edit" ? false : allowBlockSwitch,
-        onStateChange: handleEditorStateChange,
-        onRequestSubmit: handleSubmit,
-        onEnergyCapture: handleEnergyCapture,
-        isMobileLike
-      },
-      `${editorResetVersion}:${editItem?.id ?? "create"}`
-    ) }),
+    /* @__PURE__ */ u2("div", { class: "think-modal__body", children: [
+      /* @__PURE__ */ u2(
+        QuickInputEditor,
+        {
+          getResourcePath,
+          initialBlockId: preparedRecord.blockId || initialBlockId,
+          initialFormData: preparedRecord.initialFormData,
+          context: mode === "edit" ? void 0 : context,
+          recordInputMode: editorSessionMode,
+          allowBlockSwitch: operationMode === "convert" || operationMode === "duplicate" ? true : mode === "edit" ? false : allowBlockSwitch,
+          onStateChange: handleEditorStateChange,
+          onRequestSubmit: handleSubmit,
+          onEnergyCapture: handleEnergyCapture,
+          isMobileLike
+        },
+        `${editorResetVersion}:${editItem?.id ?? "create"}`
+      ),
+      operationMode === "edit" && editItem?.coreBlock === "task" && normalizeTaskStatus(editItem.status) ? /* @__PURE__ */ u2(
+        TaskLifecycleEditor,
+        {
+          status: normalizeTaskStatus(editItem.status),
+          recurring: Boolean(String(editItem.seriesId || "").trim()),
+          busy: isChangingTaskLifecycle,
+          onCommand: handleTaskLifecycleCommand
+        }
+      ) : null,
+      isRecurringTaskEdit ? /* @__PURE__ */ u2(
+        RecurringTaskSeriesEditor,
+        {
+          scope: taskSeriesEditScope,
+          recurrence: taskSeriesRecurrence,
+          onScopeChange: setTaskSeriesEditScope,
+          onRecurrenceChange: setTaskSeriesRecurrence,
+          onSkipCurrent: handleSkipRecurringTask,
+          onStopSeries: handleStopSeries,
+          skipping: isSkippingRecurringTask,
+          stopping: isStoppingSeries
+        }
+      ) : null
+    ] }),
     !isEnergyDirect && /* @__PURE__ */ u2(
       QuickInputModalFooter,
       {
@@ -48984,7 +48159,8 @@ function QuickInputModalContent({
         onDelete: handleDelete,
         onSubmitClick: handleSubmit,
         onSubmitPointerDown: handleSubmitPointerDown,
-        onPreserveDesktopInputFocus: preserveDesktopInputFocus
+        onPreserveDesktopInputFocus: preserveDesktopInputFocus,
+        allowDelete: !isRecurringTaskEdit
       }
     )
   ] });
@@ -49319,47 +48495,45 @@ function getEventClientY(event) {
   }
   return event.clientY;
 }
-function clampDayMinute(value) {
-  if (!Number.isFinite(value)) return 0;
-  return Math.min(1439, Math.max(0, Math.floor(value)));
-}
 function blockIdentity(block) {
   if (!block) return null;
   return String(block.taskRecordId || block.id || "").trim() || null;
 }
-function minuteToLocalDateTime(day, minute) {
-  return dayjs(day).startOf("day").add(clampDayMinute(minute), "minute").format("YYYY-MM-DDTHH:mm");
-}
 function resolveTimelineCreateContext(input) {
-  const clickedMinute = clampDayMinute(input.clickedMinute);
+  const maxHours = input.maxHours ?? 24;
+  const clickedMinute = clampTimelineMinute(input.clickedMinute, maxHours);
   const blocks = [...input.dayBlocks || []].filter((block) => Number.isFinite(block.blockStartMinute) && Number.isFinite(block.blockEndMinute)).sort((a2, b2) => a2.blockStartMinute - b2.blockStartMinute || a2.blockEndMinute - b2.blockEndMinute);
   const previousBlock = blocks.filter((block) => block.blockEndMinute <= clickedMinute).sort((a2, b2) => b2.blockEndMinute - a2.blockEndMinute || b2.blockStartMinute - a2.blockStartMinute)[0] || null;
   const nextBlock = blocks.filter((block) => block.blockStartMinute >= clickedMinute).sort((a2, b2) => a2.blockStartMinute - b2.blockStartMinute || a2.blockEndMinute - b2.blockEndMinute)[0] || null;
-  const suggestedStartMinute = clampDayMinute(previousBlock?.blockEndMinute ?? clickedMinute);
-  const nextStartMinute = nextBlock ? clampDayMinute(nextBlock.blockStartMinute) : null;
-  const suggestedEndMinute = nextStartMinute !== null && nextStartMinute > suggestedStartMinute ? nextStartMinute : null;
-  const startAt = minuteToLocalDateTime(input.day, suggestedStartMinute);
+  const suggestedStartMinute = clampTimelineMinute(previousBlock?.blockEndMinute ?? TIMELINE_DAY_START_MINUTE, maxHours);
+  const nextStartMinute = nextBlock ? clampTimelineMinute(nextBlock.blockStartMinute, maxHours) : null;
+  const clickedEndMinute = clickedMinute > suggestedStartMinute ? clickedMinute : null;
+  const suggestedEndMinute = nextStartMinute !== null && nextStartMinute > suggestedStartMinute ? nextStartMinute : clickedEndMinute;
+  const startAt = timelineMinuteToLocalDateTime(input.day, suggestedStartMinute);
   const context = {
     日期: input.day,
+    status: "done",
+    __timeDirection: "backward",
     startAt,
     // Legacy aliases remain invocation context only. New Task UI uses startAt/endAt.
     时间: minutesToTime(suggestedStartMinute),
     __recordUiContext: {
       kind: "timeline_create",
+      captureMode: "completed_execution",
       timeContext: {
         date: input.day,
         clickedMinute,
         suggestedStartMinute,
         suggestedEndMinute,
-        startSource: previousBlock ? "previous_block_end" : "clicked_slot",
-        endSource: suggestedEndMinute !== null ? "next_block_start" : "open_end",
+        startSource: previousBlock ? "previous_block_end" : "day_start",
+        endSource: nextStartMinute !== null && nextStartMinute > suggestedStartMinute ? "next_block_start" : suggestedEndMinute !== null ? "clicked_slot" : "open_end",
         previousBlockId: blockIdentity(previousBlock),
         nextBlockId: blockIdentity(nextBlock)
       }
     }
   };
   if (suggestedEndMinute !== null) {
-    context.endAt = minuteToLocalDateTime(input.day, suggestedEndMinute);
+    context.endAt = timelineMinuteToLocalDateTime(input.day, suggestedEndMinute);
     context["结束"] = minutesToTime(suggestedEndMinute);
   }
   return {
@@ -49376,12 +48550,12 @@ function buildTimelineCreateConfig(params) {
   if (!targetEl) return null;
   const rect = targetEl.getBoundingClientRect();
   const clientY = getEventClientY(params.event);
-  const y2 = clientY - rect.top;
-  const clickedMinute = Math.floor(y2 / params.hourHeight * 60);
+  const clickedMinute = timelineMinuteFromOffset(clientY - rect.top, params.hourHeight, params.maxHours);
   const resolved = resolveTimelineCreateContext({
     day: params.day,
     clickedMinute,
-    dayBlocks: params.dayBlocks
+    dayBlocks: params.dayBlocks,
+    maxHours: params.maxHours
   });
   return {
     blockId: RECORD_TYPE_IDS.TASK,
@@ -49604,9 +48778,8 @@ async function runUiRecordAction(action, options) {
 }
 async function completeFromView(params) {
   const { ok } = await runUiRecordAction(
-    () => params.useCases.recordInput.submitCompleteRecord({
-      itemId: params.itemId,
-      options: params.options,
+    () => params.useCases.taskRuntime.completeTask({
+      taskId: params.itemId,
       source: params.source ?? "layout_renderer"
     }),
     {
@@ -53669,7 +52842,7 @@ function useScrollOffsets(elements) {
   y(() => {
     const previousElements = prevElements.current;
     if (elements !== previousElements) {
-      cleanup2(previousElements);
+      cleanup(previousElements);
       const entries = elements.map((element) => {
         const scrollableElement = getScrollableElement(element);
         if (scrollableElement) {
@@ -53684,10 +52857,10 @@ function useScrollOffsets(elements) {
       prevElements.current = elements;
     }
     return () => {
-      cleanup2(elements);
-      cleanup2(previousElements);
+      cleanup(elements);
+      cleanup(previousElements);
     };
-    function cleanup2(elements2) {
+    function cleanup(elements2) {
       elements2.forEach((element) => {
         const scrollableElement = getScrollableElement(element);
         scrollableElement == null ? void 0 : scrollableElement.removeEventListener("scroll", handleScroll);
@@ -55735,6 +54908,9 @@ function EnergyViewEditor({ value, onChange }) {
     /* @__PURE__ */ u2(ConfigFieldRow, { label: "精力地图", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: config2.showTimeline !== false, onChange: (e2) => onChange({ showTimeline: e2.currentTarget.checked }), label: "显示", compact: true }) })
   ] }) });
 }
+function EisenhowerViewEditor() {
+  return /* @__PURE__ */ u2(ReadonlyViewEditorNotice, { title: "四象限（Eisenhower）" });
+}
 const VIEW_EDITORS = {
   TableView: TableViewEditor,
   BlockView: BlockViewEditor,
@@ -55744,7 +54920,8 @@ const VIEW_EDITORS = {
   StatisticsView: StatisticsViewEditor,
   HeatmapView: HeatmapViewEditor,
   ProgressView: ProgressViewEditor,
-  EnergyView: EnergyViewEditor
+  EnergyView: EnergyViewEditor,
+  EisenhowerView: EisenhowerViewEditor
 };
 function getViewEditorComponent(viewType) {
   return VIEW_EDITORS[viewType];
@@ -55948,7 +55125,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, sho
   const [newRule, setNewRule] = d(makeDefaultRule(mode));
   const uniqueFieldValues = T$1(() => buildUniqueFieldValues(dataStore), [dataStore]);
   const shouldShowValueInput = shouldShowRuleValueInput(mode, newRule);
-  const remove2 = (index) => onChange(removeRuleAt(rows, index));
+  const remove = (index) => onChange(removeRuleAt(rows, index));
   const updateNewRule = (patch) => setNewRule((current2) => patchRule(mode, current2, patch));
   const updateLogic = (index, logic) => onChange(patchRuleLogic(rows, index, logic, isFilterMode));
   const handleAddRule = () => {
@@ -55963,7 +55140,7 @@ function RuleBuilder({ title, mode, rows, fieldOptions, onChange, dataStore, sho
     const filterRule = rule;
     const label = buildRuleLabel(mode, rule);
     return /* @__PURE__ */ u2("div", { className: "think-rule-builder__chip-row", children: [
-      /* @__PURE__ */ u2("button", { type: "button", className: "think-chip", title: `点击删除规则: ${label}`, onClick: () => remove2(index), children: [
+      /* @__PURE__ */ u2("button", { type: "button", className: "think-chip", title: `点击删除规则: ${label}`, onClick: () => remove(index), children: [
         /* @__PURE__ */ u2("span", { className: "think-chip__label", children: label }),
         /* @__PURE__ */ u2("span", { className: "think-chip__remove", "aria-hidden": "true", children: "×" })
       ] }),
@@ -56720,7 +55897,7 @@ function LayoutEditorPanel({ layoutId, useCases }) {
       }
     ) }),
     /* @__PURE__ */ u2(
-      Modal2,
+      Modal,
       {
         isOpen: Boolean(renameTarget),
         onClose: () => setRenameTarget(null),
@@ -56840,7 +56017,7 @@ function DataFilterPanel({ dataStore, filters, items, onChange }) {
       ] })
     ] }),
     /* @__PURE__ */ u2(
-      Modal2,
+      Modal,
       {
         isOpen: open,
         onClose: () => setOpen(false),
@@ -57314,27 +56491,28 @@ function DayColumnHeader({
   ] });
 }
 const formatTimeMinute = (minute) => {
-  const h2 = Math.floor(minute / 60);
-  const m2 = minute % 60;
+  const total = Math.round(minute);
+  const h2 = Math.floor(total / 60) % 24;
+  const m2 = (total % 60 + 60) % 60;
   return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
 };
 const generateTaskBlockTitle = (block) => {
+  if (block.timelineSource === "task-point" || block.timelineSource === "task-plan" && block.duration <= 0) {
+    return `${block.timelineSource === "task-plan" ? "计划" : "任务"}: ${block.pureText}
+时间点: ${formatTimeMinute(block.startMinute)}
+${RECORD_GESTURE_HINT}`;
+  }
   const isCrossNight = block.startMinute % 1440 + block.duration > 1440;
   if (isCrossNight) {
     const startDateTime = dayjs(block.actualStartDate).add(block.startMinute, "minute");
     const endDateTime = startDateTime.add(block.duration, "minute");
-    const startFormat = startDateTime.format("HH:mm");
-    const endFormat = endDateTime.format("HH:mm");
     return `任务: ${block.pureText}
-时间: ${startFormat} - ${endFormat}
-${RECORD_GESTURE_HINT}`;
-  } else {
-    const startTime = formatTimeMinute(block.startMinute);
-    const endTime = formatTimeMinute(block.endMinute);
-    return `任务: ${block.pureText}
-时间: ${startTime} - ${endTime}
+时间: ${startDateTime.format("HH:mm")} - ${endDateTime.format("HH:mm")}
 ${RECORD_GESTURE_HINT}`;
   }
+  return `${block.timelineSource === "task-plan" ? "计划" : "任务"}: ${block.pureText}
+时间: ${formatTimeMinute(block.startMinute)} - ${formatTimeMinute(block.endMinute)}
+${RECORD_GESTURE_HINT}`;
 };
 function DayColumnBody({
   day,
@@ -57365,12 +56543,19 @@ function DayColumnBody({
       onNotice?.("更新记录时间失败");
     }
   };
-  const handleEdit = (block) => {
+  const handleOpenTask = (block) => {
+    void onOpenRecord?.({ ...block, id: block.taskRecordId });
+  };
+  const handlePreciseEdit = (block) => {
+    if (block.timelineSource === "task-plan") {
+      handleOpenTask(block);
+      return;
+    }
     if (onEditTask) {
       onEditTask(block);
       return;
     }
-    void onOpenRecord?.({ ...block, id: block.taskRecordId });
+    handleOpenTask(block);
   };
   const handleAlignToPrev = (block, prevBlock) => {
     if (onAlignPrev) {
@@ -57422,24 +56607,33 @@ function DayColumnBody({
     "div",
     {
       class: "day-column-body",
-      style: { height: `${maxHours * hourHeight}px` },
+      style: { height: `${timelineOffsetFromMinute(timelineVisibleEndMinute(maxHours), hourHeight)}px` },
       onClick: (e2) => handleBodyClick(e2),
       onTouchEnd: (e2) => handleBodyTouchEnd(e2),
       children: blocks.map((block, index) => {
-        const top2 = block.blockStartMinute / 60 * hourHeight;
-        const height2 = (block.blockEndMinute - block.blockStartMinute) / 60 * hourHeight;
+        const top2 = timelineOffsetFromMinute(block.blockStartMinute, hourHeight);
+        const naturalHeight = timelineOffsetFromMinute(block.blockEndMinute, hourHeight) - top2;
+        const isPlanned = block.timelineSource === "task-plan";
+        const isPoint = block.timelineSource === "task-point" || isPlanned && block.duration <= 0;
+        const renderHeight = isPoint ? 22 : Math.max(naturalHeight, 2);
         const category = mapTaskToCategory(block.fileName || "", categoriesConfig);
         const color2 = colorMap[category] || "var(--think-data-neutral)";
         const prevBlock = index > 0 ? blocks[index - 1] : null;
         const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
-        const canAlignToNext = nextBlock && nextBlock.blockStartMinute > block.blockStartMinute;
-        const blockGesture = createRecordGestureHandlers({ item: { ...block, id: block.taskRecordId }, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => handleEdit(block) });
+        const canAlign = !isPoint && !isPlanned;
+        const canAlignToNext = canAlign && nextBlock && nextBlock.blockStartMinute > block.blockStartMinute;
+        const lifecycle = block.timelineSource === "task-session" ? getTaskSessionResultPresentation(block.sessionResult) || getTaskStatusPresentation(block.status) : getTaskStatusPresentation(block.status);
+        const blockGesture = createRecordGestureHandlers({ item: { ...block, id: block.taskRecordId }, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => handleOpenTask(block) });
         return /* @__PURE__ */ u2(
           "div",
           {
-            class: "timeline-task-block",
-            title: generateTaskBlockTitle(block),
-            style: { top: `${top2}px`, height: `${Math.max(height2, 2)}px`, "--timeline-task-color": color2 },
+            class: `timeline-task-block timeline-task-block--${lifecycle.className}${isPoint ? " timeline-task-block--point" : ""}${isPlanned ? " timeline-task-block--planned" : ""}`,
+            "data-task-status": lifecycle.status,
+            "data-timeline-kind": isPoint ? "point" : "range",
+            "data-timeline-layer": isPlanned ? "planned" : block.timelineSource === "task-session" ? "actual" : "legacy",
+            title: `${generateTaskBlockTitle(block)}
+状态: ${lifecycle.label}`,
+            style: { top: `${top2}px`, height: `${renderHeight}px`, "--timeline-task-color": color2 },
             onClick: (e2) => e2.stopPropagation(),
             onTouchStart: (e2) => e2.stopPropagation(),
             onTouchEnd: (e2) => e2.stopPropagation(),
@@ -57457,6 +56651,15 @@ function DayColumnBody({
                   children: [
                     /* @__PURE__ */ u2("div", { class: "timeline-task-indicator" }),
                     /* @__PURE__ */ u2("div", { class: "timeline-task-content", children: [
+                      /* @__PURE__ */ u2(
+                        "span",
+                        {
+                          class: "timeline-task-status",
+                          "aria-label": lifecycle.label,
+                          title: lifecycle.label,
+                          children: lifecycle.emoji
+                        }
+                      ),
                       block.icon ? /* @__PURE__ */ u2("span", { class: "timeline-task-icon", children: block.icon }) : null,
                       /* @__PURE__ */ u2("span", { class: "timeline-task-title", children: block.title || block.pureText })
                     ] })
@@ -57464,28 +56667,30 @@ function DayColumnBody({
                 }
               ),
               /* @__PURE__ */ u2("div", { class: "task-buttons", children: [
-                /* @__PURE__ */ u2(
-                  ThinkIconButton,
-                  {
-                    className: "timeline-task-action",
-                    size: "sm",
-                    label: "向前对齐",
-                    icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-up" }),
-                    disabled: !prevBlock,
-                    onClick: () => handleAlignToPrev(block, prevBlock)
-                  }
-                ),
-                /* @__PURE__ */ u2(
-                  ThinkIconButton,
-                  {
-                    className: "timeline-task-action",
-                    size: "sm",
-                    label: "向后对齐",
-                    icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-down" }),
-                    disabled: !canAlignToNext,
-                    onClick: () => handleAlignToNext(block, nextBlock)
-                  }
-                ),
+                canAlign ? /* @__PURE__ */ u2(S, { children: [
+                  /* @__PURE__ */ u2(
+                    ThinkIconButton,
+                    {
+                      className: "timeline-task-action",
+                      size: "sm",
+                      label: "向前对齐",
+                      icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-up" }),
+                      disabled: !prevBlock,
+                      onClick: () => handleAlignToPrev(block, prevBlock)
+                    }
+                  ),
+                  /* @__PURE__ */ u2(
+                    ThinkIconButton,
+                    {
+                      className: "timeline-task-action",
+                      size: "sm",
+                      label: "向后对齐",
+                      icon: /* @__PURE__ */ u2(ThinkIcon, { name: "chevron-down" }),
+                      disabled: !canAlignToNext,
+                      onClick: () => handleAlignToNext(block, nextBlock)
+                    }
+                  )
+                ] }) : null,
                 /* @__PURE__ */ u2(
                   ThinkIconButton,
                   {
@@ -57493,7 +56698,7 @@ function DayColumnBody({
                     size: "sm",
                     label: "精确编辑",
                     icon: /* @__PURE__ */ u2(ThinkIcon, { name: "pencil" }),
-                    onClick: () => handleEdit(block)
+                    onClick: () => handlePreciseEdit(block)
                   }
                 )
               ] })
@@ -57515,11 +56720,19 @@ function buildTimelineDayColumns(dailyViewData) {
   });
 }
 function buildTimelineTimeAxisRows(maxHours, hourHeight) {
-  return Array.from({ length: Math.max(0, maxHours) + 1 }, (_2, hour) => ({
-    hour,
-    label: hour > 0 && hour % 2 === 0 ? `${hour}:00` : "",
-    height: `${hourHeight}px`
-  }));
+  const visibleEndMinute = timelineVisibleEndMinute(maxHours);
+  const hourCount = Math.ceil(visibleEndMinute / 60);
+  return Array.from({ length: hourCount }, (_2, hour) => {
+    const rowStartMinute = hour * 60;
+    const rowMinutes = Math.max(0, Math.min(60, visibleEndMinute - rowStartMinute));
+    return {
+      hour,
+      label: hour === 0 || hour % 2 === 0 ? `${String(hour).padStart(2, "0")}:00` : "",
+      // The final row can be partial. Its total pixel height must still exactly match
+      // the day column height computed from the same visible-minute boundary.
+      height: `${rowMinutes / 60 * hourHeight}px`
+    };
+  });
 }
 function TimelineDailyView({
   zoomHandlers,
@@ -57535,6 +56748,7 @@ function TimelineDailyView({
   untrackedLabel,
   onOpenRecordOrigin,
   onUpdateTaskTime,
+  onEditTimelineBlock,
   onOpenRecord,
   onNotice,
   onColumnClick
@@ -57560,7 +56774,7 @@ function TimelineDailyView({
         DayColumnHeader,
         {
           day,
-          blocks,
+          blocks: blocks.filter((block) => block.timelineSource !== "task-plan"),
           categoriesConfig,
           colorMap,
           untrackedLabel,
@@ -57582,6 +56796,7 @@ function TimelineDailyView({
           colorMap,
           maxHours,
           onUpdateTaskTime,
+          onEditTask: onEditTimelineBlock,
           onOpenRecord,
           onNotice,
           onColumnClick
@@ -57609,11 +56824,12 @@ function TimelineViewView(props) {
     maxHours,
     onOpenRecordOrigin,
     onUpdateTaskTime,
+    onEditTimelineBlock,
     onOpenRecord,
     onNotice,
     onColumnClick
   } = props;
-  if (timelineTasksCount === 0) {
+  if (isSummaryView && timelineTasksCount === 0) {
     return /* @__PURE__ */ u2("div", { class: "timeline-empty-state think-viz-empty", children: "当前范围内没有数据。" });
   }
   if (isSummaryView) {
@@ -57646,6 +56862,7 @@ function TimelineViewView(props) {
       untrackedLabel,
       onOpenRecordOrigin,
       onUpdateTaskTime,
+      onEditTimelineBlock,
       onOpenRecord,
       onNotice,
       onColumnClick
@@ -57698,6 +56915,7 @@ function buildTimelineTask(args) {
     ...args.task,
     id: args.id,
     sessionRecordId: args.sessionRecordId,
+    sessionResult: args.sessionResult,
     taskRecordId: args.task.id,
     timelineSource: args.timelineSource,
     date: actualStartDate,
@@ -57709,6 +56927,31 @@ function buildTimelineTask(args) {
     // Keep endMinute monotonic across midnight. splitTaskIntoDayBlocks() will split it per day.
     endMinute: startMinute + args.durationMinutes,
     pureText: displayText(args.task),
+    fileName,
+    actualStartDate
+  };
+}
+function buildTimelinePointTask(task, startedAt, timelineSource = "task-point", projectionId = task.id) {
+  const startedMs = timestamp(startedAt);
+  if (startedMs == null) return null;
+  const actualStartDate = localDate(startedAt);
+  const startMinute = localMinute(startedAt);
+  if (!actualStartDate || startMinute == null) return null;
+  const fileName = taskFileName(task);
+  if (!fileName) return null;
+  return {
+    ...task,
+    id: projectionId,
+    taskRecordId: task.id,
+    timelineSource,
+    date: actualStartDate,
+    doneDate: actualStartDate,
+    startTime: new Date(startedMs).toTimeString().slice(0, 5),
+    endTime: void 0,
+    duration: 0,
+    startMinute,
+    endMinute: startMinute,
+    pureText: displayText(task),
     fileName,
     actualStartDate
   };
@@ -57725,10 +56968,29 @@ function projectSession(task, record) {
     task,
     id: session.id,
     sessionRecordId: session.id,
+    sessionResult: session.sessionResult,
     timelineSource: "task-session",
     startedAt: session.sessionStartedAt,
     endedAt: session.sessionEndedAt,
     durationMinutes: duration2
+  });
+}
+function projectTaskPlan(taskItem) {
+  const task = asTaskRecord(taskItem);
+  if (!task || !task.scheduledAt) return null;
+  const startedMs = timestamp(task.scheduledAt);
+  if (startedMs == null) return null;
+  const declaredDuration = Number(task.expectedDurationMinutes);
+  if (!Number.isFinite(declaredDuration) || declaredDuration <= 0) {
+    return buildTimelinePointTask(task, task.scheduledAt, "task-plan", `${task.id}:plan`);
+  }
+  return buildTimelineTask({
+    task,
+    id: `${task.id}:plan`,
+    timelineSource: "task-plan",
+    startedAt: task.scheduledAt,
+    endedAt: new Date(startedMs + declaredDuration * 6e4).toISOString(),
+    durationMinutes: declaredDuration
   });
 }
 function projectTaskRange(taskItem) {
@@ -57744,7 +57006,9 @@ function projectTaskRange(taskItem) {
     duration2 = (endedMs - startedMs) / 6e4;
   } else {
     const declaredDuration = Number(task.expectedDurationMinutes);
-    if (!Number.isFinite(declaredDuration) || declaredDuration <= 0) return null;
+    if (!Number.isFinite(declaredDuration) || declaredDuration <= 0) {
+      return buildTimelinePointTask(task, task.startAt);
+    }
     duration2 = declaredDuration;
     endedAt = new Date(startedMs + declaredDuration * 6e4).toISOString();
   }
@@ -57772,9 +57036,12 @@ function processItemsToTimelineTasks(records) {
     taskIdsWithProjectedSessions.add(task.id);
   }
   for (const record of records) {
-    if (record.coreBlock !== "task" || taskIdsWithProjectedSessions.has(record.id)) continue;
-    const projected = projectTaskRange(record);
-    if (projected) timelineTasks.push(projected);
+    if (record.coreBlock !== "task") continue;
+    const planned = projectTaskPlan(record);
+    if (planned) timelineTasks.push(planned);
+    if (taskIdsWithProjectedSessions.has(record.id)) continue;
+    const legacy = projectTaskRange(record);
+    if (legacy) timelineTasks.push(legacy);
   }
   return timelineTasks;
 }
@@ -57811,10 +57078,11 @@ function buildTimelineRenderModel(args) {
   const { items, records = items, module: module2, dateRange, currentView, injectedModel } = args;
   const config2 = resolveTimelineConfig(module2, injectedModel?.config ? { config: injectedModel.config } : void 0);
   const timelineTasks = injectedModel?.timelineTasks ?? resolveTimelineTasks(items, records);
+  const actualTimelineTasks = timelineTasks.filter((task) => task.timelineSource !== "task-plan");
   const colorMap = buildTimelineColorMap(config2);
   const isSummaryView = currentView === "年" || currentView === "季";
-  const summaryData = injectedModel?.summaryData ?? buildTimelineSummaryData({ timelineTasks, dateRange, config: config2, isSummaryView });
-  const summaryCategoryHours = injectedModel?.summaryCategoryHours ?? (isSummaryView ? {} : buildSummaryCategoryHours(timelineTasks, dateRange, config2) || {});
+  const summaryData = injectedModel?.summaryData ?? buildTimelineSummaryData({ timelineTasks: actualTimelineTasks, dateRange, config: config2, isSummaryView });
+  const summaryCategoryHours = injectedModel?.summaryCategoryHours ?? (isSummaryView ? {} : buildSummaryCategoryHours(actualTimelineTasks, dateRange, config2) || {});
   const dailyViewData = injectedModel?.dailyViewData ?? (isSummaryView ? null : buildDailyViewData(timelineTasks, dateRange));
   const totalSummaryHours = Object.values(summaryCategoryHours).reduce((sum, hours) => sum + Number(hours || 0), 0);
   return { config: config2, colorMap, timelineTasks, dailyViewData, isSummaryView, summaryData, summaryCategoryHours, totalSummaryHours };
@@ -57827,6 +57095,7 @@ function TimelineView({
   currentView,
   onOpenRecordOrigin,
   onUpdateTaskTime,
+  onEditTimelineBlock,
   onCreateFromTimeline,
   onOpenRecord,
   onNotice,
@@ -57845,10 +57114,13 @@ function TimelineView({
         day,
         event: e2,
         hourHeight,
-        dayBlocks: renderModel.dailyViewData?.blocksByDay[day] || []
+        maxHours: renderModel.config.MAX_HOURS_PER_DAY,
+        // Retrospective creation resolves gaps from actual execution only. Planned
+        // slots are guidance and must not become hard boundaries for what really happened.
+        dayBlocks: (renderModel.dailyViewData?.blocksByDay[day] || []).filter((block) => block.timelineSource !== "task-plan")
       });
     },
-    [onCreateFromTimeline, hourHeight, renderModel.dailyViewData]
+    [onCreateFromTimeline, hourHeight, renderModel.config.MAX_HOURS_PER_DAY, renderModel.dailyViewData]
   );
   return /* @__PURE__ */ u2(
     TimelineViewView,
@@ -57869,6 +57141,7 @@ function TimelineView({
       maxHours: renderModel.config.MAX_HOURS_PER_DAY,
       onOpenRecordOrigin,
       onUpdateTaskTime,
+      onEditTimelineBlock,
       onOpenRecord,
       onNotice,
       onColumnClick: handleColumnClick
@@ -60698,12 +59971,12 @@ function SampleDetail({ selection, management, onBack, onOpenRecord, onOpenRecor
     /* @__PURE__ */ u2("div", { class: "think-energy-detail__section", children: [
       /* @__PURE__ */ u2("strong", { children: "当时" }),
       activity ? /* @__PURE__ */ u2("p", { children: [
-        "前后活动　",
+        "前后活动 · ",
         activity.title,
         activity.durationMinutes ? ` · ${activity.durationMinutes}min` : ""
       ] }) : /* @__PURE__ */ u2("p", { children: "附近没有可靠活动" }),
       signals && /* @__PURE__ */ u2("p", { children: [
-        "当天　　　",
+        "当天 · ",
         signals
       ] })
     ] }),
@@ -60742,7 +60015,7 @@ function DayDetail({ selection, onBack, onOpenRecord, onOpenRecordOrigin }) {
     ] }),
     /* @__PURE__ */ u2("div", { class: "think-energy-detail__section", children: [
       /* @__PURE__ */ u2("strong", { children: "当天记录" }),
-      day.samples.map((sample) => /* @__PURE__ */ u2(RecordAction, { item: sample.item, label: `${sample.time}　综合 ${sample.score}`, className: "think-energy-detail__record-row", onOpenRecord, onOpenRecordOrigin }, sample.id))
+      day.samples.map((sample) => /* @__PURE__ */ u2(RecordAction, { item: sample.item, label: `${sample.time} · 综合 ${sample.score}`, className: "think-energy-detail__record-row", onOpenRecord, onOpenRecordOrigin }, sample.id))
     ] }),
     latest2 && onOpenRecord && /* @__PURE__ */ u2(RecordAction, { item: latest2.item, label: "打开最后一条记录 →", onOpenRecord, onOpenRecordOrigin })
   ] });
@@ -61049,6 +60322,131 @@ function EnergyView({ items, records = items, module: module2, dateRange, curren
     ),
     otherPanels.map((panel) => /* @__PURE__ */ u2(GoalEnergyPanel, { panel, model: energyModel, onOpenRecord, onOpenRecordOrigin }, panel.key))
   ] }) });
+}
+const EISENHOWER_MAIN_QUADRANTS = ["q1", "q2", "q3", "q4"];
+function buildEisenhowerColumns(items) {
+  const columns = {
+    q1: [],
+    q2: [],
+    q3: [],
+    q4: [],
+    unclassified: []
+  };
+  for (const item of items) {
+    if (item.coreBlock !== "task" || item.status !== "open") continue;
+    columns[deriveEisenhowerQuadrant(item)].push(item);
+  }
+  return columns;
+}
+function TaskCard({ item, onOpenRecord }) {
+  const status = getTaskStatusPresentation(item.status);
+  const title = item.title || item.content || "未命名任务";
+  return /* @__PURE__ */ u2(
+    "button",
+    {
+      type: "button",
+      className: "think-eisenhower-card",
+      draggable: true,
+      onDragStart: (event) => {
+        event.dataTransfer?.setData("text/plain", item.id);
+        if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+      },
+      onClick: () => onOpenRecord?.(item),
+      title: "点击编辑；拖到其他象限可重新分类",
+      children: [
+        /* @__PURE__ */ u2("span", { className: "think-eisenhower-card__status", "aria-hidden": "true", children: status.emoji }),
+        /* @__PURE__ */ u2("span", { className: "think-eisenhower-card__title", children: title })
+      ]
+    }
+  );
+}
+function QuadrantZone({
+  quadrant,
+  items,
+  active,
+  onDropTask,
+  onOpenRecord
+}) {
+  const meta = TASK_QUADRANT_PRESENTATION[quadrant];
+  return /* @__PURE__ */ u2(
+    "section",
+    {
+      className: `think-eisenhower-zone is-${quadrant}${active ? " is-dragover" : ""}`,
+      "data-quadrant": quadrant,
+      onDragOver: (event) => {
+        event.preventDefault();
+      },
+      onDrop: (event) => {
+        event.preventDefault();
+        const taskId = event.dataTransfer?.getData("text/plain") || "";
+        if (taskId) void onDropTask(taskId, quadrant);
+      },
+      children: [
+        /* @__PURE__ */ u2("header", { className: "think-eisenhower-zone__header", children: [
+          /* @__PURE__ */ u2("span", { children: [
+            meta.emoji,
+            " ",
+            meta.label
+          ] }),
+          /* @__PURE__ */ u2("span", { className: "think-eisenhower-zone__count", children: items.length })
+        ] }),
+        /* @__PURE__ */ u2("div", { className: "think-eisenhower-zone__cards", children: items.length ? items.map((item) => /* @__PURE__ */ u2(TaskCard, { item, onOpenRecord }, item.id)) : /* @__PURE__ */ u2("div", { className: "think-eisenhower-zone__empty", children: "拖任务到这里" }) })
+      ]
+    }
+  );
+}
+function EisenhowerView({
+  items,
+  showUnclassified = true,
+  onOpenRecord,
+  onTaskQuadrantChange,
+  onNotice
+}) {
+  const columns = T$1(() => buildEisenhowerColumns(items), [items]);
+  const [pendingTaskId, setPendingTaskId] = d(null);
+  const moveTask = async (taskId, quadrant) => {
+    if (!onTaskQuadrantChange || pendingTaskId) return;
+    setPendingTaskId(taskId);
+    try {
+      await onTaskQuadrantChange(taskId, quadrant);
+    } catch (error) {
+      onNotice?.(error instanceof Error ? error.message : "四象限分类更新失败");
+    } finally {
+      setPendingTaskId(null);
+    }
+  };
+  const openCount = Object.values(columns).reduce((total, rows) => total + rows.length, 0);
+  return /* @__PURE__ */ u2("div", { className: "think-eisenhower-view", children: [
+    /* @__PURE__ */ u2("div", { className: "think-eisenhower-summary", children: [
+      /* @__PURE__ */ u2("strong", { children: "四象限" }),
+      /* @__PURE__ */ u2("span", { children: [
+        "仅显示未完成任务 · ",
+        openCount,
+        " 条"
+      ] })
+    ] }),
+    showUnclassified ? /* @__PURE__ */ u2(
+      QuadrantZone,
+      {
+        quadrant: "unclassified",
+        items: columns.unclassified,
+        active: Boolean(pendingTaskId),
+        onDropTask: moveTask,
+        onOpenRecord
+      }
+    ) : null,
+    /* @__PURE__ */ u2("div", { className: "think-eisenhower-grid", children: EISENHOWER_MAIN_QUADRANTS.map((quadrant) => /* @__PURE__ */ u2(
+      QuadrantZone,
+      {
+        quadrant,
+        items: columns[quadrant],
+        active: Boolean(pendingTaskId),
+        onDropTask: moveTask,
+        onOpenRecord
+      },
+      quadrant
+    )) })
+  ] });
 }
 function isTableViewConfigured(rowField, colField) {
   return Boolean(rowField && colField);
@@ -62757,10 +62155,10 @@ function CategoryFilter({
       onClearAll: () => onSelectionChange([]),
       isEmpty: allCategories.length === 0,
       emptyText: "暂无分类",
-      children: /* @__PURE__ */ u2(FormGroup2, { children: allCategories.map((cat) => /* @__PURE__ */ u2(
-        FormControlLabel2,
+      children: /* @__PURE__ */ u2(FormGroup, { children: allCategories.map((cat) => /* @__PURE__ */ u2(
+        FormControlLabel,
         {
-          control: /* @__PURE__ */ u2(Checkbox2, { size: "small", checked: selectedCategories.includes(cat), onChange: () => handleToggleCategory(cat) }),
+          control: /* @__PURE__ */ u2(Checkbox, { size: "small", checked: selectedCategories.includes(cat), onChange: () => handleToggleCategory(cat) }),
           label: /* @__PURE__ */ u2("span", { class: "text-md", children: cat })
         },
         cat
@@ -62886,7 +62284,8 @@ const VIEW_RUNTIME_BINDINGS = {
   StatisticsView,
   HeatmapView,
   ProgressView,
-  EnergyView
+  EnergyView,
+  EisenhowerView
 };
 function getViewRuntimeComponent(viewType) {
   return VIEW_RUNTIME_BINDINGS[viewType];
@@ -62990,6 +62389,10 @@ function useViewData({
       devTimeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
       return [];
     }
+    const dateRole = normalizeRecordQueryDateRole(viewInstance.viewConfig?.dateRole);
+    const dateField2 = typeof viewInstance.viewConfig?.dateField === "string" ? viewInstance.viewConfig.dateField : void 0;
+    const dateMode = ["standard", "overview", "strict"].includes(String(viewInstance.viewConfig?.dateMode || "")) ? viewInstance.viewConfig?.dateMode : void 0;
+    const datePrecision = ["day", "minute"].includes(String(viewInstance.viewConfig?.datePrecision || "")) ? viewInstance.viewConfig?.datePrecision : void 0;
     const finalResult = queryViewRecords({
       items: allItems,
       layoutFilters,
@@ -62999,14 +62402,18 @@ function useViewData({
       dateRange,
       layoutView,
       isOverviewMode: !!isOverviewMode,
-      useFieldGranularity
+      useFieldGranularity,
+      dateRole,
+      dateField: dateField2,
+      dateMode,
+      datePrecision
     });
     devTimeEnd(`[useViewData] 为视图 [${sourceName}] 计算数据耗时`);
     return finalResult;
   }, [allItems, layoutFilters, filters, sort, dateRange, keyword, layoutView, isOverviewMode, useFieldGranularity, sourceName, viewInstance]);
   return processedItems;
 }
-const AnyIconButton = IconButton2;
+const AnyIconButton = IconButton;
 const closeStatisticsPopover = (widgetId) => {
   closeFloatingWidget(widgetId);
 };
@@ -63027,7 +62434,7 @@ const openStatisticsPopover = (request) => {
       bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
       onClose: request.onClose,
       headerActions: /* @__PURE__ */ u2("div", { class: "sv-popover-heading", children: [
-        /* @__PURE__ */ u2(Tooltip2, { title: "导出为 Markdown", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
+        /* @__PURE__ */ u2(Tooltip, { title: "导出为 Markdown", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
           AnyIconButton,
           {
             size: "small",
@@ -63039,7 +62446,7 @@ const openStatisticsPopover = (request) => {
             children: /* @__PURE__ */ u2(IosShareIcon, { sx: { fontSize: "1rem" } })
           }
         ) }),
-        request.canQuickCreate && request.onQuickCreate ? /* @__PURE__ */ u2(Tooltip2, { title: "按当前分类创建", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
+        request.canQuickCreate && request.onQuickCreate ? /* @__PURE__ */ u2(Tooltip, { title: "按当前分类创建", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
           AnyIconButton,
           {
             size: "small",
@@ -63069,6 +62476,87 @@ const openStatisticsPopover = (request) => {
     }
   ));
 };
+function localClock(iso) {
+  const date2 = new Date(iso);
+  if (!Number.isFinite(date2.getTime())) return "";
+  return `${String(date2.getHours()).padStart(2, "0")}:${String(date2.getMinutes()).padStart(2, "0")}`;
+}
+function clockDurationMinutes(start2, end2) {
+  const parse2 = (value) => {
+    const [hours, minutes] = value.split(":").map(Number);
+    return Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : null;
+  };
+  const startMinute = parse2(start2);
+  const endMinute = parse2(end2);
+  if (startMinute == null || endMinute == null) return null;
+  return endMinute >= startMinute ? endMinute - startMinute : 1440 - startMinute + endMinute;
+}
+function SessionTimeForm(props) {
+  const [startTime, setStartTime] = d(localClock(props.options.startedAt));
+  const [endTime, setEndTime] = d(localClock(props.options.endedAt));
+  const durationMinutes2 = T$1(() => clockDurationMinutes(startTime, endTime), [startTime, endTime]);
+  const canSubmit = /^\d{2}:\d{2}$/.test(startTime) && /^\d{2}:\d{2}$/.test(endTime) && durationMinutes2 != null && durationMinutes2 > 0;
+  return /* @__PURE__ */ u2("div", { className: "think-overlay-form think-session-time-editor", children: [
+    /* @__PURE__ */ u2(ModalHeader, { left: /* @__PURE__ */ u2("span", { children: props.options.title || "编辑实际执行时间" }), onClose: props.onCancel }),
+    /* @__PURE__ */ u2("div", { className: "think-overlay-body", children: [
+      /* @__PURE__ */ u2("div", { className: "think-field", children: [
+        /* @__PURE__ */ u2("label", { className: "think-field__label", children: "实际开始" }),
+        /* @__PURE__ */ u2(ThinkInput, { type: "time", value: startTime, onInput: (event) => setStartTime(event.currentTarget.value) })
+      ] }),
+      /* @__PURE__ */ u2("div", { className: "think-field", children: [
+        /* @__PURE__ */ u2("label", { className: "think-field__label", children: "实际结束" }),
+        /* @__PURE__ */ u2(ThinkInput, { type: "time", value: endTime, onInput: (event) => setEndTime(event.currentTarget.value) })
+      ] }),
+      /* @__PURE__ */ u2("div", { className: "think-field__description", children: [
+        "实际时长：",
+        durationMinutes2 == null ? "—" : `${durationMinutes2} 分钟`,
+        "。结束时间早于开始时间时按跨午夜处理；实际时长必须大于 0。"
+      ] })
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-overlay-footer", children: [
+      /* @__PURE__ */ u2(ThinkButton, { onClick: props.onCancel, children: "取消" }),
+      /* @__PURE__ */ u2(ThinkButton, { variant: "primary", disabled: !canSubmit, onClick: () => props.onSubmit({ time: startTime, endTime }), children: "保存实际时间" })
+    ] })
+  ] });
+}
+class TaskSessionTimeEditModal extends obsidian.Modal {
+  constructor(app, options) {
+    super(app);
+    this.options = options;
+  }
+  options;
+  resolvePromise = null;
+  openAndGetValue() {
+    return new Promise((resolve) => {
+      this.resolvePromise = resolve;
+      this.open();
+    });
+  }
+  onOpen() {
+    prepareThinkModal(this, "think-modal-host--medium", "think-session-time-edit-modal");
+    renderModalContent(this.contentEl, /* @__PURE__ */ u2(
+      SessionTimeForm,
+      {
+        options: this.options,
+        onSubmit: (value) => {
+          this.resolvePromise?.(value);
+          this.resolvePromise = null;
+          this.close();
+        },
+        onCancel: () => {
+          this.resolvePromise?.(null);
+          this.resolvePromise = null;
+          this.close();
+        }
+      }
+    ));
+  }
+  onClose() {
+    this.resolvePromise?.(null);
+    this.resolvePromise = null;
+    unmountModalContent(this.contentEl);
+  }
+}
 function useViewRuntimeHandlers({
   app,
   actionService,
@@ -63098,6 +62586,35 @@ function useViewRuntimeHandlers({
     },
     [ui, useCases]
   );
+  const onEditTimelineBlock = q$1(async (block) => {
+    if (block.timelineSource === "task-session" && block.sessionRecordId) {
+      const session = dataStore.getRecordById(block.sessionRecordId);
+      if (!session || session.coreBlock !== "task-session" || !session.sessionStartedAt || !session.sessionEndedAt) {
+        ui.notice("找不到这段实际执行记录。");
+        return;
+      }
+      const value = await new TaskSessionTimeEditModal(app, {
+        startedAt: session.sessionStartedAt,
+        endedAt: session.sessionEndedAt,
+        title: "编辑实际执行时间"
+      }).openAndGetValue();
+      if (!value) return;
+      const ok = await updateTimeFromView({
+        uiPort: ui,
+        useCases,
+        itemId: session.id,
+        updates: value,
+        source: "layout_renderer"
+      });
+      if (!ok) throw new Error("更新实际执行时间失败");
+      return;
+    }
+    const task = dataStore.getRecordById(block.taskRecordId);
+    if (task) openEditFromItem({ app, item: task, openedFrom: "timeline" });
+  }, [app, dataStore, ui, useCases]);
+  const onTaskQuadrantChange = q$1(async (recordId, quadrant) => {
+    await useCases.recordInput.updateTaskQuadrant(recordId, quadrant);
+  }, [useCases.recordInput]);
   const onQuickCreate = q$1((payload) => {
     openCreateFromStatistics({
       app,
@@ -63127,6 +62644,7 @@ function useViewRuntimeHandlers({
     openCreateFromTimeline({
       app,
       hourHeight: payload.hourHeight,
+      maxHours: payload.maxHours,
       dayBlocks: payload.dayBlocks,
       day: payload.day,
       event: payload.event
@@ -63184,6 +62702,8 @@ function useViewRuntimeHandlers({
   }, [useCases, viewInstance.id]);
   return {
     onUpdateTaskTime,
+    onEditTimelineBlock,
+    onTaskQuadrantChange,
     onQuickCreate,
     onCategoryColorsChange,
     onOpenRecord,
@@ -63240,6 +62760,8 @@ function buildViewProps({
     onEnergyContextChange: viewType === "EnergyView" ? handlers.onEnergyContextChange : void 0,
     onMarkDone,
     onUpdateTaskTime: handlers.onUpdateTaskTime,
+    onEditTimelineBlock: viewType === "TimelineView" ? handlers.onEditTimelineBlock : void 0,
+    onTaskQuadrantChange: viewType === "EisenhowerView" ? handlers.onTaskQuadrantChange : void 0,
     onOpenStatisticsPopover: viewType === "StatisticsView" ? onOpenStatisticsPopover : void 0,
     onCloseStatisticsPopover: viewType === "StatisticsView" ? onCloseStatisticsPopover : void 0,
     categoryColors: viewType === "StatisticsView" ? categoryColors : void 0,
@@ -63400,8 +62922,7 @@ function useLayoutModuleActions({
   allViews,
   modulesDataCache,
   ui,
-  useCases,
-  timerService
+  useCases
 }) {
   const handleExport = q$1((viewId, viewTitle) => {
     const items = modulesDataCache.current?.[viewId];
@@ -63434,19 +62955,13 @@ function useLayoutModuleActions({
     });
   }, [actionService, app, layoutDate, layoutView]);
   const handleMarkItemDone = q$1((itemId) => {
-    void (async () => {
-      if (timerService.completeTask) {
-        await timerService.completeTask(itemId);
-        return;
-      }
-      await completeFromView({
-        uiPort: ui,
-        useCases,
-        itemId,
-        source: "layout_renderer"
-      });
-    })();
-  }, [timerService, ui, useCases]);
+    void completeFromView({
+      uiPort: ui,
+      useCases,
+      itemId,
+      source: "layout_renderer"
+    });
+  }, [ui, useCases]);
   const handleSettingsClick = q$1((viewInstance) => {
     openModuleSettingsWidget(viewInstance);
   }, []);
@@ -64059,8 +63574,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
     allViews,
     modulesDataCache,
     ui,
-    useCases,
-    timerService
+    useCases
   });
   const handlePlacementChange = (viewId, placement) => {
     void useCases.layout.updateViewPlacement(layout.id, viewId, placement);
@@ -64347,9 +63861,6 @@ class RendererService {
 function readResultMessage(result, fallback) {
   return readRecordSubmitMessage(result, fallback);
 }
-function durationMinutes(totalSeconds) {
-  return Math.max(0, Math.round(Math.max(0, totalSeconds) / 60 * 100) / 100);
-}
 class TimerService {
   constructor(useCases, dataStore, ui) {
     this.useCases = useCases;
@@ -64361,18 +63872,19 @@ class TimerService {
   ui;
   async startOrResume(taskId) {
     const timers = this.useCases.timer.getTimers();
-    for (const timer of timers) {
-      if (timer.status === "running") await this.pause(timer.id);
-    }
-    const existingTimer = this.useCases.timer.getTimers().find((timer) => timer.taskId === taskId);
-    if (existingTimer && existingTimer.status === "paused") {
-      await this.resume(existingTimer.id);
-      return;
-    }
-    if (existingTimer) return;
+    const existingTimer = timers.find((timer) => timer.taskId === taskId);
     const taskItem = this.dataStore.getRecordById(taskId);
     if (!taskItem || taskItem.coreBlock !== "task" || taskItem.status !== "open") {
+      if (existingTimer) await this.useCases.timer.removeTimer(existingTimer.id);
       this.ui.notice("找不到可执行的未完成任务");
+      return;
+    }
+    if (existingTimer?.status === "running") return;
+    for (const timer of timers) {
+      if (timer.taskId !== taskId && timer.status === "running") await this.pause(timer.id);
+    }
+    if (existingTimer?.status === "paused") {
+      await this.resume(existingTimer.id);
       return;
     }
     const now2 = Date.now();
@@ -64428,19 +63940,9 @@ class TimerService {
    * it performs a normal Task completion without fabricating a Session.
    */
   async completeTask(taskId) {
-    const taskItem = this.dataStore.getRecordById(taskId);
-    if (!taskItem || taskItem.coreBlock !== "task" || taskItem.status !== "open") {
-      this.ui.notice("找不到可完成的未完成任务");
-      return false;
-    }
-    const timer = this.useCases.timer.getTimers().find((entry) => entry.taskId === taskId);
-    if (timer) return this.stopAndApply(timer.id);
     try {
-      const result = await this.useCases.recordInput.submitCompleteRecord({
-        itemId: taskId,
-        source: "layout_renderer"
-      });
-      if (result.status !== "success") {
+      const result = await this.useCases.taskRuntime.completeTask({ taskId, source: "timer" });
+      if (result.status !== "success" && result.status !== "partial_success") {
         if (result.status !== "cancelled") this.ui.notice(readResultMessage(result, "完成任务失败"));
         return false;
       }
@@ -64454,14 +63956,31 @@ class TimerService {
   }
   async pause(timerId) {
     const timer = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
-    if (timer && timer.status === "running") {
-      const elapsed = Math.max(0, (Date.now() - timer.startTime) / 1e3);
-      await this.useCases.timer.updateTimer({
-        ...timer,
-        elapsedSeconds: timer.elapsedSeconds + elapsed,
-        status: "paused"
-      });
+    if (!timer || timer.status !== "running") return;
+    const taskItem = this.dataStore.getRecordById(timer.taskId);
+    if (!taskItem || taskItem.coreBlock !== "task") {
+      this.ui.notice("找不到原始任务，本次工作无法保存。");
+      return;
     }
+    const endedAt = Date.now();
+    const segmentSeconds = Math.max(0, (endedAt - timer.startTime) / 1e3);
+    const session = buildTimerSegmentSession(timer, endedAt, "work-block-ended");
+    if (session) {
+      const result = await this.useCases.recordInput.submitTaskSession({
+        itemId: timer.taskId,
+        session,
+        source: "timer"
+      });
+      if (result.status !== "success") {
+        if (result.status !== "cancelled") this.ui.notice(readResultMessage(result, "暂停失败：本次连续工作段未保存"));
+        return;
+      }
+    }
+    await this.useCases.timer.updateTimer({
+      ...timer,
+      elapsedSeconds: timer.elapsedSeconds + segmentSeconds,
+      status: "paused"
+    });
   }
   async resume(timerId) {
     const timers = this.useCases.timer.getTimers();
@@ -64486,15 +64005,20 @@ class TimerService {
       this.ui.notice("找不到原始任务，本次工作无法保存。");
       return false;
     }
-    const endedAt = Date.now();
-    const result = await this.useCases.recordInput.submitTaskSession({
-      itemId: timer.taskId,
-      session: this.buildSession(timer, endedAt, "work-block-ended"),
-      source: "timer"
-    });
-    if (result.status !== "success") {
-      if (result.status !== "cancelled") this.ui.notice(readResultMessage(result, "保存本次工作失败"));
-      return false;
+    if (timer.status === "running") {
+      const endedAt = Date.now();
+      const session = buildTimerSegmentSession(timer, endedAt, "work-block-ended");
+      if (session) {
+        const result = await this.useCases.recordInput.submitTaskSession({
+          itemId: timer.taskId,
+          session,
+          source: "timer"
+        });
+        if (result.status !== "success") {
+          if (result.status !== "cancelled") this.ui.notice(readResultMessage(result, "保存本次工作失败"));
+          return false;
+        }
+      }
     }
     await this.useCases.timer.removeTimer(timerId);
     this.ui.notice(
@@ -64506,23 +64030,16 @@ class TimerService {
   async stopAndApply(timerId) {
     const timer = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
     if (!timer) return false;
-    const taskItem = this.dataStore.getRecordById(timer.taskId);
-    if (!taskItem || taskItem.coreBlock !== "task") {
-      this.ui.notice("找不到原始任务，无法完成任务。");
-      return false;
-    }
-    const endedAt = Date.now();
     try {
-      const result = await this.useCases.recordInput.submitCompleteRecord({
-        itemId: timer.taskId,
-        session: this.buildSession(timer, endedAt, "task-completed"),
+      const result = await this.useCases.taskRuntime.completeTask({
+        taskId: timer.taskId,
+        expectedTimerId: timer.id,
         source: "timer"
       });
-      if (result.status !== "success") {
+      if (result.status !== "success" && result.status !== "partial_success") {
         if (result.status !== "cancelled") this.ui.notice(readResultMessage(result, "完成任务失败"));
         return false;
       }
-      await this.useCases.timer.removeTimer(timerId);
       this.ui.notice(
         timer.source === "energy-view" && timer.energyContext?.baselineEnergyItemId ? `${result.feedback?.notice || "任务已完成。"} 可记录一次当前精力，用于后续个性化推荐。` : result.feedback?.notice || "任务已完成。"
       );
@@ -64544,19 +64061,6 @@ class TimerService {
       return;
     }
     await this.startOrResume(taskId);
-  }
-  buildSession(timer, endedAt, result) {
-    let totalSeconds = timer.elapsedSeconds;
-    if (timer.status === "running") totalSeconds += Math.max(0, (endedAt - timer.startTime) / 1e3);
-    return {
-      startedAt: new Date(timer.startedAt).toISOString(),
-      endedAt: new Date(endedAt).toISOString(),
-      durationMinutes: durationMinutes(totalSeconds),
-      result,
-      source: timer.source,
-      suggestedDurationMinutes: timer.energyContext?.suggestedDurationMinutes,
-      startEnergyRecordId: timer.energyContext?.baselineEnergyItemId
-    };
   }
 }
 async function loadTimerServices(opts) {
@@ -64721,7 +64225,7 @@ function raceWithAbort(promise, signal) {
   throwIfAborted(signal);
   return new Promise((resolve, reject) => {
     let settled = false;
-    const cleanup2 = () => {
+    const cleanup = () => {
       try {
         signal.removeEventListener("abort", onAbort);
       } catch {
@@ -64730,7 +64234,7 @@ function raceWithAbort(promise, signal) {
     const onAbort = () => {
       if (settled) return;
       settled = true;
-      cleanup2();
+      cleanup();
       reject(createAbortError());
     };
     try {
@@ -64741,13 +64245,13 @@ function raceWithAbort(promise, signal) {
       (value) => {
         if (settled) return;
         settled = true;
-        cleanup2();
+        cleanup();
         resolve(value);
       },
       (error) => {
         if (settled) return;
         settled = true;
-        cleanup2();
+        cleanup();
         reject(error);
       }
     );
@@ -64779,13 +64283,13 @@ function normalizeRequestBody(body) {
   return String(body);
 }
 function makeHeadersLike(headers) {
-  const lookup2 = /* @__PURE__ */ new Map();
+  const lookup = /* @__PURE__ */ new Map();
   for (const [key, value] of Object.entries(headers ?? {})) {
-    lookup2.set(key.toLowerCase(), String(value));
+    lookup.set(key.toLowerCase(), String(value));
   }
   return {
     get(name) {
-      return lookup2.get(name.toLowerCase()) ?? null;
+      return lookup.get(name.toLowerCase()) ?? null;
     }
   };
 }
@@ -66957,7 +66461,7 @@ function NativeTextInput({
     }
   ) });
 }
-function NativeSelectInput2({
+function NativeSelectInput({
   label,
   value,
   options,
@@ -67272,7 +66776,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template, useCa
         /* @__PURE__ */ u2(GoalTemplateModeSwitch, { mode, blockName: block.name, onChange: handleModeChange }),
         /* @__PURE__ */ u2("section", { className: "think-goal-template-editor__fields", children: [
           supportsPeriod ? /* @__PURE__ */ u2(
-            NativeSelectInput2,
+            NativeSelectInput,
             {
               label: "周期",
               value: draft.granularity,
@@ -67882,7 +67386,7 @@ function GoalMetricSection() {
       ] }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "目标值" }),
-        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: metricTargetValue, onInput: (event) => setMetricTargetValue(event.currentTarget.value) })
+        /* @__PURE__ */ u2(ThinkInput, { "aria-label": "目标值", className: "think-settings-field--sm", type: "number", value: metricTargetValue, onInput: (event) => setMetricTargetValue(event.currentTarget.value) })
       ] }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "单位" }),

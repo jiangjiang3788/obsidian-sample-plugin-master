@@ -84,28 +84,42 @@ export function QuickInputEditorFields({
 
   if (isTaskTemplate) {
     const taskFields = fields.filter((field) => !isQuickInputSystemContextField(field));
+    const recurringEdit = Boolean(String(formData.seriesId || formData['系列ID'] || '').trim());
     const recurrenceUnit = scalarValue(formData.recurrenceUnit ?? formData['重复']);
-    const repeats = !!recurrenceUnit && recurrenceUnit !== 'none';
+    const repeats = !recurringEdit && !!recurrenceUnit && recurrenceUnit !== 'none';
 
     const primaryFields = taskFields
       .filter((field) => taskPrimaryRank(field) < 99)
+      .filter((field) => !(recurringEdit && taskPrimarySlot(field) === 'recurrence'))
       .sort((left, right) => taskPrimaryRank(left) - taskPrimaryRank(right));
     const recurrenceDetailFields = repeats
-      ? taskFields.filter((field) => ['recurrenceInterval', '重复间隔'].includes(String(field?.key || field?.label || '')))
+      ? taskFields.filter((field) => ['recurrenceInterval', '重复间隔', 'recurrenceAnchor', '重复方式', '重复锚点'].includes(String(field?.key || field?.label || '')))
       : [];
+    const taskTimeFields = primaryFields.filter((field) => {
+      const slot = taskPrimarySlot(field);
+      return slot === 'start' || slot === 'end' || slot === 'duration';
+    });
+    const taskNonTimePrimaryFields = primaryFields.filter((field) => !taskTimeFields.includes(field));
     const excluded = new Set([...primaryFields, ...recurrenceDetailFields]);
     const advancedFields = taskFields.filter((field) => {
       if (excluded.has(field)) return false;
-      return !['recurrenceInterval', '重复间隔'].includes(String(field?.key || field?.label || ''));
+      return !['recurrenceInterval', '重复间隔', 'recurrenceAnchor', '重复方式', '重复锚点'].includes(String(field?.key || field?.label || ''));
     });
 
     return (
       <div className={`think-qif-fields-stack${dense ? ' is-dense' : ''}`}>
-        {primaryFields.map((field) => (
+        {taskNonTimePrimaryFields.map((field) => (
           <div key={field.id} className="think-qif-fields-stack__item">
             <QuickInputFieldRenderer field={field} {...rendererProps} />
           </div>
         ))}
+        <QuickInputTimeFieldsSection
+          timeFields={taskTimeFields}
+          timeDirection={timeDirection}
+          onTimeDirectionChange={onTimeDirectionChange}
+          showTimeDirectionControl={showTimeDirectionControl}
+          {...rendererProps}
+        />
         {recurrenceDetailFields.map((field) => (
           <div key={field.id} className="think-qif-fields-stack__item think-qif-recurrence-detail">
             <QuickInputFieldRenderer field={field} {...rendererProps} />

@@ -68,15 +68,18 @@ export class TaskSessionMutation {
 
     if (updates.time) startedMs = withLocalClock(session.sessionStartedAt, updates.time);
     if (updates.endTime) {
-      endedMs = withLocalClock(session.sessionEndedAt, updates.endTime);
+      // Exact clock editing is anchored to the (possibly edited) start day.
+      // Only an end clock earlier than the start clock crosses midnight; never inherit
+      // the old end date because that can accidentally create 24h+ sessions.
+      endedMs = withLocalClock(new Date(startedMs).toISOString(), updates.endTime);
       if (endedMs < startedMs) endedMs += 86_400_000;
     } else if (updates.duration != null || updates.time) {
       const duration = updates.duration != null ? updates.duration : originalDuration;
-      if (!Number.isFinite(duration) || duration < 0) throw new Error('task_session_duration_invalid');
+      if (!Number.isFinite(duration) || duration <= 0) throw new Error('task_session_duration_invalid');
       endedMs = startedMs + duration * 60_000;
     }
 
-    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs < startedMs) {
+    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs <= startedMs) {
       throw new Error('task_session_time_order_invalid');
     }
     const durationMinutes = Math.round(((endedMs - startedMs) / 60_000) * 100) / 100;

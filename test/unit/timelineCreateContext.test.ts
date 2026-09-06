@@ -4,7 +4,8 @@
  */
 import { getRecordTypeById, RECORD_TYPE_IDS } from '@core/recordTypes/public';
 import type { TaskBlock } from '@core/types/public';
-import { hydrateQuickInputTemplateDefaults } from '@/features/quickinput/editor/QuickInputEditorModel';
+import { applyQuickInputFieldUpdate, applyQuickInputTimeDirectionChange, hydrateQuickInputTemplateDefaults } from '@/features/quickinput/editor/QuickInputEditorModel';
+import { buildQuickInputDisplayTemplate } from '@/features/quickinput/editor/model/displayTemplate';
 import type { QuickInputFieldSourceMap } from '@/features/quickinput/editor/model/types';
 import { resolveTimelineCreateContext } from '@/app/actions/recordCreate/timelineCreateAction';
 
@@ -26,9 +27,11 @@ function block(input: Partial<TaskBlock> & Pick<TaskBlock, 'blockStartMinute' | 
   } as TaskBlock;
 }
 
-function hydrateTaskContext(context: Record<string, unknown>, current: Record<string, unknown> = {}, fieldSources: QuickInputFieldSourceMap = {}) {
-  const template = getRecordTypeById(RECORD_TYPE_IDS.TASK);
-  if (!template) throw new Error('Task template missing');
+function hydrateTaskContext(context: Record<string, unknown>, current: Record<string, unknown> = {}, fieldSources: QuickInputFieldSourceMap = {}, timeDirection: 'forward' | 'backward' = 'forward') {
+  const rawTemplate = getRecordTypeById(RECORD_TYPE_IDS.TASK);
+  if (!rawTemplate) throw new Error('Task template missing');
+  const template = buildQuickInputDisplayTemplate(rawTemplate, RECORD_TYPE_IDS.TASK, [], { taskTimingMode: 'execution' });
+  if (!template) throw new Error('Task execution template missing');
   return hydrateQuickInputTemplateDefaults({
     template,
     context,
@@ -38,7 +41,7 @@ function hydrateTaskContext(context: Record<string, unknown>, current: Record<st
     currentGoalPath: null,
     currentGoalTitle: null,
     currentPeriod: null,
-    timeDirection: 'forward',
+    timeDirection,
   });
 }
 
@@ -66,6 +69,7 @@ describe('Timeline create context', () => {
       结束: '02:00',
       __recordUiContext: {
         kind: 'timeline_create',
+        captureMode: 'completed_execution',
         timeContext: {
           date: '2026-05-13',
           clickedMinute: 90,
@@ -80,7 +84,7 @@ describe('Timeline create context', () => {
     });
   });
 
-  it('starts at the clicked slot before the first task and closes at the next task', () => {
+  it('uses 00:00 as the first blank-interval boundary before the first task', () => {
     const result = resolveTimelineCreateContext({
       day: '2026-05-13',
       clickedMinute: 60,
@@ -88,18 +92,20 @@ describe('Timeline create context', () => {
     });
 
     expect(result.context).toMatchObject({
-      startAt: '2026-05-13T01:00',
+      status: 'done',
+      __timeDirection: 'backward',
+      startAt: '2026-05-13T00:00',
       endAt: '2026-05-13T02:00',
       __recordUiContext: {
         timeContext: {
-          startSource: 'clicked_slot',
+          startSource: 'day_start',
           endSource: 'next_block_start',
         },
       },
     });
   });
 
-  it('starts from the previous task end after the last task and leaves the end open', () => {
+  it('uses the clicked slot as the provisional end after the last task', () => {
     const result = resolveTimelineCreateContext({
       day: '2026-05-13',
       clickedMinute: 240,
@@ -107,16 +113,16 @@ describe('Timeline create context', () => {
     });
 
     expect(result.context.startAt).toBe('2026-05-13T03:00');
+    expect(result.context.endAt).toBe('2026-05-13T04:00');
     expect(result.context['时间']).toBe('03:00');
-    expect(result.context).not.toHaveProperty('endAt');
-    expect(result.context).not.toHaveProperty('结束');
+    expect(result.context['结束']).toBe('04:00');
     expect(result.context).toMatchObject({
       __recordUiContext: {
         timeContext: {
           suggestedStartMinute: 180,
-          suggestedEndMinute: null,
+          suggestedEndMinute: 240,
           startSource: 'previous_block_end',
-          endSource: 'open_end',
+          endSource: 'clicked_slot',
         },
       },
     });
@@ -135,14 +141,57 @@ describe('Timeline create context', () => {
     expect(result.suggestedStartMinute).toBe(120);
     expect(result.suggestedEndMinute).toBeNull();
     expect(result.context.startAt).toBe('2026-05-13T02:00');
-    expect(result.context).not.toHaveProperty('endAt');
+  });
+
+
+  it('creates the first Timeline Task from 00:00 to the clicked slot and defaults it completed', () => {
+    const result = resolveTimelineCreateContext({
+      day: '2026-08-26',
+      clickedMinute: 9 * 60 + 25,
+      dayBlocks: [],
+    });
+
+    expect(result.context).toMatchObject({
+      日期: '2026-08-26',
+      status: 'done',
+      __timeDirection: 'backward',
+      startAt: '2026-08-26T00:00',
+      endAt: '2026-08-26T09:25',
+      时间: '00:00',
+      结束: '09:25',
+      __recordUiContext: {
+        kind: 'timeline_create',
+        timeContext: {
+          clickedMinute: 565,
+          suggestedStartMinute: 0,
+          suggestedEndMinute: 565,
+          startSource: 'day_start',
+          endSource: 'clicked_slot',
+          previousBlockId: null,
+          nextBlockId: null,
+        },
+      },
+    });
   });
 
   it('clamps click geometry to the current day instead of emitting invalid clock values', () => {
     expect(resolveTimelineCreateContext({ day: '2026-05-13', clickedMinute: -30, dayBlocks: [] }).context.startAt)
       .toBe('2026-05-13T00:00');
-    expect(resolveTimelineCreateContext({ day: '2026-05-13', clickedMinute: 2000, dayBlocks: [] }).context.startAt)
-      .toBe('2026-05-13T23:59');
+    const late = resolveTimelineCreateContext({ day: '2026-05-13', clickedMinute: 2000, dayBlocks: [] });
+    expect(late.context.startAt).toBe('2026-05-13T00:00');
+    expect(late.context.endAt).toBe('2026-05-13T23:59');
+  });
+
+  it('uses the configured visible-day boundary for click clamping instead of assuming 24 hours', () => {
+    const result = resolveTimelineCreateContext({
+      day: '2026-05-13',
+      clickedMinute: 900,
+      maxHours: 12,
+      dayBlocks: [],
+    });
+    expect(result.clickedMinute).toBe(719);
+    expect(result.context.startAt).toBe('2026-05-13T00:00');
+    expect(result.context.endAt).toBe('2026-05-13T11:59');
   });
 
   it('hydrates canonical Task datetime fields and derives the gap duration', () => {
@@ -187,4 +236,67 @@ describe('Timeline create context', () => {
     expect(second.formData.startAt).toBe('2026-05-13T01:35');
     expect(second.fieldSources.startAt).toBe('user');
   });
+
+  it('treats Timeline gap context as a seed so backward linked edits are not restored to the original gap', () => {
+    const resolved = resolveTimelineCreateContext({
+      day: '2026-05-13',
+      clickedMinute: 90,
+      dayBlocks: [
+        block({ blockStartMinute: 40, blockEndMinute: 80 }),
+        block({ blockStartMinute: 120, blockEndMinute: 180 }),
+      ],
+    });
+    const first = hydrateTaskContext(resolved.context);
+    const backward = applyQuickInputTimeDirectionChange({
+      formData: first.formData,
+      fieldSources: first.fieldSources,
+      nextDirection: 'backward',
+      timeFieldSet: 'task',
+    });
+    const edited = applyQuickInputFieldUpdate({
+      formData: backward.formData,
+      fieldSources: backward.fieldSources,
+      key: 'expectedDurationMinutes',
+      value: 20,
+      timeDirection: 'backward',
+    });
+
+    expect(edited.formData).toMatchObject({
+      startAt: '2026-05-13T01:40',
+      endAt: '2026-05-13T02:00',
+      expectedDurationMinutes: 20,
+    });
+    expect(edited.fieldSources.startAt).toBe('system_auto');
+
+    const rehydrated = hydrateTaskContext(
+      resolved.context,
+      edited.formData,
+      edited.fieldSources,
+      'backward',
+    );
+
+    expect(rehydrated.formData).toMatchObject({
+      startAt: '2026-05-13T01:40',
+      endAt: '2026-05-13T02:00',
+      expectedDurationMinutes: 20,
+    });
+  });
+
+  it('lets the user clear a Timeline-suggested time instead of immediately restoring it', () => {
+    const resolved = resolveTimelineCreateContext({ day: '2026-05-13', clickedMinute: 90, dayBlocks: [] });
+    const first = hydrateTaskContext(resolved.context);
+    const cleared = {
+      ...first.formData,
+      startAt: '',
+    };
+    const sources = {
+      ...first.fieldSources,
+      startAt: 'user',
+    } as QuickInputFieldSourceMap;
+
+    const rehydrated = hydrateTaskContext(resolved.context, cleared, sources);
+    expect(rehydrated.formData.startAt).toBe('');
+    expect(rehydrated.fieldSources.startAt).toBe('user');
+  });
+
 });

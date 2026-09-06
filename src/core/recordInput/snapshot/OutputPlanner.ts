@@ -9,6 +9,8 @@ import { encodeRecordBlock, encodeRecordDraft } from '@/core/records/codec';
 import { buildCustomCaptureFields, buildGenericRecordDraft } from '@/core/records/RecordDraft';
 import { getRecordSchemaDefinition } from '@/core/records/schema';
 import { splitHierarchyPathValue } from '@/core/semantics/path';
+import { buildTimelineCompletedExecutionPersistence } from '@/core/records/task/taskExecutionCapture';
+import { buildTaskSessionFields } from '@/core/records/task/taskSession';
 
 function normalizeNonEmptyPath(value: string | null | undefined): string | null {
   const trimmed = String(value || '').trim();
@@ -52,7 +54,7 @@ function readStructuredTaskRecurrence(renderData: Record<string, unknown>): { un
   if (!['day', 'week', 'month', 'quarter', 'year'].includes(rawUnit)) throw new Error(`task_recurrence_unit_invalid:${rawUnit}`);
   const interval = Number(renderData['重复间隔'] ?? renderData.recurrenceInterval ?? 1);
   if (!Number.isInteger(interval) || interval < 1) throw new Error(`task_recurrence_interval_invalid:${interval}`);
-  const rawAnchor = readScalarOption(renderData['重复锚点'] ?? renderData.recurrenceAnchor ?? 'start').toLowerCase();
+  const rawAnchor = readScalarOption(renderData['重复锚点'] ?? renderData.recurrenceAnchor ?? 'scheduled').toLowerCase();
   if (!['scheduled', 'start', 'due', 'completion'].includes(rawAnchor)) throw new Error(`task_recurrence_anchor_invalid:${rawAnchor}`);
   return { unit: rawUnit as any, interval, anchor: rawAnchor as any };
 }
@@ -118,6 +120,7 @@ export function buildRecordOutputPlan(input: {
   template: RecordCaptureTemplate | null;
   formData: Record<string, unknown>;
   recordId?: string | null;
+  context?: Record<string, unknown> | null;
 }): RecordOutputPlan {
   if (!input.template) {
     return {
@@ -149,33 +152,40 @@ export function buildRecordOutputPlan(input: {
     const recurrence = readStructuredTaskRecurrence(renderData);
     if (!recurrence && status === 'skipped') throw new Error('task_status_skipped_requires_series');
     if (recurrence && status !== 'open') throw new Error('task_series_initial_instance_must_be_open');
-    const startAt = normalizeLocalDateTime(
-      renderData['开始/预计时间']
-      ?? renderData['开始时间']
-      ?? renderData.startAt
-      ?? renderData['计划时间']
-      ?? renderData.scheduledAt
-      ?? renderData['计划日期']
-      ?? renderData.scheduledDate,
+    const scheduledAt = normalizeLocalDateTime(
+      renderData['计划时间'] ?? renderData.scheduledAt ?? renderData['计划日期'] ?? renderData.scheduledDate,
     );
-    const endAt = normalizeLocalDateTime(renderData['结束时间'] ?? renderData.endAt);
-    const declaredDuration = renderData['时长（分钟）'] ?? renderData['时长'] ?? renderData['预计时长'] ?? renderData.expectedDurationMinutes;
+    const dueAt = normalizeLocalDateTime(
+      renderData['截止时间'] ?? renderData.dueAt ?? renderData['截止日期'] ?? renderData.dueDate,
+    );
+    const startAt = normalizeLocalDateTime(renderData['实际开始'] ?? renderData['开始时间'] ?? renderData['开始/预计时间'] ?? renderData.startAt);
+    const endAt = normalizeLocalDateTime(renderData['实际结束'] ?? renderData['结束时间'] ?? renderData.endAt);
+    const declaredDuration = renderData['预计时长（分钟）'] ?? renderData['时长（分钟）'] ?? renderData['时长'] ?? renderData['预计时长'] ?? renderData.expectedDurationMinutes;
     const capturedAt = new Date().toISOString();
     const taskFields = {
       status,
       content: renderData['任务内容'] ?? renderData['内容'] ?? renderData.content,
       goalPath: renderData.goalPath,
       priority: renderData['优先级'] ?? renderData.priority,
+      importance: renderData['重要程度'] ?? renderData.importance,
+      urgency: renderData['紧急程度'] ?? renderData.urgency,
       energyDemand: renderData['精力要求'] ?? renderData.energyDemand,
       brainDemand: renderData['脑力要求'] ?? renderData.brainDemand,
       physicalDemand: renderData['体力要求'] ?? renderData.physicalDemand,
       availabilityContexts: renderData['可用场景'] ?? renderData.availabilityContexts,
       recoveryIntent: renderData['恢复意图'] ?? renderData.recoveryIntent,
+      scheduledAt,
+      dueAt,
       startAt,
       endAt,
       expectedDurationMinutes: declaredDuration || durationMinutesBetween(startAt, endAt),
       createdAt: renderData['创建于'] ?? renderData.createdAt ?? capturedAt,
-      completedAt: status === 'done' ? (renderData['完成于'] ?? renderData.completedAt ?? capturedAt) : undefined,
+      // A completed Task with an explicit endAt is historical execution data.
+      // Use that end as the completion fact unless the user supplied completedAt;
+      // falling back to capture time is only appropriate when no execution end exists.
+      completedAt: status === 'done' ? (renderData['完成于'] ?? renderData.completedAt ?? endAt ?? capturedAt) : undefined,
+      cancelledAt: status === 'cancelled' ? (renderData['取消于'] ?? renderData.cancelledAt) : undefined,
+      skippedAt: status === 'skipped' ? (renderData['跳过于'] ?? renderData.skippedAt) : undefined,
       seriesId: renderData.seriesId ?? renderData['系列ID'],
     } as Record<string, unknown>;
     const customTaskFields = buildCustomCaptureFields('task', renderData, input.template.fields);
@@ -194,7 +204,9 @@ export function buildRecordOutputPlan(input: {
       const seriesId = createRecordId('task-series');
       taskFields.seriesId = seriesId;
       const seriesStartDate = String(
-        localDatePart(String(taskFields.startAt || ''))
+        localDatePart(String(taskFields.scheduledAt || ''))
+        || localDatePart(String(taskFields.startAt || ''))
+        || localDatePart(String(taskFields.dueAt || ''))
         || new Date().toISOString().slice(0, 10)
       );
       const seriesBlock = encodeRecordBlock({
@@ -205,6 +217,8 @@ export function buildRecordOutputPlan(input: {
           content: taskFields.content,
           goalPath: taskFields.goalPath,
           priority: taskFields.priority,
+          importance: taskFields.importance,
+          urgency: taskFields.urgency,
           expectedDurationMinutes: taskFields.expectedDurationMinutes,
           energyDemand: taskFields.energyDemand,
           brainDemand: taskFields.brainDemand,
@@ -221,7 +235,26 @@ export function buildRecordOutputPlan(input: {
       const taskBlock = encodeRecordBlock({ recordId, coreBlock: 'task', fields: taskFields });
       outputContent = `${seriesBlock}\n\n${taskBlock}`;
     } else {
-      outputContent = encodeRecordBlock({ recordId, coreBlock: 'task', fields: taskFields });
+      const timelineExecution = buildTimelineCompletedExecutionPersistence({
+        context: input.context,
+        taskFields,
+      });
+      const taskBlock = encodeRecordBlock({ recordId, coreBlock: 'task', fields: timelineExecution.taskFields });
+      if (!timelineExecution.session) {
+        outputContent = taskBlock;
+      } else {
+        const sessionId = createRecordId('task-session');
+        const sessionBlock = encodeRecordBlock({
+          recordId: sessionId,
+          coreBlock: 'task-session',
+          fields: buildTaskSessionFields({
+            id: recordId,
+            seriesId: existingSeriesId || undefined,
+            goalPath: String(taskFields.goalPath || '').trim() || undefined,
+          }, timelineExecution.session),
+        });
+        outputContent = `${taskBlock}\n\n${sessionBlock}`;
+      }
     }
   } else if (schema?.family === 'generic') {
     const draft = buildGenericRecordDraft(schema.coreBlock, renderData, input.template.fields);

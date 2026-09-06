@@ -15,6 +15,8 @@ export interface RecordWriteOptions {
   autoRefresh?: boolean;
   /** Reuse an already allocated stable ID (create preview or move transaction). */
   recordId?: string;
+  /** Invocation-only context. It may influence create orchestration but is never persisted as Record fields. */
+  context?: Record<string, unknown> | null;
 }
 
 
@@ -29,10 +31,11 @@ export class InputService {
     template: RecordCaptureTemplate,
     formData: Record<string, any>,
     recordId?: string,
+    context?: Record<string, unknown> | null,
   ): { recordId?: string | null; renderData: Record<string, any>; outputContent: string; targetFilePath: string; header: string | null } {
     if (!template) throw new Error('传入了无效的模板对象。');
 
-    const outputPlan = buildRecordOutputPlan({ template, formData, recordId });
+    const outputPlan = buildRecordOutputPlan({ template, formData, recordId, context });
     return {
       recordId: outputPlan.recordId,
       renderData: outputPlan.renderData,
@@ -49,7 +52,7 @@ export class InputService {
   ): Promise<string> {
     const signal = options.signal;
     this.throwIfAborted(signal);
-    const preview = this.previewTemplateExecution(template, formData, options.recordId);
+    const preview = this.previewTemplateExecution(template, formData, options.recordId, options.context);
     const { outputContent, targetFilePath, header } = preview;
 
     if (!targetFilePath) throw new Error('模板未定义目标文件路径 (targetFile)。');

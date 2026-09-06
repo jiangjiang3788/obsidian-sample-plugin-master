@@ -10,6 +10,7 @@ export { StatisticsView } from './StatisticsView/StatisticsViewContainer';
 export { PopoverContent } from './StatisticsView/components/PopoverContent';
 export { ProgressView } from './ProgressView';
 export { EnergyView } from './EnergyView';
+export { EisenhowerView } from './EisenhowerView';
 export { TableView } from './TableView';
 export { ExcelView } from './excel-view/ExcelView';
 

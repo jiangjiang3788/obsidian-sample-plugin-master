@@ -10,7 +10,7 @@ import type { IPluginStorage } from '@/core/services/StorageService';
 function persistentMemoryStorage() {
   const files = new Map<string, unknown>();
   const storage: IPluginStorage = {
-    readJSON: jest.fn(async <T,>(path: string) => files.has(path) ? JSON.parse(JSON.stringify(files.get(path))) as T : null),
+    readJSON: async <T,>(path: string) => files.has(path) ? JSON.parse(JSON.stringify(files.get(path))) as T : null,
     writeJSON: jest.fn(async (path, value) => { files.set(path, JSON.parse(JSON.stringify(value))); }),
     remove: jest.fn(async (path) => { files.delete(path); }),
   };

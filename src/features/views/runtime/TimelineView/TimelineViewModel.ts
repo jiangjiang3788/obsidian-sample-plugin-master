@@ -97,12 +97,15 @@ export function buildTimelineRenderModel(args: {
   const { items, records = items, module, dateRange, currentView, injectedModel } = args;
   const config = resolveTimelineConfig(module, injectedModel?.config ? { config: injectedModel.config } : undefined);
   const timelineTasks = injectedModel?.timelineTasks ?? resolveTimelineTasks(items, records);
+  const actualTimelineTasks = timelineTasks.filter((task) => task.timelineSource !== 'task-plan');
   const colorMap = buildTimelineColorMap(config);
   const isSummaryView = currentView === '年' || currentView === '季';
 
-  const summaryData = injectedModel?.summaryData ?? buildTimelineSummaryData({ timelineTasks, dateRange, config, isSummaryView });
+  const summaryData = injectedModel?.summaryData ?? buildTimelineSummaryData({ timelineTasks: actualTimelineTasks, dateRange, config, isSummaryView });
 
-  const summaryCategoryHours = injectedModel?.summaryCategoryHours ?? (isSummaryView ? {} : (buildSummaryCategoryHours(timelineTasks, dateRange, config) || {}));
+  // Planned occupancy is visual guidance, not completed/actual effort. Keep progress
+  // summaries grounded in execution facts (Session or legacy actual-range fallback).
+  const summaryCategoryHours = injectedModel?.summaryCategoryHours ?? (isSummaryView ? {} : (buildSummaryCategoryHours(actualTimelineTasks, dateRange, config) || {}));
   const dailyViewData = injectedModel?.dailyViewData ?? (isSummaryView ? null : buildDailyViewData(timelineTasks, dateRange));
   const totalSummaryHours = Object.values(summaryCategoryHours).reduce((sum, hours) => sum + Number(hours || 0), 0);
 

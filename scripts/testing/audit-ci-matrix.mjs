@@ -4,11 +4,11 @@ import process from 'node:process';
 
 const workflow = '.github/workflows/think-os-test-v9.yml';
 const problems = [];
-const hasWorkflowDir = fs.existsSync('.github/workflows');
+const isCiRuntime = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
 if (fs.existsSync('.github/workflows/think-os-test-v8.yml')) problems.push('旧 v8 工作流仍然启用，会与 v9 重复执行。');
 if (!fs.existsSync(workflow)) {
-  if (process.env.CI || hasWorkflowDir) problems.push('缺少 v9 自动测试工作流。');
-  else console.log('【CI 测试矩阵审计】当前是本地插件工作区，未携带 .github 工作流；跳过工作流文件检查。');
+  if (isCiRuntime) problems.push('缺少 v9 自动测试工作流。');
+  else console.log('【CI 测试矩阵审计】当前不是 CI 运行环境；跳过工作流文件检查。');
 } else {
   const text = fs.readFileSync(workflow, 'utf8');
   const required = [

@@ -14,7 +14,7 @@ import { DEFAULT_SETTINGS, type ThinkSettings } from '@core/settings/ThinkSettin
 import { filterViewPlacementsForLayout } from '@core/layout/freeformLayout';
 
 function createSettings(): ThinkSettings {
-  const settings: ThinkSettings = structuredClone(DEFAULT_SETTINGS);
+  const settings: ThinkSettings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
   settings.viewInstances = [
     { id: 'view-a', parentId: null, title: 'A 表格', viewType: 'TableView' },
     { id: 'view-b', parentId: null, title: 'B 时间轴', viewType: 'TimelineView' },

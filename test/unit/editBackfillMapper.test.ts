@@ -85,4 +85,75 @@ describe('EditBackfillMapper', () => {
 
     expect(data.labels).toEqual(['项目/插件', '地点/家']);
   });
+
+  it('Task edit backfills canonical start/end and expected duration instead of generic timeline duration', () => {
+    const item = baseItem({
+      startAt: '2026-08-26T09:20',
+      endAt: '2026-08-26T10:05',
+      expectedDurationMinutes: 45,
+      duration: undefined,
+    });
+    const snapshot = buildParsedRecordSnapshot(item);
+    const data = buildInitialEditFormData({
+      template: template([
+        { id: 'start', key: 'startAt', label: '开始/预计时间', type: 'datetime', semantic: 'startTime' },
+        { id: 'end', key: 'endAt', label: '结束时间', type: 'datetime', semantic: 'endTime' },
+        { id: 'duration', key: 'expectedDurationMinutes', label: '时长（分钟）', type: 'number', semantic: 'duration' },
+      ]),
+      item,
+      snapshot,
+    });
+
+    expect(data).toMatchObject({
+      startAt: '2026-08-26T09:20',
+      endAt: '2026-08-26T10:05',
+      expectedDurationMinutes: 45,
+    });
+  });
+
+
+  it('derives edit duration from a legacy Task start/end range when expectedDurationMinutes is absent', () => {
+    const item = baseItem({
+      startAt: '2026-08-26T09:20',
+      endAt: '2026-08-26T10:05',
+      expectedDurationMinutes: undefined,
+      duration: undefined,
+    });
+    const snapshot = buildParsedRecordSnapshot(item);
+    const data = buildInitialEditFormData({
+      template: template([
+        { id: 'duration', key: 'expectedDurationMinutes', label: '时长（分钟）', type: 'number', semantic: 'duration' },
+      ]),
+      item,
+      snapshot,
+    });
+
+    expect(data.expectedDurationMinutes).toBe(45);
+  });
+
+
+  it('普通计划编辑保留旧实际 range，但不会把 startAt 误复制成 scheduledAt', () => {
+    const item = baseItem({
+      startAt: '2026-08-26T09:20',
+      endAt: '2026-08-26T10:05',
+      completedAt: '2026-08-26T10:05',
+      status: 'done',
+    });
+    const snapshot = buildParsedRecordSnapshot(item);
+    const data = buildInitialEditFormData({
+      template: template([
+        { id: 'scheduled', key: 'scheduledAt', label: '计划时间', type: 'datetime', semantic: 'startTime' },
+        { id: 'duration', key: 'expectedDurationMinutes', label: '预计时长（分钟）', type: 'number', semantic: 'duration' },
+      ]),
+      item,
+      snapshot,
+    });
+
+    expect(data.scheduledAt).toBeUndefined();
+    expect(data.startAt).toBe('2026-08-26T09:20');
+    expect(data.endAt).toBe('2026-08-26T10:05');
+    expect(data.completedAt).toBe('2026-08-26T10:05');
+    expect(data.status).toBe('done');
+  });
+
 });

@@ -9,6 +9,7 @@ import { StatisticsViewEditor } from './StatisticsViewEditor';
 import { HeatmapViewEditor } from './HeatmapViewEditor';
 import { ProgressViewEditor } from './ProgressViewEditor';
 import { EnergyViewEditor } from './EnergyViewEditor';
+import { EisenhowerViewEditor } from './EisenhowerViewEditor';
 import type { ViewEditorProps } from './ViewEditorProps';
 
 export type ViewKind = ViewName;
@@ -28,6 +29,7 @@ export const VIEW_EDITORS = {
   HeatmapView: HeatmapViewEditor,
   ProgressView: ProgressViewEditor,
   EnergyView: EnergyViewEditor,
+  EisenhowerView: EisenhowerViewEditor,
 } satisfies Record<ViewName, (p: ViewEditorProps) => any>;
 
 export function getViewEditorComponent(viewType: ViewName) {

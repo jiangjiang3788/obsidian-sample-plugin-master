@@ -6,6 +6,7 @@
  */
 
 import type { EnergyTaskExecutionStart, RecordViewItem, TaskBlock, ViewInstance } from '@core/types/public';
+import type { EisenhowerQuadrant } from '@core/records/public';
 import type { MessageRenderPort } from '@core/ports/public';
 
 export type MarkDoneHandler = (id: string) => void;
@@ -40,6 +41,7 @@ export type CloseStatisticsPopoverHandler = (widgetId: string) => void;
 
 
 export type OpenRecordHandler = (item: RecordViewItem) => void | Promise<void>;
+export type UpdateTaskQuadrantHandler = (recordId: string, quadrant: EisenhowerQuadrant) => void | Promise<void>;
 
 /**
  * shared/ui 只表达“在时间轴某一天/时刻创建记录”的意图。
@@ -49,10 +51,12 @@ export interface TimelineCreatePayload {
   day: string;
   event: MouseEvent | TouchEvent;
   hourHeight: number;
+  maxHours: number;
   dayBlocks: TaskBlock[];
 }
 
 export type OpenTimelineCreateHandler = (payload: TimelineCreatePayload) => void;
+export type EditTimelineBlockHandler = (block: TaskBlock) => void | Promise<void>;
 
 
 export interface HeatmapCreateRequest {

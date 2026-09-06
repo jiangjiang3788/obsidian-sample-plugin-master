@@ -13,5 +13,10 @@ export * from './task/taskTime';
 export * from './task/taskUtils';
 export * from './task/taskCadence';
 export * from './task/taskSession';
+export * from './task/taskTimerSession';
+export * from './task/taskExecutionCapture';
+export * from './task/taskSeriesEdit';
+export * from './task/taskQuadrant';
+export * from './task/taskDate';
 
 export * from './RecordDraft';

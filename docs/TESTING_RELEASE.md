@@ -1,5 +1,17 @@
 # Testing and release
 
+## Daily test entry
+
+日常测试统一使用 npm 最常见的入口：
+
+```bash
+npm test
+```
+
+`npm test` 运行单元 + 组合测试，并通过 `test/configs/jest-reporter.zh-CN.cjs` 输出中文结果。准备提交时使用 `npm run test:full`，真机快速检查使用 `npm run test:smoke`，发布前使用 `npm run test:release`。中文命令仍保留兼容，但不再作为新文档的首选入口。
+
+如果本地依赖尚未安装完整，`pretest` 会先用中文提示运行 `npm install`。
+
 ## Fast architecture check
 
 ```bash

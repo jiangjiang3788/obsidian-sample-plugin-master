@@ -62,14 +62,22 @@ function mergeTemplate(
 ): RecordCaptureTemplate {
   const required = new Set(patch.requiredFields || []);
   const defaultValues = patch.defaultValues || {};
+  const isTaskTemplate = String(base.recordTypeId || base.id || '').replace(/^core\./, '') === 'task';
   const fields = [...(patch.fields ?? base.fields)].map((field) => {
     const key = field.key || field.label;
     const defaultValue = defaultValues[key] ?? defaultValues[field.label || ''];
-    return {
+    const mergedField = {
       ...field,
       ...(defaultValue !== undefined ? { defaultValue: String(defaultValue) } : null),
       ...(required.has(key) || required.has(field.label || '') ? { required: true } : null),
     } as any;
+
+    // Domain invariant: Task expected duration is optional. Goal templates may provide a
+    // default, but cannot turn it into a persistence requirement for open/unexecuted tasks.
+    if (isTaskTemplate && ['expectedDurationMinutes', '预计时长', '时长', '时长（分钟）'].includes(String(key || ''))) {
+      mergedField.required = false;
+    }
+    return mergedField;
   });
   const merged = {
     ...base,

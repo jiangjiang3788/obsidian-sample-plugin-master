@@ -75,6 +75,11 @@ describe('QuickInputEditorModel', () => {
     expect(deriveQuickInputInitialSelection({}, {}).selectedGoalPath).toBeNull();
   });
 
+  it('lets Timeline invocation context choose backward time without changing global QuickInput defaults', () => {
+    expect(deriveQuickInputInitialSelection({}, { __timeDirection: 'backward' } as any).timeDirection).toBe('backward');
+    expect(deriveQuickInputInitialSelection({}, {}).timeDirection).toBe('forward');
+  });
+
   it('derives initial goal/template selection from form data before invocation context', () => {
     const selection = deriveQuickInputInitialSelection(
       { goalPath: '学习/英语', __timeDirection: 'backward' },
@@ -173,6 +178,52 @@ describe('QuickInputEditorModel', () => {
     expect(updated.timeDirection).toBe('backward');
     expect(updated.formData['结束']).toBe('10:00');
     expect(updated.fieldSources['结束']).toBe('system_auto');
+  });
+
+  it('uses canonical Task datetime fields when backward mode starts from a blank Task form', () => {
+    const updated = applyQuickInputTimeDirectionChange({
+      formData: { expectedDurationMinutes: 30 },
+      fieldSources: { expectedDurationMinutes: 'user' } as any,
+      nextDirection: 'backward',
+      timeFieldSet: 'task',
+      defaultEndTime: '2026-08-26T01:45',
+    });
+
+    expect(updated.timeDirection).toBe('backward');
+    expect(updated.formData).toMatchObject({
+      startAt: '2026-08-26T01:15',
+      endAt: '2026-08-26T01:45',
+      expectedDurationMinutes: 30,
+    });
+    expect(updated.formData).not.toHaveProperty('结束');
+    expect(updated.fieldSources.endAt).toBe('system_auto');
+    expect(updated.fieldSources.startAt).toBe('system_auto');
+  });
+
+  it('moves Task start backward across midnight when duration changes in backward mode', () => {
+    const updated = applyQuickInputFieldUpdate({
+      formData: {
+        startAt: '2026-08-26T00:00',
+        endAt: '2026-08-26T00:10',
+        expectedDurationMinutes: 10,
+      },
+      fieldSources: {
+        startAt: 'system_auto',
+        endAt: 'system_auto',
+        expectedDurationMinutes: 'user',
+      } as any,
+      key: 'expectedDurationMinutes',
+      value: 30,
+      timeDirection: 'backward',
+    });
+
+    expect(updated.formData).toMatchObject({
+      startAt: '2026-08-25T23:40',
+      endAt: '2026-08-26T00:10',
+      expectedDurationMinutes: 30,
+    });
+    expect(updated.fieldSources.expectedDurationMinutes).toBe('user');
+    expect(updated.fieldSources.startAt).toBe('system_auto');
   });
 
   it('keeps linked time draft cleanup inside the model layer', () => {

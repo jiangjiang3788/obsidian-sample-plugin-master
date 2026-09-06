@@ -64,6 +64,11 @@ export interface EnergyViewConfig {
 }
 
 
+/** Eisenhower 四象限默认配置。 */
+export interface EisenhowerViewConfig {
+  showUnclassified: boolean;
+}
+
 /** TableView 默认配置（供视图 + 编辑器复用）。 */
 export interface TableViewConfig {
   view: 'TableView';
@@ -154,6 +159,7 @@ export type ViewDefaultConfig =
   | StatisticsViewConfig
   | HeatmapViewConfig
   | ProgressViewConfig
-  | EnergyViewConfig;
+  | EnergyViewConfig
+  | EisenhowerViewConfig;
 
 export type ViewDefaultConfigMap = Record<string, ViewDefaultConfig>;

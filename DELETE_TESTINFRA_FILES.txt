@@ -1,0 +1,11 @@
+docs/reports/TEST_INFRASTRUCTURE_ROOT_CAUSE_V9_2026-08-27.md
+scripts/gates/checks/test-toolchain-gate.mjs
+scripts/testing/audit-unit-environments.mjs
+scripts/testing/run-unit-tests-zh.mjs
+scripts/testing/test-bootstrap-preflight.mjs
+test/configs/jest-global-setup.cjs
+test/configs/jest.unit.dom.config.js
+test/configs/jest.unit.node.config.js
+test/configs/test-bootstrap.cjs
+test/configs/typescript-jest-transformer.cjs
+test/configs/unit-dom-tests.cjs

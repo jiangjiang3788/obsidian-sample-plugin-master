@@ -169,6 +169,13 @@ export function QuickInputEditor({
   const currentPeriodFields = currentPeriodUi.fields;
   const currentPeriodOptions = currentPeriodUi.options;
 
+  const taskTimingMode = useMemo(() => {
+    const uiContext = context?.__recordUiContext;
+    if (!uiContext || typeof uiContext !== 'object' || Array.isArray(uiContext)) return 'plan' as const;
+    const ui = uiContext as Record<string, unknown>;
+    return ui.kind === 'timeline_create' && ui.captureMode === 'completed_execution' ? 'execution' as const : 'plan' as const;
+  }, [context]);
+
   const template = useMemo(
     () => {
       if (isEnergyDirect) return null;
@@ -176,9 +183,9 @@ export function QuickInputEditor({
       // RecordType base form before Goal selection (and for stale Goal context);
       // the modal submit boundary separately requires a direct GoalTemplate in
       // create mode, so showing fields never weakens persistence rules.
-      return buildQuickInputDisplayTemplate(displayRawTemplate, displayEffectiveBlockId, goalFieldOptions);
+      return buildQuickInputDisplayTemplate(displayRawTemplate, displayEffectiveBlockId, goalFieldOptions, { taskTimingMode, recordInputMode: recordInputMode === 'create' ? 'create' : 'edit' });
     },
-    [displayRawTemplate, displayEffectiveBlockId, goalFieldOptions, isEnergyDirect]
+    [displayRawTemplate, displayEffectiveBlockId, goalFieldOptions, isEnergyDirect, taskTimingMode, recordInputMode]
   );
 
   const showTimeDirectionControl = useMemo(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
@@ -238,7 +245,13 @@ export function QuickInputEditor({
   };
 
   const handleTimeDirectionChange = (nextDirection: TimeDirection) => {
-    const updated = applyQuickInputTimeDirectionChange({ formData, fieldSources, nextDirection });
+    const isTaskTimeForm = String(displayEffectiveBlockId || currentBlockId || '').replace(/^core\./, '') === 'task';
+    const updated = applyQuickInputTimeDirectionChange({
+      formData,
+      fieldSources,
+      nextDirection,
+      timeFieldSet: isTaskTimeForm ? 'task' : 'legacy',
+    });
     dispatchSession({
       type: 'changeTimeDirection',
       timeDirection: updated.timeDirection,

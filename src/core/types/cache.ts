@@ -17,6 +17,8 @@ export interface CachedItem {
   categoryKey: string;
   recurrenceInfo?: RecordViewItem['recurrenceInfo'];
   priority?: RecordViewItem['priority'];
+  importance?: RecordViewItem['importance'];
+  urgency?: RecordViewItem['urgency'];
   expectedDurationMinutes?: number;
   energyDemand?: string;
   brainDemand?: string;
@@ -81,8 +83,9 @@ export interface CacheV1 {
   };
 }
 
-// v15: persist scanner integrity diagnostics; v14 added Task recommendation metadata for warm/cold parity.
-export const CURRENT_CACHE_SCHEMA_VERSION = 15;
+// v16: persist Task importance/urgency so warm and cold scans classify quadrants identically.
+// v15 persisted scanner integrity diagnostics; v14 added Task recommendation metadata.
+export const CURRENT_CACHE_SCHEMA_VERSION = 16;
 
 export function toCachedItem(it: RecordViewItem): CachedItem {
   return {
@@ -101,6 +104,8 @@ export function toCachedItem(it: RecordViewItem): CachedItem {
     categoryKey: it.categoryKey,
     recurrenceInfo: it.recurrenceInfo,
     priority: it.priority,
+    importance: it.importance,
+    urgency: it.urgency,
     expectedDurationMinutes: it.expectedDurationMinutes,
     energyDemand: it.energyDemand,
     brainDemand: it.brainDemand,
@@ -164,6 +169,8 @@ export function fromCachedItem(c: CachedItem): RecordViewItem {
     categoryKey: c.categoryKey,
     recurrenceInfo: c.recurrenceInfo,
     priority: c.priority,
+    importance: c.importance,
+    urgency: c.urgency,
     expectedDurationMinutes: c.expectedDurationMinutes,
     energyDemand: c.energyDemand,
     brainDemand: c.brainDemand,

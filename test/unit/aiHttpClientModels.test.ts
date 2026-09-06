@@ -11,7 +11,7 @@ function makeResponse(payload: unknown, status = 200, text?: string): AiHttpResp
         ok: status >= 200 && status < 300,
         status,
         statusText: '',
-        headers: { get: () => 'application/json' } as Headers,
+        headers: { get: () => 'application/json' } as unknown as Headers,
         text: async () => bodyText,
         json: async () => payload,
     };

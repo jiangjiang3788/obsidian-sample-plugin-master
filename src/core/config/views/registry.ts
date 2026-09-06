@@ -1,6 +1,7 @@
 import {
   BLOCK_VIEW_DEFAULT_CONFIG,
   ENERGY_VIEW_DEFAULT_CONFIG,
+  EISENHOWER_VIEW_DEFAULT_CONFIG,
   EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
   EXCEL_VIEW_DEFAULT_CONFIG,
   HEATMAP_VIEW_DEFAULT_CONFIG,
@@ -111,6 +112,12 @@ export const VIEW_DEFINITIONS = {
     layout: { freeformWidth: 720, freeformHeight: 620, deferredMinHeight: 440 },
     capabilities: { headerCreate: true, export: true },
     exportConfig: BLOCK_EXPORT_DEFAULT_CONFIG,
+  },
+  EisenhowerView: {
+    label: '四象限',
+    defaultConfig: EISENHOWER_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 760, freeformHeight: 560, deferredMinHeight: 480 },
+    capabilities: { headerCreate: false, export: false },
   },
 } as const satisfies Record<string, ViewDefinition>;
 

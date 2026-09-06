@@ -8,6 +8,14 @@ import { groupItemsByFields } from '@/core/utils/itemGrouping';
 import { isSameIsoWeek, toIsoDateTuple } from '@/core/utils/timelineRange';
 
 export type RecordQueryDateMode = 'standard' | 'overview' | 'strict';
+export type RecordQueryDateRole = 'default' | 'task-scheduled' | 'task-due' | 'task-completed' | 'task-actual';
+
+export function normalizeRecordQueryDateRole(value: unknown): RecordQueryDateRole | undefined {
+  const normalized = String(value || '').trim();
+  return ['default', 'task-scheduled', 'task-due', 'task-completed', 'task-actual'].includes(normalized)
+    ? normalized as RecordQueryDateRole
+    : undefined;
+}
 
 export interface RecordQueryDateConstraint {
   range: [Date, Date];
@@ -21,6 +29,8 @@ export interface RecordQueryDateConstraint {
   periodValue?: unknown;
   /** Event-like fields are compared at minute precision; default date uses day precision. */
   precision?: 'day' | 'minute';
+  /** Explicit Task date fact. Non-default roles are always strict and never keep open Tasks outside range. */
+  role?: RecordQueryDateRole;
 }
 
 export interface RecordQuerySpec {
@@ -74,13 +84,30 @@ function isWithinMinuteRange(value: unknown, range: [Date, Date]): boolean {
   return valueMs >= startMs && valueMs <= endMs;
 }
 
+
+function readDateConstraintValue(item: RecordViewItem, constraint: RecordQueryDateConstraint): unknown {
+  const role = constraint.role || 'default';
+  if (role === 'task-scheduled') {
+    return item.coreBlock === 'task' ? (item.scheduledAt ?? item.scheduledDate) : undefined;
+  }
+  if (role === 'task-due') {
+    return item.coreBlock === 'task' ? (item.dueAt ?? item.dueDate) : undefined;
+  }
+  if (role === 'task-completed') {
+    return item.coreBlock === 'task' ? (item.completedAt ?? item.doneDate) : undefined;
+  }
+  if (role === 'task-actual') {
+    return item.coreBlock === 'task-session' ? item.sessionStartedAt : undefined;
+  }
+  return readField(item, constraint.field || 'date');
+}
+
 function applyStrictDateConstraint(
   items: RecordViewItem[],
   constraint: RecordQueryDateConstraint,
 ): RecordViewItem[] {
-  const field = constraint.field || 'date';
   const inRange = constraint.precision === 'minute' ? isWithinMinuteRange : isWithinDayRange;
-  return items.filter((item) => inRange(readField(item, field), constraint.range));
+  return items.filter((item) => inRange(readDateConstraintValue(item, constraint), constraint.range));
 }
 
 function applyOverviewDateConstraint(
@@ -95,7 +122,7 @@ function applyOverviewDateConstraint(
     // a live entity, so a past scheduled/start/due date must not make it disappear.
     // Explicit task-date queries still use strict mode and therefore remain date-bound.
     if (field === 'date' && isOpenTask(item)) return true;
-    const rawDate = readField(item, field);
+    const rawDate = readDateConstraintValue(item, constraint);
     if (!rawDate) return field === 'date' ? !isClosedTask(item) : false;
 
     const itemDate = dayjs(rawDate as string | number | Date);
@@ -128,7 +155,7 @@ function applyStandardDateConstraint(
 
   return result.filter((item) => {
     if (isOpenTask(item)) return true;
-    const rawDate = readField(item, field);
+    const rawDate = readDateConstraintValue(item, constraint);
     if (!rawDate) return !isClosedTask(item);
     const parsed = dayjs(rawDate as string | number | Date);
     if (!parsed.isValid()) return !isClosedTask(item);
@@ -138,7 +165,10 @@ function applyStandardDateConstraint(
 
 function applyDateConstraint(items: RecordViewItem[], constraint?: RecordQueryDateConstraint): RecordViewItem[] {
   if (!constraint) return items;
-  const mode = constraint.mode || ((constraint.field && constraint.field !== 'date') ? 'strict' : 'standard');
+  const explicitRole = (constraint.role || 'default') !== 'default';
+  const mode = explicitRole
+    ? 'strict'
+    : (constraint.mode || ((constraint.field && constraint.field !== 'date') ? 'strict' : 'standard'));
   if (mode === 'overview') return applyOverviewDateConstraint(items, constraint);
   if (mode === 'strict') return applyStrictDateConstraint(items, constraint);
   return applyStandardDateConstraint(items, constraint);
@@ -162,6 +192,7 @@ function buildDateConstraintCacheKey(constraint: RecordQueryDateConstraint): str
     useFieldGranularity: !!constraint.useFieldGranularity,
     periodValue: constraint.periodValue == null ? '' : String(constraint.periodValue),
     precision: constraint.precision || 'day',
+    role: constraint.role || 'default',
   });
 }
 

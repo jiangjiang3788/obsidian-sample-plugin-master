@@ -9,6 +9,8 @@ export function deriveQuickInputInitialSelection(
   return {
     selectedGoalPath: resolveRecordGoalPath({ formData: initialFormData, context }),
     timeDirection:
-      initialFormData?.__timeDirection === 'backward' ? 'backward' : 'forward',
+      initialFormData?.__timeDirection === 'backward' || context?.__timeDirection === 'backward'
+        ? 'backward'
+        : 'forward',
   };
 }

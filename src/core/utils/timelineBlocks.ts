@@ -25,6 +25,15 @@ export function splitTaskIntoDayBlocks(
   // TimelineTask 逻辑上应当具备 doneDate，但类型层面仍允许 optional；这里做防御式保护。
   if (!task.doneDate) return [];
 
+  // startAt-only Task is a point marker, not an occupied range. Keep zero duration
+  // in the data model and create one zero-height block for the renderer to style.
+  if (task.timelineSource === 'task-point') {
+    const pointDate = dayjs(task.actualStartDate);
+    if (pointDate.isBefore(dateRange[0], 'day') || pointDate.isAfter(dateRange[1], 'day')) return [];
+    const minute = task.startMinute % 1440;
+    return [{ ...task, day: pointDate.format(DATE_FORMAT), blockStartMinute: minute, blockEndMinute: minute }];
+  }
+
   let currentDate = dayjs(task.actualStartDate);
   let currentStartMinute = task.startMinute % 1440;
   let remainingDuration = task.duration;

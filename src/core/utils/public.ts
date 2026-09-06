@@ -35,6 +35,7 @@ export * from './templateUtils';
 export * from './timeline';
 export * from './timelineAggregation';
 export * from './timelineBlocks';
+export * from './timelineClock';
 export * from './timelineInteraction';
 export * from './timelineRange';
 export * from './timing';
