@@ -1,0 +1,114 @@
+/* 1.2.6-1.2.8: semantic zoom swaps unreadably small nodes for fixed-screen spatial locators. */
+.think-os .think-whiteboard-semantic-status {
+  position: absolute;
+  left: var(--think-space-3);
+  bottom: var(--think-space-3);
+  z-index: 2320;
+  max-width: min(520px, 70%);
+  padding: var(--think-space-1) var(--think-space-2);
+  overflow: hidden;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: color-mix(in srgb, var(--think-bg-elevated) 92%, transparent);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-card {
+  visibility: hidden;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-workbench__header {
+  visibility: hidden;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-workbench {
+  border-width: calc(1px * var(--think-whiteboard-semantic-inverse-zoom));
+  box-shadow: none;
+}
+.think-os .think-whiteboard-canvas-viewport[data-whiteboard-lod="overview"] .think-whiteboard-annotation {
+  visibility: hidden;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-edge-controls { display: none; }
+.think-os .think-whiteboard-canvas-viewport[data-whiteboard-lod="compact"] .think-whiteboard-edge-layer { opacity: 0.45; }
+.think-os .think-whiteboard-canvas-viewport[data-whiteboard-lod="overview"] .think-whiteboard-edge-layer { opacity: 0.24; }
+
+.think-os .think-whiteboard-overview-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2000000;
+  overflow: visible;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-overview-marker {
+  position: absolute;
+  width: 0;
+  height: 0;
+  transform: scale(var(--think-whiteboard-semantic-inverse-zoom));
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-overview-marker__button {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 18px;
+  min-height: 18px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--think-border-strong);
+  border-radius: 999px;
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--think-bg-canvas) 80%, transparent), var(--think-shadow-overlay);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.think-os .think-whiteboard-overview-marker__button:hover,
+.think-os .think-whiteboard-overview-marker__button:focus-visible,
+.think-os .think-whiteboard-overview-marker__button.is-selected,
+.think-os .think-whiteboard-overview-marker__button.is-find-active,
+.think-os .think-whiteboard-overview-marker__button.is-drop-target {
+  border-color: var(--think-border-selection);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--think-focus-ring-color) 38%, transparent), var(--think-shadow-overlay);
+}
+.think-os .think-whiteboard-overview-marker__button.is-find-match { border-color: var(--think-border-selection); }
+.think-os .think-whiteboard-overview-marker--group .think-whiteboard-overview-marker__button { max-width: 180px; min-height: 24px; padding: 0 8px; border-radius: var(--think-radius-sm); font-weight: var(--think-font-weight-semibold); }
+.think-os .think-whiteboard-overview-marker--annotation .think-whiteboard-overview-marker__button { width: 20px; height: 20px; border-style: dashed; }
+.think-os .think-whiteboard-overview-marker__label { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="compact"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button {
+  max-width: 170px;
+  min-width: 76px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: var(--think-radius-sm);
+  justify-content: flex-start;
+}
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="compact"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__dot { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 999px; background: currentColor; }
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="compact"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__label { display: block; }
+
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button { width: 16px; height: 16px; }
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__label { position: absolute; left: 22px; display: none; max-width: 180px; padding: 4px 6px; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-elevated); box-shadow: var(--think-shadow-overlay); }
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button:hover .think-whiteboard-overview-marker__label,
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button:focus-visible .think-whiteboard-overview-marker__label,
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button.is-selected .think-whiteboard-overview-marker__label,
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button.is-find-active .think-whiteboard-overview-marker__label { display: block; }
+
+/* 1.4.0: semantic zoom keeps Record type identity without rendering full cards. */
+.think-os .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button[data-record-type] {
+  border-color: color-mix(in srgb, var(--think-record-type-accent) 58%, var(--think-border-strong));
+}
+.think-os .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button[data-record-type] .think-whiteboard-overview-marker__dot {
+  background: var(--think-record-type-accent);
+}

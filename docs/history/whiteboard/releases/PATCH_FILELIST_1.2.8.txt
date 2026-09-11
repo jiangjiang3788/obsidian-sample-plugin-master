@@ -1,0 +1,23 @@
+ThinkOS 1.2.8 — PATCH 文件清单
+Base: ThinkOS 1.2.5 R3
+Target: ThinkOS 1.2.8
+
+1. doc/PATCH_FILELIST_1.2.8.txt
+2. doc/README_PATCH_1.2.8.txt
+3. doc/WHITEBOARD_IMPLEMENTATION_BASELINE_v1_1.2.8-updated.md
+4. doc/Whiteboard_1.2.8_IMPLEMENTATION_RESULT.md
+5. doc/Whiteboard_1.2.8_TEST_REPORT.md
+6. manifest.json
+7. package-lock.json
+8. package.json
+9. src/features/whiteboard/WhiteboardSemanticOverviewLayer.tsx
+10. src/features/whiteboard/WhiteboardSemanticZoomModel.ts
+11. src/features/whiteboard/WhiteboardWorkspace.tsx
+12. src/styles/features/whiteboard-semantic-zoom.css
+13. src/styles/main.css
+14. test/specs/whiteboard.e2e.ts
+15. test/system/feature-test-map.json
+16. test/unit/whiteboardSemanticZoomModel.test.ts
+17. test/unit/whiteboardSemanticZoomUi.test.tsx
+
+说明：PATCH 仅包含上述相对项目路径；不包含 node_modules、构建缓存或测试运行生成报告。

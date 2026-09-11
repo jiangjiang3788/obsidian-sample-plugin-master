@@ -1,7 +1,8 @@
 node_modules/
+.venv/
 reports/
-dist/
 main.js.map
+*-release.zip
 *.log
 .DS_Store
 
@@ -18,5 +19,4 @@ data.json
 
 .obsidian/workspace*.json
 .obsidian/cache/
-.obsidian-cache
 .obsidian-cache

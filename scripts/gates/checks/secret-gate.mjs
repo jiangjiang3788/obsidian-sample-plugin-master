@@ -8,8 +8,6 @@ const ignoredDirs = new Set([
   '.git',
   '.venv',
   'node_modules',
-  'dist',
-  'release',
   'coverage',
   '.obsidian',
   '.obsidian-cache',

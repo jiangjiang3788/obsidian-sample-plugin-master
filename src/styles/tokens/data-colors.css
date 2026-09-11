@@ -64,3 +64,41 @@
   --think-heatmap-4: #4c7ed1;
   --think-heatmap-5: #759cff;
 }
+
+/*
+ * Record type semantic palette.
+ *
+ * These tokens are a product contract shared by every view. They are separate
+ * from category/goal colors and from the generic chart palette above: a Record
+ * type keeps the same identity color wherever a view chooses to render a type
+ * accent. Text/labels remain present where type identity must not be color-only.
+ */
+.think-os {
+  --think-record-type-task: #4f7cff;
+  --think-record-type-task-session: #168ca8;
+  --think-record-type-task-series: #6f66d9;
+  --think-record-type-energy: #d98b22;
+  --think-record-type-habit: #20a675;
+  --think-record-type-evidence: #e8783d;
+  --think-record-type-thought: #8b68d8;
+  --think-record-type-review: #d65b74;
+  --think-record-type-plan: #547aa5;
+  --think-record-type-blocker: #c94f4f;
+  --think-record-type-milestone: #a98213;
+  --think-record-type-neutral: var(--think-text-secondary);
+}
+
+.theme-dark .think-os,
+.think-os.theme-dark {
+  --think-record-type-task: #7da2ff;
+  --think-record-type-task-session: #4ab7ce;
+  --think-record-type-task-series: #9b91ef;
+  --think-record-type-energy: #f1b45b;
+  --think-record-type-habit: #45c994;
+  --think-record-type-evidence: #f39a69;
+  --think-record-type-thought: #ac8ee8;
+  --think-record-type-review: #ef8095;
+  --think-record-type-plan: #80a3c9;
+  --think-record-type-blocker: #ec7777;
+  --think-record-type-milestone: #d7b449;
+}

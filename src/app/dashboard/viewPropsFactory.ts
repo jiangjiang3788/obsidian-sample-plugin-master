@@ -83,7 +83,7 @@ export function buildViewProps({
     onCellCommit: viewType === 'ExcelView' ? handlers.onExcelCellCommit : undefined,
     timerService,
     timers,
-      inputSettings,
+    inputSettings,
     goals,
     goalSettings,
     selectedCategories: selectedLayoutCategories,

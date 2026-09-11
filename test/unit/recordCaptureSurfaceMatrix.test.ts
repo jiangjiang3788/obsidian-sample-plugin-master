@@ -73,9 +73,22 @@ const EXPECTED_CAPTURE = {
   },
 } as const;
 
+const EXPECTED_CAPTURE_ORDER = [
+  'core.task',
+  'core.energy',
+  'core.habit',
+  'core.evidence',
+  'core.thought',
+  'core.review',
+  'core.plan',
+  'core.blocker',
+  'core.milestone',
+];
+
 describe('Record capture surface matrix', () => {
-  it('keeps the complete user-visible RecordType set stable', () => {
-    expect(DEFAULT_RECORD_TYPES.map((recordType) => recordType.id)).toEqual(Object.keys(EXPECTED_CAPTURE));
+  it('keeps the complete user-visible RecordType set in the global presentation order', () => {
+    expect(DEFAULT_RECORD_TYPES.map((recordType) => recordType.id)).toEqual(EXPECTED_CAPTURE_ORDER);
+    expect(new Set(DEFAULT_RECORD_TYPES.map((recordType) => recordType.id))).toEqual(new Set(Object.keys(EXPECTED_CAPTURE)));
   });
 
   it.each(Object.entries(EXPECTED_CAPTURE))('%s keeps its capture contract', (id, expected) => {

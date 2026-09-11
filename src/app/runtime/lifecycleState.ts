@@ -1,7 +1,11 @@
-// src/app/runtime/lifecycleState.ts
-// A tiny global flag to prevent any writes after plugin unload/reload.
-// This is intentionally simple: set once on cleanup, read from platform adapters.
+// A tiny global lifecycle flag to prevent any Vault writes after plugin unload/reload.
+// Important: Obsidian can hot-reload a plugin while preserving the JS module instance,
+// so every onload must explicitly reactivate the lifecycle state.
 let disposed = false;
+
+export function markActive(): void {
+  disposed = false;
+}
 
 export function markDisposed(): void {
   disposed = true;
@@ -11,12 +15,12 @@ export function isDisposed(): boolean {
   return disposed;
 }
 
-// Useful for tests/dev hot reload (should not be used in production code paths).
+// Backward-compatible dev helper.
 export function _resetDisposedForDev(): void {
-  disposed = false;
+  markActive();
 }
 
 // Jest helper (explicit name to discourage accidental use in prod paths)
 export function resetDisposedForTests(): void {
-  disposed = false;
+  markActive();
 }

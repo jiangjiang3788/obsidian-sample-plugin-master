@@ -1,0 +1,60 @@
+/* Whiteboard 1.1.6: source multi-select + batch drag. */
+.think-os .think-whiteboard-source__selection-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  padding: var(--think-space-2) var(--think-space-3);
+  border-top: 1px solid var(--think-list-divider);
+  border-bottom: 1px solid var(--think-list-divider);
+  background: var(--think-bg-surface-1);
+}
+
+.think-os .think-whiteboard-source__selection-count {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+  white-space: nowrap;
+}
+
+.think-os .think-whiteboard-source__select {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.think-os .think-whiteboard-source__select .think-selection-control { min-height: 0; }
+.think-os .think-whiteboard-source__select .think-selection-control__text { display: none; }
+.think-os .think-whiteboard-source__row.is-selected {
+  border-color: var(--think-border-selection);
+  background: var(--think-bg-selected, var(--think-bg-hover));
+}
+
+.think-os .think-whiteboard-source__row.is-selected.is-dragging {
+  box-shadow: 0 0 0 2px var(--think-focus-ring-color);
+}
+
+/* Whiteboard 1.1.8: ephemeral Canvas selection. */
+.think-os .think-whiteboard-card.is-selected {
+  outline: 3px solid var(--think-border-selection);
+  outline-offset: 3px;
+}
+
+.think-os .think-whiteboard-selection-marquee {
+  position: absolute;
+  z-index: 2400;
+  border: 1px solid var(--think-focus-ring-color);
+  background: color-mix(in srgb, var(--think-focus-ring-color) 12%, transparent);
+  pointer-events: none;
+}
+
+.think-os .think-whiteboard-board-selection {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-1);
+  padding-left: var(--think-space-2);
+  border-left: 1px solid var(--think-border-subtle);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+  white-space: nowrap;
+}

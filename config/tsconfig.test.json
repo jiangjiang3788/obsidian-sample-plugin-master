@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "isolatedModules": true,
+    "types": [
+      "vite/client",
+      "preact",
+      "jest",
+      "node"
+    ]
+  },
+  "include": [
+    "../src",
+    "../test/unit",
+    "../test/integration",
+    "../test/configs/jest.config.js"
+  ],
+  "exclude": [
+    "../node_modules",
+    "../test/specs"
+  ]
+}

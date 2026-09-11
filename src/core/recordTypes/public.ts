@@ -13,3 +13,13 @@ export {
   getTemplateRecordTypes,
   isDirectRecordType,
 } from './registry';
+export {
+  RECORD_TYPE_PRESENTATION_ORDER,
+  RECORD_TYPE_PRESENTATION_REGISTRY,
+  compareRecordTypeKeys,
+  getRecordTypePresentation,
+  getRecordTypePresentationOrder,
+  normalizeRecordTypePresentationKey,
+  sortRecordTypesByPresentation,
+} from './presentation';
+export type { CanonicalRecordTypePresentationKey, RecordTypePresentation } from './presentation';

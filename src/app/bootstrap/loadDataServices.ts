@@ -1,14 +1,41 @@
 import { devError, devLog, devTime, devTimeEnd } from '@core/utils/public';
 import { startMeasure } from '@shared/utils/public';
 
+import type { PluginHost } from '@core/ports/public';
+import type { WhiteboardStore } from '@core/whiteboard/public';
+
 import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 import type { Services } from '@/app/services.types';
 import type { BootstrapResolved } from '@/app/bootstrap/buildRuntime';
 
+
+export function scheduleWhiteboardRestore(opts: {
+    plugin: PluginHost;
+    store: WhiteboardStore;
+    onError?: (error: unknown) => void;
+}): void {
+    const { plugin, store, onError } = opts;
+    const startRestore = () => {
+        void store.initialize().catch((error) => {
+            if (store.getStatus().state === 'disposed') return;
+            onError?.(error);
+        });
+    };
+
+    const workspace = plugin.app?.workspace as { onLayoutReady?: (callback: () => void) => void } | undefined;
+    if (typeof workspace?.onLayoutReady === 'function') {
+        workspace.onLayoutReady(startRestore);
+        return;
+    }
+
+    // 非 Obsidian 测试宿主没有 workspace lifecycle 时，保持可测试的降级路径。
+    startRestore();
+}
+
 export async function loadDataServices(opts: {
     services: ServiceManagerServices;
     runtime: Pick<Services, 'dataStore' | 'inputService'>;
-    bootstrap: Pick<BootstrapResolved, 'actionService' | 'itemService' | 'chatSessionStore'>;
+    bootstrap: Pick<BootstrapResolved, 'actionService' | 'itemService' | 'chatSessionStore' | 'whiteboardStore'>;
     getScanDataPromise: () => Promise<void> | null;
     setScanDataPromise: (p: Promise<void>) => void;
 }): Promise<void> {
@@ -24,6 +51,9 @@ export async function loadDataServices(opts: {
     services.actionService = bootstrap.actionService;
     services.itemService = bootstrap.itemService;
     services.chatSessionStore = bootstrap.chatSessionStore;
+    services.whiteboardStore = bootstrap.whiteboardStore;
+    // Whiteboard durable state is restored after Obsidian workspace/Vault layout is ready.
+    // Do not perform Vault-cache-sensitive reads in the same turn as plugin bootstrap.
 
     // 触发后台扫描
     scanDataInBackground({ services, getScanDataPromise, setScanDataPromise });

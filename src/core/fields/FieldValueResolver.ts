@@ -8,6 +8,7 @@ import { splitHierarchyPath } from './pathSemantics';
 import { getTaskCadence } from '@/core/records/task/taskCadence';
 import { formatTaskRecurrence } from '@/core/records/task/taskRecurrence';
 import { asUnknownRecord, readFirstString, readString, readStringArray, readUnknown } from '@/core/utils/unknownRecord';
+import { getRecordPrimaryText } from './RecordPrimaryText';
 
 export type FieldValueSource = FieldSource | 'unknown';
 
@@ -66,6 +67,8 @@ function readCanonicalField(item: RecordViewItem, canonicalField: string): unkno
   if (canonicalField.startsWith('file.')) {
     return readFileField(item, canonicalField);
   }
+
+  if (canonicalField === 'primaryText') return getRecordPrimaryText(item);
 
   if (canonicalField === 'goalPath') {
     return splitHierarchyPath(item.goalPath).path;

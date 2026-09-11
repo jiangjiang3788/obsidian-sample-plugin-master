@@ -1,6 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { RecordViewItem } from '@core/types/public';
+import type { RecordViewItem } from '@core/types/public';
+import { getRecordPrimaryText } from '@core/fields/public';
 import { FieldPill } from './FieldPill';
 import { ItemLink } from './ItemLink';
 import type { MessageRenderPort } from '@core/ports/public';
@@ -18,8 +19,10 @@ interface BlockItemProps {
 }
 
 export const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, onOpenRecord }: BlockItemProps) => {
-    const metadataFields = fields.filter(f => f !== 'title' && f !== 'content');
-    const showTitle = fields.includes('title') && item.title;
+    const metadataFields = fields.filter(f => f !== 'title' && f !== 'primaryText' && f !== 'content');
+    const showTitle = fields.includes('title') && Boolean(item.title);
+    const showPrimaryText = fields.includes('primaryText');
+    const primaryText = getRecordPrimaryText(item);
     const effectiveContent = (item.content && item.content.trim().length > 0) ? item.content : item.title;
     const showContent = fields.includes('content') && effectiveContent;
 
@@ -36,24 +39,29 @@ export const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigi
     });
 
     return (
-        <div class="bv-item bv-item--block think-list-row think-list-row--interactive">
+        <div class="bv-item bv-item--block think-list-row think-list-row--interactive" data-record-type={item.coreBlock}>
             <div class="bv-block-metadata">
                 <div class="bv-fields-list-wrapper">
                     {metadataFields.map(fieldKey => (
-                        <FieldPill 
-                            key={fieldKey} 
-                            item={item} 
-                            fieldKey={fieldKey} 
-                            resolveResourcePath={resolveResourcePath} 
-                                          onOpenRecordOrigin={onOpenRecordOrigin}
+                        <FieldPill
+                            key={fieldKey}
+                            item={item}
+                            fieldKey={fieldKey}
+                            resolveResourcePath={resolveResourcePath}
+                            onOpenRecordOrigin={onOpenRecordOrigin}
                         />
                     ))}
                 </div>
             </div>
             <div class="bv-block-main">
-                {showTitle && (
+                {showPrimaryText && (
+                    <div class="bv-block-title bv-block-title--primary-text">
+                        <ItemLink item={item} displayText={primaryText} onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />
+                    </div>
+                )}
+                {showTitle && !showPrimaryText && (
                     <div class="bv-block-title">
-                        <ItemLink item={item} onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />
+                        <ItemLink item={item} displayText={item.title} onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} />
                     </div>
                 )}
                 {showContent && (

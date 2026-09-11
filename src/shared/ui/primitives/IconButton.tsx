@@ -17,6 +17,7 @@ export function ThinkIconButton({
   tone = 'default',
   pressed,
   className,
+  title,
   type = 'button',
   ...buttonProps
 }: ThinkIconButtonProps) {
@@ -33,7 +34,7 @@ export function ThinkIconButton({
       type={type}
       className={classes}
       aria-label={label}
-      title={label}
+      title={title ?? label}
       aria-pressed={pressed === undefined ? undefined : pressed}
     >
       {icon}

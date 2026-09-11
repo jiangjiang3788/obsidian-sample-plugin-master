@@ -12,6 +12,7 @@ import type { FilterRule, RecordViewItem } from '@core/types/public';
 import { getAllFields, readField } from '@core/types/public';
 import { formatFieldValue, getFieldLabel } from '@core/fields/public';
 import { normalizeViewFieldKey, normalizeViewMultiValue } from '@core/view/public';
+import { compareRecordTypeKeys } from '@core/recordTypes/public';
 
 interface QuickFilterField {
   field: string;
@@ -76,7 +77,7 @@ function collectFieldValues(items: RecordViewItem[], fields: string[]): Record<s
   const result: Record<string, string[]> = {};
   fields.forEach(rawField => {
     const field = normalizeViewFieldKey(rawField);
-    result[field] = Array.from(valueMap[field] || []).sort((a, b) => a.localeCompare(b, 'zh-CN'));
+    result[field] = Array.from(valueMap[field] || []).sort(field === 'coreBlock' ? compareRecordTypeKeys : (a, b) => a.localeCompare(b, 'zh-CN'));
   });
   return result;
 }

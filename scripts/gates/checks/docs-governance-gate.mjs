@@ -4,6 +4,7 @@ import path from 'node:path';
 
 const root = process.cwd();
 const failures = [];
+const pkg = fs.existsSync(path.join(root, 'package.json')) ? JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')) : {};
 const required = [
   'README.md',
   'docs/README.md',
@@ -17,6 +18,17 @@ const required = [
 for (const file of required) {
   if (!fs.existsSync(path.join(root, file))) failures.push(`missing current doc: ${file}`);
 }
+if (pkg.version) {
+  for (const name of ['PLAN.md', 'IMPLEMENTATION_RESULT.md', 'TEST_REPORT.md']) {
+    const file = `docs/releases/${pkg.version}/${name}`;
+    if (!fs.existsSync(path.join(root, file))) failures.push(`missing current release doc: ${file}`);
+  }
+}
+if (fs.existsSync(path.join(root, 'doc'))) failures.push('legacy doc/ directory is forbidden; merge documentation into docs/');
+const looseRootDocs = fs.readdirSync(root, { withFileTypes: true })
+  .filter((entry) => entry.isFile() && /\.(?:md|txt)$/i.test(entry.name) && entry.name !== 'README.md')
+  .map((entry) => entry.name);
+if (looseRootDocs.length) failures.push(`documentation must live under docs/: ${looseRootDocs.join(', ')}`);
 const docs = fs.existsSync(path.join(root, 'docs'))
   ? fs.readdirSync(path.join(root, 'docs'), { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
   : [];

@@ -40,7 +40,7 @@ function moduleConfig(viewConfig: Record<string, any> = {}) {
 
 describe('EventTimelineViewModel', () => {
   it('normalizes view config and display text', () => {
-    expect(buildEventTimelineViewConfig({ viewConfig: { timeField: 'doneDate', maxContentLength: '4' } } as any)).toEqual({ timeField: 'doneDate', titleField: 'title', contentField: 'content', maxContentLength: 4 });
+    expect(buildEventTimelineViewConfig({ viewConfig: { timeField: 'doneDate', maxContentLength: '4' } } as any)).toEqual({ timeField: 'doneDate', titleField: 'primaryText', contentField: 'content', maxContentLength: 4 });
     expect(cleanEventTimelineDisplayText('  abc\n  def  ', 5)).toBe('abc d...');
     expect(cleanEventTimelineDisplayText('abcdef', 0)).toBe('abcdef');
   });

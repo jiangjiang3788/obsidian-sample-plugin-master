@@ -43,7 +43,7 @@ const USER_RECORDS: RecordViewItem[] = [
 })) as RecordViewItem[];
 
 describe('View surface matrix', () => {
-  it('keeps all ten product views registered in core, runtime and settings editor', () => {
+  it('keeps all ten normal product views registered in core, runtime and settings editor', () => {
     expect(VIEW_OPTIONS).toEqual(Object.keys(EXPECTED_VIEWS));
     expect(Object.keys(VIEW_RUNTIME_BINDINGS).sort()).toEqual(Object.keys(EXPECTED_VIEWS).sort());
     expect(Object.keys(VIEW_EDITORS).sort()).toEqual(Object.keys(EXPECTED_VIEWS).sort());

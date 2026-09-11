@@ -407,7 +407,7 @@ function check_modal_promise_gate() {
   function walk(dir) {
     const out = [];
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (ent.name === 'node_modules' || ent.name === 'dist') continue;
+      if (ent.name === 'node_modules') continue;
       const p = path.join(dir, ent.name);
       if (ent.isDirectory()) out.push(...walk(p));
       else if (p.endsWith('.ts') || p.endsWith('.tsx')) out.push(p);

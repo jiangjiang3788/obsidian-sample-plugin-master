@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
+import { normalizeRecordTypePresentationKey, type TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { getRootTimePresetTotals } from '@core/goal/public';
 import { GoalTemplateMatrixGroupRows } from './GoalTemplateMatrixRow';
@@ -63,7 +63,7 @@ function GoalTemplateMatrixHeader({ visibleBlocks }: { visibleBlocks: TemplateRe
       <tr>
         <th className="think-goal-template-matrix__path-header">目标</th>
         {visibleBlocks.map((block) => (
-          <th key={block.id} className="think-goal-template-matrix__block-header">{block.name}</th>
+          <th key={block.id} className="think-goal-template-matrix__block-header think-record-type-header" data-record-type={normalizeRecordTypePresentationKey(block.coreBlock)}>{block.name}</th>
         ))}
       </tr>
     </thead>

@@ -19,6 +19,7 @@ export const CORE_PUBLIC_FACADES = [
   { specifier: '@core/bootstrap/public', file: 'src/core/bootstrap/public.ts', scope: 'module' },
   { specifier: '@core/recordTypes/public', file: 'src/core/recordTypes/public.ts', scope: 'module' },
   { specifier: '@core/energy/public', file: 'src/core/energy/public.ts', scope: 'module' },
+  { specifier: '@core/whiteboard/public', file: 'src/core/whiteboard/public.ts', scope: 'module' },
 ];
 
 export const SHARED_PUBLIC_FACADES = [

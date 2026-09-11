@@ -7,6 +7,7 @@
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { SettingsRepository, type ISettingsPersistence } from '@/core/services/SettingsRepository';
 import { ViewInstanceUseCase } from '@/app/usecases/viewinstance.usecase';
+import type { AppStoreApi } from '@/app/usecases/AppStoreApi';
 
 function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)); }
 
@@ -23,6 +24,22 @@ function initialSettings(): ThinkSettings {
   } as ThinkSettings;
 }
 
+async function createViewUseCaseHarness(persistence: ISettingsPersistence) {
+  const repository = new SettingsRepository(persistence);
+  const settings = await repository.load();
+  const state: {
+    isInitialized: boolean;
+    settings: ThinkSettings;
+    updateSettings: (mutator: (draft: ThinkSettings) => void) => Promise<void>;
+  } = {
+    isInitialized: true,
+    settings,
+    updateSettings: async (mutator) => { state.settings = await repository.update(mutator); },
+  };
+  const store = { getState: () => state } as unknown as AppStoreApi;
+  return { repository, state, useCase: new ViewInstanceUseCase(store) };
+}
+
 describe('模块设置弹窗参数持久化生命周期', () => {
   it('视图类型、折叠、字段、筛选和视图专属参数统一经 ViewInstanceUseCase 写盘并在重启后恢复', async () => {
     let persisted = clone(initialSettings());
@@ -30,11 +47,7 @@ describe('模块设置弹窗参数持久化生命周期', () => {
       loadData: jest.fn(async () => clone(persisted)),
       saveData: jest.fn(async (settings: ThinkSettings) => { persisted = clone(settings); }),
     };
-    const repository = new SettingsRepository(persistence);
-    const settings = await repository.load();
-    const state: any = { isInitialized: true, settings };
-    state.updateSettings = async (mutator: (draft: ThinkSettings) => void) => { state.settings = await repository.update(mutator); };
-    const useCase = new ViewInstanceUseCase({ getState: () => state } as any);
+    const { useCase } = await createViewUseCaseHarness(persistence);
 
     await useCase.updateView('view-v6', {
       viewType: 'TableView',
@@ -55,4 +68,5 @@ describe('模块设置弹窗参数持久化生命周期', () => {
     expect(view?.filters).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'status', value: 'open' })]));
     expect(view?.viewConfig).toMatchObject({ pageSize: 50, compact: true, dateRole: 'task-completed' });
   });
+
 });

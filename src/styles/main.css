@@ -43,6 +43,7 @@
 @import "./components/data-grid.css";
 @import "./components/visualization.css";
 @import "./components/grouped-container.css";
+@import "./components/record-type.css";
 @import "./features/settings.css";
 @import "./features/settings-structural.css";
 @import "./features/settings-editors.css";
@@ -60,6 +61,15 @@
 @import "./features/timeline-goal-allocation.css";
 @import "./features/excel.css";
 @import "./features/block.css";
+@import "./features/whiteboard.css";
+@import "./features/whiteboard-selection.css";
+@import "./features/whiteboard-connection.css";
+@import "./features/whiteboard-workbench.css";
+@import "./features/whiteboard-semantic-zoom.css";
+@import "./features/whiteboard-archive.css";
+@import "./features/whiteboard-annotation.css";
+@import "./features/whiteboard-context-menu.css";
+@import "./features/whiteboard-layout.css";
 @import "./features/event-timeline.css";
 @import "./features/overlay-ui.css";
 @import "./features/timer.css";

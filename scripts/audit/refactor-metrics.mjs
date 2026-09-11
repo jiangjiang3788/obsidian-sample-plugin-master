@@ -17,7 +17,7 @@ const __filename = fileURLToPath(import.meta.url);
 const DEFAULT_ROOT = process.cwd();
 const CODE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.mts', '.cts', '.css']);
 const TS_LIKE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.mts', '.cts']);
-const IGNORED_PATH_PARTS = new Set(['node_modules', 'dist', '.git', 'coverage', 'reports', 'release']);
+const IGNORED_PATH_PARTS = new Set(['node_modules', '.git', 'coverage', 'reports']);
 
 const SEMANTIC_CATEGORIES = [
   {

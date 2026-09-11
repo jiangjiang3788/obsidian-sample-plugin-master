@@ -1,5 +1,6 @@
 import type { ViewTemporalConfig } from '../../view-config/dateRole';
 
+
 /** StatisticsView 的默认配置。 */
 export interface StatisticsViewConfig extends ViewTemporalConfig {
   /** 目标中心：统计视图只按目标分组；时间与其他筛选统一由控制栏/视图筛选提供。 */

@@ -1,50 +1,60 @@
 #!/usr/bin/env node
-import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const root = process.cwd();
 const manifest = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8'));
-const packageDir = join(root, 'release', manifest.id);
-const allowedFiles = new Set(['manifest.json', 'main.js', 'styles.css']);
-const forbiddenTopLevel = new Set([
-  'src', 'doc', 'docs', 'test', 'tests', 'scripts', 'reports', 'dist', 'node_modules', '.git', 'coverage'
-]);
-const forbiddenExact = new Set([
-  'data.json', 'data.example.json', 'main.js.map', 'package.json', 'package-lock.json', 'tsconfig.json', 'tsconfig.test.json', 'vite.config.ts'
-]);
-
-function walk(dir, base = dir) {
-  const out = [];
-  for (const name of readdirSync(dir)) {
-    const full = join(dir, name);
-    const stat = statSync(full);
-    if (stat.isDirectory()) out.push(...walk(full, base));
-    else out.push(relative(base, full).replaceAll('\\\\', '/'));
-  }
-  return out;
-}
+const zipPath = join(root, `${manifest.id}-release.zip`);
+const requiredRootArtifacts = ['manifest.json', 'main.js', 'styles.css'];
+const expectedZipEntries = requiredRootArtifacts.map((file) => `${manifest.id}/${file}`).sort();
 
 function fail(message) {
   console.error(`[release-boundary-gate] ${message}`);
   process.exit(1);
 }
 
-if (!existsSync(packageDir)) {
-  fail('release/<manifest.id> does not exist. Run npm run package:release first.');
+function listZipEntries(filePath) {
+  const buffer = readFileSync(filePath);
+  const EOCD = 0x06054b50;
+  const CENTRAL = 0x02014b50;
+  const minOffset = Math.max(0, buffer.length - 0xffff - 22);
+  let eocd = -1;
+  for (let offset = buffer.length - 22; offset >= minOffset; offset -= 1) {
+    if (buffer.readUInt32LE(offset) === EOCD) {
+      eocd = offset;
+      break;
+    }
+  }
+  if (eocd < 0) fail('release zip has no valid end-of-central-directory record');
+
+  const entryCount = buffer.readUInt16LE(eocd + 10);
+  let offset = buffer.readUInt32LE(eocd + 16);
+  const entries = [];
+
+  for (let index = 0; index < entryCount; index += 1) {
+    if (buffer.readUInt32LE(offset) !== CENTRAL) fail('release zip central directory is malformed');
+    const nameLength = buffer.readUInt16LE(offset + 28);
+    const extraLength = buffer.readUInt16LE(offset + 30);
+    const commentLength = buffer.readUInt16LE(offset + 32);
+    const name = buffer.subarray(offset + 46, offset + 46 + nameLength).toString('utf8').replaceAll('\\', '/');
+    if (!name.endsWith('/')) entries.push(name);
+    offset += 46 + nameLength + extraLength + commentLength;
+  }
+  return entries.sort();
 }
 
-const files = walk(packageDir).sort();
-const missing = [...allowedFiles].filter((file) => !files.includes(file));
-if (missing.length > 0) fail(`missing required files: ${missing.join(', ')}`);
-
-const unexpected = files.filter((file) => !allowedFiles.has(file));
-if (unexpected.length > 0) fail(`unexpected files: ${unexpected.join(', ')}`);
-
-for (const file of files) {
-  const first = file.split('/')[0];
-  if (forbiddenExact.has(file) || forbiddenTopLevel.has(first) || file.endsWith('.map')) {
-    fail(`forbidden release file: ${file}`);
+for (const file of requiredRootArtifacts) {
+  if (!existsSync(join(root, file))) {
+    fail(`missing root build artifact: ${file}. Run npm run build:release first.`);
   }
 }
+if (!existsSync(zipPath)) {
+  fail(`missing ${relative(root, zipPath)}. Run npm run package:release first.`);
+}
 
-console.log(`[release-boundary-gate] ok: ${files.join(', ')}`);
+const entries = listZipEntries(zipPath);
+if (JSON.stringify(entries) !== JSON.stringify(expectedZipEntries)) {
+  fail(`zip must contain only ${expectedZipEntries.join(', ')}; got ${entries.join(', ') || '(empty)'}`);
+}
+
+console.log(`[release-boundary-gate] ok: ${entries.join(', ')}`);

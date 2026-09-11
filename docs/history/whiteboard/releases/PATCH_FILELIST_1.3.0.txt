@@ -1,0 +1,14 @@
+doc/PATCH_FILELIST_1.3.0.txt
+doc/README_PATCH_1.3.0.txt
+doc/WHITEBOARD_IMPLEMENTATION_BASELINE_v1_1.3.0-updated.md
+doc/Whiteboard_1.3.0_IMPLEMENTATION_RESULT.md
+doc/Whiteboard_1.3.0_TEST_REPORT.md
+manifest.json
+package-lock.json
+package.json
+scripts/testing/test-help.mjs
+src/features/whiteboard/WhiteboardWorkspace.tsx
+test/integration/whiteboardRestartLifecycle.test.ts
+test/specs/whiteboard.e2e.ts
+test/system/feature-test-map.json
+test/unit/whiteboardArchiveUi.test.tsx

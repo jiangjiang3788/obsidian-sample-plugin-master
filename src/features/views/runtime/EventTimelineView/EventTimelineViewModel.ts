@@ -25,7 +25,7 @@ export interface EventTimelineRenderModel {
 }
 
 export function buildEventTimelineDisplayFields(module: ViewInstance): string[] {
-  return normalizeDisplayFields(module.fields || ['title', 'date'], { fallbackFields: ['title', 'date'] });
+  return normalizeDisplayFields(module.fields || ['primaryText', 'date'], { fallbackFields: ['primaryText', 'date'] });
 }
 
 export function buildEventTimelineGroupFields(module: ViewInstance): string[] {
@@ -36,7 +36,7 @@ export function buildEventTimelineViewConfig(module: ViewInstance): EventTimelin
   const viewConfig = (module.viewConfig as any) || {};
   return {
     timeField: viewConfig.timeField || 'date',
-    titleField: viewConfig.titleField || 'title',
+    titleField: viewConfig.titleField || 'primaryText',
     contentField: viewConfig.contentField || 'content',
     maxContentLength: Number.isFinite(Number(viewConfig.maxContentLength)) ? Number(viewConfig.maxContentLength) : 160,
   };

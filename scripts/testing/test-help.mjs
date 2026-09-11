@@ -17,6 +17,19 @@ Think OS 测试命令（简化版）
   npm run test:release
     发布前最终检查：完整检查 + 全部真机 + 大仓库 + 兼容矩阵 + 稳定性 + 正式构建。
 
+白板专项（1.3.0 起）：
+
+  npm run test:whiteboard
+    白板专项：测试体系 + 语法 + 全部 whiteboard 单元/组合测试。
+
+  npm run test:whiteboard:e2e
+    构建当前源码并只跑真实 Obsidian whiteboard.e2e.ts。
+
+  npm run test:whiteboard:full
+    白板完整：专项单元/组合 + 真实 Obsidian 白板 E2E。
+
+  中文别名：npm run 测试:白板 / 测试:白板:真机 / 测试:白板:完整
+
 需要定位问题时再用：
 
   npm run test:unit         只跑单元测试

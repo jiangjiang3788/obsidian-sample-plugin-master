@@ -142,16 +142,56 @@ function hydrateGoalOnlySettings(value: unknown): GoalSettings {
   return hydrated;
 }
 
+
+
+export function hasRetiredAssociationViewState(rawValue: unknown): boolean {
+  if (!isRecord(rawValue)) return false;
+  const rawViews = Array.isArray(rawValue.viewInstances) ? rawValue.viewInstances : [];
+  return rawViews.some((entry) => isRecord(entry) && String(entry.viewType ?? '') === 'AssociationView');
+}
+
+function sanitizeViewState(raw: Record<string, unknown>): Pick<ThinkSettings, 'viewInstances' | 'layouts'> {
+  const rawViews = Array.isArray(raw.viewInstances) ? raw.viewInstances : [];
+  const retiredIds = new Set(
+    rawViews
+      .filter((entry) => isRecord(entry) && String(entry.viewType ?? '') === 'AssociationView' && typeof entry.id === 'string')
+      .map((entry) => String((entry as Record<string, unknown>).id)),
+  );
+  const viewInstances = rawViews.filter(
+    (entry) => !(isRecord(entry) && String(entry.viewType ?? '') === 'AssociationView'),
+  ) as ThinkSettings['viewInstances'];
+
+  const rawLayouts = Array.isArray(raw.layouts) ? raw.layouts : [];
+  const layouts = rawLayouts.map((entry) => {
+    if (!isRecord(entry)) return entry;
+    const viewInstanceIds = (Array.isArray(entry.viewInstanceIds) ? entry.viewInstanceIds : [])
+      .map((id) => String(id))
+      .filter((id) => !retiredIds.has(id));
+    const rawPlacements = isRecord(entry.viewPlacements) ? entry.viewPlacements : undefined;
+    const viewPlacements = rawPlacements
+      ? Object.fromEntries(Object.entries(rawPlacements).filter(([id]) => !retiredIds.has(id)))
+      : undefined;
+    return {
+      ...entry,
+      viewInstanceIds,
+      ...(viewPlacements ? { viewPlacements } : {}),
+    };
+  }) as ThinkSettings['layouts'];
+
+  return { viewInstances, layouts };
+}
+
 /** Current-only settings loader. Existing local data must already be Goal-only. */
 export function toCurrentThinkSettings(rawValue: unknown): ThinkSettings {
   const raw = isRecord(rawValue) ? rawValue : {};
   const partial = raw as Partial<ThinkSettings>;
+  const sanitizedViews = sanitizeViewState(raw);
   const current: ThinkSettings = {
     ...DEFAULT_SETTINGS,
     ...partial,
     groups: Array.isArray(partial.groups) ? partial.groups : [],
-    viewInstances: Array.isArray(partial.viewInstances) ? partial.viewInstances : [],
-    layouts: Array.isArray(partial.layouts) ? partial.layouts : [],
+    viewInstances: sanitizedViews.viewInstances,
+    layouts: sanitizedViews.layouts,
     goalSettings: hydrateGoalOnlySettings(raw.goalSettings),
     energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...(isRecord(partial.energySettings) ? partial.energySettings : {}) },
   };

@@ -1,0 +1,23 @@
+ThinkOS 1.2.5 PATCH file list
+Base: 1.2.4
+
+doc/PATCH_FILELIST_1.2.5.txt
+doc/README_PATCH_1.2.5.txt
+doc/WHITEBOARD_IMPLEMENTATION_BASELINE_v1_1.2.5-updated.md
+doc/Whiteboard_1.2.5_IMPLEMENTATION_RESULT.md
+manifest.json
+package-lock.json
+package.json
+src/features/whiteboard/WhiteboardBoardTools.tsx
+src/features/whiteboard/WhiteboardCameraModel.ts
+src/features/whiteboard/WhiteboardCanvasBreadcrumbs.tsx
+src/features/whiteboard/WhiteboardContentBoundsModel.ts
+src/features/whiteboard/WhiteboardNestedCanvasController.ts
+src/features/whiteboard/WhiteboardNestedNavigationModel.ts
+src/features/whiteboard/WhiteboardWorkspace.tsx
+src/features/whiteboard/WhiteboardZoomController.ts
+src/styles/features/whiteboard-workbench.css
+test/specs/whiteboard.e2e.ts
+test/system/feature-test-map.json
+test/unit/whiteboardCanvasBreadcrumbs.test.tsx
+test/unit/whiteboardNestedNavigationModel.test.ts

@@ -57,7 +57,7 @@ function GoalRecords({ records, runtime }: {
   runtime: ProgressRecordRuntimeProps;
 }) {
   if (!records.length) return <div class="think-progress-goal-records__empty">该目标暂无记录</div>;
-  const fields = runtime.module.fields?.length ? runtime.module.fields : ['title', 'content'];
+  const fields = runtime.module.fields?.length ? runtime.module.fields : ['primaryText', 'content'];
   return (
     <div class="think-progress-goal-records" aria-label="目标记录">
       <BlockView

@@ -1,0 +1,30 @@
+ThinkOS 1.1.7 PATCH file list
+Base: ThinkOS 1.1.6 SOURCE
+
+doc/PATCH_FILELIST_1.1.7.txt
+doc/README_PATCH_1.1.7.txt
+doc/WHITEBOARD_IMPLEMENTATION_BASELINE_v1_1.1.7-updated.md
+doc/Whiteboard_1.1.7_IMPLEMENTATION_RESULT.md
+manifest.json
+package-lock.json
+package.json
+src/core/whiteboard/WhiteboardSchema.ts
+src/core/whiteboard/WhiteboardStore.ts
+src/core/whiteboard/public.ts
+src/features/whiteboard/WhiteboardBatchPlacementModel.ts
+src/features/whiteboard/WhiteboardBoardTools.tsx
+src/features/whiteboard/WhiteboardCard.tsx
+src/features/whiteboard/WhiteboardRecordTransferController.ts
+src/features/whiteboard/WhiteboardWorkbenchController.ts
+src/features/whiteboard/WhiteboardWorkbenchGroup.tsx
+src/features/whiteboard/WhiteboardWorkbenchModel.ts
+src/features/whiteboard/WhiteboardWorkspace.tsx
+src/styles/features/whiteboard-workbench.css
+src/styles/main.css
+test/integration/whiteboardRestartLifecycle.test.ts
+test/specs/whiteboard.e2e.ts
+test/system/feature-test-map.json
+test/unit/whiteboardBatchPlacementModel.test.ts
+test/unit/whiteboardStore.test.ts
+test/unit/whiteboardWorkbenchModel.test.ts
+test/unit/whiteboardWorkbenchUi.test.tsx

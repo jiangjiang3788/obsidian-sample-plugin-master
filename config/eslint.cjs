@@ -1,0 +1,116 @@
+// config/eslint.cjs
+// ESLint Root Config（唯一入口）
+// - 架构依赖约束来自 eslint-architecture.cjs
+// - console 策略：关键路径 error，其它 src/** warn，脚本/配置不误伤
+
+const architecture = require('./eslint-architecture.cjs');
+
+module.exports = {
+  root: true,
+  parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint', 'react-hooks'],
+
+  env: {
+    es2022: true,
+    browser: true,
+    node: true,
+  },
+
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+  },
+
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
+
+  rules: {
+    // 默认不限制 console：把约束收口在 src/**，避免 scripts/config 被误伤。
+    'no-console': 'off',
+
+    // TypeScript already checks undefined identifiers; `no-undef` is noisy in TS + mixed module formats.
+    'no-undef': 'off',
+
+    // Keep lint unblocked; treat these as guidance (warnings) during the current migration phase.
+    'no-mixed-spaces-and-tabs': 'warn',
+    'prefer-const': 'warn',
+    'no-case-declarations': 'warn',
+    'no-unexpected-multiline': 'warn',
+    'no-misleading-character-class': 'warn',
+    'no-useless-escape': 'warn',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-empty-object-type': 'warn',
+    '@typescript-eslint/no-unused-expressions': 'warn',
+    '@typescript-eslint/no-namespace': 'warn',
+    '@typescript-eslint/no-unsafe-function-type': 'warn',
+    '@typescript-eslint/no-unused-vars': [
+      'warn',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      },
+    ],
+    'no-empty': ['warn', { allowEmptyCatch: true }],
+
+    ...(architecture.rules || {}),
+  },
+
+  overrides: [
+    ...(architecture.overrides || []),
+
+    // Node-style config/scripts (CommonJS) — allow require/module/__dirname and disable TS "no-require-imports".
+    {
+      files: [
+        '*.cjs',
+        '*.js',
+        'scripts/**/*.{js,cjs,mjs,ts}',
+        'test/configs/**/*.{js,cjs,mjs,ts}',
+        'test/mocks/**/*.{js,cjs,mjs,ts}',
+      ],
+      env: {
+        node: true,
+      },
+      rules: {
+        '@typescript-eslint/no-require-imports': 'off',
+      },
+    },
+
+    // Jest tests
+    {
+      files: ['test/**/*.{ts,tsx,js,jsx}'],
+      env: {
+        jest: true,
+        node: true,
+      },
+    },
+
+    // ✅ 基线：src 内默认 warn（冻结扩散）
+    {
+      files: ['src/**/*.{ts,tsx,js,jsx}'],
+      rules: {
+        'no-console': 'warn',
+      },
+    },
+
+    // ✅ 关键路径：严格禁止 console（必须保持 0 console）
+    {
+      files: [
+        'src/main.ts',
+        'src/app/usecases/**/*.{ts,tsx}',
+        'src/app/store/slices/**/*.{ts,tsx}',
+        'src/core/ai/**/*.{ts,tsx}',
+      ],
+      rules: {
+        'no-console': 'error',
+      },
+    },
+
+    // ✅ 白名单：允许 devLogger/performance 内部使用 console（封装层）
+    {
+      files: ['src/core/utils/devLogger.ts', 'src/shared/utils/performance.ts'],
+      rules: {
+        'no-console': 'off',
+      },
+    },
+  ],
+};

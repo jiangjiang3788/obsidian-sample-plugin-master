@@ -1,0 +1,31 @@
+ThinkOS 1.1.8 R2 PATCH FILE LIST
+
+Base: ThinkOS 1.1.8 Whiteboard canvas selection
+Target: ThinkOS 1.1.8 R2 selection/workbench/remove/direct-edge-connect correction
+
+Changed/new files: 22
+
+NEW	doc/PATCH_FILELIST_1.1.8-R2.txt
+NEW	doc/README_PATCH_1.1.8-R2.txt
+MOD	doc/WHITEBOARD_IMPLEMENTATION_BASELINE_v1_1.1.8-updated.md
+MOD	doc/Whiteboard_1.1.8_IMPLEMENTATION_RESULT.md
+MOD	src/core/whiteboard/WhiteboardStore.ts
+MOD	src/features/whiteboard/WhiteboardCard.tsx
+NEW	src/features/whiteboard/WhiteboardConnectionController.ts
+MOD	src/features/whiteboard/WhiteboardEdgeGeometry.ts
+MOD	src/features/whiteboard/WhiteboardEdgeLayer.tsx
+MOD	src/features/whiteboard/WhiteboardSelectionController.ts
+MOD	src/features/whiteboard/WhiteboardWorkbenchController.ts
+MOD	src/features/whiteboard/WhiteboardWorkbenchModel.ts
+MOD	src/features/whiteboard/WhiteboardWorkspace.tsx
+NEW	src/styles/features/whiteboard-connection.css
+MOD	src/styles/main.css
+MOD	test/system/feature-test-map.json
+MOD	test/unit/whiteboardEdgeGeometry.test.ts
+MOD	test/unit/whiteboardSelectionModel.test.ts
+MOD	test/unit/whiteboardSelectionUi.test.tsx
+MOD	test/unit/whiteboardStore.test.ts
+MOD	test/unit/whiteboardWorkbenchModel.test.ts
+MOD	test/unit/whiteboardWorkspace.test.tsx
+
+No 1.1.9 files/features are included.

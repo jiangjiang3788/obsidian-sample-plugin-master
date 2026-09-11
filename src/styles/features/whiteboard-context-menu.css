@@ -1,0 +1,9 @@
+/* 1.2.4: context-sensitive whiteboard actions keep dense tooling off the permanent toolbar. */
+.think-os .think-whiteboard-context-menu { position: fixed; z-index: 10000; display: grid; min-width: 190px; max-width: 260px; padding: 6px; border: 1px solid var(--think-border-default); border-radius: var(--think-radius-md); background: var(--think-bg-elevated); box-shadow: var(--think-shadow-overlay); transform: translate(4px, 4px); }
+.think-os .think-whiteboard-context-menu > button { width: 100%; padding: 7px 9px; border: 0; border-radius: var(--think-radius-sm); background: transparent; color: var(--think-text-primary); text-align: left; cursor: pointer; }
+.think-os .think-whiteboard-context-menu > button:hover:not(:disabled),
+.think-os .think-whiteboard-context-menu > button:focus-visible { background: var(--think-bg-hover); }
+.think-os .think-whiteboard-context-menu > button:disabled { color: var(--think-text-muted); cursor: default; }
+.think-os .think-whiteboard-context-menu__title { padding: 5px 9px; color: var(--think-text-secondary); font-size: var(--think-font-size-sm); }
+.think-os .think-whiteboard-context-menu__separator { height: 1px; margin: 4px 3px; background: var(--think-border-subtle); }
+.think-os .think-whiteboard-context-menu > .think-whiteboard-context-menu__close { position: absolute; top: 2px; right: 2px; width: 26px; padding: 3px; text-align: center; opacity: 0.45; }

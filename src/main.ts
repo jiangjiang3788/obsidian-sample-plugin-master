@@ -9,7 +9,7 @@ import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
 import { DataStore } from '@core/services/public';
 import { InputService } from '@core/services/public';
-import { toCurrentThinkSettings, toPersistedThinkSettings, type ThinkSettings } from '@core/types/public';
+import { hasRetiredAssociationViewState, toCurrentThinkSettings, toPersistedThinkSettings, type ThinkSettings } from '@core/types/public';
 import type { UseCases } from '@/app/public';
 import { setupCoreContainer } from '@core/bootstrap/public';
 import { setDefaultAiHttpTransportFactory, resetDefaultAiHttpTransportFactory } from '@core/ai/public';
@@ -27,7 +27,7 @@ import './styles/main.css';
 import { safeAsync } from '@shared/utils/public';
 import { startMeasure } from '@shared/utils/public';
 import { ServiceManager } from '@/app/ServiceManager';
-import { isDisposed } from '@/app/runtime/lifecycleState';
+import { isDisposed, markActive } from '@/app/runtime/lifecycleState';
 import { buildRuntime } from '@/app/bootstrap/buildRuntime';
 import {
     createCapabilities,
@@ -65,6 +65,8 @@ export default class ThinkPlugin extends Plugin {
      * 4. 注册命令
      */
     async onload(): Promise<void> {
+        // Hot reload may preserve module state; every new plugin lifecycle must reactivate Vault IO.
+        markActive();
         devLog('[ThinkPlugin][BOOT] onload entered');
         const stopMeasure = startMeasure('ThinkPlugin.onload');
 
@@ -199,13 +201,18 @@ export default class ThinkPlugin extends Plugin {
     }
 
     private async loadSettings(): Promise<ThinkSettings> {
-        const current = toCurrentThinkSettings(await this.loadData());
+        const raw = await this.loadData();
+        const needsViewStateCleanup = hasRetiredAssociationViewState(raw);
+        const current = toCurrentThinkSettings(raw);
         const seeded = applyGoalTaskDefaultsSeed(current);
-        if (seeded.changed) {
-            // data.json inside an update/source archive is not an Obsidian settings migration.
-            // Persist the one-time seed into the user's actual installed plugin settings here.
+        if (seeded.changed || needsViewStateCleanup) {
+            // Persist current-only settings. In 1.1.0 this also removes the retired AssociationView test shell
+            // from viewInstances/layout references before the normal View runtime is constructed.
             await this.saveData(this.sanitizeSettingsForPersistence(seeded.settings));
-            devLog(`[ThinkPlugin][BOOT] Goal Task defaults seeded into ${seeded.appliedTemplateCount} direct Task templates`);
+            if (seeded.changed) {
+                devLog(`[ThinkPlugin][BOOT] Goal Task defaults seeded into ${seeded.appliedTemplateCount} direct Task templates`);
+            }
+            if (needsViewStateCleanup) devLog('[ThinkPlugin][BOOT] 已清理旧 AssociationView 测试设置引用');
         }
         return seeded.settings;
     }

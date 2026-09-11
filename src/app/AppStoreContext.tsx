@@ -18,6 +18,7 @@ import { useStore } from 'zustand';
 import type { ComponentChildren } from 'preact';
 import type { DataStore } from '@core/services/public';
 import type { InputService } from '@core/services/public';
+import type { WhiteboardStore } from '@core/whiteboard/public';
 import type { MessageRenderPort } from '@core/ports/public';
 import type { UseCases } from './usecases';
 import type { AppStoreInstance, ZustandAppStore } from './store/useAppStore';
@@ -119,6 +120,18 @@ export function useInputService(): InputService {
     return store;
 }
 
+// ============== WhiteboardStore Context ==============
+
+export const WhiteboardStoreContext = createContext<WhiteboardStore | null>(null);
+
+export function useWhiteboardStore(): WhiteboardStore {
+    const store = useContext(WhiteboardStoreContext);
+    if (!store) {
+        throw new Error('useWhiteboardStore 必须在 ServicesProvider 内部使用。');
+    }
+    return store;
+}
+
 // ============== UseCases Context (P0 新增) ==============
 
 /**
@@ -180,15 +193,17 @@ export function ServicesProvider({ services, children }: ServicesProviderProps) 
         <ZustandStoreContext.Provider value={services.zustandStore}>
             <DataStoreContext.Provider value={services.dataStore}>
                 <InputServiceContext.Provider value={services.inputService}>
-                    <UseCasesContext.Provider value={services.useCases}>
-	                      <UiPortContext.Provider value={services.uiPort}>
-	                        <ModalPortContext.Provider value={services.modalPort}>
-	                          <MessageRenderPortContext.Provider value={services.messageRenderPort}>
-	                            {children}
-	                          </MessageRenderPortContext.Provider>
-	                        </ModalPortContext.Provider>
-	                      </UiPortContext.Provider>
-    </UseCasesContext.Provider>
+                    <WhiteboardStoreContext.Provider value={services.whiteboardStore ?? null}>
+                        <UseCasesContext.Provider value={services.useCases}>
+                            <UiPortContext.Provider value={services.uiPort}>
+                                <ModalPortContext.Provider value={services.modalPort}>
+                                    <MessageRenderPortContext.Provider value={services.messageRenderPort}>
+                                        {children}
+                                    </MessageRenderPortContext.Provider>
+                                </ModalPortContext.Provider>
+                            </UiPortContext.Provider>
+                        </UseCasesContext.Provider>
+                    </WhiteboardStoreContext.Provider>
                 </InputServiceContext.Provider>
             </DataStoreContext.Provider>
         </ZustandStoreContext.Provider>

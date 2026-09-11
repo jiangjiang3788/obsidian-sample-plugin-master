@@ -26,7 +26,7 @@ const budgets = {
 
 const roots = ['src', 'test', 'scripts'];
 const extensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.mts', '.cts']);
-const ignoredPathParts = new Set(['node_modules', 'dist', '.git']);
+const ignoredPathParts = new Set(['node_modules', '.git']);
 
 function normalizePath(filePath) {
   return filePath.replaceAll('\\\\', '/').replaceAll('\\', '/');

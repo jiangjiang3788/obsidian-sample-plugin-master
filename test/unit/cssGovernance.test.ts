@@ -34,7 +34,7 @@ describe('CSS 治理', () => {
     for (const fragment of [
       'components/modal.css','components/simple-select.css','components/native-controls.css','components/task-row.css','components/grouped-container.css',
       'features/settings.css','features/settings-editors.css','features/layout-editor.css','features/view-shell.css','features/progress.css',
-      'features/heatmap.css','features/statistics.css','features/timeline.css','features/excel.css','features/block.css','features/event-timeline.css',
+      'features/heatmap.css','features/statistics.css','features/timeline.css','features/excel.css','features/block.css','features/whiteboard.css','features/event-timeline.css',
       'features/energy-task-list.css','overrides/obsidian-modal.css','overrides/quick-input-modal.css',
     ]) expect(main).toContain(fragment);
   });
@@ -47,7 +47,7 @@ describe('CSS 治理', () => {
     expect(audit.summary.cssFiles).toBeLessThanOrEqual(72);
     const migrated = [
       'src/styles/features/view-shell.css','src/styles/features/progress.css','src/styles/features/heatmap.css','src/styles/features/statistics.css',
-      'src/styles/features/timeline.css','src/styles/features/excel.css','src/styles/features/block.css','src/styles/features/event-timeline.css',
+      'src/styles/features/timeline.css','src/styles/features/excel.css','src/styles/features/block.css','src/styles/features/whiteboard.css','src/styles/features/event-timeline.css',
     ].map(read).join('\n');
     expect(migrated).not.toContain('!important');
     expect(migrated).not.toMatch(/#[0-9a-f]{3,8}\b/i);

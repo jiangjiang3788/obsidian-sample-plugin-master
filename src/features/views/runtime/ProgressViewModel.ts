@@ -4,6 +4,8 @@ import { buildGoalBuckets, getItemGoalKey, getItemRootGoalKey } from '@core/goal
 import { computeProgression } from '@core/progression/public';
 import { isEnergyItem } from '@core/energy/public';
 import { PROGRESS_VIEW_DEFAULT_CONFIG } from '@core/view/public';
+import { getRecordPrimaryText } from '@core/fields/public';
+import { getRecordTypePresentation, normalizeRecordTypePresentationKey, RECORD_TYPE_PRESENTATION_ORDER } from '@core/recordTypes/public';
 import { dayjs } from '@core/utils/public';
 import { buildGoalEnergySummary, type GoalEnergySummaryModel } from '../models/energySummaryModel';
 
@@ -92,15 +94,8 @@ export interface ProgressSkillRowModel {
 }
 
 
-const PROGRESS_BLOCK_KEY_ALIASES: Record<string, string> = {
-  '任务': 'task', '计划': 'plan', '总结': 'review', '打卡': 'habit',
-  '阻碍项': 'blocker', '里程碑': 'milestone', '思考': 'thought', '事件': 'evidence',
-};
-
 function normalizeProgressBlockKey(item: RecordViewItem): string {
-  const raw = String(item.coreBlock || '').replace(/^core\./, '').trim();
-  if (!raw) return 'unknown';
-  return PROGRESS_BLOCK_KEY_ALIASES[raw] || raw.split('/')[0] || raw;
+  return normalizeRecordTypePresentationKey(item.coreBlock) || 'unknown';
 }
 
 function progressDateSource(item: RecordViewItem): unknown {
@@ -149,7 +144,7 @@ function buildProgressRecentRecords(items: RecordViewItem[], limit = 5): Progres
     .slice(0, limit)
     .map((item) => ({
       id: item.id,
-      title: item.title || item.content || item.file?.basename || item.filename || '未命名记录',
+      title: getRecordPrimaryText(item) || item.file?.basename || item.filename || '未命名记录',
       date: progressItemDate(item) || null,
       item,
     }));
@@ -223,18 +218,10 @@ export function buildProgressViewRenderModel(args: {
   };
 }
 
-export const PROGRESS_BLOCK_LABELS: Record<string, string> = {
-  task: '任务',
-  plan: '计划',
-  review: '总结',
-  habit: '打卡',
-  blocker: '阻碍项',
-  milestone: '里程碑',
-  thought: '思考',
-  evidence: '事件',
-  energy: '精力',
+export const PROGRESS_BLOCK_LABELS: Record<string, string> = Object.freeze({
+  ...Object.fromEntries(RECORD_TYPE_PRESENTATION_ORDER.map((key) => [key, getRecordTypePresentation(key).label])),
   unknown: '未分类',
-};
+});
 
 export const PROGRESS_LEVEL_META: ProgressLevelMeta[] = [
   { level: 1, icon: '🌱', title: '入门' },
@@ -250,7 +237,7 @@ export const PROGRESS_LEVEL_META: ProgressLevelMeta[] = [
 ];
 
 const DEFAULT_COLLAPSED_BLOCKS = ['task', 'habit', 'blocker', 'milestone'];
-const EXPANDED_BLOCK_ORDER = ['task', 'plan', 'review', 'habit', 'blocker', 'milestone', 'thought', 'evidence', 'energy'];
+const EXPANDED_BLOCK_ORDER = RECORD_TYPE_PRESENTATION_ORDER;
 const TRACK_SEGMENT_COUNT = 10;
 
 export function clampProgressRatio(value: number): number {

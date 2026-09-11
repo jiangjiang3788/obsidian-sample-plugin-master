@@ -7,6 +7,7 @@ import { getCanonicalFieldKey } from '@/core/fields/FieldRegistry';
 import { splitGoalPath } from '@/core/goal/path';
 import { createGoalOrderIndex } from '@/core/goal/order';
 import type { GoalDefinition } from '@/core/goal/types';
+import { compareRecordTypeKeys } from '@/core/recordTypes/public';
 
 export interface ViewFieldOrderContext {
     goals?: GoalDefinition[];
@@ -21,6 +22,12 @@ export interface ViewFieldOrderContext {
 export function isGoalOrderField(field?: string | null): boolean {
     const canonical = getCanonicalFieldKey(String(field || '').trim());
     return ['goalPath', 'rootGoal', 'leafGoal'].includes(canonical);
+}
+
+/** Record type identity is owned by coreBlock. Category remains an independent grouping dimension. */
+export function isRecordTypeOrderField(field?: string | null): boolean {
+    const canonical = getCanonicalFieldKey(String(field || '').trim());
+    return canonical === 'coreBlock';
 }
 
 function normalizeText(value: unknown): string {
@@ -65,6 +72,9 @@ export function compareFieldValuesByViewOrder(field: string, left: unknown, righ
         const byGoal = goalOrder.compareGoalPaths(leftGoal, rightGoal);
         if (byGoal !== 0) return byGoal;
         return leftGoal.localeCompare(rightGoal, 'zh-CN');
+    }
+    if (isRecordTypeOrderField(field)) {
+        return compareRecordTypeKeys(left, right);
     }
     return String(left ?? '').localeCompare(String(right ?? ''), 'zh-CN');
 }
@@ -140,7 +150,7 @@ export function groupItemsByField(items: RecordViewItem[], groupField: string, d
  */
 export function getSortedGroupKeys(grouped: Record<string, RecordViewItem[]>, field?: string, context?: ViewFieldOrderContext): string[] {
     const keys = Object.keys(grouped);
-    if (field && isGoalOrderField(field)) {
+    if (field && (isGoalOrderField(field) || isRecordTypeOrderField(field))) {
         return keys.sort((a, b) => compareFieldValuesByViewOrder(field, a, b, context));
     }
     return keys.sort((a, b) => a.localeCompare(b, 'zh-CN'));

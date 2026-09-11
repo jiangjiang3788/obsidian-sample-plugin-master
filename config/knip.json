@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/knip/schema.json",
+  "project": [
+    "config/tsconfig.json"
+  ],
+  "entry": [
+    "src/main.ts"
+  ],
+  "ignore": [
+    "reports/**",
+    "coverage/**",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/__tests__/**"
+  ],
+  "ignoreDependencies": [
+    "obsidian"
+  ]
+}

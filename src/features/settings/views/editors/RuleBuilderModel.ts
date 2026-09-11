@@ -3,6 +3,7 @@ import type { FilterRule, SortRule } from '@core/types/public';
 import { getAllFields, readField } from '@core/types/public';
 import { formatFieldValue, getFieldLabel } from '@core/fields/public';
 import { normalizeViewMultiValue } from '@core/view/public';
+import { compareRecordTypeKeys } from '@core/recordTypes/public';
 
 export type RuleBuilderMode = 'filter' | 'sort';
 export type RuleBuilderVariant = 'compact' | 'panel';
@@ -204,7 +205,7 @@ export function buildUniqueFieldValues(dataStore: DataStore | null | undefined):
   const result: Record<string, string[]> = {};
   for (const field in valueMap) {
     if (valueMap[field].size > 0) {
-      result[field] = Array.from(valueMap[field]).sort((a, b) => a.localeCompare(b, 'zh-CN'));
+      result[field] = Array.from(valueMap[field]).sort(field === 'coreBlock' ? compareRecordTypeKeys : (a, b) => a.localeCompare(b, 'zh-CN'));
     }
   }
   return result;

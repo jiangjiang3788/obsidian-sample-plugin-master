@@ -2031,15 +2031,15 @@ const AppToken = "App";
 const SETTINGS_TOKEN = "ThinkSettings";
 const SettingsProviderToken = "SettingsProvider";
 const VAULT_PORT_TOKEN = "VaultPort";
-var __getOwnPropDesc$f = Object.getOwnPropertyDescriptor;
-var __decorateClass$f = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$f(target, key) : target;
+var __getOwnPropDesc$g = Object.getOwnPropertyDescriptor;
+var __decorateClass$g = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$g(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$e = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$f = (index, decorator) => (target, key) => decorator(target, key, index);
 const STORAGE_TOKEN = "PluginStorage";
 let VaultFileStorage = class {
   constructor(vault) {
@@ -2064,9 +2064,9 @@ let VaultFileStorage = class {
     await this.vault.deleteFile(path);
   }
 };
-VaultFileStorage = __decorateClass$f([
+VaultFileStorage = __decorateClass$g([
   singleton(),
-  __decorateParam$e(0, inject(VAULT_PORT_TOKEN))
+  __decorateParam$f(0, inject(VAULT_PORT_TOKEN))
 ], VaultFileStorage);
 var NOTHING = /* @__PURE__ */ Symbol.for("immer-nothing");
 var DRAFTABLE = /* @__PURE__ */ Symbol.for("immer-draftable");
@@ -3956,11 +3956,11 @@ function parseTagList(value) {
   const tags2 = rawValues.map(normalizeTag).filter((tag) => !!tag);
   return Array.from(new Set(tags2));
 }
-function compactText(value) {
+function compactText$1(value) {
   return String(value ?? "").trim();
 }
 function normalizeTextToken(value) {
-  return compactText(value).toLowerCase();
+  return compactText$1(value).toLowerCase();
 }
 function containsTagMarker(value) {
   return value.includes("#") || value.includes("＃");
@@ -4959,7 +4959,7 @@ function encodeRecordDraft(input) {
 }
 const ENERGY_TARGET_FILE = "01/目标精力.md";
 const ENERGY_APPEND_UNDER_HEADER = "## {{goalPath}}";
-function clean(value) {
+function clean$1(value) {
   return String(value || "").trim();
 }
 function buildEnergySnapshotRecord(input) {
@@ -4972,11 +4972,11 @@ function buildEnergySnapshotRecord(input) {
   return {
     ...input,
     recordId: createRecordId("energy"),
-    goalPath: clean(input.goalPath) || void 0,
-    time: clean(input.time) || void 0,
-    period: clean(input.period) || void 0,
-    recordedAt: clean(input.recordedAt) || void 0,
-    source: clean(input.source) || void 0,
+    goalPath: clean$1(input.goalPath) || void 0,
+    time: clean$1(input.time) || void 0,
+    period: clean$1(input.period) || void 0,
+    recordedAt: clean$1(input.recordedAt) || void 0,
+    source: clean$1(input.source) || void 0,
     coreBlock: "energy",
     subtype: "snapshot",
     categoryKey: "精力",
@@ -4991,25 +4991,25 @@ function buildEnergySnapshotRecord(input) {
   };
 }
 function buildEnergySnapshotMarkdown(input) {
-  const record = "coreBlock" in input ? input : buildEnergySnapshotRecord(input);
+  const record2 = "coreBlock" in input ? input : buildEnergySnapshotRecord(input);
   return encodeRecordBlock({
-    recordId: record.recordId,
+    recordId: record2.recordId,
     coreBlock: "energy",
     fields: {
       "记录子类型": "snapshot",
-      "目标": record.goalPath,
-      "日期": record.date,
-      "时间": record.time,
-      "时段": record.period,
-      "精力值": record.score,
-      "脑力精力": record.brainScore,
-      "体力精力": record.physicalScore,
-      "综合算法": record.aggregateMethod,
-      "评分模式": record.scoreMode,
-      "记录方式": record.captureMode,
-      "时间精度": record.timePrecision,
-      "记录时间": record.recordedAt,
-      "来源": record.source
+      "目标": record2.goalPath,
+      "日期": record2.date,
+      "时间": record2.time,
+      "时段": record2.period,
+      "精力值": record2.score,
+      "脑力精力": record2.brainScore,
+      "体力精力": record2.physicalScore,
+      "综合算法": record2.aggregateMethod,
+      "评分模式": record2.scoreMode,
+      "记录方式": record2.captureMode,
+      "时间精度": record2.timePrecision,
+      "记录时间": record2.recordedAt,
+      "来源": record2.source
     }
   });
 }
@@ -5150,16 +5150,16 @@ function buildTaskSessionFields(task, input) {
     startEnergyRecordId: input.startEnergyRecordId
   };
 }
-function asTaskSessionRecord(record) {
-  if (!record || record.coreBlock !== "task-session") return null;
-  const candidate = record;
+function asTaskSessionRecord(record2) {
+  if (!record2 || record2.coreBlock !== "task-session") return null;
+  const candidate = record2;
   if (!candidate.taskId) return null;
   if (!candidate.sessionStartedAt || !Number.isFinite(Date.parse(candidate.sessionStartedAt))) return null;
   if (!candidate.sessionEndedAt || !Number.isFinite(Date.parse(candidate.sessionEndedAt))) return null;
   if (normalizeTaskSessionDurationMinutes(candidate.sessionDurationMinutes) == null) return null;
   if (!["work-block-ended", "task-completed"].includes(String(candidate.sessionResult || ""))) return null;
   if (!["timer", "energy-view", "timeline", "unknown"].includes(String(candidate.sessionSource || ""))) return null;
-  return record;
+  return record2;
 }
 function localSessionDay(value) {
   const date2 = new Date(value);
@@ -5167,8 +5167,8 @@ function localSessionDay(value) {
   return `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
 }
 function recordedTaskMinutes(records, today) {
-  return records.reduce((sum, record) => {
-    const session = asTaskSessionRecord(record);
+  return records.reduce((sum, record2) => {
+    const session = asTaskSessionRecord(record2);
     if (!session || localSessionDay(session.sessionStartedAt) !== today) return sum;
     const duration2 = Number(session.sessionDurationMinutes);
     if (!Number.isFinite(duration2) || duration2 <= 0) return sum;
@@ -5612,10 +5612,10 @@ function buildEnergyEffects(items, options = {}) {
   const intervals = items.map((item) => resolveEffectActivityInterval(item, byId)).filter((interval) => !!interval).sort((left2, right2) => left2.startAbsolute - right2.startAbsolute);
   if (intervals.length === 0) return null;
   const samples = [];
-  for (const record of items) {
-    const session = asTaskSessionRecord(record);
+  for (const record2 of items) {
+    const session = asTaskSessionRecord(record2);
     if (!session?.startEnergyRecordId || !session.endEnergyRecordId) continue;
-    const interval = resolveEffectActivityInterval(record, byId);
+    const interval = resolveEffectActivityInterval(record2, byId);
     if (!interval) continue;
     const before = pointById.get(session.startEnergyRecordId);
     const after = pointById.get(session.endEnergyRecordId);
@@ -5720,7 +5720,7 @@ function contextAllowed(item, currentContext) {
   if (contexts.length === 0 || contexts.includes("any")) return true;
   return contexts.includes(currentContext);
 }
-function median$1(values2) {
+function median$2(values2) {
   const sorted = values2.filter((value2) => Number.isFinite(value2) && value2 > 0).sort((a2, b2) => a2 - b2);
   if (sorted.length < 2) return void 0;
   const middle = Math.floor(sorted.length / 2);
@@ -5730,9 +5730,9 @@ function median$1(values2) {
 function historyDurationMaps(records) {
   const taskRows = /* @__PURE__ */ new Map();
   const seriesRows = /* @__PURE__ */ new Map();
-  const byId = new Map(records.map((record) => [record.id, record]));
-  for (const record of records) {
-    const session = asTaskSessionRecord(record);
+  const byId = new Map(records.map((record2) => [record2.id, record2]));
+  for (const record2 of records) {
+    const session = asTaskSessionRecord(record2);
     if (!session) continue;
     const duration2 = number$2(session.sessionDurationMinutes);
     if (!duration2 || duration2 <= 0) continue;
@@ -5742,7 +5742,7 @@ function historyDurationMaps(records) {
     if (seriesId) seriesRows.set(seriesId, [...seriesRows.get(seriesId) || [], duration2]);
   }
   const build = (rows) => new Map([...rows].flatMap(([key, values2]) => {
-    const value = median$1(values2);
+    const value = median$2(values2);
     return value == null ? [] : [[key, value]];
   }));
   return { byTaskId: build(taskRows), bySeriesId: build(seriesRows) };
@@ -5932,7 +5932,7 @@ function mean(values2) {
   if (!finite.length) return void 0;
   return Math.round(finite.reduce((sum, value) => sum + value, 0) / finite.length * 10) / 10;
 }
-function median(values2) {
+function median$1(values2) {
   const finite = values2.filter((value2) => Number.isFinite(value2) && value2 > 0).sort((a2, b2) => a2 - b2);
   if (!finite.length) return void 0;
   const middle = Math.floor(finite.length / 2);
@@ -5951,7 +5951,7 @@ function aggregate(rows, keyOf2) {
     sampleCount: group.length,
     meanBrainDelta: mean(group.flatMap((row) => row.brainDelta == null ? [] : [row.brainDelta])),
     meanPhysicalDelta: mean(group.flatMap((row) => row.physicalDelta == null ? [] : [row.physicalDelta])),
-    typicalDurationMinutes: median(group.flatMap((row) => row.durationMinutes == null ? [] : [row.durationMinutes])),
+    typicalDurationMinutes: median$1(group.flatMap((row) => row.durationMinutes == null ? [] : [row.durationMinutes])),
     origin: "recommendation-feedback"
   }]));
 }
@@ -6151,7 +6151,7 @@ function normalizeFieldToken(value) {
   return normalizeTextToken(value);
 }
 function normalizeFieldLabelToken(value) {
-  return compactText(value);
+  return compactText$1(value);
 }
 function getTemplateFieldLookupTokens(field) {
   return templateFieldTokenSources(field).map(normalizeFieldToken).filter(Boolean);
@@ -6201,6 +6201,101 @@ function applyGoalIconToCaptureFields(fields, goal) {
   const icon = resolveGoalIcon(goal);
   if (!fields?.length || !icon) return fields;
   return fields.map((field) => isIconTemplateField(field) ? { ...field, defaultValue: icon } : field);
+}
+const RECORD_TYPE_PRESENTATION_ORDER = [
+  "task",
+  "task-session",
+  "task-series",
+  "energy",
+  "habit",
+  "evidence",
+  "thought",
+  "review",
+  "plan",
+  "blocker",
+  "milestone"
+];
+const RECORD_TYPE_PRESENTATION_REGISTRY = Object.freeze(
+  Object.fromEntries(
+    RECORD_TYPE_PRESENTATION_ORDER.map((coreBlock, index) => [
+      coreBlock,
+      { order: (index + 1) * 10, colorToken: `--think-record-type-${coreBlock}` }
+    ])
+  )
+);
+const ALIASES = /* @__PURE__ */ new Map();
+for (const schema of RECORD_SCHEMA_DEFINITIONS) {
+  const candidates = [schema.coreBlock, schema.id, schema.key, schema.name, schema.displayName, schema.categoryKey];
+  for (const candidate of candidates) {
+    const key = String(candidate || "").trim().toLocaleLowerCase();
+    if (key) ALIASES.set(key, schema.coreBlock);
+  }
+}
+function normalizeRecordTypePresentationKey(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const direct = ALIASES.get(raw.toLocaleLowerCase());
+  if (direct) return direct;
+  const withoutNamespace = raw.replace(/^(?:core|internal)\./i, "").trim().toLocaleLowerCase();
+  return ALIASES.get(withoutNamespace) || withoutNamespace;
+}
+function getRecordTypePresentationOrder(value) {
+  const key = normalizeRecordTypePresentationKey(value);
+  return RECORD_TYPE_PRESENTATION_REGISTRY[key]?.order ?? Number.MAX_SAFE_INTEGER;
+}
+function getRecordTypePresentation(value) {
+  const coreBlock = normalizeRecordTypePresentationKey(value);
+  const schema = RECORD_SCHEMA_DEFINITIONS.find((candidate) => candidate.coreBlock === coreBlock);
+  const identity2 = RECORD_TYPE_PRESENTATION_REGISTRY[coreBlock];
+  return {
+    coreBlock,
+    label: schema?.name || schema?.displayName || coreBlock || "记录",
+    order: identity2?.order ?? Number.MAX_SAFE_INTEGER,
+    colorToken: identity2?.colorToken || "--think-record-type-neutral"
+  };
+}
+function compareRecordTypeKeys(left2, right2) {
+  const leftKey = normalizeRecordTypePresentationKey(left2);
+  const rightKey = normalizeRecordTypePresentationKey(right2);
+  const leftOrder = getRecordTypePresentationOrder(leftKey);
+  const rightOrder = getRecordTypePresentationOrder(rightKey);
+  if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+  return leftKey.localeCompare(rightKey, "zh-CN");
+}
+function sortRecordTypesByPresentation(items, getKey) {
+  return [...items].sort((left2, right2) => compareRecordTypeKeys(getKey(left2), getKey(right2)));
+}
+const ENERGY_RECORD_TYPE_ID = RECORD_TYPE_IDS.ENERGY;
+const DEFAULT_RECORD_TYPES = Object.freeze(
+  sortRecordTypesByPresentation(
+    RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.capabilities.userVisible && definition.captureMode !== "internal"),
+    (definition) => definition.coreBlock
+  )
+);
+const DEFAULT_TEMPLATE_RECORD_TYPES = Object.freeze(
+  sortRecordTypesByPresentation(
+    RECORD_SCHEMA_DEFINITIONS.filter(
+      (definition) => definition.capabilities.userVisible && definition.captureMode === "template" && typeof definition.recordTypeId === "string"
+    ),
+    (definition) => definition.coreBlock
+  )
+);
+function getEffectiveRecordTypes() {
+  return [...DEFAULT_RECORD_TYPES];
+}
+function getTemplateRecordTypes() {
+  return [...DEFAULT_TEMPLATE_RECORD_TYPES];
+}
+function getRecordTypeById(recordTypeId) {
+  const id = String(recordTypeId || "").trim();
+  return DEFAULT_RECORD_TYPES.find((item) => item.id === id) || null;
+}
+function getTemplateRecordTypeById(recordTypeId) {
+  const id = String(recordTypeId || "").trim();
+  return DEFAULT_TEMPLATE_RECORD_TYPES.find((item) => item.id === id) || null;
+}
+function buildRecordTypeInputSettings() {
+  return { blocks: [...DEFAULT_TEMPLATE_RECORD_TYPES] };
 }
 const UNKNOWN_GOAL_RANK = Number.MAX_SAFE_INTEGER - 1e3;
 const UNASSIGNED_GOAL_RANK = Number.MAX_SAFE_INTEGER;
@@ -6581,7 +6676,7 @@ function readOptionText(value) {
 }
 function getGoalTemplateDisplayName(template, _goal, fallback = "模板") {
   const values2 = template?.defaultValues || {};
-  return compactText(
+  return compactText$1(
     readOptionText(values2.name) || readOptionText(values2["名称"]) || readOptionText(values2["任务内容"]) || readOptionText(values2["内容"]) || readOptionText(values2.title) || fallback
   );
 }
@@ -6598,8 +6693,8 @@ const CONTEXT_FIELD_KEYS = /* @__PURE__ */ new Set([
 ]);
 function isContextField(field) {
   const source = field;
-  const semantic = compactText(source.semantic || source.semanticType);
-  const key = compactText(source.key || source.label);
+  const semantic = compactText$1(source.semantic || source.semanticType);
+  const key = compactText$1(source.key || source.label);
   return semantic === "goalPath" || CONTEXT_FIELD_KEYS.has(key);
 }
 function stripContextFields(fields) {
@@ -6639,11 +6734,11 @@ function fieldsHaveSameStructure$1(left2, right2) {
   return stableJson$1(normalize2(left2)) === stableJson$1(normalize2(right2));
 }
 function deriveRequiredFields$1(fields) {
-  return (fields || []).filter((field) => field?.required === true).map((field) => compactText(field.key || field.label)).filter(Boolean);
+  return (fields || []).filter((field) => field?.required === true).map((field) => compactText$1(field.key || field.label)).filter(Boolean);
 }
 function equalStringSet$1(left2, right2) {
-  const a2 = new Set((left2 || []).map(compactText).filter(Boolean));
-  const b2 = new Set((right2 || []).map(compactText).filter(Boolean));
+  const a2 = new Set((left2 || []).map(compactText$1).filter(Boolean));
+  const b2 = new Set((right2 || []).map(compactText$1).filter(Boolean));
   if (a2.size !== b2.size) return false;
   for (const value of a2) if (!b2.has(value)) return false;
   return true;
@@ -6651,10 +6746,10 @@ function equalStringSet$1(left2, right2) {
 function getFieldDefaultMap$1(fields) {
   const result = {};
   for (const field of fields || []) {
-    const key = compactText(field.key || field.label);
+    const key = compactText$1(field.key || field.label);
     if (!key) continue;
     const value = field.defaultValue;
-    if (value !== void 0 && value !== null && compactText(value) !== "") result[key] = compactText(value);
+    if (value !== void 0 && value !== null && compactText$1(value) !== "") result[key] = compactText$1(value);
   }
   return result;
 }
@@ -6665,7 +6760,7 @@ function compactDefaultValues(values2, baseFields) {
     const key = rawKey === "图标" ? "icon" : rawKey;
     if (key === "icon") return;
     if (CONTEXT_FIELD_KEYS.has(key)) return;
-    const value = compactText(raw);
+    const value = compactText$1(raw);
     if (!value) return;
     if (isSystemRecordContextField(key)) return;
     if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
@@ -6688,10 +6783,10 @@ function compactGoalTemplateForStorage(template, options = {}) {
   next2.periodPolicy = normalizePeriodPolicyForTemplate(template);
   if (recordType) {
     if (fieldsHaveSameStructure$1(next2.fields, stripContextFields(baseFields))) next2.fields = void 0;
-    if (compactText(template.targetFile) === compactText(recordType.targetFile)) next2.targetFile = void 0;
-    if (compactText(template.appendUnderHeader) === compactText(recordType.appendUnderHeader)) next2.appendUnderHeader = void 0;
-    const explicitRequired = (template.requiredFields?.length ? template.requiredFields : deriveRequiredFields$1(template.fields)).filter((key) => !CONTEXT_FIELD_KEYS.has(compactText(key)));
-    const baseRequired = deriveRequiredFields$1(baseFields).filter((key) => !CONTEXT_FIELD_KEYS.has(compactText(key)));
+    if (compactText$1(template.targetFile) === compactText$1(recordType.targetFile)) next2.targetFile = void 0;
+    if (compactText$1(template.appendUnderHeader) === compactText$1(recordType.appendUnderHeader)) next2.appendUnderHeader = void 0;
+    const explicitRequired = (template.requiredFields?.length ? template.requiredFields : deriveRequiredFields$1(template.fields)).filter((key) => !CONTEXT_FIELD_KEYS.has(compactText$1(key)));
+    const baseRequired = deriveRequiredFields$1(baseFields).filter((key) => !CONTEXT_FIELD_KEYS.has(compactText$1(key)));
     next2.requiredFields = equalStringSet$1(explicitRequired, baseRequired) ? void 0 : explicitRequired;
   } else if (next2.requiredFields && !next2.requiredFields.length) {
     next2.requiredFields = void 0;
@@ -7056,8 +7151,8 @@ function buildGoalTimeAllocationSummary(args) {
   const comparisonEnd = new Date(Math.max(rangeStartMs, comparisonEndExclusiveMs - 1));
   const comparisonNaturalMinutes = rangeHasStarted ? getNaturalRangeMinutes(rangeStart, comparisonEnd) : 0;
   const taskById = /* @__PURE__ */ new Map();
-  for (const record of records) {
-    if (record?.coreBlock === "task" && record.id) taskById.set(record.id, record);
+  for (const record2 of records) {
+    if (record2?.coreBlock === "task" && record2.id) taskById.set(record2.id, record2);
   }
   const goalByPath = /* @__PURE__ */ new Map();
   for (const goal of goals) {
@@ -7069,8 +7164,8 @@ function buildGoalTimeAllocationSummary(args) {
   const observationIntervals = [];
   let trackedMinutes = 0;
   let unallocatedMinutes = 0;
-  for (const record of records) {
-    const session = asTaskSessionRecord(record);
+  for (const record2 of records) {
+    const session = asTaskSessionRecord(record2);
     if (!session) continue;
     const overlap = sessionOverlap(session, rangeStartMs, comparisonEndExclusiveMs);
     const minutes = overlap.minutes;
@@ -7257,15 +7352,43 @@ function hydrateGoalOnlySettings(value) {
   assertCanonicalGoalSettings(hydrated);
   return hydrated;
 }
+function hasRetiredAssociationViewState(rawValue) {
+  if (!isRecord(rawValue)) return false;
+  const rawViews = Array.isArray(rawValue.viewInstances) ? rawValue.viewInstances : [];
+  return rawViews.some((entry) => isRecord(entry) && String(entry.viewType ?? "") === "AssociationView");
+}
+function sanitizeViewState(raw) {
+  const rawViews = Array.isArray(raw.viewInstances) ? raw.viewInstances : [];
+  const retiredIds = new Set(
+    rawViews.filter((entry) => isRecord(entry) && String(entry.viewType ?? "") === "AssociationView" && typeof entry.id === "string").map((entry) => String(entry.id))
+  );
+  const viewInstances = rawViews.filter(
+    (entry) => !(isRecord(entry) && String(entry.viewType ?? "") === "AssociationView")
+  );
+  const rawLayouts = Array.isArray(raw.layouts) ? raw.layouts : [];
+  const layouts = rawLayouts.map((entry) => {
+    if (!isRecord(entry)) return entry;
+    const viewInstanceIds = (Array.isArray(entry.viewInstanceIds) ? entry.viewInstanceIds : []).map((id) => String(id)).filter((id) => !retiredIds.has(id));
+    const rawPlacements = isRecord(entry.viewPlacements) ? entry.viewPlacements : void 0;
+    const viewPlacements = rawPlacements ? Object.fromEntries(Object.entries(rawPlacements).filter(([id]) => !retiredIds.has(id))) : void 0;
+    return {
+      ...entry,
+      viewInstanceIds,
+      ...viewPlacements ? { viewPlacements } : {}
+    };
+  });
+  return { viewInstances, layouts };
+}
 function toCurrentThinkSettings(rawValue) {
   const raw = isRecord(rawValue) ? rawValue : {};
   const partial2 = raw;
+  const sanitizedViews = sanitizeViewState(raw);
   const current2 = {
     ...DEFAULT_SETTINGS,
     ...partial2,
     groups: Array.isArray(partial2.groups) ? partial2.groups : [],
-    viewInstances: Array.isArray(partial2.viewInstances) ? partial2.viewInstances : [],
-    layouts: Array.isArray(partial2.layouts) ? partial2.layouts : [],
+    viewInstances: sanitizedViews.viewInstances,
+    layouts: sanitizedViews.layouts,
     goalSettings: hydrateGoalOnlySettings(raw.goalSettings),
     energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...isRecord(partial2.energySettings) ? partial2.energySettings : {} }
   };
@@ -7293,8 +7416,8 @@ function persistGoalOnlySettings(settings) {
     const path = normalizeGoalPath(template.goalPath);
     if (!path) throw new Error("Cannot persist GoalTemplate without canonical Goal path.");
     const fields = stripGoalTemplateIconFieldDefaults((template.fields || []).filter((field) => {
-      const record = field;
-      return record.semantic !== "goalPath" && record.key !== "goalPath" && record.key !== "目标";
+      const record2 = field;
+      return record2.semantic !== "goalPath" && record2.key !== "goalPath" && record2.key !== "目标";
     })) || [];
     const defaults = { ...stripGoalTemplateIconDefaults(template.defaultValues) || {} };
     for (const key of ["goalPath", "目标"]) delete defaults[key];
@@ -7328,15 +7451,15 @@ function toPersistedThinkSettings(settings) {
   out.goalSettings = persistGoalOnlySettings(settings);
   return out;
 }
-var __getOwnPropDesc$e = Object.getOwnPropertyDescriptor;
-var __decorateClass$e = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$e(target, key) : target;
+var __getOwnPropDesc$f = Object.getOwnPropertyDescriptor;
+var __decorateClass$f = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$f(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$d = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$e = (index, decorator) => (target, key) => decorator(target, key, index);
 const SETTINGS_PERSISTENCE_TOKEN = "SettingsPersistence";
 let SettingsRepository = class {
   constructor(persistence) {
@@ -7434,19 +7557,19 @@ let SettingsRepository = class {
     return newSettings;
   }
 };
-SettingsRepository = __decorateClass$e([
+SettingsRepository = __decorateClass$f([
   singleton(),
-  __decorateParam$d(0, inject(SETTINGS_PERSISTENCE_TOKEN))
+  __decorateParam$e(0, inject(SETTINGS_PERSISTENCE_TOKEN))
 ], SettingsRepository);
-var __getOwnPropDesc$d = Object.getOwnPropertyDescriptor;
-var __decorateClass$d = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$d(target, key) : target;
+var __getOwnPropDesc$e = Object.getOwnPropertyDescriptor;
+var __decorateClass$e = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$e(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$c = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$d = (index, decorator) => (target, key) => decorator(target, key, index);
 let RepositorySettingsProvider = class {
   constructor(settingsRepository) {
     this.settingsRepository = settingsRepository;
@@ -7456,9 +7579,9 @@ let RepositorySettingsProvider = class {
     return this.settingsRepository.getSettings();
   }
 };
-RepositorySettingsProvider = __decorateClass$d([
+RepositorySettingsProvider = __decorateClass$e([
   singleton(),
-  __decorateParam$c(0, inject(SettingsRepository))
+  __decorateParam$d(0, inject(SettingsRepository))
 ], RepositorySettingsProvider);
 function setupCoreContainer(app, settings) {
   instance.register(AppToken, { useValue: app });
@@ -7614,12 +7737,12 @@ const EISENHOWER_VIEW_DEFAULT_CONFIG = {
 const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG = {
   dateRole: "default",
   timeField: "date",
-  titleField: "title",
+  titleField: "primaryText",
   contentField: "content",
   groupByDay: true,
   showWeekday: true,
   maxContentLength: 160,
-  fields: ["title", "date"],
+  fields: ["primaryText", "date"],
   groupFields: []
 };
 const EXCEL_VIEW_DEFAULT_CONFIG = {
@@ -7926,7 +8049,8 @@ const text$1 = (partial2) => ({
 const FIELD_REGISTRY = {
   // --- 核心字段 ---
   id: text$1({ key: "id", label: "记录ID", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
-  title: text$1({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录标题或主要摘要" }),
+  title: text$1({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录的真实标题；为空时保持为空，不承担类型特定兜底。" }),
+  primaryText: text$1({ key: "primaryText", label: "主显示值", category: "core", source: "derived", semantic: "title", description: "按 Record 类型派生的人类主要识别值；只用于展示，不写回标题或 Markdown。" }),
   content: text$1({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文；任务与其他 Record 统一为用户正文，不包含存储层元数据" }),
   editableText: text$1({ key: "editableText", label: "可编辑正文", category: "core", source: "item", semantic: "body", inputType: "textarea", hiddenByDefault: true, description: "编辑态正文真源" }),
   rawSource: text$1({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
@@ -8020,6 +8144,7 @@ const FIELD_REGISTRY = {
 };
 const VIEW_FIELD_PICKER_KEYS = /* @__PURE__ */ new Set([
   "title",
+  "primaryText",
   "content",
   "categoryKey",
   "tags",
@@ -8239,37 +8364,85 @@ function isUnknownRecord(value) {
 function asUnknownRecord(value) {
   return isUnknownRecord(value) ? value : void 0;
 }
-function readUnknown(record, key) {
-  return record?.[key];
+function readUnknown(record2, key) {
+  return record2?.[key];
 }
-function readString$1(record, key) {
-  const value = readUnknown(record, key);
+function readString$1(record2, key) {
+  const value = readUnknown(record2, key);
   return typeof value === "string" ? value : void 0;
 }
-function readTrimmedString(record, key) {
-  const value = readString$1(record, key)?.trim();
+function readTrimmedString(record2, key) {
+  const value = readString$1(record2, key)?.trim();
   return value ? value : void 0;
 }
-function readNumber(record, key) {
-  const value = readUnknown(record, key);
+function readNumber(record2, key) {
+  const value = readUnknown(record2, key);
   return typeof value === "number" && Number.isFinite(value) ? value : void 0;
 }
-function readStringArray(record, key) {
-  const value = readUnknown(record, key);
+function readStringArray(record2, key) {
+  const value = readUnknown(record2, key);
   if (!Array.isArray(value)) return [];
   return value.filter((item) => typeof item === "string");
 }
-function readRecordArray(record, key) {
-  const value = readUnknown(record, key);
+function readRecordArray(record2, key) {
+  const value = readUnknown(record2, key);
   if (!Array.isArray(value)) return [];
   return value.filter(isUnknownRecord);
 }
-function readFirstString(record, keys) {
+function readFirstString(record2, keys) {
   for (const key of keys) {
-    const value = readTrimmedString(record, key);
+    const value = readTrimmedString(record2, key);
     if (value) return value;
   }
   return void 0;
+}
+function compact(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+function fallbackLabel(item) {
+  return getRecordTypePresentation(item.coreBlock).label;
+}
+function genericPrimary(item) {
+  return compact(item.content) || fallbackLabel(item);
+}
+const energyPrimary = (item) => {
+  const snapshot = readEnergyItemSnapshot(item);
+  if (snapshot) return `精力 ${snapshot.score}`;
+  return compact(item.content) || "精力";
+};
+const habitPrimary = (item) => {
+  const content = compact(item.content);
+  if (content) return content;
+  if (item.rating != null && Number.isFinite(Number(item.rating))) return `打卡 · 评分 ${item.rating}`;
+  return "打卡";
+};
+const taskSessionPrimary = (item) => {
+  const content = compact(item.content);
+  if (content) return content;
+  if (item.sessionDurationMinutes != null && Number.isFinite(Number(item.sessionDurationMinutes))) {
+    return `任务工作块 · ${item.sessionDurationMinutes} 分钟`;
+  }
+  return "任务工作块";
+};
+const PRIMARY_TEXT_RESOLVERS = {
+  task: genericPrimary,
+  "task-session": taskSessionPrimary,
+  "task-series": genericPrimary,
+  energy: energyPrimary,
+  habit: habitPrimary,
+  evidence: genericPrimary,
+  thought: genericPrimary,
+  review: genericPrimary,
+  plan: genericPrimary,
+  blocker: genericPrimary,
+  milestone: genericPrimary
+};
+function getRecordPrimaryText(item) {
+  const title = compact(item.title);
+  if (title) return title;
+  const coreBlock = normalizeRecordTypePresentationKey(item.coreBlock);
+  const resolver = PRIMARY_TEXT_RESOLVERS[coreBlock];
+  return resolver ? resolver(item) : genericPrimary(item);
 }
 function normalizeFieldKey(field) {
   return getCanonicalFieldKey(field);
@@ -8305,6 +8478,7 @@ function readCanonicalField(item, canonicalField) {
   if (canonicalField.startsWith("file.")) {
     return readFileField(item, canonicalField);
   }
+  if (canonicalField === "primaryText") return getRecordPrimaryText(item);
   if (canonicalField === "goalPath") {
     return splitHierarchyPath(item.goalPath).path;
   }
@@ -8424,32 +8598,6 @@ function buildParsedRecordSnapshot(item) {
     },
     extra: { ...item.extra || {} }
   };
-}
-const ENERGY_RECORD_TYPE_ID = RECORD_TYPE_IDS.ENERGY;
-const DEFAULT_RECORD_TYPES = Object.freeze(
-  RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.capabilities.userVisible && definition.captureMode !== "internal")
-);
-const DEFAULT_TEMPLATE_RECORD_TYPES = Object.freeze(
-  RECORD_SCHEMA_DEFINITIONS.filter(
-    (definition) => definition.capabilities.userVisible && definition.captureMode === "template" && typeof definition.recordTypeId === "string"
-  )
-);
-function getEffectiveRecordTypes() {
-  return [...DEFAULT_RECORD_TYPES];
-}
-function getTemplateRecordTypes() {
-  return [...DEFAULT_TEMPLATE_RECORD_TYPES];
-}
-function getRecordTypeById(recordTypeId) {
-  const id = String(recordTypeId || "").trim();
-  return DEFAULT_RECORD_TYPES.find((item) => item.id === id) || null;
-}
-function getTemplateRecordTypeById(recordTypeId) {
-  const id = String(recordTypeId || "").trim();
-  return DEFAULT_TEMPLATE_RECORD_TYPES.find((item) => item.id === id) || null;
-}
-function buildRecordTypeInputSettings() {
-  return { blocks: [...DEFAULT_TEMPLATE_RECORD_TYPES] };
 }
 function getEffectiveTemplate(settings, blockId) {
   const configured = settings.blocks || [];
@@ -9340,16 +9488,16 @@ function joinApiPath(baseURL, path) {
 function extractModelId(item) {
   if (typeof item === "string") return item.trim();
   if (!item || typeof item !== "object") return "";
-  const record = item;
+  const record2 = item;
   for (const key of ["id", "name", "model"]) {
-    const value = record[key];
+    const value = record2[key];
     if (typeof value === "string" && value.trim()) return value.trim();
   }
   return "";
 }
 function parseModelIds(payload) {
-  const record = payload && typeof payload === "object" ? payload : null;
-  const rawModels = Array.isArray(payload) ? payload : Array.isArray(record?.data) ? record.data : Array.isArray(record?.models) ? record.models : [];
+  const record2 = payload && typeof payload === "object" ? payload : null;
+  const rawModels = Array.isArray(payload) ? payload : Array.isArray(record2?.data) ? record2.data : Array.isArray(record2?.models) ? record2.models : [];
   const ids2 = rawModels.map(extractModelId).filter((id) => id.length > 0);
   return Array.from(new Set(ids2)).sort((a2, b2) => a2.localeCompare(b2));
 }
@@ -9555,8 +9703,8 @@ function coerceNaturalRecordBatch(value) {
   if (Array.isArray(value)) {
     return { items: value };
   }
-  const record = asUnknownRecord(value);
-  const items = readRecordArray(record, "items");
+  const record2 = asUnknownRecord(value);
+  const items = readRecordArray(record2, "items");
   return { items };
 }
 function safeJsonParseBatch(raw, traceId) {
@@ -9706,9 +9854,9 @@ function ensureCommandTarget(item) {
 }
 function cleanAiFieldValues(values2) {
   const result = {};
-  const record = asUnknownRecord(values2);
-  if (!record) return result;
-  for (const [key, value] of Object.entries(record)) {
+  const record2 = asUnknownRecord(values2);
+  if (!record2) return result;
+  for (const [key, value] of Object.entries(record2)) {
     if (isSystemRecordContextField(key)) continue;
     result[key] = value;
   }
@@ -11943,6 +12091,132 @@ function handleIntersectionResults(result, left2, right2) {
   result.value = merged.data;
   return result;
 }
+const $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def) => {
+  $ZodType.init(inst, def);
+  inst._zod.parse = (payload, ctx) => {
+    const input = payload.value;
+    if (!isPlainObject$1(input)) {
+      payload.issues.push({
+        expected: "record",
+        code: "invalid_type",
+        input,
+        inst
+      });
+      return payload;
+    }
+    const proms = [];
+    const values2 = def.keyType._zod.values;
+    if (values2) {
+      payload.value = {};
+      const recordKeys = /* @__PURE__ */ new Set();
+      for (const key of values2) {
+        if (typeof key === "string" || typeof key === "number" || typeof key === "symbol") {
+          recordKeys.add(typeof key === "number" ? key.toString() : key);
+          const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+          if (keyResult instanceof Promise) {
+            throw new Error("Async schemas not supported in object keys currently");
+          }
+          if (keyResult.issues.length) {
+            payload.issues.push({
+              code: "invalid_key",
+              origin: "record",
+              issues: keyResult.issues.map((iss) => finalizeIssue(iss, ctx, config$1())),
+              input: key,
+              path: [key],
+              inst
+            });
+            continue;
+          }
+          const outKey = keyResult.value;
+          const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+          if (result instanceof Promise) {
+            proms.push(result.then((result2) => {
+              if (result2.issues.length) {
+                payload.issues.push(...prefixIssues(key, result2.issues));
+              }
+              payload.value[outKey] = result2.value;
+            }));
+          } else {
+            if (result.issues.length) {
+              payload.issues.push(...prefixIssues(key, result.issues));
+            }
+            payload.value[outKey] = result.value;
+          }
+        }
+      }
+      let unrecognized;
+      for (const key in input) {
+        if (!recordKeys.has(key)) {
+          unrecognized = unrecognized ?? [];
+          unrecognized.push(key);
+        }
+      }
+      if (unrecognized && unrecognized.length > 0) {
+        payload.issues.push({
+          code: "unrecognized_keys",
+          input,
+          inst,
+          keys: unrecognized
+        });
+      }
+    } else {
+      payload.value = {};
+      for (const key of Reflect.ownKeys(input)) {
+        if (key === "__proto__")
+          continue;
+        if (!Object.prototype.propertyIsEnumerable.call(input, key))
+          continue;
+        let keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+        if (keyResult instanceof Promise) {
+          throw new Error("Async schemas not supported in object keys currently");
+        }
+        const checkNumericKey = typeof key === "string" && number$1.test(key) && keyResult.issues.length;
+        if (checkNumericKey) {
+          const retryResult = def.keyType._zod.run({ value: Number(key), issues: [] }, ctx);
+          if (retryResult instanceof Promise) {
+            throw new Error("Async schemas not supported in object keys currently");
+          }
+          if (retryResult.issues.length === 0) {
+            keyResult = retryResult;
+          }
+        }
+        if (keyResult.issues.length) {
+          if (def.mode === "loose") {
+            payload.value[key] = input[key];
+          } else {
+            payload.issues.push({
+              code: "invalid_key",
+              origin: "record",
+              issues: keyResult.issues.map((iss) => finalizeIssue(iss, ctx, config$1())),
+              input: key,
+              path: [key],
+              inst
+            });
+          }
+          continue;
+        }
+        const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+        if (result instanceof Promise) {
+          proms.push(result.then((result2) => {
+            if (result2.issues.length) {
+              payload.issues.push(...prefixIssues(key, result2.issues));
+            }
+            payload.value[keyResult.value] = result2.value;
+          }));
+        } else {
+          if (result.issues.length) {
+            payload.issues.push(...prefixIssues(key, result.issues));
+          }
+          payload.value[keyResult.value] = result.value;
+        }
+      }
+    }
+    if (proms.length) {
+      return Promise.all(proms).then(() => payload);
+    }
+    return payload;
+  };
+});
 const $ZodEnum = /* @__PURE__ */ $constructor("$ZodEnum", (inst, def) => {
   $ZodType.init(inst, def);
   const values2 = getEnumValues(def.entries);
@@ -13381,6 +13655,42 @@ const intersectionProcessor = (schema, ctx, json, params) => {
   ];
   json.allOf = allOf;
 };
+const recordProcessor = (schema, ctx, _json, params) => {
+  const json = _json;
+  const def = schema._zod.def;
+  json.type = "object";
+  const keyType = def.keyType;
+  const keyBag = keyType._zod.bag;
+  const patterns = keyBag?.patterns;
+  if (def.mode === "loose" && patterns && patterns.size > 0) {
+    const valueSchema = process$1(def.valueType, ctx, {
+      ...params,
+      path: [...params.path, "patternProperties", "*"]
+    });
+    json.patternProperties = {};
+    for (const pattern of patterns) {
+      json.patternProperties[pattern.source] = valueSchema;
+    }
+  } else {
+    if (ctx.target === "draft-07" || ctx.target === "draft-2020-12") {
+      json.propertyNames = process$1(def.keyType, ctx, {
+        ...params,
+        path: [...params.path, "propertyNames"]
+      });
+    }
+    json.additionalProperties = process$1(def.valueType, ctx, {
+      ...params,
+      path: [...params.path, "additionalProperties"]
+    });
+  }
+  const keyValues = keyType._zod.values;
+  if (keyValues) {
+    const validKeyValues = [...keyValues].filter((v2) => typeof v2 === "string" || typeof v2 === "number");
+    if (validKeyValues.length > 0) {
+      json.required = validKeyValues;
+    }
+  }
+};
 const nullableProcessor = (schema, ctx, json, params) => {
   const def = schema._zod.def;
   const inner = process$1(def.innerType, ctx, params);
@@ -14060,6 +14370,29 @@ function intersection(left2, right2) {
     right: right2
   });
 }
+const ZodRecord = /* @__PURE__ */ $constructor("ZodRecord", (inst, def) => {
+  $ZodRecord.init(inst, def);
+  ZodType.init(inst, def);
+  inst._zod.processJSONSchema = (ctx, json, params) => recordProcessor(inst, ctx, json, params);
+  inst.keyType = def.keyType;
+  inst.valueType = def.valueType;
+});
+function record(keyType, valueType, params) {
+  if (!valueType || !valueType._zod) {
+    return new ZodRecord({
+      type: "record",
+      keyType: string(),
+      valueType: keyType,
+      ...normalizeParams(valueType)
+    });
+  }
+  return new ZodRecord({
+    type: "record",
+    keyType,
+    valueType,
+    ...normalizeParams(params)
+  });
+}
 const ZodEnum = /* @__PURE__ */ $constructor("ZodEnum", (inst, def) => {
   $ZodEnum.init(inst, def);
   ZodType.init(inst, def);
@@ -14299,18 +14632,21 @@ function refine(fn3, _params = {}) {
 function superRefine(fn3, params) {
   return /* @__PURE__ */ _superRefine(fn3, params);
 }
+const ZodIssueCode = {
+  custom: "custom"
+};
 function generateId(prefix2 = "id") {
   return `${prefix2}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
 }
-var __getOwnPropDesc$c = Object.getOwnPropertyDescriptor;
-var __decorateClass$c = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$c(target, key) : target;
+var __getOwnPropDesc$d = Object.getOwnPropertyDescriptor;
+var __decorateClass$d = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$d(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$b = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$c = (index, decorator) => (target, key) => decorator(target, key, index);
 const MessageContentTypeSchema = _enum(["markdown", "plain", "html"]);
 const ChatMessageSchema = object({
   id: string(),
@@ -14566,12 +14902,12 @@ let ChatSessionStore = class {
     return session?.messages ?? [];
   }
 };
-ChatSessionStore = __decorateClass$c([
+ChatSessionStore = __decorateClass$d([
   singleton(),
-  __decorateParam$b(0, inject(STORAGE_TOKEN))
+  __decorateParam$c(0, inject(STORAGE_TOKEN))
 ], ChatSessionStore);
-function toRecordViewItem(record) {
-  return record;
+function toRecordViewItem(record2) {
+  return record2;
 }
 const METADATA_PORT_TOKEN = "MetadataPort";
 const FILESTAT_PORT_TOKEN = "FileStatPort";
@@ -15288,6 +15624,10 @@ function isGoalOrderField(field) {
   const canonical = getCanonicalFieldKey(String(field || "").trim());
   return ["goalPath", "rootGoal", "leafGoal"].includes(canonical);
 }
+function isRecordTypeOrderField(field) {
+  const canonical = getCanonicalFieldKey(String(field || "").trim());
+  return canonical === "coreBlock";
+}
 function normalizeText(value) {
   if (value === null || value === void 0) return "";
   return String(value).trim();
@@ -15321,6 +15661,9 @@ function compareFieldValuesByViewOrder(field, left2, right2, context) {
     const byGoal = goalOrder.compareGoalPaths(leftGoal, rightGoal);
     if (byGoal !== 0) return byGoal;
     return leftGoal.localeCompare(rightGoal, "zh-CN");
+  }
+  if (isRecordTypeOrderField(field)) {
+    return compareRecordTypeKeys(left2, right2);
   }
   return String(left2 ?? "").localeCompare(String(right2 ?? ""), "zh-CN");
 }
@@ -15374,7 +15717,7 @@ function groupItemsByField(items, groupField, defaultLabel = "(未分类)") {
 }
 function getSortedGroupKeys(grouped, field, context) {
   const keys = Object.keys(grouped);
-  if (field && isGoalOrderField(field)) {
+  if (field && (isGoalOrderField(field) || isRecordTypeOrderField(field))) {
     return keys.sort((a2, b2) => compareFieldValuesByViewOrder(field, a2, b2, context));
   }
   return keys.sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
@@ -15609,20 +15952,20 @@ function executeRecordQuery(items, spec = {}) {
 function queryRecordItems(items, spec = {}) {
   return executeRecordQuery(items, spec).items;
 }
-function asTaskRecord(record) {
-  if (!record || record.coreBlock !== "task") return null;
-  const candidate = record;
+function asTaskRecord(record2) {
+  if (!record2 || record2.coreBlock !== "task") return null;
+  const candidate = record2;
   const status = String(candidate.status || "");
   if (!["open", "done", "cancelled", "skipped"].includes(status)) return null;
-  return record;
+  return record2;
 }
-function asTaskSeriesRecord(record) {
-  if (!record || record.coreBlock !== "task-series") return null;
-  const candidate = record;
+function asTaskSeriesRecord(record2) {
+  if (!record2 || record2.coreBlock !== "task-series") return null;
+  const candidate = record2;
   if (!candidate.recurrenceInfo) return null;
   const status = String(candidate.status || "");
   if (status !== "active" && status !== "stopped") return null;
-  return record;
+  return record2;
 }
 class RecordIndex {
   recordsById = /* @__PURE__ */ new Map();
@@ -15637,34 +15980,34 @@ class RecordIndex {
     this.clear();
     const all = [];
     for (const [path, records] of fileIndex.entries()) {
-      for (const record of records) {
-        const id = String(record.id || "").trim();
+      for (const record2 of records) {
+        const id = String(record2.id || "").trim();
         if (!id) {
           this.issues.push({ code: "record_id_missing", path, message: `Record in ${path} has no 记录ID.` });
           continue;
         }
-        const source = record.source;
-        const line2 = source?.startLine ?? record.file?.line ?? 0;
+        const source = record2.source;
+        const line2 = source?.startLine ?? record2.file?.line ?? 0;
         const location = {
           recordId: id,
           path,
           startLine: line2,
           endLine: source?.endLine ?? line2,
-          modified: source?.modified ?? record.modified ?? 0
+          modified: source?.modified ?? record2.modified ?? 0
         };
         const locations = this.locationsById.get(id) || [];
         locations.push(location);
         this.locationsById.set(id, locations);
-        all.push(record);
+        all.push(record2);
       }
     }
     const unique2 = [];
-    for (const record of all) {
-      const locations = this.locationsById.get(record.id) || [];
+    for (const record2 of all) {
+      const locations = this.locationsById.get(record2.id) || [];
       if (locations.length !== 1) continue;
-      if (this.recordsById.has(record.id)) continue;
-      this.recordsById.set(record.id, record);
-      unique2.push(record);
+      if (this.recordsById.has(record2.id)) continue;
+      this.recordsById.set(record2.id, record2);
+      unique2.push(record2);
     }
     for (const [recordId, locations] of this.locationsById.entries()) {
       if (locations.length > 1) {
@@ -15676,8 +16019,8 @@ class RecordIndex {
       }
     }
     const openTasksBySeries = /* @__PURE__ */ new Map();
-    for (const record of unique2) {
-      const task = asTaskRecord(record);
+    for (const record2 of unique2) {
+      const task = asTaskRecord(record2);
       if (task?.seriesId && task.status === "open") {
         const group = openTasksBySeries.get(task.seriesId) || [];
         group.push(task);
@@ -15696,7 +16039,7 @@ class RecordIndex {
           task.recurrenceInfo = series2.recurrenceInfo;
         }
       }
-      const session = record.coreBlock === "task-session" ? record : null;
+      const session = record2.coreBlock === "task-session" ? record2 : null;
       if (session) {
         const sessionTask = session.taskId ? asTaskRecord(this.recordsById.get(session.taskId)) : null;
         const sessionSeries = session.seriesId ? asTaskSeriesRecord(this.recordsById.get(session.seriesId)) : null;
@@ -15714,7 +16057,7 @@ class RecordIndex {
           });
         }
       }
-      const series = asTaskSeriesRecord(record);
+      const series = asTaskSeriesRecord(record2);
       if (series) {
         if (series.status === "active" && !series.currentTaskId) {
           this.issues.push({
@@ -15837,7 +16180,7 @@ class DataStoreIndex {
     const key = this.makeQueryKey(filters, sortRules);
     const cached2 = this.queryCache.get(key);
     if (cached2) return cached2;
-    const userVisibleItems = this.records.filter((record) => record.coreBlock !== "task-series" && record.coreBlock !== "task-session").map(toRecordViewItem);
+    const userVisibleItems = this.records.filter((record2) => record2.coreBlock !== "task-series" && record2.coreBlock !== "task-session").map(toRecordViewItem);
     const result = queryRecordItems(userVisibleItems, { filterGroups: [filters], sort: sortRules });
     this.queryCache.set(key, result);
     return result;
@@ -15873,15 +16216,15 @@ async function buildWarmStartPlan(paths, cache, fileStat) {
   }
   return { seen, unchangedEntries, changedFiles };
 }
-var __getOwnPropDesc$b = Object.getOwnPropertyDescriptor;
-var __decorateClass$b = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$b(target, key) : target;
+var __getOwnPropDesc$c = Object.getOwnPropertyDescriptor;
+var __decorateClass$c = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$c(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$a = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$b = (index, decorator) => (target, key) => decorator(target, key, index);
 let DataStore = class {
   constructor(vault, metadata, fileStat, storage) {
     this.vault = vault;
@@ -16061,8 +16404,8 @@ let DataStore = class {
     return this.index.getById(recordId);
   }
   getRecordById(recordId) {
-    const record = this.index.getById(recordId);
-    return record ? toRecordViewItem(record) : null;
+    const record2 = this.index.getById(recordId);
+    return record2 ? toRecordViewItem(record2) : null;
   }
   getRecordLocation(recordId) {
     return this.index.getLocation(recordId);
@@ -16104,25 +16447,25 @@ let DataStore = class {
     if (this._assertNotDisposed()) this._emitThrottled();
   }
 };
-DataStore = __decorateClass$b([
+DataStore = __decorateClass$c([
   singleton(),
-  __decorateParam$a(0, inject(VAULT_PORT_TOKEN)),
-  __decorateParam$a(1, inject(METADATA_PORT_TOKEN)),
-  __decorateParam$a(2, inject(FILESTAT_PORT_TOKEN)),
-  __decorateParam$a(3, inject(STORAGE_TOKEN))
+  __decorateParam$b(0, inject(VAULT_PORT_TOKEN)),
+  __decorateParam$b(1, inject(METADATA_PORT_TOKEN)),
+  __decorateParam$b(2, inject(FILESTAT_PORT_TOKEN)),
+  __decorateParam$b(3, inject(STORAGE_TOKEN))
 ], DataStore);
 const HIDDEN_EXTRA_ALIAS_SET = /* @__PURE__ */ new Set(["正文", "内容", "任务内容", "记录内容", "editableText"]);
 function normalizeRetrievalText(value) {
   if (value == null) return "";
   if (Array.isArray(value)) return value.map(normalizeRetrievalText).filter(Boolean).join(" ");
   if (typeof value === "object") {
-    const record = asUnknownRecord(value);
-    if (!record) return "";
-    const src = readString$1(record, "src");
+    const record2 = asUnknownRecord(value);
+    if (!record2) return "";
+    const src = readString$1(record2, "src");
     if (src) return src;
-    const values2 = readUnknown(record, "values");
+    const values2 = readUnknown(record2, "values");
     if (Array.isArray(values2)) return normalizeRetrievalText(values2);
-    return Object.values(record).map(normalizeRetrievalText).filter(Boolean).join(" ");
+    return Object.values(record2).map(normalizeRetrievalText).filter(Boolean).join(" ");
   }
   return String(value).trim();
 }
@@ -16219,11 +16562,11 @@ class LocalRetrievalIndex {
     }));
   }
   search(query) {
-    const queryTokens = tokenizeRetrievalText(normalizeRetrievalText(query));
-    if (!queryTokens.length) return [];
+    const queryTokens2 = tokenizeRetrievalText(normalizeRetrievalText(query));
+    if (!queryTokens2.length) return [];
     const results = [];
     for (const prepared of this.preparedDocuments) {
-      const scored = scorePreparedDocument(prepared, queryTokens);
+      const scored = scorePreparedDocument(prepared, queryTokens2);
       if (scored.score <= 0) continue;
       results.push({
         ...prepared.document,
@@ -16242,10 +16585,10 @@ function prepareFieldTokens(document2) {
   }
   return result;
 }
-function scorePreparedDocument(prepared, queryTokens) {
+function scorePreparedDocument(prepared, queryTokens2) {
   let score = 0;
   const match5 = {};
-  for (const queryToken of queryTokens) {
+  for (const queryToken of queryTokens2) {
     let bestTokenScore = 0;
     const matchedFields = [];
     for (const field of SEARCH_FIELDS) {
@@ -16262,7 +16605,7 @@ function scorePreparedDocument(prepared, queryTokens) {
     }
   }
   return {
-    score: score / Math.max(queryTokens.length, 1),
+    score: score / Math.max(queryTokens2.length, 1),
     match: match5
   };
 }
@@ -16367,15 +16710,15 @@ function searchResultToItem(sr, indexedItemsById) {
     extra: {}
   };
 }
-var __getOwnPropDesc$a = Object.getOwnPropertyDescriptor;
-var __decorateClass$a = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$a(target, key) : target;
+var __getOwnPropDesc$b = Object.getOwnPropertyDescriptor;
+var __decorateClass$b = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$b(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$9 = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$a = (index, decorator) => (target, key) => decorator(target, key, index);
 let RetrievalService = class {
   constructor(dataStore) {
     this.dataStore = dataStore;
@@ -16483,19 +16826,19 @@ let RetrievalService = class {
     return result;
   }
 };
-RetrievalService = __decorateClass$a([
+RetrievalService = __decorateClass$b([
   singleton(),
-  __decorateParam$9(0, inject(DataStore))
+  __decorateParam$a(0, inject(DataStore))
 ], RetrievalService);
-var __getOwnPropDesc$9 = Object.getOwnPropertyDescriptor;
-var __decorateClass$9 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$9(target, key) : target;
+var __getOwnPropDesc$a = Object.getOwnPropertyDescriptor;
+var __decorateClass$a = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$a(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$8 = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$9 = (index, decorator) => (target, key) => decorator(target, key, index);
 const SYSTEM_PROMPT = `你是一个个人工作记录助手，帮助用户查询和分析他们的工作记录、任务和笔记。
 
 你的职责：
@@ -16667,10 +17010,10 @@ ${contextStr}
     });
   }
 };
-AiChatService = __decorateClass$9([
+AiChatService = __decorateClass$a([
   singleton(),
-  __decorateParam$8(0, inject(SettingsProviderToken)),
-  __decorateParam$8(1, inject(RetrievalService))
+  __decorateParam$9(0, inject(SettingsProviderToken)),
+  __decorateParam$9(1, inject(RetrievalService))
 ], AiChatService);
 const UI_PORT_TOKEN = "UiPort";
 const MODAL_PORT_TOKEN = "ModalPort";
@@ -16792,14 +17135,14 @@ function moveItemInArray(array2, id, direction) {
   const from2 = next2.findIndex((candidate) => candidate.id === id);
   const to = next2.findIndex((candidate) => candidate.id === siblings[target].id);
   if (from2 < 0 || to < 0) return next2;
-  const [moved] = next2.splice(from2, 1);
-  next2.splice(to, 0, moved);
+  const [moved2] = next2.splice(from2, 1);
+  next2.splice(to, 0, moved2);
   return next2;
 }
 function arrayMove$1(array2, from2, to) {
   const next2 = [...array2];
-  const [moved] = next2.splice(from2, 1);
-  next2.splice(to, 0, moved);
+  const [moved2] = next2.splice(from2, 1);
+  next2.splice(to, 0, moved2);
   return next2;
 }
 function getExportConfigByViewType(viewType) {
@@ -18177,6 +18520,9 @@ class Disposables {
   }
 }
 let disposed = false;
+function markActive() {
+  disposed = false;
+}
 function markDisposed() {
   disposed = true;
 }
@@ -18904,15 +19250,15 @@ async function appendUnderHeader(vault, filePath, header, payload, options = {})
   checkAbort(options);
   await vault.writeFile(filePath, next2);
 }
-var __getOwnPropDesc$8 = Object.getOwnPropertyDescriptor;
-var __decorateClass$8 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$8(target, key) : target;
+var __getOwnPropDesc$9 = Object.getOwnPropertyDescriptor;
+var __decorateClass$9 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$9(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$7 = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$8 = (index, decorator) => (target, key) => decorator(target, key, index);
 let InputService = class {
   constructor(vault, dataStore) {
     this.vault = vault;
@@ -19023,10 +19369,10 @@ ${outputContent}` : outputContent;
     }
   }
 };
-InputService = __decorateClass$8([
+InputService = __decorateClass$9([
   singleton(),
-  __decorateParam$7(0, inject(VAULT_PORT_TOKEN)),
-  __decorateParam$7(1, inject(DataStore))
+  __decorateParam$8(0, inject(VAULT_PORT_TOKEN)),
+  __decorateParam$8(1, inject(DataStore))
 ], InputService);
 class GoalTemplateMigrationMutation {
   constructor(repository) {
@@ -19227,7 +19573,7 @@ function buildLegacyActualRangeCompletionSession(dataStore, task) {
   const startedMs = Date.parse(startedAt);
   const endedMs = Date.parse(endedAt);
   if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs <= startedMs) return null;
-  const alreadyHasSession = dataStore.queryRecords().some((record) => asTaskSessionRecord(record)?.taskId === task.id);
+  const alreadyHasSession = dataStore.queryRecords().some((record2) => asTaskSessionRecord(record2)?.taskId === task.id);
   if (alreadyHasSession) return null;
   const durationMinutes2 = Math.round((endedMs - startedMs) / 6e4 * 100) / 100;
   if (!Number.isFinite(durationMinutes2) || durationMinutes2 <= 0) return null;
@@ -19447,7 +19793,7 @@ function normalizedDateTime$1(value) {
   const raw = String(value || "").trim();
   return /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(raw) ? raw.replace(" ", "T") : raw;
 }
-function timeMs(value) {
+function timeMs$1(value) {
   if (!value) return null;
   const ms = Date.parse(normalizedDateTime$1(value));
   return Number.isFinite(ms) ? ms : null;
@@ -19462,8 +19808,8 @@ function localDateTime(ms) {
   return `${year}-${month}-${day}T${hour}:${minute}`;
 }
 function requireRange(range) {
-  const startedMs = timeMs(range.start);
-  const endedMs = timeMs(range.end);
+  const startedMs = timeMs$1(range.start);
+  const endedMs = timeMs$1(range.end);
   if (startedMs == null || endedMs == null || endedMs <= startedMs) {
     throw new Error("timeline_range_time_order_invalid");
   }
@@ -19477,17 +19823,17 @@ class TaskTimeMutation {
   repository;
   taskSessions;
   async updateTimelineRange(target, range) {
-    const record = await this.repository.getById(target.recordId);
-    if (!record) throw new Error(`timeline_target_not_found:${target.recordId}`);
+    const record2 = await this.repository.getById(target.recordId);
+    if (!record2) throw new Error(`timeline_target_not_found:${target.recordId}`);
     if (target.kind === "task-session") {
-      if (!asTaskSessionRecord(record)) throw new Error(`task_session_required:${target.recordId}`);
+      if (!asTaskSessionRecord(record2)) throw new Error(`task_session_required:${target.recordId}`);
       return this.taskSessions.updateSessionTime(target.recordId, range);
     }
-    const task = asTaskRecord(record);
+    const task = asTaskRecord(record2);
     if (!task) throw new Error(`task_record_required:${target.recordId}`);
     if (target.kind === "task-plan") {
       if (!task.scheduledAt) throw new Error(`task_plan_time_required:${target.recordId}`);
-      const startedMs = timeMs(range.start);
+      const startedMs = timeMs$1(range.start);
       if (startedMs == null) throw new Error("task_plan_time_invalid");
       if (!range.end) {
         await this.repository.update(task.id, { scheduledAt: localDateTime(startedMs) });
@@ -19503,7 +19849,7 @@ class TaskTimeMutation {
     }
     if (target.kind === "task-point") {
       if (!task.startAt) throw new Error(`task_start_time_required:${target.recordId}`);
-      const startedMs = timeMs(range.start);
+      const startedMs = timeMs$1(range.start);
       if (startedMs == null) throw new Error("task_time_invalid");
       await this.repository.update(task.id, { startAt: localDateTime(startedMs) });
       return this.requireUpdated(task.id);
@@ -19749,9 +20095,9 @@ class RecordRepository {
   async getById(recordId) {
     return this.dataStore.getRecordEntityById(recordId);
   }
-  async create(record) {
-    const recordId = record.recordId || createRecordId(record.coreBlock);
-    await this.batch([{ kind: "create", record: { ...record, recordId } }]);
+  async create(record2) {
+    const recordId = record2.recordId || createRecordId(record2.coreBlock);
+    await this.batch([{ kind: "create", record: { ...record2, recordId } }]);
     const created = this.dataStore.getRecordEntityById(recordId);
     if (!created) throw new Error(`record_create_scan_failed:${recordId}`);
     return created;
@@ -19840,15 +20186,15 @@ class RecordRepository {
     return { writtenPaths: committed.writtenPaths, createdRecordIds };
   }
 }
-var __getOwnPropDesc$7 = Object.getOwnPropertyDescriptor;
-var __decorateClass$7 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$7(target, key) : target;
+var __getOwnPropDesc$8 = Object.getOwnPropertyDescriptor;
+var __decorateClass$8 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$8(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$6 = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$7 = (index, decorator) => (target, key) => decorator(target, key, index);
 let ItemService = class {
   taskCompletion;
   taskSessions;
@@ -19919,10 +20265,10 @@ let ItemService = class {
     return this.migrationBackup.createMigrationBackup(backupRoot, settings);
   }
 };
-ItemService = __decorateClass$7([
+ItemService = __decorateClass$8([
   singleton(),
-  __decorateParam$6(0, inject(DataStore)),
-  __decorateParam$6(1, inject(VAULT_PORT_TOKEN))
+  __decorateParam$7(0, inject(DataStore)),
+  __decorateParam$7(1, inject(VAULT_PORT_TOKEN))
 ], ItemService);
 function normalizeTagToken(value) {
   return String(value ?? "").trim();
@@ -19955,15 +20301,15 @@ function formatTagsForField(value) {
   const tags2 = parseTagsInput(value);
   return tags2.length ? tags2.map((tag) => tag.startsWith("#") ? tag : `#${tag}`).join(", ") : void 0;
 }
-var __getOwnPropDesc$6 = Object.getOwnPropertyDescriptor;
-var __decorateClass$6 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$6(target, key) : target;
+var __getOwnPropDesc$7 = Object.getOwnPropertyDescriptor;
+var __decorateClass$7 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$7(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$5 = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$6 = (index, decorator) => (target, key) => decorator(target, key, index);
 let ActionService = class {
   constructor(ui, dataStore, settingsProvider, inputService) {
     this.ui = ui;
@@ -20135,22 +20481,22 @@ let ActionService = class {
     };
   }
 };
-ActionService = __decorateClass$6([
+ActionService = __decorateClass$7([
   singleton(),
-  __decorateParam$5(0, inject(UI_PORT_TOKEN)),
-  __decorateParam$5(1, inject(DataStore)),
-  __decorateParam$5(2, inject(SettingsProviderToken)),
-  __decorateParam$5(3, inject(InputService))
+  __decorateParam$6(0, inject(UI_PORT_TOKEN)),
+  __decorateParam$6(1, inject(DataStore)),
+  __decorateParam$6(2, inject(SettingsProviderToken)),
+  __decorateParam$6(3, inject(InputService))
 ], ActionService);
-var __getOwnPropDesc$5 = Object.getOwnPropertyDescriptor;
-var __decorateClass$5 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$5(target, key) : target;
+var __getOwnPropDesc$6 = Object.getOwnPropertyDescriptor;
+var __decorateClass$6 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$6(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$4 = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$5 = (index, decorator) => (target, key) => decorator(target, key, index);
 const TIMER_STATE_PATH = "think-plugin-timer-state.json";
 const TIMER_RUNTIME_SCHEMA_VERSION = 3;
 function isTimerRuntimeState(entry) {
@@ -20188,10 +20534,1078 @@ let TimerStateService = class {
     }
   }
 };
-TimerStateService = __decorateClass$5([
+TimerStateService = __decorateClass$6([
   singleton(),
-  __decorateParam$4(0, inject(VAULT_PORT_TOKEN))
+  __decorateParam$5(0, inject(VAULT_PORT_TOKEN))
 ], TimerStateService);
+const WHITEBOARD_WORKBENCH_MAX_DEPTH = 4;
+function getWhiteboardGroupById(groups) {
+  return new Map(groups.map((group) => [group.id, group]));
+}
+function getWhiteboardGroupDepth(groups, groupId) {
+  const byId = getWhiteboardGroupById(groups);
+  let current2 = byId.get(groupId);
+  let depth = 0;
+  const visited = /* @__PURE__ */ new Set();
+  while (current2) {
+    if (visited.has(current2.id)) return Number.POSITIVE_INFINITY;
+    visited.add(current2.id);
+    depth += 1;
+    current2 = current2.parentGroupId ? byId.get(current2.parentGroupId) : void 0;
+  }
+  return depth;
+}
+function getWhiteboardGroupPathIds(groups, groupId) {
+  const byId = getWhiteboardGroupById(groups);
+  const path = [];
+  let current2 = byId.get(groupId);
+  const visited = /* @__PURE__ */ new Set();
+  while (current2 && !visited.has(current2.id)) {
+    visited.add(current2.id);
+    path.unshift(current2.id);
+    current2 = current2.parentGroupId ? byId.get(current2.parentGroupId) : void 0;
+  }
+  return path;
+}
+function getWhiteboardGroupDescendantIds(groups, groupId) {
+  const descendants = /* @__PURE__ */ new Set();
+  let changed2 = true;
+  while (changed2) {
+    changed2 = false;
+    groups.forEach((group) => {
+      if (group.id === groupId || descendants.has(group.id)) return;
+      if (group.parentGroupId === groupId || group.parentGroupId && descendants.has(group.parentGroupId)) {
+        descendants.add(group.id);
+        changed2 = true;
+      }
+    });
+  }
+  return descendants;
+}
+function getWhiteboardGroupSubtreeHeight(groups, groupId) {
+  const byParent = /* @__PURE__ */ new Map();
+  groups.forEach((group) => {
+    if (!group.parentGroupId) return;
+    const children = byParent.get(group.parentGroupId) ?? [];
+    children.push(group.id);
+    byParent.set(group.parentGroupId, children);
+  });
+  const visit = (id, visited) => {
+    if (visited.has(id)) return Number.POSITIVE_INFINITY;
+    const nextVisited = new Set(visited);
+    nextVisited.add(id);
+    const children = byParent.get(id) ?? [];
+    return 1 + children.reduce((max2, childId) => Math.max(max2, visit(childId, nextVisited)), 0);
+  };
+  return visit(groupId, /* @__PURE__ */ new Set());
+}
+function canNestWhiteboardGroup(groups, groupId, parentGroupId, maxDepth = WHITEBOARD_WORKBENCH_MAX_DEPTH) {
+  if (parentGroupId === groupId) return false;
+  if (!parentGroupId) return getWhiteboardGroupSubtreeHeight(groups, groupId) <= maxDepth;
+  const byId = getWhiteboardGroupById(groups);
+  if (!byId.has(groupId) || !byId.has(parentGroupId)) return false;
+  if (getWhiteboardGroupDescendantIds(groups, groupId).has(parentGroupId)) return false;
+  const parentDepth = getWhiteboardGroupDepth(groups, parentGroupId);
+  const subtreeHeight = getWhiteboardGroupSubtreeHeight(groups, groupId);
+  return Number.isFinite(parentDepth) && Number.isFinite(subtreeHeight) && parentDepth + subtreeHeight <= maxDepth;
+}
+const WhiteboardItemSchema = object({
+  id: string().min(1),
+  recordId: string().min(1),
+  x: number().finite(),
+  y: number().finite(),
+  zIndex: number().finite().optional(),
+  groupId: string().min(1).optional()
+}).strict();
+const WhiteboardArchivedItemSchema = WhiteboardItemSchema.extend({
+  archivedAt: number().finite().nonnegative(),
+  archiveX: number().finite().optional(),
+  archiveY: number().finite().optional(),
+  archiveZIndex: number().finite().optional()
+}).strict();
+const WhiteboardEdgeSchema = object({
+  id: string().min(1),
+  fromItemId: string().min(1),
+  toItemId: string().min(1),
+  label: string().max(200).optional()
+}).strict();
+const WhiteboardAnnotationSchema = object({
+  id: string().min(1),
+  kind: _enum(["text", "sticky"]),
+  text: string().max(4e3),
+  x: number().finite(),
+  y: number().finite(),
+  zIndex: number().finite().optional(),
+  groupId: string().min(1).optional()
+}).strict();
+const WhiteboardGroupSchema = object({
+  id: string().min(1),
+  title: string().min(1),
+  x: number().finite(),
+  y: number().finite(),
+  collapsed: boolean(),
+  parentGroupId: string().min(1).optional()
+}).strict();
+const WhiteboardBoardSchema = object({
+  title: string().min(1),
+  items: array(WhiteboardItemSchema),
+  edges: array(WhiteboardEdgeSchema),
+  annotations: array(WhiteboardAnnotationSchema).optional(),
+  groups: array(WhiteboardGroupSchema).optional(),
+  archivedItems: array(WhiteboardArchivedItemSchema).optional(),
+  archivedEdges: array(WhiteboardEdgeSchema).optional(),
+  modified: number().finite().nonnegative()
+}).strict().superRefine((board, ctx) => {
+  const groupIds = /* @__PURE__ */ new Set();
+  (board.groups ?? []).forEach((group, index) => {
+    if (groupIds.has(group.id)) ctx.addIssue({ code: ZodIssueCode.custom, path: ["groups", index, "id"], message: "工作台 ID 必须唯一" });
+    groupIds.add(group.id);
+  });
+  const groups = board.groups ?? [];
+  groups.forEach((group, index) => {
+    if (group.parentGroupId && !groupIds.has(group.parentGroupId)) {
+      ctx.addIssue({ code: ZodIssueCode.custom, path: ["groups", index, "parentGroupId"], message: "工作台引用了不存在的父工作台" });
+      return;
+    }
+    if (group.parentGroupId === group.id || getWhiteboardGroupPathIds(groups, group.id).filter((id) => id === group.id).length > 1) {
+      ctx.addIssue({ code: ZodIssueCode.custom, path: ["groups", index, "parentGroupId"], message: "工作台不能循环嵌套" });
+      return;
+    }
+    const depth = getWhiteboardGroupDepth(groups, group.id);
+    if (!Number.isFinite(depth) || depth > WHITEBOARD_WORKBENCH_MAX_DEPTH) {
+      ctx.addIssue({ code: ZodIssueCode.custom, path: ["groups", index, "parentGroupId"], message: `工作台最多嵌套 ${WHITEBOARD_WORKBENCH_MAX_DEPTH} 层` });
+    }
+  });
+  board.items.forEach((item, index) => {
+    if (item.groupId && !groupIds.has(item.groupId)) {
+      ctx.addIssue({ code: ZodIssueCode.custom, path: ["items", index, "groupId"], message: "卡片引用了不存在的工作台" });
+    }
+  });
+  (board.archivedItems ?? []).forEach((item, index) => {
+    if (item.groupId && !groupIds.has(item.groupId)) {
+      ctx.addIssue({ code: ZodIssueCode.custom, path: ["archivedItems", index, "groupId"], message: "归档卡片引用了不存在的工作台" });
+    }
+  });
+  (board.annotations ?? []).forEach((annotation, index) => {
+    if (annotation.groupId && !groupIds.has(annotation.groupId)) {
+      ctx.addIssue({ code: ZodIssueCode.custom, path: ["annotations", index, "groupId"], message: "白板标注引用了不存在的工作台" });
+    }
+  });
+  const projectionIds = /* @__PURE__ */ new Set();
+  const recordIds = /* @__PURE__ */ new Set();
+  [...board.items, ...board.archivedItems ?? []].forEach((item, index) => {
+    const pathRoot = index < board.items.length ? "items" : "archivedItems";
+    const pathIndex = index < board.items.length ? index : index - board.items.length;
+    if (projectionIds.has(item.id)) ctx.addIssue({ code: ZodIssueCode.custom, path: [pathRoot, pathIndex, "id"], message: "白板 Projection ID 必须唯一" });
+    if (recordIds.has(item.recordId)) ctx.addIssue({ code: ZodIssueCode.custom, path: [pathRoot, pathIndex, "recordId"], message: "同一 Record 不能同时存在多个白板 Projection" });
+    projectionIds.add(item.id);
+    recordIds.add(item.recordId);
+  });
+});
+const WhiteboardStoreDataSchema = object({
+  version: literal(1),
+  boards: record(string(), WhiteboardBoardSchema)
+}).strict();
+const ARCHIVE_COLUMNS = 4;
+const ARCHIVE_GAP_X = 56;
+const ARCHIVE_GAP_Y = 48;
+const ARCHIVE_CARD_WIDTH = 248;
+const ARCHIVE_CARD_HEIGHT = 260;
+function getDefaultArchivePosition(index) {
+  const safeIndex = Math.max(0, Math.floor(index));
+  return {
+    archiveX: 48 + safeIndex % ARCHIVE_COLUMNS * (ARCHIVE_CARD_WIDTH + ARCHIVE_GAP_X),
+    archiveY: 72 + Math.floor(safeIndex / ARCHIVE_COLUMNS) * (ARCHIVE_CARD_HEIGHT + ARCHIVE_GAP_Y),
+    archiveZIndex: safeIndex + 1
+  };
+}
+function archiveWhiteboardItems(board, itemIds, archivedAt) {
+  const targets = board.items.filter((item) => itemIds.has(item.id));
+  if (targets.length === 0) return false;
+  const archivedItems = board.archivedItems ?? (board.archivedItems = []);
+  const archiveStartIndex = archivedItems.length;
+  targets.forEach((item, offset2) => archivedItems.push(WhiteboardArchivedItemSchema.parse({
+    ...item,
+    archivedAt,
+    ...getDefaultArchivePosition(archiveStartIndex + offset2)
+  })));
+  board.items = board.items.filter((item) => !itemIds.has(item.id));
+  const movedEdges = board.edges.filter((edge) => itemIds.has(edge.fromItemId) || itemIds.has(edge.toItemId));
+  board.edges = board.edges.filter((edge) => !itemIds.has(edge.fromItemId) && !itemIds.has(edge.toItemId));
+  if (movedEdges.length > 0) {
+    const archivedEdges = board.archivedEdges ?? (board.archivedEdges = []);
+    const archivedEdgeIds = new Set(archivedEdges.map((edge) => edge.id));
+    movedEdges.forEach((edge) => {
+      if (archivedEdgeIds.has(edge.id)) return;
+      archivedEdges.push({ ...edge });
+      archivedEdgeIds.add(edge.id);
+    });
+  }
+  return true;
+}
+function restoreWhiteboardArchivedItem(board, itemId) {
+  if (!board.archivedItems) return null;
+  const index = board.archivedItems.findIndex((item2) => item2.id === itemId);
+  if (index < 0) return null;
+  const archived = board.archivedItems[index];
+  if (board.items.some((item2) => item2.recordId === archived.recordId || item2.id === archived.id)) {
+    throw new Error("归档记录与当前白板 Projection 冲突，已阻止恢复");
+  }
+  const { archivedAt: _archivedAt, archiveX: _archiveX, archiveY: _archiveY, archiveZIndex: _archiveZIndex, ...projection } = archived;
+  const item = WhiteboardItemSchema.parse(projection);
+  board.items.push({ ...item });
+  board.archivedItems.splice(index, 1);
+  if (board.archivedItems.length === 0) delete board.archivedItems;
+  const activeIds = new Set(board.items.map((candidate) => candidate.id));
+  const restoreEdges = [];
+  board.archivedEdges = (board.archivedEdges ?? []).filter((edge) => {
+    if (!activeIds.has(edge.fromItemId) || !activeIds.has(edge.toItemId)) return true;
+    restoreEdges.push(edge);
+    return false;
+  });
+  if (board.archivedEdges.length === 0) delete board.archivedEdges;
+  const edgeIds = new Set(board.edges.map((edge) => edge.id));
+  restoreEdges.forEach((edge) => {
+    if (!edgeIds.has(edge.id)) board.edges.push({ ...edge });
+  });
+  return item;
+}
+function moveWhiteboardArchivedItems(board, moves) {
+  if (!board.archivedItems || moves.length === 0) return false;
+  const byId = new Map(board.archivedItems.map((item) => [item.id, item]));
+  if (moves.some((move2) => !byId.has(move2.itemId))) return false;
+  let changed2 = false;
+  moves.forEach((move2) => {
+    const item = byId.get(move2.itemId);
+    if (item.archiveX === move2.archiveX && item.archiveY === move2.archiveY && (move2.archiveZIndex === void 0 || item.archiveZIndex === move2.archiveZIndex)) return;
+    item.archiveX = move2.archiveX;
+    item.archiveY = move2.archiveY;
+    if (move2.archiveZIndex !== void 0) item.archiveZIndex = move2.archiveZIndex;
+    changed2 = true;
+  });
+  return changed2;
+}
+function createWhiteboardAnnotation(board, kind, text2, position2, groupId) {
+  if (groupId && !board.groups?.some((group) => group.id === groupId)) throw new Error("目标工作台不存在");
+  const annotation = WhiteboardAnnotationSchema.parse({
+    id: generateId("whiteboard-annotation"),
+    kind,
+    text: text2,
+    x: position2.x,
+    y: position2.y,
+    ...position2.zIndex === void 0 ? {} : { zIndex: position2.zIndex },
+    ...groupId ? { groupId } : {}
+  });
+  (board.annotations ?? (board.annotations = [])).push(annotation);
+  return annotation;
+}
+function updateWhiteboardAnnotation(board, annotationId, text2) {
+  const annotation = board.annotations?.find((candidate) => candidate.id === annotationId);
+  if (!annotation) return false;
+  const next2 = text2.slice(0, 4e3);
+  if (annotation.text === next2) return false;
+  annotation.text = next2;
+  return true;
+}
+function moveWhiteboardAnnotation(board, annotationId, position2) {
+  const annotation = board.annotations?.find((candidate) => candidate.id === annotationId);
+  if (!annotation) return false;
+  if (annotation.x === position2.x && annotation.y === position2.y && (position2.zIndex === void 0 || annotation.zIndex === position2.zIndex)) return false;
+  annotation.x = position2.x;
+  annotation.y = position2.y;
+  if (position2.zIndex !== void 0) annotation.zIndex = position2.zIndex;
+  return true;
+}
+function removeWhiteboardAnnotation(board, annotationId) {
+  if (!board.annotations) return false;
+  const before = board.annotations.length;
+  board.annotations = board.annotations.filter((candidate) => candidate.id !== annotationId);
+  if (board.annotations.length === before) return false;
+  if (board.annotations.length === 0) delete board.annotations;
+  return true;
+}
+function assertWhiteboardGroupParent(board, parentGroupId) {
+  if (!parentGroupId) return;
+  const groups = board.groups ?? [];
+  if (!groups.some((group) => group.id === parentGroupId)) throw new Error("目标父工作台不存在");
+  if (getWhiteboardGroupDepth(groups, parentGroupId) >= WHITEBOARD_WORKBENCH_MAX_DEPTH) {
+    throw new Error(`工作台最多嵌套 ${WHITEBOARD_WORKBENCH_MAX_DEPTH} 层`);
+  }
+}
+function moveWhiteboardGroupTree(board, groupId, position2, parentGroupId) {
+  const groups = board.groups ?? [];
+  const group = groups.find((candidate) => candidate.id === groupId);
+  if (!group) return false;
+  const nextParentId = parentGroupId === void 0 ? group.parentGroupId ?? null : parentGroupId;
+  if (nextParentId && !groups.some((candidate) => candidate.id === nextParentId)) throw new Error("目标父工作台不存在");
+  if (!canNestWhiteboardGroup(groups, groupId, nextParentId)) throw new Error(`工作台最多嵌套 ${WHITEBOARD_WORKBENCH_MAX_DEPTH} 层，且不能循环嵌套`);
+  const dx = position2.x - group.x;
+  const dy = position2.y - group.y;
+  const parentChanged = nextParentId !== (group.parentGroupId ?? null);
+  if (dx === 0 && dy === 0 && !parentChanged) return true;
+  const subtreeIds = getWhiteboardGroupDescendantIds(groups, groupId);
+  subtreeIds.add(groupId);
+  group.x = position2.x;
+  group.y = position2.y;
+  if (nextParentId) group.parentGroupId = nextParentId;
+  else delete group.parentGroupId;
+  groups.forEach((candidate) => {
+    if (candidate.id !== groupId && subtreeIds.has(candidate.id)) {
+      candidate.x += dx;
+      candidate.y += dy;
+    }
+  });
+  board.items.forEach((item) => {
+    if (item.groupId && subtreeIds.has(item.groupId)) {
+      item.x += dx;
+      item.y += dy;
+    }
+  });
+  board.archivedItems?.forEach((item) => {
+    if (item.groupId && subtreeIds.has(item.groupId)) {
+      item.x += dx;
+      item.y += dy;
+    }
+  });
+  board.annotations?.forEach((annotation) => {
+    if (annotation.groupId && subtreeIds.has(annotation.groupId)) {
+      annotation.x += dx;
+      annotation.y += dy;
+    }
+  });
+  return true;
+}
+function dissolveWhiteboardGroupTree(board, groupId) {
+  const groups = board.groups;
+  if (!groups) return false;
+  const group = groups.find((candidate) => candidate.id === groupId);
+  if (!group) return false;
+  const parentGroupId = group.parentGroupId;
+  board.groups = groups.filter((candidate) => candidate.id !== groupId);
+  board.groups.forEach((candidate) => {
+    if (candidate.parentGroupId !== groupId) return;
+    if (parentGroupId) candidate.parentGroupId = parentGroupId;
+    else delete candidate.parentGroupId;
+  });
+  board.items.forEach((item) => {
+    if (item.groupId !== groupId) return;
+    if (parentGroupId) item.groupId = parentGroupId;
+    else delete item.groupId;
+  });
+  board.archivedItems?.forEach((item) => {
+    if (item.groupId !== groupId) return;
+    if (parentGroupId) item.groupId = parentGroupId;
+    else delete item.groupId;
+  });
+  board.annotations?.forEach((annotation) => {
+    if (annotation.groupId !== groupId) return;
+    if (parentGroupId) annotation.groupId = parentGroupId;
+    else delete annotation.groupId;
+  });
+  return true;
+}
+function hasSelectedAncestor(groups, groupId, selected) {
+  return getWhiteboardGroupPathIds(groups ?? [], groupId).some((id) => id !== groupId && selected.has(id));
+}
+function rootSelectedGroupIds(groups, groupIds) {
+  const existing = new Set(groups.map((group) => group.id));
+  const selected = new Set([...groupIds].filter((id) => existing.has(id)));
+  return [...selected].filter((id) => !hasSelectedAncestor(groups, id, selected));
+}
+function translateWhiteboardNodes(board, itemIds, groupIds, dx, dy) {
+  if (!Number.isFinite(dx) || !Number.isFinite(dy) || dx === 0 && dy === 0) return false;
+  const groups = board.groups ?? [];
+  const rootGroups = rootSelectedGroupIds(groups, groupIds);
+  let changed2 = false;
+  rootGroups.forEach((groupId) => {
+    const group = groups.find((candidate) => candidate.id === groupId);
+    if (!group) return;
+    moveWhiteboardGroupTree(board, groupId, { x: group.x + dx, y: group.y + dy }, void 0);
+    changed2 = true;
+  });
+  board.items.forEach((item) => {
+    if (!itemIds.has(item.id)) return;
+    if (item.groupId && rootGroups.some((groupId) => getWhiteboardGroupPathIds(groups, item.groupId).includes(groupId))) return;
+    item.x += dx;
+    item.y += dy;
+    changed2 = true;
+  });
+  return changed2;
+}
+function moveWhiteboardNodes(board, itemMoves, groupMoves) {
+  if (itemMoves.length === 0 && groupMoves.length === 0) return false;
+  const groups = board.groups ?? [];
+  const requestedGroupIds = new Set(groupMoves.map((move2) => move2.groupId));
+  const roots = new Set(rootSelectedGroupIds(groups, requestedGroupIds));
+  const groupMoveById = new Map(groupMoves.map((move2) => [move2.groupId, move2.position]));
+  let changed2 = false;
+  roots.forEach((groupId) => {
+    const group = groups.find((candidate) => candidate.id === groupId);
+    const position2 = groupMoveById.get(groupId);
+    if (!group || !position2) return;
+    if (group.x === position2.x && group.y === position2.y) return;
+    moveWhiteboardGroupTree(board, groupId, position2, void 0);
+    changed2 = true;
+  });
+  const itemById = new Map(board.items.map((item) => [item.id, item]));
+  itemMoves.forEach(({ itemId, position: position2 }) => {
+    const item = itemById.get(itemId);
+    if (!item) return;
+    if (item.groupId && [...roots].some((groupId) => getWhiteboardGroupPathIds(groups, item.groupId).includes(groupId))) return;
+    if (item.x === position2.x && item.y === position2.y && (position2.zIndex === void 0 || item.zIndex === position2.zIndex)) return;
+    item.x = position2.x;
+    item.y = position2.y;
+    if (position2.zIndex !== void 0) item.zIndex = position2.zIndex;
+    changed2 = true;
+  });
+  return changed2;
+}
+var __getOwnPropDesc$5 = Object.getOwnPropertyDescriptor;
+var __decorateClass$5 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$5(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$4 = (index, decorator) => (target, key) => decorator(target, key, index);
+const DEFAULT_WHITEBOARD_STORE_PATH = "Think/whiteboards.json";
+const LEGACY_ASSOCIATION_STORE_PATH = "Think/association-spaces.json";
+const DEFAULT_WHITEBOARD_ID = "whiteboard-default";
+const DEFAULT_WHITEBOARD_TITLE = "白板";
+function emptyWhiteboardStoreData() {
+  return { version: 1, boards: {} };
+}
+function cloneBoard(board) {
+  return {
+    title: board.title,
+    items: board.items.map((item) => ({ ...item })),
+    edges: board.edges.map((edge) => ({ ...edge })),
+    ...board.annotations ? { annotations: board.annotations.map((annotation) => ({ ...annotation })) } : {},
+    ...board.groups ? { groups: board.groups.map((group) => ({ ...group })) } : {},
+    ...board.archivedItems ? { archivedItems: board.archivedItems.map((item) => ({ ...item })) } : {},
+    ...board.archivedEdges ? { archivedEdges: board.archivedEdges.map((edge) => ({ ...edge })) } : {},
+    modified: board.modified
+  };
+}
+function cloneStoreData(data) {
+  return {
+    version: 1,
+    boards: Object.fromEntries(
+      Object.entries(data.boards).map(([boardId, board]) => [boardId, cloneBoard(board)])
+    )
+  };
+}
+function corruptBackupPath(filePath) {
+  return filePath.endsWith(".json") ? `${filePath.slice(0, -".json".length)}.corrupt.json` : `${filePath}.corrupt.json`;
+}
+const changed = (value) => ({ changed: true, value });
+const unchanged = (value) => ({ changed: false, value });
+let WhiteboardStore = class {
+  constructor(storage) {
+    this.storage = storage;
+  }
+  storage;
+  data = emptyWhiteboardStoreData();
+  listeners = /* @__PURE__ */ new Set();
+  initialized = false;
+  initPromise = null;
+  disposed = false;
+  status = { state: "idle" };
+  mutationQueue = Promise.resolve();
+  historyPast = [];
+  historyFuture = [];
+  historyLimit = 100;
+  filePath = DEFAULT_WHITEBOARD_STORE_PATH;
+  getStatus() {
+    return { ...this.status };
+  }
+  async initialize() {
+    if (this.disposed) throw new Error("WhiteboardStore 已 dispose");
+    if (this.initialized) return;
+    if (this.initPromise) return this.initPromise;
+    this.setStatus({ state: "loading" });
+    const operation = this.doInitialize().then(async () => {
+      if (this.disposed) return;
+      this.initialized = true;
+      this.setStatus({ state: "ready" });
+      await this.cleanupLegacyAssociationData();
+    }).catch((error) => {
+      if (!this.disposed) {
+        this.initialized = false;
+        const message = error instanceof Error ? error.message : String(error);
+        this.setStatus({ state: "error", message });
+      }
+      throw error;
+    }).finally(() => {
+      this.initPromise = null;
+    });
+    this.initPromise = operation;
+    return operation;
+  }
+  async doInitialize() {
+    let raw;
+    try {
+      raw = await this.storage.readJSON(this.filePath);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new Error(`白板数据恢复失败（${this.filePath}）：${detail}`);
+    }
+    if (this.disposed) return;
+    if (raw == null) {
+      this.data = emptyWhiteboardStoreData();
+      return;
+    }
+    const parsed = WhiteboardStoreDataSchema.safeParse(raw);
+    if (parsed.success) {
+      this.data = cloneStoreData(parsed.data);
+      devLog(`WhiteboardStore: 从文件加载 ${Object.keys(this.data.boards).length} 个白板`);
+      return;
+    }
+    devWarn("WhiteboardStore: 文件数据校验失败，备份损坏文件并阻止写入", parsed.error);
+    await this.backupCorruptData(raw);
+    throw new Error(`白板数据格式无效（${this.filePath}），已阻止写入以保护原文件`);
+  }
+  async cleanupLegacyAssociationData() {
+    try {
+      await this.storage.remove(LEGACY_ASSOCIATION_STORE_PATH);
+    } catch (error) {
+      devWarn(`WhiteboardStore: 清理旧测试数据失败（${LEGACY_ASSOCIATION_STORE_PATH}），可忽略`, error);
+    }
+  }
+  async backupCorruptData(data) {
+    if (this.disposed) return;
+    try {
+      await this.storage.writeJSON(corruptBackupPath(this.filePath), data);
+    } catch (error) {
+      devError("WhiteboardStore: 备份损坏数据失败", error);
+    }
+  }
+  setStatus(status) {
+    this.status = status;
+    this.notify();
+  }
+  assertReady() {
+    if (this.disposed) throw new Error("WhiteboardStore 已 dispose");
+    if (this.status.state === "error") throw new Error(`WhiteboardStore 初始化失败：${this.status.message}`);
+    if (!this.initialized || this.status.state !== "ready") throw new Error("WhiteboardStore 尚未完成启动恢复，当前禁止读取或写入");
+  }
+  assertBoardId(boardId) {
+    if (!boardId.trim()) throw new Error("whiteboardId 必须非空");
+  }
+  getMutableBoard(data, boardId) {
+    return data.boards[boardId];
+  }
+  ensureMutableBoard(data, boardId, title = DEFAULT_WHITEBOARD_TITLE) {
+    const existing = this.getMutableBoard(data, boardId);
+    if (existing) return existing;
+    const board = WhiteboardBoardSchema.parse({ title, items: [], edges: [], modified: Date.now() });
+    data.boards[boardId] = board;
+    return board;
+  }
+  touch(board) {
+    board.modified = Date.now();
+  }
+  groups(board) {
+    return board.groups ?? (board.groups = []);
+  }
+  findGroup(board, groupId) {
+    return board.groups?.find((group) => group.id === groupId);
+  }
+  async persistSnapshot(snapshot) {
+    try {
+      await this.storage.writeJSON(this.filePath, snapshot);
+    } catch (error) {
+      throw new Error(`白板数据写入失败（${this.filePath}）：${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  enqueueMutation(mutate, recordHistory = true) {
+    const operation = this.mutationQueue.then(async () => {
+      this.assertReady();
+      const draft = cloneStoreData(this.data);
+      const decision = mutate(draft);
+      if (!decision.changed) return decision.value;
+      const parsed = WhiteboardStoreDataSchema.safeParse(draft);
+      if (!parsed.success) throw new Error(`WhiteboardStore mutation 产生无效数据: ${parsed.error.message}`);
+      const snapshot = cloneStoreData(parsed.data);
+      const previous = cloneStoreData(this.data);
+      await this.persistSnapshot(snapshot);
+      if (!this.disposed) {
+        if (recordHistory) {
+          this.historyPast.push(previous);
+          if (this.historyPast.length > this.historyLimit) this.historyPast.shift();
+          this.historyFuture = [];
+        }
+        this.data = snapshot;
+        this.notify();
+      }
+      return decision.value;
+    });
+    this.mutationQueue = operation.then(() => void 0, () => void 0);
+    return operation;
+  }
+  notify() {
+    if (this.disposed) return;
+    this.listeners.forEach((listener) => {
+      try {
+        listener();
+      } catch (error) {
+        devError("WhiteboardStore: 通知失败", error);
+      }
+    });
+  }
+  subscribe(listener) {
+    if (this.disposed) return () => void 0;
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+  dispose() {
+    this.disposed = true;
+    this.initialized = false;
+    this.status = { state: "disposed" };
+    this.listeners.clear();
+    this.initPromise = null;
+    this.historyPast = [];
+    this.historyFuture = [];
+  }
+  canUndo() {
+    return this.initialized && this.status.state === "ready" && this.historyPast.length > 0;
+  }
+  canRedo() {
+    return this.initialized && this.status.state === "ready" && this.historyFuture.length > 0;
+  }
+  enqueueHistoryTravel(direction) {
+    const operation = this.mutationQueue.then(async () => {
+      this.assertReady();
+      const source = direction === "undo" ? this.historyPast : this.historyFuture;
+      const target = direction === "undo" ? this.historyFuture : this.historyPast;
+      const candidate = source[source.length - 1];
+      if (!candidate) return false;
+      const snapshot = cloneStoreData(candidate);
+      const current2 = cloneStoreData(this.data);
+      await this.persistSnapshot(snapshot);
+      source.pop();
+      target.push(current2);
+      if (target.length > this.historyLimit) target.shift();
+      if (!this.disposed) {
+        this.data = snapshot;
+        this.notify();
+      }
+      return true;
+    });
+    this.mutationQueue = operation.then(() => void 0, () => void 0);
+    return operation;
+  }
+  undo() {
+    return this.enqueueHistoryTravel("undo");
+  }
+  redo() {
+    return this.enqueueHistoryTravel("redo");
+  }
+  getBoard(boardId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    const board = this.getMutableBoard(this.data, boardId);
+    return board ? cloneBoard(board) : void 0;
+  }
+  async ensureBoard(boardId, title = DEFAULT_WHITEBOARD_TITLE) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const existing = this.getMutableBoard(draft, boardId);
+      if (existing) return unchanged(cloneBoard(existing));
+      return changed(cloneBoard(this.ensureMutableBoard(draft, boardId, title)));
+    }, false);
+  }
+  async addRecord(boardId, recordId, position2, groupId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    if (!recordId.trim()) throw new Error("recordId 必须非空");
+    return this.enqueueMutation((draft) => {
+      const board = this.ensureMutableBoard(draft, boardId);
+      const existing = board.items.find((item2) => item2.recordId === recordId);
+      if (existing) return unchanged({ ...existing });
+      if (board.archivedItems?.some((item2) => item2.recordId === recordId)) throw new Error("该记录已归档，请从归档箱恢复");
+      if (groupId && !this.findGroup(board, groupId)) throw new Error("目标工作台不存在");
+      const item = WhiteboardItemSchema.parse({
+        id: generateId("whiteboard-item"),
+        recordId,
+        x: position2.x,
+        y: position2.y,
+        ...position2.zIndex === void 0 ? {} : { zIndex: position2.zIndex },
+        ...groupId ? { groupId } : {}
+      });
+      board.items.push({ ...item });
+      this.touch(board);
+      return changed({ ...item });
+    });
+  }
+  async addRecords(boardId, placements2) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    const seenRecordIds = /* @__PURE__ */ new Set();
+    const uniquePlacements = placements2.filter((entry) => {
+      if (!entry.recordId.trim()) throw new Error("recordId 必须非空");
+      if (seenRecordIds.has(entry.recordId)) return false;
+      seenRecordIds.add(entry.recordId);
+      return true;
+    });
+    if (uniquePlacements.length === 0) return [];
+    return this.enqueueMutation((draft) => {
+      const board = this.ensureMutableBoard(draft, boardId);
+      const results = [];
+      const archivedRecordIds = new Set((board.archivedItems ?? []).map((item) => item.recordId));
+      const existingByRecordId = new Map(board.items.map((item) => [item.recordId, item]));
+      let didChange = false;
+      uniquePlacements.forEach(({ recordId, position: position2, groupId }) => {
+        if (archivedRecordIds.has(recordId)) throw new Error("批量加入包含已归档记录，请先从归档箱恢复");
+        const existing = existingByRecordId.get(recordId);
+        if (existing) {
+          results.push({ ...existing });
+          return;
+        }
+        if (groupId && !this.findGroup(board, groupId)) throw new Error("目标工作台不存在");
+        const item = WhiteboardItemSchema.parse({
+          id: generateId("whiteboard-item"),
+          recordId,
+          x: position2.x,
+          y: position2.y,
+          ...position2.zIndex === void 0 ? {} : { zIndex: position2.zIndex },
+          ...groupId ? { groupId } : {}
+        });
+        board.items.push({ ...item });
+        existingByRecordId.set(recordId, item);
+        results.push({ ...item });
+        didChange = true;
+      });
+      if (!didChange) return unchanged(results);
+      this.touch(board);
+      return changed(results);
+    });
+  }
+  async moveItem(boardId, itemId, position2, groupId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board) return unchanged(false);
+      const item = board.items.find((candidate) => candidate.id === itemId);
+      if (!item) return unchanged(false);
+      if (groupId && !this.findGroup(board, groupId)) throw new Error("目标工作台不存在");
+      const { groupId: currentGroupId, ...withoutGroup } = item;
+      const base = groupId === null ? withoutGroup : item;
+      const next2 = WhiteboardItemSchema.parse({
+        ...base,
+        x: position2.x,
+        y: position2.y,
+        ...position2.zIndex === void 0 ? {} : { zIndex: position2.zIndex },
+        ...groupId ? { groupId } : groupId === void 0 && currentGroupId ? { groupId: currentGroupId } : {}
+      });
+      if (groupId === null) delete item.groupId;
+      Object.assign(item, next2);
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async moveItems(boardId, moves, groupId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board || moves.length === 0) return unchanged(false);
+      if (groupId && !this.findGroup(board, groupId)) throw new Error("目标工作台不存在");
+      const itemById = new Map(board.items.map((item) => [item.id, item]));
+      if (moves.some((move2) => !itemById.has(move2.itemId))) return unchanged(false);
+      moves.forEach(({ itemId, position: position2 }) => {
+        const item = itemById.get(itemId);
+        Object.assign(item, WhiteboardItemSchema.parse({ ...item, x: position2.x, y: position2.y, ...position2.zIndex === void 0 ? {} : { zIndex: position2.zIndex }, ...groupId ? { groupId } : {} }));
+      });
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async moveArchivedItems(boardId, moves) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board || !moveWhiteboardArchivedItems(board, moves)) return unchanged(false);
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async translateNodes(boardId, itemIds, groupIds, dx, dy) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    const items = new Set(itemIds.filter((id) => id.trim()));
+    const groups = new Set(groupIds.filter((id) => id.trim()));
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board || !translateWhiteboardNodes(board, items, groups, dx, dy)) return unchanged(false);
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async moveNodes(boardId, itemMoves, groupMoves) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board || !moveWhiteboardNodes(board, itemMoves, groupMoves)) return unchanged(false);
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async archiveItems(boardId, itemIds) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    const ids2 = new Set(itemIds.filter((id) => id.trim()));
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board || ids2.size === 0) return unchanged(false);
+      if (!archiveWhiteboardItems(board, ids2, Date.now())) return unchanged(false);
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async restoreArchivedItem(boardId, itemId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board) return unchanged(null);
+      const item = restoreWhiteboardArchivedItem(board, itemId);
+      if (!item) return unchanged(null);
+      this.touch(board);
+      return changed({ ...item });
+    });
+  }
+  async removeItems(boardId, itemIds) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    const ids2 = new Set(itemIds.filter((id) => id.trim()));
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board || ids2.size === 0) return unchanged(false);
+      const before = board.items.length;
+      board.items = board.items.filter((item) => !ids2.has(item.id));
+      if (board.items.length === before) return unchanged(false);
+      board.edges = board.edges.filter((edge) => !ids2.has(edge.fromItemId) && !ids2.has(edge.toItemId));
+      if (board.archivedEdges) board.archivedEdges = board.archivedEdges.filter((edge) => !ids2.has(edge.fromItemId) && !ids2.has(edge.toItemId));
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async removeItem(boardId, itemId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board) return unchanged(false);
+      const originalLength = board.items.length;
+      board.items = board.items.filter((item) => item.id !== itemId);
+      if (board.items.length === originalLength) return unchanged(false);
+      board.edges = board.edges.filter((edge) => edge.fromItemId !== itemId && edge.toItemId !== itemId);
+      if (board.archivedEdges) board.archivedEdges = board.archivedEdges.filter((edge) => edge.fromItemId !== itemId && edge.toItemId !== itemId);
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async createGroup(boardId, title, position2, parentGroupId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    const cleanTitle = title.trim();
+    if (!cleanTitle) throw new Error("工作台名称必须非空");
+    return this.enqueueMutation((draft) => {
+      const board = this.ensureMutableBoard(draft, boardId);
+      const parentId = parentGroupId ?? null;
+      assertWhiteboardGroupParent(board, parentId);
+      const group = WhiteboardGroupSchema.parse({ id: generateId("whiteboard-group"), title: cleanTitle, x: position2.x, y: position2.y, collapsed: false, ...parentId ? { parentGroupId: parentId } : {} });
+      this.groups(board).push({ ...group });
+      this.touch(board);
+      return changed({ ...group });
+    });
+  }
+  async createGroupFromItems(boardId, title, itemIds, position2, parentGroupId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    const cleanTitle = title.trim();
+    if (!cleanTitle) throw new Error("工作台名称必须非空");
+    return this.enqueueMutation((draft) => {
+      const board = this.ensureMutableBoard(draft, boardId);
+      const ids2 = new Set(itemIds);
+      const members = board.items.filter((item) => ids2.has(item.id));
+      if (members.length === 0) throw new Error("没有可加入工作台的所选卡片");
+      const parentId = parentGroupId ?? null;
+      assertWhiteboardGroupParent(board, parentId);
+      const group = WhiteboardGroupSchema.parse({ id: generateId("whiteboard-group"), title: cleanTitle, x: position2.x, y: position2.y, collapsed: false, ...parentId ? { parentGroupId: parentId } : {} });
+      this.groups(board).push({ ...group });
+      members.forEach((item) => {
+        item.groupId = group.id;
+      });
+      this.touch(board);
+      return changed({ ...group });
+    });
+  }
+  async renameGroup(boardId, groupId, title) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    const cleanTitle = title.trim();
+    if (!cleanTitle) throw new Error("工作台名称必须非空");
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      const group = board && this.findGroup(board, groupId);
+      if (!board || !group) return unchanged(false);
+      if (group.title === cleanTitle) return unchanged(true);
+      group.title = cleanTitle;
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async setGroupCollapsed(boardId, groupId, collapsed) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      const group = board && this.findGroup(board, groupId);
+      if (!board || !group) return unchanged(false);
+      if (group.collapsed === collapsed) return unchanged(true);
+      group.collapsed = collapsed;
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async moveGroup(boardId, groupId, position2, parentGroupId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board) return unchanged(false);
+      const group = this.findGroup(board, groupId);
+      if (!group) return unchanged(false);
+      const nextParentId = parentGroupId === void 0 ? group.parentGroupId ?? null : parentGroupId;
+      if (group.x === position2.x && group.y === position2.y && nextParentId === (group.parentGroupId ?? null)) return unchanged(true);
+      moveWhiteboardGroupTree(board, groupId, position2, parentGroupId);
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async removeGroup(boardId, groupId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board || !dissolveWhiteboardGroupTree(board, groupId)) return unchanged(false);
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async bringItemToFront(boardId, itemId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board) return unchanged(false);
+      const item = board.items.find((candidate) => candidate.id === itemId);
+      if (!item) return unchanged(false);
+      const maxZ = board.items.reduce((max2, candidate) => Math.max(max2, candidate.zIndex ?? 0), 0);
+      item.zIndex = maxZ + 1;
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async createAnnotation(boardId, kind, text2, position2, groupId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.ensureMutableBoard(draft, boardId);
+      const annotation = createWhiteboardAnnotation(board, kind, text2, position2, groupId);
+      this.touch(board);
+      return changed({ ...annotation });
+    });
+  }
+  async updateAnnotation(boardId, annotationId, text2) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board || !updateWhiteboardAnnotation(board, annotationId, text2)) return unchanged(false);
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async moveAnnotation(boardId, annotationId, position2) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board || !moveWhiteboardAnnotation(board, annotationId, position2)) return unchanged(false);
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async removeAnnotation(boardId, annotationId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board || !removeWhiteboardAnnotation(board, annotationId)) return unchanged(false);
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async addEdge(boardId, fromItemId, toItemId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    if (!fromItemId.trim() || !toItemId.trim()) throw new Error("白板连线必须引用非空 item ID");
+    if (fromItemId === toItemId) throw new Error("白板连线不能连接同一个 item");
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board) throw new Error("白板不存在，无法创建连线");
+      if (!board.items.some((item) => item.id === fromItemId) || !board.items.some((item) => item.id === toItemId)) {
+        throw new Error("白板连线的起点或终点 item 不存在");
+      }
+      const duplicate = board.edges.find((edge2) => edge2.fromItemId === fromItemId && edge2.toItemId === toItemId);
+      if (duplicate) return unchanged({ ...duplicate });
+      const edge = WhiteboardEdgeSchema.parse({ id: generateId("whiteboard-edge"), fromItemId, toItemId });
+      board.edges.push({ ...edge });
+      this.touch(board);
+      return changed({ ...edge });
+    });
+  }
+  async updateEdgeLabel(boardId, edgeId, label) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      const edge = board?.edges.find((candidate) => candidate.id === edgeId);
+      if (!board || !edge) return unchanged(false);
+      const cleanLabel2 = label.trim().slice(0, 200);
+      if ((edge.label ?? "") === cleanLabel2) return unchanged(true);
+      if (cleanLabel2) edge.label = cleanLabel2;
+      else delete edge.label;
+      this.touch(board);
+      return changed(true);
+    });
+  }
+  async removeEdge(boardId, edgeId) {
+    this.assertReady();
+    this.assertBoardId(boardId);
+    return this.enqueueMutation((draft) => {
+      const board = this.getMutableBoard(draft, boardId);
+      if (!board) return unchanged(false);
+      const originalLength = board.edges.length;
+      board.edges = board.edges.filter((edge) => edge.id !== edgeId);
+      if (board.edges.length === originalLength) return unchanged(false);
+      this.touch(board);
+      return changed(true);
+    });
+  }
+};
+WhiteboardStore = __decorateClass$5([
+  singleton(),
+  __decorateParam$4(0, inject(STORAGE_TOKEN))
+], WhiteboardStore);
 function validateServices(services, source = "validateServices") {
   if (!services) {
     throw new Error(
@@ -21075,9 +22489,9 @@ function getStoreMutationErrorMessage(error, fallback) {
   if (typeof error === "string" && error.trim()) return error;
   return fallback;
 }
-function getActionShortName(action) {
-  const parts = action.split(".").filter(Boolean);
-  return parts[parts.length - 1] || action;
+function getActionShortName(action2) {
+  const parts = action2.split(".").filter(Boolean);
+  return parts[parts.length - 1] || action2;
 }
 function createSettingsMutationRunner(options) {
   return async function runSettingsMutation(operation) {
@@ -21172,7 +22586,7 @@ function createDefaultViewPlacements(viewInstanceIds, canvasWidth, config2, pref
   const result = {};
   let cursorX = 0;
   let cursorY = 0;
-  let rowHeight = 0;
+  let rowHeight2 = 0;
   let startIndex = 0;
   if (normalizedConfig.defaultTemplate === "focus" && viewInstanceIds.length > 0) {
     const firstViewId = viewInstanceIds[0];
@@ -21190,14 +22604,14 @@ function createDefaultViewPlacements(viewInstanceIds, canvasWidth, config2, pref
     const height2 = Math.max(normalizedConfig.minItemHeight, preferred?.height ?? normalizedConfig.defaultItemHeight);
     if (cursorX > 0 && cursorX + width2 > safeCanvasWidth) {
       cursorX = 0;
-      cursorY += rowHeight + ITEM_GAP;
-      rowHeight = 0;
+      cursorY += rowHeight2 + ITEM_GAP;
+      rowHeight2 = 0;
     }
     const fallback = { x: cursorX, y: cursorY, width: width2, height: height2, zIndex: index + 1 };
     const placement = normalizeViewPlacement(fallback, fallback, safeCanvasWidth, normalizedConfig);
     result[viewId] = placement;
     cursorX = placement.x + placement.width + ITEM_GAP;
-    rowHeight = Math.max(rowHeight, placement.height);
+    rowHeight2 = Math.max(rowHeight2, placement.height);
   }
   return result;
 }
@@ -21213,7 +22627,7 @@ function resolveViewPlacements(viewInstanceIds, persistedPlacements, canvasWidth
   }
   let cursorX = 0;
   let cursorY = Object.values(result).reduce((maxBottom, placement) => Math.max(maxBottom, placement.y + getFreeformVisualHeight(placement)), 0) + ITEM_GAP;
-  let rowHeight = 0;
+  let rowHeight2 = 0;
   let nextZIndex = Object.values(result).reduce((maxValue, placement) => Math.max(maxValue, placement.zIndex ?? 0), 0) + 1;
   for (const viewId of viewInstanceIds) {
     if (result[viewId]) continue;
@@ -21222,14 +22636,14 @@ function resolveViewPlacements(viewInstanceIds, persistedPlacements, canvasWidth
     const height2 = Math.max(normalizedConfig.minItemHeight, preferred?.height ?? normalizedConfig.defaultItemHeight);
     if (cursorX > 0 && cursorX + width2 > safeCanvasWidth) {
       cursorX = 0;
-      cursorY += rowHeight + ITEM_GAP;
-      rowHeight = 0;
+      cursorY += rowHeight2 + ITEM_GAP;
+      rowHeight2 = 0;
     }
     const fallback = { x: cursorX, y: cursorY, width: width2, height: height2, zIndex: nextZIndex };
     const placement = normalizeViewPlacement(fallback, fallback, safeCanvasWidth, normalizedConfig);
     result[viewId] = placement;
     cursorX = placement.x + placement.width + ITEM_GAP;
-    rowHeight = Math.max(rowHeight, placement.height);
+    rowHeight2 = Math.max(rowHeight2, placement.height);
     nextZIndex += 1;
   }
   return viewInstanceIds.reduce((ordered, viewId) => {
@@ -21280,14 +22694,14 @@ function normalizeViewPlacementZIndices(placements2, preferredOrder = Object.key
     if (zDiff !== 0) return zDiff;
     return (order2.get(leftId) ?? Number.MAX_SAFE_INTEGER) - (order2.get(rightId) ?? Number.MAX_SAFE_INTEGER);
   });
-  let changed = false;
+  let changed2 = false;
   const normalized2 = {};
   entries.forEach(([id, placement], index) => {
     const zIndex2 = index + 1;
-    if (placement.zIndex !== zIndex2) changed = true;
+    if (placement.zIndex !== zIndex2) changed2 = true;
     normalized2[id] = placement.zIndex === zIndex2 ? placement : { ...placement, zIndex: zIndex2 };
   });
-  return changed ? normalized2 : placements2;
+  return changed2 ? normalized2 : placements2;
 }
 function bringViewPlacementsToFront(placements2, viewInstanceId, preferredOrder = Object.keys(placements2)) {
   if (!placements2[viewInstanceId]) return placements2;
@@ -21297,15 +22711,15 @@ function bringViewPlacementsToFront(placements2, viewInstanceId, preferredOrder 
   if (topId === viewInstanceId) return normalized2;
   const withoutTarget = orderedIds.filter((id) => id !== viewInstanceId);
   const nextOrder = [...withoutTarget, viewInstanceId];
-  let changed = normalized2 !== placements2;
+  let changed2 = normalized2 !== placements2;
   const next2 = {};
   nextOrder.forEach((id, index) => {
     const placement = normalized2[id];
     const zIndex2 = index + 1;
-    if (placement.zIndex !== zIndex2) changed = true;
+    if (placement.zIndex !== zIndex2) changed2 = true;
     next2[id] = placement.zIndex === zIndex2 ? placement : { ...placement, zIndex: zIndex2 };
   });
-  return changed ? next2 : placements2;
+  return changed2 ? next2 : placements2;
 }
 function makeLayoutSettingsDraft(name, parentId = null) {
   return {
@@ -22423,8 +23837,8 @@ function moveDisplayField(fields, fromIndex, toIndex, options = {}) {
   if (fromIndex < 0 || fromIndex >= current2.length) return current2;
   if (toIndex < 0 || toIndex >= current2.length) return current2;
   const next2 = [...current2];
-  const [moved] = next2.splice(fromIndex, 1);
-  next2.splice(toIndex, 0, moved);
+  const [moved2] = next2.splice(fromIndex, 1);
+  next2.splice(toIndex, 0, moved2);
   return next2;
 }
 function normalizeViewMultiValue(value, options = {}) {
@@ -22960,15 +24374,15 @@ function buildSwitchFallbackDraft(state) {
     timeDirection: "forward"
   };
 }
-function reduceRecordInputSession(state, action) {
-  switch (action.type) {
+function reduceRecordInputSession(state, action2) {
+  switch (action2.type) {
     case "reset":
-      return initializeRecordInputSession(action.payload);
+      return initializeRecordInputSession(action2.payload);
     case "setMode":
-      if (action.mode === state.mode) return state;
-      return { ...state, mode: action.mode, dirty: true, revision: state.revision + 1 };
+      if (action2.mode === state.mode) return state;
+      return { ...state, mode: action2.mode, dirty: true, revision: state.revision + 1 };
     case "switchRecordType": {
-      const nextBlockId = String(action.blockId || "");
+      const nextBlockId = String(action2.blockId || "");
       if (!nextBlockId || nextBlockId === state.currentBlockId) return state;
       const cachedDrafts = withCachedCurrentDraft(state);
       const restored = cachedDrafts[nextBlockId] ? copyDraft(cachedDrafts[nextBlockId]) : buildSwitchFallbackDraft(state);
@@ -22980,16 +24394,16 @@ function reduceRecordInputSession(state, action) {
     }
     case "updateDraft":
       return commitDraft(state, {
-        formData: action.formData,
-        fieldSources: action.fieldSources,
-        selectedGoalPath: action.selectedGoalPath !== void 0 ? action.selectedGoalPath : state.selectedGoalPath,
-        timeDirection: action.timeDirection ?? state.timeDirection
+        formData: action2.formData,
+        fieldSources: action2.fieldSources,
+        selectedGoalPath: action2.selectedGoalPath !== void 0 ? action2.selectedGoalPath : state.selectedGoalPath,
+        timeDirection: action2.timeDirection ?? state.timeDirection
       });
     case "selectGoal":
       return commitDraft(state, {
-        formData: action.formData || state.formData,
-        fieldSources: action.fieldSources || state.fieldSources,
-        selectedGoalPath: action.goalPath,
+        formData: action2.formData || state.formData,
+        fieldSources: action2.fieldSources || state.fieldSources,
+        selectedGoalPath: action2.goalPath,
         timeDirection: state.timeDirection
       });
     case "clearGoalContext": {
@@ -23003,15 +24417,15 @@ function reduceRecordInputSession(state, action) {
     }
     case "changeTimeDirection":
       return commitDraft(state, {
-        formData: action.formData,
-        fieldSources: action.fieldSources,
+        formData: action2.formData,
+        fieldSources: action2.fieldSources,
         selectedGoalPath: state.selectedGoalPath,
-        timeDirection: action.timeDirection
+        timeDirection: action2.timeDirection
       });
     case "hydrateDefaults":
       return commitDraft(state, {
-        formData: action.formData,
-        fieldSources: action.fieldSources,
+        formData: action2.formData,
+        fieldSources: action2.fieldSources,
         selectedGoalPath: state.selectedGoalPath,
         timeDirection: state.timeDirection
       });
@@ -24293,8 +25707,8 @@ function localSessionParts$1(value) {
     time: `${String(parsed.getHours()).padStart(2, "0")}:${String(parsed.getMinutes()).padStart(2, "0")}`
   };
 }
-function resolveActivityInterval(record, byId) {
-  const session = asTaskSessionRecord(record);
+function resolveActivityInterval(record2, byId) {
+  const session = asTaskSessionRecord(record2);
   if (!session) return null;
   const task = byId.get(session.taskId);
   if (!task || task.coreBlock !== "task") return null;
@@ -24324,10 +25738,10 @@ function activityConfidence(relation, gapMinutes) {
   if (gapMinutes <= 60) return "medium";
   return "low";
 }
-function buildActivityContext(record, byId, energyItemId, energyAbsolute, recentWindowMinutes) {
-  const interval = resolveActivityInterval(record, byId);
+function buildActivityContext(record2, byId, energyItemId, energyAbsolute, recentWindowMinutes) {
+  const interval = resolveActivityInterval(record2, byId);
   if (!interval) return null;
-  const session = asTaskSessionRecord(record);
+  const session = asTaskSessionRecord(record2);
   const directStart = session.startEnergyRecordId === energyItemId;
   const directEnd = session.endEnergyRecordId === energyItemId;
   if (directStart || energyAbsolute >= interval.startAbsolute && energyAbsolute <= interval.endAbsolute) {
@@ -25657,30 +27071,30 @@ class RecordInputUseCase {
     return new CreateRecordWorkflow(this.getWorkflowRuntime()).submit(params);
   }
   async submitEnergySnapshot(params) {
-    const record = buildEnergySnapshotRecord(params);
-    if (!record.goalPath) {
+    const record2 = buildEnergySnapshotRecord(params);
+    if (!record2.goalPath) {
       return buildValidationErrorResult("create", [{
         code: "energy_goal_required",
         field: "目标",
         message: "精力记录必须绑定目标。"
       }]);
     }
-    if (record.captureMode === "retrospective" && (!record.date || !record.time || !record.recordedAt)) {
+    if (record2.captureMode === "retrospective" && (!record2.date || !record2.time || !record2.recordedAt)) {
       return buildValidationErrorResult("create", [{
         code: "energy_retrospective_exact_time_required",
         field: "时间",
         message: "补录精力必须提供实际发生日期、具体时间和记录时间。"
       }]);
     }
-    if (record.captureMode === "retrospective" && `${record.date} ${record.time}` > record.recordedAt) {
+    if (record2.captureMode === "retrospective" && `${record2.date} ${record2.time}` > record2.recordedAt) {
       return buildValidationErrorResult("create", [{
         code: "energy_retrospective_future_time",
         field: "时间",
         message: "补录发生时间不能晚于当前记录时间。"
       }]);
     }
-    const header = ENERGY_APPEND_UNDER_HEADER.replace("{{goalPath}}", record.goalPath);
-    const markdown = buildEnergySnapshotMarkdown(record);
+    const header = ENERGY_APPEND_UNDER_HEADER.replace("{{goalPath}}", record2.goalPath);
+    const markdown = buildEnergySnapshotMarkdown(record2);
     try {
       const path = await this.deps.inputService.appendDirectRecord(
         ENERGY_TARGET_FILE,
@@ -25690,12 +27104,12 @@ class RecordInputUseCase {
       );
       const refresh = buildRefreshPlan([path]);
       await applyRecordRefreshPlan(this.deps.dataStore, refresh);
-      const linkedSession = params.linkFinishedSession === false ? null : await this.deps.itemService.linkEnergySnapshot(record.recordId);
+      const linkedSession = params.linkFinishedSession === false ? null : await this.deps.itemService.linkEnergySnapshot(record2.recordId);
       return buildSuccessResult("create", {
         affectedPath: path,
-        affectedRecordId: record.recordId,
+        affectedRecordId: record2.recordId,
         refresh,
-        feedback: { notice: linkedSession ? `已记录精力 ${record.score}，并关联本次工作反馈。` : `已记录精力 ${record.score}` }
+        feedback: { notice: linkedSession ? `已记录精力 ${record2.score}，并关联本次工作反馈。` : `已记录精力 ${record2.score}` }
       });
     } catch (error) {
       return mapSubmitError("create", error);
@@ -26220,6 +27634,7 @@ function buildRuntime(container = instance) {
       zustandStore: container.resolve(STORE_TOKEN),
       dataStore: container.resolve(DataStore),
       inputService: container.resolve(InputService),
+      whiteboardStore: container.resolve(WhiteboardStore),
       useCases: container.resolve(USECASES_TOKEN),
       uiPort: container.resolve(UI_PORT_TOKEN),
       modalPort: container.resolve(MODAL_PORT_TOKEN),
@@ -26247,7 +27662,8 @@ function resolveBootstrap(container = instance) {
       itemService: container.resolve(ItemService),
       inputService: container.resolve(InputService),
       dataStore: container.resolve(DataStore),
-      chatSessionStore: container.resolve(ChatSessionStore)
+      chatSessionStore: container.resolve(ChatSessionStore),
+      whiteboardStore: container.resolve(WhiteboardStore)
     };
   } catch (error) {
     devError("[resolveBootstrap] 解析 bootstrap 依赖失败:", error);
@@ -26294,6 +27710,14 @@ function useDataStore() {
   return store;
 }
 const InputServiceContext = X$1(null);
+const WhiteboardStoreContext = X$1(null);
+function useWhiteboardStore() {
+  const store = x$1(WhiteboardStoreContext);
+  if (!store) {
+    throw new Error("useWhiteboardStore 必须在 ServicesProvider 内部使用。");
+  }
+  return store;
+}
 const UseCasesContext = X$1(null);
 const UiPortContext = X$1(null);
 const ModalPortContext = X$1(null);
@@ -26309,7 +27733,7 @@ function useUseCases() {
 }
 function ServicesProvider({ services, children }) {
   validateServices(services, "ServicesProvider");
-  return /* @__PURE__ */ u2(ZustandStoreContext.Provider, { value: services.zustandStore, children: /* @__PURE__ */ u2(DataStoreContext.Provider, { value: services.dataStore, children: /* @__PURE__ */ u2(InputServiceContext.Provider, { value: services.inputService, children: /* @__PURE__ */ u2(UseCasesContext.Provider, { value: services.useCases, children: /* @__PURE__ */ u2(UiPortContext.Provider, { value: services.uiPort, children: /* @__PURE__ */ u2(ModalPortContext.Provider, { value: services.modalPort, children: /* @__PURE__ */ u2(MessageRenderPortContext.Provider, { value: services.messageRenderPort, children }) }) }) }) }) }) });
+  return /* @__PURE__ */ u2(ZustandStoreContext.Provider, { value: services.zustandStore, children: /* @__PURE__ */ u2(DataStoreContext.Provider, { value: services.dataStore, children: /* @__PURE__ */ u2(InputServiceContext.Provider, { value: services.inputService, children: /* @__PURE__ */ u2(WhiteboardStoreContext.Provider, { value: services.whiteboardStore ?? null, children: /* @__PURE__ */ u2(UseCasesContext.Provider, { value: services.useCases, children: /* @__PURE__ */ u2(UiPortContext.Provider, { value: services.uiPort, children: /* @__PURE__ */ u2(ModalPortContext.Provider, { value: services.modalPort, children: /* @__PURE__ */ u2(MessageRenderPortContext.Provider, { value: services.messageRenderPort, children }) }) }) }) }) }) }) });
 }
 function useUiPort() {
   const ui = x$1(UiPortContext);
@@ -34257,7 +35681,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
     name: "MuiButtonBase"
   });
   const {
-    action,
+    action: action2,
     centerRipple = false,
     children,
     className,
@@ -34295,7 +35719,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
   if (disabled && focusVisible) {
     setFocusVisible(false);
   }
-  F$1(action, () => ({
+  F$1(action2, () => ({
     focusVisible: () => {
       setFocusVisible(true);
       buttonRef.current.focus();
@@ -41750,7 +43174,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover2(inProps, ref) {
     name: "MuiPopover"
   });
   const {
-    action,
+    action: action2,
     anchorEl,
     anchorOrigin = {
       vertical: "top",
@@ -41889,7 +43313,7 @@ const Popover$1 = /* @__PURE__ */ D(function Popover2(inProps, ref) {
       setPositioningStyles();
     }
   });
-  F$1(action, () => open ? {
+  F$1(action2, () => open ? {
     updatePosition: () => {
       setPositioningStyles();
     }
@@ -44280,6 +45704,7 @@ function ThinkIconButton({
   tone = "default",
   pressed,
   className,
+  title,
   type = "button",
   ...buttonProps
 }) {
@@ -44296,7 +45721,7 @@ function ThinkIconButton({
       type,
       className: classes,
       "aria-label": label,
-      title: label,
+      title: title ?? label,
       "aria-pressed": pressed === void 0 ? void 0 : pressed,
       children: icon
     }
@@ -44557,8 +45982,8 @@ function ThinkSelect({ className, invalid, ...props }) {
     }
   );
 }
-function ThinkCheckbox({ label, description, compact = false, className, ...inputProps }) {
-  return /* @__PURE__ */ u2("label", { className: ["think-selection-control", compact ? "think-selection-control--compact" : "", className].filter(Boolean).join(" "), children: [
+function ThinkCheckbox({ label, description, compact: compact2 = false, className, ...inputProps }) {
+  return /* @__PURE__ */ u2("label", { className: ["think-selection-control", compact2 ? "think-selection-control--compact" : "", className].filter(Boolean).join(" "), children: [
     /* @__PURE__ */ u2("input", { ...inputProps, type: "checkbox" }),
     /* @__PURE__ */ u2("span", { className: "think-selection-control__text", children: [
       /* @__PURE__ */ u2("span", { className: "think-selection-control__label", children: label }),
@@ -45458,13 +46883,13 @@ function SimpleSelect({ value, options, onChange, placeholder, fullWidth, classN
     }) })
   ] });
 }
-function normalize(value) {
+function normalize$1(value) {
   return String(value || "").trim().toLocaleLowerCase();
 }
 function filterOptions(options, query) {
-  const needle = normalize(query);
+  const needle = normalize$1(query);
   if (!needle) return options.slice(0, 80);
-  return options.filter((option) => normalize(option.label).includes(needle) || normalize(option.value).includes(needle) || normalize(option.group || "").includes(needle)).slice(0, 80);
+  return options.filter((option) => normalize$1(option.label).includes(needle) || normalize$1(option.value).includes(needle) || normalize$1(option.group || "").includes(needle)).slice(0, 80);
 }
 function closeLater(setOpen) {
   window.setTimeout(() => setOpen(false), 90);
@@ -45555,16 +46980,16 @@ function ThinkMultiCombobox({
 }) {
   const [query, setQuery] = d("");
   const [open, setOpen] = d(false);
-  const normalizedValues = T$1(() => new Set(values2.map(normalize)), [values2]);
+  const normalizedValues = T$1(() => new Set(values2.map(normalize$1)), [values2]);
   const normalizedOptions = T$1(() => options.map(normalizeMultiOption), [options]);
   const labelByValue = T$1(() => new Map(normalizedOptions.map((option) => [option.value, option.label])), [normalizedOptions]);
   const filtered = T$1(() => {
-    const needle = normalize(query);
-    return normalizedOptions.filter((option) => !normalizedValues.has(normalize(option.value))).filter((option) => !needle || normalize(option.label).includes(needle) || normalize(option.value).includes(needle)).slice(0, 80);
+    const needle = normalize$1(query);
+    return normalizedOptions.filter((option) => !normalizedValues.has(normalize$1(option.value))).filter((option) => !needle || normalize$1(option.label).includes(needle) || normalize$1(option.value).includes(needle)).slice(0, 80);
   }, [normalizedOptions, query, normalizedValues]);
   const addValue = (next2) => {
     const clean2 = next2.trim();
-    if (!clean2 || normalizedValues.has(normalize(clean2))) return;
+    if (!clean2 || normalizedValues.has(normalize$1(clean2))) return;
     onChange([...values2, clean2]);
     setQuery("");
     setOpen(false);
@@ -46343,8 +47768,8 @@ function getQuickInputFieldChoices(field, fieldValueOptionsByKey) {
 }
 function getSelectedPathValue(value) {
   if (typeof value !== "object" || value === null) return String(value ?? "");
-  const record = value;
-  return String(record.value ?? record.label ?? "");
+  const record2 = value;
+  return String(record2.value ?? record2.label ?? "");
 }
 function QuickInputHierarchyFieldRenderer({
   field,
@@ -47147,7 +48572,7 @@ function RecordTypeSwitcher({ blocks, currentBlockId, onBlockChange }) {
         onClick: () => onBlockChange(block.id),
         title: label,
         className: "think-quick-input-record-type-switcher__item",
-        children: label
+        children: /* @__PURE__ */ u2("span", { className: "think-record-type-marker", "data-record-type": normalizeRecordTypePresentationKey(block.id), children: label })
       },
       block.id
     );
@@ -47453,11 +48878,11 @@ function hydrateQuickInputTemplateDefaults({
       periodLabel: currentPeriod.label
     } : {}
   };
-  let changed = false;
+  let changed2 = false;
   const next2 = { ...current2 };
   const nextSources = { ...fieldSources };
   const markChanged2 = () => {
-    changed = true;
+    changed2 = true;
   };
   const assignValue = (key, value, source) => assignQuickInputDefaultValue({ next: next2, nextSources, key, value, source, markChanged: markChanged2 });
   (template.fields || []).forEach((field) => {
@@ -47502,7 +48927,7 @@ function hydrateQuickInputTemplateDefaults({
       }
     }
   });
-  if (!changed) return { changed: false, formData: current2, fieldSources };
+  if (!changed2) return { changed: false, formData: current2, fieldSources };
   const taskTimeKeys = { startKey: "startAt", endKey: "endAt", durationKey: "expectedDurationMinutes" };
   const legacyTimeKeys = { startKey: "时间", endKey: "结束", durationKey: "时长" };
   const taskFinalized = finalizeLinkedTimeFields(
@@ -47840,8 +49265,8 @@ function applyQuickInputFieldUpdate(input) {
   } = input;
   const optionValue = value;
   const rawValue = isOptionObject2 ? optionValue?.value : value;
-  const fieldValue = isOptionObject2 ? { value: optionValue?.value, label: optionValue?.label } : value;
-  const draft = { ...formData, [key]: fieldValue, lastChanged: key };
+  const fieldValue2 = isOptionObject2 ? { value: optionValue?.value, label: optionValue?.label } : value;
+  const draft = { ...formData, [key]: fieldValue2, lastChanged: key };
   const statusValue = key === "status" || key === "状态" ? String(rawValue ?? "").trim().toLowerCase() : "";
   if (statusValue === "done") {
     draft.recurrenceUnit = { value: "none", label: "不重复" };
@@ -50168,8 +51593,8 @@ function openEditFromItem(params) {
   }).open();
   return true;
 }
-async function runUiRecordAction(action, options) {
-  const result = await action();
+async function runUiRecordAction(action2, options) {
+  const result = await action2();
   const message = readRecordSubmitMessage(result, options.failureMessage);
   if (isRecordSubmitSuccess(result, { treatCancelledAsSuccess: true })) {
     const successFallback = result.status === "success" ? options.successFallback : void 0;
@@ -50625,20 +52050,20 @@ function buildAiBatchConfirmRecordItems({
     };
   });
 }
-function materializeAiBatchConfirmRecordDraft(record, state) {
-  if (!state) return record;
+function materializeAiBatchConfirmRecordDraft(record2, state) {
+  if (!state) return record2;
   const nextGoalLabel = state.goalTitle || goalDisplayName(null, state.goalPath || String(state.formData.goalPath || state.formData["目标"] || ""));
-  const nextPresetLabel = state.templateSourceType === "goal-template" ? "已配置" : state.templateSourceType === "record-type" ? "记录类型默认" : record.presetLabel;
+  const nextPresetLabel = state.templateSourceType === "goal-template" ? "已配置" : state.templateSourceType === "record-type" ? "记录类型默认" : record2.presetLabel;
   return {
-    ...record,
-    blockId: state.blockId || record.blockId,
+    ...record2,
+    blockId: state.blockId || record2.blockId,
     goalLabel: nextGoalLabel,
     presetLabel: nextPresetLabel,
     formData: { ...state.formData }
   };
 }
 function findNextPendingAiBatchConfirmIndex(records, currentIndex) {
-  const isPending = (record) => !record.saved && !record.skipped;
+  const isPending = (record2) => !record2.saved && !record2.skipped;
   for (let index = currentIndex + 1; index < records.length; index += 1) {
     if (isPending(records[index])) return index;
   }
@@ -50648,18 +52073,18 @@ function findNextPendingAiBatchConfirmIndex(records, currentIndex) {
   return -1;
 }
 function summarizeAiBatchConfirmRecords(records) {
-  const savedCount = records.filter((record) => record.saved).length;
-  const skippedCount = records.filter((record) => record.skipped).length;
+  const savedCount = records.filter((record2) => record2.saved).length;
+  const skippedCount = records.filter((record2) => record2.skipped).length;
   return { savedCount, skippedCount, pendingCount: records.length - savedCount - skippedCount };
 }
-function buildAiBatchConfirmRecordContext(record) {
-  return buildRecordDraftContext(record.editorContext, record.formData);
+function buildAiBatchConfirmRecordContext(record2) {
+  return buildRecordDraftContext(record2.editorContext, record2.formData);
 }
-function buildAiBatchConfirmCreateSubmitParams(record, signal) {
+function buildAiBatchConfirmCreateSubmitParams(record2, signal) {
   return {
-    blockId: record.blockId,
-    formData: record.formData,
-    context: buildAiBatchConfirmRecordContext(record),
+    blockId: record2.blockId,
+    formData: record2.formData,
+    context: buildAiBatchConfirmRecordContext(record2),
     signal,
     source: "ai_batch"
   };
@@ -50667,7 +52092,7 @@ function buildAiBatchConfirmCreateSubmitParams(record, signal) {
 function buildAiBatchConfirmBatchSummary(results) {
   return buildBatchCreateRecordSubmitResult(results);
 }
-function AiBatchConfirmRecordHeader({ title, currentIndex, record, onClose }) {
+function AiBatchConfirmRecordHeader({ title, currentIndex, record: record2, onClose }) {
   return /* @__PURE__ */ u2(
     ModalHeader,
     {
@@ -50679,17 +52104,17 @@ function AiBatchConfirmRecordHeader({ title, currentIndex, record, onClose }) {
             currentIndex + 1,
             " 条"
           ] }),
-          record.saved ? /* @__PURE__ */ u2("span", { className: "is-success", children: "已保存" }) : null,
-          record.skipped ? /* @__PURE__ */ u2("span", { children: "已跳过" }) : null
+          record2.saved ? /* @__PURE__ */ u2("span", { className: "is-success", children: "已保存" }) : null,
+          record2.skipped ? /* @__PURE__ */ u2("span", { children: "已跳过" }) : null
         ] }),
         /* @__PURE__ */ u2("div", { className: "think-ai-batch-header__meta", children: [
           /* @__PURE__ */ u2("span", { children: [
             "目标 ",
-            shortDisplay(record.goalLabel, "未匹配")
+            shortDisplay(record2.goalLabel, "未匹配")
           ] }),
           /* @__PURE__ */ u2("span", { children: [
             "预设 ",
-            shortDisplay(record.presetLabel, "默认")
+            shortDisplay(record2.presetLabel, "默认")
           ] })
         ] })
       ] }),
@@ -50717,31 +52142,31 @@ function AiBatchConfirmSidebar({
         savedCount
       ] })
     ] }),
-    /* @__PURE__ */ u2("div", { className: "think-ai-batch-sidebar__list", children: records.map((record, index) => {
-      const block = blocks.find((entry) => entry.id === record.blockId);
+    /* @__PURE__ */ u2("div", { className: "think-ai-batch-sidebar__list", children: records.map((record2, index) => {
+      const block = blocks.find((entry) => entry.id === record2.blockId);
       const active = index === currentIndex;
       return /* @__PURE__ */ u2(
         "button",
         {
           type: "button",
-          className: `think-ai-batch-sidebar__item${active ? " is-selected" : ""}${record.skipped ? " is-muted" : ""}`,
+          className: `think-ai-batch-sidebar__item${active ? " is-selected" : ""}${record2.skipped ? " is-muted" : ""}`,
           "aria-current": active ? "true" : void 0,
           onClick: () => onSelect(index),
           disabled: isBusy,
           children: [
-            /* @__PURE__ */ u2("span", { className: "think-ai-batch-sidebar__status", "aria-hidden": "true", children: record.saved ? /* @__PURE__ */ u2(CheckCircleIcon, { fontSize: "small" }) : record.skipped ? /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(RadioButtonUncheckedIcon, { fontSize: "small" }) }),
+            /* @__PURE__ */ u2("span", { className: "think-ai-batch-sidebar__status", "aria-hidden": "true", children: record2.saved ? /* @__PURE__ */ u2(CheckCircleIcon, { fontSize: "small" }) : record2.skipped ? /* @__PURE__ */ u2(DeleteIcon, { fontSize: "small" }) : /* @__PURE__ */ u2(RadioButtonUncheckedIcon, { fontSize: "small" }) }),
             /* @__PURE__ */ u2("span", { className: "think-ai-batch-sidebar__text", children: [
               /* @__PURE__ */ u2("strong", { children: block?.name || "未知类型" }),
               /* @__PURE__ */ u2("span", { children: [
-                shortDisplay(record.goalLabel, "未匹配目标", 18),
+                shortDisplay(record2.goalLabel, "未匹配目标", 18),
                 " · ",
-                shortDisplay(record.presetLabel, "默认预设", 18)
+                shortDisplay(record2.presetLabel, "默认预设", 18)
               ] }),
-              /* @__PURE__ */ u2("span", { children: record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}` })
+              /* @__PURE__ */ u2("span", { children: record2.cmd.fieldValues?.内容?.slice(0, 20) || record2.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}` })
             ] })
           ]
         },
-        record.id
+        record2.id
       );
     }) }),
     /* @__PURE__ */ u2("div", { className: "think-ai-batch-sidebar__footer", children: /* @__PURE__ */ u2(
@@ -50778,8 +52203,8 @@ function showAiBatchUnexpectedSaveError(traceId, scope, error) {
   devError(`[AiInput][${traceLabel(traceId)}] ${label}`, error);
   new obsidian.Notice(`${noticePrefix}: ${error instanceof Error ? error.message : String(error)}`, 1e4);
 }
-function replaceRecordAtIndex(records, index, record) {
-  return records.map((entry, currentIndex) => currentIndex === index ? record : entry);
+function replaceRecordAtIndex(records, index, record2) {
+  return records.map((entry, currentIndex) => currentIndex === index ? record2 : entry);
 }
 function useAiBatchConfirmActions({
   initialRecords,
@@ -50811,14 +52236,14 @@ function useAiBatchConfirmActions({
     if (mountedRef.current) setViewState({ records: nextRecords, currentIndex: nextIndex });
     return nextRecords;
   };
-  const materializeRecord = (record) => {
-    return materializeAiBatchConfirmRecordDraft(record, draftStateByRecordIdRef.current.get(record.id));
+  const materializeRecord = (record2) => {
+    return materializeAiBatchConfirmRecordDraft(record2, draftStateByRecordIdRef.current.get(record2.id));
   };
   const materializeDraftIntoRecords = (records2, index) => {
-    const record = records2[index];
-    if (!record) return records2;
-    const materialized = materializeRecord(record);
-    return materialized === record ? records2 : replaceRecordAtIndex(records2, index, materialized);
+    const record2 = records2[index];
+    if (!record2) return records2;
+    const materialized = materializeRecord(record2);
+    return materialized === record2 ? records2 : replaceRecordAtIndex(records2, index, materialized);
   };
   const chooseNextPendingIndex = (records2, fromIndex) => {
     const nextPending = findNextPendingAiBatchConfirmIndex(records2, fromIndex);
@@ -50831,10 +52256,10 @@ function useAiBatchConfirmActions({
     const nextRecords = materializeDraftIntoRecords(recordsRef.current, currentIndexRef.current);
     publishView(nextRecords, index);
   };
-  const beginPendingAction = (action, message) => {
+  const beginPendingAction = (action2, message) => {
     if (pendingActionRef.current) return false;
-    pendingActionRef.current = action;
-    setPendingAction(action);
+    pendingActionRef.current = action2;
+    setPendingAction(action2);
     setActionStatus({ tone: "working", message });
     return true;
   };
@@ -50927,8 +52352,8 @@ function useAiBatchConfirmActions({
     const abortController = new AbortController();
     activeAbortControllerRef.current = abortController;
     const results = [];
-    let workingRecords = recordsRef.current.map((record) => materializeRecord(record));
-    const pendingIndexes = workingRecords.map((record, index) => ({ record, index })).filter(({ record }) => !record.saved && !record.skipped).map(({ index }) => index);
+    let workingRecords = recordsRef.current.map((record2) => materializeRecord(record2));
+    const pendingIndexes = workingRecords.map((record2, index) => ({ record: record2, index })).filter(({ record: record2 }) => !record2.saved && !record2.skipped).map(({ index }) => index);
     try {
       logAiBatchSubmit(traceId, "before batch submitCreateRecord", {
         pendingCount: pendingIndexes.length
@@ -52050,6 +53475,21 @@ async function initializeCore(opts) {
     { showNotice: false }
   );
 }
+function scheduleWhiteboardRestore(opts) {
+  const { plugin, store, onError } = opts;
+  const startRestore = () => {
+    void store.initialize().catch((error) => {
+      if (store.getStatus().state === "disposed") return;
+      onError?.(error);
+    });
+  };
+  const workspace = plugin.app?.workspace;
+  if (typeof workspace?.onLayoutReady === "function") {
+    workspace.onLayoutReady(startRestore);
+    return;
+  }
+  startRestore();
+}
 async function loadDataServices(opts) {
   const { services, runtime, bootstrap, getScanDataPromise, setScanDataPromise } = opts;
   if (services.dataStore) return;
@@ -52059,6 +53499,7 @@ async function loadDataServices(opts) {
   services.actionService = bootstrap.actionService;
   services.itemService = bootstrap.itemService;
   services.chatSessionStore = bootstrap.chatSessionStore;
+  services.whiteboardStore = bootstrap.whiteboardStore;
   scanDataInBackground({ services, getScanDataPromise, setScanDataPromise });
   const duration2 = stopMeasure();
   devLog(`[ThinkPlugin] 数据服务加载完成 (${duration2.toFixed(2)}ms)`);
@@ -54312,11 +55753,11 @@ function useRect(element, measure, fallbackRect) {
       if (!element) {
         return;
       }
-      for (const record of records) {
+      for (const record2 of records) {
         const {
           type,
           target
-        } = record;
+        } = record2;
         if (type === "childList" && target instanceof HTMLElement && target.contains(element)) {
           measureRect();
           break;
@@ -54661,15 +56102,15 @@ function getInitialState() {
     }
   };
 }
-function reducer(state, action) {
-  switch (action.type) {
+function reducer(state, action2) {
+  switch (action2.type) {
     case Action.DragStart:
       return {
         ...state,
         draggable: {
           ...state.draggable,
-          initialCoordinates: action.initialCoordinates,
-          active: action.active
+          initialCoordinates: action2.initialCoordinates,
+          active: action2.active
         }
       };
     case Action.DragMove:
@@ -54681,8 +56122,8 @@ function reducer(state, action) {
         draggable: {
           ...state.draggable,
           translate: {
-            x: action.coordinates.x - state.draggable.initialCoordinates.x,
-            y: action.coordinates.y - state.draggable.initialCoordinates.y
+            x: action2.coordinates.x - state.draggable.initialCoordinates.x,
+            y: action2.coordinates.y - state.draggable.initialCoordinates.y
           }
         }
       };
@@ -54706,7 +56147,7 @@ function reducer(state, action) {
     case Action.RegisterDroppable: {
       const {
         element
-      } = action;
+      } = action2;
       const {
         id
       } = element;
@@ -54725,7 +56166,7 @@ function reducer(state, action) {
         id,
         key,
         disabled
-      } = action;
+      } = action2;
       const element = state.droppable.containers.get(id);
       if (!element || key !== element.key) {
         return state;
@@ -54747,7 +56188,7 @@ function reducer(state, action) {
       const {
         id,
         key
-      } = action;
+      } = action2;
       const element = state.droppable.containers.get(id);
       if (!element || key !== element.key) {
         return state;
@@ -56254,6 +57695,7 @@ function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
     CONTENT_FIELD_KEY,
     FULL_DATA_FIELD_KEY,
     "title",
+    "primaryText",
     "date",
     "startTime",
     ...fieldOptions
@@ -56282,7 +57724,7 @@ function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
           /* @__PURE__ */ u2(ConfigFieldRow, { label: "标题字段", children: /* @__PURE__ */ u2(
             SimpleSelect,
             {
-              value: config2.titleField || "title",
+              value: config2.titleField || "primaryText",
               options: fieldSelectOptions,
               onChange: (field) => patch({ titleField: field }),
               fullWidth: true
@@ -56305,7 +57747,7 @@ function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [] }) {
             {
               size: "sm",
               variant: "secondary",
-              onClick: () => patch({ contentField: CONTENT_FIELD_KEY, titleField: "title", timeField: "date", maxContentLength: 160 }),
+              onClick: () => patch({ contentField: CONTENT_FIELD_KEY, titleField: "primaryText", timeField: "date", maxContentLength: 160 }),
               children: "使用推荐字段"
             }
           ),
@@ -56626,7 +58068,7 @@ function buildUniqueFieldValues(dataStore) {
   const result = {};
   for (const field in valueMap) {
     if (valueMap[field].size > 0) {
-      result[field] = Array.from(valueMap[field]).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+      result[field] = Array.from(valueMap[field]).sort(field === "coreBlock" ? compareRecordTypeKeys : (a2, b2) => a2.localeCompare(b2, "zh-CN"));
     }
   }
   return result;
@@ -56766,7 +58208,7 @@ function collectFieldValues(items, fields) {
   const result = {};
   fields.forEach((rawField) => {
     const field = normalizeViewFieldKey(rawField);
-    result[field] = Array.from(valueMap[field] || []).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+    result[field] = Array.from(valueMap[field] || []).sort(field === "coreBlock" ? compareRecordTypeKeys : (a2, b2) => a2.localeCompare(b2, "zh-CN"));
   });
   return result;
 }
@@ -56817,7 +58259,7 @@ function CommonFilterPanel({
   fieldOptions,
   title = "常用筛选",
   fields = DEFAULT_QUICK_FILTER_FIELDS,
-  compact = false,
+  compact: compact2 = false,
   showHeader = true
 }) {
   const sourceItems = T$1(() => items ?? dataStore.queryItems(), [items, dataStore]);
@@ -56832,7 +58274,7 @@ function CommonFilterPanel({
   );
   const hasQuickFilters = hasAnyQuickFilter(filters, quickFields);
   if (quickFields.length === 0) return null;
-  return /* @__PURE__ */ u2("div", { className: `think-common-filter${compact ? " think-common-filter--compact" : ""}`, children: [
+  return /* @__PURE__ */ u2("div", { className: `think-common-filter${compact2 ? " think-common-filter--compact" : ""}`, children: [
     showHeader && /* @__PURE__ */ u2("div", { className: "think-common-filter__header", children: [
       /* @__PURE__ */ u2("span", { className: "think-common-filter__title", children: title }),
       /* @__PURE__ */ u2(
@@ -56874,6 +58316,18 @@ function CommonFilterPanel({
     }) })
   ] });
 }
+function createViewSettingsWriteBarrier() {
+  let pending = Promise.resolve();
+  return {
+    track(operation) {
+      pending = Promise.all([pending, operation]).then(() => void 0);
+      void pending.catch(() => void 0);
+    },
+    flush() {
+      return pending;
+    }
+  };
+}
 const VIEW_DATE_ROLE_OPTIONS = [
   { value: "default", label: "默认时间（记录日期）" },
   { value: "task-scheduled", label: "计划时间" },
@@ -56881,7 +58335,7 @@ const VIEW_DATE_ROLE_OPTIONS = [
   { value: "task-completed", label: "完成时间" },
   { value: "task-actual", label: "实际执行时间（TaskSession）" }
 ];
-function ViewInstanceEditor({ vi }) {
+function ViewInstanceEditor({ vi, onWriteStarted }) {
   const dataStore = useDataStore();
   const useCases = useUseCases();
   const currentVi = useSelector(makeSelectViewInstanceById(vi.id)) || vi;
@@ -56894,7 +58348,7 @@ function ViewInstanceEditor({ vi }) {
   }, [currentVi.viewConfig]);
   const currentDateRole = normalizeViewDateRole(correctedViewConfig.dateRole) ?? "default";
   const handleUpdate = (updates) => {
-    useCases.viewInstance.updateView(currentVi.id, updates);
+    onWriteStarted(useCases.viewInstance.updateView(currentVi.id, updates));
   };
   const viewTypeOptions = T$1(
     () => VIEW_OPTIONS.map((v2) => ({ value: v2, label: getViewLabel(v2) })),
@@ -57050,15 +58504,17 @@ function ViewInstanceEditor({ vi }) {
 }
 function ModuleSettingsPanel({ module: module2, onClose }) {
   const currentModule = useSelector(makeSelectViewInstanceById(module2.id)) || module2;
+  const writeBarrierRef = A$1(null);
+  if (!writeBarrierRef.current) writeBarrierRef.current = createViewSettingsWriteBarrier();
   const handleSave = useSaveHandler(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await writeBarrierRef.current.flush();
     onClose();
   }, {
     successMessage: `已保存视图 "${module2.title}" 的设置`,
     errorMessage: "保存设置失败"
   });
   return /* @__PURE__ */ u2("div", { className: "think-os think-os--settings think-module-settings-panel", children: [
-    /* @__PURE__ */ u2("div", { className: "think-module-settings-panel__body", children: /* @__PURE__ */ u2(ViewInstanceEditor, { vi: currentModule }) }),
+    /* @__PURE__ */ u2("div", { className: "think-module-settings-panel__body", children: /* @__PURE__ */ u2(ViewInstanceEditor, { vi: currentModule, onWriteStarted: (operation) => writeBarrierRef.current.track(operation) }) }),
     /* @__PURE__ */ u2("div", { className: "think-module-settings-panel__actions", children: [
       /* @__PURE__ */ u2(ThinkButton, { onClick: onClose, variant: "secondary", size: "sm", children: "关闭" }),
       /* @__PURE__ */ u2(ThinkButton, { onClick: handleSave, variant: "primary", size: "sm", children: "保存设置" })
@@ -57676,6 +59132,11 @@ function FieldPill({ item, fieldKey, resolveResourcePath, onOpenRecordOrigin }) 
     const labelText = getLeafPath(fullPath) || fullPath;
     return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${fullPath} · ${originTitle}`, style: { backgroundColor: getCategoryColor(fullPath) }, children: labelText });
   }
+  if (fieldKey === "coreBlock") {
+    const recordType = normalizeRecordTypePresentationKey(value);
+    const displayValue2 = formatFieldValue(fieldKey, value, item);
+    return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill think-record-type-pill", "data-record-type": recordType, title: `${label}: ${displayValue2} · ${originTitle}`, children: displayValue2 });
+  }
   if (fieldKey === "categoryKey") {
     const baseCategory = getLeafPath(item.categoryKey) || getBaseCategory(item.categoryKey);
     return /* @__PURE__ */ u2("span", { ...originProps, class: "tag-pill", title: `${label}: ${value} · ${originTitle}`, style: { backgroundColor: getCategoryColor(item.categoryKey) }, children: baseCategory });
@@ -57698,7 +59159,7 @@ function TaskRow({
   timerService,
   timer,
   showFields = [],
-  compact = false,
+  compact: compact2 = false,
   displayTitle,
   onOpenRecord,
   listRow = false
@@ -57711,7 +59172,7 @@ function TaskRow({
     void onOpenRecord?.(item);
   };
   const gesture = createRecordGestureHandlers({ item, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => openEdit() });
-  return /* @__PURE__ */ u2("div", { class: `task-row ${listRow ? "think-list-row think-list-row--task think-list-row--interactive" : ""} ${compact ? `task-row--compact ${listRow ? "think-list-row--compact" : ""}` : ""} ${done ? "task-row--done" : ""}`, children: [
+  return /* @__PURE__ */ u2("div", { class: `task-row ${listRow ? "think-list-row think-list-row--task think-list-row--interactive" : ""} ${compact2 ? `task-row--compact ${listRow ? "think-list-row--compact" : ""}` : ""} ${done ? "task-row--done" : ""}`, children: [
     /* @__PURE__ */ u2("div", { class: "task-row-checkbox-wrapper", onClick: (e2) => e2.stopPropagation(), children: /* @__PURE__ */ u2(TaskCheckbox, { done, onMarkDone: () => onMarkDone(item.id) }) }),
     /* @__PURE__ */ u2("div", { class: "task-row-content", onClick: gesture.onClick, onDblClick: gesture.onDblClick, onTouchEnd: gesture.onTouchEnd, children: [
       /* @__PURE__ */ u2("div", { class: "task-row-main", children: [
@@ -57728,7 +59189,7 @@ function TaskRow({
           }
         ) })
       ] }),
-      !compact && showFields.length > 0 && /* @__PURE__ */ u2("div", { class: "task-row-fields", onClick: (e2) => e2.stopPropagation(), children: showFields.map((fieldKey) => /* @__PURE__ */ u2(
+      !compact2 && showFields.length > 0 && /* @__PURE__ */ u2("div", { class: "task-row-fields", onClick: (e2) => e2.stopPropagation(), children: showFields.map((fieldKey) => /* @__PURE__ */ u2(
         FieldPill,
         {
           item,
@@ -57741,7 +59202,7 @@ function TaskRow({
     ] })
   ] });
 }
-function ItemLink({ item, className = "", showIcon = true, onOpenRecord, onOpenRecordOrigin }) {
+function ItemLink({ item, className = "", showIcon = true, displayText: displayText2, onOpenRecord, onOpenRecordOrigin }) {
   const gesture = createRecordGestureHandlers({
     item,
     onOpenOrigin: onOpenRecordOrigin,
@@ -57749,6 +59210,7 @@ function ItemLink({ item, className = "", showIcon = true, onOpenRecord, onOpenR
       void onOpenRecord?.(item);
     }
   });
+  const visibleText = displayText2 === void 0 ? getRecordPrimaryText(item) : displayText2;
   return /* @__PURE__ */ u2(
     "span",
     {
@@ -57763,14 +59225,16 @@ function ItemLink({ item, className = "", showIcon = true, onOpenRecord, onOpenR
       style: { cursor: "pointer" },
       children: [
         showIcon && item.icon && /* @__PURE__ */ u2("span", { class: "icon mr-1", children: item.icon }),
-        item.title
+        visibleText
       ]
     }
   );
 }
 const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigin, messageRenderPort, onOpenRecord }) => {
-  const metadataFields = fields.filter((f2) => f2 !== "title" && f2 !== "content");
-  const showTitle = fields.includes("title") && item.title;
+  const metadataFields = fields.filter((f2) => f2 !== "title" && f2 !== "primaryText" && f2 !== "content");
+  const showTitle = fields.includes("title") && Boolean(item.title);
+  const showPrimaryText = fields.includes("primaryText");
+  const primaryText = getRecordPrimaryText(item);
   const effectiveContent = item.content && item.content.trim().length > 0 ? item.content : item.title;
   const showContent = fields.includes("content") && effectiveContent;
   const gesture = createRecordGestureHandlers({
@@ -57783,7 +59247,7 @@ const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigin, mess
       }
     }
   });
-  return /* @__PURE__ */ u2("div", { class: "bv-item bv-item--block think-list-row think-list-row--interactive", children: [
+  return /* @__PURE__ */ u2("div", { class: "bv-item bv-item--block think-list-row think-list-row--interactive", "data-record-type": item.coreBlock, children: [
     /* @__PURE__ */ u2("div", { class: "bv-block-metadata", children: /* @__PURE__ */ u2("div", { class: "bv-fields-list-wrapper", children: metadataFields.map((fieldKey) => /* @__PURE__ */ u2(
       FieldPill,
       {
@@ -57795,7 +59259,8 @@ const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigin, mess
       fieldKey
     )) }) }),
     /* @__PURE__ */ u2("div", { class: "bv-block-main", children: [
-      showTitle && /* @__PURE__ */ u2("div", { class: "bv-block-title", children: /* @__PURE__ */ u2(ItemLink, { item, onOpenRecord, onOpenRecordOrigin }) }),
+      showPrimaryText && /* @__PURE__ */ u2("div", { class: "bv-block-title bv-block-title--primary-text", children: /* @__PURE__ */ u2(ItemLink, { item, displayText: primaryText, onOpenRecord, onOpenRecordOrigin }) }),
+      showTitle && !showPrimaryText && /* @__PURE__ */ u2("div", { class: "bv-block-title", children: /* @__PURE__ */ u2(ItemLink, { item, displayText: item.title, onOpenRecord, onOpenRecordOrigin }) }),
       showContent && /* @__PURE__ */ u2("div", { class: "bv-block-content", children: /* @__PURE__ */ u2(
         MarkdownContent,
         {
@@ -59012,8 +60477,8 @@ function buildTimelinePointTask(task, startedAt, timelineSource = "task-point", 
     actualStartDate
   };
 }
-function projectSession(task, record) {
-  const session = asTaskSessionRecord(record);
+function projectSession(task, record2) {
+  const session = asTaskSessionRecord(record2);
   if (!session) return null;
   const startedMs = timestamp(session.sessionStartedAt);
   const endedMs = timestamp(session.sessionEndedAt);
@@ -59081,25 +60546,25 @@ function projectTaskRange(taskItem) {
   });
 }
 function processItemsToTimelineTasks(records) {
-  const byId = new Map(records.map((record) => [record.id, record]));
+  const byId = new Map(records.map((record2) => [record2.id, record2]));
   const timelineTasks = [];
   const taskIdsWithProjectedSessions = /* @__PURE__ */ new Set();
-  for (const record of records) {
-    const session = asTaskSessionRecord(record);
+  for (const record2 of records) {
+    const session = asTaskSessionRecord(record2);
     if (!session) continue;
     const task = byId.get(session.taskId);
     if (!task || task.coreBlock !== "task") continue;
-    const projected = projectSession(task, record);
+    const projected = projectSession(task, record2);
     if (!projected) continue;
     timelineTasks.push(projected);
     taskIdsWithProjectedSessions.add(task.id);
   }
-  for (const record of records) {
-    if (record.coreBlock !== "task") continue;
-    const planned = projectTaskPlan(record);
+  for (const record2 of records) {
+    if (record2.coreBlock !== "task") continue;
+    const planned = projectTaskPlan(record2);
     if (planned) timelineTasks.push(planned);
-    if (taskIdsWithProjectedSessions.has(record.id)) continue;
-    const legacy = projectTaskRange(record);
+    if (taskIdsWithProjectedSessions.has(record2.id)) continue;
+    const legacy = projectTaskRange(record2);
     if (legacy) timelineTasks.push(legacy);
   }
   return timelineTasks;
@@ -59123,7 +60588,7 @@ function buildTimelineColorMap(config2) {
 }
 function resolveTimelineTasks(items, records = items) {
   const visibleTaskIds = new Set(items.filter((item) => item.coreBlock === "task").map((item) => item.id));
-  const timelineRecords = records.filter((record) => record.coreBlock === "task" && visibleTaskIds.has(record.id) || record.coreBlock === "task-session" && !!record.taskId && visibleTaskIds.has(record.taskId));
+  const timelineRecords = records.filter((record2) => record2.coreBlock === "task" && visibleTaskIds.has(record2.id) || record2.coreBlock === "task-session" && !!record2.taskId && visibleTaskIds.has(record2.taskId));
   return processItemsToTimelineTasks(timelineRecords);
 }
 function buildTimelineSummaryData(args) {
@@ -59278,7 +60743,7 @@ function TimelineView({
   );
 }
 function buildEventTimelineDisplayFields(module2) {
-  return normalizeDisplayFields(module2.fields || ["title", "date"], { fallbackFields: ["title", "date"] });
+  return normalizeDisplayFields(module2.fields || ["primaryText", "date"], { fallbackFields: ["primaryText", "date"] });
 }
 function buildEventTimelineGroupFields(module2) {
   return normalizeViewGroupFields(module2.groupFields || []);
@@ -59287,7 +60752,7 @@ function buildEventTimelineViewConfig(module2) {
   const viewConfig = module2.viewConfig || {};
   return {
     timeField: viewConfig.timeField || "date",
-    titleField: viewConfig.titleField || "title",
+    titleField: viewConfig.titleField || "primaryText",
     contentField: viewConfig.contentField || "content",
     maxContentLength: Number.isFinite(Number(viewConfig.maxContentLength)) ? Number(viewConfig.maxContentLength) : 160
   };
@@ -59317,9 +60782,9 @@ function buildEventTimelineGroupedTree(args) {
 function cleanEventTimelineDisplayText(value, maxContentLength) {
   const text2 = String(value ?? "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
   if (!text2) return "";
-  const compact = text2.replace(/\s+/g, " ").trim();
-  if (!Number.isFinite(maxContentLength) || maxContentLength <= 0) return compact;
-  return compact.length > maxContentLength ? `${compact.slice(0, maxContentLength)}...` : compact;
+  const compact2 = text2.replace(/\s+/g, " ").trim();
+  if (!Number.isFinite(maxContentLength) || maxContentLength <= 0) return compact2;
+  return compact2.length > maxContentLength ? `${compact2.slice(0, maxContentLength)}...` : compact2;
 }
 function getEventTimelineTaskDisplayTitle(args) {
   const { item, titleField, contentField: contentField2, maxContentLength } = args;
@@ -60835,7 +62300,7 @@ function PopoverContent({
       items: blocks,
       resolveResourcePath,
       onOpenRecordOrigin,
-      fields: module2.fields || ["title", "content", "categoryKey", "goalPath", "date", "period"],
+      fields: module2.fields || ["primaryText", "content", "categoryKey", "goalPath", "date", "period"],
       groupFields: module2.groupFields,
       onMarkDone,
       timerService,
@@ -61012,20 +62477,8 @@ function buildGoalEnergySummary(items, limit = 5, options = {}) {
     effects: buildGoalEnergyEffects(effectRecords)
   };
 }
-const PROGRESS_BLOCK_KEY_ALIASES = {
-  "任务": "task",
-  "计划": "plan",
-  "总结": "review",
-  "打卡": "habit",
-  "阻碍项": "blocker",
-  "里程碑": "milestone",
-  "思考": "thought",
-  "事件": "evidence"
-};
 function normalizeProgressBlockKey(item) {
-  const raw = String(item.coreBlock || "").replace(/^core\./, "").trim();
-  if (!raw) return "unknown";
-  return PROGRESS_BLOCK_KEY_ALIASES[raw] || raw.split("/")[0] || raw;
+  return normalizeRecordTypePresentationKey(item.coreBlock) || "unknown";
 }
 function progressDateSource(item) {
   return item.date || item.doneDate || item.dueDate || item.createdDate || item.modified || item.created || "";
@@ -61065,7 +62518,7 @@ function progressItemTime(item) {
 function buildProgressRecentRecords(items, limit = 5) {
   return [...items].sort((left2, right2) => progressItemTime(right2) - progressItemTime(left2)).slice(0, limit).map((item) => ({
     id: item.id,
-    title: item.title || item.content || item.file?.basename || item.filename || "未命名记录",
+    title: getRecordPrimaryText(item) || item.file?.basename || item.filename || "未命名记录",
     date: progressItemDate(item) || null,
     item
   }));
@@ -61132,6 +62585,10 @@ function buildProgressViewRenderModel(args) {
     result: null
   };
 }
+Object.freeze({
+  ...Object.fromEntries(RECORD_TYPE_PRESENTATION_ORDER.map((key) => [key, getRecordTypePresentation(key).label])),
+  unknown: "未分类"
+});
 const PROGRESS_LEVEL_META = [
   { level: 1, icon: "🌱", title: "入门" },
   { level: 2, icon: "🔰", title: "练习" },
@@ -61193,11 +62650,11 @@ function ExperienceBar({ ratio: ratio2, tone = "goal" }) {
 }
 function GoalRecords({ records, runtime }) {
   if (!records.length) return /* @__PURE__ */ u2("div", { class: "think-progress-goal-records__empty", children: "该目标暂无记录" });
-  const fields = runtime.module.fields?.length ? runtime.module.fields : ["title", "content"];
+  const fields = runtime.module.fields?.length ? runtime.module.fields : ["primaryText", "content"];
   return /* @__PURE__ */ u2("div", { class: "think-progress-goal-records", "aria-label": "目标记录", children: /* @__PURE__ */ u2(
     BlockView,
     {
-      items: records.map((record) => record.item),
+      items: records.map((record2) => record2.item),
       fields,
       onMarkDone: runtime.onMarkDone,
       timerService: runtime.timerService,
@@ -61406,8 +62863,8 @@ function fallbackEnergyWorkBlockMinutes(score) {
   if (score >= ENERGY_RECOMMENDATION_HIGH_THRESHOLD) return 60;
   return 45;
 }
-function resolveSuggestedDurationMinutes(item, action, candidate, management) {
-  const recommended = Number(action?.suggestedDurationMinutes);
+function resolveSuggestedDurationMinutes(item, action2, candidate, management) {
+  const recommended = Number(action2?.suggestedDurationMinutes);
   if (Number.isFinite(recommended) && recommended > 0) return Math.max(1, Math.min(240, Math.round(recommended)));
   const learned = Number(candidate?.durationMinutes);
   if (Number.isFinite(learned) && learned > 0) return Math.max(1, Math.min(240, Math.round(learned)));
@@ -61467,7 +62924,7 @@ function buildEnergyTaskListModel(args) {
     const goalKey = resolvedGoal.key;
     const cadence = getTaskCadence(item);
     const history = completionHistory.get(completionIdentity(item)) || [];
-    const action = actionById.get(item.id);
+    const action2 = actionById.get(item.id);
     const candidate = candidateById.get(item.id);
     let bucket = goalBuckets.get(goalKey);
     if (!bucket) {
@@ -61485,10 +62942,10 @@ function buildEnergyTaskListModel(args) {
       recurrenceLabel: recurrenceText(item),
       count: history.length,
       records: history,
-      suggestedDurationMinutes: resolveSuggestedDurationMinutes(item, action, candidate, management),
-      energyFitScore: action?.fitScore,
-      recommendationRank: action?.rank,
-      recommendationReason: action?.reason,
+      suggestedDurationMinutes: resolveSuggestedDurationMinutes(item, action2, candidate, management),
+      energyFitScore: action2?.fitScore,
+      recommendationRank: action2?.rank,
+      recommendationReason: action2?.reason,
       energyMatched: energyMatchedIds.has(item.id),
       item
     });
@@ -61520,8 +62977,8 @@ function buildEnergyTaskListModel(args) {
   }).filter((goal) => goal.taskCount > 0);
   const taskVmById = /* @__PURE__ */ new Map();
   for (const goal of goalModels) for (const row of goal.rows) for (const task of row.tasks) taskVmById.set(task.itemId, task);
-  const recommendations = Array.from(actionById.values()).sort((left2, right2) => (left2.rank || Number.MAX_SAFE_INTEGER) - (right2.rank || Number.MAX_SAFE_INTEGER)).slice(0, 3).flatMap((action) => {
-    const task = taskVmById.get(action.candidate.id);
+  const recommendations = Array.from(actionById.values()).sort((left2, right2) => (left2.rank || Number.MAX_SAFE_INTEGER) - (right2.rank || Number.MAX_SAFE_INTEGER)).slice(0, 3).flatMap((action2) => {
+    const task = taskVmById.get(action2.candidate.id);
     return task ? [task] : [];
   });
   return {
@@ -62154,8 +63611,8 @@ function EnergySampleDetail(props) {
   if (props.selection.kind === "day") return /* @__PURE__ */ u2(DayDetail, { ...props, selection: props.selection });
   return /* @__PURE__ */ u2(SampleDetail, { ...props, selection: props.selection });
 }
-function recordLabel(record) {
-  return record.timeLabel || record.doneDate || "查看记录";
+function recordLabel(record2) {
+  return record2.timeLabel || record2.doneDate || "查看记录";
 }
 const CONTEXT_OPTIONS = [
   { value: "any", label: "任意" },
@@ -62217,15 +63674,15 @@ function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecord
       " 次"
     ] }),
     task.recurrenceLabel && /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-meta", children: task.recurrenceLabel }),
-    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-records", children: task.records.length > 0 ? task.records.map((record) => {
+    /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-records", children: task.records.length > 0 ? task.records.map((record2) => {
       const gesture = createRecordGestureHandlers({
-        item: record.item,
+        item: record2.item,
         onOpenOrigin: onOpenRecordOrigin ? (originItem) => {
           void onOpenRecordOrigin(originItem);
           onClose();
         } : void 0,
         onPrimary: () => {
-          void onOpenRecord?.(record.item);
+          void onOpenRecord?.(record2.item);
           onClose();
         }
       });
@@ -62239,9 +63696,9 @@ function TaskMenu({ menu, task, currentView, menuRef, onOpenRecord, onOpenRecord
           onDblClick: gesture.onDblClick,
           onTouchEnd: gesture.onTouchEnd,
           onKeyDown: gesture.onKeyDown,
-          children: recordLabel(record)
+          children: recordLabel(record2)
         },
-        record.id
+        record2.id
       );
     }) : /* @__PURE__ */ u2("div", { class: "think-energy-task-list__menu-empty", children: "暂无历史记录" }) })
   ] });
@@ -63109,20 +64566,20 @@ function ExcelCell({
     onStartFillDrag?.(cell);
   };
   const handleEditorKeyDown = (event) => {
-    const action = resolveExcelCellEditorKeyAction({ key: event.key, shiftKey: event.shiftKey, descriptorTag: ui.descriptor.tag });
-    if (action === "none") return;
+    const action2 = resolveExcelCellEditorKeyAction({ key: event.key, shiftKey: event.shiftKey, descriptorTag: ui.descriptor.tag });
+    if (action2 === "none") return;
     event.preventDefault();
-    if (action === "cancel-edit") return onCancelEdit?.();
+    if (action2 === "cancel-edit") return onCancelEdit?.();
     commit(readExcelKeyboardValue(event));
   };
   const handleCellKeyDown = (event) => {
-    const action = resolveExcelCellKeyAction({ key: event.key, shiftKey: event.shiftKey, editing, editable: ui.editable, fillDragging });
-    if (action.type === "none") return;
+    const action2 = resolveExcelCellKeyAction({ key: event.key, shiftKey: event.shiftKey, editing, editable: ui.editable, fillDragging });
+    if (action2.type === "none") return;
     event.preventDefault();
     event.stopPropagation();
-    if (action.type === "cancel-fill-drag") return onCancelFillDrag?.();
-    if (action.type === "start-edit") return onStartEdit?.(cell);
-    onNavigate?.(cell, action.direction);
+    if (action2.type === "cancel-fill-drag") return onCancelFillDrag?.();
+    if (action2.type === "start-edit") return onStartEdit?.(cell);
+    onNavigate?.(cell, action2.direction);
   };
   const handlePaste = (event) => {
     if (editing) return;
@@ -63359,17 +64816,17 @@ function ExcelGrid({
     const th = event.currentTarget.closest("th");
     const startX = event.clientX;
     const startWidth = getExcelColumnWidth(column2, columnWidths?.[column2.key]) || th?.offsetWidth || 150;
-    const move = (moveEvent) => {
+    const move2 = (moveEvent) => {
       onColumnWidthDraftChange?.(column2.key, startWidth + (moveEvent.clientX - startX));
     };
     const up = (upEvent) => {
-      window.removeEventListener("mousemove", move, true);
+      window.removeEventListener("mousemove", move2, true);
       window.removeEventListener("mouseup", up, true);
       document.body.classList.remove("excel-view-is-resizing-column");
       onColumnWidthCommit?.(column2.key, startWidth + (upEvent.clientX - startX));
     };
     document.body.classList.add("excel-view-is-resizing-column");
-    window.addEventListener("mousemove", move, true);
+    window.addEventListener("mousemove", move2, true);
     window.addEventListener("mouseup", up, true);
   };
   return /* @__PURE__ */ u2("table", { ref: tableRef, class: "think-table think-data-grid think-data-grid--excel excel-view-table", children: [
@@ -63819,8 +65276,8 @@ function moveExcelColumnField(fields, fromIndex, toIndex) {
   if (fromIndex < 0 || fromIndex >= fields.length) return fields;
   if (toIndex < 0 || toIndex >= fields.length) return fields;
   const next2 = [...fields];
-  const [moved] = next2.splice(fromIndex, 1);
-  next2.splice(toIndex, 0, moved);
+  const [moved2] = next2.splice(fromIndex, 1);
+  next2.splice(toIndex, 0, moved2);
   return next2;
 }
 function buildExcelColumnAvailableOptions(fields, availableFields, getFieldLabel2, getFieldGroupLabel) {
@@ -64457,16 +65914,16 @@ function useExpandedViewRendering({
   y(() => {
     if (!isStateInitialized) return;
     setExpandedState((previous) => {
-      let changed = false;
+      let changed2 = false;
       const next2 = { ...previous };
       for (const viewId of layout.viewInstanceIds) {
         if (viewId in next2) continue;
         const view = allViews.find((candidate) => candidate.id === viewId);
         if (!view) continue;
         next2[viewId] = !view.collapsed;
-        changed = true;
+        changed2 = true;
       }
-      return changed ? next2 : previous;
+      return changed2 ? next2 : previous;
     });
   }, [allViews, isStateInitialized, layout.viewInstanceIds]);
   const handleToggle = q$1((viewId, event) => {
@@ -65512,7 +66969,7 @@ function getLayoutInitialDate(layout) {
   return layout.initialDateFollowsNow ? dayjs() : layout.initialDate ? dayjs(layout.initialDate) : dayjs();
 }
 function useCompactFreeformFallback() {
-  const [compact, setCompact] = d(false);
+  const [compact2, setCompact] = d(false);
   y(() => {
     if (typeof window === "undefined") return;
     const media = window.matchMedia?.("(max-width: 760px), (hover: none) and (pointer: coarse)");
@@ -65528,7 +66985,7 @@ function useCompactFreeformFallback() {
       window.removeEventListener("resize", update);
     };
   }, []);
-  return compact;
+  return compact2;
 }
 function LayoutRenderer({ layout, dataStore, app, actionService, timerService }) {
   const deviceProfileAttrs = getThinkDeviceProfileAttributes();
@@ -67770,19 +69227,20 @@ let ObsidianVaultPort = class {
     return this.app.vault.getMarkdownFiles().map((f2) => f2.path);
   }
   async readFile(path) {
-    if (isDisposed()) return null;
+    this.assertActive("readFile", path);
     const af = this.app.vault.getAbstractFileByPath(path);
-    if (!af) return null;
     if (af instanceof obsidian.TFile) {
       return await this.app.vault.read(af);
     }
-    return null;
+    if (af instanceof obsidian.TFolder) {
+      return null;
+    }
+    const existsOnDisk = await this.app.vault.adapter.exists(path);
+    if (!existsOnDisk) return null;
+    return await this.app.vault.adapter.read(path);
   }
   async writeFile(path, content) {
-    if (isDisposed()) {
-      devWarn(`[ObsidianVaultPort] writeFile ignored after dispose: ${path}`);
-      return;
-    }
+    this.assertActive("writeFile", path);
     await this.ensureFolderFor(path);
     const af = this.app.vault.getAbstractFileByPath(path);
     if (af instanceof obsidian.TFile) {
@@ -67791,6 +69249,10 @@ let ObsidianVaultPort = class {
     }
     if (af instanceof obsidian.TFolder) {
       throw new Error(`路径冲突："${path}" 是文件夹，无法写入文件。`);
+    }
+    if (await this.app.vault.adapter.exists(path)) {
+      await this.app.vault.adapter.write(path, content);
+      return;
     }
     try {
       await this.app.vault.create(path, content);
@@ -67808,10 +69270,7 @@ let ObsidianVaultPort = class {
     }
   }
   async deleteFile(path) {
-    if (isDisposed()) {
-      devWarn(`[ObsidianVaultPort] deleteFile ignored after dispose: ${path}`);
-      return;
-    }
+    this.assertActive("deleteFile", path);
     const af = this.app.vault.getAbstractFileByPath(path);
     if (af instanceof obsidian.TFile) {
       await this.app.vault.delete(af);
@@ -67820,6 +69279,12 @@ let ObsidianVaultPort = class {
   // ------------------------------
   // Helpers
   // ------------------------------
+  assertActive(operation, path) {
+    if (!isDisposed()) return;
+    const message = `[ObsidianVaultPort] ${operation} blocked after dispose: ${path}`;
+    devWarn(message);
+    throw new Error(message);
+  }
   async ensureFolderFor(filePath) {
     const folder = filePath.includes("/") ? filePath.slice(0, filePath.lastIndexOf("/")) : "";
     if (!folder) return;
@@ -68446,7 +69911,7 @@ function BlockManager() {
               type: "button",
               className: "think-block-accordion__title",
               onClick: () => setOpenId(open ? null : recordType.id),
-              children: recordType.name
+              children: /* @__PURE__ */ u2("span", { className: "think-record-type-marker", "data-record-type": normalizeRecordTypePresentationKey(recordType.coreBlock), children: recordType.name })
             }
           ),
           /* @__PURE__ */ u2("span", { className: "think-block-accordion__meta", children: recordType.captureMode === "template" ? "模板录入" : recordType.captureMode === "direct" ? "直接记录" : "内部记录" }),
@@ -68799,8 +70264,8 @@ function createEmptyField(index) {
 function reorderFields(fields, fromIndex, toIndex) {
   if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= fields.length || toIndex >= fields.length) return fields;
   const next2 = [...fields];
-  const [moved] = next2.splice(fromIndex, 1);
-  next2.splice(toIndex, 0, moved);
+  const [moved2] = next2.splice(fromIndex, 1);
+  next2.splice(toIndex, 0, moved2);
   return next2;
 }
 function FieldsEditor({ fields = [], disabled = false, onChange, isDefaultValueLocked }) {
@@ -68932,7 +70397,7 @@ const presetGranularityOptions = [
   { value: "year", label: "年" }
 ];
 function deriveRequiredFields(fields) {
-  return (fields || []).filter((field) => field.required === true).map((field) => compactText(field.key || field.label)).filter(Boolean);
+  return (fields || []).filter((field) => field.required === true).map((field) => compactText$1(field.key || field.label)).filter(Boolean);
 }
 function stableJson(value) {
   const seen = /* @__PURE__ */ new WeakSet();
@@ -68940,11 +70405,11 @@ function stableJson(value) {
     if (input === void 0) return void 0;
     if (input === null) return null;
     if (typeof input === "string" || typeof input === "number" || typeof input === "boolean") return input;
-    if (typeof input !== "object") return compactText(input);
+    if (typeof input !== "object") return compactText$1(input);
     if (seen.has(input)) return "[Circular]";
     seen.add(input);
     if (Array.isArray(input)) return input.map(normalize2).filter((item) => item !== void 0);
-    if (!isUnknownRecord(input)) return compactText(input);
+    if (!isUnknownRecord(input)) return compactText$1(input);
     const out = {};
     Object.keys(input).sort().forEach((key) => {
       const value2 = normalize2(input[key]);
@@ -68970,8 +70435,8 @@ function fieldsHaveSameStructure(left2, right2) {
   return stableJson(normalize2(left2)) === stableJson(normalize2(right2));
 }
 function equalStringSet(left2, right2) {
-  const a2 = new Set(left2.map(compactText).filter(Boolean));
-  const b2 = new Set(right2.map(compactText).filter(Boolean));
+  const a2 = new Set(left2.map(compactText$1).filter(Boolean));
+  const b2 = new Set(right2.map(compactText$1).filter(Boolean));
   if (a2.size !== b2.size) return false;
   for (const value of a2) if (!b2.has(value)) return false;
   return true;
@@ -68979,18 +70444,18 @@ function equalStringSet(left2, right2) {
 function getFieldDefaultMap(fields) {
   const result = {};
   for (const field of fields || []) {
-    const key = compactText(field.key || field.label);
+    const key = compactText$1(field.key || field.label);
     if (!key) continue;
     const value = field.defaultValue;
-    if (value !== void 0 && value !== null && compactText(value) !== "") result[key] = compactText(value);
+    if (value !== void 0 && value !== null && compactText$1(value) !== "") result[key] = compactText$1(value);
   }
   return result;
 }
 function applyGoalTemplateDefaultValuesToFields(fields, defaultValues) {
   const defaults = defaultValues || {};
   return (fields || []).map((field) => {
-    const key = compactText(field.key || field.label);
-    const label = compactText(field.label);
+    const key = compactText$1(field.key || field.label);
+    const label = compactText$1(field.label);
     const hasKey = key && Object.prototype.hasOwnProperty.call(defaults, key);
     const hasLabel = label && Object.prototype.hasOwnProperty.call(defaults, label);
     if (!hasKey && !hasLabel) return field;
@@ -69001,10 +70466,10 @@ function applyGoalTemplateDefaultValuesToFields(fields, defaultValues) {
 function collectGoalTemplateDefaultValuesFromFields(fields) {
   const result = {};
   for (const field of fields || []) {
-    const key = compactText(field.key || field.label);
+    const key = compactText$1(field.key || field.label);
     if (!key) continue;
     const raw = field.defaultValue;
-    if (raw === void 0 || raw === null || compactText(raw) === "") continue;
+    if (raw === void 0 || raw === null || compactText$1(raw) === "") continue;
     result[key] = isTemplateMultiValueField(field) ? templateFieldValueToArray(raw) : raw;
   }
   return result;
@@ -69077,7 +70542,7 @@ function cleanDefaultValuesOverride(draft, block) {
   Object.entries(fieldDefaults).forEach(([key, raw]) => {
     if (key === "icon" || key === "图标") return;
     if (FORBIDDEN_CONTEXT_KEYS.has(key) || isSystemRecordContextField(key)) return;
-    const value = compactText(raw);
+    const value = compactText$1(raw);
     if (!value) return;
     if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
     result[key] = raw;
@@ -69097,10 +70562,10 @@ function buildTemplatePatchFromDraft(params) {
   const baseRequiredFields = deriveRequiredFields(baseFields || []);
   const sameFields = fieldsHaveSameStructure(draftFields, baseFields);
   const sameRequired = equalStringSet(requiredFields, baseRequiredFields);
-  const targetFile = compactText(draft.targetFile);
-  const appendUnderHeader2 = compactText(draft.appendUnderHeader);
-  const baseTargetFile = compactText(block.targetFile);
-  const baseAppendUnderHeader = compactText(block.appendUnderHeader);
+  const targetFile = compactText$1(draft.targetFile);
+  const appendUnderHeader2 = compactText$1(draft.appendUnderHeader);
+  const baseTargetFile = compactText$1(block.targetFile);
+  const baseAppendUnderHeader = compactText$1(block.appendUnderHeader);
   const rawPatch = {
     id: getGoalTemplateId(goalPath, block.id),
     goalPath,
@@ -69209,7 +70674,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template, useCa
   };
   if (!isOpen || !goal || !block) return null;
   const goalPath = goal.path;
-  const goalLeaf = getGoalLeaf(goalPath) || goalPath;
+  const goalLeaf2 = getGoalLeaf(goalPath) || goalPath;
   const goalIcon = resolveGoalIcon(goal);
   return /* @__PURE__ */ u2(
     FloatingPanel,
@@ -69219,7 +70684,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template, useCa
         "模板：",
         /* @__PURE__ */ u2("strong", { children: [
           goalIcon ? `${goalIcon} ` : "",
-          goalLeaf
+          goalLeaf2
         ] }),
         " / ",
         block.name
@@ -69242,7 +70707,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template, useCa
         /* @__PURE__ */ u2("header", { className: "think-editor-header", children: /* @__PURE__ */ u2("div", { className: "think-goal-template-editor__identity", children: [
           /* @__PURE__ */ u2("div", { className: "think-settings-title-strong", children: [
             goalIcon ? `${goalIcon} ` : "",
-            goalLeaf
+            goalLeaf2
           ] }),
           /* @__PURE__ */ u2("div", { className: "think-settings-caption", title: goalPath, children: [
             "完整路径：",
@@ -69913,7 +71378,7 @@ function applyDraftPreviews(goals, previews) {
 function GoalTemplateMatrixHeader({ visibleBlocks }) {
   return /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
     /* @__PURE__ */ u2("th", { className: "think-goal-template-matrix__path-header", children: "目标" }),
-    visibleBlocks.map((block) => /* @__PURE__ */ u2("th", { className: "think-goal-template-matrix__block-header", children: block.name }, block.id))
+    visibleBlocks.map((block) => /* @__PURE__ */ u2("th", { className: "think-goal-template-matrix__block-header think-record-type-header", "data-record-type": normalizeRecordTypePresentationKey(block.coreBlock), children: block.name }, block.id))
   ] }) });
 }
 function GoalTemplateMatrixTable(props) {
@@ -69958,18 +71423,8 @@ function GoalTemplateMatrixTable(props) {
     ] }) })
   ] });
 }
-const GOAL_TEMPLATE_BLOCK_ORDER = ["打卡", "任务", "事件", "思考", "总结", "计划", "阻碍项", "里程碑"];
-const GOAL_TEMPLATE_BLOCK_ID_ORDER = ["core.habit", "core.task", "core.evidence", "core.thought", "core.review", "core.plan", "core.blocker", "core.milestone"];
 function orderGoalTemplateBlocks(blocks) {
-  const order2 = /* @__PURE__ */ new Map();
-  GOAL_TEMPLATE_BLOCK_ORDER.forEach((name, index) => order2.set(name, index));
-  GOAL_TEMPLATE_BLOCK_ID_ORDER.forEach((id, index) => order2.set(id, index));
-  return [...blocks].sort((left2, right2) => {
-    const leftRank = order2.get(left2.id) ?? order2.get(left2.name) ?? 999;
-    const rightRank = order2.get(right2.id) ?? order2.get(right2.name) ?? 999;
-    if (leftRank !== rightRank) return leftRank - rightRank;
-    return String(left2.name || left2.id).localeCompare(String(right2.name || right2.id), "zh-CN");
-  });
+  return sortRecordTypesByPresentation(blocks, (block) => block.coreBlock);
 }
 function GoalTemplateMatrix() {
   const settings = useSelector(selectSettings);
@@ -70433,6 +71888,4403 @@ class SettingsTab extends obsidian.PluginSettingTab {
   hide() {
     unmountPreact(this.containerEl);
   }
+}
+function compactText(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+function truncate(value, maxLength) {
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+}
+function getWhiteboardRecordTypeLabel(item) {
+  return getRecordTypePresentation(item.coreBlock).label;
+}
+function formatDateTime(value, includeTime) {
+  if (!value) return "";
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return compactText(value);
+  return parsed.format(includeTime ? "YYYY-MM-DD HH:mm" : "YYYY-MM-DD");
+}
+function buildWhiteboardRecordPresentation(item) {
+  const typeLabel = getWhiteboardRecordTypeLabel(item);
+  const primaryText = truncate(compactText(getRecordPrimaryText(item)) || typeLabel, 90);
+  const rawContent = compactText(item.content);
+  const summarySource = rawContent && rawContent !== compactText(item.title) && rawContent !== compactText(primaryText) ? rawContent : "";
+  const temporalLabel = item.coreBlock === "task-session" ? formatDateTime(item.sessionStartedAt || item.date, true) : formatDateTime(item.date, false);
+  const detailLabels = [];
+  if (item.coreBlock === "thought" && item.recordSubtype) detailLabels.push(String(item.recordSubtype));
+  if (item.coreBlock === "habit" && item.rating != null && !primaryText.includes(`评分 ${item.rating}`)) detailLabels.push(`评分 ${item.rating}`);
+  if (item.coreBlock === "task-session" && item.sessionDurationMinutes != null && !primaryText.includes(`${item.sessionDurationMinutes} 分钟`)) {
+    detailLabels.push(`${item.sessionDurationMinutes} 分钟`);
+  }
+  return {
+    typeLabel,
+    primaryText,
+    summary: truncate(summarySource, 180),
+    temporalLabel,
+    goalLabel: compactText(item.goalPath),
+    detailLabels
+  };
+}
+function getDefaultWhiteboardPosition(index) {
+  const safeIndex = Math.max(0, Math.floor(index));
+  const column2 = safeIndex % 3;
+  const row = Math.floor(safeIndex / 3);
+  return {
+    x: 24 + column2 * 272,
+    y: 24 + row * 196,
+    zIndex: safeIndex + 1
+  };
+}
+const WHITEBOARD_DRAG_THRESHOLD_PX = 5;
+const WHITEBOARD_CARD_WIDTH_PX = 248;
+const WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX = 260;
+function createWhiteboardDragSession(input) {
+  return {
+    pointerId: input.pointerId,
+    startClientX: input.clientX,
+    startClientY: input.clientY,
+    origin: {
+      x: input.item.x,
+      y: input.item.y,
+      zIndex: input.item.zIndex
+    },
+    activeZIndex: input.activeZIndex
+  };
+}
+function resolveWhiteboardDragPreview(session, clientX, clientY, zoom = 1, thresholdPx = WHITEBOARD_DRAG_THRESHOLD_PX) {
+  const screenDeltaX = clientX - session.startClientX;
+  const screenDeltaY = clientY - session.startClientY;
+  if (Math.hypot(screenDeltaX, screenDeltaY) < thresholdPx) return null;
+  const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+  return {
+    x: session.origin.x + screenDeltaX / safeZoom,
+    y: session.origin.y + screenDeltaY / safeZoom,
+    zIndex: session.activeZIndex
+  };
+}
+function getNextWhiteboardZIndex(items) {
+  return items.reduce((max2, item) => Math.max(max2, item.zIndex ?? 0), 0) + 1;
+}
+const CLICK_SUPPRESS_AFTER_DRAG_MS = 350;
+function WhiteboardCard({
+  whiteboardItem,
+  record: record2,
+  activeZIndex,
+  zoom = 1,
+  onOpenRecord,
+  onOpenRecordOrigin,
+  onMove,
+  onPreviewChange,
+  onDragPointerChange,
+  onDropToSource,
+  onBeginConnection,
+  connectionActive = false,
+  connectionTarget = false,
+  workbenchTitle = null,
+  selected = false,
+  onToggleSelection,
+  findState = "idle"
+}) {
+  const dragSessionRef = A$1(null);
+  const dragTargetRef = A$1(null);
+  const dragListenerCleanupRef = A$1(null);
+  const previewRef = A$1(null);
+  const suppressClickUntilRef = A$1(0);
+  const [preview, setPreview] = d(null);
+  const [committing, setCommitting] = d(false);
+  const visiblePosition = preview ?? whiteboardItem;
+  const cardStyle = {
+    left: `${visiblePosition.x}px`,
+    top: `${visiblePosition.y}px`,
+    zIndex: visiblePosition.zIndex ?? 1
+  };
+  const clearDragListeners = () => {
+    dragListenerCleanupRef.current?.();
+    dragListenerCleanupRef.current = null;
+  };
+  const handlePointerMove = (event) => {
+    const session = dragSessionRef.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    event.stopPropagation();
+    const next2 = resolveWhiteboardDragPreview(session, event.clientX, event.clientY, zoom);
+    if (!next2) return;
+    event.preventDefault();
+    previewRef.current = next2;
+    setPreview(next2);
+    onPreviewChange?.(whiteboardItem.id, next2);
+    onDragPointerChange?.(whiteboardItem.id, { clientX: event.clientX, clientY: event.clientY });
+  };
+  const finishDrag = (event, cancelled = false) => {
+    const session = dragSessionRef.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    event.stopPropagation();
+    dragSessionRef.current = null;
+    clearDragListeners();
+    try {
+      dragTargetRef.current?.releasePointerCapture?.(event.pointerId);
+    } catch {
+    }
+    dragTargetRef.current = null;
+    const committedPreview = previewRef.current;
+    if (cancelled || !committedPreview) {
+      previewRef.current = null;
+      setPreview(null);
+      onPreviewChange?.(whiteboardItem.id, null);
+      onDragPointerChange?.(whiteboardItem.id, null);
+      return;
+    }
+    event.preventDefault();
+    suppressClickUntilRef.current = Date.now() + CLICK_SUPPRESS_AFTER_DRAG_MS;
+    onDragPointerChange?.(whiteboardItem.id, null);
+    setCommitting(true);
+    const point = { clientX: event.clientX, clientY: event.clientY };
+    void Promise.resolve(onDropToSource?.(whiteboardItem.id, point) ?? false).then((consumedBySource) => consumedBySource ? void 0 : onMove(whiteboardItem.id, committedPreview)).catch(() => void 0).finally(() => {
+      previewRef.current = null;
+      setPreview(null);
+      setCommitting(false);
+      onPreviewChange?.(whiteboardItem.id, null);
+    });
+  };
+  const beginDrag = (event) => {
+    if (committing) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      suppressClickUntilRef.current = Date.now() + CLICK_SUPPRESS_AFTER_DRAG_MS;
+      onToggleSelection?.(whiteboardItem.id);
+      return;
+    }
+    event.stopPropagation();
+    clearDragListeners();
+    dragSessionRef.current = createWhiteboardDragSession({
+      item: whiteboardItem,
+      pointerId: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      activeZIndex
+    });
+    const target = event.currentTarget;
+    dragTargetRef.current = target;
+    target.setPointerCapture?.(event.pointerId);
+    const move2 = (nextEvent) => handlePointerMove(nextEvent);
+    const up = (nextEvent) => finishDrag(nextEvent, false);
+    const cancel = (nextEvent) => finishDrag(nextEvent, true);
+    window.addEventListener("pointermove", move2, true);
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", cancel, true);
+    dragListenerCleanupRef.current = () => {
+      window.removeEventListener("pointermove", move2, true);
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", cancel, true);
+    };
+  };
+  y(() => () => {
+    dragListenerCleanupRef.current?.();
+    dragListenerCleanupRef.current = null;
+    dragSessionRef.current = null;
+    dragTargetRef.current = null;
+    onDragPointerChange?.(whiteboardItem.id, null);
+  }, [onDragPointerChange, whiteboardItem.id]);
+  const beginConnection = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onBeginConnection?.(whiteboardItem.id, event);
+  };
+  const suppressConnectionClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const connectionHandles = ["top", "right", "bottom", "left"].map((side) => /* @__PURE__ */ u2("button", { type: "button", class: `think-whiteboard-card__edge-handle is-${side}`, "aria-label": `从卡片${side === "top" ? "上" : side === "right" ? "右" : side === "bottom" ? "下" : "左"}边拖出连线`, "data-whiteboard-edge-handle": side, onPointerDown: beginConnection, onClick: suppressConnectionClick }, side));
+  const findClass = findState === "idle" ? "" : ` is-find-${findState}`;
+  const sharedArticleProps = {
+    style: cardStyle,
+    "data-whiteboard-item-id": whiteboardItem.id,
+    "data-whiteboard-dragging": preview ? "true" : "false",
+    "data-whiteboard-connection-source": connectionActive ? "true" : "false",
+    "data-whiteboard-connection-target": connectionTarget ? "true" : "false",
+    "data-whiteboard-find-state": findState,
+    "data-whiteboard-selected": selected ? "true" : "false",
+    onPointerDown: beginDrag
+  };
+  if (!record2) {
+    return /* @__PURE__ */ u2(
+      "article",
+      {
+        ...sharedArticleProps,
+        class: `think-whiteboard-card think-card think-whiteboard-card--missing${preview ? " is-dragging" : ""}${selected ? " is-selected" : ""}${connectionActive ? " is-connection-source" : ""}${findClass}`,
+        "data-record-type": "missing",
+        children: [
+          connectionHandles,
+          /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__header", children: /* @__PURE__ */ u2("span", { class: "think-whiteboard-card__goal", children: "原记录不可用" }) }),
+          /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__title", children: "⚠ 原记录当前不可用" }),
+          /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__record-id", children: whiteboardItem.recordId }),
+          workbenchTitle && /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__workbench", children: [
+            "▣ ",
+            workbenchTitle
+          ] })
+        ]
+      }
+    );
+  }
+  const presentation = buildWhiteboardRecordPresentation(record2);
+  const gesture = createRecordGestureHandlers({
+    item: record2,
+    onOpenOrigin: onOpenRecordOrigin,
+    onPrimary: () => {
+      void onOpenRecord?.(record2);
+    }
+  });
+  const guardAfterDrag = (event, handler) => {
+    if (Date.now() < suppressClickUntilRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    handler?.(event);
+  };
+  return /* @__PURE__ */ u2(
+    "article",
+    {
+      ...sharedArticleProps,
+      class: `think-whiteboard-card think-card think-card--interactive${preview ? " is-dragging" : ""}${selected ? " is-selected" : ""}${committing ? " is-committing" : ""}${connectionActive ? " is-connection-source" : ""}${findClass}`,
+      "data-record-type": record2.coreBlock,
+      role: "button",
+      tabIndex: 0,
+      title: `类型：${presentation.typeLabel}；${RECORD_GESTURE_HINT}；拖动卡片可调整位置；Ctrl/⌘/Shift 点击多选；从四边拖出连线；右键可归档或移出`,
+      onClick: ((event) => guardAfterDrag(event, gesture.onClick)),
+      onDblClick: ((event) => guardAfterDrag(event, gesture.onDblClick)),
+      onTouchEnd: ((event) => guardAfterDrag(event, gesture.onTouchEnd)),
+      onKeyDown: gesture.onKeyDown,
+      children: [
+        connectionHandles,
+        /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__header", children: [
+          /* @__PURE__ */ u2("span", { class: "think-whiteboard-card__goal", title: presentation.goalLabel || "未归属目标", children: presentation.goalLabel || "未归属目标" }),
+          presentation.temporalLabel && /* @__PURE__ */ u2("span", { class: "think-whiteboard-card__date", children: presentation.temporalLabel })
+        ] }),
+        /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__title", children: presentation.primaryText }),
+        workbenchTitle && /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__workbench", children: [
+          "▣ ",
+          workbenchTitle
+        ] }),
+        presentation.summary && /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__summary", children: presentation.summary }),
+        presentation.detailLabels.length > 0 && /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__meta", children: presentation.detailLabels.map((label) => /* @__PURE__ */ u2("span", { children: label }, label)) })
+      ]
+    }
+  );
+}
+const WHITEBOARD_EDGE_ANCHOR_Y_PX = 48;
+const WHITEBOARD_EDGE_MIN_CURVE_PX = 48;
+const WHITEBOARD_EDGE_MAX_CURVE_PX = 180;
+function cubicPoint(start2, control1, control2, end2, t3) {
+  const oneMinusT = 1 - t3;
+  return oneMinusT ** 3 * start2 + 3 * oneMinusT ** 2 * t3 * control1 + 3 * oneMinusT * t3 ** 2 * control2 + t3 ** 3 * end2;
+}
+function getWhiteboardEdgeGeometry(from2, to) {
+  const fromCenterX = from2.x + WHITEBOARD_CARD_WIDTH_PX / 2;
+  const toCenterX = to.x + WHITEBOARD_CARD_WIDTH_PX / 2;
+  const goesRight = toCenterX >= fromCenterX;
+  const startX = goesRight ? from2.x + WHITEBOARD_CARD_WIDTH_PX : from2.x;
+  const endX = goesRight ? to.x : to.x + WHITEBOARD_CARD_WIDTH_PX;
+  const startY = from2.y + WHITEBOARD_EDGE_ANCHOR_Y_PX;
+  const endY = to.y + WHITEBOARD_EDGE_ANCHOR_Y_PX;
+  const horizontalSpan = Math.abs(endX - startX);
+  const curve = Math.min(
+    WHITEBOARD_EDGE_MAX_CURVE_PX,
+    Math.max(WHITEBOARD_EDGE_MIN_CURVE_PX, horizontalSpan / 2)
+  );
+  const direction = goesRight ? 1 : -1;
+  const control1X = startX + curve * direction;
+  const control2X = endX - curve * direction;
+  const control1Y = startY;
+  const control2Y = endY;
+  const midpointX = cubicPoint(startX, control1X, control2X, endX, 0.5);
+  const midpointY = cubicPoint(startY, control1Y, control2Y, endY, 0.5);
+  return {
+    startX,
+    startY,
+    control1X,
+    control1Y,
+    control2X,
+    control2Y,
+    endX,
+    endY,
+    midpointX,
+    midpointY,
+    pathD: `M ${startX} ${startY} C ${control1X} ${control1Y}, ${control2X} ${control2Y}, ${endX} ${endY}`
+  };
+}
+function resolveWhiteboardItemPosition(item, preview) {
+  if (!preview || preview.itemId !== item.id) return item;
+  return {
+    ...item,
+    ...preview.position
+  };
+}
+function getWhiteboardConnectionPreviewPath(start2, end2) {
+  const dx = end2.x - start2.x;
+  const direction = dx >= 0 ? 1 : -1;
+  const curve = Math.min(WHITEBOARD_EDGE_MAX_CURVE_PX, Math.max(WHITEBOARD_EDGE_MIN_CURVE_PX, Math.abs(dx) / 2));
+  const c1x = start2.x + curve * direction;
+  const c2x = end2.x - curve * direction;
+  return `M ${start2.x} ${start2.y} C ${c1x} ${start2.y}, ${c2x} ${end2.y}, ${end2.x} ${end2.y}`;
+}
+function safeMarkerId(boardId) {
+  const suffix = boardId.replace(/[^a-zA-Z0-9_-]/g, "-");
+  return `think-whiteboard-arrow-${suffix || "board"}`;
+}
+function WhiteboardEdgeLayer({
+  boardId,
+  items,
+  edges,
+  dragPreview = null,
+  onRemoveEdge,
+  onUpdateEdgeLabel,
+  removingEdgeId = null,
+  connectionPreview = null
+}) {
+  const [editingEdgeId, setEditingEdgeId] = d(null);
+  const [draft, setDraft] = d("");
+  const itemById = new Map(items.map((item) => [item.id, item]));
+  const markerId = safeMarkerId(boardId);
+  const renderable = edges.flatMap((edge) => {
+    const from2 = itemById.get(edge.fromItemId);
+    const to = itemById.get(edge.toItemId);
+    if (!from2 || !to) return [];
+    return [{ edge, geometry: getWhiteboardEdgeGeometry(resolveWhiteboardItemPosition(from2, dragPreview), resolveWhiteboardItemPosition(to, dragPreview)) }];
+  });
+  const beginEdit = (edge) => {
+    setDraft(edge.label ?? "");
+    setEditingEdgeId(edge.id);
+  };
+  const finishEdit = (edgeId) => {
+    void onUpdateEdgeLabel?.(edgeId, draft);
+    setEditingEdgeId(null);
+  };
+  return /* @__PURE__ */ u2(S, { children: [
+    /* @__PURE__ */ u2("svg", { class: "think-whiteboard-edge-layer", "aria-hidden": "true", children: [
+      /* @__PURE__ */ u2("defs", { children: /* @__PURE__ */ u2("marker", { id: markerId, markerWidth: "8", markerHeight: "8", refX: "7", refY: "4", orient: "auto", markerUnits: "strokeWidth", viewBox: "0 0 8 8", children: /* @__PURE__ */ u2("path", { class: "think-whiteboard-edge__arrow", d: "M 0 0 L 8 4 L 0 8 z" }) }) }),
+      renderable.map(({ edge, geometry }) => /* @__PURE__ */ u2("path", { class: "think-whiteboard-edge__path", "data-whiteboard-edge-id": edge.id, d: geometry.pathD, markerEnd: `url(#${markerId})` }, edge.id)),
+      connectionPreview && /* @__PURE__ */ u2("path", { class: "think-whiteboard-edge__path think-whiteboard-edge__path--preview", "data-whiteboard-edge-preview": "true", d: getWhiteboardConnectionPreviewPath(connectionPreview.start, connectionPreview.end), markerEnd: `url(#${markerId})` })
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "think-whiteboard-edge-controls", "aria-label": "白板连线操作", children: renderable.map(({ edge, geometry }) => /* @__PURE__ */ u2("div", { class: "think-whiteboard-edge__control", style: `left:${geometry.midpointX}px;top:${geometry.midpointY}px;`, "data-whiteboard-edge-control-id": edge.id, children: [
+      editingEdgeId === edge.id ? /* @__PURE__ */ u2(
+        ThinkInput,
+        {
+          autoFocus: true,
+          className: "think-whiteboard-edge__label-input",
+          value: draft,
+          maxLength: 200,
+          "aria-label": "连线标注",
+          onPointerDown: ((event) => event.stopPropagation()),
+          onInput: ((event) => setDraft(event.currentTarget.value)),
+          onBlur: () => finishEdit(edge.id),
+          onKeyDown: ((event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              finishEdit(edge.id);
+            } else if (event.key === "Escape") {
+              event.preventDefault();
+              setEditingEdgeId(null);
+            }
+          })
+        }
+      ) : /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          class: `think-whiteboard-edge__label${edge.label ? " has-label" : ""}`,
+          "aria-label": edge.label ? `编辑连线标注：${edge.label}` : "添加连线标注",
+          title: "双击或点击编辑连线标注",
+          onPointerDown: ((event) => event.stopPropagation()),
+          onClick: ((event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            beginEdit(edge);
+          }),
+          children: edge.label || "+ 标注"
+        }
+      ),
+      /* @__PURE__ */ u2(
+        ThinkButton,
+        {
+          className: "think-whiteboard-edge__remove",
+          size: "sm",
+          variant: "ghost",
+          "aria-label": "删除连线",
+          title: "删除这条连线",
+          disabled: removingEdgeId === edge.id,
+          onPointerDown: (event) => event.stopPropagation(),
+          onClick: (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            void onRemoveEdge(edge.id);
+          },
+          children: removingEdgeId === edge.id ? "…" : "×"
+        }
+      )
+    ] }, edge.id)) })
+  ] });
+}
+const WHITEBOARD_SOURCE_MAX_VISIBLE_RESULTS = 80;
+const WHITEBOARD_SOURCE_DATE_ROLES = [
+  { value: "default", label: "记录日期" },
+  { value: "task-scheduled", label: "任务计划时间" },
+  { value: "task-due", label: "任务截止时间" },
+  { value: "task-completed", label: "任务完成时间" },
+  { value: "task-actual", label: "实际执行时间" }
+];
+function compareText(a2, b2) {
+  return a2.localeCompare(b2, "zh");
+}
+function goalLeaf(path) {
+  const parts = path.split("/").filter(Boolean);
+  return parts[parts.length - 1] || path;
+}
+function collectWhiteboardRecordTypeOptions(records) {
+  const values2 = /* @__PURE__ */ new Set();
+  for (const record2 of records) {
+    const coreBlock = String(record2.coreBlock || "").trim();
+    if (coreBlock) values2.add(coreBlock);
+  }
+  return Array.from(values2).map((value) => ({ value, label: getRecordSchemaDefinition(value)?.name || value })).sort((a2, b2) => compareRecordTypeKeys(a2.value, b2.value) || compareText(a2.label, b2.label));
+}
+function collectWhiteboardGoalTree(records) {
+  const exactPaths = /* @__PURE__ */ new Set();
+  const allPaths = /* @__PURE__ */ new Set();
+  for (const record2 of records) {
+    const goalPath = normalizeGoalPath(record2.goalPath);
+    if (!goalPath) continue;
+    exactPaths.add(goalPath);
+    for (const candidate of getGoalPathCandidates(goalPath)) allPaths.add(candidate);
+  }
+  const nodes = /* @__PURE__ */ new Map();
+  for (const value of allPaths) {
+    nodes.set(value, { value, label: goalLeaf(value), children: [], selectableGoalPaths: [] });
+  }
+  const roots = [];
+  for (const value of Array.from(allPaths).sort(compareText)) {
+    const node2 = nodes.get(value);
+    const parentPath2 = getParentGoalPath(value);
+    const parent = parentPath2 ? nodes.get(parentPath2) : void 0;
+    if (parent) parent.children.push(node2);
+    else roots.push(node2);
+  }
+  const finalize2 = (node2) => {
+    node2.children.sort((a2, b2) => compareText(a2.label, b2.label));
+    const selectable = exactPaths.has(node2.value) ? [node2.value] : [];
+    for (const child of node2.children) selectable.push(...finalize2(child));
+    node2.selectableGoalPaths = Array.from(new Set(selectable)).sort(compareText);
+    return node2.selectableGoalPaths;
+  };
+  roots.sort((a2, b2) => compareText(a2.label, b2.label));
+  roots.forEach(finalize2);
+  return roots;
+}
+function validateWhiteboardRecordSourceTime(time2) {
+  if (!time2) return null;
+  const start2 = dayjs(time2.startDate);
+  const end2 = dayjs(time2.endDate);
+  if (!time2.startDate || !time2.endDate || !start2.isValid() || !end2.isValid()) return "请选择有效的开始和结束日期";
+  if (start2.startOf("day").valueOf() > end2.endOf("day").valueOf()) return "开始日期不能晚于结束日期";
+  return null;
+}
+function buildFilterGroups(state) {
+  const groups = [];
+  const recordTypes = Array.from(new Set(state.recordTypes.map((value) => String(value || "").trim()).filter(Boolean)));
+  if (recordTypes.length) groups.push([{ field: "coreBlock", op: "in", value: recordTypes }]);
+  const goalPaths = Array.from(new Set(state.goalPaths.map((value) => normalizeGoalPath(value)).filter((value) => Boolean(value))));
+  if (goalPaths.length) groups.push([{ field: "goalPath", op: "in", value: goalPaths }]);
+  return groups;
+}
+function buildWhiteboardRecordSourceSpec(_records, state) {
+  const spec = {};
+  const filterGroups = buildFilterGroups(state);
+  if (filterGroups.length) spec.filterGroups = filterGroups;
+  const keyword = state.keyword.trim();
+  if (keyword) spec.keyword = keyword;
+  if (state.time && !validateWhiteboardRecordSourceTime(state.time)) {
+    const start2 = dayjs(state.time.startDate).startOf("day");
+    const end2 = dayjs(state.time.endDate).endOf("day");
+    spec.date = {
+      range: [start2.toDate(), end2.toDate()],
+      mode: "strict",
+      precision: "day",
+      role: state.time.role
+    };
+  }
+  return spec;
+}
+function queryWhiteboardRecordSource(records, state, excludedRecordIds) {
+  const queriedItems = queryRecordItems(records, buildWhiteboardRecordSourceSpec(records, state));
+  const matchedItems = excludedRecordIds?.size ? queriedItems.filter((record2) => !excludedRecordIds.has(record2.id)) : queriedItems;
+  const visibleItems = matchedItems.slice(0, WHITEBOARD_SOURCE_MAX_VISIBLE_RESULTS);
+  return {
+    matchedItems,
+    visibleItems,
+    totalCount: matchedItems.length,
+    visibleCount: visibleItems.length,
+    dateError: validateWhiteboardRecordSourceTime(state.time)
+  };
+}
+function GoalNodeView({ node: node2, selected, expanded, onToggleExpanded, onToggleSubtree }) {
+  const checkboxRef = A$1(null);
+  const selectedCount = node2.selectableGoalPaths.reduce((count, path) => count + (selected.has(path) ? 1 : 0), 0);
+  const checked = node2.selectableGoalPaths.length > 0 && selectedCount === node2.selectableGoalPaths.length;
+  const mixed = selectedCount > 0 && !checked;
+  const isExpanded = expanded.has(node2.value);
+  y(() => {
+    if (checkboxRef.current) checkboxRef.current.indeterminate = mixed;
+  }, [mixed]);
+  return /* @__PURE__ */ u2("div", { class: "think-whiteboard-goal-tree__node", "data-goal-path": node2.value, children: [
+    /* @__PURE__ */ u2("div", { class: "think-whiteboard-goal-tree__row think-list-row think-list-row--compact", children: [
+      /* @__PURE__ */ u2("label", { class: "think-selection-control think-selection-control--compact think-whiteboard-goal-tree__check", title: node2.value, children: [
+        /* @__PURE__ */ u2(
+          "input",
+          {
+            ref: checkboxRef,
+            type: "checkbox",
+            checked,
+            "aria-checked": mixed ? "mixed" : checked ? "true" : "false",
+            onChange: (event) => onToggleSubtree(node2, event.currentTarget.checked)
+          }
+        ),
+        /* @__PURE__ */ u2("span", { class: "think-selection-control__text", children: /* @__PURE__ */ u2("span", { class: "think-selection-control__label", children: node2.label }) })
+      ] }),
+      node2.children.length > 0 ? /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          class: "think-whiteboard-goal-tree__toggle",
+          "aria-label": `${isExpanded ? "折叠" : "展开"} ${node2.label}`,
+          "aria-expanded": isExpanded,
+          onClick: () => onToggleExpanded(node2.value),
+          children: isExpanded ? "⌄" : "›"
+        }
+      ) : /* @__PURE__ */ u2("span", { class: "think-whiteboard-goal-tree__toggle-placeholder", "aria-hidden": "true" })
+    ] }),
+    isExpanded && node2.children.length > 0 && /* @__PURE__ */ u2("div", { class: "think-whiteboard-goal-tree__children", children: node2.children.map((child) => /* @__PURE__ */ u2(
+      GoalNodeView,
+      {
+        node: child,
+        selected,
+        expanded,
+        onToggleExpanded,
+        onToggleSubtree
+      },
+      child.value
+    )) })
+  ] });
+}
+function WhiteboardRecordFilters({
+  recordTypeOptions,
+  selectedRecordTypes,
+  onRecordTypesChange,
+  goalTree,
+  selectedGoalPaths,
+  onGoalPathsChange,
+  time: time2,
+  onTimeChange,
+  dateError = null
+}) {
+  const [expandedGoals, setExpandedGoals] = d(() => /* @__PURE__ */ new Set());
+  const [filtersExpanded, setFiltersExpanded] = d(true);
+  const selectedTypes = T$1(() => new Set(selectedRecordTypes), [selectedRecordTypes]);
+  const selectedGoals = T$1(() => new Set(selectedGoalPaths), [selectedGoalPaths]);
+  const toggleRecordType = (recordType, checked) => {
+    if (checked) onRecordTypesChange(Array.from(/* @__PURE__ */ new Set([...selectedRecordTypes, recordType])));
+    else onRecordTypesChange(selectedRecordTypes.filter((value) => value !== recordType));
+  };
+  const toggleGoalSubtree = (node2, checked) => {
+    const next2 = new Set(selectedGoalPaths);
+    for (const goalPath of node2.selectableGoalPaths) {
+      if (checked) next2.add(goalPath);
+      else next2.delete(goalPath);
+    }
+    onGoalPathsChange(Array.from(next2));
+  };
+  const toggleGoalExpanded = (goalPath) => {
+    setExpandedGoals((current2) => {
+      const next2 = new Set(current2);
+      if (next2.has(goalPath)) next2.delete(goalPath);
+      else next2.add(goalPath);
+      return next2;
+    });
+  };
+  const enableTime = (enabled2) => {
+    if (!enabled2) {
+      onTimeChange(null);
+      return;
+    }
+    onTimeChange(time2 ?? { role: "default", startDate: "", endDate: "" });
+  };
+  const updateTime = (patch) => {
+    const current2 = time2 ?? { role: "default", startDate: "", endDate: "" };
+    onTimeChange({ ...current2, ...patch });
+  };
+  const hasActiveFilters = selectedRecordTypes.length > 0 || selectedGoalPaths.length > 0 || Boolean(time2);
+  return /* @__PURE__ */ u2("section", { class: `think-whiteboard-source-filters${filtersExpanded ? "" : " is-collapsed"}`, "aria-label": "筛选范围", children: [
+    /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filters__heading", children: [
+      /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          class: "think-whiteboard-source-filters__toggle",
+          "aria-expanded": filtersExpanded,
+          onClick: () => setFiltersExpanded((current2) => !current2),
+          children: [
+            /* @__PURE__ */ u2("span", { children: "筛选范围" }),
+            /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: filtersExpanded ? "⌃" : "⌄" })
+          ]
+        }
+      ),
+      hasActiveFilters && /* @__PURE__ */ u2(
+        ThinkButton,
+        {
+          size: "sm",
+          variant: "secondary",
+          onClick: () => {
+            onRecordTypesChange([]);
+            onGoalPathsChange([]);
+            onTimeChange(null);
+          },
+          children: "清除筛选"
+        }
+      )
+    ] }),
+    filtersExpanded && /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filters__body", children: [
+      /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-group", children: [
+        /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-group__label", children: "类型" }),
+        /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-types", role: "group", "aria-label": "Record Type 筛选", children: recordTypeOptions.map((option) => /* @__PURE__ */ u2("span", { class: "think-record-type-marker think-whiteboard-source-filter-type-marker", "data-record-type": option.value, children: /* @__PURE__ */ u2(
+          ThinkCheckbox,
+          {
+            compact: true,
+            className: "think-whiteboard-source-filter-type",
+            checked: selectedTypes.has(option.value),
+            onChange: (event) => toggleRecordType(option.value, event.currentTarget.checked),
+            label: option.label
+          }
+        ) }, option.value)) })
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-group", children: [
+        /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-group__label", children: "目标" }),
+        /* @__PURE__ */ u2("div", { class: "think-whiteboard-goal-tree", role: "tree", "aria-label": "目标筛选", children: goalTree.length > 0 ? goalTree.map((node2) => /* @__PURE__ */ u2(
+          GoalNodeView,
+          {
+            node: node2,
+            selected: selectedGoals,
+            expanded: expandedGoals,
+            onToggleExpanded: toggleGoalExpanded,
+            onToggleSubtree: toggleGoalSubtree
+          },
+          node2.value
+        )) : /* @__PURE__ */ u2("div", { class: "think-whiteboard-goal-tree__empty", children: "暂无目标" }) })
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-group", children: [
+        /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-group__label", children: "时间" }),
+        /* @__PURE__ */ u2(
+          ThinkCheckbox,
+          {
+            compact: true,
+            checked: Boolean(time2),
+            onChange: (event) => enableTime(event.currentTarget.checked),
+            label: "限定时间范围"
+          }
+        ),
+        time2 && /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-time", children: [
+          /* @__PURE__ */ u2(
+            ThinkSelect,
+            {
+              value: time2.role,
+              "aria-label": "时间依据",
+              onChange: (event) => updateTime({ role: event.currentTarget.value }),
+              children: WHITEBOARD_SOURCE_DATE_ROLES.map((option) => /* @__PURE__ */ u2("option", { value: option.value, children: option.label }, option.value))
+            }
+          ),
+          /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-time__dates", children: [
+            /* @__PURE__ */ u2(
+              ThinkInput,
+              {
+                type: "date",
+                value: time2.startDate,
+                "aria-label": "开始日期",
+                invalid: Boolean(dateError),
+                onInput: (event) => updateTime({ startDate: event.currentTarget.value })
+              }
+            ),
+            /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "—" }),
+            /* @__PURE__ */ u2(
+              ThinkInput,
+              {
+                type: "date",
+                value: time2.endDate,
+                "aria-label": "结束日期",
+                invalid: Boolean(dateError),
+                onInput: (event) => updateTime({ endDate: event.currentTarget.value })
+              }
+            )
+          ] }),
+          dateError && /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-error", role: "status", children: dateError })
+        ] })
+      ] })
+    ] })
+  ] });
+}
+function selectAllWhiteboardRecordIds(records) {
+  return new Set(records.map((record2) => record2.id));
+}
+function pruneWhiteboardRecordSelection(selectedIds, availableRecords) {
+  if (selectedIds.size === 0) return /* @__PURE__ */ new Set();
+  const availableIds = new Set(availableRecords.map((record2) => record2.id));
+  return new Set(Array.from(selectedIds).filter((id) => availableIds.has(id)));
+}
+function toggleWhiteboardRecordSelection(selectedIds, recordId) {
+  const next2 = new Set(selectedIds);
+  if (next2.has(recordId)) next2.delete(recordId);
+  else next2.add(recordId);
+  return next2;
+}
+function resolveWhiteboardSourceDragRecords(origin, selectedIds, orderedResults) {
+  if (!selectedIds.has(origin.id)) return [origin];
+  const selected = orderedResults.filter((record2) => selectedIds.has(record2.id));
+  return selected.length > 0 ? selected : [origin];
+}
+const WHITEBOARD_ZOOM_MIN = 5e-3;
+const WHITEBOARD_ZOOM_MAX = 128;
+const WHITEBOARD_ZOOM_STEP_RATIO = 1.25;
+const WHITEBOARD_ZOOM_DEFAULT = 1;
+const WHITEBOARD_ZOOM_WHEEL_SENSITIVITY = 25e-4;
+function clampWhiteboardZoom(value) {
+  if (!Number.isFinite(value)) return WHITEBOARD_ZOOM_DEFAULT;
+  const clamped = Math.min(WHITEBOARD_ZOOM_MAX, Math.max(WHITEBOARD_ZOOM_MIN, value));
+  return Math.round(clamped * 1e5) / 1e5;
+}
+function stepWhiteboardZoom(current2, direction) {
+  const safeCurrent = clampWhiteboardZoom(current2);
+  return clampWhiteboardZoom(safeCurrent * (direction > 0 ? WHITEBOARD_ZOOM_STEP_RATIO : 1 / WHITEBOARD_ZOOM_STEP_RATIO));
+}
+function resolveWhiteboardWheelZoom(current2, deltaY) {
+  if (!Number.isFinite(deltaY) || deltaY === 0) return clampWhiteboardZoom(current2);
+  return clampWhiteboardZoom(clampWhiteboardZoom(current2) * Math.exp(-deltaY * WHITEBOARD_ZOOM_WHEEL_SENSITIVITY));
+}
+function formatWhiteboardZoomPercent(zoom) {
+  const percent = clampWhiteboardZoom(zoom) * 100;
+  if (percent < 1) return `${Number(percent.toFixed(2))}%`;
+  if (percent < 10) return `${Number(percent.toFixed(1))}%`;
+  return `${Math.round(percent)}%`;
+}
+const WHITEBOARD_CAMERA_DEFAULT = { x: 0, y: 0 };
+function finiteOrZero(value) {
+  return Number.isFinite(value) ? value : 0;
+}
+function safeCamera(camera) {
+  return { x: finiteOrZero(camera.x), y: finiteOrZero(camera.y) };
+}
+function screenToWhiteboardWorld(point, viewport2, camera, zoom) {
+  const safeZoom = clampWhiteboardZoom(zoom);
+  const currentCamera = safeCamera(camera);
+  return {
+    x: currentCamera.x + (finiteOrZero(point.clientX) - finiteOrZero(viewport2.left)) / safeZoom,
+    y: currentCamera.y + (finiteOrZero(point.clientY) - finiteOrZero(viewport2.top)) / safeZoom
+  };
+}
+function createWhiteboardPanSession(input) {
+  return {
+    pointerId: input.pointerId,
+    startClientX: finiteOrZero(input.clientX),
+    startClientY: finiteOrZero(input.clientY),
+    startCamera: safeCamera(input.camera),
+    zoom: clampWhiteboardZoom(input.zoom)
+  };
+}
+function resolveWhiteboardPannedCamera(session, clientX, clientY) {
+  return {
+    x: session.startCamera.x - (finiteOrZero(clientX) - session.startClientX) / session.zoom,
+    y: session.startCamera.y - (finiteOrZero(clientY) - session.startClientY) / session.zoom
+  };
+}
+function resolveWhiteboardWheelPannedCamera(camera, deltaX, deltaY, zoom) {
+  const safeZoom = clampWhiteboardZoom(zoom);
+  const currentCamera = safeCamera(camera);
+  return {
+    x: currentCamera.x + finiteOrZero(deltaX) / safeZoom,
+    y: currentCamera.y + finiteOrZero(deltaY) / safeZoom
+  };
+}
+function resolveWhiteboardZoomedCamera(input) {
+  const currentZoom = clampWhiteboardZoom(input.currentZoom);
+  const nextZoom = clampWhiteboardZoom(input.nextZoom);
+  const currentCamera = safeCamera(input.camera);
+  const anchorOffsetX = finiteOrZero(input.anchorOffsetX);
+  const anchorOffsetY = finiteOrZero(input.anchorOffsetY);
+  return {
+    x: currentCamera.x + anchorOffsetX / currentZoom - anchorOffsetX / nextZoom,
+    y: currentCamera.y + anchorOffsetY / currentZoom - anchorOffsetY / nextZoom
+  };
+}
+function centerWhiteboardCameraOnWorldPoint(input) {
+  const zoom = clampWhiteboardZoom(input.zoom);
+  return {
+    x: finiteOrZero(input.point.x) - Math.max(0, finiteOrZero(input.viewportWidth)) / (2 * zoom),
+    y: finiteOrZero(input.point.y) - Math.max(0, finiteOrZero(input.viewportHeight)) / (2 * zoom)
+  };
+}
+function fitWhiteboardBoundsToViewport(input) {
+  const padding2 = Math.max(0, finiteOrZero(input.padding ?? 48));
+  const viewportWidth = Math.max(1, finiteOrZero(input.viewportWidth));
+  const viewportHeight = Math.max(1, finiteOrZero(input.viewportHeight));
+  const width2 = Math.max(1, finiteOrZero(input.bounds.right) - finiteOrZero(input.bounds.x));
+  const height2 = Math.max(1, finiteOrZero(input.bounds.bottom) - finiteOrZero(input.bounds.y));
+  const availableWidth = Math.max(1, viewportWidth - padding2 * 2);
+  const availableHeight = Math.max(1, viewportHeight - padding2 * 2);
+  const maxZoom = clampWhiteboardZoom(input.maxZoom);
+  const zoom = clampWhiteboardZoom(Math.min(maxZoom, availableWidth / width2, availableHeight / height2));
+  const point = { x: finiteOrZero(input.bounds.x) + width2 / 2, y: finiteOrZero(input.bounds.y) + height2 / 2 };
+  return { camera: centerWhiteboardCameraOnWorldPoint({ point, viewportWidth, viewportHeight, zoom }), zoom };
+}
+function getWhiteboardWorldTransform(camera, zoom) {
+  const safeZoom = clampWhiteboardZoom(zoom);
+  const currentCamera = safeCamera(camera);
+  return `matrix(${safeZoom},0,0,${safeZoom},${-currentCamera.x * safeZoom},${-currentCamera.y * safeZoom})`;
+}
+function createWhiteboardSourceDragSession(pointerId, clientX, clientY) {
+  return { pointerId, startClientX: clientX, startClientY: clientY };
+}
+function isWhiteboardSourceDragActivated(session, point, thresholdPx = WHITEBOARD_DRAG_THRESHOLD_PX) {
+  return Math.hypot(point.clientX - session.startClientX, point.clientY - session.startClientY) >= thresholdPx;
+}
+function isWhiteboardClientPointInsideRect(point, rect) {
+  return point.clientX >= rect.left && point.clientX <= rect.right && point.clientY >= rect.top && point.clientY <= rect.bottom;
+}
+function resolveWhiteboardCanvasDropPosition(input) {
+  const anchorOffsetWorld = Math.max(0, input.anchorOffsetWorld ?? 24);
+  const world = screenToWhiteboardWorld(
+    input.point,
+    input.viewport,
+    input.viewport.camera,
+    input.zoom ?? 1
+  );
+  return {
+    x: world.x - anchorOffsetWorld,
+    y: world.y - anchorOffsetWorld,
+    zIndex: input.zIndex
+  };
+}
+const EMPTY_SOURCE_STATE = {
+  keyword: "",
+  recordTypes: [],
+  goalPaths: [],
+  time: null
+};
+function WhiteboardRecordSourcePanel({
+  records,
+  boardRecordIds,
+  onAdd,
+  onDropRecords,
+  onDragRecordPreview,
+  onSourceElementChange,
+  addingRecordIds = /* @__PURE__ */ new Set(),
+  removalDropActive = false
+}) {
+  const [sourceState, setSourceState] = d(EMPTY_SOURCE_STATE);
+  const [selectedRecordIds, setSelectedRecordIds] = d(() => /* @__PURE__ */ new Set());
+  const [draggingRecordId, setDraggingRecordId] = d(null);
+  const dragRef = A$1(null);
+  const dragCleanupRef = A$1(null);
+  const recordTypeOptions = T$1(() => collectWhiteboardRecordTypeOptions(records), [records]);
+  const goalTree = T$1(() => collectWhiteboardGoalTree(records), [records]);
+  const queryResult = T$1(
+    () => queryWhiteboardRecordSource(records, sourceState, boardRecordIds),
+    [boardRecordIds, records, sourceState]
+  );
+  const selectionBusy = addingRecordIds.size > 0;
+  const allResultsSelected = queryResult.matchedItems.length > 0 && queryResult.matchedItems.every((record2) => selectedRecordIds.has(record2.id));
+  y(() => {
+    setSelectedRecordIds((current2) => pruneWhiteboardRecordSelection(current2, queryResult.matchedItems));
+  }, [queryResult.matchedItems]);
+  const clearSourceDragListeners = () => {
+    dragCleanupRef.current?.();
+    dragCleanupRef.current = null;
+  };
+  const finishSourceDrag = (event, cancelled = false) => {
+    const current2 = dragRef.current;
+    if (!current2 || current2.session.pointerId !== event.pointerId) return;
+    event.stopPropagation();
+    dragRef.current = null;
+    clearSourceDragListeners();
+    try {
+      current2.target?.releasePointerCapture?.(event.pointerId);
+    } catch {
+    }
+    setDraggingRecordId(null);
+    onDragRecordPreview?.(null);
+    if (cancelled || !current2.active) return;
+    event.preventDefault();
+    const point = { clientX: event.clientX, clientY: event.clientY };
+    void Promise.resolve(onDropRecords?.(current2.records, point)).catch(() => void 0);
+  };
+  const moveSourceDrag = (event) => {
+    const current2 = dragRef.current;
+    if (!current2 || current2.session.pointerId !== event.pointerId) return;
+    event.stopPropagation();
+    const point = { clientX: event.clientX, clientY: event.clientY };
+    if (!current2.active && !isWhiteboardSourceDragActivated(current2.session, point)) return;
+    event.preventDefault();
+    current2.active = true;
+    setDraggingRecordId(current2.originRecordId);
+    onDragRecordPreview?.({ records: current2.records, point });
+  };
+  const beginSourceDrag = (record2, disabled, event) => {
+    if (disabled) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    const targetElement = event.target;
+    if (targetElement?.closest("button, input, select, textarea, a")) return;
+    event.stopPropagation();
+    clearSourceDragListeners();
+    const target = event.currentTarget;
+    dragRef.current = {
+      originRecordId: record2.id,
+      records: resolveWhiteboardSourceDragRecords(record2, selectedRecordIds, queryResult.matchedItems),
+      session: createWhiteboardSourceDragSession(event.pointerId, event.clientX, event.clientY),
+      active: false,
+      target
+    };
+    try {
+      target.setPointerCapture?.(event.pointerId);
+    } catch {
+    }
+    const move2 = (nextEvent) => moveSourceDrag(nextEvent);
+    const up = (nextEvent) => finishSourceDrag(nextEvent, false);
+    const cancel = (nextEvent) => finishSourceDrag(nextEvent, true);
+    window.addEventListener("pointermove", move2, true);
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", cancel, true);
+    dragCleanupRef.current = () => {
+      window.removeEventListener("pointermove", move2, true);
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", cancel, true);
+    };
+  };
+  y(() => () => {
+    clearSourceDragListeners();
+    dragRef.current = null;
+    onDragRecordPreview?.(null);
+  }, [onDragRecordPreview]);
+  return /* @__PURE__ */ u2(
+    "aside",
+    {
+      class: `think-whiteboard-source${removalDropActive ? " is-remove-drop-target" : ""}`,
+      "aria-label": "搜索记录",
+      "data-whiteboard-source-dropzone": "true",
+      ref: (element) => onSourceElementChange?.(element),
+      children: [
+        /* @__PURE__ */ u2("div", { class: "think-whiteboard-source__search-zone", role: "search", "aria-label": "搜索全部记录", children: /* @__PURE__ */ u2(
+          ThinkInput,
+          {
+            className: "think-whiteboard-source__search",
+            value: sourceState.keyword,
+            placeholder: "搜索记录",
+            "aria-label": "搜索记录",
+            onInput: (event) => setSourceState((current2) => ({
+              ...current2,
+              keyword: event.currentTarget.value
+            }))
+          }
+        ) }),
+        /* @__PURE__ */ u2(
+          WhiteboardRecordFilters,
+          {
+            recordTypeOptions,
+            selectedRecordTypes: sourceState.recordTypes,
+            onRecordTypesChange: (recordTypes) => setSourceState((current2) => ({ ...current2, recordTypes })),
+            goalTree,
+            selectedGoalPaths: sourceState.goalPaths,
+            onGoalPathsChange: (goalPaths) => setSourceState((current2) => ({ ...current2, goalPaths })),
+            time: sourceState.time,
+            onTimeChange: (time2) => setSourceState((current2) => ({ ...current2, time: time2 })),
+            dateError: queryResult.dateError
+          }
+        ),
+        /* @__PURE__ */ u2("div", { class: "think-whiteboard-source__selection-bar", "aria-label": "记录批量选择", children: [
+          /* @__PURE__ */ u2(
+            ThinkButton,
+            {
+              size: "sm",
+              variant: "secondary",
+              disabled: queryResult.matchedItems.length === 0 || selectionBusy,
+              onClick: () => setSelectedRecordIds(allResultsSelected ? /* @__PURE__ */ new Set() : selectAllWhiteboardRecordIds(queryResult.matchedItems)),
+              children: allResultsSelected ? "取消全选" : "全选结果"
+            }
+          ),
+          /* @__PURE__ */ u2("span", { class: "think-whiteboard-source__selection-count", "aria-live": "polite", children: [
+            "已选 ",
+            selectedRecordIds.size
+          ] }),
+          selectedRecordIds.size > 0 && /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", disabled: selectionBusy, onClick: () => setSelectedRecordIds(/* @__PURE__ */ new Set()), children: "清空" })
+        ] }),
+        /* @__PURE__ */ u2("div", { class: "think-whiteboard-source__results", children: queryResult.visibleItems.map((record2) => {
+          const presentation = buildWhiteboardRecordPresentation(record2);
+          const adding = addingRecordIds.has(record2.id);
+          const selected = selectedRecordIds.has(record2.id);
+          const isDragging = draggingRecordId === record2.id;
+          return /* @__PURE__ */ u2(
+            "div",
+            {
+              class: `think-whiteboard-source__row${selected ? " is-selected" : ""}${isDragging ? " is-dragging" : ""}`,
+              "data-record-type": record2.coreBlock,
+              "data-whiteboard-source-record-id": record2.id,
+              "data-whiteboard-source-selected": selected ? "true" : "false",
+              "data-whiteboard-source-draggable": selectionBusy ? "false" : "true",
+              title: selected ? "拖动这一条即可把全部已选记录一起加入白板" : "拖到右侧白板指定位置加入；也可以点击加入",
+              onPointerDown: ((event) => beginSourceDrag(record2, selectionBusy, event)),
+              children: [
+                /* @__PURE__ */ u2("div", { class: "think-whiteboard-source__select", onPointerDown: ((event) => event.stopPropagation()), children: /* @__PURE__ */ u2(
+                  ThinkCheckbox,
+                  {
+                    compact: true,
+                    label: "",
+                    "aria-label": `选择 ${presentation.primaryText}`,
+                    checked: selected,
+                    disabled: selectionBusy,
+                    onChange: () => setSelectedRecordIds((current2) => toggleWhiteboardRecordSelection(current2, record2.id))
+                  }
+                ) }),
+                /* @__PURE__ */ u2("div", { class: "think-whiteboard-source__row-main", children: [
+                  /* @__PURE__ */ u2("div", { class: "think-whiteboard-source__row-heading", children: [
+                    /* @__PURE__ */ u2("span", { class: "think-whiteboard-source__type", children: presentation.typeLabel }),
+                    /* @__PURE__ */ u2("span", { class: "think-whiteboard-source__row-title", children: presentation.primaryText })
+                  ] }),
+                  /* @__PURE__ */ u2("div", { class: "think-whiteboard-source__row-meta", children: [presentation.temporalLabel, presentation.goalLabel, ...presentation.detailLabels].filter(Boolean).join(" · ") })
+                ] }),
+                /* @__PURE__ */ u2("div", { class: "think-whiteboard-source__row-action", onPointerDown: ((event) => event.stopPropagation()), children: /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", disabled: selectionBusy, onClick: () => void onAdd(record2), children: adding ? "加入中…" : "加入" }) })
+              ]
+            },
+            record2.id
+          );
+        }) }),
+        removalDropActive && /* @__PURE__ */ u2("div", { class: "think-whiteboard-source__remove-drop-overlay", "aria-hidden": "true", children: [
+          /* @__PURE__ */ u2("strong", { children: "← 松开移出白板" }),
+          /* @__PURE__ */ u2("span", { children: "原 Record / Markdown 不会删除" })
+        ] })
+      ]
+    }
+  );
+}
+function WhiteboardBoardTools({
+  sourceCollapsed,
+  onToggleSource,
+  gridVisible,
+  onToggleGrid,
+  find,
+  zoom,
+  onZoomIn,
+  onZoomOut,
+  onResetZoom,
+  onCenterBoard,
+  onFitBoard,
+  archiveCount,
+  archiveOpen,
+  onToggleArchive,
+  onCreateWorkbench,
+  selectionCount,
+  onClearSelection,
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo,
+  findPathLabel,
+  activeCanvasId = null,
+  activeCanvasTitle = null,
+  onExitCanvas,
+  onExitToRoot
+}) {
+  return /* @__PURE__ */ u2("div", { class: "think-whiteboard-board-tools", children: [
+    /* @__PURE__ */ u2("div", { class: "think-whiteboard-board-tools__left", children: [
+      /* @__PURE__ */ u2(
+        ThinkIconButton,
+        {
+          className: "think-whiteboard-board-tools__source-toggle",
+          size: "sm",
+          label: sourceCollapsed ? "展开记录栏" : "收起记录栏",
+          icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: sourceCollapsed ? "›" : "‹" }),
+          pressed: !sourceCollapsed,
+          onClick: onToggleSource
+        }
+      ),
+      /* @__PURE__ */ u2(
+        ThinkIconButton,
+        {
+          className: "think-whiteboard-board-tools__grid-toggle",
+          size: "sm",
+          label: gridVisible ? "关闭白板网格" : "显示白板网格",
+          icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "#" }),
+          pressed: gridVisible,
+          onClick: onToggleGrid
+        }
+      ),
+      activeCanvasId && /* @__PURE__ */ u2("div", { class: "think-whiteboard-board-tools__nested-exit", "data-whiteboard-active-canvas-id": activeCanvasId, "aria-label": `当前工作台：${activeCanvasTitle ?? "当前工作台"}`, children: [
+        /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "返回上一级工作台", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "←" }), onClick: () => onExitCanvas?.() }),
+        /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "退出到根白板", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "⌂" }), onClick: () => onExitToRoot?.() })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "think-whiteboard-board-tools__right", children: [
+      /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "撤销白板操作", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "↶" }), disabled: !canUndo, onClick: () => onUndo?.() }),
+      /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "重做白板操作", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "↷" }), disabled: !canRedo, onClick: () => onRedo?.() }),
+      /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "新建工作台", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "▣" }), onClick: onCreateWorkbench }),
+      /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: `归档箱${archiveCount > 0 ? `（${archiveCount}）` : ""}`, icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "▱" }), pressed: archiveOpen, onClick: onToggleArchive }),
+      selectionCount > 0 && /* @__PURE__ */ u2("div", { class: "think-whiteboard-board-selection", "aria-live": "polite", children: [
+        /* @__PURE__ */ u2("span", { children: [
+          "已选 ",
+          selectionCount
+        ] }),
+        /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "清除白板选择", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "×" }), onClick: onClearSelection })
+      ] }),
+      /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "回到画布中心", title: activeCanvasId ? `找回工作台「${activeCanvasTitle ?? "当前工作台"}」内容并恢复到 100%` : "找回根白板内容并恢复到 100%", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "◎" }), onClick: onCenterBoard }),
+      /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "适配当前画布内容", title: activeCanvasId ? `适配工作台「${activeCanvasTitle ?? "当前工作台"}」全部内容（最多 100%）` : "适配根白板全部内容（最多 100%）", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "⤢" }), onClick: onFitBoard }),
+      /* @__PURE__ */ u2("div", { class: "think-whiteboard-zoom", "aria-label": "白板缩放", children: [
+        /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "缩小白板", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "−" }), disabled: zoom <= WHITEBOARD_ZOOM_MIN, onClick: onZoomOut }),
+        /* @__PURE__ */ u2(
+          "button",
+          {
+            type: "button",
+            class: "think-whiteboard-zoom__value",
+            "aria-label": `重置白板缩放到 ${Math.round(WHITEBOARD_ZOOM_DEFAULT * 100)}%`,
+            title: "重置到 100%",
+            onClick: onResetZoom,
+            children: formatWhiteboardZoomPercent(zoom)
+          }
+        ),
+        /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "放大白板", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "＋" }), disabled: zoom >= WHITEBOARD_ZOOM_MAX, onClick: onZoomIn })
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "think-whiteboard-find", role: "search", "aria-label": "在白板中查找", children: [
+        /* @__PURE__ */ u2(
+          ThinkInput,
+          {
+            className: "think-whiteboard-find__input",
+            ref: find.inputRef,
+            value: find.query,
+            placeholder: "查找白板卡片",
+            "aria-label": "查找白板卡片",
+            onInput: (event) => find.setQuery(event.currentTarget.value),
+            onKeyDown: ((event) => {
+              if (event.key !== "Enter" || find.matchIds.length === 0) return;
+              event.preventDefault();
+              find.step(event.shiftKey ? -1 : 1);
+            })
+          }
+        ),
+        find.active && /* @__PURE__ */ u2(S, { children: [
+          /* @__PURE__ */ u2("span", { class: "think-whiteboard-find__count", "aria-live": "polite", children: find.matchIds.length > 0 ? `${Math.min(find.index, find.matchIds.length - 1) + 1}/${find.matchIds.length}` : "0" }),
+          find.activeItemId && findPathLabel && /* @__PURE__ */ u2("span", { class: "think-whiteboard-find__path", title: findPathLabel, children: findPathLabel }),
+          /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "上一个匹配", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "↑" }), disabled: find.matchIds.length === 0, onClick: () => find.step(-1) }),
+          /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "下一个匹配", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "↓" }), disabled: find.matchIds.length === 0, onClick: () => find.step(1) }),
+          /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "清除白板查找", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "×" }), onClick: () => find.setQuery("") })
+        ] })
+      ] })
+    ] })
+  ] });
+}
+const WHITEBOARD_WORKBENCH_MIN_WIDTH_PX = 720;
+const WHITEBOARD_WORKBENCH_MIN_HEIGHT_PX = 480;
+const WHITEBOARD_WORKBENCH_HEADER_HEIGHT_PX = 44;
+const WHITEBOARD_WORKBENCH_PADDING_PX = 24;
+const WHITEBOARD_WORKBENCH_COLLAPSED_WIDTH_PX = 360;
+function directChildGroups(groups, parentGroupId) {
+  return groups.filter((group) => group.parentGroupId === parentGroupId);
+}
+function getWhiteboardWorkbenchFrame(group, items, groups = [], visited = /* @__PURE__ */ new Set()) {
+  if (group.collapsed || visited.has(group.id)) {
+    return { x: group.x, y: group.y, width: WHITEBOARD_WORKBENCH_COLLAPSED_WIDTH_PX, height: WHITEBOARD_WORKBENCH_HEADER_HEIGHT_PX, right: group.x + WHITEBOARD_WORKBENCH_COLLAPSED_WIDTH_PX, bottom: group.y + WHITEBOARD_WORKBENCH_HEADER_HEIGHT_PX };
+  }
+  let right2 = group.x + WHITEBOARD_WORKBENCH_MIN_WIDTH_PX;
+  let bottom2 = group.y + WHITEBOARD_WORKBENCH_MIN_HEIGHT_PX;
+  items.forEach((item) => {
+    if (item.groupId !== group.id) return;
+    right2 = Math.max(right2, item.x + WHITEBOARD_CARD_WIDTH_PX + WHITEBOARD_WORKBENCH_PADDING_PX);
+    bottom2 = Math.max(bottom2, item.y + WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX + WHITEBOARD_WORKBENCH_PADDING_PX);
+  });
+  const nextVisited = new Set(visited);
+  nextVisited.add(group.id);
+  directChildGroups(groups, group.id).forEach((child) => {
+    const frame = getWhiteboardWorkbenchFrame(child, items, groups, nextVisited);
+    right2 = Math.max(right2, frame.right + WHITEBOARD_WORKBENCH_PADDING_PX);
+    bottom2 = Math.max(bottom2, frame.bottom + WHITEBOARD_WORKBENCH_PADDING_PX);
+  });
+  return { x: group.x, y: group.y, width: right2 - group.x, height: bottom2 - group.y, right: right2, bottom: bottom2 };
+}
+function hasCollapsedAncestor(groups, groupId, containerGroupId) {
+  const byId = new Map(groups.map((group) => [group.id, group]));
+  let current2 = byId.get(groupId);
+  while (current2 && current2.id !== containerGroupId) {
+    if (current2.collapsed) return true;
+    current2 = current2.parentGroupId ? byId.get(current2.parentGroupId) : void 0;
+  }
+  return false;
+}
+function getWhiteboardWorkbenchGroupsForContainer(groups, containerGroupId) {
+  return groups.filter((group) => {
+    if (group.id === containerGroupId) return false;
+    const path = getWhiteboardGroupPathIds(groups, group.id);
+    if (containerGroupId ? !path.includes(containerGroupId) : false) return false;
+    if (!containerGroupId && path.length === 0) return false;
+    const parent = group.parentGroupId ? groups.find((candidate) => candidate.id === group.parentGroupId) : void 0;
+    return !parent || parent.id === containerGroupId || !hasCollapsedAncestor(groups, parent.id, containerGroupId);
+  });
+}
+function getWhiteboardWorkbenchItemsForContainer(items, groups, containerGroupId) {
+  const groupById = new Map(groups.map((group) => [group.id, group]));
+  return items.filter((item) => {
+    if (!item.groupId) return containerGroupId === null;
+    if (item.groupId === containerGroupId) return true;
+    const path = getWhiteboardGroupPathIds(groups, item.groupId);
+    if (containerGroupId ? !path.includes(containerGroupId) : false) return false;
+    let current2 = groupById.get(item.groupId);
+    while (current2 && current2.id !== containerGroupId) {
+      if (current2.collapsed) return false;
+      current2 = current2.parentGroupId ? groupById.get(current2.parentGroupId) : void 0;
+    }
+    return containerGroupId ? current2?.id === containerGroupId : current2 === void 0;
+  });
+}
+function getWhiteboardWorkbenchPointHitTargetId(groups, items, point, containerGroupId = null, excludedGroupIds = /* @__PURE__ */ new Set()) {
+  const candidates = getWhiteboardWorkbenchGroupsForContainer(groups, containerGroupId).filter((group) => !group.collapsed && !excludedGroupIds.has(group.id)).sort((a2, b2) => getWhiteboardGroupDepth(groups, b2.id) - getWhiteboardGroupDepth(groups, a2.id));
+  return candidates.find((group) => {
+    const frame = getWhiteboardWorkbenchFrame(group, items, groups);
+    return point.x >= frame.x && point.x <= frame.right && point.y >= frame.y && point.y <= frame.bottom;
+  })?.id ?? null;
+}
+function getWhiteboardWorkbenchHitTargetId(groups, items, position2, containerGroupId = null, excludedGroupIds = /* @__PURE__ */ new Set()) {
+  return getWhiteboardWorkbenchPointHitTargetId(groups, items, {
+    x: position2.x + WHITEBOARD_CARD_WIDTH_PX / 2,
+    y: position2.y + WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX / 2
+  }, containerGroupId, excludedGroupIds);
+}
+function getWhiteboardWorkbenchDropTargetId(groups, items, position2, currentGroupId = null, containerGroupId = null) {
+  return getWhiteboardWorkbenchHitTargetId(groups, items, position2, containerGroupId) ?? currentGroupId ?? containerGroupId;
+}
+function getWhiteboardWorkbenchGroupDropTargetId(groups, items, groupId, position2, containerGroupId) {
+  const moving = groups.find((group) => group.id === groupId);
+  if (!moving) return null;
+  const dx = position2.x - moving.x;
+  const dy = position2.y - moving.y;
+  const movedGroups = translateWhiteboardWorkbenchGroups(groups, groupId, dx, dy);
+  const movedItems = translateWhiteboardWorkbenchMembers(items, groupId, dx, dy, groups);
+  const moved2 = movedGroups.find((group) => group.id === groupId);
+  const frame = getWhiteboardWorkbenchFrame(moved2, movedItems, movedGroups);
+  const excluded = getWhiteboardGroupDescendantIds(groups, groupId);
+  excluded.add(groupId);
+  return getWhiteboardWorkbenchHitTargetId(movedGroups, movedItems, {
+    x: frame.x + frame.width / 2 - WHITEBOARD_CARD_WIDTH_PX / 2,
+    y: frame.y + frame.height / 2 - WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX / 2
+  }, containerGroupId, excluded);
+}
+function getNextWhiteboardWorkbenchTitle(groups) {
+  const titles = new Set(groups.map((group) => group.title.trim()));
+  let index = 1;
+  while (titles.has(`工作台 ${index}`)) index += 1;
+  return `工作台 ${index}`;
+}
+function getWhiteboardWorkbenchCreatePosition(input) {
+  const zoom = clampWhiteboardZoom(input.zoom);
+  const centerX = input.camera.x + Math.max(0, input.viewportWidth) / (2 * zoom);
+  const centerY = input.camera.y + Math.max(0, input.viewportHeight) / (2 * zoom);
+  return { x: centerX - WHITEBOARD_WORKBENCH_MIN_WIDTH_PX / 2, y: centerY - WHITEBOARD_WORKBENCH_MIN_HEIGHT_PX / 2 };
+}
+function createWhiteboardWorkbenchDragSession(input) {
+  return { pointerId: input.pointerId, startClientX: input.clientX, startClientY: input.clientY, origin: { x: input.group.x, y: input.group.y }, zoom: clampWhiteboardZoom(input.zoom) };
+}
+function resolveWhiteboardWorkbenchDragPreview(session, clientX, clientY) {
+  const dx = clientX - session.startClientX;
+  const dy = clientY - session.startClientY;
+  if (Math.hypot(dx, dy) < WHITEBOARD_DRAG_THRESHOLD_PX) return null;
+  return { x: session.origin.x + dx / session.zoom, y: session.origin.y + dy / session.zoom };
+}
+function translateWhiteboardWorkbenchMembers(items, groupId, dx, dy, groups = []) {
+  const subtreeIds = getWhiteboardGroupDescendantIds(groups, groupId);
+  subtreeIds.add(groupId);
+  return items.map((item) => item.groupId && subtreeIds.has(item.groupId) ? { ...item, x: item.x + dx, y: item.y + dy } : { ...item });
+}
+function translateWhiteboardWorkbenchGroups(groups, groupId, dx, dy) {
+  const subtreeIds = getWhiteboardGroupDescendantIds(groups, groupId);
+  subtreeIds.add(groupId);
+  return groups.map((group) => subtreeIds.has(group.id) ? { ...group, x: group.x + dx, y: group.y + dy } : { ...group });
+}
+function getWhiteboardWorkbenchHomePoint(group, items, groups = [], annotations = []) {
+  const candidates = [];
+  items.forEach((item) => {
+    if (item.groupId === group.id) candidates.push({ x: item.x + WHITEBOARD_CARD_WIDTH_PX / 2, y: item.y + WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX / 2 });
+  });
+  groups.forEach((child) => {
+    if (child.parentGroupId === group.id) candidates.push({ x: child.x + (child.collapsed ? WHITEBOARD_WORKBENCH_COLLAPSED_WIDTH_PX : WHITEBOARD_WORKBENCH_MIN_WIDTH_PX) / 2, y: child.y + (child.collapsed ? WHITEBOARD_WORKBENCH_HEADER_HEIGHT_PX : WHITEBOARD_WORKBENCH_MIN_HEIGHT_PX) / 2 });
+  });
+  annotations.forEach((annotation) => {
+    if (annotation.groupId === group.id) candidates.push({ x: annotation.x + 130, y: annotation.y + (annotation.kind === "sticky" ? 66 : 24) });
+  });
+  if (candidates.length === 0) return { x: group.x + WHITEBOARD_WORKBENCH_MIN_WIDTH_PX / 2, y: group.y + WHITEBOARD_WORKBENCH_MIN_HEIGHT_PX / 2 };
+  const xs = candidates.map((point) => point.x).sort((a2, b2) => a2 - b2);
+  const ys = candidates.map((point) => point.y).sort((a2, b2) => a2 - b2);
+  const middle = Math.floor(candidates.length / 2);
+  const medianX = candidates.length % 2 ? xs[middle] : (xs[middle - 1] + xs[middle]) / 2;
+  const medianY = candidates.length % 2 ? ys[middle] : (ys[middle - 1] + ys[middle]) / 2;
+  return candidates.reduce((best, point) => (point.x - medianX) ** 2 + (point.y - medianY) ** 2 < (best.x - medianX) ** 2 + (best.y - medianY) ** 2 ? point : best);
+}
+function getWhiteboardWorkbenchCenter(group, items, groups = []) {
+  const frame = getWhiteboardWorkbenchFrame(group, items, groups);
+  return { x: frame.x + frame.width / 2, y: frame.y + frame.height / 2 };
+}
+const WHITEBOARD_TEXT_ANNOTATION_WIDTH_PX = 260;
+const WHITEBOARD_TEXT_ANNOTATION_HEIGHT_PX = 48;
+const WHITEBOARD_STICKY_ANNOTATION_HEIGHT_PX = 132;
+function includeRect(bounds, x2, y2, right2, bottom2) {
+  if (!bounds) return { x: x2, y: y2, right: right2, bottom: bottom2, width: Math.max(0, right2 - x2), height: Math.max(0, bottom2 - y2) };
+  const nextX = Math.min(bounds.x, x2);
+  const nextY = Math.min(bounds.y, y2);
+  const nextRight = Math.max(bounds.right, right2);
+  const nextBottom = Math.max(bounds.bottom, bottom2);
+  return { x: nextX, y: nextY, right: nextRight, bottom: nextBottom, width: nextRight - nextX, height: nextBottom - nextY };
+}
+function getWhiteboardCanvasContentBounds(items, groups = [], annotations = []) {
+  let bounds = null;
+  items.forEach((item) => {
+    bounds = includeRect(bounds, item.x, item.y, item.x + WHITEBOARD_CARD_WIDTH_PX, item.y + WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX);
+  });
+  groups.forEach((group) => {
+    const frame = getWhiteboardWorkbenchFrame(group, items, groups);
+    bounds = includeRect(bounds, frame.x, frame.y, frame.right, frame.bottom);
+  });
+  annotations.forEach((annotation) => {
+    const height2 = annotation.kind === "sticky" ? WHITEBOARD_STICKY_ANNOTATION_HEIGHT_PX : WHITEBOARD_TEXT_ANNOTATION_HEIGHT_PX;
+    bounds = includeRect(bounds, annotation.x, annotation.y, annotation.x + WHITEBOARD_TEXT_ANNOTATION_WIDTH_PX, annotation.y + height2);
+  });
+  return bounds;
+}
+function median(values2) {
+  if (values2.length === 0) return 0;
+  const sorted = [...values2].sort((a2, b2) => a2 - b2);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+function getWhiteboardCanvasHomePoint(items, groups = [], annotations = [], fallback = { x: 0, y: 0 }) {
+  const candidates = [];
+  items.forEach((item) => candidates.push({ x: item.x + WHITEBOARD_CARD_WIDTH_PX / 2, y: item.y + WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX / 2 }));
+  groups.forEach((group) => {
+    const width2 = group.collapsed ? WHITEBOARD_WORKBENCH_COLLAPSED_WIDTH_PX : WHITEBOARD_WORKBENCH_MIN_WIDTH_PX;
+    const height2 = group.collapsed ? WHITEBOARD_WORKBENCH_HEADER_HEIGHT_PX : WHITEBOARD_WORKBENCH_MIN_HEIGHT_PX;
+    candidates.push({ x: group.x + width2 / 2, y: group.y + height2 / 2 });
+  });
+  annotations.forEach((annotation) => {
+    const height2 = annotation.kind === "sticky" ? WHITEBOARD_STICKY_ANNOTATION_HEIGHT_PX : WHITEBOARD_TEXT_ANNOTATION_HEIGHT_PX;
+    candidates.push({ x: annotation.x + WHITEBOARD_TEXT_ANNOTATION_WIDTH_PX / 2, y: annotation.y + height2 / 2 });
+  });
+  if (candidates.length === 0) return fallback;
+  const robust = { x: median(candidates.map((point) => point.x)), y: median(candidates.map((point) => point.y)) };
+  return candidates.reduce((best, point) => {
+    const bestDistance = (best.x - robust.x) ** 2 + (best.y - robust.y) ** 2;
+    const distance = (point.x - robust.x) ** 2 + (point.y - robust.y) ** 2;
+    return distance < bestDistance ? point : best;
+  });
+}
+const WHITEBOARD_BATCH_GAP_PX = 24;
+const WHITEBOARD_BATCH_MAX_COLUMNS = 8;
+function resolveWhiteboardBatchPlacements(recordIds, anchor, startZIndex) {
+  if (recordIds.length === 0) return [];
+  const columns = Math.min(WHITEBOARD_BATCH_MAX_COLUMNS, Math.max(1, Math.ceil(Math.sqrt(recordIds.length))));
+  const stepX = WHITEBOARD_CARD_WIDTH_PX + WHITEBOARD_BATCH_GAP_PX;
+  const stepY = WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX + WHITEBOARD_BATCH_GAP_PX;
+  return recordIds.map((recordId, index) => ({
+    recordId,
+    position: {
+      x: anchor.x + index % columns * stepX,
+      y: anchor.y + Math.floor(index / columns) * stepY,
+      zIndex: startZIndex + index
+    }
+  }));
+}
+function elementRect$2(element) {
+  const rect = element.getBoundingClientRect();
+  return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+}
+function useWhiteboardRecordTransferController({
+  boardId,
+  items,
+  groups,
+  boardRecordIds,
+  storeReady,
+  whiteboardStore,
+  viewportRef,
+  camera,
+  zoom,
+  activeGroupId = null,
+  onNotice
+}) {
+  const [addingRecordIds, setAddingRecordIds] = d(() => /* @__PURE__ */ new Set());
+  const busyRef = A$1(false);
+  const beginBusy = q$1((recordIds) => {
+    if (busyRef.current) return false;
+    busyRef.current = true;
+    setAddingRecordIds(new Set(recordIds));
+    return true;
+  }, []);
+  const endBusy = q$1(() => {
+    busyRef.current = false;
+    setAddingRecordIds(/* @__PURE__ */ new Set());
+  }, []);
+  const addRecord = q$1(async (record2) => {
+    if (!storeReady || !beginBusy([record2.id])) return;
+    try {
+      const viewport2 = viewportRef.current;
+      const position2 = activeGroupId && viewport2 ? {
+        x: camera.x + viewport2.clientWidth / (2 * zoom) - WHITEBOARD_CARD_WIDTH_PX / 2,
+        y: camera.y + viewport2.clientHeight / (2 * zoom) - WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX / 2,
+        zIndex: getNextWhiteboardZIndex(items)
+      } : getDefaultWhiteboardPosition(items.length);
+      await whiteboardStore.addRecord(boardId, record2.id, position2, activeGroupId);
+    } catch (error) {
+      onNotice?.(`加入白板失败：${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      endBusy();
+    }
+  }, [activeGroupId, beginBusy, boardId, camera.x, camera.y, endBusy, items, onNotice, storeReady, viewportRef, whiteboardStore, zoom]);
+  const resolveDropTargetGroupId = q$1((point) => {
+    const viewport2 = viewportRef.current;
+    if (!viewport2 || !isWhiteboardClientPointInsideRect(point, elementRect$2(viewport2))) return null;
+    const rect = viewport2.getBoundingClientRect();
+    const worldPoint = screenToWhiteboardWorld(point, { left: rect.left, top: rect.top }, camera, zoom);
+    return getWhiteboardWorkbenchPointHitTargetId(groups, items, worldPoint, activeGroupId) ?? activeGroupId;
+  }, [activeGroupId, camera, groups, items, viewportRef, zoom]);
+  const dropRecords = q$1(async (records, point) => {
+    const viewport2 = viewportRef.current;
+    if (!viewport2 || !storeReady || busyRef.current || records.length === 0) return;
+    if (!isWhiteboardClientPointInsideRect(point, elementRect$2(viewport2))) return;
+    const candidates = records.filter((record2) => !boardRecordIds.has(record2.id));
+    if (candidates.length === 0) {
+      onNotice?.(records.length === 1 ? "这条记录已经在当前白板" : "这些记录已经在当前白板");
+      return;
+    }
+    if (!beginBusy(candidates.map((record2) => record2.id))) return;
+    try {
+      const viewportRect = viewport2.getBoundingClientRect();
+      const startZIndex = getNextWhiteboardZIndex(items);
+      const anchor = resolveWhiteboardCanvasDropPosition({
+        point,
+        viewport: {
+          left: viewportRect.left,
+          top: viewportRect.top,
+          right: viewportRect.right,
+          bottom: viewportRect.bottom,
+          camera
+        },
+        zIndex: startZIndex,
+        zoom
+      });
+      const targetGroupId = resolveDropTargetGroupId(point);
+      const placements2 = resolveWhiteboardBatchPlacements(
+        candidates.map((record2) => record2.id),
+        { x: anchor.x, y: anchor.y },
+        startZIndex
+      ).map((entry) => targetGroupId ? { ...entry, groupId: targetGroupId } : entry);
+      await whiteboardStore.addRecords(boardId, placements2);
+    } catch (error) {
+      onNotice?.(`批量拖入白板失败：${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      endBusy();
+    }
+  }, [beginBusy, boardId, boardRecordIds, camera, endBusy, items, onNotice, resolveDropTargetGroupId, storeReady, viewportRef, whiteboardStore, zoom]);
+  return { addingRecordIds, addRecord, dropRecords, resolveDropTargetGroupId };
+}
+const TARGET_MINOR_SCREEN_PX = 32;
+const MAJOR_MULTIPLIER = 5;
+function positiveModulo(value, divisor) {
+  if (!Number.isFinite(value) || !Number.isFinite(divisor) || divisor <= 0) return 0;
+  return (value % divisor + divisor) % divisor;
+}
+function niceWorldStepAtLeast(rawStep) {
+  const safeRaw = Number.isFinite(rawStep) && rawStep > 0 ? rawStep : 1;
+  const magnitude = 10 ** Math.floor(Math.log10(safeRaw));
+  const normalized2 = safeRaw / magnitude;
+  const nice = normalized2 <= 1 ? 1 : normalized2 <= 2 ? 2 : normalized2 <= 5 ? 5 : 10;
+  return nice * magnitude;
+}
+function getWhiteboardGridMetrics(camera, zoom) {
+  const safeZoom = clampWhiteboardZoom(zoom);
+  const minorWorld = niceWorldStepAtLeast(TARGET_MINOR_SCREEN_PX / safeZoom);
+  const minorSizePx = minorWorld * safeZoom;
+  const majorSizePx = minorSizePx * MAJOR_MULTIPLIER;
+  const screenOriginX = -camera.x * safeZoom;
+  const screenOriginY = -camera.y * safeZoom;
+  return {
+    minorSizePx,
+    majorSizePx,
+    minorOffsetX: positiveModulo(screenOriginX, minorSizePx),
+    minorOffsetY: positiveModulo(screenOriginY, minorSizePx),
+    majorOffsetX: positiveModulo(screenOriginX, majorSizePx),
+    majorOffsetY: positiveModulo(screenOriginY, majorSizePx)
+  };
+}
+function getWhiteboardGridStyle(camera, zoom) {
+  const grid = getWhiteboardGridMetrics(camera, zoom);
+  return [
+    `--think-whiteboard-grid-minor:${grid.minorSizePx}px`,
+    `--think-whiteboard-grid-major:${grid.majorSizePx}px`,
+    `--think-whiteboard-grid-minor-x:${grid.minorOffsetX}px`,
+    `--think-whiteboard-grid-minor-y:${grid.minorOffsetY}px`,
+    `--think-whiteboard-grid-major-x:${grid.majorOffsetX}px`,
+    `--think-whiteboard-grid-major-y:${grid.majorOffsetY}px`
+  ].join(";");
+}
+const INITIAL_VIEWPORT_STATE = {
+  camera: WHITEBOARD_CAMERA_DEFAULT,
+  zoom: WHITEBOARD_ZOOM_DEFAULT
+};
+function useWhiteboardViewportController(viewportRef) {
+  const [state, setState] = d(INITIAL_VIEWPORT_STATE);
+  const [panning, setPanning] = d(false);
+  const stateRef = A$1(state);
+  const panSessionRef = A$1(null);
+  const panTargetRef = A$1(null);
+  const panCleanupRef = A$1(null);
+  stateRef.current = state;
+  const updateState = q$1((resolve) => {
+    setState((current2) => {
+      const next2 = resolve(current2);
+      stateRef.current = next2;
+      return next2;
+    });
+  }, []);
+  const clearPanListeners = q$1(() => {
+    panCleanupRef.current?.();
+    panCleanupRef.current = null;
+  }, []);
+  const finishPan = q$1((event) => {
+    const session = panSessionRef.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    event.stopPropagation();
+    panSessionRef.current = null;
+    clearPanListeners();
+    try {
+      panTargetRef.current?.releasePointerCapture?.(event.pointerId);
+    } catch {
+    }
+    panTargetRef.current = null;
+    setPanning(false);
+  }, [clearPanListeners]);
+  const beginPan = q$1((event) => {
+    if (event.pointerType === "mouse" && event.button !== 0 && event.button !== 1) return;
+    event.preventDefault();
+    event.stopPropagation();
+    clearPanListeners();
+    const current2 = stateRef.current;
+    panSessionRef.current = createWhiteboardPanSession({
+      pointerId: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      camera: current2.camera,
+      zoom: current2.zoom
+    });
+    const target = event.currentTarget;
+    panTargetRef.current = target;
+    try {
+      target.setPointerCapture?.(event.pointerId);
+    } catch {
+    }
+    setPanning(true);
+    const move2 = (nextEvent) => {
+      const session = panSessionRef.current;
+      if (!session || session.pointerId !== nextEvent.pointerId) return;
+      nextEvent.preventDefault();
+      nextEvent.stopPropagation();
+      const camera = resolveWhiteboardPannedCamera(session, nextEvent.clientX, nextEvent.clientY);
+      updateState((latest2) => ({ ...latest2, camera }));
+    };
+    const up = (nextEvent) => finishPan(nextEvent);
+    const cancel = (nextEvent) => finishPan(nextEvent);
+    window.addEventListener("pointermove", move2, true);
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", cancel, true);
+    panCleanupRef.current = () => {
+      window.removeEventListener("pointermove", move2, true);
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", cancel, true);
+    };
+  }, [clearPanListeners, finishPan, updateState]);
+  y(() => () => {
+    clearPanListeners();
+    panSessionRef.current = null;
+    panTargetRef.current = null;
+  }, [clearPanListeners]);
+  const applyZoom = q$1((nextValue, anchor) => {
+    const viewport2 = viewportRef.current;
+    updateState((current2) => {
+      const nextZoom = clampWhiteboardZoom(nextValue);
+      if (nextZoom === current2.zoom) return current2;
+      const rect = viewport2?.getBoundingClientRect();
+      const anchorOffsetX = anchor && rect ? anchor.clientX - rect.left : (viewport2?.clientWidth ?? 0) / 2;
+      const anchorOffsetY = anchor && rect ? anchor.clientY - rect.top : (viewport2?.clientHeight ?? 0) / 2;
+      return {
+        zoom: nextZoom,
+        camera: resolveWhiteboardZoomedCamera({
+          camera: current2.camera,
+          currentZoom: current2.zoom,
+          nextZoom,
+          anchorOffsetX,
+          anchorOffsetY
+        })
+      };
+    });
+  }, [updateState, viewportRef]);
+  const zoomIn = q$1(() => applyZoom(stepWhiteboardZoom(stateRef.current.zoom, 1)), [applyZoom]);
+  const zoomOut = q$1(() => applyZoom(stepWhiteboardZoom(stateRef.current.zoom, -1)), [applyZoom]);
+  const resetZoom = q$1(() => applyZoom(WHITEBOARD_ZOOM_DEFAULT), [applyZoom]);
+  const handleWheel = q$1((event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.ctrlKey || event.metaKey) {
+      applyZoom(resolveWhiteboardWheelZoom(stateRef.current.zoom, event.deltaY), event);
+      return;
+    }
+    const current2 = stateRef.current;
+    const useShiftForHorizontal = event.shiftKey && event.deltaX === 0;
+    const deltaX = useShiftForHorizontal ? event.deltaY : event.deltaX;
+    const deltaY = useShiftForHorizontal ? 0 : event.deltaY;
+    const camera = resolveWhiteboardWheelPannedCamera(current2.camera, deltaX, deltaY, current2.zoom);
+    updateState((latest2) => ({ ...latest2, camera }));
+  }, [applyZoom, updateState]);
+  const centerOnWorldPoint = q$1((point) => {
+    const viewport2 = viewportRef.current;
+    if (!viewport2) return;
+    const current2 = stateRef.current;
+    const camera = centerWhiteboardCameraOnWorldPoint({
+      point,
+      viewportWidth: viewport2.clientWidth,
+      viewportHeight: viewport2.clientHeight,
+      zoom: current2.zoom
+    });
+    updateState((latest2) => ({ ...latest2, camera }));
+  }, [updateState, viewportRef]);
+  const resetViewOnWorldPoint = q$1((point) => {
+    const viewport2 = viewportRef.current;
+    if (!viewport2) return;
+    const camera = centerWhiteboardCameraOnWorldPoint({
+      point,
+      viewportWidth: viewport2.clientWidth,
+      viewportHeight: viewport2.clientHeight,
+      zoom: WHITEBOARD_ZOOM_DEFAULT
+    });
+    updateState(() => ({ camera, zoom: WHITEBOARD_ZOOM_DEFAULT }));
+  }, [updateState, viewportRef]);
+  const fitWorldBounds = q$1((bounds, fallbackPoint) => {
+    const viewport2 = viewportRef.current;
+    if (!viewport2) return;
+    const next2 = fitWhiteboardBoundsToViewport({
+      bounds,
+      viewportWidth: viewport2.clientWidth,
+      viewportHeight: viewport2.clientHeight,
+      padding: 56,
+      maxZoom: WHITEBOARD_ZOOM_DEFAULT
+    });
+    const fits = bounds.width * next2.zoom <= Math.max(1, viewport2.clientWidth - 112) + 1 && bounds.height * next2.zoom <= Math.max(1, viewport2.clientHeight - 112) + 1;
+    if (!fits && fallbackPoint) next2.camera = centerWhiteboardCameraOnWorldPoint({
+      point: fallbackPoint,
+      viewportWidth: viewport2.clientWidth,
+      viewportHeight: viewport2.clientHeight,
+      zoom: next2.zoom
+    });
+    updateState(() => next2);
+  }, [updateState, viewportRef]);
+  return {
+    camera: state.camera,
+    zoom: state.zoom,
+    panning,
+    worldTransform: getWhiteboardWorldTransform(state.camera, state.zoom),
+    gridStyle: getWhiteboardGridStyle(state.camera, state.zoom),
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    handleWheel,
+    beginPan,
+    centerOnWorldPoint,
+    resetViewOnWorldPoint,
+    fitWorldBounds
+  };
+}
+function normalize(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim().toLocaleLowerCase();
+}
+function queryTokens(query) {
+  return normalize(query).split(" ").filter(Boolean);
+}
+function getWhiteboardFindHaystack(record2, item) {
+  if (!record2) return normalize(`${item.recordId} ${item.id}`);
+  const presentation = buildWhiteboardRecordPresentation(record2);
+  return normalize([
+    item.recordId,
+    record2.id,
+    record2.coreBlock,
+    record2.categoryKey,
+    record2.title,
+    record2.content,
+    record2.goalPath,
+    record2.date,
+    record2.recordSubtype,
+    record2.rating,
+    record2.sessionStartedAt,
+    record2.sessionDurationMinutes,
+    ...record2.tags ?? [],
+    presentation.typeLabel,
+    presentation.primaryText,
+    presentation.temporalLabel,
+    presentation.goalLabel,
+    ...presentation.detailLabels
+  ].join(" "));
+}
+function findWhiteboardItemIds(items, recordsById, query) {
+  const tokens = queryTokens(query);
+  if (tokens.length === 0) return [];
+  return items.filter((item) => {
+    const haystack = getWhiteboardFindHaystack(recordsById.get(item.recordId) ?? null, item);
+    return tokens.every((token2) => haystack.includes(token2));
+  }).map((item) => item.id);
+}
+function stepWhiteboardFindIndex(currentIndex, matchCount, delta) {
+  if (matchCount <= 0) return 0;
+  const normalized2 = ((currentIndex + delta) % matchCount + matchCount) % matchCount;
+  return normalized2;
+}
+function useWhiteboardFindController(items, recordsById) {
+  const [query, setQuery] = d("");
+  const [index, setIndex] = d(0);
+  const inputRef = A$1(null);
+  const matchIds = T$1(() => findWhiteboardItemIds(items, recordsById, query), [items, query, recordsById]);
+  const matchSet = T$1(() => new Set(matchIds), [matchIds]);
+  const activeItemId = matchIds.length > 0 ? matchIds[Math.min(index, matchIds.length - 1)] : null;
+  const active = query.trim().length > 0;
+  y(() => setIndex(0), [query]);
+  y(() => {
+    if (matchIds.length === 0) {
+      if (index !== 0) setIndex(0);
+      return;
+    }
+    if (index >= matchIds.length) setIndex(matchIds.length - 1);
+  }, [index, matchIds.length]);
+  const step = q$1((delta) => {
+    setIndex((current2) => stepWhiteboardFindIndex(current2, matchIds.length, delta));
+  }, [matchIds.length]);
+  const handleWorkspaceKeyDown = q$1((event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === "f") {
+      event.preventDefault();
+      event.stopPropagation();
+      inputRef.current?.focus();
+      inputRef.current?.select();
+      return;
+    }
+    if (event.key === "Escape" && query) {
+      event.preventDefault();
+      setQuery("");
+    }
+  }, [query]);
+  return { query, setQuery, matchIds, matchSet, activeItemId, active, index, inputRef, step, handleWorkspaceKeyDown };
+}
+function WhiteboardWorkbenchGroup({
+  group,
+  items,
+  annotations = [],
+  groups = [],
+  zoom,
+  previewPosition = null,
+  dropTarget = false,
+  findActive = false,
+  onPreviewChange,
+  onMove,
+  onRename,
+  onToggleCollapsed,
+  onDissolve,
+  onEnter
+}) {
+  const dragRef = A$1(null);
+  const cleanupRef = A$1(null);
+  const previewRef = A$1(null);
+  const [editing, setEditing] = d(false);
+  const [draftTitle, setDraftTitle] = d(group.title);
+  const [moving, setMoving] = d(false);
+  const visibleGroup = previewPosition ? { ...group, ...previewPosition } : group;
+  const frame = getWhiteboardWorkbenchFrame(visibleGroup, items, groups);
+  const memberCount = items.filter((item) => item.groupId === group.id).length;
+  const annotationCount = annotations.filter((entry) => entry.groupId === group.id).length;
+  const childGroupCount = groups.filter((candidate) => candidate.parentGroupId === group.id).length;
+  const style2 = `left:${frame.x}px;top:${frame.y}px;width:${frame.width}px;height:${frame.height}px;`;
+  y(() => setDraftTitle(group.title), [group.title]);
+  y(() => () => cleanupRef.current?.(), []);
+  const clearListeners = () => {
+    cleanupRef.current?.();
+    cleanupRef.current = null;
+  };
+  const finishDrag = (event, cancelled) => {
+    const session = dragRef.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dragRef.current = null;
+    clearListeners();
+    const preview = previewRef.current;
+    previewRef.current = null;
+    if (cancelled || !preview) {
+      onPreviewChange(group.id, null);
+      return;
+    }
+    setMoving(true);
+    void Promise.resolve(onMove(group.id, preview)).finally(() => {
+      onPreviewChange(group.id, null);
+      setMoving(false);
+    });
+  };
+  const beginDrag = (event) => {
+    if (moving || editing || event.pointerType === "mouse" && event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    clearListeners();
+    dragRef.current = createWhiteboardWorkbenchDragSession({ group, pointerId: event.pointerId, clientX: event.clientX, clientY: event.clientY, zoom });
+    const move2 = (next2) => {
+      const session = dragRef.current;
+      if (!session || session.pointerId !== next2.pointerId) return;
+      next2.preventDefault();
+      next2.stopPropagation();
+      const preview = resolveWhiteboardWorkbenchDragPreview(session, next2.clientX, next2.clientY);
+      if (!preview) return;
+      previewRef.current = preview;
+      onPreviewChange(group.id, preview);
+    };
+    const up = (next2) => finishDrag(next2, false);
+    const cancel = (next2) => finishDrag(next2, true);
+    window.addEventListener("pointermove", move2, true);
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", cancel, true);
+    cleanupRef.current = () => {
+      window.removeEventListener("pointermove", move2, true);
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", cancel, true);
+    };
+  };
+  const stopPointer2 = (event) => event.stopPropagation();
+  const saveTitle = () => {
+    const next2 = draftTitle.trim();
+    if (!next2) {
+      setDraftTitle(group.title);
+      setEditing(false);
+      return;
+    }
+    setEditing(false);
+    void onRename(group.id, next2);
+  };
+  return /* @__PURE__ */ u2(
+    "section",
+    {
+      class: `think-whiteboard-workbench${group.collapsed ? " is-collapsed" : ""}${dropTarget ? " is-drop-target" : ""}${findActive ? " is-find-active" : ""}${previewPosition ? " is-dragging" : ""}`,
+      style: style2,
+      "data-whiteboard-group-id": group.id,
+      "data-whiteboard-group-collapsed": group.collapsed ? "true" : "false",
+      children: [
+        /* @__PURE__ */ u2("header", { class: "think-whiteboard-workbench__header", onPointerDown: beginDrag, title: "拖动标题栏或手柄可整组移动", children: [
+          /* @__PURE__ */ u2(
+            ThinkIconButton,
+            {
+              size: "sm",
+              label: group.collapsed ? "展开工作台" : "折叠工作台",
+              icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: group.collapsed ? "›" : "⌄" }),
+              onPointerDown: stopPointer2,
+              onClick: () => void onToggleCollapsed(group.id, !group.collapsed)
+            }
+          ),
+          /* @__PURE__ */ u2("span", { class: "think-whiteboard-workbench__drag-handle", title: "拖动整组", "aria-hidden": "true", children: "⠿" }),
+          editing ? /* @__PURE__ */ u2(
+            ThinkInput,
+            {
+              className: "think-whiteboard-workbench__title-input",
+              value: draftTitle,
+              "aria-label": "工作台名称",
+              onPointerDown: stopPointer2,
+              onInput: (event) => setDraftTitle(event.currentTarget.value),
+              onBlur: saveTitle,
+              onKeyDown: ((event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  saveTitle();
+                }
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  setDraftTitle(group.title);
+                  setEditing(false);
+                }
+              })
+            }
+          ) : /* @__PURE__ */ u2("button", { type: "button", class: "think-whiteboard-workbench__title", onPointerDown: stopPointer2, onDblClick: () => setEditing(true), children: group.title }),
+          /* @__PURE__ */ u2("span", { class: "think-whiteboard-workbench__count", children: [
+            memberCount,
+            " 张",
+            annotationCount > 0 ? ` · ${annotationCount} 标注` : "",
+            childGroupCount > 0 ? ` · ${childGroupCount} 子工作台` : ""
+          ] }),
+          onEnter && /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", "aria-label": "全屏进入工作台", title: "全屏进入工作台子画布", onPointerDown: stopPointer2, onClick: () => onEnter(group.id), children: "⛶ 全屏" }),
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onPointerDown: stopPointer2, onClick: () => setEditing(true), children: "重命名" }),
+          /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onPointerDown: stopPointer2, onClick: () => void onDissolve(group.id), children: "解散" })
+        ] }),
+        !group.collapsed && memberCount === 0 && annotationCount === 0 && childGroupCount === 0 && /* @__PURE__ */ u2("div", { class: "think-whiteboard-workbench__empty", "aria-hidden": "true", children: "拖卡片到这里加入工作台" })
+      ]
+    }
+  );
+}
+function useWhiteboardWorkbenchController({
+  boardId,
+  items,
+  annotations,
+  groups,
+  activeGroupId,
+  storeReady,
+  whiteboardStore,
+  viewportRef,
+  camera,
+  zoom,
+  onNotice
+}) {
+  const [groupPreview, setGroupPreviewState] = d(null);
+  const [dropTargetGroupId, setDropTargetGroupId] = d(null);
+  const previewGroup = groupPreview ? groups.find((group) => group.id === groupPreview.groupId) : void 0;
+  const previewDelta = previewGroup && groupPreview ? { dx: groupPreview.position.x - previewGroup.x, dy: groupPreview.position.y - previewGroup.y } : null;
+  const renderGroups = T$1(() => previewGroup && previewDelta ? translateWhiteboardWorkbenchGroups(groups, previewGroup.id, previewDelta.dx, previewDelta.dy) : groups.map((group) => ({ ...group })), [groups, previewDelta?.dx, previewDelta?.dy, previewGroup?.id]);
+  const renderItems = T$1(() => previewGroup && previewDelta ? translateWhiteboardWorkbenchMembers(items, previewGroup.id, previewDelta.dx, previewDelta.dy, groups) : items.map((item) => ({ ...item })), [groups, items, previewDelta?.dx, previewDelta?.dy, previewGroup?.id]);
+  const renderAnnotations = T$1(() => previewGroup && previewDelta ? translateWhiteboardWorkbenchMembers(annotations, previewGroup.id, previewDelta.dx, previewDelta.dy, groups) : annotations.map((entry) => ({ ...entry })), [annotations, groups, previewDelta?.dx, previewDelta?.dy, previewGroup?.id]);
+  const visibleGroups = T$1(() => getWhiteboardWorkbenchGroupsForContainer(renderGroups, activeGroupId), [activeGroupId, renderGroups]);
+  const visibleItems = T$1(() => getWhiteboardWorkbenchItemsForContainer(renderItems, renderGroups, activeGroupId), [activeGroupId, renderGroups, renderItems]);
+  const resolveItemTarget = q$1((itemId, position2) => {
+    const item = items.find((candidate) => candidate.id === itemId);
+    return getWhiteboardWorkbenchDropTargetId(groups, items, position2, item?.groupId ?? activeGroupId, activeGroupId);
+  }, [activeGroupId, groups, items]);
+  const resolveSelectionTarget = q$1((position2) => getWhiteboardWorkbenchHitTargetId(groups, items, position2, activeGroupId) ?? activeGroupId, [activeGroupId, groups, items]);
+  const previewItemDrop = q$1((itemId, position2) => setDropTargetGroupId(position2 ? resolveItemTarget(itemId, position2) : null), [resolveItemTarget]);
+  const previewSelectionDrop = q$1((position2) => setDropTargetGroupId(position2 ? resolveSelectionTarget(position2) : null), [resolveSelectionTarget]);
+  const moveItem = q$1(async (itemId, position2) => {
+    if (!storeReady) throw new Error("WhiteboardStore 尚未完成启动恢复");
+    const item = items.find((candidate) => candidate.id === itemId);
+    if (!item) return false;
+    const targetGroupId = resolveItemTarget(itemId, position2);
+    setDropTargetGroupId(null);
+    return targetGroupId === (item.groupId ?? null) ? whiteboardStore.moveItem(boardId, itemId, position2) : whiteboardStore.moveItem(boardId, itemId, position2, targetGroupId);
+  }, [boardId, items, resolveItemTarget, storeReady, whiteboardStore]);
+  const removeItemFromGroup = q$1(async (itemId) => {
+    const item = items.find((candidate) => candidate.id === itemId);
+    if (!storeReady || !item?.groupId) return false;
+    const parent = groups.find((group) => group.id === item.groupId)?.parentGroupId ?? null;
+    return whiteboardStore.moveItem(boardId, itemId, { x: item.x, y: item.y, zIndex: item.zIndex }, parent);
+  }, [boardId, groups, items, storeReady, whiteboardStore]);
+  const wrapItemsInGroup = q$1(async (itemIds) => {
+    if (!storeReady) return null;
+    const ids2 = new Set(itemIds);
+    const members = items.filter((item) => ids2.has(item.id));
+    if (members.length === 0) return null;
+    const position2 = { x: Math.min(...members.map((item) => item.x)) - WHITEBOARD_WORKBENCH_PADDING_PX, y: Math.min(...members.map((item) => item.y)) - WHITEBOARD_WORKBENCH_HEADER_HEIGHT_PX - WHITEBOARD_WORKBENCH_PADDING_PX };
+    try {
+      return await whiteboardStore.createGroupFromItems(boardId, getNextWhiteboardWorkbenchTitle(groups), members.map((item) => item.id), position2, activeGroupId);
+    } catch (error) {
+      onNotice?.(`从所选卡片创建工作台失败：${error instanceof Error ? error.message : String(error)}`);
+      return null;
+    }
+  }, [activeGroupId, boardId, groups, items, onNotice, storeReady, whiteboardStore]);
+  const createGroupAt = q$1(async (point) => {
+    if (!storeReady) return;
+    try {
+      await whiteboardStore.createGroup(boardId, getNextWhiteboardWorkbenchTitle(groups), { x: point.x - WHITEBOARD_WORKBENCH_MIN_WIDTH_PX / 2, y: point.y - WHITEBOARD_WORKBENCH_MIN_HEIGHT_PX / 2 }, activeGroupId);
+    } catch (error) {
+      onNotice?.(`创建工作台失败：${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [activeGroupId, boardId, groups, onNotice, storeReady, whiteboardStore]);
+  const createGroup = q$1(async () => {
+    const viewport2 = viewportRef.current;
+    if (!storeReady || !viewport2) return;
+    const position2 = getWhiteboardWorkbenchCreatePosition({ camera, zoom, viewportWidth: viewport2.clientWidth, viewportHeight: viewport2.clientHeight });
+    try {
+      await whiteboardStore.createGroup(boardId, getNextWhiteboardWorkbenchTitle(groups), position2, activeGroupId);
+    } catch (error) {
+      onNotice?.(`创建工作台失败：${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [activeGroupId, boardId, camera, groups, onNotice, storeReady, viewportRef, whiteboardStore, zoom]);
+  const setGroupPreview = q$1((groupId, position2) => {
+    setGroupPreviewState(position2 ? { groupId, position: position2 } : null);
+    if (!position2) {
+      setDropTargetGroupId(null);
+      return;
+    }
+    const target = getWhiteboardWorkbenchGroupDropTargetId(groups, items, groupId, position2, activeGroupId);
+    setDropTargetGroupId(target && canNestWhiteboardGroup(groups, groupId, target) ? target : null);
+  }, [activeGroupId, groups, items]);
+  const moveGroup = q$1(async (groupId, position2) => {
+    if (!storeReady) return;
+    const hit = getWhiteboardWorkbenchGroupDropTargetId(groups, items, groupId, position2, activeGroupId);
+    const targetParentId = hit && canNestWhiteboardGroup(groups, groupId, hit) ? hit : activeGroupId;
+    setDropTargetGroupId(null);
+    try {
+      await whiteboardStore.moveGroup(boardId, groupId, position2, targetParentId);
+    } catch (error) {
+      onNotice?.(`移动工作台失败：${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
+  }, [activeGroupId, boardId, groups, items, onNotice, storeReady, whiteboardStore]);
+  const renameGroup = q$1(async (groupId, title) => {
+    if (storeReady) try {
+      await whiteboardStore.renameGroup(boardId, groupId, title);
+    } catch (error) {
+      onNotice?.(`重命名工作台失败：${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [boardId, onNotice, storeReady, whiteboardStore]);
+  const toggleGroupCollapsed = q$1(async (groupId, collapsed) => {
+    if (storeReady) try {
+      await whiteboardStore.setGroupCollapsed(boardId, groupId, collapsed);
+    } catch (error) {
+      onNotice?.(`保存工作台折叠状态失败：${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [boardId, onNotice, storeReady, whiteboardStore]);
+  const dissolveGroup = q$1(async (groupId) => {
+    if (storeReady) try {
+      await whiteboardStore.removeGroup(boardId, groupId);
+    } catch (error) {
+      onNotice?.(`解散工作台失败：${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [boardId, onNotice, storeReady, whiteboardStore]);
+  const getFindTargetPoint = q$1((item) => {
+    const group = item.groupId ? groups.find((candidate) => candidate.id === item.groupId) : void 0;
+    if (group?.collapsed) return getWhiteboardWorkbenchCenter(group, items, groups);
+    return { x: item.x + WHITEBOARD_CARD_WIDTH_PX / 2, y: item.y + WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX / 2 };
+  }, [groups, items]);
+  return {
+    renderGroups,
+    renderItems,
+    renderAnnotations,
+    visibleGroups,
+    visibleItems,
+    groupPreview,
+    dropTargetGroupId,
+    createGroup,
+    createGroupAt,
+    wrapItemsInGroup,
+    setGroupPreview,
+    previewItemDrop,
+    previewSelectionDrop,
+    resolveSelectionTarget,
+    moveItem,
+    removeItemFromGroup,
+    moveGroup,
+    renameGroup,
+    toggleGroupCollapsed,
+    dissolveGroup,
+    getFindTargetPoint
+  };
+}
+const WHITEBOARD_SEMANTIC_DETAIL_MIN_ZOOM = 0.35;
+const WHITEBOARD_SEMANTIC_OVERVIEW_MAX_ZOOM = 0.1;
+function getWhiteboardSemanticZoomState(value) {
+  const zoom = clampWhiteboardZoom(value);
+  const level = zoom >= WHITEBOARD_SEMANTIC_DETAIL_MIN_ZOOM ? "detail" : zoom >= WHITEBOARD_SEMANTIC_OVERVIEW_MAX_ZOOM ? "compact" : "overview";
+  return {
+    level,
+    zoom,
+    inverseZoom: 1 / zoom,
+    showCardLocators: level !== "detail",
+    showGroupLocators: level !== "detail",
+    showAnnotationLocators: level === "overview"
+  };
+}
+function getWhiteboardSemanticZoomStyle(state) {
+  return `--think-whiteboard-semantic-inverse-zoom:${state.inverseZoom}`;
+}
+function getWhiteboardSemanticZoomStatus(state, cardCount, groupCount) {
+  if (state.level === "detail") return null;
+  if (state.level === "compact") return `简化视图：${cardCount} 卡片 · ${groupCount} 工作台 · Ctrl/⌘ 框选或点选，拖动可移动；卡片可拖回左栏移出，右键可整理`;
+  return `概览模式：${cardCount} 卡片 · ${groupCount} 工作台 · 拖动 Locator 可移动；卡片可拖回左栏移出，文字标注也可拖动`;
+}
+function rectFromPoints(x1, y1, x2, y2) {
+  const left2 = Math.min(x1, x2);
+  const top2 = Math.min(y1, y2);
+  const right2 = Math.max(x1, x2);
+  const bottom2 = Math.max(y1, y2);
+  return { left: left2, top: top2, right: right2, bottom: bottom2, width: right2 - left2, height: bottom2 - top2 };
+}
+function createWhiteboardMarqueeSession(input) {
+  return {
+    pointerId: input.pointerId,
+    startClientX: input.clientX,
+    startClientY: input.clientY,
+    viewportLeft: input.viewportLeft,
+    viewportTop: input.viewportTop,
+    camera: { ...input.camera },
+    zoom: clampWhiteboardZoom(input.zoom),
+    baseSelection: [...input.baseSelection ?? []]
+  };
+}
+function resolveWhiteboardMarqueeRects(session, clientX, clientY) {
+  const screen = rectFromPoints(
+    session.startClientX - session.viewportLeft,
+    session.startClientY - session.viewportTop,
+    clientX - session.viewportLeft,
+    clientY - session.viewportTop
+  );
+  const start2 = screenToWhiteboardWorld(
+    { clientX: session.startClientX, clientY: session.startClientY },
+    { left: session.viewportLeft, top: session.viewportTop },
+    session.camera,
+    session.zoom
+  );
+  const end2 = screenToWhiteboardWorld(
+    { clientX, clientY },
+    { left: session.viewportLeft, top: session.viewportTop },
+    session.camera,
+    session.zoom
+  );
+  return { screen, world: rectFromPoints(start2.x, start2.y, end2.x, end2.y) };
+}
+function getWhiteboardItemsIntersectingRect(items, rect) {
+  return items.filter((item) => {
+    const right2 = item.x + WHITEBOARD_CARD_WIDTH_PX;
+    const bottom2 = item.y + WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX;
+    return item.x <= rect.right && right2 >= rect.left && item.y <= rect.bottom && bottom2 >= rect.top;
+  }).map((item) => item.id);
+}
+function mergeWhiteboardSelection(base, hitIds) {
+  return /* @__PURE__ */ new Set([...base, ...hitIds]);
+}
+function buildWhiteboardSelectionMoves(input) {
+  const dragged = input.items.find((item) => item.id === input.draggedItemId);
+  if (!dragged || !input.selectedItemIds.has(input.draggedItemId)) return [];
+  const dx = input.draggedPosition.x - dragged.x;
+  const dy = input.draggedPosition.y - dragged.y;
+  return input.items.filter((item) => input.selectedItemIds.has(item.id)).map((item) => ({
+    itemId: item.id,
+    position: item.id === input.draggedItemId ? { ...input.draggedPosition } : { x: item.x + dx, y: item.y + dy, zIndex: item.zIndex }
+  }));
+}
+function applyWhiteboardSelectionPreview(items, moves) {
+  if (moves.length === 0) return items.map((item) => ({ ...item }));
+  const moveById = new Map(moves.map((move2) => [move2.itemId, move2.position]));
+  return items.map((item) => {
+    const position2 = moveById.get(item.id);
+    return position2 ? { ...item, ...position2 } : { ...item };
+  });
+}
+function getWhiteboardGroupsIntersectingRect(groups, items, rect) {
+  return groups.filter((group) => {
+    const frame = getWhiteboardWorkbenchFrame(group, items, groups);
+    return frame.x <= rect.right && frame.right >= rect.left && frame.y <= rect.bottom && frame.bottom >= rect.top;
+  }).map((group) => group.id);
+}
+function getWhiteboardDirectItems(items, containerGroupId) {
+  return items.filter((item) => (item.groupId ?? null) === containerGroupId);
+}
+function getWhiteboardDirectGroups(groups, containerGroupId) {
+  return groups.filter((group) => (group.parentGroupId ?? null) === containerGroupId);
+}
+function useWhiteboardSelectionController({
+  boardId,
+  items,
+  groups,
+  activeGroupId,
+  visibleItems,
+  visibleGroups,
+  storeReady,
+  whiteboardStore,
+  viewportRef,
+  camera,
+  zoom,
+  onNotice,
+  onSemanticMoveStart,
+  onSemanticItemDragPointerChange,
+  onSemanticItemDrop
+}) {
+  const [selectedItemIds, setSelectedItemIdsState] = d(() => /* @__PURE__ */ new Set());
+  const [selectedGroupIds, setSelectedGroupIdsState] = d(() => /* @__PURE__ */ new Set());
+  const [marqueeRect, setMarqueeRect] = d(null);
+  const [dragMoves, setDragMoves] = d([]);
+  const [semanticDragDelta, setSemanticDragDelta] = d(null);
+  const selectedRef = A$1(selectedItemIds);
+  const selectedGroupsRef = A$1(selectedGroupIds);
+  const marqueeRef = A$1(null);
+  const cleanupRef = A$1(null);
+  const semanticCleanupRef = A$1(null);
+  const suppressOverviewClickUntilRef = A$1(0);
+  const setSelectedItemIds = q$1((next2) => {
+    selectedRef.current = next2;
+    setSelectedItemIdsState(next2);
+  }, []);
+  const setSelectedGroupIds = q$1((next2) => {
+    selectedGroupsRef.current = next2;
+    setSelectedGroupIdsState(next2);
+  }, []);
+  const clear = q$1(() => {
+    setSelectedItemIds(/* @__PURE__ */ new Set());
+    setSelectedGroupIds(/* @__PURE__ */ new Set());
+  }, [setSelectedGroupIds, setSelectedItemIds]);
+  const selectableItems = T$1(() => getWhiteboardDirectItems(items, activeGroupId), [activeGroupId, items]);
+  const selectableGroups = T$1(() => getWhiteboardDirectGroups(groups, activeGroupId), [activeGroupId, groups]);
+  y(() => {
+    const visibleIds = new Set(visibleItems.map((item) => item.id));
+    const next2 = new Set([...selectedRef.current].filter((id) => visibleIds.has(id)));
+    if (next2.size !== selectedRef.current.size) setSelectedItemIds(next2);
+  }, [setSelectedItemIds, visibleItems]);
+  y(() => {
+    const visibleIds = new Set(visibleGroups.map((group) => group.id));
+    const next2 = new Set([...selectedGroupsRef.current].filter((id) => visibleIds.has(id)));
+    if (next2.size !== selectedGroupsRef.current.size) setSelectedGroupIds(next2);
+  }, [setSelectedGroupIds, visibleGroups]);
+  y(() => () => {
+    cleanupRef.current?.();
+    semanticCleanupRef.current?.();
+    onSemanticItemDragPointerChange?.([], null);
+  }, [onSemanticItemDragPointerChange]);
+  y(() => {
+    if (zoom >= WHITEBOARD_SEMANTIC_DETAIL_MIN_ZOOM && selectedGroupsRef.current.size > 0) setSelectedGroupIds(/* @__PURE__ */ new Set());
+  }, [setSelectedGroupIds, zoom]);
+  const selectOnly = q$1((itemId) => {
+    setSelectedGroupIds(/* @__PURE__ */ new Set());
+    setSelectedItemIds(/* @__PURE__ */ new Set([itemId]));
+  }, [setSelectedGroupIds, setSelectedItemIds]);
+  const selectOnlyGroup = q$1((groupId) => {
+    setSelectedItemIds(/* @__PURE__ */ new Set());
+    setSelectedGroupIds(/* @__PURE__ */ new Set([groupId]));
+  }, [setSelectedGroupIds, setSelectedItemIds]);
+  const selectItems = q$1((itemIds) => {
+    setSelectedGroupIds(/* @__PURE__ */ new Set());
+    setSelectedItemIds(new Set(itemIds));
+  }, [setSelectedGroupIds, setSelectedItemIds]);
+  const toggleItem = q$1((itemId) => {
+    const next2 = new Set(selectedRef.current);
+    if (next2.has(itemId)) next2.delete(itemId);
+    else next2.add(itemId);
+    setSelectedItemIds(next2);
+  }, [setSelectedItemIds]);
+  const toggleGroup = q$1((groupId) => {
+    const next2 = new Set(selectedGroupsRef.current);
+    if (next2.has(groupId)) next2.delete(groupId);
+    else next2.add(groupId);
+    setSelectedGroupIds(next2);
+  }, [setSelectedGroupIds]);
+  const finishMarquee = q$1((event) => {
+    const session = marqueeRef.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    marqueeRef.current = null;
+    cleanupRef.current?.();
+    cleanupRef.current = null;
+    setMarqueeRect(null);
+  }, []);
+  const beginMarquee = q$1((event) => {
+    if (!(event.ctrlKey || event.metaKey) || event.pointerType === "mouse" && event.button !== 0) return false;
+    const viewport2 = viewportRef.current;
+    if (!viewport2) return false;
+    event.preventDefault();
+    event.stopPropagation();
+    cleanupRef.current?.();
+    const rect = viewport2.getBoundingClientRect();
+    const baseItems = event.shiftKey ? selectedRef.current : [];
+    const baseGroups = event.shiftKey ? selectedGroupsRef.current : [];
+    const session = createWhiteboardMarqueeSession({ pointerId: event.pointerId, clientX: event.clientX, clientY: event.clientY, viewportLeft: rect.left, viewportTop: rect.top, camera, zoom, baseSelection: baseItems });
+    marqueeRef.current = session;
+    const move2 = (next2) => {
+      if (marqueeRef.current?.pointerId !== next2.pointerId) return;
+      next2.preventDefault();
+      next2.stopPropagation();
+      const resolved = resolveWhiteboardMarqueeRects(session, next2.clientX, next2.clientY);
+      setMarqueeRect(resolved.screen);
+      setSelectedItemIds(mergeWhiteboardSelection(session.baseSelection, getWhiteboardItemsIntersectingRect(selectableItems, resolved.world)));
+      const groupHits = zoom < WHITEBOARD_SEMANTIC_DETAIL_MIN_ZOOM ? getWhiteboardGroupsIntersectingRect(selectableGroups, items, resolved.world) : [];
+      setSelectedGroupIds(mergeWhiteboardSelection(baseGroups, groupHits));
+    };
+    const up = (next2) => finishMarquee(next2);
+    const cancel = (next2) => finishMarquee(next2);
+    window.addEventListener("pointermove", move2, true);
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", cancel, true);
+    cleanupRef.current = () => {
+      window.removeEventListener("pointermove", move2, true);
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", cancel, true);
+    };
+    return true;
+  }, [camera, finishMarquee, items, selectableGroups, selectableItems, setSelectedGroupIds, setSelectedItemIds, viewportRef, zoom]);
+  const isMultiDrag = q$1((itemId) => selectedRef.current.has(itemId) && selectedRef.current.size > 1 && selectedGroupsRef.current.size === 0, []);
+  const previewItemDrag = q$1((itemId, position2) => {
+    if (!position2 || !isMultiDrag(itemId)) {
+      setDragMoves([]);
+      return;
+    }
+    setDragMoves(buildWhiteboardSelectionMoves({ items, selectedItemIds: selectedRef.current, draggedItemId: itemId, draggedPosition: position2 }));
+  }, [isMultiDrag, items]);
+  const applyPreview = q$1((renderItems) => applyWhiteboardSelectionPreview(renderItems, dragMoves), [dragMoves]);
+  const moveSelected = q$1(async (itemId, position2, targetGroupId) => {
+    if (!isMultiDrag(itemId)) return null;
+    if (!storeReady) throw new Error("WhiteboardStore 尚未完成启动恢复");
+    const moves = buildWhiteboardSelectionMoves({ items, selectedItemIds: selectedRef.current, draggedItemId: itemId, draggedPosition: position2 });
+    setDragMoves([]);
+    try {
+      return await whiteboardStore.moveItems(boardId, moves, targetGroupId);
+    } catch (error) {
+      onNotice?.(`移动所选卡片失败：${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
+  }, [boardId, isMultiDrag, items, onNotice, storeReady, whiteboardStore]);
+  const getDragItemIds = q$1((itemId) => isMultiDrag(itemId) ? [...selectedRef.current] : [itemId], [isMultiDrag]);
+  const beginSemanticNodePointer = q$1((event, kind, id) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.stopPropagation();
+    semanticCleanupRef.current?.();
+    onSemanticItemDragPointerChange?.([], null);
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+      kind === "item" ? toggleItem(id) : toggleGroup(id);
+      suppressOverviewClickUntilRef.current = Date.now() + 350;
+      return;
+    }
+    const selected = kind === "item" ? selectedRef.current.has(id) : selectedGroupsRef.current.has(id);
+    if (!selected) kind === "item" ? selectOnly(id) : selectOnlyGroup(id);
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const pointerId = event.pointerId;
+    let moved2 = false;
+    const move2 = (next2) => {
+      if (next2.pointerId !== pointerId) return;
+      const dxScreen = next2.clientX - startX;
+      const dyScreen = next2.clientY - startY;
+      if (!moved2 && Math.hypot(dxScreen, dyScreen) < WHITEBOARD_DRAG_THRESHOLD_PX) return;
+      if (!moved2) onSemanticMoveStart?.();
+      moved2 = true;
+      next2.preventDefault();
+      next2.stopPropagation();
+      setSemanticDragDelta({ dx: dxScreen / zoom, dy: dyScreen / zoom });
+      if (kind === "item" && selectedGroupsRef.current.size === 0) onSemanticItemDragPointerChange?.([...selectedRef.current], { clientX: next2.clientX, clientY: next2.clientY });
+    };
+    const finish = (next2, cancelled) => {
+      if (next2.pointerId !== pointerId) return;
+      semanticCleanupRef.current?.();
+      semanticCleanupRef.current = null;
+      const dxScreen = next2.clientX - startX;
+      const dyScreen = next2.clientY - startY;
+      const itemIds = [...selectedRef.current];
+      const groupIds = [...selectedGroupsRef.current];
+      setSemanticDragDelta(null);
+      onSemanticItemDragPointerChange?.([], null);
+      if (!moved2 || cancelled) return;
+      next2.preventDefault();
+      next2.stopPropagation();
+      suppressOverviewClickUntilRef.current = Date.now() + 350;
+      if (!storeReady) return;
+      const translate = () => whiteboardStore.translateNodes(boardId, itemIds, groupIds, dxScreen / zoom, dyScreen / zoom).catch((error) => onNotice?.(`移动概览选择失败：${error instanceof Error ? error.message : String(error)}`));
+      if (kind !== "item" || groupIds.length > 0 || itemIds.length === 0 || !onSemanticItemDrop) {
+        void translate();
+        return;
+      }
+      void Promise.resolve(onSemanticItemDrop(itemIds, { clientX: next2.clientX, clientY: next2.clientY })).then((consumed) => consumed ? void 0 : translate()).catch((error) => onNotice?.(`低倍率拖回左侧失败：${error instanceof Error ? error.message : String(error)}`));
+    };
+    const up = (next2) => finish(next2, false);
+    const cancel = (next2) => finish(next2, true);
+    window.addEventListener("pointermove", move2, true);
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", cancel, true);
+    semanticCleanupRef.current = () => {
+      window.removeEventListener("pointermove", move2, true);
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", cancel, true);
+    };
+  }, [boardId, onNotice, onSemanticItemDragPointerChange, onSemanticItemDrop, onSemanticMoveStart, selectOnly, selectOnlyGroup, storeReady, toggleGroup, toggleItem, whiteboardStore, zoom]);
+  const consumeOverviewClickSuppression = q$1(() => Date.now() < suppressOverviewClickUntilRef.current, []);
+  const handleKeyDown = q$1((event) => {
+    if (event.key !== "Escape" || selectedRef.current.size === 0 && selectedGroupsRef.current.size === 0) return;
+    event.preventDefault();
+    clear();
+  }, [clear]);
+  const selectedIds = T$1(() => selectedItemIds, [selectedItemIds]);
+  const selectedGroups = T$1(() => selectedGroupIds, [selectedGroupIds]);
+  return {
+    selectedItemIds: selectedIds,
+    selectedGroupIds: selectedGroups,
+    selectionCount: selectedIds.size + selectedGroups.size,
+    marqueeRect,
+    dragMoves,
+    semanticDragDelta,
+    clear,
+    selectOnly,
+    selectOnlyGroup,
+    selectItems,
+    toggleItem,
+    toggleGroup,
+    beginMarquee,
+    isMultiDrag,
+    getDragItemIds,
+    previewItemDrag,
+    applyPreview,
+    moveSelected,
+    beginSemanticNodePointer,
+    consumeOverviewClickSuppression,
+    handleKeyDown
+  };
+}
+function targetItemIdAtPoint(sourceItemId, clientX, clientY) {
+  const element = document.elementFromPoint?.(clientX, clientY) ?? null;
+  const card = element?.closest?.("[data-whiteboard-item-id]") ?? null;
+  const itemId = card?.getAttribute("data-whiteboard-item-id")?.trim() ?? "";
+  return itemId && itemId !== sourceItemId ? itemId : null;
+}
+function useWhiteboardConnectionController({
+  boardId,
+  items,
+  storeReady,
+  whiteboardStore,
+  viewportRef,
+  camera,
+  zoom,
+  onNotice
+}) {
+  const [preview, setPreview] = d(null);
+  const [committing, setCommitting] = d(false);
+  const sessionRef = A$1(null);
+  const cleanupRef = A$1(null);
+  const clearListeners = q$1(() => {
+    cleanupRef.current?.();
+    cleanupRef.current = null;
+  }, []);
+  const worldPoint = (session, clientX, clientY) => screenToWhiteboardWorld(
+    { clientX, clientY },
+    { left: session.viewportLeft, top: session.viewportTop },
+    session.camera,
+    session.zoom
+  );
+  const resolveTarget = (session, clientX, clientY) => {
+    const itemId = targetItemIdAtPoint(session.sourceItemId, clientX, clientY);
+    return itemId && items.some((item) => item.id === itemId) ? itemId : null;
+  };
+  const finish = q$1((event, cancelled) => {
+    const session = sessionRef.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    sessionRef.current = null;
+    clearListeners();
+    try {
+      session.target?.releasePointerCapture?.(event.pointerId);
+    } catch {
+    }
+    const targetItemId = cancelled ? null : resolveTarget(session, event.clientX, event.clientY);
+    setPreview(null);
+    if (!targetItemId || !storeReady || committing) return;
+    setCommitting(true);
+    void whiteboardStore.addEdge(boardId, session.sourceItemId, targetItemId).catch((error) => onNotice?.(`创建白板连线失败：${error instanceof Error ? error.message : String(error)}`)).finally(() => setCommitting(false));
+  }, [boardId, clearListeners, committing, items, onNotice, storeReady, whiteboardStore]);
+  const beginConnection = q$1((itemId, event) => {
+    if (!storeReady || committing || event.pointerType === "mouse" && event.button !== 0) return;
+    const viewport2 = viewportRef.current;
+    if (!viewport2 || !items.some((item) => item.id === itemId)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    clearListeners();
+    const rect = viewport2.getBoundingClientRect();
+    const session = {
+      pointerId: event.pointerId,
+      sourceItemId: itemId,
+      start: screenToWhiteboardWorld({ clientX: event.clientX, clientY: event.clientY }, { left: rect.left, top: rect.top }, camera, zoom),
+      viewportLeft: rect.left,
+      viewportTop: rect.top,
+      camera: { ...camera },
+      zoom,
+      target: event.currentTarget
+    };
+    sessionRef.current = session;
+    setPreview({ sourceItemId: itemId, targetItemId: null, start: session.start, end: session.start });
+    try {
+      session.target?.setPointerCapture?.(event.pointerId);
+    } catch {
+    }
+    const move2 = (next2) => {
+      if (sessionRef.current?.pointerId !== next2.pointerId) return;
+      next2.preventDefault();
+      next2.stopPropagation();
+      setPreview({ sourceItemId: itemId, targetItemId: resolveTarget(session, next2.clientX, next2.clientY), start: session.start, end: worldPoint(session, next2.clientX, next2.clientY) });
+    };
+    const up = (next2) => finish(next2, false);
+    const cancel = (next2) => finish(next2, true);
+    window.addEventListener("pointermove", move2, true);
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", cancel, true);
+    cleanupRef.current = () => {
+      window.removeEventListener("pointermove", move2, true);
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", cancel, true);
+    };
+  }, [camera, clearListeners, committing, finish, items, storeReady, viewportRef, zoom]);
+  y(() => () => {
+    clearListeners();
+    sessionRef.current = null;
+  }, [clearListeners]);
+  return { preview, committing, beginConnection };
+}
+function useWhiteboardArchiveController(input) {
+  const { boardId, storeReady, whiteboardStore, onNotice } = input;
+  const [open, setOpen] = d(false);
+  const [archivingItemIds, setArchivingItemIds] = d(() => /* @__PURE__ */ new Set());
+  const [restoringItemIds, setRestoringItemIds] = d(() => /* @__PURE__ */ new Set());
+  const archiveItems = q$1(async (itemIds) => {
+    const ids2 = [...new Set(itemIds.filter((id) => id.trim()))];
+    if (!storeReady || ids2.length === 0 || archivingItemIds.size > 0) return false;
+    setArchivingItemIds(new Set(ids2));
+    try {
+      const archived = await whiteboardStore.archiveItems(boardId, ids2);
+      if (!archived) onNotice?.("要归档的白板卡片已不存在");
+      return archived;
+    } catch (error) {
+      onNotice?.(`归档白板卡片失败：${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    } finally {
+      setArchivingItemIds(/* @__PURE__ */ new Set());
+    }
+  }, [archivingItemIds.size, boardId, onNotice, storeReady, whiteboardStore]);
+  const restoreItem = q$1(async (itemId) => {
+    if (!storeReady || restoringItemIds.size > 0) return null;
+    setRestoringItemIds(/* @__PURE__ */ new Set([itemId]));
+    try {
+      const restored = await whiteboardStore.restoreArchivedItem(boardId, itemId);
+      if (!restored) onNotice?.("归档卡片已不存在");
+      return restored;
+    } catch (error) {
+      onNotice?.(`恢复归档卡片失败：${error instanceof Error ? error.message : String(error)}`);
+      return null;
+    } finally {
+      setRestoringItemIds(/* @__PURE__ */ new Set());
+    }
+  }, [boardId, onNotice, restoringItemIds.size, storeReady, whiteboardStore]);
+  const moveArchivedItems = q$1(async (moves) => {
+    if (!storeReady || moves.length === 0) return false;
+    try {
+      return await whiteboardStore.moveArchivedItems(boardId, moves);
+    } catch (error) {
+      onNotice?.(`移动归档卡片失败：${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }, [boardId, onNotice, storeReady, whiteboardStore]);
+  return { open, setOpen, archivingItemIds, restoringItemIds, archiveItems, restoreItem, moveArchivedItems };
+}
+const GAP_X$1 = 44;
+const GAP_Y$1 = 38;
+const bySpatialOrder$1 = (a2, b2) => a2.y - b2.y || a2.x - b2.x || a2.id.localeCompare(b2.id);
+const move = (item, x2, y2) => ({ itemId: item.id, position: { x: x2, y: y2, zIndex: item.zIndex } });
+function arrangeGrid(items) {
+  const sorted = [...items].sort(bySpatialOrder$1);
+  const columns = Math.max(1, Math.ceil(Math.sqrt(sorted.length)));
+  const minX = Math.min(...sorted.map((item) => item.x));
+  const minY = Math.min(...sorted.map((item) => item.y));
+  return sorted.map((item, index) => move(item, minX + index % columns * (WHITEBOARD_CARD_WIDTH_PX + GAP_X$1), minY + Math.floor(index / columns) * (WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX + GAP_Y$1)));
+}
+function arrangeGraph(items, edges) {
+  const ids2 = new Set(items.map((item) => item.id));
+  const incoming = new Map(items.map((item) => [item.id, 0]));
+  const outgoing = new Map(items.map((item) => [item.id, []]));
+  edges.forEach((edge) => {
+    if (!ids2.has(edge.fromItemId) || !ids2.has(edge.toItemId)) return;
+    outgoing.get(edge.fromItemId).push(edge.toItemId);
+    incoming.set(edge.toItemId, (incoming.get(edge.toItemId) ?? 0) + 1);
+  });
+  const depth = /* @__PURE__ */ new Map();
+  const queue = [...items].filter((item) => incoming.get(item.id) === 0).sort(bySpatialOrder$1);
+  queue.forEach((item) => depth.set(item.id, 0));
+  while (queue.length) {
+    const current2 = queue.shift();
+    const currentDepth = depth.get(current2.id) ?? 0;
+    outgoing.get(current2.id).forEach((nextId) => {
+      incoming.set(nextId, (incoming.get(nextId) ?? 1) - 1);
+      depth.set(nextId, Math.max(depth.get(nextId) ?? 0, currentDepth + 1));
+      if (incoming.get(nextId) === 0) queue.push(items.find((item) => item.id === nextId));
+    });
+  }
+  const maxDepth = Math.max(0, ...depth.values());
+  [...items].filter((item) => !depth.has(item.id)).sort(bySpatialOrder$1).forEach((item, index) => depth.set(item.id, maxDepth + 1 + Math.floor(index / 4)));
+  const minX = Math.min(...items.map((item) => item.x));
+  const minY = Math.min(...items.map((item) => item.y));
+  const lanes = /* @__PURE__ */ new Map();
+  items.forEach((item) => {
+    const d2 = depth.get(item.id) ?? 0;
+    const lane = lanes.get(d2) ?? [];
+    lane.push(item);
+    lanes.set(d2, lane);
+  });
+  return [...lanes.entries()].sort(([a2], [b2]) => a2 - b2).flatMap(([d2, lane]) => lane.sort(bySpatialOrder$1).map((item, row) => move(item, minX + d2 * (WHITEBOARD_CARD_WIDTH_PX + 84), minY + row * (WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX + GAP_Y$1))));
+}
+function arrangeWhiteboardItems(items, mode, edges = []) {
+  if (items.length < 2) return [];
+  if (mode === "grid") return arrangeGrid(items);
+  if (mode === "graph") return arrangeGraph(items, edges);
+  if (mode === "align-left") {
+    const x2 = Math.min(...items.map((item) => item.x));
+    return items.map((item) => move(item, x2, item.y));
+  }
+  if (mode === "align-top") {
+    const y2 = Math.min(...items.map((item) => item.y));
+    return items.map((item) => move(item, item.x, y2));
+  }
+  const sorted = [...items].sort(mode === "distribute-horizontal" ? (a2, b2) => a2.x - b2.x : (a2, b2) => a2.y - b2.y);
+  if (mode === "distribute-horizontal") {
+    const first22 = sorted[0].x;
+    const last2 = sorted[sorted.length - 1].x;
+    const step2 = (last2 - first22) / (sorted.length - 1);
+    return sorted.map((item, index) => move(item, first22 + step2 * index, item.y));
+  }
+  const first2 = sorted[0].y;
+  const last = sorted[sorted.length - 1].y;
+  const step = (last - first2) / (sorted.length - 1);
+  return sorted.map((item, index) => move(item, item.x, first2 + step * index));
+}
+const GOAL_TYPE_TIME_LAYOUT_SPEC = {
+  id: "goal-type-time",
+  groupBy: "goal",
+  x: { field: "recordType", order: "canonical" },
+  y: { field: "time", order: "asc", bucket: "month" },
+  cellLayout: "grid"
+};
+const GOAL_HEADER_H = 52;
+const X_HEADER_H = 38;
+const Y_LABEL_W = 112;
+const CELL_COLS = 2;
+const CELL_GAP_X = 22;
+const CELL_GAP_Y = 24;
+const CELL_PAD = 18;
+const CELL_W = CELL_PAD * 2 + CELL_COLS * WHITEBOARD_CARD_WIDTH_PX + (CELL_COLS - 1) * CELL_GAP_X;
+const GROUP_GAP_Y = 88;
+const GROUP_PAD = 22;
+function clean(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+function goalValue(record2) {
+  const label = clean(record2?.goalPath) || clean(record2?.rootGoal) || clean(record2?.leafGoal) || "未归属目标";
+  return { key: label, label, sort: label };
+}
+function typeValue(record2) {
+  if (!record2) return { key: "missing", label: "原记录不可用", sort: Number.MAX_SAFE_INTEGER };
+  const coreBlock = clean(record2.coreBlock);
+  const label = getWhiteboardRecordTypeLabel(record2);
+  return { key: coreBlock || label, label, sort: getRecordTypePresentationOrder(record2.coreBlock) };
+}
+function timeMs(record2) {
+  if (!record2) return null;
+  for (const value of [record2.dateMs, record2.date, record2.startMs, record2.startISO, record2.createdAt, record2.created]) {
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) return value;
+    const parsed = typeof value === "string" && value ? Date.parse(value) : NaN;
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+function timeValue(record2, _bucket = "month") {
+  const ms = timeMs(record2);
+  if (ms == null) return { key: "no-time", label: "无时间", sort: Number.MAX_SAFE_INTEGER };
+  const date2 = new Date(ms);
+  const year = date2.getUTCFullYear();
+  const month = date2.getUTCMonth();
+  const label = `${year}-${String(month + 1).padStart(2, "0")}`;
+  return { key: label, label, sort: Date.UTC(year, month, 1) };
+}
+function fieldValue(record2, field, bucket) {
+  if (field === "goal") return goalValue(record2);
+  if (field === "recordType") return typeValue(record2);
+  return timeValue(record2, bucket);
+}
+function compareValue(a2, b2, order2) {
+  if (typeof a2.sort === "number" && typeof b2.sort === "number" && a2.sort !== b2.sort) return a2.sort - b2.sort;
+  if (order2 === "canonical" && typeof a2.sort === "number" && typeof b2.sort !== "number") return -1;
+  if (order2 === "canonical" && typeof b2.sort === "number" && typeof a2.sort !== "number") return 1;
+  return a2.label.localeCompare(b2.label, "zh");
+}
+function uniqueValues(facts, axis) {
+  const byKey = /* @__PURE__ */ new Map();
+  facts.forEach((fact) => {
+    const value = fact.values[axis.field];
+    if (!byKey.has(value.key)) byKey.set(value.key, value);
+  });
+  return [...byKey.values()].sort((a2, b2) => compareValue(a2, b2, axis.order));
+}
+function groupValues(facts, field) {
+  return uniqueValues(facts, { field, order: "asc" });
+}
+function rowHeight(maxCellCount) {
+  const rows = Math.max(1, Math.ceil(maxCellCount / CELL_COLS));
+  return CELL_PAD * 2 + rows * WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX + Math.max(0, rows - 1) * CELL_GAP_Y;
+}
+function arrangeWhiteboardItemsBySpec(items, recordsById, spec = GOAL_TYPE_TIME_LAYOUT_SPEC, origin) {
+  if (items.length === 0) return { spec, moves: [], guides: [], width: 0, height: 0 };
+  const startX = Math.min(...items.map((item) => item.x));
+  const startY = Math.min(...items.map((item) => item.y));
+  const facts = items.map((item) => {
+    const record2 = recordsById.get(item.recordId) ?? null;
+    return { item, record: record2, values: {
+      goal: fieldValue(record2, "goal"),
+      recordType: fieldValue(record2, "recordType"),
+      time: fieldValue(record2, "time", spec.y.bucket ?? spec.x.bucket)
+    } };
+  });
+  const groups = groupValues(facts, spec.groupBy);
+  const moves = [];
+  const guides = [];
+  let y2 = startY;
+  let maxWidth2 = 0;
+  groups.forEach((group, groupIndex) => {
+    const groupFacts = facts.filter((fact) => fact.values[spec.groupBy].key === group.key);
+    const xValues = uniqueValues(groupFacts, spec.x);
+    const yValues = uniqueValues(groupFacts, spec.y);
+    const blockX = startX;
+    const contentX = blockX + Y_LABEL_W;
+    const blockW = Y_LABEL_W + xValues.length * CELL_W + GROUP_PAD;
+    const rowMetrics = yValues.map((yValue) => ({ yValue, height: rowHeight(Math.max(0, ...xValues.map((xValue) => groupFacts.filter((fact) => fact.values[spec.x.field].key === xValue.key && fact.values[spec.y.field].key === yValue.key).length))) }));
+    const blockH = GOAL_HEADER_H + X_HEADER_H + rowMetrics.reduce((sum, row) => sum + row.height, 0) + GROUP_PAD;
+    guides.push({ id: `group:${groupIndex}`, kind: spec.groupBy, label: group.label, x: blockX, y: y2, width: blockW, height: blockH, itemIds: groupFacts.map((fact) => fact.item.id) });
+    xValues.forEach((value, xIndex) => guides.push({ id: `group:${groupIndex}:x:${xIndex}`, kind: spec.x.field, label: value.label, x: contentX + xIndex * CELL_W, y: y2 + GOAL_HEADER_H, width: CELL_W, height: X_HEADER_H, itemIds: groupFacts.filter((fact) => fact.values[spec.x.field].key === value.key).map((fact) => fact.item.id) }));
+    let rowY = y2 + GOAL_HEADER_H + X_HEADER_H;
+    rowMetrics.forEach(({ yValue, height: height2 }, yIndex) => {
+      const rowFacts = groupFacts.filter((fact) => fact.values[spec.y.field].key === yValue.key);
+      guides.push({ id: `group:${groupIndex}:y:${yIndex}`, kind: spec.y.field, label: yValue.label, x: blockX, y: rowY, width: Y_LABEL_W, height: height2, itemIds: rowFacts.map((fact) => fact.item.id) });
+      xValues.forEach((xValue, xIndex) => {
+        const cell = rowFacts.filter((fact) => fact.values[spec.x.field].key === xValue.key).sort((a2, b2) => a2.item.y - b2.item.y || a2.item.x - b2.item.x || a2.item.id.localeCompare(b2.item.id));
+        cell.forEach((fact, index) => moves.push({ itemId: fact.item.id, position: {
+          x: contentX + xIndex * CELL_W + CELL_PAD + index % CELL_COLS * (WHITEBOARD_CARD_WIDTH_PX + CELL_GAP_X),
+          y: rowY + CELL_PAD + Math.floor(index / CELL_COLS) * (WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX + CELL_GAP_Y),
+          zIndex: fact.item.zIndex
+        } }));
+      });
+      rowY += height2;
+    });
+    maxWidth2 = Math.max(maxWidth2, blockW);
+    y2 += blockH + GROUP_GAP_Y;
+  });
+  return { spec, moves, guides, width: maxWidth2, height: Math.max(0, y2 - startY - GROUP_GAP_Y) };
+}
+function WhiteboardSemanticLayoutOverlay({ guides, zoom = 1, onSelectItems, onMoveGuide }) {
+  const [dragPreview, setDragPreview] = d(null);
+  const cleanupRef = A$1(null);
+  const suppressClickUntilRef = A$1(0);
+  y(() => () => cleanupRef.current?.(), []);
+  if (guides.length === 0) return null;
+  const beginGuideDrag = (event, guide) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.stopPropagation();
+    cleanupRef.current?.();
+    const pointerId = event.pointerId;
+    const startX = event.clientX;
+    const startY = event.clientY;
+    let moved2 = false;
+    const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+    const move2 = (next2) => {
+      if (next2.pointerId !== pointerId) return;
+      const sx = next2.clientX - startX;
+      const sy = next2.clientY - startY;
+      if (!moved2 && Math.hypot(sx, sy) < WHITEBOARD_DRAG_THRESHOLD_PX) return;
+      moved2 = true;
+      next2.preventDefault();
+      next2.stopPropagation();
+      setDragPreview({ guideId: guide.id, dx: sx / safeZoom, dy: sy / safeZoom });
+    };
+    const finish = (next2, cancelled) => {
+      if (next2.pointerId !== pointerId) return;
+      cleanupRef.current?.();
+      cleanupRef.current = null;
+      const sx = next2.clientX - startX;
+      const sy = next2.clientY - startY;
+      setDragPreview(null);
+      if (!moved2 || cancelled) return;
+      next2.preventDefault();
+      next2.stopPropagation();
+      suppressClickUntilRef.current = Date.now() + 350;
+      onMoveGuide?.(guide.id, { x: guide.x + sx / safeZoom, y: guide.y + sy / safeZoom });
+    };
+    const up = (next2) => finish(next2, false);
+    const cancel = (next2) => finish(next2, true);
+    window.addEventListener("pointermove", move2, true);
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", cancel, true);
+    cleanupRef.current = () => {
+      window.removeEventListener("pointermove", move2, true);
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", cancel, true);
+    };
+  };
+  return /* @__PURE__ */ u2("div", { class: "think-whiteboard-layout-overlay", "aria-label": "目标类型时间布局参考线", children: guides.map((guide) => {
+    const shift = dragPreview?.guideId === guide.id ? dragPreview : null;
+    const x2 = guide.x + (shift?.dx ?? 0);
+    const y2 = guide.y + (shift?.dy ?? 0);
+    return /* @__PURE__ */ u2("div", { class: `think-whiteboard-layout-guide think-whiteboard-layout-guide--${guide.kind}${shift ? " is-dragging" : ""}`, "data-whiteboard-layout-guide-id": guide.id, style: `left:${x2}px;top:${y2}px;width:${guide.width}px;height:${guide.height}px;`, children: /* @__PURE__ */ u2(
+      "button",
+      {
+        type: "button",
+        class: "think-whiteboard-layout-guide__label",
+        title: `拖动可移动“${guide.label}”标注与边框；点击选择 ${guide.itemIds.length} 张卡片`,
+        onPointerDown: ((event) => beginGuideDrag(event, guide)),
+        onClick: ((event) => {
+          event.stopPropagation();
+          if (Date.now() >= suppressClickUntilRef.current) onSelectItems?.(guide.itemIds);
+        }),
+        children: guide.label
+      }
+    ) }, guide.id);
+  }) });
+}
+function displayItem(item, index) {
+  return { id: item.id, recordId: item.recordId, x: item.archiveX ?? 48 + index % 4 * 304, y: item.archiveY ?? 72 + Math.floor(index / 4) * 308, zIndex: item.archiveZIndex ?? index + 1 };
+}
+function WhiteboardArchiveCanvas({ items, recordsById, restoringItemIds, onRestore, onMoveItems, onClose, gridVisible = false }) {
+  const viewportRef = A$1(null);
+  const viewport2 = useWhiteboardViewportController(viewportRef);
+  const [selectedIds, setSelectedIds] = d(() => /* @__PURE__ */ new Set());
+  const [dragDelta, setDragDelta] = d(null);
+  const [marqueeRect, setMarqueeRect] = d(null);
+  const [guides, setGuides] = d([]);
+  const dragCleanupRef = A$1(null);
+  const displayItems = T$1(() => items.map(displayItem), [items]);
+  const displayById = T$1(() => new Map(displayItems.map((item) => [item.id, item])), [displayItems]);
+  const bounds = T$1(() => getWhiteboardCanvasContentBounds(displayItems, [], []), [displayItems]);
+  const home = T$1(() => getWhiteboardCanvasHomePoint(displayItems, [], []), [displayItems]);
+  y(() => {
+    const valid = new Set(displayItems.map((item) => item.id));
+    setSelectedIds((current2) => new Set([...current2].filter((id) => valid.has(id))));
+  }, [displayItems]);
+  y(() => () => dragCleanupRef.current?.(), []);
+  const moveFromDisplay = q$1(async (moves) => {
+    await onMoveItems(moves.map(({ itemId, position: position2 }) => ({ itemId, archiveX: position2.x, archiveY: position2.y, archiveZIndex: position2.zIndex })));
+  }, [onMoveItems]);
+  const targetItems = q$1(() => selectedIds.size > 0 ? displayItems.filter((item) => selectedIds.has(item.id)) : displayItems, [displayItems, selectedIds]);
+  const arrangeTargetCount = selectedIds.size > 0 ? selectedIds.size : displayItems.length;
+  const arrangeGrid2 = q$1(() => {
+    const targets = targetItems();
+    if (targets.length < 2) return;
+    setGuides([]);
+    void moveFromDisplay(arrangeWhiteboardItems(targets, "grid"));
+  }, [moveFromDisplay, targetItems]);
+  const arrangeSemantic = q$1(() => {
+    const targets = targetItems();
+    if (targets.length < 2) return;
+    const result = arrangeWhiteboardItemsBySpec(targets, recordsById);
+    setGuides(result.guides);
+    void moveFromDisplay(result.moves);
+  }, [moveFromDisplay, recordsById, targetItems]);
+  const moveGuide = q$1((guideId, position2) => setGuides((current2) => current2.map((guide) => guide.id === guideId ? { ...guide, x: position2.x, y: position2.y } : guide)), []);
+  const beginCanvasPointerDown = q$1((event) => {
+    if (!(event.ctrlKey || event.metaKey) || event.pointerType === "mouse" && event.button !== 0) {
+      setSelectedIds(/* @__PURE__ */ new Set());
+      viewport2.beginPan(event);
+      return;
+    }
+    const host = viewportRef.current;
+    if (!host) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dragCleanupRef.current?.();
+    const rect = host.getBoundingClientRect();
+    const baseSelection = event.shiftKey ? selectedIds : /* @__PURE__ */ new Set();
+    const session = createWhiteboardMarqueeSession({ pointerId: event.pointerId, clientX: event.clientX, clientY: event.clientY, viewportLeft: rect.left, viewportTop: rect.top, camera: viewport2.camera, zoom: viewport2.zoom, baseSelection });
+    const move2 = (next2) => {
+      if (next2.pointerId !== event.pointerId) return;
+      next2.preventDefault();
+      next2.stopPropagation();
+      const resolved = resolveWhiteboardMarqueeRects(session, next2.clientX, next2.clientY);
+      setMarqueeRect(resolved.screen);
+      setSelectedIds(mergeWhiteboardSelection(session.baseSelection, getWhiteboardItemsIntersectingRect(displayItems, resolved.world)));
+    };
+    const finish = (next2) => {
+      if (next2.pointerId !== event.pointerId) return;
+      next2.preventDefault();
+      next2.stopPropagation();
+      dragCleanupRef.current?.();
+      dragCleanupRef.current = null;
+      setMarqueeRect(null);
+    };
+    window.addEventListener("pointermove", move2, true);
+    window.addEventListener("pointerup", finish, true);
+    window.addEventListener("pointercancel", finish, true);
+    dragCleanupRef.current = () => {
+      window.removeEventListener("pointermove", move2, true);
+      window.removeEventListener("pointerup", finish, true);
+      window.removeEventListener("pointercancel", finish, true);
+    };
+  }, [displayItems, selectedIds, viewport2.beginPan, viewport2.camera, viewport2.zoom]);
+  const beginDrag = q$1((event, itemId) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.stopPropagation();
+    dragCleanupRef.current?.();
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+      setSelectedIds((current2) => {
+        const next2 = new Set(current2);
+        if (next2.has(itemId)) next2.delete(itemId);
+        else next2.add(itemId);
+        return next2;
+      });
+      return;
+    }
+    if (!selectedIds.has(itemId)) setSelectedIds(/* @__PURE__ */ new Set([itemId]));
+    const ids2 = selectedIds.has(itemId) && selectedIds.size > 1 ? [...selectedIds] : [itemId];
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const pointerId = event.pointerId;
+    let moved2 = false;
+    const move2 = (next2) => {
+      if (next2.pointerId !== pointerId) return;
+      const sx = next2.clientX - startX;
+      const sy = next2.clientY - startY;
+      if (!moved2 && Math.hypot(sx, sy) < WHITEBOARD_DRAG_THRESHOLD_PX) return;
+      if (!moved2) setGuides([]);
+      moved2 = true;
+      next2.preventDefault();
+      next2.stopPropagation();
+      setDragDelta({ dx: sx / viewport2.zoom, dy: sy / viewport2.zoom });
+    };
+    const finish = (next2) => {
+      if (next2.pointerId !== pointerId) return;
+      dragCleanupRef.current?.();
+      dragCleanupRef.current = null;
+      const sx = next2.clientX - startX;
+      const sy = next2.clientY - startY;
+      setDragDelta(null);
+      if (!moved2) return;
+      next2.preventDefault();
+      next2.stopPropagation();
+      const dx = sx / viewport2.zoom;
+      const dy = sy / viewport2.zoom;
+      void onMoveItems(ids2.flatMap((id) => {
+        const item = displayById.get(id);
+        return item ? [{ itemId: id, archiveX: item.x + dx, archiveY: item.y + dy, archiveZIndex: item.zIndex }] : [];
+      }));
+    };
+    window.addEventListener("pointermove", move2, true);
+    window.addEventListener("pointerup", finish, true);
+    window.addEventListener("pointercancel", finish, true);
+    dragCleanupRef.current = () => {
+      window.removeEventListener("pointermove", move2, true);
+      window.removeEventListener("pointerup", finish, true);
+      window.removeEventListener("pointercancel", finish, true);
+    };
+  }, [displayById, onMoveItems, selectedIds, viewport2.zoom]);
+  return /* @__PURE__ */ u2("section", { class: "think-whiteboard-archive-canvas", "aria-label": "归档工作台", children: [
+    /* @__PURE__ */ u2("header", { class: "think-whiteboard-archive-canvas__toolbar", children: [
+      /* @__PURE__ */ u2("div", { class: "think-whiteboard-archive-canvas__title", children: [
+        /* @__PURE__ */ u2("strong", { children: "归档工作台" }),
+        /* @__PURE__ */ u2("span", { children: [
+          items.length,
+          " 张",
+          selectedIds.size ? ` · 已选 ${selectedIds.size}` : ""
+        ] })
+      ] }),
+      /* @__PURE__ */ u2("div", { class: "think-whiteboard-archive-canvas__actions", children: [
+        /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onClick: () => setSelectedIds(selectedIds.size === displayItems.length ? /* @__PURE__ */ new Set() : new Set(displayItems.map((item) => item.id))), children: selectedIds.size === displayItems.length && displayItems.length ? "取消全选" : "全选" }),
+        /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", disabled: arrangeTargetCount < 2, onClick: arrangeGrid2, children: "网格整理" }),
+        /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", disabled: arrangeTargetCount < 2, onClick: arrangeSemantic, children: "目标 × 类型 × 时间" }),
+        /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", onClick: () => viewport2.resetViewOnWorldPoint(home), children: "回到中心 · 100%" }),
+        /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "ghost", disabled: !bounds, onClick: () => bounds && viewport2.fitWorldBounds(bounds, home), children: "适配内容" }),
+        /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "关闭归档工作台", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "×" }), onClick: onClose })
+      ] })
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "think-whiteboard-archive-canvas__viewport", ref: viewportRef, style: viewport2.gridStyle, onWheel: viewport2.handleWheel, onPointerDown: beginCanvasPointerDown, "data-whiteboard-archive-zoom": viewport2.zoom, "data-whiteboard-grid": gridVisible ? "on" : "off", children: [
+      displayItems.length === 0 && /* @__PURE__ */ u2("div", { class: "think-whiteboard-empty", children: "暂无归档卡片" }),
+      marqueeRect && /* @__PURE__ */ u2("div", { class: "think-whiteboard-selection-marquee", style: `left:${marqueeRect.left}px;top:${marqueeRect.top}px;width:${marqueeRect.width}px;height:${marqueeRect.height}px;`, "aria-hidden": "true" }),
+      /* @__PURE__ */ u2("div", { class: "think-whiteboard-world", style: `transform:${viewport2.worldTransform};`, children: [
+        /* @__PURE__ */ u2(WhiteboardSemanticLayoutOverlay, { guides, zoom: viewport2.zoom, onSelectItems: (ids2) => setSelectedIds(new Set(ids2)), onMoveGuide: moveGuide }),
+        displayItems.map((item, index) => {
+          const archived = items[index];
+          const record2 = recordsById.get(item.recordId) ?? null;
+          const presentation = record2 ? buildWhiteboardRecordPresentation(record2) : null;
+          const selected = selectedIds.has(item.id);
+          const shift = selected && dragDelta ? dragDelta : null;
+          const x2 = item.x + (shift?.dx ?? 0);
+          const y2 = item.y + (shift?.dy ?? 0);
+          return /* @__PURE__ */ u2("article", { class: `think-whiteboard-archive-card think-card${selected ? " is-selected" : ""}`, style: `left:${x2}px;top:${y2}px;z-index:${item.zIndex ?? 1};`, "data-record-type": record2?.coreBlock ?? "missing", "data-whiteboard-archived-item-id": item.id, onPointerDown: ((event) => beginDrag(event, item.id)), children: [
+            /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__header", children: [
+              /* @__PURE__ */ u2("span", { class: "think-whiteboard-card__goal", children: presentation?.goalLabel || "未归属目标" }),
+              presentation?.temporalLabel && /* @__PURE__ */ u2("span", { class: "think-whiteboard-card__date", children: presentation.temporalLabel })
+            ] }),
+            /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__title", children: presentation?.primaryText ?? item.recordId }),
+            presentation?.detailLabels.length ? /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__meta", children: presentation.detailLabels.map((label) => /* @__PURE__ */ u2("span", { children: label }, label)) }) : null,
+            /* @__PURE__ */ u2("div", { class: "think-whiteboard-archive-card__origin", children: [
+              "恢复位置 ",
+              Math.round(archived.x),
+              ", ",
+              Math.round(archived.y)
+            ] }),
+            /* @__PURE__ */ u2("div", { class: "think-whiteboard-card__footer", onPointerDown: ((event) => event.stopPropagation()), children: /* @__PURE__ */ u2(ThinkButton, { size: "sm", variant: "secondary", disabled: restoringItemIds.has(item.id), onClick: () => {
+              setGuides([]);
+              void onRestore(item.id);
+            }, children: restoringItemIds.has(item.id) ? "恢复中…" : "恢复到原位置" }) })
+          ] }, item.id);
+        })
+      ] })
+    ] })
+  ] });
+}
+function isEditableTarget(target) {
+  const element = target;
+  if (!element) return false;
+  return element.isContentEditable || element.tagName === "INPUT" || element.tagName === "TEXTAREA" || element.tagName === "SELECT";
+}
+function useWhiteboardHistoryController(whiteboardStore, onNotice) {
+  const canUndo = typeof whiteboardStore.canUndo === "function" ? whiteboardStore.canUndo() : false;
+  const canRedo = typeof whiteboardStore.canRedo === "function" ? whiteboardStore.canRedo() : false;
+  const undo = q$1(async () => {
+    if (typeof whiteboardStore.undo !== "function") return false;
+    try {
+      return await whiteboardStore.undo();
+    } catch (error) {
+      onNotice?.(`撤销失败：${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }, [onNotice, whiteboardStore]);
+  const redo = q$1(async () => {
+    if (typeof whiteboardStore.redo !== "function") return false;
+    try {
+      return await whiteboardStore.redo();
+    } catch (error) {
+      onNotice?.(`重做失败：${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }, [onNotice, whiteboardStore]);
+  const handleKeyDown = q$1((event) => {
+    if (isEditableTarget(event.target) || event.altKey || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "z") return;
+    event.preventDefault();
+    event.stopPropagation();
+    void (event.shiftKey ? redo() : undo());
+  }, [redo, undo]);
+  return { canUndo, canRedo, undo, redo, handleKeyDown };
+}
+function createWhiteboardCanvasNavigationHistory(initial = null) {
+  return { entries: [initial], index: 0 };
+}
+function pushWhiteboardCanvasNavigation(history, target) {
+  if (history.entries[history.index] === target) return history;
+  const entries = [...history.entries.slice(0, history.index + 1), target].slice(-100);
+  return { entries, index: entries.length - 1 };
+}
+function stepWhiteboardCanvasNavigation(history, delta) {
+  const index = Math.max(0, Math.min(history.entries.length - 1, history.index + delta));
+  return index === history.index ? history : { entries: history.entries, index };
+}
+function getWhiteboardCanvasNavigationTarget(history) {
+  return history.entries[history.index] ?? null;
+}
+function getWhiteboardItemPathLabel(item, groups) {
+  if (!item?.groupId) return "白板";
+  const byId = new Map(groups.map((group) => [group.id, group]));
+  const titles = getWhiteboardGroupPathIds(groups, item.groupId).map((id) => byId.get(id)?.title).filter((title) => Boolean(title));
+  return ["白板", ...titles].join(" › ");
+}
+function useWhiteboardNestedCanvasController({ groups, items, annotations, resetViewOnWorldPoint, rootCenter }) {
+  const [activeGroupId, setActiveGroupId] = d(null);
+  const [history, setHistory] = d(() => createWhiteboardCanvasNavigationHistory());
+  const historyRef = A$1(history);
+  historyRef.current = history;
+  const groupById = T$1(() => new Map(groups.map((group) => [group.id, group])), [groups]);
+  const path = T$1(() => activeGroupId ? getWhiteboardGroupPathIds(groups, activeGroupId).map((id) => groupById.get(id)).filter((group) => Boolean(group)) : [], [activeGroupId, groupById, groups]);
+  const activeCanvasCenter = T$1(() => {
+    const group = activeGroupId ? groupById.get(activeGroupId) : void 0;
+    return group ? getWhiteboardWorkbenchHomePoint(group, items, groups, annotations) : rootCenter;
+  }, [activeGroupId, annotations, groupById, groups, items, rootCenter]);
+  const focusTarget = q$1((groupId, resetView) => {
+    if (groupId && !groupById.has(groupId)) return false;
+    setActiveGroupId(groupId);
+    if (resetView) {
+      const group = groupId ? groupById.get(groupId) : void 0;
+      resetViewOnWorldPoint(group ? getWhiteboardWorkbenchHomePoint(group, items, groups, annotations) : rootCenter);
+    }
+    return true;
+  }, [annotations, groupById, groups, items, resetViewOnWorldPoint, rootCenter]);
+  const enterGroup = q$1((groupId) => {
+    if (!focusTarget(groupId, true)) return;
+    const next2 = pushWhiteboardCanvasNavigation(historyRef.current, groupId);
+    historyRef.current = next2;
+    setHistory(next2);
+  }, [focusTarget]);
+  const stepHistory = q$1((delta) => {
+    let next2 = historyRef.current;
+    while (true) {
+      const stepped = stepWhiteboardCanvasNavigation(next2, delta);
+      if (stepped.index === next2.index) return;
+      next2 = stepped;
+      const target = getWhiteboardCanvasNavigationTarget(next2);
+      if (!target || groupById.has(target)) break;
+    }
+    historyRef.current = next2;
+    setHistory(next2);
+    focusTarget(getWhiteboardCanvasNavigationTarget(next2), true);
+  }, [focusTarget, groupById]);
+  y(() => {
+    if (!activeGroupId || groupById.has(activeGroupId)) return;
+    const next2 = pushWhiteboardCanvasNavigation(historyRef.current, null);
+    historyRef.current = next2;
+    setHistory(next2);
+    focusTarget(null, true);
+  }, [activeGroupId, focusTarget, groupById]);
+  const enterParent = q$1(() => {
+    if (!activeGroupId) return;
+    enterGroup(groupById.get(activeGroupId)?.parentGroupId ?? null);
+  }, [activeGroupId, enterGroup, groupById]);
+  const enterRoot = q$1(() => enterGroup(null), [enterGroup]);
+  const handleKeyDown = q$1((event) => {
+    if (event.defaultPrevented || event.key !== "Escape" || !activeGroupId) return;
+    const target = event.target;
+    if (target?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target?.tagName ?? "")) return;
+    event.preventDefault();
+    enterParent();
+  }, [activeGroupId, enterParent]);
+  const revealItem = q$1((item) => {
+    const nextGroupId = item.groupId ?? null;
+    if (nextGroupId === activeGroupId || !focusTarget(nextGroupId, false)) return;
+    const next2 = pushWhiteboardCanvasNavigation(historyRef.current, nextGroupId);
+    historyRef.current = next2;
+    setHistory(next2);
+  }, [activeGroupId, focusTarget]);
+  return {
+    activeGroupId,
+    activeCanvasCenter,
+    path,
+    enterGroup,
+    enterParent,
+    enterRoot,
+    revealItem,
+    handleKeyDown,
+    canGoBack: history.index > 0,
+    canGoForward: history.index < history.entries.length - 1,
+    goBack: () => stepHistory(-1),
+    goForward: () => stepHistory(1)
+  };
+}
+function WhiteboardCanvasBreadcrumbs({ path, canGoBack, canGoForward, onEnter, onParent, onBack, onForward, onFitContent }) {
+  if (path.length === 0 && !canGoBack && !canGoForward) return null;
+  return /* @__PURE__ */ u2("div", { class: "think-whiteboard-breadcrumbs", "aria-label": "工作台层级导航", children: [
+    /* @__PURE__ */ u2("div", { class: "think-whiteboard-breadcrumbs__history", "aria-label": "子画布浏览历史", children: [
+      /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "返回上次画布", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "←" }), disabled: !canGoBack, onClick: onBack }),
+      /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "前进到下次画布", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "→" }), disabled: !canGoForward, onClick: onForward }),
+      /* @__PURE__ */ u2(ThinkIconButton, { size: "sm", label: "返回父工作台", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "↑" }), disabled: path.length === 0, onClick: onParent })
+    ] }),
+    /* @__PURE__ */ u2("div", { class: "think-whiteboard-breadcrumbs__path", children: [
+      /* @__PURE__ */ u2("button", { type: "button", class: "think-whiteboard-breadcrumbs__item", "aria-label": "退出到根白板", "aria-current": path.length === 0 ? "page" : void 0, onClick: () => onEnter(null), children: "白板" }),
+      path.map((group, index) => /* @__PURE__ */ u2("span", { class: "think-whiteboard-breadcrumbs__segment", children: [
+        /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "›" }),
+        /* @__PURE__ */ u2("button", { type: "button", class: "think-whiteboard-breadcrumbs__item", "data-whiteboard-breadcrumb-group-id": group.id, "aria-current": index === path.length - 1 ? "page" : void 0, onClick: () => onEnter(group.id), children: group.title })
+      ] }, group.id))
+    ] }),
+    path.length > 0 && /* @__PURE__ */ u2(ThinkIconButton, { className: "think-whiteboard-breadcrumbs__fit", size: "sm", label: "适配当前工作台内容", icon: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "⤢" }), onClick: onFitContent })
+  ] });
+}
+function WhiteboardAnnotation({ annotation, zoom, autoEdit = false, onUpdate, onMove, onRemove, onAutoEditConsumed }) {
+  const [editing, setEditing] = d(autoEdit);
+  const [draft, setDraft] = d(annotation.text);
+  const [preview, setPreview] = d(null);
+  const dragRef = A$1(null);
+  const previewRef = A$1(null);
+  const dragTargetRef = A$1(null);
+  const cleanupRef = A$1(null);
+  y(() => {
+    if (!editing) setDraft(annotation.text);
+  }, [annotation.text, editing]);
+  y(() => {
+    if (!autoEdit) return;
+    setEditing(true);
+    onAutoEditConsumed?.(annotation.id);
+  }, [annotation.id, autoEdit, onAutoEditConsumed]);
+  y(() => () => cleanupRef.current?.(), []);
+  const commit = () => {
+    const next2 = draft.trim();
+    if (!next2 && annotation.text === "") {
+      void onRemove(annotation.id);
+      setEditing(false);
+      return;
+    }
+    void onUpdate(annotation.id, next2);
+    setEditing(false);
+  };
+  const cancel = () => {
+    setDraft(annotation.text);
+    setEditing(false);
+    if (!annotation.text) void onRemove(annotation.id);
+  };
+  const beginDrag = (event) => {
+    if (editing || event.pointerType === "mouse" && event.button !== 0) return;
+    event.stopPropagation();
+    cleanupRef.current?.();
+    const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+    const session = { pointerId: event.pointerId, clientX: event.clientX, clientY: event.clientY, x: annotation.x, y: annotation.y };
+    dragRef.current = session;
+    dragTargetRef.current = event.currentTarget;
+    dragTargetRef.current.setPointerCapture?.(event.pointerId);
+    const move2 = (next2) => {
+      if (dragRef.current?.pointerId !== next2.pointerId) return;
+      const dx = next2.clientX - session.clientX;
+      const dy = next2.clientY - session.clientY;
+      if (Math.hypot(dx, dy) < WHITEBOARD_DRAG_THRESHOLD_PX) return;
+      next2.preventDefault();
+      next2.stopPropagation();
+      const position22 = { x: session.x + dx / safeZoom, y: session.y + dy / safeZoom, zIndex: annotation.zIndex };
+      previewRef.current = position22;
+      setPreview(position22);
+    };
+    const finish = (next2, cancelled) => {
+      if (dragRef.current?.pointerId !== next2.pointerId) return;
+      next2.stopPropagation();
+      dragRef.current = null;
+      cleanupRef.current?.();
+      cleanupRef.current = null;
+      try {
+        dragTargetRef.current?.releasePointerCapture?.(next2.pointerId);
+      } catch {
+      }
+      dragTargetRef.current = null;
+      const committed = previewRef.current;
+      previewRef.current = null;
+      setPreview(null);
+      if (!cancelled && committed) {
+        next2.preventDefault();
+        void onMove(annotation.id, committed);
+      }
+    };
+    const up = (next2) => finish(next2, false);
+    const cancelPointer = (next2) => finish(next2, true);
+    window.addEventListener("pointermove", move2, true);
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", cancelPointer, true);
+    cleanupRef.current = () => {
+      window.removeEventListener("pointermove", move2, true);
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", cancelPointer, true);
+    };
+  };
+  const position2 = preview ?? annotation;
+  return /* @__PURE__ */ u2(
+    "article",
+    {
+      class: `think-whiteboard-annotation is-${annotation.kind}${editing ? " is-editing" : ""}${preview ? " is-dragging" : ""}`,
+      "data-whiteboard-annotation-id": annotation.id,
+      style: `left:${position2.x}px;top:${position2.y}px;z-index:${position2.zIndex ?? 2};`,
+      onPointerDown: beginDrag,
+      onDblClick: ((event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setEditing(true);
+      }),
+      children: [
+        editing ? /* @__PURE__ */ u2(
+          ThinkTextarea,
+          {
+            autoFocus: true,
+            className: "think-whiteboard-annotation__editor",
+            value: draft,
+            placeholder: annotation.kind === "sticky" ? "写下便签…" : "输入文字标注…",
+            onPointerDown: ((event) => event.stopPropagation()),
+            onInput: ((event) => setDraft(event.currentTarget.value)),
+            onBlur: commit,
+            onKeyDown: ((event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                cancel();
+              } else if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+                event.preventDefault();
+                commit();
+              }
+            })
+          }
+        ) : /* @__PURE__ */ u2("div", { class: "think-whiteboard-annotation__text", children: annotation.text || (annotation.kind === "sticky" ? "双击编辑便签" : "双击编辑文字") }),
+        !editing && /* @__PURE__ */ u2(
+          ThinkButton,
+          {
+            size: "sm",
+            variant: "ghost",
+            className: "think-whiteboard-annotation__remove",
+            "aria-label": "删除标注",
+            title: "删除标注",
+            onPointerDown: ((event) => event.stopPropagation()),
+            onClick: ((event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void onRemove(annotation.id);
+            }),
+            children: "×"
+          }
+        )
+      ]
+    }
+  );
+}
+function useWhiteboardAnnotationController({
+  boardId,
+  annotations,
+  groups,
+  activeGroupId,
+  storeReady,
+  whiteboardStore,
+  onNotice
+}) {
+  const [autoEditAnnotationId, setAutoEditAnnotationId] = d(null);
+  const visibleAnnotations = T$1(
+    () => getWhiteboardWorkbenchItemsForContainer(annotations, groups, activeGroupId),
+    [activeGroupId, annotations, groups]
+  );
+  const create2 = q$1(async (kind, point, text2 = "") => {
+    if (!storeReady) return null;
+    try {
+      const created = await whiteboardStore.createAnnotation(boardId, kind, text2, { x: point.x, y: point.y }, activeGroupId);
+      setAutoEditAnnotationId(created.id);
+      return created;
+    } catch (error) {
+      onNotice?.(`添加白板标注失败：${error instanceof Error ? error.message : String(error)}`);
+      return null;
+    }
+  }, [activeGroupId, boardId, onNotice, storeReady, whiteboardStore]);
+  const update = q$1(async (annotationId, text2) => {
+    if (!storeReady) return false;
+    try {
+      return await whiteboardStore.updateAnnotation(boardId, annotationId, text2);
+    } catch (error) {
+      onNotice?.(`保存白板标注失败：${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }, [boardId, onNotice, storeReady, whiteboardStore]);
+  const move2 = q$1(async (annotationId, position2) => {
+    if (!storeReady) return false;
+    try {
+      return await whiteboardStore.moveAnnotation(boardId, annotationId, position2);
+    } catch (error) {
+      onNotice?.(`移动白板标注失败：${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }, [boardId, onNotice, storeReady, whiteboardStore]);
+  const remove = q$1(async (annotationId) => {
+    if (!storeReady) return false;
+    try {
+      return await whiteboardStore.removeAnnotation(boardId, annotationId);
+    } catch (error) {
+      onNotice?.(`删除白板标注失败：${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }, [boardId, onNotice, storeReady, whiteboardStore]);
+  const consumeAutoEdit = q$1((annotationId) => setAutoEditAnnotationId((current2) => current2 === annotationId ? null : current2), []);
+  return { visibleAnnotations, autoEditAnnotationId, consumeAutoEdit, create: create2, update, move: move2, remove };
+}
+const action = (label, callback, disabled = false) => /* @__PURE__ */ u2("button", { type: "button", disabled, onClick: (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  callback();
+}, children: label });
+function WhiteboardContextMenu({ state, selectionCount, selectedItemCount = selectionCount, selectedGroupCount = 0, currentItemCount = 0, currentGroupCount = 0, onClose, onCreateText, onCreateSticky, onCreateWorkbench, onCenter, onWrapSelection, onArrange, onArrangeCurrentLayer, onSemanticArrange, onArchiveSelection, onRemoveSelection, onRemoveSelectionFromWorkbench, canRemoveSelectionFromWorkbench = false }) {
+  if (!state) return null;
+  const hasNode = Boolean(state.itemId || state.groupId);
+  const canArrangeNodes = selectionCount > 1;
+  const canArrangeCards = selectedItemCount > 1 && selectedGroupCount === 0;
+  const canWrap = selectedItemCount > 1 && selectedGroupCount === 0;
+  return /* @__PURE__ */ u2("div", { class: "think-whiteboard-context-menu", role: "menu", "aria-label": "白板右键菜单", style: `left:${state.clientX}px;top:${state.clientY}px;`, onPointerDown: ((event) => event.stopPropagation()), children: [
+    hasNode ? /* @__PURE__ */ u2(S, { children: [
+      /* @__PURE__ */ u2("div", { class: "think-whiteboard-context-menu__title", children: [
+        "整理 ",
+        selectionCount,
+        " 个节点",
+        selectedGroupCount > 0 ? ` · ${selectedItemCount} 卡片 · ${selectedGroupCount} 工作台` : ""
+      ] }),
+      action("网格整理", () => onArrange("grid"), !canArrangeNodes),
+      action("按连线整理", () => onArrange("graph"), !canArrangeCards),
+      action("目标 × 类型 × 时间", () => onSemanticArrange("selection"), !canArrangeCards),
+      action("用所选创建工作台", onWrapSelection, !canWrap),
+      /* @__PURE__ */ u2("div", { class: "think-whiteboard-context-menu__separator" }),
+      action("左对齐", () => onArrange("align-left"), !canArrangeNodes),
+      action("顶部对齐", () => onArrange("align-top"), !canArrangeNodes),
+      action("水平等距", () => onArrange("distribute-horizontal"), !canArrangeNodes),
+      action("垂直等距", () => onArrange("distribute-vertical"), !canArrangeNodes),
+      /* @__PURE__ */ u2("div", { class: "think-whiteboard-context-menu__separator" }),
+      canRemoveSelectionFromWorkbench && onRemoveSelectionFromWorkbench ? action("移出工作台", onRemoveSelectionFromWorkbench, selectedItemCount < 1 || selectedGroupCount > 0) : null,
+      onArchiveSelection ? action(selectedItemCount > 1 ? `归档所选 ${selectedItemCount} 张` : "归档", onArchiveSelection, selectedItemCount < 1 || selectedGroupCount > 0) : null,
+      onRemoveSelection ? action(selectedItemCount > 1 ? `移出白板 ${selectedItemCount} 张` : "移出白板", onRemoveSelection, selectedItemCount < 1 || selectedGroupCount > 0) : null
+    ] }) : /* @__PURE__ */ u2(S, { children: [
+      action("添加文字标注", onCreateText),
+      action("添加便签", onCreateSticky),
+      action("新建工作台", onCreateWorkbench),
+      action("网格整理当前层", onArrangeCurrentLayer, currentItemCount + currentGroupCount < 2),
+      action("目标 × 类型 × 时间整理当前工作台", () => onSemanticArrange("canvas"), currentItemCount < 2),
+      /* @__PURE__ */ u2("div", { class: "think-whiteboard-context-menu__separator" }),
+      action("回到当前画布中心 · 100%", onCenter)
+    ] }),
+    /* @__PURE__ */ u2("button", { type: "button", class: "think-whiteboard-context-menu__close", "aria-label": "关闭菜单", onClick: onClose, children: "×" })
+  ] });
+}
+function pointStyle(point) {
+  return `left:${point.x}px;top:${point.y}px;`;
+}
+function cardPoint(item) {
+  return { x: item.x + WHITEBOARD_CARD_WIDTH_PX / 2, y: item.y + WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX / 2 };
+}
+function groupPoint(group) {
+  return { x: group.x + (group.collapsed ? WHITEBOARD_WORKBENCH_COLLAPSED_WIDTH_PX : WHITEBOARD_WORKBENCH_MIN_WIDTH_PX) / 2, y: group.y + WHITEBOARD_WORKBENCH_HEADER_HEIGHT_PX / 2 };
+}
+function annotationPoint(annotation) {
+  return { x: annotation.x + 130, y: annotation.y + (annotation.kind === "sticky" ? 66 : 24) };
+}
+function stopPointer(event) {
+  event.stopPropagation();
+}
+function stopAndRun(event, run) {
+  event.preventDefault();
+  event.stopPropagation();
+  run();
+}
+function coveredBySelectedGroup(groupId, groups, selected) {
+  if (!groupId || selected.size === 0) return false;
+  return getWhiteboardGroupPathIds(groups, groupId).some((id) => selected.has(id));
+}
+function moved(point, shouldMove, delta) {
+  return shouldMove && delta ? { x: point.x + delta.dx, y: point.y + delta.dy } : point;
+}
+function WhiteboardSemanticOverviewLayer({
+  semantic,
+  items,
+  groups,
+  annotations,
+  recordsById,
+  selectedItemIds,
+  selectedGroupIds = /* @__PURE__ */ new Set(),
+  semanticDragDelta = null,
+  activeFindItemId = null,
+  findMatchSet = /* @__PURE__ */ new Set(),
+  activeFindGroupId = null,
+  dropTargetGroupId = null,
+  onFocusItem,
+  onFocusGroup,
+  onFocusAnnotation,
+  onMoveAnnotation,
+  onNodePointerDown,
+  shouldSuppressFocusClick
+}) {
+  const [annotationDrag, setAnnotationDrag] = d(null);
+  const annotationCleanupRef = A$1(null);
+  const suppressAnnotationClickUntilRef = A$1(0);
+  y(() => () => annotationCleanupRef.current?.(), []);
+  if (semantic.level === "detail") return null;
+  const focus = (event, run) => stopAndRun(event, () => {
+    if (!shouldSuppressFocusClick?.()) run();
+  });
+  const beginAnnotationDrag = (event, annotation) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.stopPropagation();
+    annotationCleanupRef.current?.();
+    const pointerId = event.pointerId;
+    const startX = event.clientX;
+    const startY = event.clientY;
+    let didMove = false;
+    const safeZoom = Number.isFinite(semantic.zoom) && semantic.zoom > 0 ? semantic.zoom : 1;
+    const move2 = (next2) => {
+      if (next2.pointerId !== pointerId) return;
+      const sx = next2.clientX - startX;
+      const sy = next2.clientY - startY;
+      if (!didMove && Math.hypot(sx, sy) < WHITEBOARD_DRAG_THRESHOLD_PX) return;
+      didMove = true;
+      next2.preventDefault();
+      next2.stopPropagation();
+      setAnnotationDrag({ annotationId: annotation.id, dx: sx / safeZoom, dy: sy / safeZoom });
+    };
+    const finish = (next2, cancelled) => {
+      if (next2.pointerId !== pointerId) return;
+      annotationCleanupRef.current?.();
+      annotationCleanupRef.current = null;
+      const sx = next2.clientX - startX;
+      const sy = next2.clientY - startY;
+      setAnnotationDrag(null);
+      if (!didMove || cancelled) return;
+      next2.preventDefault();
+      next2.stopPropagation();
+      suppressAnnotationClickUntilRef.current = Date.now() + 350;
+      void onMoveAnnotation?.(annotation.id, { x: annotation.x + sx / safeZoom, y: annotation.y + sy / safeZoom, zIndex: annotation.zIndex });
+    };
+    const up = (next2) => finish(next2, false);
+    const cancel = (next2) => finish(next2, true);
+    window.addEventListener("pointermove", move2, true);
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", cancel, true);
+    annotationCleanupRef.current = () => {
+      window.removeEventListener("pointermove", move2, true);
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", cancel, true);
+    };
+  };
+  return /* @__PURE__ */ u2("div", { class: "think-whiteboard-overview-layer", "data-whiteboard-overview-level": semantic.level, "aria-label": "白板缩放概览定位层", children: [
+    semantic.showGroupLocators && groups.map((group) => {
+      const selected = selectedGroupIds.has(group.id);
+      const shift = selected || coveredBySelectedGroup(group.parentGroupId, groups, selectedGroupIds);
+      return /* @__PURE__ */ u2("div", { class: "think-whiteboard-overview-marker think-whiteboard-overview-marker--group", style: pointStyle(moved(groupPoint(group), shift, semanticDragDelta)), "data-whiteboard-overview-group-id": group.id, children: /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          class: `think-whiteboard-overview-marker__button${selected ? " is-selected" : ""}${activeFindGroupId === group.id ? " is-find-active" : ""}${dropTargetGroupId === group.id ? " is-drop-target" : ""}`,
+          "aria-label": `定位工作台：${group.title}`,
+          title: `工作台：${group.title}；Ctrl/⌘ 点击多选，拖动已选节点可整体移动，右键整理，单击回到 100%`,
+          onPointerDown: ((event) => onNodePointerDown ? onNodePointerDown(event, "group", group.id) : stopPointer(event)),
+          onClick: ((event) => focus(event, () => onFocusGroup(group))),
+          children: [
+            /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: "▣" }),
+            /* @__PURE__ */ u2("span", { class: "think-whiteboard-overview-marker__label", children: group.title })
+          ]
+        }
+      ) }, group.id);
+    }),
+    semantic.showCardLocators && items.map((item) => {
+      const record2 = recordsById.get(item.recordId) ?? null;
+      const label = record2 ? buildWhiteboardRecordPresentation(record2).primaryText : "原记录不可用";
+      const findState = activeFindItemId === item.id ? " is-find-active" : findMatchSet.has(item.id) ? " is-find-match" : "";
+      const selected = selectedItemIds.has(item.id);
+      const shift = selected || coveredBySelectedGroup(item.groupId, groups, selectedGroupIds);
+      return /* @__PURE__ */ u2("div", { class: "think-whiteboard-overview-marker think-whiteboard-overview-marker--card", style: pointStyle(moved(cardPoint(item), shift, semanticDragDelta)), "data-whiteboard-overview-item-id": item.id, children: /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          class: `think-whiteboard-overview-marker__button${selected ? " is-selected" : ""}${findState}`,
+          "aria-label": `定位卡片：${label}`,
+          title: `${label}；Ctrl/⌘ 点击多选，拖动已选节点可整体移动，也可拖回左侧移出白板；右键整理，单击回到 100%`,
+          "data-record-type": record2?.coreBlock ?? "missing",
+          onPointerDown: ((event) => onNodePointerDown ? onNodePointerDown(event, "item", item.id) : stopPointer(event)),
+          onClick: ((event) => focus(event, () => onFocusItem(item))),
+          children: [
+            /* @__PURE__ */ u2("span", { class: "think-whiteboard-overview-marker__dot", "aria-hidden": "true" }),
+            /* @__PURE__ */ u2("span", { class: "think-whiteboard-overview-marker__label", children: label })
+          ]
+        }
+      ) }, item.id);
+    }),
+    semantic.showAnnotationLocators && annotations.map((annotation) => {
+      const shift = annotationDrag?.annotationId === annotation.id ? annotationDrag : null;
+      return /* @__PURE__ */ u2("div", { class: "think-whiteboard-overview-marker think-whiteboard-overview-marker--annotation", style: pointStyle(moved(annotationPoint(annotation), Boolean(shift), shift)), "data-whiteboard-overview-annotation-id": annotation.id, children: /* @__PURE__ */ u2(
+        "button",
+        {
+          type: "button",
+          class: `think-whiteboard-overview-marker__button${shift ? " is-dragging" : ""}`,
+          "aria-label": `定位${annotation.kind === "sticky" ? "便签" : "文字标注"}`,
+          title: "拖动可移动标注；单击回到 100%",
+          onPointerDown: ((event) => beginAnnotationDrag(event, annotation)),
+          onClick: ((event) => {
+            if (Date.now() >= suppressAnnotationClickUntilRef.current) focus(event, () => onFocusAnnotation(annotation));
+            else {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+          }),
+          children: /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: annotation.kind === "sticky" ? "◆" : "T" })
+        }
+      ) }, annotation.id);
+    })
+  ] });
+}
+const GAP_X = 72;
+const GAP_Y = 64;
+const bySpatialOrder = (a2, b2) => a2.y - b2.y || a2.x - b2.x || a2.kind.localeCompare(b2.kind) || a2.id.localeCompare(b2.id);
+function buildNodes(targetItems, targetGroups, allItems, allGroups) {
+  const itemNodes = targetItems.map((item) => ({ kind: "item", id: item.id, x: item.x, y: item.y, width: WHITEBOARD_CARD_WIDTH_PX, height: WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX, zIndex: item.zIndex }));
+  const groupNodes = targetGroups.map((group) => {
+    const frame = getWhiteboardWorkbenchFrame(group, allItems, allGroups);
+    return { kind: "group", id: group.id, x: group.x, y: group.y, width: frame.width, height: frame.height };
+  });
+  return [...itemNodes, ...groupNodes];
+}
+function targetPositions(nodes, mode) {
+  const positions = /* @__PURE__ */ new Map();
+  if (nodes.length < 2) return positions;
+  if (mode === "align-left") {
+    const x2 = Math.min(...nodes.map((node2) => node2.x));
+    nodes.forEach((node2) => positions.set(`${node2.kind}:${node2.id}`, { x: x2, y: node2.y }));
+    return positions;
+  }
+  if (mode === "align-top") {
+    const y2 = Math.min(...nodes.map((node2) => node2.y));
+    nodes.forEach((node2) => positions.set(`${node2.kind}:${node2.id}`, { x: node2.x, y: y2 }));
+    return positions;
+  }
+  if (mode === "distribute-horizontal" || mode === "distribute-vertical") {
+    const horizontal = mode === "distribute-horizontal";
+    const sorted2 = [...nodes].sort(horizontal ? (a2, b2) => a2.x - b2.x || bySpatialOrder(a2, b2) : (a2, b2) => a2.y - b2.y || bySpatialOrder(a2, b2));
+    const first2 = horizontal ? sorted2[0].x : sorted2[0].y;
+    const last = horizontal ? sorted2.at(-1).x : sorted2.at(-1).y;
+    const step = (last - first2) / (sorted2.length - 1);
+    sorted2.forEach((node2, index) => positions.set(`${node2.kind}:${node2.id}`, horizontal ? { x: first2 + step * index, y: node2.y } : { x: node2.x, y: first2 + step * index }));
+    return positions;
+  }
+  const sorted = [...nodes].sort(bySpatialOrder);
+  const columns = Math.max(1, Math.ceil(Math.sqrt(sorted.length)));
+  const rows = Math.ceil(sorted.length / columns);
+  const colWidths = Array.from({ length: columns }, () => 0);
+  const rowHeights = Array.from({ length: rows }, () => 0);
+  sorted.forEach((node2, index) => {
+    const col = index % columns;
+    const row = Math.floor(index / columns);
+    colWidths[col] = Math.max(colWidths[col], node2.width);
+    rowHeights[row] = Math.max(rowHeights[row], node2.height);
+  });
+  const minX = Math.min(...sorted.map((node2) => node2.x));
+  const minY = Math.min(...sorted.map((node2) => node2.y));
+  const colX = [];
+  const rowY = [];
+  colWidths.reduce((x2, width2, index) => {
+    colX[index] = x2;
+    return x2 + width2 + GAP_X;
+  }, minX);
+  rowHeights.reduce((y2, height2, index) => {
+    rowY[index] = y2;
+    return y2 + height2 + GAP_Y;
+  }, minY);
+  sorted.forEach((node2, index) => positions.set(`${node2.kind}:${node2.id}`, { x: colX[index % columns], y: rowY[Math.floor(index / columns)] }));
+  return positions;
+}
+function arrangeWhiteboardNodes(input) {
+  const nodes = buildNodes(input.targetItems, input.targetGroups, input.allItems, input.allGroups);
+  const positions = targetPositions(nodes, input.mode);
+  const itemMoves = [];
+  const groupMoves = [];
+  nodes.forEach((node2) => {
+    const position2 = positions.get(`${node2.kind}:${node2.id}`);
+    if (!position2) return;
+    if (node2.kind === "item") itemMoves.push({ itemId: node2.id, position: { ...position2, ...node2.zIndex === void 0 ? {} : { zIndex: node2.zIndex } } });
+    else groupMoves.push({ groupId: node2.id, position: position2 });
+  });
+  return { itemMoves, groupMoves };
+}
+function useWhiteboardContextMenuController(input) {
+  const [state, setState] = d(null);
+  const close = q$1(() => setState(null), []);
+  y(() => {
+    if (!state) return;
+    const closeMenu = (event) => {
+      if (!event.target?.closest?.(".think-whiteboard-context-menu")) close();
+    };
+    const escape = (event) => {
+      if (event.key === "Escape") close();
+    };
+    window.addEventListener("pointerdown", closeMenu, true);
+    window.addEventListener("keydown", escape, true);
+    return () => {
+      window.removeEventListener("pointerdown", closeMenu, true);
+      window.removeEventListener("keydown", escape, true);
+    };
+  }, [close, state]);
+  const worldAt = q$1((clientX, clientY) => {
+    const rect = input.viewportRef.current?.getBoundingClientRect();
+    return rect ? screenToWhiteboardWorld({ clientX, clientY }, rect, input.camera, input.zoom) : null;
+  }, [input.camera, input.viewportRef, input.zoom]);
+  const handleContextMenu = q$1((event) => {
+    const world = worldAt(event.clientX, event.clientY);
+    if (!world) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const element = event.target;
+    const itemElement = element?.closest?.("[data-whiteboard-item-id],[data-whiteboard-overview-item-id]");
+    const groupElement = element?.closest?.("[data-whiteboard-overview-group-id]");
+    const itemId = itemElement?.getAttribute("data-whiteboard-item-id") ?? itemElement?.getAttribute("data-whiteboard-overview-item-id") ?? null;
+    const groupId = groupElement?.getAttribute("data-whiteboard-overview-group-id") ?? null;
+    if (itemId && !input.selectedItemIds.has(itemId)) input.selectOnly(itemId);
+    else if (groupId && !input.selectedGroupIds.has(groupId)) input.selectOnlyGroup(groupId);
+    setState({ clientX: event.clientX, clientY: event.clientY, worldX: world.x, worldY: world.y, itemId, groupId });
+  }, [input.selectOnly, input.selectOnlyGroup, input.selectedGroupIds, input.selectedItemIds, worldAt]);
+  const handleDoubleClick = q$1((event) => {
+    const element = event.target;
+    if (element?.closest?.("[data-whiteboard-item-id],[data-whiteboard-group-id],[data-whiteboard-annotation-id],[data-whiteboard-edge-control-id],button,input,textarea")) return;
+    const world = worldAt(event.clientX, event.clientY);
+    if (!world) return;
+    event.preventDefault();
+    event.stopPropagation();
+    void input.createAnnotation("text", world);
+  }, [input.createAnnotation, worldAt]);
+  const point = q$1(() => state ? { x: state.worldX, y: state.worldY } : null, [state]);
+  const createAnnotation = q$1((kind) => {
+    const world = point();
+    if (world) void input.createAnnotation(kind, world);
+    close();
+  }, [close, input.createAnnotation, point]);
+  const createWorkbench = q$1(() => {
+    const world = point();
+    if (world) void input.createWorkbenchAt(world);
+    close();
+  }, [close, input.createWorkbenchAt, point]);
+  const centerBoard = q$1(() => {
+    input.centerBoard();
+    close();
+  }, [close, input.centerBoard]);
+  const wrapSelection = q$1(async () => {
+    const ids2 = [...input.selectedItemIds];
+    close();
+    if (ids2.length < 2 || input.selectedGroupIds.size > 0) return;
+    const group = await input.wrapSelection(ids2);
+    if (group) input.clearSelection();
+  }, [close, input.clearSelection, input.selectedGroupIds.size, input.selectedItemIds, input.wrapSelection]);
+  const targetItemIds = q$1(() => {
+    if (state?.itemId && !input.selectedItemIds.has(state.itemId)) return [state.itemId];
+    return [...input.selectedItemIds];
+  }, [input.selectedItemIds, state?.itemId]);
+  const archiveSelection = q$1(async () => {
+    const ids2 = targetItemIds();
+    close();
+    if (!input.archiveItems || ids2.length === 0 || input.selectedGroupIds.size > 0) return;
+    const changed2 = await input.archiveItems(ids2);
+    if (changed2) input.clearSelection();
+  }, [close, input.archiveItems, input.clearSelection, input.selectedGroupIds.size, targetItemIds]);
+  const removeSelection = q$1(async () => {
+    const ids2 = targetItemIds();
+    close();
+    if (!input.removeItems || ids2.length === 0 || input.selectedGroupIds.size > 0) return;
+    const changed2 = await input.removeItems(ids2);
+    if (changed2) input.clearSelection();
+  }, [close, input.clearSelection, input.removeItems, input.selectedGroupIds.size, targetItemIds]);
+  const removeSelectionFromWorkbench = q$1(async () => {
+    const ids2 = targetItemIds();
+    close();
+    if (!input.removeItemFromWorkbench || input.selectedGroupIds.size > 0) return;
+    for (const id of ids2) await input.removeItemFromWorkbench(id);
+  }, [close, input.removeItemFromWorkbench, input.selectedGroupIds.size, targetItemIds]);
+  const moveNodeArrangement = q$1(async (targetItems, targetGroups, mode) => {
+    const result = arrangeWhiteboardNodes({ targetItems, targetGroups, allItems: input.allItems, allGroups: input.allGroups, mode });
+    if (result.itemMoves.length + result.groupMoves.length === 0) return;
+    input.onSemanticLayoutGuides?.([]);
+    try {
+      await input.whiteboardStore.moveNodes(input.boardId, result.itemMoves, result.groupMoves);
+    } catch (error) {
+      input.onNotice?.(`整理概览节点失败：${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [input.allGroups, input.allItems, input.boardId, input.onNotice, input.onSemanticLayoutGuides, input.whiteboardStore]);
+  const arrange = q$1(async (mode) => {
+    if (!input.storeReady) return;
+    close();
+    if (input.selectedGroupIds.size > 0) {
+      if (mode === "graph") return;
+      const selectedItems = input.layoutItems.filter((item) => input.selectedItemIds.has(item.id));
+      const selectedGroups = input.layoutGroups.filter((group) => input.selectedGroupIds.has(group.id));
+      await moveNodeArrangement(selectedItems, selectedGroups, mode);
+      return;
+    }
+    const selected = input.visibleItems.filter((item) => input.selectedItemIds.has(item.id));
+    const moves = arrangeWhiteboardItems(selected, mode, input.edges);
+    if (moves.length === 0) return;
+    input.onSemanticLayoutGuides?.([]);
+    try {
+      await input.whiteboardStore.moveItems(input.boardId, moves);
+    } catch (error) {
+      input.onNotice?.(`整理节点失败：${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [close, input.boardId, input.edges, input.layoutGroups, input.layoutItems, input.onNotice, input.onSemanticLayoutGuides, input.selectedGroupIds, input.selectedItemIds, input.storeReady, input.visibleItems, input.whiteboardStore, moveNodeArrangement]);
+  const arrangeCurrentLayer = q$1(async () => {
+    if (!input.storeReady) return;
+    close();
+    await moveNodeArrangement(input.layoutItems, input.layoutGroups, "grid");
+  }, [close, input.layoutGroups, input.layoutItems, input.storeReady, moveNodeArrangement]);
+  const semanticArrange = q$1(async (scope) => {
+    if (!input.storeReady) return;
+    const targets = scope === "selection" ? input.visibleItems.filter((item) => input.selectedItemIds.has(item.id)) : input.layoutItems;
+    close();
+    if (targets.length < 2 || scope === "selection" && input.selectedGroupIds.size > 0) return;
+    const result = arrangeWhiteboardItemsBySpec(targets, input.recordsById);
+    if (result.moves.length === 0) return;
+    try {
+      await input.whiteboardStore.moveItems(input.boardId, result.moves);
+      input.onSemanticLayoutGuides?.(result.guides);
+    } catch (error) {
+      input.onNotice?.(`目标 × 类型 × 时间整理失败：${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [close, input.boardId, input.layoutItems, input.onNotice, input.onSemanticLayoutGuides, input.recordsById, input.selectedGroupIds.size, input.selectedItemIds, input.storeReady, input.visibleItems, input.whiteboardStore]);
+  return { state, close, handleContextMenu, handleDoubleClick, createAnnotation, createWorkbench, wrapSelection, centerBoard, arrange, arrangeCurrentLayer, semanticArrange, archiveSelection, removeSelection, removeSelectionFromWorkbench };
+}
+function elementRect$1(element) {
+  const rect = element.getBoundingClientRect();
+  return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+}
+function useWhiteboardSemanticSourceDropController({
+  sourceCollapsed,
+  sourceElementRef,
+  onDropActiveChange,
+  onDropItems
+}) {
+  y(() => {
+    if (sourceCollapsed) onDropActiveChange(false);
+  }, [onDropActiveChange, sourceCollapsed]);
+  const handleSemanticItemDragPointerChange = q$1((_itemIds, point) => {
+    if (sourceCollapsed) {
+      onDropActiveChange(false);
+      return;
+    }
+    const sourceElement = sourceElementRef.current;
+    onDropActiveChange(Boolean(point && sourceElement && isWhiteboardClientPointInsideRect(point, elementRect$1(sourceElement))));
+  }, [onDropActiveChange, sourceCollapsed, sourceElementRef]);
+  const handleSemanticItemDrop = q$1(async (itemIds, point) => {
+    if (sourceCollapsed) return false;
+    const sourceElement = sourceElementRef.current;
+    const consumed = Boolean(sourceElement && isWhiteboardClientPointInsideRect(point, elementRect$1(sourceElement)));
+    onDropActiveChange(false);
+    if (!consumed) return false;
+    await onDropItems(itemIds);
+    return true;
+  }, [onDropActiveChange, onDropItems, sourceCollapsed, sourceElementRef]);
+  return { handleSemanticItemDragPointerChange, handleSemanticItemDrop };
+}
+const WHITEBOARD_UI_PREFERENCES_KEY = "think-whiteboard-ui-preferences-v1";
+const DEFAULT_WHITEBOARD_UI_PREFERENCES = {
+  gridVisible: false,
+  sourceCollapsed: false
+};
+function normalizeWhiteboardUiPreferences(value) {
+  const candidate = value && typeof value === "object" ? value : {};
+  return {
+    gridVisible: typeof candidate.gridVisible === "boolean" ? candidate.gridVisible : DEFAULT_WHITEBOARD_UI_PREFERENCES.gridVisible,
+    sourceCollapsed: typeof candidate.sourceCollapsed === "boolean" ? candidate.sourceCollapsed : DEFAULT_WHITEBOARD_UI_PREFERENCES.sourceCollapsed
+  };
+}
+function useWhiteboardUiPreferences() {
+  const [stored, setStored] = useLocalStorage(WHITEBOARD_UI_PREFERENCES_KEY, DEFAULT_WHITEBOARD_UI_PREFERENCES);
+  const value = T$1(() => normalizeWhiteboardUiPreferences(stored), [stored]);
+  const set2 = q$1((patch) => {
+    setStored({ ...value, ...patch });
+  }, [setStored, value]);
+  return {
+    ...value,
+    setGridVisible: (gridVisible) => set2({ gridVisible }),
+    setSourceCollapsed: (sourceCollapsed) => set2({ sourceCollapsed }),
+    toggleGrid: () => set2({ gridVisible: !value.gridVisible }),
+    toggleSource: () => set2({ sourceCollapsed: !value.sourceCollapsed })
+  };
+}
+function elementRect(element) {
+  const rect = element.getBoundingClientRect();
+  return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+}
+function WhiteboardWorkspace({ records, whiteboardStore, boardId = DEFAULT_WHITEBOARD_ID, onOpenRecord, onOpenRecordOrigin, onNotice }) {
+  const [board, setBoard] = d(void 0);
+  const [storeStatus, setStoreStatus] = d(() => whiteboardStore.getStatus());
+  const [removingItemIds, setRemovingItemIds] = d(() => /* @__PURE__ */ new Set());
+  const [removingEdgeId, setRemovingEdgeId] = d(null);
+  const [dragPreview, setDragPreview] = d(null);
+  const [sourceDragPreview, setSourceDragPreview] = d(null);
+  const [removalDropActive, setRemovalDropActive] = d(false);
+  const [ensuringBoard, setEnsuringBoard] = d(false);
+  const uiPreferences = useWhiteboardUiPreferences();
+  const { sourceCollapsed, gridVisible } = uiPreferences;
+  const [semanticLayoutGuides, setSemanticLayoutGuides] = d([]);
+  const sourceElementRef = A$1(null);
+  const canvasViewportRef = A$1(null);
+  const viewportController = useWhiteboardViewportController(canvasViewportRef);
+  const syncBoard = q$1(() => {
+    const nextStatus = whiteboardStore.getStatus();
+    setStoreStatus(nextStatus);
+    if (nextStatus.state !== "ready") {
+      setBoard(void 0);
+      return;
+    }
+    try {
+      setBoard(whiteboardStore.getBoard(boardId));
+    } catch (error) {
+      onNotice?.(`白板读取失败：${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [boardId, onNotice, whiteboardStore]);
+  y(() => {
+    const unsubscribe = whiteboardStore.subscribe(syncBoard);
+    syncBoard();
+    return unsubscribe;
+  }, [syncBoard, whiteboardStore]);
+  y(() => {
+    if (storeStatus.state !== "ready" || board || ensuringBoard) return;
+    setEnsuringBoard(true);
+    void whiteboardStore.ensureBoard(boardId, DEFAULT_WHITEBOARD_TITLE).catch((error) => onNotice?.(`创建白板失败：${error instanceof Error ? error.message : String(error)}`)).finally(() => setEnsuringBoard(false));
+  }, [board, boardId, ensuringBoard, onNotice, storeStatus.state, whiteboardStore]);
+  const recordsById = T$1(() => new Map(records.map((record2) => [record2.id, record2])), [records]);
+  const items = board?.items ?? [];
+  const edges = board?.edges ?? [];
+  const annotations = board?.annotations ?? [];
+  const groups = board?.groups ?? [];
+  const archivedItems = board?.archivedItems ?? [];
+  const boardRecordIds = T$1(() => new Set([...items, ...archivedItems].map((item) => item.recordId)), [archivedItems, items]);
+  const find = useWhiteboardFindController(items, recordsById);
+  const activeZIndex = T$1(() => getNextWhiteboardZIndex(items), [items]);
+  const storeReady = storeStatus.state === "ready" && Boolean(board);
+  const removeItemsByIds = q$1(async (itemIds) => {
+    const ids2 = [...new Set(itemIds)];
+    if (!storeReady || removingItemIds.size > 0 || ids2.length === 0) return false;
+    setRemovingItemIds(new Set(ids2));
+    try {
+      const removed = ids2.length === 1 ? await whiteboardStore.removeItem(boardId, ids2[0]) : await whiteboardStore.removeItems(boardId, ids2);
+      if (!removed) onNotice?.("白板卡片已不存在");
+      return removed;
+    } catch (error) {
+      onNotice?.(`移出白板失败：${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    } finally {
+      setRemovingItemIds(/* @__PURE__ */ new Set());
+    }
+  }, [boardId, onNotice, removingItemIds.size, storeReady, whiteboardStore]);
+  const { handleSemanticItemDragPointerChange, handleSemanticItemDrop } = useWhiteboardSemanticSourceDropController({
+    sourceCollapsed,
+    sourceElementRef,
+    onDropActiveChange: setRemovalDropActive,
+    onDropItems: removeItemsByIds
+  });
+  const history = useWhiteboardHistoryController(whiteboardStore, onNotice);
+  const nested2 = useWhiteboardNestedCanvasController({ groups, items, annotations, rootCenter: getWhiteboardCanvasHomePoint(items, groups, annotations), resetViewOnWorldPoint: viewportController.resetViewOnWorldPoint });
+  const workbench = useWhiteboardWorkbenchController({
+    boardId,
+    items,
+    annotations,
+    groups,
+    activeGroupId: nested2.activeGroupId,
+    storeReady,
+    whiteboardStore,
+    viewportRef: canvasViewportRef,
+    camera: viewportController.camera,
+    zoom: viewportController.zoom,
+    onNotice
+  });
+  const groupTitleById = T$1(() => new Map(groups.map((group) => [group.id, group.title])), [groups]);
+  const activeFindItem = items.find((item) => item.id === find.activeItemId) ?? null;
+  const activeFindGroupId = activeFindItem?.groupId ?? null;
+  const findPathLabel = getWhiteboardItemPathLabel(activeFindItem, groups);
+  const recordTransfer = useWhiteboardRecordTransferController({
+    boardId,
+    items,
+    groups,
+    boardRecordIds,
+    storeReady,
+    whiteboardStore,
+    activeGroupId: nested2.activeGroupId,
+    viewportRef: canvasViewportRef,
+    camera: viewportController.camera,
+    zoom: viewportController.zoom,
+    onNotice
+  });
+  const selection = useWhiteboardSelectionController({
+    boardId,
+    items,
+    groups,
+    activeGroupId: nested2.activeGroupId,
+    visibleItems: workbench.visibleItems,
+    visibleGroups: workbench.visibleGroups,
+    storeReady,
+    whiteboardStore,
+    viewportRef: canvasViewportRef,
+    camera: viewportController.camera,
+    zoom: viewportController.zoom,
+    onNotice,
+    onSemanticMoveStart: () => setSemanticLayoutGuides([]),
+    onSemanticItemDragPointerChange: handleSemanticItemDragPointerChange,
+    onSemanticItemDrop: handleSemanticItemDrop
+  });
+  const connection = useWhiteboardConnectionController({ boardId, items, storeReady, whiteboardStore, viewportRef: canvasViewportRef, camera: viewportController.camera, zoom: viewportController.zoom, onNotice });
+  const annotation = useWhiteboardAnnotationController({ boardId, annotations: workbench.renderAnnotations, groups: workbench.renderGroups, activeGroupId: nested2.activeGroupId, storeReady, whiteboardStore, onNotice });
+  const archive = useWhiteboardArchiveController({ boardId, storeReady, whiteboardStore, onNotice });
+  const selectionRenderItems = selection.applyPreview(workbench.renderItems);
+  const visibleItemIds = T$1(() => new Set(workbench.visibleItems.map((item) => item.id)), [workbench.visibleItems]);
+  const renderVisibleItems = selectionRenderItems.filter((item) => visibleItemIds.has(item.id));
+  const sourceDropActive = Boolean(!archive.open && !sourceCollapsed && sourceDragPreview && canvasViewportRef.current && isWhiteboardClientPointInsideRect(sourceDragPreview.point, elementRect(canvasViewportRef.current)));
+  const sourceDropTargetGroupId = sourceDropActive && sourceDragPreview ? recordTransfer.resolveDropTargetGroupId(sourceDragPreview.point) : null;
+  const sourceDropTargetTitle = sourceDropTargetGroupId ? groupTitleById.get(sourceDropTargetGroupId) ?? null : null;
+  const currentLayoutItems = T$1(() => items.filter((item) => (item.groupId ?? null) === nested2.activeGroupId), [items, nested2.activeGroupId]);
+  const currentLayoutGroups = T$1(() => groups.filter((group) => (group.parentGroupId ?? null) === nested2.activeGroupId), [groups, nested2.activeGroupId]);
+  const semanticZoom = getWhiteboardSemanticZoomState(viewportController.zoom);
+  const semanticStatus = getWhiteboardSemanticZoomStatus(semanticZoom, currentLayoutItems.length, currentLayoutGroups.length);
+  const currentCanvasBounds = T$1(() => getWhiteboardCanvasContentBounds(workbench.visibleItems, workbench.visibleGroups, annotation.visibleAnnotations), [annotation.visibleAnnotations, workbench.visibleGroups, workbench.visibleItems]);
+  const currentCanvasHome = T$1(() => getWhiteboardCanvasHomePoint(workbench.visibleItems, workbench.visibleGroups, annotation.visibleAnnotations, nested2.activeCanvasCenter), [annotation.visibleAnnotations, nested2.activeCanvasCenter, workbench.visibleGroups, workbench.visibleItems]);
+  const activeCanvasTitle = nested2.activeGroupId ? groupTitleById.get(nested2.activeGroupId) ?? "当前工作台" : null;
+  y(() => setSemanticLayoutGuides([]), [nested2.activeGroupId]);
+  const centerCurrentCanvas = q$1(() => viewportController.resetViewOnWorldPoint(currentCanvasHome), [currentCanvasHome, viewportController.resetViewOnWorldPoint]);
+  const fitCurrentCanvas = q$1(() => currentCanvasBounds ? viewportController.fitWorldBounds(currentCanvasBounds, currentCanvasHome) : viewportController.resetViewOnWorldPoint(currentCanvasHome), [currentCanvasBounds, currentCanvasHome, viewportController.fitWorldBounds, viewportController.resetViewOnWorldPoint]);
+  const contextMenu = useWhiteboardContextMenuController({
+    boardId,
+    visibleItems: workbench.visibleItems,
+    layoutItems: currentLayoutItems,
+    layoutGroups: currentLayoutGroups,
+    allItems: items,
+    allGroups: groups,
+    edges,
+    selectedItemIds: selection.selectedItemIds,
+    selectedGroupIds: selection.selectedGroupIds,
+    recordsById,
+    storeReady,
+    whiteboardStore,
+    viewportRef: canvasViewportRef,
+    camera: viewportController.camera,
+    zoom: viewportController.zoom,
+    selectOnly: selection.selectOnly,
+    selectOnlyGroup: selection.selectOnlyGroup,
+    createAnnotation: annotation.create,
+    createWorkbenchAt: workbench.createGroupAt,
+    wrapSelection: workbench.wrapItemsInGroup,
+    clearSelection: selection.clear,
+    centerBoard: centerCurrentCanvas,
+    archiveItems: archive.archiveItems,
+    removeItems: removeItemsByIds,
+    removeItemFromWorkbench: workbench.removeItemFromGroup,
+    onSemanticLayoutGuides: setSemanticLayoutGuides,
+    onNotice
+  });
+  y(() => {
+    if (activeFindItem) {
+      nested2.revealItem(activeFindItem);
+      viewportController.centerOnWorldPoint(workbench.getFindTargetPoint(activeFindItem));
+    }
+  }, [activeFindItem, nested2.revealItem, viewportController.centerOnWorldPoint, workbench.getFindTargetPoint]);
+  const restoreMessage = storeStatus.state === "error" ? `白板恢复失败，已阻止写入：${storeStatus.message}` : storeStatus.state === "disposed" ? "白板服务已停止" : "正在恢复白板…";
+  const handleMove = q$1(async (itemId, position2) => {
+    setSemanticLayoutGuides([]);
+    try {
+      const targetGroupId = selection.isMultiDrag(itemId) ? workbench.resolveSelectionTarget(position2) ?? void 0 : void 0;
+      const selectionMoved = await selection.moveSelected(itemId, position2, targetGroupId);
+      const moved2 = selectionMoved === null ? await workbench.moveItem(itemId, position2) : selectionMoved;
+      if (!moved2) onNotice?.("白板卡片已不存在，位置未保存");
+    } catch (error) {
+      onNotice?.(`保存白板位置失败：${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
+  }, [onNotice, selection.isMultiDrag, selection.moveSelected, workbench.moveItem, workbench.resolveSelectionTarget]);
+  const handlePreviewChange = q$1((itemId, position2) => {
+    const multi = selection.isMultiDrag(itemId);
+    selection.previewItemDrag(itemId, position2);
+    setDragPreview(!multi && position2 ? { itemId, position: position2 } : null);
+    if (multi) workbench.previewSelectionDrop(position2);
+    else workbench.previewItemDrop(itemId, position2);
+  }, [selection.isMultiDrag, selection.previewItemDrag, workbench.previewItemDrop, workbench.previewSelectionDrop]);
+  const handleCanvasPointerDown = q$1((event) => {
+    if (selection.beginMarquee(event)) return;
+    if (event.pointerType !== "mouse" || event.button === 0) selection.clear();
+    viewportController.beginPan(event);
+  }, [selection.beginMarquee, selection.clear, viewportController.beginPan]);
+  const handleRestore = q$1(async (itemId) => {
+    const restored = await archive.restoreItem(itemId);
+    if (!restored) return;
+    archive.setOpen(false);
+    selection.clear();
+    nested2.revealItem(restored);
+    viewportController.resetViewOnWorldPoint({ x: restored.x + WHITEBOARD_CARD_WIDTH_PX / 2, y: restored.y + WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX / 2 });
+  }, [archive.restoreItem, archive.setOpen, nested2.revealItem, selection.clear, viewportController.resetViewOnWorldPoint]);
+  const handleBoardCardDragPointer = q$1((_itemId, point) => {
+    if (sourceCollapsed) {
+      setRemovalDropActive(false);
+      return;
+    }
+    const sourceElement = sourceElementRef.current;
+    setRemovalDropActive(Boolean(point && sourceElement && isWhiteboardClientPointInsideRect(point, elementRect(sourceElement))));
+  }, [sourceCollapsed]);
+  const handleDropBoardCardToSource = q$1(async (itemId, point) => {
+    if (sourceCollapsed) return false;
+    const sourceElement = sourceElementRef.current;
+    const consumed = Boolean(sourceElement && isWhiteboardClientPointInsideRect(point, elementRect(sourceElement)));
+    setRemovalDropActive(false);
+    if (!consumed) return false;
+    await removeItemsByIds(selection.getDragItemIds(itemId));
+    return true;
+  }, [removeItemsByIds, selection.getDragItemIds, sourceCollapsed]);
+  const handleRemoveEdge = q$1(async (edgeId) => {
+    if (!storeReady || removingEdgeId) return;
+    setRemovingEdgeId(edgeId);
+    try {
+      const removed = await whiteboardStore.removeEdge(boardId, edgeId);
+      if (!removed) onNotice?.("白板连线已不存在");
+    } catch (error) {
+      onNotice?.(`删除白板连线失败：${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setRemovingEdgeId(null);
+    }
+  }, [boardId, onNotice, removingEdgeId, storeReady, whiteboardStore]);
+  const sourceDragLabel = sourceDragPreview ? sourceDragPreview.records.length > 1 ? `${sourceDragPreview.records.length} 条记录` : buildWhiteboardRecordPresentation(sourceDragPreview.records[0]).primaryText : "";
+  return /* @__PURE__ */ u2("div", { class: "think-whiteboard-workspace", "data-whiteboard-selection-count": selection.selectionCount, "data-whiteboard-active-group-id": nested2.activeGroupId ?? "", onKeyDown: ((event) => {
+    history.handleKeyDown(event);
+    find.handleWorkspaceKeyDown(event);
+    selection.handleKeyDown(event);
+    nested2.handleKeyDown(event);
+  }), children: [
+    /* @__PURE__ */ u2("div", { class: `think-whiteboard-body${sourceCollapsed ? " is-source-collapsed" : ""}`, children: [
+      /* @__PURE__ */ u2(
+        WhiteboardRecordSourcePanel,
+        {
+          records,
+          boardRecordIds,
+          onAdd: recordTransfer.addRecord,
+          onDropRecords: recordTransfer.dropRecords,
+          onDragRecordPreview: setSourceDragPreview,
+          onSourceElementChange: (element) => {
+            sourceElementRef.current = element;
+          },
+          addingRecordIds: recordTransfer.addingRecordIds,
+          removalDropActive
+        }
+      ),
+      /* @__PURE__ */ u2(
+        "main",
+        {
+          class: `think-whiteboard-board${sourceDropActive ? " is-source-drop-target" : ""}`,
+          "aria-label": "白板",
+          "data-whiteboard-source-drop-active": sourceDropActive ? "true" : "false",
+          children: [
+            /* @__PURE__ */ u2(
+              WhiteboardBoardTools,
+              {
+                sourceCollapsed,
+                onToggleSource: uiPreferences.toggleSource,
+                gridVisible,
+                onToggleGrid: uiPreferences.toggleGrid,
+                find,
+                findPathLabel,
+                zoom: viewportController.zoom,
+                onZoomOut: viewportController.zoomOut,
+                onResetZoom: viewportController.resetZoom,
+                onZoomIn: viewportController.zoomIn,
+                onCenterBoard: centerCurrentCanvas,
+                onFitBoard: fitCurrentCanvas,
+                archiveCount: archivedItems.length,
+                archiveOpen: archive.open,
+                onToggleArchive: () => archive.setOpen(!archive.open),
+                onCreateWorkbench: () => void workbench.createGroup(),
+                selectionCount: selection.selectionCount,
+                onClearSelection: selection.clear,
+                canUndo: history.canUndo,
+                canRedo: history.canRedo,
+                onUndo: () => {
+                  setSemanticLayoutGuides([]);
+                  void history.undo();
+                },
+                onRedo: () => {
+                  setSemanticLayoutGuides([]);
+                  void history.redo();
+                },
+                activeCanvasId: nested2.activeGroupId,
+                activeCanvasTitle,
+                onExitCanvas: () => {
+                  selection.clear();
+                  nested2.enterParent();
+                },
+                onExitToRoot: () => {
+                  selection.clear();
+                  nested2.enterRoot();
+                }
+              }
+            ),
+            /* @__PURE__ */ u2(
+              WhiteboardCanvasBreadcrumbs,
+              {
+                path: nested2.path,
+                canGoBack: nested2.canGoBack,
+                canGoForward: nested2.canGoForward,
+                onEnter: (groupId) => {
+                  selection.clear();
+                  nested2.enterGroup(groupId);
+                },
+                onParent: () => {
+                  selection.clear();
+                  nested2.enterParent();
+                },
+                onBack: () => {
+                  selection.clear();
+                  nested2.goBack();
+                },
+                onForward: () => {
+                  selection.clear();
+                  nested2.goForward();
+                },
+                onFitContent: fitCurrentCanvas
+              }
+            ),
+            archive.open && storeReady && /* @__PURE__ */ u2(WhiteboardArchiveCanvas, { items: archivedItems, recordsById, restoringItemIds: archive.restoringItemIds, onRestore: handleRestore, onMoveItems: archive.moveArchivedItems, onClose: () => archive.setOpen(false), gridVisible }),
+            !storeReady ? /* @__PURE__ */ u2("div", { class: "think-whiteboard-empty", children: restoreMessage }) : /* @__PURE__ */ u2(
+              "div",
+              {
+                class: "think-whiteboard-canvas-viewport",
+                ref: canvasViewportRef,
+                style: `${viewportController.gridStyle};${getWhiteboardSemanticZoomStyle(semanticZoom)}`,
+                onWheel: viewportController.handleWheel,
+                onPointerDown: handleCanvasPointerDown,
+                onContextMenu: contextMenu.handleContextMenu,
+                onDblClick: contextMenu.handleDoubleClick,
+                "data-whiteboard-zoom": viewportController.zoom,
+                "data-whiteboard-lod": semanticZoom.level,
+                "data-whiteboard-camera-x": viewportController.camera.x,
+                "data-whiteboard-camera-y": viewportController.camera.y,
+                "data-whiteboard-panning": viewportController.panning ? "true" : "false",
+                "data-whiteboard-grid": gridVisible ? "on" : "off",
+                children: [
+                  selection.marqueeRect && /* @__PURE__ */ u2("div", { class: "think-whiteboard-selection-marquee", style: `left:${selection.marqueeRect.left}px;top:${selection.marqueeRect.top}px;width:${selection.marqueeRect.width}px;height:${selection.marqueeRect.height}px;`, "aria-hidden": "true" }),
+                  /* @__PURE__ */ u2("div", { class: "think-whiteboard-pan-hint", "aria-hidden": "true", children: "拖动空白移动 · Ctrl/⌘ + 拖动框选 · Ctrl/⌘ + 滚轮缩放" }),
+                  semanticStatus && /* @__PURE__ */ u2("div", { class: "think-whiteboard-semantic-status", "aria-live": "polite", children: semanticStatus }),
+                  workbench.visibleItems.length === 0 && workbench.visibleGroups.length === 0 && annotation.visibleAnnotations.length === 0 && /* @__PURE__ */ u2("div", { class: "think-whiteboard-empty think-whiteboard-empty--canvas", children: "从左侧拖一条记录到这里，或点击“加入”。" }),
+                  /* @__PURE__ */ u2(
+                    "div",
+                    {
+                      class: "think-whiteboard-canvas think-whiteboard-world",
+                      style: `transform:${viewportController.worldTransform};`,
+                      children: [
+                        /* @__PURE__ */ u2(WhiteboardSemanticLayoutOverlay, { guides: semanticLayoutGuides, zoom: viewportController.zoom, onSelectItems: selection.selectItems, onMoveGuide: (guideId, position2) => setSemanticLayoutGuides((current2) => current2.map((guide) => guide.id === guideId ? { ...guide, ...position2 } : guide)) }),
+                        workbench.visibleGroups.map((group) => /* @__PURE__ */ u2(
+                          WhiteboardWorkbenchGroup,
+                          {
+                            group,
+                            items: selectionRenderItems,
+                            annotations: workbench.renderAnnotations,
+                            groups: workbench.renderGroups,
+                            zoom: viewportController.zoom,
+                            dropTarget: workbench.dropTargetGroupId === group.id || sourceDropTargetGroupId === group.id,
+                            findActive: activeFindGroupId === group.id,
+                            onPreviewChange: workbench.setGroupPreview,
+                            onMove: workbench.moveGroup,
+                            onRename: workbench.renameGroup,
+                            onToggleCollapsed: workbench.toggleGroupCollapsed,
+                            onDissolve: workbench.dissolveGroup,
+                            onEnter: (groupId) => {
+                              selection.clear();
+                              nested2.enterGroup(groupId);
+                            }
+                          },
+                          group.id
+                        )),
+                        annotation.visibleAnnotations.map((entry) => /* @__PURE__ */ u2(WhiteboardAnnotation, { annotation: entry, zoom: viewportController.zoom, autoEdit: annotation.autoEditAnnotationId === entry.id, onAutoEditConsumed: annotation.consumeAutoEdit, onUpdate: annotation.update, onMove: annotation.move, onRemove: annotation.remove }, entry.id)),
+                        /* @__PURE__ */ u2(
+                          WhiteboardEdgeLayer,
+                          {
+                            boardId,
+                            items: renderVisibleItems,
+                            edges,
+                            dragPreview: selection.dragMoves.length > 0 ? null : dragPreview,
+                            onRemoveEdge: handleRemoveEdge,
+                            onUpdateEdgeLabel: (edgeId, label) => void whiteboardStore.updateEdgeLabel(boardId, edgeId, label).catch((error) => onNotice?.(`保存连线标注失败：${error instanceof Error ? error.message : String(error)}`)),
+                            removingEdgeId,
+                            connectionPreview: connection.preview
+                          }
+                        ),
+                        semanticZoom.level === "detail" && renderVisibleItems.map((item) => /* @__PURE__ */ u2(
+                          WhiteboardCard,
+                          {
+                            whiteboardItem: item,
+                            record: recordsById.get(item.recordId) ?? null,
+                            activeZIndex,
+                            zoom: viewportController.zoom,
+                            onOpenRecord,
+                            onOpenRecordOrigin,
+                            onMove: handleMove,
+                            onPreviewChange: handlePreviewChange,
+                            onDragPointerChange: handleBoardCardDragPointer,
+                            onDropToSource: handleDropBoardCardToSource,
+                            onBeginConnection: connection.beginConnection,
+                            connectionActive: connection.preview?.sourceItemId === item.id,
+                            connectionTarget: connection.preview?.targetItemId === item.id,
+                            workbenchTitle: item.groupId ? groupTitleById.get(item.groupId) ?? null : null,
+                            selected: selection.selectedItemIds.has(item.id),
+                            onToggleSelection: selection.toggleItem,
+                            findState: !find.active ? "idle" : find.activeItemId === item.id ? "active" : find.matchSet.has(item.id) ? "match" : "dimmed"
+                          },
+                          item.id
+                        )),
+                        /* @__PURE__ */ u2(WhiteboardSemanticOverviewLayer, { semantic: semanticZoom, items: currentLayoutItems, groups: currentLayoutGroups, annotations: annotation.visibleAnnotations, recordsById, selectedItemIds: selection.selectedItemIds, selectedGroupIds: selection.selectedGroupIds, semanticDragDelta: selection.semanticDragDelta, activeFindItemId: find.activeItemId, findMatchSet: find.matchSet, activeFindGroupId, dropTargetGroupId: workbench.dropTargetGroupId ?? sourceDropTargetGroupId, onNodePointerDown: selection.beginSemanticNodePointer, shouldSuppressFocusClick: selection.consumeOverviewClickSuppression, onFocusItem: (item) => {
+                          selection.clear();
+                          viewportController.resetViewOnWorldPoint({ x: item.x + 124, y: item.y + 84 });
+                        }, onFocusGroup: (group) => {
+                          selection.clear();
+                          viewportController.resetViewOnWorldPoint({ x: group.x + (group.collapsed ? 180 : 360), y: group.y + 22 });
+                        }, onFocusAnnotation: (entry) => viewportController.resetViewOnWorldPoint({ x: entry.x + 130, y: entry.y + (entry.kind === "sticky" ? 66 : 24) }), onMoveAnnotation: annotation.move })
+                      ]
+                    }
+                  )
+                ]
+              }
+            ),
+            sourceDropActive && /* @__PURE__ */ u2("div", { class: "think-whiteboard-board__drop-hint", "aria-hidden": "true", children: sourceDropTargetTitle ? `松开加入工作台「${sourceDropTargetTitle}」` : `松开加入${sourceDragPreview && sourceDragPreview.records.length > 1 ? ` ${sourceDragPreview.records.length} 条记录` : "白板"}` }),
+            /* @__PURE__ */ u2(
+              WhiteboardContextMenu,
+              {
+                state: contextMenu.state,
+                selectionCount: selection.selectionCount,
+                selectedItemCount: selection.selectedItemIds.size,
+                selectedGroupCount: selection.selectedGroupIds.size,
+                currentItemCount: currentLayoutItems.length,
+                currentGroupCount: currentLayoutGroups.length,
+                onClose: contextMenu.close,
+                onCreateText: () => contextMenu.createAnnotation("text"),
+                onCreateSticky: () => contextMenu.createAnnotation("sticky"),
+                onCreateWorkbench: contextMenu.createWorkbench,
+                onCenter: contextMenu.centerBoard,
+                onWrapSelection: contextMenu.wrapSelection,
+                onArrange: contextMenu.arrange,
+                onArrangeCurrentLayer: contextMenu.arrangeCurrentLayer,
+                onSemanticArrange: contextMenu.semanticArrange,
+                onArchiveSelection: contextMenu.archiveSelection,
+                onRemoveSelection: contextMenu.removeSelection,
+                onRemoveSelectionFromWorkbench: contextMenu.removeSelectionFromWorkbench,
+                canRemoveSelectionFromWorkbench: [...selection.selectedItemIds].some((id) => Boolean(items.find((item) => item.id === id)?.groupId))
+              }
+            )
+          ]
+        }
+      )
+    ] }),
+    sourceDragPreview && /* @__PURE__ */ u2(
+      "div",
+      {
+        class: "think-whiteboard-source-drag-ghost",
+        style: `left:${sourceDragPreview.point.clientX + 12}px;top:${sourceDragPreview.point.clientY + 12}px;`,
+        "aria-hidden": "true",
+        children: sourceDragLabel
+      }
+    )
+  ] });
+}
+function WhiteboardRoot({ app }) {
+  const dataStore = useDataStore();
+  const whiteboardStore = useWhiteboardStore();
+  const ui = useUiPort();
+  const [records, setRecords] = d(() => dataStore.queryRecords());
+  y(() => {
+    const sync = () => setRecords(dataStore.queryRecords());
+    dataStore.subscribe(sync);
+    sync();
+    return () => dataStore.unsubscribe(sync);
+  }, [dataStore]);
+  const onOpenRecord = q$1((item) => {
+    const canonical = dataStore.getRecordById(item.id);
+    openEditFromItem({ app, item: mergeRecordItemForEdit(canonical, item) });
+  }, [app, dataStore]);
+  const onOpenRecordOrigin = q$1((item) => {
+    openRecordOrigin({ app, item: dataStore.getRecordById(item.id) ?? item });
+  }, [app, dataStore]);
+  return /* @__PURE__ */ u2("div", { class: "think-os think-os--whiteboard", children: /* @__PURE__ */ u2(
+    WhiteboardWorkspace,
+    {
+      records,
+      whiteboardStore,
+      onOpenRecord,
+      onOpenRecordOrigin,
+      onNotice: (message) => ui.notice(message)
+    }
+  ) });
+}
+const THINK_WHITEBOARD_VIEW_TYPE = "think-os-whiteboard";
+class ThinkWhiteboardView extends obsidian.ItemView {
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.plugin = plugin;
+    this.services = createServices();
+  }
+  plugin;
+  services;
+  getViewType() {
+    return THINK_WHITEBOARD_VIEW_TYPE;
+  }
+  getDisplayText() {
+    return "ThinkOS 白板";
+  }
+  getIcon() {
+    return "panels-top-left";
+  }
+  async onOpen() {
+    this.contentEl.empty();
+    this.contentEl.addClass("think-whiteboard-workspace-view");
+    mountWithServices(this.contentEl, /* @__PURE__ */ u2(WhiteboardRoot, { app: this.plugin.app }), this.services);
+  }
+  async onClose() {
+    unmountPreact(this.contentEl);
+    this.contentEl.empty();
+  }
+}
+function registerThinkWhiteboardView(plugin) {
+  plugin.registerView(THINK_WHITEBOARD_VIEW_TYPE, (leaf) => new ThinkWhiteboardView(leaf, plugin));
+}
+async function openThinkWhiteboardView(plugin) {
+  const workspace = plugin.app.workspace;
+  const existingLeaf = workspace.getLeavesOfType(THINK_WHITEBOARD_VIEW_TYPE)[0];
+  const leaf = existingLeaf || workspace.getLeaf("tab");
+  await leaf.setViewState({ type: THINK_WHITEBOARD_VIEW_TYPE, active: true });
+  workspace.revealLeaf(leaf);
 }
 class VaultWatcher {
   dataStore;
@@ -70972,8 +76824,29 @@ function registerAiInputFeature(registry2, deps) {
     }
   });
 }
+function registerWhiteboardFeature(registry2, deps) {
+  registry2.register({
+    id: "whiteboard",
+    description: "ThinkOS standalone whiteboard workspace",
+    bootMode: "blocking",
+    boot: () => {
+      registerThinkWhiteboardView(deps.plugin);
+      deps.plugin.addRibbonIcon("panels-top-left", "ThinkOS 白板", () => {
+        void openThinkWhiteboardView(deps.plugin);
+      });
+      deps.plugin.addCommand({
+        id: "think-open-whiteboard",
+        name: "打开 ThinkOS 白板",
+        callback: () => {
+          void openThinkWhiteboardView(deps.plugin);
+        }
+      });
+    }
+  });
+}
 function registerFeatureContributions(registry2, deps) {
   registerDashboardFeature(registry2, deps);
+  registerWhiteboardFeature(registry2, { plugin: deps.plugin });
   registerSettingsFeatures(registry2, { plugin: deps.plugin });
   registerQuickInputFeature(registry2, { plugin: deps.plugin });
   registerAiInputFeature(registry2, { plugin: deps.plugin });
@@ -71071,6 +76944,12 @@ class ServiceManager {
       } catch {
       }
     });
+    this.disposables.add("WhiteboardStore.dispose()", () => {
+      try {
+        this.services.whiteboardStore?.dispose?.();
+      } catch {
+      }
+    });
     this.disposables.add("container.clearInstances()", () => {
       instance.clearInstances();
     });
@@ -71112,6 +76991,7 @@ class ServiceManager {
     await this.initializeCore();
     this.runtimeServices = buildRuntime();
     await this.loadDataServices();
+    this.scheduleWhiteboardRestore();
     await this.loadTimerServices();
     await this.loadUIFeatures();
     const duration2 = stopMeasure();
@@ -71165,11 +77045,23 @@ class ServiceManager {
       bootstrap: {
         actionService: this.bootstrapResolved.actionService,
         itemService: this.bootstrapResolved.itemService,
-        chatSessionStore: this.bootstrapResolved.chatSessionStore
+        chatSessionStore: this.bootstrapResolved.chatSessionStore,
+        whiteboardStore: this.bootstrapResolved.whiteboardStore
       },
       getScanDataPromise: () => this.scanDataPromise,
       setScanDataPromise: (p2) => {
         this.scanDataPromise = p2;
+      }
+    });
+  }
+  scheduleWhiteboardRestore() {
+    const store = this.services.whiteboardStore;
+    if (!store) throw new Error("WhiteboardStore 未初始化");
+    scheduleWhiteboardRestore({
+      plugin: this.plugin,
+      store,
+      onError: (error) => {
+        devError("[ThinkPlugin] 白板数据恢复失败，已阻止后续写入:", error);
       }
     });
   }
@@ -71354,6 +77246,7 @@ class ThinkPlugin extends obsidian.Plugin {
    * 4. 注册命令
    */
   async onload() {
+    markActive();
     devLog("[ThinkPlugin][BOOT] onload entered");
     const stopMeasure = startMeasure("ThinkPlugin.onload");
     await safeAsync(
@@ -71456,11 +77349,16 @@ class ThinkPlugin extends obsidian.Plugin {
     if (!this.serviceManager) instance.clearInstances();
   }
   async loadSettings() {
-    const current2 = toCurrentThinkSettings(await this.loadData());
+    const raw = await this.loadData();
+    const needsViewStateCleanup = hasRetiredAssociationViewState(raw);
+    const current2 = toCurrentThinkSettings(raw);
     const seeded = applyGoalTaskDefaultsSeed(current2);
-    if (seeded.changed) {
+    if (seeded.changed || needsViewStateCleanup) {
       await this.saveData(this.sanitizeSettingsForPersistence(seeded.settings));
-      devLog(`[ThinkPlugin][BOOT] Goal Task defaults seeded into ${seeded.appliedTemplateCount} direct Task templates`);
+      if (seeded.changed) {
+        devLog(`[ThinkPlugin][BOOT] Goal Task defaults seeded into ${seeded.appliedTemplateCount} direct Task templates`);
+      }
+      if (needsViewStateCleanup) devLog("[ThinkPlugin][BOOT] 已清理旧 AssociationView 测试设置引用");
     }
     return seeded.settings;
   }

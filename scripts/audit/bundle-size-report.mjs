@@ -4,10 +4,9 @@ import { gzipSync } from 'node:zlib';
 import { join, relative } from 'node:path';
 
 const root = process.cwd();
-const releaseRoot = join(root, 'release');
+const reportRoot = join(root, 'reports', 'bundle');
 const manifest = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8'));
 const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-const pluginDir = join(releaseRoot, manifest.id);
 const maxRawBytes = Number(process.env.THINK_OS_MAX_BUNDLE_BYTES || 1_200_000);
 const maxGzipBytes = Number(process.env.THINK_OS_MAX_GZIP_BUNDLE_BYTES || 380_000);
 
@@ -17,32 +16,33 @@ function formatBytes(bytes) {
   return `${(bytes / 1024 / 1024).toFixed(2)} MiB`;
 }
 
-function fileEntry(path, role) {
-  if (!existsSync(path)) return null;
-  const rawBytes = statSync(path).size;
-  const content = readFileSync(path);
+function fileEntry(filePath, role) {
+  if (!existsSync(filePath)) return null;
+  const rawBytes = statSync(filePath).size;
+  const content = readFileSync(filePath);
+  const gzipBytes = gzipSync(content).length;
   return {
     role,
-    path: relative(root, path).replaceAll('\\', '/'),
+    path: relative(root, filePath).replaceAll('\\', '/'),
     rawBytes,
-    gzipBytes: gzipSync(content).length,
+    gzipBytes,
     raw: formatBytes(rawBytes),
-    gzip: formatBytes(gzipSync(content).length),
+    gzip: formatBytes(gzipBytes),
   };
 }
 
-if (!existsSync(join(pluginDir, 'main.js'))) {
-  console.error(`[bundle-size-report] missing ${relative(root, join(pluginDir, 'main.js'))}. Run npm run build:release first.`);
+if (!existsSync(join(root, 'main.js'))) {
+  console.error('[bundle-size-report] missing main.js. Run npm run build:release first.');
   process.exit(1);
 }
 
-mkdirSync(releaseRoot, { recursive: true });
+mkdirSync(reportRoot, { recursive: true });
 
 const files = [
-  fileEntry(join(pluginDir, 'main.js'), 'runtime'),
-  fileEntry(join(pluginDir, 'styles.css'), 'styles'),
-  fileEntry(join(pluginDir, 'manifest.json'), 'manifest'),
-  fileEntry(join(releaseRoot, `${manifest.id}-release.zip`), 'release-zip'),
+  fileEntry(join(root, 'main.js'), 'runtime'),
+  fileEntry(join(root, 'styles.css'), 'styles'),
+  fileEntry(join(root, 'manifest.json'), 'manifest'),
+  fileEntry(join(root, `${manifest.id}-release.zip`), 'release-zip'),
 ].filter(Boolean);
 
 const main = files.find((entry) => entry.role === 'runtime');
@@ -67,8 +67,8 @@ const report = {
   files,
 };
 
-const jsonPath = join(releaseRoot, `${manifest.id}-bundle-report.json`);
-const mdPath = join(releaseRoot, `${manifest.id}-bundle-report.md`);
+const jsonPath = join(reportRoot, `${manifest.id}-bundle-report.json`);
+const mdPath = join(reportRoot, `${manifest.id}-bundle-report.md`);
 writeFileSync(jsonPath, JSON.stringify(report, null, 2) + '\n');
 
 const rows = files

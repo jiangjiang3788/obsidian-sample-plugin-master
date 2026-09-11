@@ -2,11 +2,11 @@
 /** @jsxImportSource preact */
 /**
  * 【S5 术语统一】
- * - 所有 View 写操作统一通过 useCases.layout.*
- * - 禁止直接 import viewInstance.usecase
+ * - 所有 View 写操作统一通过 useCases.viewInstance.*
+ * - 禁止 features 层直接 import viewinstance.usecase
  */
 
-import { useMemo } from 'preact/hooks';
+import { useMemo, useRef } from 'preact/hooks';
 import {
   ThinkButton,
   ThinkCheckbox,
@@ -29,6 +29,7 @@ import { RuleBuilder } from '@features/settings/views/editors/RuleBuilder';
 import { CommonFilterPanel, splitDefaultQuickFilterRules } from '@features/settings/views/editors/CommonFilterPanel';
 import { FloatingPanel } from '@/app/public';
 import { closeFloatingWidget, openFloatingWidget } from '@/app/public';
+import { createViewSettingsWriteBarrier, type ViewSettingsWriteBarrier } from './viewSettingsWriteBarrier';
 
 const VIEW_DATE_ROLE_OPTIONS: Array<{ value: ViewDateRole; label: string }> = [
     { value: 'default', label: '默认时间（记录日期）' },
@@ -38,11 +39,11 @@ const VIEW_DATE_ROLE_OPTIONS: Array<{ value: ViewDateRole; label: string }> = [
     { value: 'task-actual', label: '实际执行时间（TaskSession）' },
 ];
 
-// [S5 术语统一] 视图设置编辑器组件 - 通过 useCases.layout 调用
-function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
+// [S5 术语统一] 视图设置编辑器组件 - 通过 useCases.viewInstance 调用
+function ViewInstanceEditor({ vi, onWriteStarted }: { vi: ViewInstance; onWriteStarted: (operation: Promise<void>) => void }) {
     // 从 Context 获取 DataStore
     const dataStore = useDataStore();
-    // S5: 通过 useUseCases 获取 useCases.layout
+    // S5: 通过 useUseCases 获取 ViewInstanceUseCase
     const useCases = useUseCases();
     
     // 从store中获取最新的viewInstance状态
@@ -57,9 +58,9 @@ function ViewInstanceEditor({ vi }: { vi: ViewInstance }) {
     }, [currentVi.viewConfig]);
     const currentDateRole: ViewDateRole = normalizeViewDateRole(correctedViewConfig.dateRole) ?? 'default';
 
-    // 迁移: 通过 useCases.viewInstance.updateView 更新
+    // 所有 ViewInstance 修改仍走唯一 UseCase；同时把真实写盘 Promise 交给保存 barrier。
     const handleUpdate = (updates: Partial<ViewInstance>) => {
-        useCases.viewInstance.updateView(currentVi.id, updates);
+        onWriteStarted(useCases.viewInstance.updateView(currentVi.id, updates));
     };
 
     // 准备选项数据
@@ -218,12 +219,12 @@ interface Props {
 export function ModuleSettingsModal({ isOpen, onClose, module }: Props) {
     // 从store中获取最新的模块状态
     const currentModule = useSelector(makeSelectViewInstanceById(module.id)) || module;
+    const writeBarrierRef = useRef<ViewSettingsWriteBarrier | null>(null);
+    if (!writeBarrierRef.current) writeBarrierRef.current = createViewSettingsWriteBarrier();
 
-    // 使用统一的保存处理模式
+    // 保存按钮必须等待本窗口触发的全部 SettingsRepository 写入真正完成。
     const handleSave = useSaveHandler(async () => {
-        // 由于 ViewInstanceEditor 中的每次更改都会立即调用 updateViewInstance
-        // 这里我们只需要等待一小段时间确保最后的更新完成
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await writeBarrierRef.current!.flush();
         onClose();
     }, {
         successMessage: `已保存视图 "${module.title}" 的设置`,
@@ -240,7 +241,7 @@ export function ModuleSettingsModal({ isOpen, onClose, module }: Props) {
             saveButtonText="保存设置"
             size="large"
         >
-            <ViewInstanceEditor vi={currentModule} />
+            <ViewInstanceEditor vi={currentModule} onWriteStarted={(operation) => writeBarrierRef.current!.track(operation)} />
         </Modal>
     );
 }
@@ -256,9 +257,11 @@ export function ModuleSettingsModal({ isOpen, onClose, module }: Props) {
  */
 function ModuleSettingsPanel({ module, onClose }: { module: ViewInstance; onClose: () => void }) {
     const currentModule = useSelector(makeSelectViewInstanceById(module.id)) || module;
+    const writeBarrierRef = useRef<ViewSettingsWriteBarrier | null>(null);
+    if (!writeBarrierRef.current) writeBarrierRef.current = createViewSettingsWriteBarrier();
 
     const handleSave = useSaveHandler(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await writeBarrierRef.current!.flush();
         onClose();
     }, {
         successMessage: `已保存视图 "${module.title}" 的设置`,
@@ -268,7 +271,7 @@ function ModuleSettingsPanel({ module, onClose }: { module: ViewInstance; onClos
     return (
         <div className="think-os think-os--settings think-module-settings-panel">
             <div className="think-module-settings-panel__body">
-                <ViewInstanceEditor vi={currentModule} />
+                <ViewInstanceEditor vi={currentModule} onWriteStarted={(operation) => writeBarrierRef.current!.track(operation)} />
             </div>
             <div className="think-module-settings-panel__actions">
                 <ThinkButton onClick={onClose} variant="secondary" size="sm">关闭</ThinkButton>

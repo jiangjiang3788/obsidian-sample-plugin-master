@@ -102,13 +102,13 @@ function extractModuleSpecifiers(sourceFile) {
 }
 
 function loadTsConfig() {
-  const configPath = ts.findConfigFile(ROOT, ts.sys.fileExists, 'tsconfig.json');
+  const configPath = ts.findConfigFile(ROOT, ts.sys.fileExists, 'config/tsconfig.json');
   if (!configPath) {
-    throw new Error('feature-gate: tsconfig.json not found');
+    throw new Error('feature-gate: config/tsconfig.json not found');
   }
   const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
   if (configFile.error) {
-    throw new Error('feature-gate: failed to read tsconfig.json');
+    throw new Error('feature-gate: failed to read config/tsconfig.json');
   }
   const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, path.dirname(configPath));
   return { compilerOptions: parsed.options };

@@ -5,7 +5,7 @@ function walk(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const files = [];
   for (const e of entries) {
-    if (e.name === 'node_modules' || e.name === 'dist' || e.name === '.git') continue;
+    if (e.name === 'node_modules' || e.name === '.git') continue;
     const full = path.join(dir, e.name);
     if (e.isDirectory()) files.push(...walk(full));
     else files.push(full);

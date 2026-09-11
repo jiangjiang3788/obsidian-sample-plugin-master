@@ -18,6 +18,7 @@ export { ObsidianVaultPort } from './ObsidianVaultPort';
 export { SettingsTab } from './SettingsTab';
 export { SettingsRoot } from './SettingsRoot';
 export { THINK_SETTINGS_VIEW_TYPE, openThinkSettingsWorkspaceView, registerThinkSettingsWorkspaceView } from './ThinkSettingsView';
+export { THINK_WHITEBOARD_VIEW_TYPE, openThinkWhiteboardView, registerThinkWhiteboardView } from './ThinkWhiteboardView';
 export { VaultWatcher } from './events/VaultWatcher';
 export { NamePromptModal } from './modals/NamePromptModal';
 

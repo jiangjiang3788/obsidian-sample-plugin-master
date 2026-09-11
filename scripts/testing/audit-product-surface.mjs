@@ -67,6 +67,7 @@ for (const [value, label, id, source] of [
 const featureRegistration = read('src/app/features/registerFeatureContributions.ts');
 for (const [call, ids] of [
   ['registerDashboardFeature(', ['F003']],
+  ['registerWhiteboardFeature(', ['F094']],
   ['registerSettingsFeatures(', ['F002', 'F110']],
   ['registerQuickInputFeature(', ['F040', 'F043']],
   ['registerAiInputFeature(', ['F074', 'F075']],
@@ -74,6 +75,13 @@ for (const [call, ids] of [
   if (!featureRegistration.includes(call)) errors.push(`功能注册表缺少：${call.replace('(', '')}`);
   for (const id of ids) requireFeature(id);
 }
+
+
+const whiteboardFeature = read('src/features/whiteboard/registerFeature.ts');
+if (!whiteboardFeature.includes("id: 'think-open-whiteboard'")) errors.push('白板命令未注册：think-open-whiteboard');
+if (!whiteboardFeature.includes("addRibbonIcon('panels-top-left', 'ThinkOS 白板'")) errors.push('白板一级 Ribbon 入口未注册。');
+requireFeature('F094', 'src/features/whiteboard/registerFeature.ts');
+requireFeature('F094', 'src/platform/obsidian/ThinkWhiteboardView.tsx');
 
 const aiCommands = read('src/features/aiinput/registerCommands.ts');
 for (const id of ['think-ai-natural-input', 'think-ai-natural-input-fast', 'think-ai-speed-test']) {

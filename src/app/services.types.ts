@@ -11,6 +11,7 @@
 
 import type { DataStore } from '@core/services/public';
 import type { InputService } from '@core/services/public';
+import type { WhiteboardStore } from '@core/whiteboard/public';
 import type { UseCases } from './usecases';
 import type { UiPort, ModalPort, MessageRenderPort } from '@core/ports/public';
 import type { AppStoreInstance } from './store/useAppStore';
@@ -22,6 +23,7 @@ export interface Services {
   zustandStore: AppStoreInstance;
   dataStore: DataStore;
   inputService: InputService;
+  whiteboardStore?: WhiteboardStore;
   useCases: UseCases;
   uiPort: UiPort;
   modalPort: ModalPort;

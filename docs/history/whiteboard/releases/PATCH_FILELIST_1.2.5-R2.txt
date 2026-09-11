@@ -1,0 +1,22 @@
+ThinkOS Whiteboard 1.2.5 R2 PATCH file list
+Base: ThinkOS 1.2.5 Nested Navigation SOURCE
+Files: 18
+
+doc/PATCH_FILELIST_1.2.5-R2.txt
+doc/README_PATCH_1.2.5-R2.txt
+doc/WHITEBOARD_IMPLEMENTATION_BASELINE_v1_1.2.5-R2-updated.md
+doc/Whiteboard_1.2.5_R2_IMPLEMENTATION_RESULT.md
+doc/Whiteboard_1.2.5_R2_TEST_REPORT.md
+src/features/whiteboard/WhiteboardBoardTools.tsx
+src/features/whiteboard/WhiteboardCanvasBreadcrumbs.tsx
+src/features/whiteboard/WhiteboardNestedCanvasController.ts
+src/features/whiteboard/WhiteboardRecordTransferController.ts
+src/features/whiteboard/WhiteboardWorkbenchModel.ts
+src/features/whiteboard/WhiteboardWorkspace.tsx
+src/styles/features/whiteboard-workbench.css
+src/styles/features/whiteboard.css
+test/specs/whiteboard.e2e.ts
+test/system/feature-test-map.json
+test/unit/whiteboardCanvasBreadcrumbs.test.tsx
+test/unit/whiteboardNestedReliabilityUi.test.tsx
+test/unit/whiteboardWorkbenchModel.test.ts

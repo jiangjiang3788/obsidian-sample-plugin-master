@@ -4,7 +4,7 @@ import fs from 'node:fs';
 const failures = [];
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
-const viteConfig = fs.readFileSync('vite.config.ts', 'utf8');
+const viteConfig = fs.readFileSync('config/vite.config.ts', 'utf8');
 const devDeps = pkg.devDependencies ?? {};
 const lockPackages = lock.packages ?? {};
 
@@ -26,19 +26,31 @@ if (!devDeps['@prefresh/vite']) {
 
 const importSpecs = [...viteConfig.matchAll(/\b(?:import|export)\s+(?:[^'\"]*?\s+from\s+)?['\"]([^'\"]+)['\"]/g)].map((match) => match[1]);
 if (importSpecs.includes('@preact/preset-vite')) {
-  failures.push('vite.config.ts must not import @preact/preset-vite; the library build does not prerender HTML');
+  failures.push('config/vite.config.ts must not import @preact/preset-vite; the library build does not prerender HTML');
 }
 if (importSpecs.includes('@rollup/plugin-replace')) {
-  failures.push('vite.config.ts must use Vite define instead of @rollup/plugin-replace');
+  failures.push('config/vite.config.ts must use Vite define instead of @rollup/plugin-replace');
 }
 if (importSpecs.includes('vite-prerender-plugin')) {
-  failures.push('vite.config.ts must not load vite-prerender-plugin');
+  failures.push('config/vite.config.ts must not load vite-prerender-plugin');
 }
 if (!importSpecs.includes('@prefresh/vite')) {
-  failures.push('vite.config.ts must import @prefresh/vite explicitly');
+  failures.push('config/vite.config.ts must import @prefresh/vite explicitly');
 }
 if (!viteConfig.includes("'process.env.NODE_ENV': JSON.stringify('production')")) {
-  failures.push('vite.config.ts must preserve the process.env.NODE_ENV library replacement through Vite define');
+  failures.push('config/vite.config.ts must preserve the process.env.NODE_ENV library replacement through Vite define');
+}
+if (!viteConfig.includes('tsconfigRaw')) {
+  failures.push('config/vite.config.ts must explicitly feed config/tsconfig.json to the Vite transform because the config file is no longer above src/');
+}
+if (viteConfig.includes('jsxFactory:') || viteConfig.includes('jsxInject:')) {
+  failures.push('config/vite.config.ts must not force the classic JSX transform; config/tsconfig.json owns Preact automatic JSX settings');
+}
+if (!viteConfig.includes('write: false')) {
+  failures.push('config/vite.config.ts must keep Vite disk output disabled so no dist/build/release directory is created');
+}
+if (/outDir\s*:\s*['"]\.['"]/.test(viteConfig)) {
+  failures.push('config/vite.config.ts must not use the repository root as Vite outDir');
 }
 
 for (const lockPath of [

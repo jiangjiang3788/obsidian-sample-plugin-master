@@ -1,40 +1,52 @@
 {
-  "generatedAt": "2026-08-24T03:21:46.570Z",
-  "root": "/mnt/data/think_os_context2",
+  "generatedAt": "2026-09-06T09:29:58.303Z",
+  "root": "/mnt/data/thinkos_1077",
   "summary": {
-    "cssFiles": 72,
-    "cssLines": 8493,
-    "cssRules": 1604,
-    "selectors": 1954,
-    "uniqueClasses": 1059,
+    "cssFiles": 75,
+    "cssLines": 9596,
+    "cssRules": 1783,
+    "selectors": 2178,
+    "uniqueClasses": 1176,
     "unprefixedClasses": 0,
     "pluginUnprefixedClasses": 0,
     "hostFrameworkClasses": 0,
-    "duplicateClassesAcrossFiles": 73,
+    "duplicateClassesAcrossFiles": 78,
     "important": 9,
     "hardcodedColors": 44,
     "hardcodedColorsOutsideTokens": 0,
-    "cssVariableReferences": 2513,
-    "uniqueCssVariables": 257,
-    "thinkVariableDefinitions": 231,
+    "cssVariableReferences": 2779,
+    "uniqueCssVariables": 268,
+    "thinkVariableDefinitions": 232,
     "sxOccurrences": 9,
     "styleOccurrences": 16
   },
   "topFilesByLines": [
     [
-      "src/styles/features/progress.css",
-      336
+      "src/styles/features/quick-input-editor.css",
+      471
     ],
     [
-      "src/styles/features/quick-input-editor.css",
-      333
+      "src/styles/features/timeline.css",
+      458
+    ],
+    [
+      "src/styles/features/progress.css",
+      336
     ],
     [
       "src/styles/features/progress-energy.css",
       330
     ],
     [
+      "src/styles/features/quick-input-editor-controls.css",
+      318
+    ],
+    [
       "src/styles/features/heatmap.css",
+      309
+    ],
+    [
+      "src/styles/primitives/form-control.css",
       309
     ],
     [
@@ -50,16 +62,12 @@
       300
     ],
     [
-      "src/styles/primitives/form-control.css",
-      299
+      "src/styles/features/settings-editors.goal-template.css",
+      290
     ],
     [
       "src/styles/components/task-row.css",
       275
-    ],
-    [
-      "src/styles/features/timeline.css",
-      242
     ],
     [
       "src/styles/features/energy-capture.css",
@@ -70,16 +78,8 @@
       212
     ],
     [
-      "src/styles/features/excel.table-cells.css",
-      210
-    ],
-    [
-      "src/styles/components/grouped-container.css",
-      204
-    ],
-    [
-      "src/styles/features/settings-editors.fields-editor.css",
-      202
+      "src/styles/features/association-view.css",
+      211
     ]
   ],
   "topFilesByImportant": [
@@ -128,19 +128,19 @@
       0
     ],
     [
+      "src/styles/features/association-view.css",
+      0
+    ],
+    [
       "src/styles/features/block.css",
       0
     ],
     [
+      "src/styles/features/eisenhower.css",
+      0
+    ],
+    [
       "src/styles/features/energy-capture.css",
-      0
-    ],
-    [
-      "src/styles/features/energy-map.css",
-      0
-    ],
-    [
-      "src/styles/features/energy-task-list.css",
       0
     ]
   ],
@@ -186,7 +186,15 @@
       0
     ],
     [
+      "src/styles/features/association-view.css",
+      0
+    ],
+    [
       "src/styles/features/block.css",
+      0
+    ],
+    [
+      "src/styles/features/eisenhower.css",
       0
     ],
     [
@@ -195,14 +203,6 @@
     ],
     [
       "src/styles/features/energy-map.css",
-      0
-    ],
-    [
-      "src/styles/features/energy-task-list.css",
-      0
-    ],
-    [
-      "src/styles/features/energy-view.css",
       0
     ]
   ],
@@ -219,6 +219,7 @@
         "src/styles/components/settings-shell.css",
         "src/styles/components/task-row.css",
         "src/styles/components/visualization.css",
+        "src/styles/features/association-view.css",
         "src/styles/features/energy-task-list.css",
         "src/styles/features/heatmap.css",
         "src/styles/features/progress.css",
@@ -278,6 +279,7 @@
     {
       "className": "is-dragging",
       "files": [
+        "src/styles/features/association-view.css",
         "src/styles/features/excel.columns.css",
         "src/styles/features/layout-editor.css",
         "src/styles/features/settings-editors.fields-editor.css",
@@ -285,6 +287,27 @@
         "src/styles/features/view-shell.freeform-base.css",
         "src/styles/features/view-shell.freeform-resize.css",
         "src/styles/features/view-shell.normalization.css"
+      ]
+    },
+    {
+      "className": "think-button",
+      "files": [
+        "src/styles/features/overlay-ui.css",
+        "src/styles/features/quick-input-editor.css",
+        "src/styles/features/settings.css",
+        "src/styles/features/timer.css",
+        "src/styles/features/view-shell.toolbar.css",
+        "src/styles/primitives/button.css"
+      ]
+    },
+    {
+      "className": "is-disabled",
+      "files": [
+        "src/styles/components/simple-select.css",
+        "src/styles/features/quick-input-editor.css",
+        "src/styles/features/settings-editors.fields-editor.css",
+        "src/styles/features/settings-editors.goal-template.css",
+        "src/styles/features/view-shell.freeform-management.css"
       ]
     },
     {
@@ -317,30 +340,12 @@
       ]
     },
     {
-      "className": "is-disabled",
-      "files": [
-        "src/styles/components/simple-select.css",
-        "src/styles/features/settings-editors.fields-editor.css",
-        "src/styles/features/settings-editors.goal-template.css",
-        "src/styles/features/view-shell.freeform-management.css"
-      ]
-    },
-    {
       "className": "modal",
       "files": [
         "src/styles/features/energy-capture.css",
         "src/styles/features/overlay-ui.css",
         "src/styles/overrides/obsidian-modal.css",
         "src/styles/overrides/quick-input-modal.css"
-      ]
-    },
-    {
-      "className": "think-button",
-      "files": [
-        "src/styles/features/overlay-ui.css",
-        "src/styles/features/settings.css",
-        "src/styles/features/view-shell.toolbar.css",
-        "src/styles/primitives/button.css"
       ]
     },
     {
@@ -362,6 +367,24 @@
       ]
     },
     {
+      "className": "think-segmented-control",
+      "files": [
+        "src/styles/features/quick-input-editor.css",
+        "src/styles/features/settings-editors.goal-template.css",
+        "src/styles/features/view-shell.toolbar.css",
+        "src/styles/primitives/toolbar.css"
+      ]
+    },
+    {
+      "className": "think-segmented-control__item",
+      "files": [
+        "src/styles/features/layout-editor.css",
+        "src/styles/features/quick-input-editor.css",
+        "src/styles/features/view-shell.toolbar.css",
+        "src/styles/primitives/toolbar.css"
+      ]
+    },
+    {
       "className": "bv-item",
       "files": [
         "src/styles/features/block.css",
@@ -375,6 +398,14 @@
         "src/styles/features/excel.content-expanded.css",
         "src/styles/features/excel.grid-interactions.css",
         "src/styles/features/excel.table-cells.css"
+      ]
+    },
+    {
+      "className": "is-active",
+      "files": [
+        "src/styles/components/settings-shell.css",
+        "src/styles/features/energy-capture.css",
+        "src/styles/features/timer.css"
       ]
     },
     {
@@ -423,22 +454,6 @@
         "src/styles/components/modal.css",
         "src/styles/features/settings-structural.css",
         "src/styles/foundations/scope.css"
-      ]
-    },
-    {
-      "className": "think-segmented-control",
-      "files": [
-        "src/styles/features/settings-editors.goal-template.css",
-        "src/styles/features/view-shell.toolbar.css",
-        "src/styles/primitives/toolbar.css"
-      ]
-    },
-    {
-      "className": "think-segmented-control__item",
-      "files": [
-        "src/styles/features/layout-editor.css",
-        "src/styles/features/view-shell.toolbar.css",
-        "src/styles/primitives/toolbar.css"
       ]
     },
     {
@@ -526,13 +541,6 @@
       ]
     },
     {
-      "className": "is-active",
-      "files": [
-        "src/styles/components/settings-shell.css",
-        "src/styles/features/energy-capture.css"
-      ]
-    },
-    {
       "className": "is-clickable",
       "files": [
         "src/styles/features/heatmap.css",
@@ -561,6 +569,13 @@
       ]
     },
     {
+      "className": "is-high",
+      "files": [
+        "src/styles/features/progress-energy.css",
+        "src/styles/features/timeline-goal-allocation.css"
+      ]
+    },
+    {
       "className": "is-locked",
       "files": [
         "src/styles/features/overlay-ui.css",
@@ -568,10 +583,24 @@
       ]
     },
     {
+      "className": "is-low",
+      "files": [
+        "src/styles/features/progress-energy.css",
+        "src/styles/features/timeline-goal-allocation.css"
+      ]
+    },
+    {
       "className": "is-missing",
       "files": [
         "src/styles/features/energy-map.css",
         "src/styles/features/progress-energy.css"
+      ]
+    },
+    {
+      "className": "is-pending",
+      "files": [
+        "src/styles/features/excel.table-cells.css",
+        "src/styles/features/timeline-goal-allocation.css"
       ]
     },
     {
@@ -659,6 +688,13 @@
       ]
     },
     {
+      "className": "think-combobox-option__label",
+      "files": [
+        "src/styles/features/quick-input-editor-controls.css",
+        "src/styles/primitives/form-control.css"
+      ]
+    },
+    {
       "className": "think-disclosure__body",
       "files": [
         "src/styles/components/grouped-container.css",
@@ -739,6 +775,13 @@
       "className": "think-modal",
       "files": [
         "src/styles/components/modal.css",
+        "src/styles/overrides/quick-input-modal.css"
+      ]
+    },
+    {
+      "className": "think-modal--quick-input",
+      "files": [
+        "src/styles/features/quick-input-editor.css",
         "src/styles/overrides/quick-input-modal.css"
       ]
     },
@@ -890,6 +933,16 @@
       "cssVariableReferences": 30,
       "thinkVariableDefinitions": 14
     },
+    "src/styles/features/association-view.css": {
+      "lines": 211,
+      "rules": 34,
+      "selectors": 61,
+      "classes": 32,
+      "important": 0,
+      "hardcodedColors": 0,
+      "cssVariableReferences": 52,
+      "thinkVariableDefinitions": 1
+    },
     "src/styles/features/block.css": {
       "lines": 148,
       "rules": 24,
@@ -898,6 +951,16 @@
       "important": 0,
       "hardcodedColors": 0,
       "cssVariableReferences": 23,
+      "thinkVariableDefinitions": 0
+    },
+    "src/styles/features/eisenhower.css": {
+      "lines": 94,
+      "rules": 18,
+      "selectors": 18,
+      "classes": 13,
+      "important": 0,
+      "hardcodedColors": 0,
+      "cssVariableReferences": 25,
       "thinkVariableDefinitions": 0
     },
     "src/styles/features/energy-capture.css": {
@@ -1061,23 +1124,23 @@
       "thinkVariableDefinitions": 4
     },
     "src/styles/features/quick-input-editor-controls.css": {
-      "lines": 174,
-      "rules": 24,
-      "selectors": 33,
-      "classes": 17,
+      "lines": 318,
+      "rules": 43,
+      "selectors": 54,
+      "classes": 29,
       "important": 0,
       "hardcodedColors": 0,
-      "cssVariableReferences": 64,
+      "cssVariableReferences": 95,
       "thinkVariableDefinitions": 0
     },
     "src/styles/features/quick-input-editor.css": {
-      "lines": 333,
-      "rules": 55,
-      "selectors": 58,
-      "classes": 39,
+      "lines": 471,
+      "rules": 81,
+      "selectors": 91,
+      "classes": 63,
       "important": 0,
       "hardcodedColors": 0,
-      "cssVariableReferences": 73,
+      "cssVariableReferences": 103,
       "thinkVariableDefinitions": 1
     },
     "src/styles/features/settings-editors.base.css": {
@@ -1131,13 +1194,13 @@
       "thinkVariableDefinitions": 0
     },
     "src/styles/features/settings-editors.goal-template.css": {
-      "lines": 184,
-      "rules": 58,
-      "selectors": 65,
-      "classes": 53,
+      "lines": 290,
+      "rules": 72,
+      "selectors": 80,
+      "classes": 61,
       "important": 0,
       "hardcodedColors": 0,
-      "cssVariableReferences": 105,
+      "cssVariableReferences": 121,
       "thinkVariableDefinitions": 0
     },
     "src/styles/features/settings-editors.rule-builder-base.css": {
@@ -1250,24 +1313,34 @@
       "cssVariableReferences": 5,
       "thinkVariableDefinitions": 0
     },
-    "src/styles/features/timeline.css": {
-      "lines": 242,
-      "rules": 37,
-      "selectors": 44,
-      "classes": 30,
+    "src/styles/features/timeline-goal-allocation.css": {
+      "lines": 142,
+      "rules": 22,
+      "selectors": 26,
+      "classes": 18,
       "important": 0,
       "hardcodedColors": 0,
-      "cssVariableReferences": 54,
+      "cssVariableReferences": 28,
+      "thinkVariableDefinitions": 0
+    },
+    "src/styles/features/timeline.css": {
+      "lines": 458,
+      "rules": 66,
+      "selectors": 78,
+      "classes": 45,
+      "important": 0,
+      "hardcodedColors": 0,
+      "cssVariableReferences": 121,
       "thinkVariableDefinitions": 0
     },
     "src/styles/features/timer.css": {
-      "lines": 15,
-      "rules": 13,
-      "selectors": 13,
-      "classes": 11,
+      "lines": 54,
+      "rules": 31,
+      "selectors": 32,
+      "classes": 20,
       "important": 0,
       "hardcodedColors": 0,
-      "cssVariableReferences": 18,
+      "cssVariableReferences": 38,
       "thinkVariableDefinitions": 0
     },
     "src/styles/features/view-shell.css": {
@@ -1381,7 +1454,7 @@
       "thinkVariableDefinitions": 0
     },
     "src/styles/main.css": {
-      "lines": 71,
+      "lines": 74,
       "rules": 0,
       "selectors": 0,
       "classes": 0,
@@ -1451,13 +1524,13 @@
       "thinkVariableDefinitions": 0
     },
     "src/styles/primitives/form-control.css": {
-      "lines": 299,
-      "rules": 56,
-      "selectors": 75,
-      "classes": 39,
+      "lines": 309,
+      "rules": 55,
+      "selectors": 72,
+      "classes": 38,
       "important": 0,
       "hardcodedColors": 0,
-      "cssVariableReferences": 132,
+      "cssVariableReferences": 129,
       "thinkVariableDefinitions": 0
     },
     "src/styles/primitives/icon-button.css": {

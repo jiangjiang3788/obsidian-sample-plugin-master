@@ -1,6 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { RecordViewItem } from '@core/types/public';
+import { getRecordPrimaryText } from '@core/fields/public';
 import { createRecordGestureHandlers, RECORD_GESTURE_HINT } from '@shared/ui/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/public';
 
@@ -8,14 +9,19 @@ interface ItemLinkProps {
     item: RecordViewItem;
     className?: string;
     showIcon?: boolean;
+    /**
+     * Explicit renderer text. Omit it on generic identity surfaces to use the
+     * global primaryText contract. Pass item.title when the user explicitly
+     * selected the real title field, so an empty title never gets silently
+     * replaced by a type-aware value.
+     */
+    displayText?: string;
     onOpenRecord?: OpenRecordHandler;
     onOpenRecordOrigin?: OpenRecordOriginHandler;
 }
 
-/**
- * 通用项目链接组件 - 可在多个视图间复用
- */
-export function ItemLink({ item, className = '', showIcon = true, onOpenRecord, onOpenRecordOrigin }: ItemLinkProps) {
+/** 通用 Record identity link. Layout belongs to the view; identity text belongs to Record presentation. */
+export function ItemLink({ item, className = '', showIcon = true, displayText, onOpenRecord, onOpenRecordOrigin }: ItemLinkProps) {
     const gesture = createRecordGestureHandlers({
         item,
         onOpenOrigin: onOpenRecordOrigin,
@@ -23,6 +29,7 @@ export function ItemLink({ item, className = '', showIcon = true, onOpenRecord, 
             void onOpenRecord?.(item);
         },
     });
+    const visibleText = displayText === undefined ? getRecordPrimaryText(item) : displayText;
 
     return (
         <span
@@ -37,7 +44,7 @@ export function ItemLink({ item, className = '', showIcon = true, onOpenRecord, 
             style={{ cursor: 'pointer' }}
         >
             {showIcon && item.icon && <span class="icon mr-1">{item.icon}</span>}
-            {item.title}
+            {visibleText}
         </span>
     );
 }

@@ -7,6 +7,7 @@ import type {
   SettingsRepository,
 } from '@core/services/public';
 import type { ChatSessionStore } from '@core/ai/public';
+import type { WhiteboardStore } from '@core/whiteboard/public';
 import type { RendererService } from '@/app/dashboard/RendererService';
 import type { TimerService } from '@features/timer/TimerService';
 import type { FloatingTimerWidget } from '@features/timer/FloatingTimerWidget';
@@ -29,4 +30,5 @@ export type ServiceManagerServices = Partial<{
     itemService: ItemService;
     useCases: UseCases;
     chatSessionStore: ChatSessionStore;
+    whiteboardStore: WhiteboardStore;
 }>;

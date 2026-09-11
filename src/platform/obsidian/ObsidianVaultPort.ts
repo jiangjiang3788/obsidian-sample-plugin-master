@@ -28,21 +28,25 @@ export class ObsidianVaultPort implements VaultPort {
   }
 
   async readFile(path: string): Promise<string | null> {
-    if (isDisposed()) return null;
+    this.assertActive('readFile', path);
     const af = this.app.vault.getAbstractFileByPath(path);
-    if (!af) return null;
     if (af instanceof TFile) {
       return await this.app.vault.read(af);
     }
-    // Folder or unsupported type
-    return null;
+    if (af instanceof TFolder) {
+      return null;
+    }
+
+    // During Obsidian startup the Vault file tree can lag behind the underlying adapter.
+    // A cache miss must not be treated as "file does not exist" until the adapter agrees,
+    // otherwise stores may initialize empty and later overwrite durable user data.
+    const existsOnDisk = await this.app.vault.adapter.exists(path);
+    if (!existsOnDisk) return null;
+    return await this.app.vault.adapter.read(path);
   }
 
   async writeFile(path: string, content: string): Promise<void> {
-    if (isDisposed()) {
-      devWarn(`[ObsidianVaultPort] writeFile ignored after dispose: ${path}`);
-      return;
-    }
+    this.assertActive('writeFile', path);
     await this.ensureFolderFor(path);
 
     const af = this.app.vault.getAbstractFileByPath(path);
@@ -53,6 +57,13 @@ export class ObsidianVaultPort implements VaultPort {
 
     if (af instanceof TFolder) {
       throw new Error(`路径冲突："${path}" 是文件夹，无法写入文件。`);
+    }
+
+    // File may exist on disk before Obsidian's abstract-file cache sees it.
+    // In that case update through the adapter instead of trying to create a duplicate path.
+    if (await this.app.vault.adapter.exists(path)) {
+      await this.app.vault.adapter.write(path, content);
+      return;
     }
 
     try {
@@ -74,10 +85,7 @@ export class ObsidianVaultPort implements VaultPort {
   }
 
   async deleteFile(path: string): Promise<void> {
-    if (isDisposed()) {
-      devWarn(`[ObsidianVaultPort] deleteFile ignored after dispose: ${path}`);
-      return;
-    }
+    this.assertActive('deleteFile', path);
     const af = this.app.vault.getAbstractFileByPath(path);
     if (af instanceof TFile) {
       await this.app.vault.delete(af);
@@ -87,6 +95,13 @@ export class ObsidianVaultPort implements VaultPort {
   // ------------------------------
   // Helpers
   // ------------------------------
+
+  private assertActive(operation: string, path: string): void {
+    if (!isDisposed()) return;
+    const message = `[ObsidianVaultPort] ${operation} blocked after dispose: ${path}`;
+    devWarn(message);
+    throw new Error(message);
+  }
 
   private async ensureFolderFor(filePath: string): Promise<void> {
     const folder = filePath.includes('/') ? filePath.slice(0, filePath.lastIndexOf('/')) : '';

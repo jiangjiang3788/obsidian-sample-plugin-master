@@ -7,7 +7,7 @@ const args = new Set(process.argv.slice(2));
 const strict = args.has('--strict');
 const requestedExample = args.has('--example');
 const defaultDataPath = path.resolve(rootDir, 'data.json');
-const exampleDataPath = path.resolve(rootDir, 'data.example.json');
+const exampleDataPath = path.resolve(rootDir, 'config/data.example.json');
 const dataPath = requestedExample || !fs.existsSync(defaultDataPath) ? exampleDataPath : defaultDataPath;
 
 const FORBIDDEN_REMOVED_FIELDS = new Map([

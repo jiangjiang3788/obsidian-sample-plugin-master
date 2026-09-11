@@ -1,0 +1,12 @@
+Think OS 1.0.77 Association persistence root-fix (SAFE source package)
+
+IMPORTANT:
+- This source package intentionally DOES NOT contain data.json.
+- Keep your existing plugin data.json; it owns ViewInstance/Layout settings.
+- Association items/XY are persisted separately at Vault path:
+    Think/association-spaces.json
+- After extracting over the plugin folder, run in Windows CMD:
+    npm run build
+- Then run the root-fix tests listed in:
+    AssociationView_1.0.77_ASSOCIATION_PERSISTENCE_ROOTFIX_RESULT.md
+- Re-add one real Record only after the new build is loaded; old in-memory-only phantom items may never have reached disk.

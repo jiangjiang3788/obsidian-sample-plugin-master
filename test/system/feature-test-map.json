@@ -2443,6 +2443,309 @@
       "note": "V3：四象限是 Task importance/urgency 的派生独立视图；quadrant 不持久化，未分类保持空值。"
     },
     {
+      "id": "F094",
+      "area": "白板工作区",
+      "name": "ThinkOS 独立白板（一级 Workspace）",
+      "risk": "P1",
+      "sources": [
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/features/whiteboard/WhiteboardConnectionController.ts",
+        "src/features/whiteboard/WhiteboardEdgeLayer.tsx",
+        "src/features/whiteboard/WhiteboardRecordSourcePanel.tsx",
+        "src/platform/obsidian/ThinkWhiteboardView.tsx",
+        "src/features/whiteboard/registerFeature.ts",
+        "src/core/settings/currentSettingsSchema.ts",
+        "src/main.ts",
+        "src/features/whiteboard/WhiteboardRecordSourceQuery.ts",
+        "src/features/whiteboard/WhiteboardRecordFilters.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "persistence",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/unit/whiteboardDragModel.test.ts",
+          "test/unit/whiteboardEdgeGeometry.test.ts",
+          "test/unit/whiteboardRecordPresentation.test.ts",
+          "test/unit/whiteboardWorkspaceRegistration.test.ts",
+          "test/unit/whiteboardLegacyViewCleanup.test.ts",
+          "test/unit/whiteboardRecordSourceQuery.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardWorkspace.test.tsx",
+          "test/unit/whiteboardRecordFilters.test.tsx"
+        ],
+        "integration": [
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/integration/whiteboardRecordIntegrity.test.ts",
+          "test/integration/whiteboardStartupVaultRecovery.test.ts",
+          "test/integration/whiteboardDiPersistencePath.test.ts"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/integration/whiteboardStartupVaultRecovery.test.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardWorkspaceRegistration.test.ts",
+          "test/unit/whiteboardWorkspace.test.tsx",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/unit/whiteboardLegacyViewCleanup.test.ts",
+          "test/unit/whiteboardRecordSourceQuery.test.ts",
+          "test/unit/whiteboardRecordFilters.test.tsx"
+        ]
+      },
+      "note": "1.1.1：白板保持 ThinkOS 一级 Workspace，不回到 View/Layout。左侧 Record Source 支持 canonical RecordQuery 的关键词 + Record Type 多选 + 目标层级复选树 + strict 时间/dateRole 检索；左侧查询状态全部 ephemeral，不过滤或改写右侧白板，也不写 whiteboards.json。1.1.8 R2 将显式连线交互改为卡片四边直接拖出临时 Edge preview，松开到另一张卡即创建 A→B durable edge，不再使用‘连线/连到这里’两步按钮；仍不引入 edge type 或 AI 自动关系。"
+    },
+    {
+      "id": "F095",
+      "area": "白板工作区",
+      "name": "白板左右直接拖（Record Source ↔ Board）",
+      "risk": "P1",
+      "sources": [
+        "src/features/whiteboard/WhiteboardTransferModel.ts",
+        "src/features/whiteboard/WhiteboardRecordSourcePanel.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/features/whiteboard/WhiteboardCard.tsx",
+        "src/core/whiteboard/WhiteboardStore.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "persistence",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardTransferModel.test.ts",
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardDirectTransferUi.test.tsx",
+          "test/unit/whiteboardWorkspace.test.tsx"
+        ],
+        "integration": [
+          "test/integration/whiteboardRecordIntegrity.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardTransferModel.test.ts",
+          "test/unit/whiteboardDirectTransferUi.test.tsx",
+          "test/integration/whiteboardRecordIntegrity.test.ts"
+        ]
+      },
+      "note": "1.1.2～1.1.4：左侧 Record 小卡片使用 Pointer Events 拖到右侧 viewport 指定位置，一次 addRecord 同时完成加入与逻辑 XY；右侧现有卡拖回左侧 Source 区只 remove WhiteboardItem，并由 Store 同步删除 incident edges，canonical Record/Markdown 永远保留。1.1.4 起已在白板的 Record 直接从左侧候选结果排除，右侧白板是唯一“已加入”视觉真源。缩放下 screen↔board 坐标统一换算，不制造重复 Projection。"
+    },
+    {
+      "id": "F096",
+      "area": "白板工作区",
+      "name": "白板内定位与工作区收纳",
+      "risk": "P2",
+      "sources": [
+        "src/features/whiteboard/WhiteboardFindModel.ts",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/features/whiteboard/WhiteboardCard.tsx",
+        "src/features/whiteboard/WhiteboardRecordFilters.tsx",
+        "src/styles/features/whiteboard.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardFindModel.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardFindUi.test.tsx"
+        ],
+        "regression": [
+          "test/unit/whiteboardFindModel.test.ts",
+          "test/unit/whiteboardFindUi.test.tsx"
+        ]
+      },
+      "note": "1.1.3 起白板右上角提供当前白板内定位，匹配卡高亮、非匹配卡淡化、上一项/下一项循环。1.1.5 起定位通过 ephemeral camera 把目标 world 点带到视野中心，不修改 WhiteboardItem x/y/Edge、不写 whiteboards.json。Record Source 整栏可收起且不卸载查询状态，左侧 canonical Record 搜索/筛选与右侧白板定位继续保持两个不同语义。"
+    },
+    {
+      "id": "F097",
+      "area": "白板工作区",
+      "name": "白板有界缩放与逻辑坐标稳定性",
+      "risk": "P1",
+      "sources": [
+        "src/features/whiteboard/WhiteboardCameraModel.ts",
+        "src/features/whiteboard/WhiteboardZoomModel.ts",
+        "src/features/whiteboard/WhiteboardZoomController.ts",
+        "src/features/whiteboard/WhiteboardBoardTools.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/features/whiteboard/WhiteboardDragModel.ts",
+        "src/features/whiteboard/WhiteboardTransferModel.ts",
+        "src/features/whiteboard/WhiteboardCard.tsx",
+        "src/styles/features/whiteboard.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardZoomModel.test.ts",
+          "test/unit/whiteboardDragModel.test.ts",
+          "test/unit/whiteboardTransferModel.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardZoomUi.test.tsx"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardZoomModel.test.ts",
+          "test/unit/whiteboardZoomUi.test.tsx",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.1.4 起白板先提供 50%～200% 的 ephemeral zoom；1.1.5 与 camera 合并为统一 viewport 坐标合同，并把交互扩成 0.5%～12800% 的实用近无限范围：按钮倍率缩放，Ctrl/⌘+wheel 连续指数缩放，始终保持锚点 world 点稳定。WhiteboardItem/Edge durable 数据继续使用 world/logical x/y；缩放本身不写 whiteboards.json。"
+    },
+    {
+      "id": "F098",
+      "area": "白板工作区",
+      "name": "假无限白板：Pan / World-Camera-Screen 坐标",
+      "risk": "P1",
+      "sources": [
+        "src/features/whiteboard/WhiteboardCameraModel.ts",
+        "src/features/whiteboard/WhiteboardZoomModel.ts",
+        "src/features/whiteboard/WhiteboardGridModel.ts",
+        "src/features/whiteboard/WhiteboardZoomController.ts",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/features/whiteboard/WhiteboardDragModel.ts",
+        "src/features/whiteboard/WhiteboardTransferModel.ts",
+        "src/features/whiteboard/WhiteboardFindController.ts",
+        "src/features/whiteboard/WhiteboardEdgeGeometry.ts",
+        "src/features/whiteboard/WhiteboardEdgeLayer.tsx",
+        "src/features/whiteboard/WhiteboardCard.tsx",
+        "src/styles/features/whiteboard.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "persistence",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardCameraModel.test.ts",
+          "test/unit/whiteboardGridModel.test.ts",
+          "test/unit/whiteboardDragModel.test.ts",
+          "test/unit/whiteboardTransferModel.test.ts",
+          "test/unit/whiteboardEdgeGeometry.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardZoomUi.test.tsx",
+          "test/unit/whiteboardFindUi.test.tsx"
+        ],
+        "integration": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardCameraModel.test.ts",
+          "test/unit/whiteboardGridModel.test.ts",
+          "test/unit/whiteboardDragModel.test.ts",
+          "test/unit/whiteboardTransferModel.test.ts",
+          "test/unit/whiteboardEdgeGeometry.test.ts",
+          "test/unit/whiteboardZoomUi.test.tsx",
+          "test/unit/whiteboardFindUi.test.tsx",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.1.5：WhiteboardItem.x/y 明确定义为可正可负的 world 坐标；camera 表示 viewport 左上角对应的 world 坐标，screenLocal=(world-camera)*zoom。空白拖动与普通 wheel/trackpad 只更新 ephemeral camera；camera-aware 自适应世界网格提供明确 Pan 反馈；Ctrl/Command+wheel 在实用近无限范围内连续 Zoom 并保持锚点。Source drop、card drag、Edge、find-to-card 全部复用同一 world/camera/screen 合同。camera/zoom 不进入 WhiteboardStore，不写 whiteboards.json，pointermove 仍不高频写 Vault。"
+    },
+    {
+      "id": "F099",
+      "area": "白板工作区",
+      "name": "Record Source 多选 / 全选结果 / 批量拖入",
+      "risk": "P1",
+      "sources": [
+        "src/features/whiteboard/WhiteboardRecordSelectionModel.ts",
+        "src/features/whiteboard/WhiteboardBatchPlacementModel.ts",
+        "src/features/whiteboard/WhiteboardWorkbenchModel.ts",
+        "src/features/whiteboard/WhiteboardRecordTransferController.ts",
+        "src/features/whiteboard/WhiteboardRecordSourcePanel.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/features/whiteboard/WhiteboardBoardTools.tsx",
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/styles/features/whiteboard-selection.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "persistence",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardRecordSelectionModel.test.ts",
+          "test/unit/whiteboardBatchPlacementModel.test.ts",
+          "test/unit/whiteboardWorkbenchModel.test.ts",
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardDirectTransferUi.test.tsx",
+          "test/unit/whiteboardNestedReliabilityUi.test.tsx",
+          "test/unit/whiteboardZoomUi.test.tsx"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardRecordSelectionModel.test.ts",
+          "test/unit/whiteboardBatchPlacementModel.test.ts",
+          "test/unit/whiteboardWorkbenchModel.test.ts",
+          "test/unit/whiteboardDirectTransferUi.test.tsx",
+          "test/unit/whiteboardNestedReliabilityUi.test.tsx",
+          "test/unit/whiteboardZoomUi.test.tsx",
+          "test/unit/whiteboardStore.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.1.6：左侧 canonical RecordQuery 结果支持逐条多选与“全选结果”；全选针对完整 matched results，不受前 80 条渲染 cap 限制。拖已选行携带整组选中 Record，拖未选行保持单条拖语义；批量落点按 world 网格展开并通过 WhiteboardStore.addRecords 一次原子写盘。右上角新增“回到画布中心”，只移动 ephemeral camera 到当前卡片包围盒中心，不改 durable XY/zoom。旧“匹配 N 条，显示前 80 条”提示已移除。"
+    },
+    {
       "id": "F100",
       "area": "布局系统",
       "name": "Freeform 布局模型、坐标与 ZIndex",
@@ -2555,9 +2858,11 @@
       "risk": "P1",
       "sources": [
         "src/features/settings/layout/ModuleSettingsModal.tsx",
-        "src/features/settings/layout/LayoutSettingsWidget.tsx"
+        "src/features/settings/layout/LayoutSettingsWidget.tsx",
+        "src/features/settings/layout/viewSettingsWriteBarrier.ts"
       ],
       "required": [
+        "unit",
         "ui",
         "integration",
         "e2e",
@@ -2579,9 +2884,12 @@
         ],
         "restart": [
           "test/integration/moduleSettingsLifecycle.test.ts"
+        ],
+        "unit": [
+          "test/unit/viewSettingsWriteBarrier.test.ts"
         ]
       },
-      "note": "v6：按严格证据口径补齐剩余 P1 必需维度；真机执行结果仍以完整依赖环境实际运行为准。"
+      "note": "1.0.77 修正：模块设置字段仍即时写盘；“保存设置”改为等待真实 SettingsRepository/saveData Promise barrier，避免紧接 reload 时读回旧 viewType；restart 持久化测试覆盖普通 View 设置。"
     },
     {
       "id": "F104",
@@ -3335,6 +3643,952 @@
         ]
       },
       "note": "v6：按严格证据口径补齐剩余 P1 必需维度；真机执行结果仍以完整依赖环境实际运行为准。"
+    },
+    {
+      "id": "F134",
+      "area": "白板工作区",
+      "name": "Workbench 分组 / 命名 / 折叠 / 整组移动",
+      "risk": "P1",
+      "sources": [
+        "src/core/whiteboard/WhiteboardSchema.ts",
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/features/whiteboard/WhiteboardWorkbenchModel.ts",
+        "src/features/whiteboard/WhiteboardWorkbenchController.ts",
+        "src/features/whiteboard/WhiteboardWorkbenchGroup.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/features/whiteboard/WhiteboardCard.tsx",
+        "src/features/whiteboard/WhiteboardRecordTransferController.ts",
+        "src/styles/features/whiteboard-workbench.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "persistence",
+        "restart",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardWorkbenchModel.test.ts",
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardWorkbenchUi.test.tsx"
+        ],
+        "integration": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "restart": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardWorkbenchModel.test.ts",
+          "test/unit/whiteboardWorkbenchUi.test.tsx",
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.1.7：白板新增 durable Workbench group。工作台可在当前 viewport world 中心创建、命名、折叠与拖动；成员卡通过拖入工作台加入，成员 item.groupId 持久化，左侧 Record 批量 drop 落在工作台时整批加入该组。整组移动在单个 Store mutation 中同时平移 group anchor 与成员 durable XY，Edge 复用同一 item 坐标自然跟随。折叠隐藏成员卡与相关 Edge，但不改变 canonical Record、成员 XY 或 Record Source 排除语义；定位到折叠成员时只把 camera 对准工作台。解散工作台只清 groupId，卡片与 Record 都保留。1.1.8 的 Canvas 框选/右侧多选仍未提前实现。"
+    },
+    {
+      "id": "F135",
+      "area": "白板工作区",
+      "name": "Canvas 框选 / 多选 / 整组移动",
+      "risk": "P1",
+      "sources": [
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/features/whiteboard/WhiteboardSelectionModel.ts",
+        "src/features/whiteboard/WhiteboardSelectionController.ts",
+        "src/features/whiteboard/WhiteboardWorkbenchModel.ts",
+        "src/features/whiteboard/WhiteboardWorkbenchController.ts",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/features/whiteboard/WhiteboardCard.tsx",
+        "src/styles/features/whiteboard-selection.css",
+        "src/styles/features/whiteboard-connection.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "persistence",
+        "restart",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardSelectionModel.test.ts",
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardSelectionUi.test.tsx"
+        ],
+        "integration": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "restart": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardSelectionModel.test.ts",
+          "test/unit/whiteboardSelectionUi.test.tsx",
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.1.8 R2：右侧 Canvas selection 仍为 ephemeral。Ctrl/⌘+拖动空白按 world/camera/screen 合同框选可见卡片（Shift 单独拖空白不再框选），Ctrl/⌘/Shift 点击逐条切换；普通空白拖动继续 Pan。拖任一已选卡片时，多选卡按同一 world delta 预览并一次 moveItems 落盘；若拖入展开 Workbench，则同一次 mutation 把全部已选卡赋到目标 groupId；拖到左侧 Source 或点击已选卡‘移出’时通过 removeItems 一次移出全部选择并清理 incident edges。selection/marquee 自身不写 whiteboards.json。1.1.9 Archive 未提前实现。"
+    },
+    {
+      "id": "F136",
+      "area": "白板工作区",
+      "name": "Archive / Restore 原 world 位置",
+      "risk": "P1",
+      "sources": [
+        "src/core/whiteboard/WhiteboardSchema.ts",
+        "src/core/whiteboard/WhiteboardArchiveMutations.ts",
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/features/whiteboard/WhiteboardArchiveController.ts",
+        "src/features/whiteboard/WhiteboardArchivePanel.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/features/whiteboard/WhiteboardCard.tsx",
+        "src/features/whiteboard/WhiteboardZoomController.ts",
+        "src/styles/features/whiteboard-archive.css",
+        "src/features/whiteboard/WhiteboardBoardTools.tsx",
+        "src/styles/main.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "persistence",
+        "restart",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardArchiveUi.test.tsx",
+          "test/unit/whiteboardZoomUi.test.tsx"
+        ],
+        "integration": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "restart": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/unit/whiteboardArchiveUi.test.tsx",
+          "test/unit/whiteboardZoomUi.test.tsx",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.1.9：白板 Projection 可归档到 durable archivedItems，保留 item id、recordId、原 world x/y、zIndex 与仍有效的 groupId；归档 Record 不回左侧 Record Source，canonical Record 永不删除。incident edges 暂存 archivedEdges，只有当两端 Projection 都恢复为 active 时才恢复连线。恢复不重排、不改原 world 坐标；归档/恢复均单次 Store mutation。右上角“回到画布中心”现在原子执行 camera 居中 + zoom 100%，camera/zoom 仍不写盘。1.1.10 viewport culling 未提前实现。"
+    },
+    {
+      "id": "F137",
+      "area": "白板工作区",
+      "name": "Whiteboard Undo / Redo",
+      "risk": "P1",
+      "sources": [
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/features/whiteboard/WhiteboardHistoryController.ts",
+        "src/features/whiteboard/WhiteboardBoardTools.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "persistence",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardWorkbenchUi.test.tsx"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/unit/whiteboardWorkbenchUi.test.tsx",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.2.0：WhiteboardStore 为 changed mutation 保留最多 100 步 ephemeral snapshot history；Undo/Redo 会先持久化目标 snapshot，再替换内存状态并通知 UI。ensureBoard 启动建板不进入历史；新 mutation 清空 redo。Ctrl/⌘+Z 与 Ctrl/⌘+Shift+Z 在非输入控件内触发，输入框仍保留原生文本撤销。历史本身不写 whiteboards.json、不跨重启。"
+    },
+    {
+      "id": "F138",
+      "area": "白板工作区",
+      "name": "Nested Workbench 子画布 / 四层嵌套",
+      "risk": "P1",
+      "sources": [
+        "src/core/whiteboard/WhiteboardGroupTree.ts",
+        "src/core/whiteboard/WhiteboardWorkbenchMutations.ts",
+        "src/core/whiteboard/WhiteboardSchema.ts",
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/features/whiteboard/WhiteboardWorkbenchModel.ts",
+        "src/features/whiteboard/WhiteboardWorkbenchController.ts",
+        "src/features/whiteboard/WhiteboardNestedCanvasController.ts",
+        "src/features/whiteboard/WhiteboardCanvasBreadcrumbs.tsx",
+        "src/features/whiteboard/WhiteboardWorkbenchGroup.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/styles/features/whiteboard-workbench.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "persistence",
+        "restart",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardNestedWorkbenchModel.test.ts",
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardWorkbenchUi.test.tsx",
+          "test/unit/whiteboardNestedReliabilityUi.test.tsx"
+        ],
+        "integration": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "restart": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardNestedWorkbenchModel.test.ts",
+          "test/unit/whiteboardStore.test.ts",
+          "test/unit/whiteboardWorkbenchUi.test.tsx",
+          "test/unit/whiteboardNestedReliabilityUi.test.tsx",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.2.1：Workbench 增加可选 parentGroupId，最多四层且 schema fail-closed 拒绝悬空、循环和超深层级。工作台可通过“⛶ 全屏”切换为与根白板相同 viewport 的子画布，并用 breadcrumb 返回任意祖先；当前子画布内可继续创建 Workbench。父 Workbench 移动时后代 Workbench、active/archived 成员 world 坐标一次原子平移；拖 Workbench 到另一 Workbench 可重挂 parentGroupId，禁止拖入自身后代。为兼容 1.1.9，x/y 仍保持 durable absolute world，不做破坏性坐标迁移。"
+    },
+    {
+      "id": "F139",
+      "area": "白板工作区",
+      "name": "Whiteboard 空间文字 / 便签标注",
+      "risk": "P1",
+      "sources": [
+        "src/core/whiteboard/WhiteboardAnnotationMutations.ts",
+        "src/core/whiteboard/WhiteboardSchema.ts",
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/features/whiteboard/WhiteboardAnnotationController.ts",
+        "src/features/whiteboard/WhiteboardAnnotation.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/styles/features/whiteboard-annotation.css",
+        "src/features/whiteboard/WhiteboardSemanticOverviewLayer.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "persistence",
+        "restart",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardAnnotationUi.test.tsx",
+          "test/unit/whiteboardSemanticZoomUi.test.tsx"
+        ],
+        "integration": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "restart": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/unit/whiteboardAnnotationUi.test.tsx",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts",
+          "test/unit/whiteboardSemanticZoomUi.test.tsx"
+        ]
+      },
+      "note": "1.2.2：白板新增轻量 Annotation projection（text/sticky），不是 canonical Record。可在空白处双击或右键创建、就地编辑、拖动和删除；可归属当前 Nested Workbench，父 Workbench 移动/解散时跟随或提升。Annotation 进入 whiteboards.json version:1，Undo/Redo 可回退；旧文件 annotations 缺省兼容。 1.3.7：修复文字/便签“看得到但拖不动”的真实使用缺口；detail/compact 直接拖 Annotation，overview 的 T/◆ locator 也按 screen delta / zoom 持久化移动，允许进入负 world 坐标。"
+    },
+    {
+      "id": "F140",
+      "area": "白板工作区",
+      "name": "Whiteboard Edge 文字标注",
+      "risk": "P1",
+      "sources": [
+        "src/core/whiteboard/WhiteboardSchema.ts",
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/features/whiteboard/WhiteboardEdgeLayer.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/styles/features/whiteboard-connection.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "persistence",
+        "restart",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardEdgeLabelUi.test.tsx"
+        ],
+        "integration": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "restart": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/unit/whiteboardEdgeLabelUi.test.tsx",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.2.3：Edge 增加可选自由文字 label（<=200），在线中点直接编辑并持久化；空 label 删除字段。仍保持简单有向 Edge，不提前固化“因果/支持/依赖”等 Edge Type。四边拖线合同不变。"
+    },
+    {
+      "id": "F141",
+      "area": "白板工作区",
+      "name": "Whiteboard 右键菜单 / 节点整理",
+      "risk": "P1",
+      "sources": [
+        "src/features/whiteboard/WhiteboardArrangeModel.ts",
+        "src/features/whiteboard/WhiteboardContextMenu.tsx",
+        "src/features/whiteboard/WhiteboardContextMenuController.ts",
+        "src/features/whiteboard/WhiteboardSelectionController.ts",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/styles/features/whiteboard-context-menu.css",
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/features/whiteboard/WhiteboardWorkbenchController.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "persistence",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardArrangeModel.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardContextMenuUi.test.tsx"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardArrangeModel.test.ts",
+          "test/unit/whiteboardContextMenuUi.test.tsx",
+          "test/unit/whiteboardStore.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.2.4：右键空白提供添加文字/便签、当前层新建 Workbench、回当前画布中心并恢复 100%；右键卡片保留当前多选或单选目标，提供网格、按连线、左/顶部对齐、水平/垂直等距，以及“用所选创建工作台”。整理只移动当前可见 selection，调用一次 WhiteboardStore.moveItems 原子持久化；从选择创建 Workbench 也由一次 Store mutation 同时创建 group 并重挂成员，因此均可一步 Undo/Redo，不做隐式自动分组。"
+    },
+    {
+      "id": "F142",
+      "area": "白板工作区",
+      "name": "Whiteboard Nested Navigation / Fit Content",
+      "risk": "P1",
+      "sources": [
+        "src/features/whiteboard/WhiteboardNestedCanvasController.ts",
+        "src/features/whiteboard/WhiteboardNestedNavigationModel.ts",
+        "src/features/whiteboard/WhiteboardContentBoundsModel.ts",
+        "src/features/whiteboard/WhiteboardCameraModel.ts",
+        "src/features/whiteboard/WhiteboardCanvasBreadcrumbs.tsx",
+        "src/features/whiteboard/WhiteboardBoardTools.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/styles/features/whiteboard-workbench.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardNestedNavigationModel.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardCanvasBreadcrumbs.test.tsx",
+          "test/unit/whiteboardNestedReliabilityUi.test.tsx"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardNestedNavigationModel.test.ts",
+          "test/unit/whiteboardCanvasBreadcrumbs.test.tsx",
+          "test/unit/whiteboardNestedReliabilityUi.test.tsx",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.2.5 R2：Nested Canvas 保留 Back/Forward、父级与 breadcrumb/Fit/Find 路径，并补齐防困导航：顶部始终提供返回上一级与退出到根白板，Esc 在无编辑/选择拦截时返回父级，breadcrumb 提升到 viewport 之上。左侧 Record 拖入以指针 world 点命中 Workbench，进入子画布后空白处 drop 默认进入当前 Workbench；拖入目标有明确高亮/名称提示。重启仍只重置 ephemeral active canvas 到根白板，durable groupId/XY 保持。"
+    },
+    {
+      "id": "F143",
+      "area": "白板工作区",
+      "name": "Whiteboard Semantic Zoom / LOD",
+      "risk": "P1",
+      "sources": [
+        "src/features/whiteboard/WhiteboardSemanticZoomModel.ts",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/styles/features/whiteboard-semantic-zoom.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardSemanticZoomModel.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardSemanticZoomUi.test.tsx"
+        ],
+        "regression": [
+          "test/unit/whiteboardSemanticZoomModel.test.ts",
+          "test/unit/whiteboardSemanticZoomUi.test.tsx"
+        ]
+      },
+      "note": "1.2.6：缩放不再把完整卡片一路线性缩到不可辨识。>=35% 保持 detail；10%~35% 进入 compact，用固定屏幕尺寸的简化卡片/Workbench locator 替代完整节点；<10% 进入 overview。LOD/camera/zoom 全部 ephemeral，不写 WhiteboardStore。"
+    },
+    {
+      "id": "F144",
+      "area": "白板工作区",
+      "name": "Whiteboard Overview Locators",
+      "risk": "P1",
+      "sources": [
+        "src/features/whiteboard/WhiteboardSemanticOverviewLayer.tsx",
+        "src/features/whiteboard/WhiteboardSemanticZoomModel.ts",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/styles/features/whiteboard-semantic-zoom.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardSemanticZoomModel.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardSemanticZoomUi.test.tsx"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardSemanticZoomModel.test.ts",
+          "test/unit/whiteboardSemanticZoomUi.test.tsx",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.2.7：compact/overview 下 Card 与 Workbench 都用固定屏幕尺寸 locator 标记；overview 下 Annotation 也显示 locator。locator 使用 1/zoom 视觉补偿，因此在 0.5% 极小 zoom 下仍保持可见；selection/find/drop target 继续高亮。"
+    },
+    {
+      "id": "F145",
+      "area": "白板工作区",
+      "name": "Whiteboard Overview Focus Recovery",
+      "risk": "P1",
+      "sources": [
+        "src/features/whiteboard/WhiteboardSemanticOverviewLayer.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/features/whiteboard/WhiteboardZoomController.ts"
+      ],
+      "required": [
+        "ui",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "ui": [
+          "test/unit/whiteboardSemanticZoomUi.test.tsx"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardSemanticZoomUi.test.tsx",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.2.8：overview locator 可点击。点击 Card / Workbench / Annotation locator 会把该真实内容点居中并恢复 100%，作为极端 Pan/Zoom 后的局部找回入口；不改变 durable XY/group/edge/annotation 数据。"
+    },
+    {
+      "id": "F146",
+      "area": "白板工作区",
+      "name": "Whiteboard Cross-feature Stability / Nested Restore Recovery",
+      "risk": "P0",
+      "sources": [
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/features/whiteboard/WhiteboardArchiveController.ts",
+        "src/features/whiteboard/WhiteboardNestedCanvasController.ts",
+        "src/core/whiteboard/WhiteboardStore.ts"
+      ],
+      "required": [
+        "ui",
+        "integration",
+        "persistence",
+        "restart",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "ui": [
+          "test/unit/whiteboardArchiveUi.test.tsx"
+        ],
+        "integration": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "restart": [
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardArchiveUi.test.tsx",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.3.0 稳定性收口：深层 Workbench 的归档卡恢复后自动关闭归档箱、进入原 Workbench、恢复 100% 并精确找回真实卡片；四层嵌套下父树移动会同步 active/archived item、Annotation 与 Edge，Restore + Restart 后 durable membership/XY/label 继续一致。"
+    },
+    {
+      "id": "F147",
+      "area": "白板工作区",
+      "name": "Whiteboard Archive Canvas / Independent Archive Position",
+      "risk": "P0",
+      "sources": [
+        "src/core/whiteboard/WhiteboardSchema.ts",
+        "src/core/whiteboard/WhiteboardArchiveMutations.ts",
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/features/whiteboard/WhiteboardArchiveCanvas.tsx",
+        "src/features/whiteboard/WhiteboardArchiveController.ts",
+        "src/styles/features/whiteboard-archive.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "persistence",
+        "restart",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardArchiveUi.test.tsx"
+        ],
+        "integration": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "restart": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/unit/whiteboardArchiveUi.test.tsx",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.3.1：归档升级为全屏空间工作台，可 Pan/Zoom、Ctrl/⌘ 框选、多选拖动、网格与“目标 × 类型 × 时间”整理。archiveX/archiveY/archiveZIndex 只描述归档工作台位置，原 x/y/zIndex/groupId 独立保留为 Restore origin；重启与重新排布均不得覆盖恢复原点。"
+    },
+    {
+      "id": "F148",
+      "area": "白板工作区",
+      "name": "Whiteboard Semantic Mixed Card + Workbench Interaction",
+      "risk": "P1",
+      "sources": [
+        "src/core/whiteboard/WhiteboardSelectionMutations.ts",
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/features/whiteboard/WhiteboardSelectionModel.ts",
+        "src/features/whiteboard/WhiteboardSelectionController.ts",
+        "src/features/whiteboard/WhiteboardSemanticOverviewLayer.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/features/whiteboard/WhiteboardSemanticSourceDropController.ts"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "integration",
+        "persistence",
+        "restart",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardSelectionModel.test.ts",
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardSemanticZoomUi.test.tsx"
+        ],
+        "integration": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "restart": [
+          "test/integration/whiteboardRestartLifecycle.test.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardSelectionModel.test.ts",
+          "test/unit/whiteboardSemanticZoomUi.test.tsx",
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardRestartLifecycle.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.3.2：compact/overview 下 locator 不再只是导航点。Ctrl/⌘ 点击/框选可混选当前 Canvas 的直属 Card + Workbench，拖任一已选 locator 会用一次 translateNodes 原子平移；Workbench 作为 subtree 原子节点，子卡/子 Workbench 不被重复选择或移动。detail 模式保持原卡片选择语义。 1.3.7：低倍率 Card locator 拖动复用 detail 模式的左侧 Record Source drop；纯 Card selection 可整批拖回左栏移出白板，混有 Workbench 时不会触发删除。"
+    },
+    {
+      "id": "F149",
+      "area": "白板工作区",
+      "name": "Whiteboard Goal × Record Type × Time Semantic Layout",
+      "risk": "P1",
+      "sources": [
+        "src/features/whiteboard/WhiteboardSemanticLayoutModel.ts",
+        "src/features/whiteboard/WhiteboardSemanticLayoutOverlay.tsx",
+        "src/features/whiteboard/WhiteboardContextMenu.tsx",
+        "src/features/whiteboard/WhiteboardContextMenuController.ts",
+        "src/features/whiteboard/WhiteboardArchiveCanvas.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/styles/features/whiteboard-layout.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "persistence",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardSemanticLayoutModel.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardSemanticLayoutUi.test.tsx",
+          "test/unit/whiteboardArchiveUi.test.tsx"
+        ],
+        "persistence": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardBatchPlacementModel.test.ts",
+          "test/unit/whiteboardSemanticLayoutModel.test.ts",
+          "test/unit/whiteboardSemanticLayoutUi.test.tsx",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.3.3：新增固定产品入口“目标 × 类型 × 时间”：一个 Goal 一块，Record Type 横向，Time（月）纵向，同单元格多卡用局部网格。默认批量拖入仍使用普通网格，不自动解释数据；Arrange 只改 XY，不自动创建 Workbench。底层使用可替换 groupBy/x/y 的 LayoutSpec，为未来开放轴/分组设置留接口，但本版不暴露配置面板。"
+    },
+    {
+      "id": "F150",
+      "area": "白板工作区",
+      "name": "Whiteboard Semantic Layout Header Selection",
+      "risk": "P1",
+      "sources": [
+        "src/features/whiteboard/WhiteboardSemanticLayoutOverlay.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/styles/features/whiteboard-layout.css",
+        "src/features/whiteboard/WhiteboardArchiveCanvas.tsx"
+      ],
+      "required": [
+        "ui",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "ui": [
+          "test/unit/whiteboardSemanticLayoutUi.test.tsx"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardSemanticLayoutUi.test.tsx",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.3.4：Goal 区块标题、Record Type 列标题、Time 行标题可直接回选对应卡片集合，便于继续拖动、归档或主动创建 Workbench；这些 guide 是布局 UI，不新增持久化结构，继续保持 Arrange ≠ Group。 1.3.7：Goal / Record Type / Time guide 标签从只可点击升级为可拖动空间标注；拖标签时对应框线/参考线同步移动，按 zoom 换算 world delta，不夹紧负坐标，主白板与 Archive Canvas 一致。"
+    },
+    {
+      "id": "F151",
+      "area": "白板工作区",
+      "name": "Whiteboard Low-Zoom Mixed Node Arrange",
+      "risk": "P1",
+      "sources": [
+        "src/core/whiteboard/WhiteboardSelectionMutations.ts",
+        "src/core/whiteboard/WhiteboardStore.ts",
+        "src/features/whiteboard/WhiteboardNodeArrangeModel.ts",
+        "src/features/whiteboard/WhiteboardContextMenu.tsx",
+        "src/features/whiteboard/WhiteboardContextMenuController.ts",
+        "src/features/whiteboard/WhiteboardSemanticOverviewLayer.tsx",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/styles/features/whiteboard-layout.css"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "persistence",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardNodeArrangeModel.test.ts",
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "ui": [
+          "test/unit/whiteboardContextMenuUi.test.tsx",
+          "test/unit/whiteboardSemanticZoomUi.test.tsx"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardNodeArrangeModel.test.ts",
+          "test/unit/whiteboardContextMenuUi.test.tsx",
+          "test/unit/whiteboardSemanticZoomUi.test.tsx",
+          "test/unit/whiteboardStore.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.3.5：compact/overview 下 Card locator + Workbench locator 的 mixed selection 不再只能移动；右键可直接网格、左/顶对齐、水平/垂直等距。Workbench 按 subtree 原子节点参与尺寸/位置计算，Store 用一次 moveNodes 原子持久化 Card + Workbench；低倍率 Goal×Type×Time guide 标签保持固定屏幕可读。"
+    },
+    {
+      "id": "F152",
+      "area": "白板工作区",
+      "name": "Whiteboard Daily-use Closure",
+      "risk": "P0",
+      "sources": [
+        "src/features/whiteboard/WhiteboardRecordTransferController.ts",
+        "src/features/whiteboard/WhiteboardBatchPlacementModel.ts",
+        "src/features/whiteboard/WhiteboardSemanticLayoutModel.ts",
+        "src/features/whiteboard/WhiteboardSelectionController.ts",
+        "src/features/whiteboard/WhiteboardWorkbenchController.ts",
+        "src/features/whiteboard/WhiteboardArchiveController.ts",
+        "src/features/whiteboard/WhiteboardNestedCanvasController.ts",
+        "src/features/whiteboard/WhiteboardHistoryController.ts",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/core/whiteboard/WhiteboardStore.ts"
+      ],
+      "required": [
+        "unit",
+        "integration",
+        "persistence",
+        "restart",
+        "e2e",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/whiteboardStore.test.ts"
+        ],
+        "integration": [
+          "test/integration/whiteboardDailyUseClosure.test.ts"
+        ],
+        "persistence": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardDailyUseClosure.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "restart": [
+          "test/integration/whiteboardDailyUseClosure.test.ts"
+        ],
+        "e2e": [
+          "test/specs/whiteboard.e2e.ts"
+        ],
+        "regression": [
+          "test/unit/whiteboardStore.test.ts",
+          "test/integration/whiteboardDailyUseClosure.test.ts",
+          "test/specs/whiteboard.e2e.ts"
+        ]
+      },
+      "note": "1.3.6：不新增白板模型，收口日常主链“左侧批量拖入 → neutral grid → Goal×Type×Time → 低倍率整理 → Nested Workbench → Archive → Restore → Undo”。重点锁定跨能力连续性：Arrange 仍不自动分组；Restore 一次 Undo 必须回到归档状态，并保留 Archive placement、Restore origin、Workbench membership 与 incident edge；重启只恢复 durable snapshot，不持久化 history/UI selection/camera。"
+    },
+    {
+      "id": "F153",
+      "area": "Record 展示契约 / 白板工作区",
+      "name": "Record Presentation Contract + Whiteboard Visual Cleanup",
+      "risk": "P1",
+      "sources": [
+        "src/core/recordTypes/presentation.ts",
+        "src/core/recordTypes/registry.ts",
+        "src/core/fields/RecordPrimaryText.ts",
+        "src/core/fields/FieldRegistry.ts",
+        "src/core/fields/FieldValueResolver.ts",
+        "src/core/utils/itemGrouping.ts",
+        "src/features/views/runtime/components/items/BlockItem.tsx",
+        "src/features/views/runtime/components/items/FieldPill.tsx",
+        "src/features/whiteboard/WhiteboardRecordPresentation.ts",
+        "src/features/whiteboard/WhiteboardCard.tsx",
+        "src/features/whiteboard/WhiteboardUiPreferences.ts",
+        "src/features/whiteboard/WhiteboardWorkspace.tsx",
+        "src/styles/components/record-type.css",
+        "src/styles/features/whiteboard.css",
+        "src/styles/tokens/data-colors.css",
+        "src/features/views/runtime/ProgressViewModel.ts",
+        "src/styles/features/whiteboard-semantic-zoom.css",
+        "src/features/whiteboard/WhiteboardSemanticOverviewLayer.tsx",
+        "src/features/whiteboard/WhiteboardArchivePanel.tsx"
+      ],
+      "required": [
+        "unit",
+        "ui",
+        "regression"
+      ],
+      "evidence": {
+        "unit": [
+          "test/unit/recordTypePresentation.test.ts",
+          "test/unit/recordPrimaryText.test.ts",
+          "test/unit/fieldSemantics.test.ts",
+          "test/unit/recordTypeRegistryConvergence.test.ts",
+          "test/unit/whiteboardUiPreferences.test.ts",
+          "test/unit/whiteboardSemanticLayoutModel.test.ts"
+        ],
+        "ui": [
+          "test/unit/recordPresentationViewFields.test.tsx",
+          "test/unit/whiteboardBoardToolsRecoveryUi.test.tsx",
+          "test/unit/whiteboardContextMenuUi.test.tsx",
+          "test/unit/whiteboardArchiveUi.test.tsx",
+          "test/unit/whiteboardVisualPreferencesUi.test.tsx"
+        ],
+        "regression": [
+          "test/unit/recordTypePresentation.test.ts",
+          "test/unit/recordPrimaryText.test.ts",
+          "test/unit/recordPresentationViewFields.test.tsx",
+          "test/unit/recordTypeRegistryConvergence.test.ts",
+          "test/unit/whiteboardUiPreferences.test.ts",
+          "test/unit/whiteboardVisualPreferencesUi.test.tsx",
+          "test/unit/whiteboardSemanticLayoutModel.test.ts",
+          "test/unit/whiteboardContextMenuUi.test.tsx",
+          "test/unit/progressViewModel.test.ts"
+        ]
+      },
+      "note": "1.4.0：建立 Record Presentation Contract。记录类型的顺序与 semantic color 只有一个 Core 真源，固定为 任务→任务工作块→任务系列→精力→打卡→事件→思考→总结→计划→阻碍项→里程碑；Category 仍是独立维度。新增派生字段“主显示值 primaryText”，不改写真实 title，且用户显式 ViewInstance.fields 优先。白板默认以目标/时间/主显示值组织卡片、6px 类型色条表达类型，归档/移出降级到右键/拖拽；网格与左侧 Record Source 折叠成为独立可持久 UI preference。"
     }
   ]
 }

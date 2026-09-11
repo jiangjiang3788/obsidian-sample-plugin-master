@@ -15,3 +15,4 @@ export * from './TemplateFieldAdapter';
 export * from './TemplateFieldSanitizer';
 export * from './FieldSchema';
 export * from './CaptureFieldResolver';
+export * from './RecordPrimaryText';

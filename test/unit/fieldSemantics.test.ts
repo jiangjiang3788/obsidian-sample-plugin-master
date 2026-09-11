@@ -2,6 +2,7 @@
  * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
  * @covers F025/regression
  * @covers F025/unit
+ * @covers F153/unit
  */
 import { parseRecordBlock } from '@/core/utils/parser';
 import { encodeRecordBlock } from '@/core/records/codec';
@@ -49,12 +50,17 @@ describe('field semantics on Record Foundation v2', () => {
     expect(filterByKeyword([item], '09:00')).toHaveLength(1);
   });
 
-  it('exposes coreBlock everywhere as the single UI name 记录类型', () => {
+  it('exposes coreBlock and 主显示值 as stable view fields', () => {
     const allFields = getAllFields([] as any);
     expect(allFields).toContain('coreBlock');
+    expect(allFields).toContain('primaryText');
     expect(getFieldLabel('coreBlock')).toBe('记录类型');
+    expect(getFieldLabel('primaryText')).toBe('主显示值');
     expect(getFieldPickerOptions(allFields)).toEqual(
-      expect.arrayContaining([expect.objectContaining({ value: 'coreBlock', label: '记录类型' })]),
+      expect.arrayContaining([
+        expect.objectContaining({ value: 'coreBlock', label: '记录类型' }),
+        expect.objectContaining({ value: 'primaryText', label: '主显示值' }),
+      ]),
     );
   });
 

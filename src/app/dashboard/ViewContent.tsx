@@ -115,7 +115,7 @@ export function ViewContent({
     onCloseStatisticsPopover: closeStatisticsPopover,
     timerService,
     timers,
-      inputSettings,
+    inputSettings,
     goals: settings.goalSettings?.goals || [],
     selectedLayoutCategories,
     categoryColors,

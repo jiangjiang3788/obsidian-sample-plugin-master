@@ -5,7 +5,7 @@ import { join, relative } from 'node:path';
 
 const root = process.cwd();
 const manifest = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8'));
-const artifactPath = join(root, 'release', manifest.id, 'main.js');
+const artifactPath = join(root, 'main.js');
 const maxRawBytes = Number(process.env.THINK_OS_MAX_BUNDLE_BYTES || 1_200_000);
 const maxGzipBytes = Number(process.env.THINK_OS_MAX_GZIP_BUNDLE_BYTES || 380_000);
 

@@ -1,0 +1,16 @@
+doc/PATCH_FILELIST_1.2.5-R3.txt
+doc/README_PATCH_1.2.5-R3.txt
+doc/WHITEBOARD_IMPLEMENTATION_BASELINE_v1_1.2.5-R3-updated.md
+doc/Whiteboard_1.2.5_R3_IMPLEMENTATION_RESULT.md
+doc/Whiteboard_1.2.5_R3_TEST_REPORT.md
+src/features/whiteboard/WhiteboardBoardTools.tsx
+src/features/whiteboard/WhiteboardContentBoundsModel.ts
+src/features/whiteboard/WhiteboardNestedCanvasController.ts
+src/features/whiteboard/WhiteboardWorkbenchModel.ts
+src/features/whiteboard/WhiteboardWorkspace.tsx
+src/features/whiteboard/WhiteboardZoomController.ts
+src/shared/ui/primitives/IconButton.tsx
+test/specs/whiteboard.e2e.ts
+test/unit/whiteboardBoardToolsRecoveryUi.test.tsx
+test/unit/whiteboardContentHomeModel.test.ts
+test/unit/whiteboardWorkbenchModel.test.ts

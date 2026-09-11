@@ -1,4 +1,5 @@
 /** @jsxImportSource preact */
+import { normalizeRecordTypePresentationKey } from '@core/recordTypes/public';
 import { SelectablePill } from './SelectablePill';
 
 export interface RecordTypeSwitcherOption { id: string; name?: string }
@@ -21,7 +22,7 @@ export function RecordTypeSwitcher({ blocks, currentBlockId, onBlockChange }: Re
             onClick={() => onBlockChange(block.id)}
             title={label}
             className="think-quick-input-record-type-switcher__item"
-          >{label}</SelectablePill>
+          ><span className="think-record-type-marker" data-record-type={normalizeRecordTypePresentationKey(block.id)}>{label}</span></SelectablePill>
         );
       })}
     </div>

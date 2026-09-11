@@ -1,6 +1,7 @@
 /**
  * 测试覆盖声明（测试体系审计使用，不代表执行已通过）
  * @covers F087/unit
+ * @covers F153/regression
  */
 import { buildProgressViewRenderModel } from '@/features/views/runtime/ProgressViewModel';
 import type { RecordViewItem } from '@/core/types/public';
@@ -144,11 +145,22 @@ describe('ProgressViewModel', () => {
     expect(getProgressLevelMeta(99)).toMatchObject({ level: 10, title: '大师' });
   });
 
+  it('uses the global Record Type order for the full Progress type breakdown', () => {
+    const counts = {
+      milestone: 1, blocker: 1, plan: 1, review: 1, thought: 1, evidence: 1,
+      habit: 1, energy: 1, 'task-series': 1, 'task-session': 1, task: 1,
+    };
+    expect(buildProgressBlockCountRows(counts).map((row) => row.key)).toEqual([
+      'task', 'task-session', 'task-series', 'energy', 'habit', 'evidence',
+      'thought', 'review', 'plan', 'blocker', 'milestone',
+    ]);
+  });
+
   it('builds block rows and fallback summary', () => {
     expect(buildProgressBlockCountRows(card.blockCounts).map((row) => [row.key, row.count])).toEqual([
       ['task', 2],
-      ['milestone', 1],
       ['energy', 4],
+      ['milestone', 1],
     ]);
     expect(buildProgressSummary([card as unknown as GoalProgressCardModel])).toEqual({ goalCount: 1, totalPoints: 120, totalItems: 3 });
     expect(buildProgressSummary([card as unknown as GoalProgressCardModel], { goalCount: 9, totalPoints: 8, totalItems: 7 })).toEqual({ goalCount: 9, totalPoints: 8, totalItems: 7 });

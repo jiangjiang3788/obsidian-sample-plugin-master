@@ -12,6 +12,7 @@ export interface PluginHost {
   app: any;
   manifest: { id: string };
   addCommand(command: unknown): unknown;
+  addRibbonIcon(icon: string, title: string, callback: () => void): unknown;
   register(callback: unknown): unknown;
   addSettingTab(tab: unknown): unknown;
   registerView(type: string, creator: (leaf: any) => unknown): unknown;

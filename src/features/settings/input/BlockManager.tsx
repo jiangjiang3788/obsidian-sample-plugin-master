@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { useState } from 'preact/hooks';
-import { getEffectiveRecordTypes, ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public';
+import { getEffectiveRecordTypes, ENERGY_RECORD_TYPE_ID, normalizeRecordTypePresentationKey } from '@core/recordTypes/public';
 import { ThinkIcon, ThinkIconButton } from '@shared/ui/public';
 import { EnergyRecordTypeSettings } from './EnergyRecordTypeSettings';
 
@@ -38,7 +38,7 @@ export function BlockManager() {
                   className="think-block-accordion__title"
                   onClick={() => setOpenId(open ? null : recordType.id)}
                 >
-                  {recordType.name}
+                  <span className="think-record-type-marker" data-record-type={normalizeRecordTypePresentationKey(recordType.coreBlock)}>{recordType.name}</span>
                 </button>
                 <span className="think-block-accordion__meta">
                   {recordType.captureMode === 'template' ? '模板录入' : recordType.captureMode === 'direct' ? '直接记录' : '内部记录'}

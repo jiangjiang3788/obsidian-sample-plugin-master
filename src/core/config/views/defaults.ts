@@ -39,12 +39,12 @@ export const EISENHOWER_VIEW_DEFAULT_CONFIG: EisenhowerViewConfig = {
 export const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG: EventTimelineViewConfig = {
   dateRole: 'default',
   timeField: 'date',
-  titleField: 'title',
+  titleField: 'primaryText',
   contentField: 'content',
   groupByDay: true,
   showWeekday: true,
   maxContentLength: 160,
-  fields: ['title', 'date'],
+  fields: ['primaryText', 'date'],
   groupFields: [],
 };
 

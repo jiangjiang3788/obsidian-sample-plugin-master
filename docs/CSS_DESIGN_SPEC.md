@@ -1092,3 +1092,16 @@ sx={{
 4. 动态布局仍保持性能，不因 CSS 统一而生成大量 class；
 5. 新增组件可以通过 Token 和 Primitive 快速构建，不再复制 `sx/style`；
 6. CSS Gate 能阻止旧问题重新进入代码库。
+
+## 2.5 Record Type semantic color contract（1.4.0）
+
+Record Type color is product identity, not View decoration. The 11 canonical types use global `--think-record-type-*` tokens from `tokens/data-colors.css`; feature CSS must consume `--think-record-type-accent` through `data-record-type`, and must not maintain a second type-to-color table.
+
+Rules:
+
+- Record Type and Category colors are separate semantic systems.
+- Same Record Type must resolve to the same token in Whiteboard, type filters, type switchers, settings matrices and any future type legend.
+- Color never replaces essential text in contexts where the type name itself must be understood; use a marker/rail/header accent plus accessible text/title.
+- Whiteboard cards use a 6px start-side Record Type rail. The card header is reserved for Goal (left) and time (right); the body identity uses `primaryText`.
+- Low-frequency Whiteboard actions such as Archive/Move are progressively disclosed through context/drag interactions rather than permanently consuming card space.
+- Whiteboard grid is optional visual assistance. Hiding it removes the background rendering only; it does not disable spatial coordinates or layout capabilities.

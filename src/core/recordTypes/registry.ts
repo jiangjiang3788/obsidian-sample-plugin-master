@@ -5,6 +5,7 @@ import {
   RECORD_TYPE_IDS,
 } from '@/core/records/schema';
 import type { RecordTypeDefinition, TemplateRecordTypeDefinition } from './types';
+import { sortRecordTypesByPresentation } from './presentation';
 
 export const ENERGY_RECORD_TYPE_ID = RECORD_TYPE_IDS.ENERGY;
 export const ENERGY_RECORD_TYPE = ENERGY_DEFINITION;
@@ -17,13 +18,19 @@ export const ENERGY_RECORD_TYPE = ENERGY_DEFINITION;
  * of maintaining their own Block lists.
  */
 export const DEFAULT_RECORD_TYPES: readonly RecordTypeDefinition[] = Object.freeze(
-  RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.capabilities.userVisible && definition.captureMode !== 'internal'),
+  sortRecordTypesByPresentation(
+    RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.capabilities.userVisible && definition.captureMode !== 'internal'),
+    (definition) => definition.coreBlock,
+  ),
 );
 
 /** Template-driven RecordTypes. Direct/internal kinds are intentionally excluded. */
 export const DEFAULT_TEMPLATE_RECORD_TYPES: readonly TemplateRecordTypeDefinition[] = Object.freeze(
-  RECORD_SCHEMA_DEFINITIONS.filter((definition): definition is TemplateRecordTypeDefinition =>
-    definition.capabilities.userVisible && definition.captureMode === 'template' && typeof definition.recordTypeId === 'string'
+  sortRecordTypesByPresentation(
+    RECORD_SCHEMA_DEFINITIONS.filter((definition): definition is TemplateRecordTypeDefinition =>
+      definition.capabilities.userVisible && definition.captureMode === 'template' && typeof definition.recordTypeId === 'string'
+    ),
+    (definition) => definition.coreBlock,
   ),
 );
 

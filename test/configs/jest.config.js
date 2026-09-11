@@ -12,13 +12,13 @@ module.exports = {
     '^.+\\.(t|j)sx?$': [
       'ts-jest',
       {
-        tsconfig: '<rootDir>/tsconfig.test.json',
+        tsconfig: '<rootDir>/config/tsconfig.test.json',
       },
     ],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   moduleNameMapper: {
-    // Path aliases matching tsconfig.json
+    // Path aliases matching config/tsconfig.json
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@core/(.*)$': '<rootDir>/src/core/$1',
     '^@shared/(.*)$': '<rootDir>/src/shared/$1',

@@ -1,0 +1,26 @@
+/* 1.2.2: lightweight spatial annotations; these are whiteboard projections, not canonical Records. */
+.think-os .think-whiteboard-annotation {
+  position: absolute;
+  width: 260px;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--think-radius-md);
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-md);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  cursor: grab;
+  user-select: none;
+}
+.think-os .think-whiteboard-annotation.is-text { background: color-mix(in srgb, var(--think-bg-primary) 72%, transparent); }
+.think-os .think-whiteboard-annotation.is-sticky { min-height: 132px; background: color-mix(in srgb, var(--interactive-accent) 13%, var(--think-bg-elevated)); border-color: color-mix(in srgb, var(--interactive-accent) 32%, var(--think-border-subtle)); box-shadow: var(--think-shadow-sm); }
+.think-os .think-whiteboard-annotation:hover,
+.think-os .think-whiteboard-annotation.is-editing { border-color: var(--think-border-default); }
+.think-os .think-whiteboard-annotation__text { min-height: 24px; overflow-wrap: anywhere; }
+.think-os .think-whiteboard-annotation__editor { width: 100%; min-height: 90px; resize: both; font: inherit; line-height: inherit; user-select: text; }
+.think-os .think-whiteboard-annotation__remove { position: absolute; top: -10px; right: -10px; opacity: 0; }
+.think-os .think-whiteboard-annotation:hover .think-whiteboard-annotation__remove,
+.think-os .think-whiteboard-annotation__remove:focus-visible { opacity: 1; }
+.think-os .think-whiteboard-annotation { touch-action: none; }
+.think-os .think-whiteboard-annotation.is-dragging { cursor: grabbing; }

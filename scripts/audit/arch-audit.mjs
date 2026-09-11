@@ -116,10 +116,10 @@ function extractModuleSpecifiers(sourceFile) {
 }
 
 function loadTsConfig() {
-  const configPath = ts.findConfigFile(ROOT, ts.sys.fileExists, 'tsconfig.json');
-  if (!configPath) throw new Error('未找到 tsconfig.json（无法做模块解析）');
+  const configPath = ts.findConfigFile(ROOT, ts.sys.fileExists, 'config/tsconfig.json');
+  if (!configPath) throw new Error('未找到 config/tsconfig.json（无法做模块解析）');
   const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
-  if (configFile.error) throw new Error('读取 tsconfig.json 失败（无法做模块解析）');
+  if (configFile.error) throw new Error('读取 config/tsconfig.json 失败（无法做模块解析）');
   const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, path.dirname(configPath));
   return { compilerOptions: parsed.options };
 }

@@ -32,6 +32,7 @@ export function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [
         CONTENT_FIELD_KEY,
         FULL_DATA_FIELD_KEY,
         'title',
+        'primaryText',
         'date',
         'startTime',
         ...fieldOptions,
@@ -61,7 +62,7 @@ export function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [
                     </ConfigFieldRow>
                     <ConfigFieldRow label="标题字段">
                         <SimpleSelect
-                            value={config.titleField || 'title'}
+                            value={config.titleField || 'primaryText'}
                             options={fieldSelectOptions}
                             onChange={(field) => patch({ titleField: field })}
                             fullWidth
@@ -84,7 +85,7 @@ export function EventTimelineViewEditor({ value = {}, onChange, fieldOptions = [
                     <ThinkButton
                         size="sm"
                         variant="secondary"
-                        onClick={() => patch({ contentField: CONTENT_FIELD_KEY, titleField: 'title', timeField: 'date', maxContentLength: 160 })}
+                        onClick={() => patch({ contentField: CONTENT_FIELD_KEY, titleField: 'primaryText', timeField: 'date', maxContentLength: 160 })}
                     >
                         使用推荐字段
                     </ThinkButton>

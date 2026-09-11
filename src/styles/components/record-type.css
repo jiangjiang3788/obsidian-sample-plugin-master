@@ -1,0 +1,36 @@
+/* Global Record type presentation surface. One type -> one semantic accent token. */
+.think-os [data-record-type] { --think-record-type-accent: var(--think-record-type-neutral); }
+.think-os [data-record-type="task"] { --think-record-type-accent: var(--think-record-type-task); }
+.think-os [data-record-type="task-session"] { --think-record-type-accent: var(--think-record-type-task-session); }
+.think-os [data-record-type="task-series"] { --think-record-type-accent: var(--think-record-type-task-series); }
+.think-os [data-record-type="energy"] { --think-record-type-accent: var(--think-record-type-energy); }
+.think-os [data-record-type="habit"] { --think-record-type-accent: var(--think-record-type-habit); }
+.think-os [data-record-type="evidence"] { --think-record-type-accent: var(--think-record-type-evidence); }
+.think-os [data-record-type="thought"] { --think-record-type-accent: var(--think-record-type-thought); }
+.think-os [data-record-type="review"] { --think-record-type-accent: var(--think-record-type-review); }
+.think-os [data-record-type="plan"] { --think-record-type-accent: var(--think-record-type-plan); }
+.think-os [data-record-type="blocker"] { --think-record-type-accent: var(--think-record-type-blocker); }
+.think-os [data-record-type="milestone"] { --think-record-type-accent: var(--think-record-type-milestone); }
+
+.think-os .think-record-type-pill {
+  border-inline-start: 4px solid var(--think-record-type-accent);
+}
+
+.think-os .think-record-type-marker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-1);
+}
+
+.think-os .think-record-type-marker::before {
+  content: '';
+  width: 0.5em;
+  height: 0.5em;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--think-record-type-accent);
+}
+
+.think-os .think-record-type-header {
+  box-shadow: inset 0 -3px 0 var(--think-record-type-accent);
+}

@@ -3,6 +3,8 @@
  * @covers F010/regression
  * @covers F010/unit
  * @covers F115/unit
+ * @covers F153/unit
+ * @covers F153/regression
  */
 import {
   DEFAULT_RECORD_TYPES,
@@ -14,26 +16,27 @@ import { RECORD_SCHEMA_DEFINITIONS } from '@/core/records/schema';
 
 const USER_TYPE_IDS = [
   'core.task',
+  'core.energy',
   'core.habit',
-  'core.plan',
-  'core.review',
-  'core.thought',
   'core.evidence',
+  'core.thought',
+  'core.review',
+  'core.plan',
   'core.blocker',
   'core.milestone',
-  'core.energy',
 ];
 
 const TEMPLATE_TYPE_IDS = USER_TYPE_IDS.filter((id) => id !== 'core.energy');
 
 describe('RecordType registry convergence', () => {
-  it('derives every user-visible RecordType from the authoritative schema definitions', () => {
-    const expected = RECORD_SCHEMA_DEFINITIONS
+  it('derives every user-visible RecordType from schema definitions, then applies presentation order', () => {
+    const schemaVisibleIds = RECORD_SCHEMA_DEFINITIONS
       .filter((definition) => definition.capabilities.userVisible && definition.captureMode !== 'internal')
       .map((definition) => definition.id);
+    const runtimeIds = DEFAULT_RECORD_TYPES.map((definition) => definition.id);
 
-    expect(DEFAULT_RECORD_TYPES.map((definition) => definition.id)).toEqual(expected);
-    expect(DEFAULT_RECORD_TYPES.map((definition) => definition.id)).toEqual(USER_TYPE_IDS);
+    expect(new Set(runtimeIds)).toEqual(new Set(schemaVisibleIds));
+    expect(runtimeIds).toEqual(USER_TYPE_IDS);
   });
 
   it('derives template-capable types without a second hand-maintained list', () => {
@@ -45,7 +48,7 @@ describe('RecordType registry convergence', () => {
     expect(getTemplateRecordTypeById('core.energy')).toBeNull();
   });
 
-  it('keeps internal Task history records out of all user capture registries', () => {
+  it('keeps internal Task history records out of user capture registries', () => {
     expect(DEFAULT_RECORD_TYPES.some((definition) => definition.id === 'internal.task-series')).toBe(false);
     expect(DEFAULT_RECORD_TYPES.some((definition) => definition.id === 'internal.task-session')).toBe(false);
   });

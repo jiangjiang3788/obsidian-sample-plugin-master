@@ -104,7 +104,7 @@
           "dir": "asc"
         }
       ],
-      "collapsed": true
+      "collapsed": false
     },
     {
       "id": "vi_mmeolydjaga6z6u",
@@ -254,8 +254,7 @@
         "topN": 10,
         "usePeriodField": false,
         "rowField": "coreBlock",
-        "colField": "rootGoal",
-        "dateRole": "task-completed"
+        "colField": "rootGoal"
       },
       "fields": [
         "goalPath",
@@ -403,72 +402,6 @@
       "collapsed": true
     },
     {
-      "id": "vi_mpi3dydfsejfio8",
-      "parentId": null,
-      "title": "事件时间线",
-      "viewType": "TimelineView",
-      "viewConfig": {
-        "defaultHourHeight": 100,
-        "MAX_HOURS_PER_DAY": 24,
-        "UNTRACKED_LABEL": "未记录",
-        "categories": {
-          "工作": {
-            "name": "工作",
-            "color": "#60a5fa",
-            "files": [
-              "工作",
-              "Work"
-            ]
-          },
-          "学习": {
-            "name": "学习",
-            "color": "#34d399",
-            "files": [
-              "学习",
-              "Study"
-            ]
-          },
-          "生活": {
-            "name": "生活",
-            "color": "#fbbf24",
-            "files": [
-              "生活",
-              "Life"
-            ]
-          }
-        },
-        "progressOrder": [
-          "工作",
-          "学习",
-          "生活"
-        ]
-      },
-      "fields": [],
-      "groupFields": [],
-      "filters": [
-        {
-          "field": "coreBlock",
-          "op": "=",
-          "value": "task"
-        }
-      ],
-      "sort": [
-        {
-          "field": "coreBlock",
-          "dir": "asc"
-        },
-        {
-          "field": "goalPath",
-          "dir": "asc"
-        },
-        {
-          "field": "date",
-          "dir": "asc"
-        }
-      ],
-      "collapsed": false
-    },
-    {
       "id": "vi_msr6vmhhiraq7b0",
       "parentId": null,
       "title": "1",
@@ -584,16 +517,16 @@
         },
         "vi_msr6vrojamvaf1t": {
           "x": 0,
-          "y": 1552,
-          "width": 1616,
-          "height": 288,
+          "y": 1616,
+          "width": 1632,
+          "height": 784,
           "zIndex": 13
         },
         "vi_mn9o962553qwhzp": {
           "x": 0,
           "y": 1056,
-          "width": 1616,
-          "height": 480,
+          "width": 1600,
+          "height": 544,
           "zIndex": 14
         }
       }
@@ -602,10 +535,10 @@
       "id": "layout_mpi3dfhyn14bsio",
       "name": "全局布局 2",
       "viewInstanceIds": [
-        "vi_mpi3dydfsejfio8"
+        "vi_mm9z0oe1cvlr53c"
       ],
       "displayMode": "list",
-      "initialView": "季",
+      "initialView": "周",
       "initialDateFollowsNow": true,
       "parentId": null,
       "globalFilters": []
@@ -3511,7 +3444,7 @@
             "key": "状态",
             "label": "状态",
             "type": "singleSelect",
-            "defaultValue": "done",
+            "defaultValue": "",
             "options": [
               {
                 "value": "open",
@@ -3753,7 +3686,6 @@
         ],
         "targetFile": "01/2-6工作.md",
         "defaultValues": {
-          "状态": "done",
           "内容": "通勤",
           "重复": "none",
           "重复间隔": "1",
@@ -4460,18 +4392,262 @@
         "goalPath": "爱好能力/记录系统",
         "recordTypeId": "core.task",
         "enabled": true,
+        "fields": [
+          {
+            "id": "core.task.status",
+            "key": "状态",
+            "label": "状态",
+            "type": "singleSelect",
+            "defaultValue": "open",
+            "options": [
+              {
+                "value": "open",
+                "label": "⏳ 未完成"
+              },
+              {
+                "value": "done",
+                "label": "✅ 已完成"
+              }
+            ]
+          },
+          {
+            "id": "core.task.content",
+            "key": "内容",
+            "label": "内容",
+            "type": "text",
+            "defaultValue": "记录系统"
+          },
+          {
+            "id": "core.task.recurrenceUnit",
+            "key": "重复",
+            "label": "重复",
+            "type": "singleSelect",
+            "defaultValue": "none",
+            "options": [
+              {
+                "value": "none",
+                "label": "不重复"
+              },
+              {
+                "value": "day",
+                "label": "天"
+              },
+              {
+                "value": "week",
+                "label": "周"
+              },
+              {
+                "value": "month",
+                "label": "月"
+              },
+              {
+                "value": "quarter",
+                "label": "季"
+              },
+              {
+                "value": "year",
+                "label": "年"
+              }
+            ]
+          },
+          {
+            "id": "core.task.recurrenceInterval",
+            "key": "重复间隔",
+            "label": "重复间隔",
+            "type": "number",
+            "defaultValue": "1",
+            "min": 1
+          },
+          {
+            "id": "core.task.scheduledAt",
+            "key": "计划时间",
+            "label": "计划时间",
+            "type": "datetime"
+          },
+          {
+            "id": "core.task.expectedDurationMinutes",
+            "key": "预计时长（分钟）",
+            "label": "预计时长（分钟）",
+            "type": "number",
+            "min": 1
+          },
+          {
+            "id": "core.task.dueAt",
+            "key": "截止时间",
+            "label": "截止时间",
+            "type": "datetime"
+          },
+          {
+            "id": "core.task.priority",
+            "key": "优先级",
+            "label": "优先级",
+            "type": "singleSelect",
+            "defaultValue": "highest",
+            "options": [
+              {
+                "value": "lowest",
+                "label": "最低"
+              },
+              {
+                "value": "low",
+                "label": "低"
+              },
+              {
+                "value": "medium",
+                "label": "中"
+              },
+              {
+                "value": "high",
+                "label": "高"
+              },
+              {
+                "value": "highest",
+                "label": "最高"
+              }
+            ]
+          },
+          {
+            "id": "core.task.importance",
+            "key": "重要程度",
+            "label": "重要程度",
+            "type": "singleSelect",
+            "defaultValue": "important",
+            "options": [
+              {
+                "value": "important",
+                "label": "重要"
+              },
+              {
+                "value": "normal",
+                "label": "普通"
+              }
+            ]
+          },
+          {
+            "id": "core.task.urgency",
+            "key": "紧急程度",
+            "label": "紧急程度",
+            "type": "singleSelect",
+            "defaultValue": "normal",
+            "options": [
+              {
+                "value": "urgent",
+                "label": "紧急"
+              },
+              {
+                "value": "normal",
+                "label": "不紧急"
+              }
+            ]
+          },
+          {
+            "id": "core.task.energyDemand",
+            "key": "精力要求",
+            "label": "精力要求",
+            "type": "singleSelect",
+            "options": [
+              {
+                "value": "low",
+                "label": "低"
+              },
+              {
+                "value": "medium",
+                "label": "中"
+              },
+              {
+                "value": "high",
+                "label": "高"
+              }
+            ]
+          },
+          {
+            "id": "core.task.brainDemand",
+            "key": "脑力要求",
+            "label": "脑力要求",
+            "type": "singleSelect",
+            "defaultValue": "medium",
+            "options": [
+              {
+                "value": "low",
+                "label": "低"
+              },
+              {
+                "value": "medium",
+                "label": "中"
+              },
+              {
+                "value": "high",
+                "label": "高"
+              }
+            ]
+          },
+          {
+            "id": "core.task.physicalDemand",
+            "key": "体力要求",
+            "label": "体力要求",
+            "type": "singleSelect",
+            "defaultValue": "medium",
+            "options": [
+              {
+                "value": "low",
+                "label": "低"
+              },
+              {
+                "value": "medium",
+                "label": "中"
+              },
+              {
+                "value": "high",
+                "label": "高"
+              }
+            ]
+          },
+          {
+            "id": "core.task.availabilityContexts",
+            "key": "可用场景",
+            "label": "可用场景",
+            "type": "multiSelect",
+            "options": [
+              {
+                "value": "any",
+                "label": "任意"
+              },
+              {
+                "value": "work",
+                "label": "工作"
+              },
+              {
+                "value": "home",
+                "label": "家"
+              },
+              {
+                "value": "commute",
+                "label": "通勤"
+              },
+              {
+                "value": "out",
+                "label": "外出"
+              }
+            ]
+          },
+          {
+            "id": "core.task.recoveryIntent",
+            "key": "恢复意图",
+            "label": "恢复意图",
+            "type": "boolean"
+          }
+        ],
         "targetFile": "01/2-5电脑.md",
         "defaultValues": {
-          "任务内容": "插件",
-          "brainDemand": "medium",
-          "physicalDemand": "medium",
-          "importance": "important",
-          "urgency": "normal",
-          "priority": "highest",
-          "availabilityContexts": [
-            "any"
-          ],
-          "recurrenceUnit": "none"
+          "状态": "open",
+          "内容": "记录系统",
+          "重复": "none",
+          "重复间隔": "1",
+          "优先级": "highest",
+          "重要程度": "important",
+          "紧急程度": "normal",
+          "脑力要求": "medium",
+          "体力要求": "medium"
         }
       },
       {
@@ -5011,11 +5187,11 @@
   "floatingTimerEnabled": true,
   "devConsoleStackEnabled": false,
   "recentGoalPaths": [
-    "照顾好自己/早餐",
-    "爱好能力/ob基础",
-    "我若安好便是晴天/生活",
-    "爱好能力/AI",
-    "工作能力/通勤"
+    "武装大脑/时间整理",
+    "工作能力/通勤",
+    "照顾好自己/睡眠",
+    "我若安好便是晴天/小手机",
+    "我若安好便是晴天/娱乐"
   ],
   "goalTaskDefaultsSeedVersion": 1,
   "categoryColors": {

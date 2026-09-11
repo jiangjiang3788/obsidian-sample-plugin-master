@@ -34,7 +34,8 @@ const text = (partial: Omit<FieldSchema, 'valueType'> & { valueType?: FieldSchem
 export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
   // --- 核心字段 ---
   id: text({ key: 'id', label: '记录ID', category: 'core', source: 'item', semantic: 'id', description: '内部记录标识' }),
-  title: text({ key: 'title', label: '标题', category: 'core', source: 'item', semantic: 'title', inputType: 'text', description: '记录标题或主要摘要' }),
+  title: text({ key: 'title', label: '标题', category: 'core', source: 'item', semantic: 'title', inputType: 'text', description: '记录的真实标题；为空时保持为空，不承担类型特定兜底。' }),
+  primaryText: text({ key: 'primaryText', label: '主显示值', category: 'core', source: 'derived', semantic: 'title', description: '按 Record 类型派生的人类主要识别值；只用于展示，不写回标题或 Markdown。' }),
   content: text({ key: 'content', label: '内容', category: 'core', source: 'item', semantic: 'body', inputType: 'textarea', description: '记录正文；任务与其他 Record 统一为用户正文，不包含存储层元数据' }),
   editableText: text({ key: 'editableText', label: '可编辑正文', category: 'core', source: 'item', semantic: 'body', inputType: 'textarea', hiddenByDefault: true, description: '编辑态正文真源' }),
   rawSource: text({ key: 'rawSource', label: '原始源文本', category: 'core', source: 'item', semantic: 'body', hiddenByDefault: true }),
@@ -132,7 +133,7 @@ export const FIELD_REGISTRY: Record<string, FieldDefinition> = {
  * but they are never advertised as normal user fields.
  */
 export const VIEW_FIELD_PICKER_KEYS = new Set([
-  'title', 'content', 'categoryKey', 'tags',
+  'title', 'primaryText', 'content', 'categoryKey', 'tags',
   'goalPath', 'rootGoal', 'leafGoal',
   'coreBlock', 'recordSubtype', 'status', 'cadence',
   'date', 'scheduledAt', 'startAt', 'endAt', 'dueAt', 'scheduledDate', 'startDate', 'dueDate', 'completedAt',

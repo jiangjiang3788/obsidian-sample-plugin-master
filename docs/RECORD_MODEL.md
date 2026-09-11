@@ -66,3 +66,34 @@ Special internal/domain records:
 For goal-bindable user RecordTypes, create capture always resolves from an explicit pair: `recordTypeId + goalPath` and requires an enabled direct GoalTemplate. No direct GoalTemplate means Quick Input creation is unavailable. The registered RecordType template is the structural base merged into an enabled GoalTemplate and remains available to edit/backfill flows; it is not a create fallback.
 
 Goal selection is system context, not a removable template field. Entry points may preselect it when they already know the Goal (for example a Heatmap cell), but they must never guess the first Goal or first RecordType.
+
+## Record presentation (1.4.0)
+
+A persisted field and a human-facing representative value are not the same concept.
+
+- `title` is the real title. Empty means empty.
+- `primaryText` / “主显示值” is a derived Field used when a compact UI needs one human-readable identity value.
+- Explicit title always wins inside `primaryText`.
+- Value-shaped types can derive natural values when title is absent (for example `精力 65`, `打卡 · 评分 4`, `任务工作块 · 120 分钟`).
+- Text-shaped types use content and finally the schema-owned Record Type label as fallback.
+- The resolver is exhaustive for the 11 canonical Record kinds and never mutates Markdown or Record storage.
+
+Canonical presentation order for Record Types is:
+
+```text
+任务 → 任务工作块 → 任务系列 → 精力 → 打卡 → 事件 → 思考 → 总结 → 计划 → 阻碍项 → 里程碑
+```
+
+This order is a presentation contract, not schema/persistence order. It applies when UI enumerates or groups **Record Types**. It must not override a user-selected date/title/custom sort, and it must not be applied to independent Category values.
+
+Each canonical Record Type also owns one semantic color token (`--think-record-type-*`). A View can decide whether type color is visually useful, but if it renders a type accent it must consume that global token rather than invent a local color mapping.
+
+### Display-field priority
+
+```text
+user explicit ViewInstance.fields
+        > View default fields
+        > generic Record presentation default
+```
+
+A View configured to show `title` shows the actual title even when it is empty. A View gets type-aware identity only by choosing `primaryText` (or by using it as that View's default identity field).

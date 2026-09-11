@@ -1,0 +1,32 @@
+ThinkOS 1.1.9 PATCH file list
+Base: 1.1.8 R2
+
+Modified / added files:
+- doc/PATCH_FILELIST_1.1.9.txt
+- doc/README_PATCH_1.1.9.txt
+- doc/WHITEBOARD_IMPLEMENTATION_BASELINE_v1_1.1.9-updated.md
+- doc/Whiteboard_1.1.9_IMPLEMENTATION_RESULT.md
+- manifest.json
+- package-lock.json
+- package.json
+- src/core/whiteboard/WhiteboardArchiveMutations.ts
+- src/core/whiteboard/WhiteboardSchema.ts
+- src/core/whiteboard/WhiteboardStore.ts
+- src/core/whiteboard/public.ts
+- src/features/whiteboard/WhiteboardArchiveController.ts
+- src/features/whiteboard/WhiteboardArchivePanel.tsx
+- src/features/whiteboard/WhiteboardBoardTools.tsx
+- src/features/whiteboard/WhiteboardCard.tsx
+- src/features/whiteboard/WhiteboardWorkspace.tsx
+- src/features/whiteboard/WhiteboardZoomController.ts
+- src/styles/features/whiteboard-archive.css
+- src/styles/main.css
+- test/integration/whiteboardRestartLifecycle.test.ts
+- test/specs/whiteboard.e2e.ts
+- test/system/feature-test-map.json
+- test/unit/whiteboardArchiveUi.test.tsx
+- test/unit/whiteboardStore.test.ts
+- test/unit/whiteboardZoomUi.test.tsx
+
+Total modified / added: 25
+Total removed: 0

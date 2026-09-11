@@ -22,6 +22,7 @@ import { registerSettingsFeatures } from '@features/settings/registerFeature';
 import { registerDashboardFeature } from '@/app/dashboard/registerDashboard';
 import { registerQuickInputFeature } from '@features/quickinput/registerFeature';
 import { registerAiInputFeature } from '@features/aiinput/registerFeature';
+import { registerWhiteboardFeature } from '@features/whiteboard/registerFeature';
 
 export interface UIFeatureDeps {
     plugin: PluginHost;
@@ -36,6 +37,7 @@ export function registerFeatureContributions(
     deps: UIFeatureDeps
 ): void {
     registerDashboardFeature(registry, deps);
+    registerWhiteboardFeature(registry, { plugin: deps.plugin });
     registerSettingsFeatures(registry, { plugin: deps.plugin, dataStore: deps.dataStore });
 
     // Standalone command features

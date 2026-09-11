@@ -1,6 +1,7 @@
 import type { GoalDefinition } from './types';
 import type { GoalTemplate } from './templates';
 import { splitGoalPath } from './path';
+import { compareRecordTypeKeys } from '../recordTypes/public';
 
 const UNKNOWN_GOAL_RANK = Number.MAX_SAFE_INTEGER - 1000;
 const UNASSIGNED_GOAL_RANK = Number.MAX_SAFE_INTEGER;
@@ -156,7 +157,7 @@ export function sortGoalTemplatesBySettingsOrder<T extends GoalTemplate>(templat
   return [...templates].sort((left, right) => {
     const byGoal = goalOrder.compareGoalPaths(left.goalPath, right.goalPath);
     if (byGoal !== 0) return byGoal;
-    const byBlock = String(left.recordTypeId || '').localeCompare(String(right.recordTypeId || ''), 'zh-CN');
+    const byBlock = compareRecordTypeKeys(left.recordTypeId, right.recordTypeId);
     if (byBlock !== 0) return byBlock;
     return (originalIndex.get(left) ?? 0) - (originalIndex.get(right) ?? 0);
   });

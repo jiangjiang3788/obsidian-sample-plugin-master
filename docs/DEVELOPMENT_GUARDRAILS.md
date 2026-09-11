@@ -28,3 +28,9 @@ Rules:
 19. Business intent must never be inferred from array position (`goals[0]`, `blocks[0]`, etc.). First-item behavior is allowed only for visual focus/navigation.
 20. Quick Input create eligibility is an enabled direct Goal × RecordType GoalTemplate. Do not reintroduce RecordType-default create fallback, ancestor-template inheritance, or first-item guessing. Parent Goals without direct templates may only navigate the hierarchy; they are not selected Record context.
 21. Think OS UI is globally flat: no feature may introduce box-shadow to buttons, Goal rows, cards, menus, popovers, modals or floating panels.
+22. Record Type presentation order/color has one Core owner. Do not add View-local Record Type order arrays, locale sorting, or type color maps.
+23. Record Type and Category are independent semantic dimensions. Never reuse Record Type ordering/color merely because `categoryKey` happens to resemble a type label.
+24. `title` is a persisted semantic field; `primaryText` is derived presentation. Do not silently replace one with the other when a user explicitly selected fields.
+25. User-explicit View fields outrank View defaults. “Smart” presentation may improve defaults but must not rewrite explicit `ViewInstance.fields`.
+26. Whiteboard UI preferences (grid/source visibility and similar chrome) must not be persisted into durable board business state unless they become part of the board's actual content model.
+27. All substantive documentation lives under `docs/`; the project root keeps only `README.md`, and the legacy `doc/` directory must not return.

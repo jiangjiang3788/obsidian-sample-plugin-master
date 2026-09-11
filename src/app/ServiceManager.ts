@@ -20,7 +20,7 @@ import { closeAllFloatingWidgets } from '@/app/ui/widgets/FloatingWidgetManager'
 
 import { registerSettingsPersistence } from '@/app/bootstrap/register';
 import { initializeCore } from '@/app/bootstrap/initializeCore';
-import { loadDataServices } from '@/app/bootstrap/loadDataServices';
+import { loadDataServices, scheduleWhiteboardRestore } from '@/app/bootstrap/loadDataServices';
 import { loadTimerServices } from '@/app/bootstrap/loadTimerServices';
 import { loadUIFeatures } from '@/app/bootstrap/loadUIFeatures';
 import { buildRuntime, resetRuntimeCache, resolveBootstrap, type BootstrapResolved } from '@/app/bootstrap/buildRuntime';
@@ -65,6 +65,11 @@ export class ServiceManager {
         // AI chat sessions（如果已创建）：卸载后禁止继续写文件
         this.disposables.add('ChatSessionStore.dispose()', () => {
             try { this.services.chatSessionStore?.dispose?.(); } catch {}
+        });
+
+        // 独立白板：卸载后禁止继续写 Vault / notify。
+        this.disposables.add('WhiteboardStore.dispose()', () => {
+            try { this.services.whiteboardStore?.dispose?.(); } catch {}
         });
 
         this.disposables.add('container.clearInstances()', () => {
@@ -120,6 +125,7 @@ export class ServiceManager {
         this.runtimeServices = buildRuntime();
 
         await this.loadDataServices(); // 2. 数据服务 (Data/IO)
+        this.scheduleWhiteboardRestore();
         await this.loadTimerServices(); // 3. 核心业务 (Timer)
         await this.loadUIFeatures(); // 4. UI 特性 (Dashboard/Settings)
 
@@ -184,10 +190,25 @@ export class ServiceManager {
                 actionService: this.bootstrapResolved.actionService,
                 itemService: this.bootstrapResolved.itemService,
                 chatSessionStore: this.bootstrapResolved.chatSessionStore,
+                whiteboardStore: this.bootstrapResolved.whiteboardStore,
             },
             getScanDataPromise: () => this.scanDataPromise,
             setScanDataPromise: (p) => {
                 this.scanDataPromise = p;
+            },
+        });
+    }
+
+
+    private scheduleWhiteboardRestore(): void {
+        const store = this.services.whiteboardStore;
+        if (!store) throw new Error('WhiteboardStore 未初始化');
+
+        scheduleWhiteboardRestore({
+            plugin: this.plugin,
+            store,
+            onError: (error) => {
+                devError('[ThinkPlugin] 白板数据恢复失败，已阻止后续写入:', error);
             },
         });
     }

@@ -59,6 +59,7 @@ const suiteSpecs: Record<string, string[]> = {
         path.resolve(rootDir, 'test/specs/ai-natural-input.e2e.ts'),
         path.resolve(rootDir, 'test/specs/layout-editor-module-settings.e2e.ts'),
         path.resolve(rootDir, 'test/specs/views-matrix.e2e.ts'),
+        path.resolve(rootDir, 'test/specs/whiteboard.e2e.ts'),
     ],
     ai: [
         path.resolve(rootDir, 'test/specs/ai-natural-input.e2e.ts'),

@@ -18,6 +18,7 @@ export {
   useDataStore,
   useInputService,
   useUseCases,
+  useWhiteboardStore,
 } from './AppStoreContext';
 
 export type { Services } from './services.types';

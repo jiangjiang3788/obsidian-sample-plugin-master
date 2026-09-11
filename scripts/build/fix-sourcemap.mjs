@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const DIST_MAP = path.resolve('dist/main.js.map');
+const ROOT_MAP = path.resolve('main.js.map');
 
 function normalizeSource(p) {
   const s = p.replace(/\\/g, '/');
@@ -12,12 +12,12 @@ function normalizeSource(p) {
     .replace(/^\/+/, '');
 }
 
-if (!fs.existsSync(DIST_MAP)) {
-  console.warn('[fix-sourcemap] dist/main.js.map not found, skip');
+if (!fs.existsSync(ROOT_MAP)) {
+  console.warn('[fix-sourcemap] main.js.map not found, skip');
   process.exit(0);
 }
 
-const raw = fs.readFileSync(DIST_MAP, 'utf8');
+const raw = fs.readFileSync(ROOT_MAP, 'utf8');
 const map = JSON.parse(raw);
 
 // Ensure file name matches what Obsidian loads
@@ -42,5 +42,5 @@ if (!Array.isArray(map.sourcesContent) || map.sourcesContent.length !== map.sour
   });
 }
 
-fs.writeFileSync(DIST_MAP, JSON.stringify(map));
-console.log('[fix-sourcemap] normalized dist/main.js.map');
+fs.writeFileSync(ROOT_MAP, JSON.stringify(map));
+console.log('[fix-sourcemap] normalized main.js.map');

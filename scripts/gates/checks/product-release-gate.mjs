@@ -89,7 +89,7 @@ function check_product_acceptance_gate() {
 
   const pkg = json('package.json');
   const manifest = json('manifest.json');
-  const example = json('data.example.json');
+  const example = json('config/data.example.json');
   if (manifest.id !== pkg.name) failures.push('manifest.id must match package name');
   if (manifest.version !== pkg.version) failures.push('manifest.version must match package version');
   if (example.aiSettings?.enabled !== false) failures.push('AI must be disabled by default');

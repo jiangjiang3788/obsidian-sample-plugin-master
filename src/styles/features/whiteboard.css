@@ -1,0 +1,457 @@
+/* ThinkOS Whiteboard 1.1.0: standalone workspace. Runtime geometry stays inline; fixed visual rules live here. */
+.think-whiteboard-workspace-view,
+.think-whiteboard-workspace-view > .think-os {
+  height: 100%;
+  min-height: 0;
+}
+
+.think-os.think-os--whiteboard {
+  height: 100%;
+  min-height: 0;
+}
+
+.think-os .think-whiteboard-workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--think-bg-canvas);
+  color: var(--think-text-primary);
+}
+
+.think-os .think-whiteboard-source__hint,
+.think-os .think-whiteboard-source__count,
+.think-os .think-whiteboard-source__row-meta,
+.think-os .think-whiteboard-card__date,
+.think-os .think-whiteboard-card__record-id {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+}
+
+.think-os .think-whiteboard-body {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+}
+
+.think-os .think-whiteboard-source {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+  border-right: 1px solid var(--think-section-border);
+  background: var(--think-section-bg);
+}
+
+.think-os .think-whiteboard-source__search {
+  width: auto;
+  margin: 0 var(--think-space-4) var(--think-space-3);
+}
+
+.think-os .think-whiteboard-source__count {
+  padding: var(--think-space-2) var(--think-space-4);
+  border-top: 1px solid var(--think-list-divider);
+}
+
+.think-os .think-whiteboard-source__results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-2);
+  min-height: 0;
+  padding: var(--think-space-2) var(--think-space-3) var(--think-space-4);
+  overflow: auto;
+  border-top: 1px solid var(--think-list-divider);
+}
+
+.think-os .think-whiteboard-source__row {
+  --think-record-type-accent: var(--think-record-type-neutral);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--think-rhythm-related);
+  min-width: 0;
+  padding: var(--think-space-2) var(--think-space-3);
+  border: 1px solid var(--think-border-subtle);
+  border-inline-start: 6px solid var(--think-record-type-accent);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-1);
+  cursor: grab;
+  user-select: none;
+}
+
+.think-os .think-whiteboard-source__row:hover {
+  border-color: var(--think-border-strong);
+  background: var(--think-bg-hover);
+}
+
+.think-os .think-whiteboard-source__row[data-whiteboard-source-draggable="false"] { cursor: default; }
+
+.think-os .think-whiteboard-source__row.is-dragging {
+  opacity: 0.58;
+  cursor: grabbing;
+  border-color: var(--think-border-selection);
+}
+
+.think-os .think-whiteboard-source__row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.think-os .think-whiteboard-source__row-action { flex: 0 0 auto; }
+
+.think-os .think-whiteboard-source__remove-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--think-space-2);
+  padding: var(--think-space-5);
+  border: 2px dashed var(--think-border-selection);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  text-align: center;
+  pointer-events: none;
+}
+
+.think-os .think-whiteboard-source__remove-drop-overlay span { color: var(--think-text-secondary); font-size: var(--think-font-size-sm); }
+
+.think-os .think-whiteboard-source__row-heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--think-space-2);
+  min-width: 0;
+}
+
+.think-os .think-whiteboard-source__type,
+.think-os .think-whiteboard-card__type {
+  color: var(--think-record-type-accent, var(--think-record-type-neutral));
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+  white-space: nowrap;
+}
+
+.think-os .think-whiteboard-source__row-title,
+.think-os .think-whiteboard-source__row-meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.think-os .think-whiteboard-board {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--think-bg-canvas);
+}
+
+.think-os .think-whiteboard-board.is-source-drop-target { box-shadow: inset 0 0 0 2px var(--think-border-selection); }
+
+.think-os .think-whiteboard-board__drop-hint {
+  position: absolute;
+  top: var(--think-space-4);
+  left: 50%;
+  z-index: 2200;
+  transform: translateX(-50%);
+  padding: var(--think-space-2) var(--think-space-4);
+  border: 1px solid var(--think-border-selection);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  font-weight: var(--think-font-weight-semibold);
+  pointer-events: none;
+}
+
+.think-os .think-whiteboard-source-drag-ghost {
+  position: fixed;
+  z-index: 4000;
+  max-width: 220px;
+  padding: var(--think-space-2) var(--think-space-3);
+  overflow: hidden;
+  border: 1px solid var(--think-border-selection);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  box-shadow: var(--think-shadow-overlay);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.think-os .think-whiteboard-empty {
+  margin: var(--think-space-5);
+  padding: var(--think-space-5);
+  color: var(--think-empty-state-text);
+  background: var(--think-empty-state-bg);
+  border-radius: var(--think-radius-md);
+}
+
+.think-os .think-whiteboard-empty--canvas { position: absolute; top: 50%; left: 50%; z-index: 1; margin: 0; transform: translate(-50%, -50%); pointer-events: none; }
+
+.think-os .think-whiteboard-canvas-viewport {
+  --think-whiteboard-grid-minor: 40px; --think-whiteboard-grid-major: 200px;
+  --think-whiteboard-grid-minor-x: 0px; --think-whiteboard-grid-minor-y: 0px; --think-whiteboard-grid-major-x: 0px; --think-whiteboard-grid-major-y: 0px;
+  position: absolute; inset: 0; overflow: hidden; cursor: grab; touch-action: none; background-color: var(--think-bg-canvas);
+  background-image: linear-gradient(to right, color-mix(in srgb, var(--think-border-subtle) 45%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--think-border-subtle) 45%, transparent) 1px, transparent 1px), linear-gradient(to right, color-mix(in srgb, var(--think-border-strong) 55%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--think-border-strong) 55%, transparent) 1px, transparent 1px);
+  background-size: var(--think-whiteboard-grid-minor) var(--think-whiteboard-grid-minor), var(--think-whiteboard-grid-minor) var(--think-whiteboard-grid-minor), var(--think-whiteboard-grid-major) var(--think-whiteboard-grid-major), var(--think-whiteboard-grid-major) var(--think-whiteboard-grid-major);
+  background-position: var(--think-whiteboard-grid-minor-x) var(--think-whiteboard-grid-minor-y), var(--think-whiteboard-grid-minor-x) var(--think-whiteboard-grid-minor-y), var(--think-whiteboard-grid-major-x) var(--think-whiteboard-grid-major-y), var(--think-whiteboard-grid-major-x) var(--think-whiteboard-grid-major-y);
+}
+.think-os .think-whiteboard-canvas-viewport[data-whiteboard-grid="off"] { background-image: none; }
+.think-os .think-whiteboard-canvas-viewport[data-whiteboard-panning="true"] { cursor: grabbing; }
+.think-os .think-whiteboard-pan-hint { position: absolute; right: var(--think-space-3); bottom: var(--think-space-3); z-index: 2300; padding: var(--think-space-1) var(--think-space-2); border-radius: var(--think-radius-sm); background: var(--think-bg-elevated); color: var(--think-text-secondary); font-size: var(--think-font-size-sm); opacity: 0.78; pointer-events: none; }
+
+/* 1.1.5: viewport-sized world layer is only a transform surface; overflow remains unconstrained world space. */
+.think-os .think-whiteboard-canvas { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; transform-origin: 0 0; }
+
+.think-os .think-whiteboard-edge-layer,
+.think-os .think-whiteboard-edge-controls { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+.think-os .think-whiteboard-edge-layer {
+  z-index: 0;
+  overflow: visible;
+  color: var(--think-text-secondary);
+  pointer-events: none;
+}
+
+.think-os .think-whiteboard-edge__path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  opacity: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+
+.think-os .think-whiteboard-edge__arrow { fill: currentColor; }
+.think-os .think-whiteboard-edge-controls { z-index: 1000; pointer-events: none; }
+
+.think-os .think-whiteboard-edge__remove.think-button {
+  position: absolute;
+  min-width: 24px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  pointer-events: auto;
+}
+
+.think-os .think-whiteboard-card {
+  --think-record-type-accent: var(--think-record-type-neutral);
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 248px;
+  min-height: 168px;
+  gap: var(--think-rhythm-group);
+  border-inline-start: 6px solid var(--think-record-type-accent);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.think-os .think-whiteboard-card.is-dragging { cursor: grabbing; }
+.think-os .think-whiteboard-card.is-committing { cursor: progress; }
+.think-os .think-whiteboard-card.is-connection-source,
+.think-os .think-whiteboard-card[data-whiteboard-connection-target="true"] {
+  outline: 2px solid var(--think-focus-ring-color);
+  outline-offset: 2px;
+}
+
+.think-os .think-whiteboard-card__header,
+.think-os .think-whiteboard-card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--think-rhythm-related);
+}
+
+.think-os .think-whiteboard-card__header { justify-content: space-between; }
+.think-os .think-whiteboard-card__goal {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.think-os .think-whiteboard-card__footer { justify-content: flex-end; margin-top: auto; }
+
+.think-os .think-whiteboard-card__title {
+  color: var(--think-text-primary);
+  font-weight: var(--think-font-weight-semibold);
+  line-height: var(--think-line-height-tight);
+}
+
+.think-os .think-whiteboard-card__summary {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--think-text-secondary);
+  line-height: var(--think-line-height-normal);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.think-os .think-whiteboard-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-2);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+}
+
+.think-os .think-whiteboard-card--missing {
+  border-style: dashed;
+  border-inline-start-style: solid;
+  --think-record-type-accent: var(--think-data-4);
+}
+
+@media (max-width: 720px) {
+  .think-os .think-whiteboard-body { grid-template-columns: minmax(220px, 42vw) minmax(0, 1fr); }
+}
+
+/* 1.1.1: Record Source filters are ephemeral and never affect board layout.
+ * Whiteboard source UI follows the shared flat-list rhythm: hierarchy through
+ * spacing/indentation/dividers, not nested object frames.
+ */
+.think-os .think-whiteboard-source-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 var(--think-space-4);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.think-os .think-whiteboard-source-filters__heading,
+.think-os .think-whiteboard-source-filter-time__dates {
+  display: flex;
+  align-items: center;
+}
+
+.think-os .think-whiteboard-source-filters__heading {
+  justify-content: space-between;
+  gap: var(--think-space-2);
+  padding: var(--think-space-2) 0;
+  font-weight: var(--think-font-weight-semibold);
+}
+
+.think-os .think-whiteboard-source-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-1);
+  padding: var(--think-space-2) 0;
+  border-top: 1px solid var(--think-list-divider);
+}
+
+.think-os .think-whiteboard-source-filter-time {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-2);
+}
+
+.think-os .think-whiteboard-source-filter-group__label {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+}
+
+.think-os .think-whiteboard-source-filter-types {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--think-space-4);
+  row-gap: 0;
+}
+
+.think-os .think-whiteboard-source-filter-type {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.think-os .think-whiteboard-goal-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 18rem;
+  overflow: auto;
+  padding: 0;
+}
+
+.think-os .think-whiteboard-goal-tree__node { min-width: 0; }
+
+.think-os .think-whiteboard-goal-tree__row {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-1);
+  min-height: var(--think-list-row-min-height-compact);
+  padding-block: 0;
+}
+
+.think-os .think-whiteboard-goal-tree__check {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  gap: var(--think-space-2);
+}
+
+.think-os .think-whiteboard-goal-tree__toggle {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  min-height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--think-text-secondary);
+  cursor: pointer;
+}
+
+.think-os .think-whiteboard-goal-tree__toggle-placeholder { flex: 0 0 1.5rem; }
+
+.think-os .think-whiteboard-goal-tree__children {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-left: var(--think-space-4);
+}
+
+.think-os .think-whiteboard-goal-tree__empty {
+  padding: var(--think-space-1) 0;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+}
+
+.think-os .think-whiteboard-source-filter-time__dates { gap: var(--think-space-2); }
+.think-os .think-whiteboard-source-filter-time__dates .think-input { min-width: 0; flex: 1 1 0; }
+.think-os .think-whiteboard-source-filter-error { color: var(--think-danger); font-size: var(--think-font-size-sm); }
+
+/* 1.1.3: board-local find is ephemeral; source/filter collapse changes only workspace chrome. */
+.think-os .think-whiteboard-body.is-source-collapsed { grid-template-columns: 0 minmax(0, 1fr); } .think-os .think-whiteboard-body.is-source-collapsed .think-whiteboard-source { width: 0; min-width: 0; overflow: hidden; border-right: 0; visibility: hidden; pointer-events: none; }
+.think-os .think-whiteboard-board-tools { position: absolute; inset: var(--think-space-3) var(--think-space-3) auto var(--think-space-3); z-index: 2400; display: flex; align-items: flex-start; justify-content: space-between; gap: var(--think-space-3); pointer-events: none; } .think-os .think-whiteboard-board-tools > * { pointer-events: auto; }
+.think-os .think-whiteboard-find { display: flex; align-items: center; gap: var(--think-space-1); padding: var(--think-space-1); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-elevated); box-shadow: var(--think-shadow-overlay); } .think-os .think-whiteboard-find__input { width: min(260px, 26vw); min-width: 150px; } .think-os .think-whiteboard-find__count { min-width: 2.75rem; color: var(--think-text-secondary); font-size: var(--think-font-size-sm); text-align: center; white-space: nowrap; }
+.think-os .think-whiteboard-card.is-find-dimmed { opacity: 0.24; } .think-os .think-whiteboard-card.is-find-match { box-shadow: 0 0 0 2px var(--think-border-selection); } .think-os .think-whiteboard-card.is-find-active { box-shadow: 0 0 0 3px var(--think-focus-ring-color); }
+.think-os .think-whiteboard-source-filters__toggle { display: inline-flex; align-items: center; gap: var(--think-space-2); min-width: 0; padding: 0; border: 0; background: transparent; color: var(--think-text-primary); font: inherit; font-weight: var(--think-font-weight-semibold); cursor: pointer; } .think-os .think-whiteboard-source-filters__body { display: flex; flex-direction: column; min-height: 0; } .think-os .think-whiteboard-source-filters.is-collapsed .think-whiteboard-source-filters__heading { border-bottom: 1px solid var(--think-list-divider); }
+@media (max-width: 720px) { .think-os .think-whiteboard-find__input { width: min(190px, 34vw); } }
+
+/* 1.1.4: search is primary retrieval; filters stay secondary. Zoom is bounded and ephemeral. */
+.think-os .think-whiteboard-source__search-zone { padding: var(--think-space-3) var(--think-space-4); border-bottom: 1px solid var(--think-list-divider); background: var(--think-bg-surface-1); }
+.think-os .think-whiteboard-source__search-zone .think-whiteboard-source__search { width: 100%; margin: 0; }
+/* 1.1.5: world layer is camera-transformed instead of a finite scroll canvas; negative world coordinates stay renderable. */
+.think-os .think-whiteboard-world { will-change: transform; }
+.think-os .think-whiteboard-board-tools__left, .think-os .think-whiteboard-board-tools__right, .think-os .think-whiteboard-board-tools__nested-exit { display: flex; align-items: center; gap: var(--think-space-2); min-width: 0; }
+.think-os .think-whiteboard-zoom { display: inline-flex; align-items: center; gap: var(--think-space-1); padding: var(--think-space-1); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-elevated); }
+.think-os .think-whiteboard-zoom__value { min-width: 3.5rem; padding: 0 var(--think-space-1); border: 0; background: transparent; color: var(--think-text-secondary); font: inherit; font-size: var(--think-font-size-sm); cursor: pointer; }
+.think-os .think-whiteboard-find { padding: 0; border: 0; background: transparent; box-shadow: none; }
+@media (max-width: 720px) { .think-os .think-whiteboard-board-tools__right { gap: var(--think-space-1); } .think-os .think-whiteboard-zoom__value { min-width: 3rem; } }

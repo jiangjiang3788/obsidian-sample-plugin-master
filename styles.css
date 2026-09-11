@@ -319,6 +319,44 @@
   --think-heatmap-4: #4c7ed1;
   --think-heatmap-5: #759cff;
 }
+
+/*
+ * Record type semantic palette.
+ *
+ * These tokens are a product contract shared by every view. They are separate
+ * from category/goal colors and from the generic chart palette above: a Record
+ * type keeps the same identity color wherever a view chooses to render a type
+ * accent. Text/labels remain present where type identity must not be color-only.
+ */
+.think-os {
+  --think-record-type-task: #4f7cff;
+  --think-record-type-task-session: #168ca8;
+  --think-record-type-task-series: #6f66d9;
+  --think-record-type-energy: #d98b22;
+  --think-record-type-habit: #20a675;
+  --think-record-type-evidence: #e8783d;
+  --think-record-type-thought: #8b68d8;
+  --think-record-type-review: #d65b74;
+  --think-record-type-plan: #547aa5;
+  --think-record-type-blocker: #c94f4f;
+  --think-record-type-milestone: #a98213;
+  --think-record-type-neutral: var(--think-text-secondary);
+}
+
+.theme-dark .think-os,
+.think-os.theme-dark {
+  --think-record-type-task: #7da2ff;
+  --think-record-type-task-session: #4ab7ce;
+  --think-record-type-task-series: #9b91ef;
+  --think-record-type-energy: #f1b45b;
+  --think-record-type-habit: #45c994;
+  --think-record-type-evidence: #f39a69;
+  --think-record-type-thought: #ac8ee8;
+  --think-record-type-review: #ef8095;
+  --think-record-type-plan: #80a3c9;
+  --think-record-type-blocker: #ec7777;
+  --think-record-type-milestone: #d7b449;
+}
 }
 /* Minimal, plugin-scoped normalization. Existing feature CSS remains untouched in V1. */
 .think-os,
@@ -2239,6 +2277,38 @@
 .think-os .think-disclosure__icon { width: var(--think-icon-size-sm); height: var(--think-icon-size-sm); transition: transform var(--think-duration-fast) var(--think-ease-standard); }
 .think-os .think-disclosure[open] .think-disclosure__icon { transform: rotate(180deg); }
 .think-os .think-disclosure__body { padding: var(--think-rhythm-inline) 0 0 var(--think-rhythm-group); }
+/* Global Record type presentation surface. One type -> one semantic accent token. */
+.think-os [data-record-type] { --think-record-type-accent: var(--think-record-type-neutral); }
+.think-os [data-record-type="task"] { --think-record-type-accent: var(--think-record-type-task); }
+.think-os [data-record-type="task-session"] { --think-record-type-accent: var(--think-record-type-task-session); }
+.think-os [data-record-type="task-series"] { --think-record-type-accent: var(--think-record-type-task-series); }
+.think-os [data-record-type="energy"] { --think-record-type-accent: var(--think-record-type-energy); }
+.think-os [data-record-type="habit"] { --think-record-type-accent: var(--think-record-type-habit); }
+.think-os [data-record-type="evidence"] { --think-record-type-accent: var(--think-record-type-evidence); }
+.think-os [data-record-type="thought"] { --think-record-type-accent: var(--think-record-type-thought); }
+.think-os [data-record-type="review"] { --think-record-type-accent: var(--think-record-type-review); }
+.think-os [data-record-type="plan"] { --think-record-type-accent: var(--think-record-type-plan); }
+.think-os [data-record-type="blocker"] { --think-record-type-accent: var(--think-record-type-blocker); }
+.think-os [data-record-type="milestone"] { --think-record-type-accent: var(--think-record-type-milestone); }
+.think-os .think-record-type-pill {
+  border-inline-start: 4px solid var(--think-record-type-accent);
+}
+.think-os .think-record-type-marker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-1);
+}
+.think-os .think-record-type-marker::before {
+  content: '';
+  width: 0.5em;
+  height: 0.5em;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--think-record-type-accent);
+}
+.think-os .think-record-type-header {
+  box-shadow: inset 0 -3px 0 var(--think-record-type-accent);
+}
 /* CSS V3: governed Settings workspace and page composition. */
 .think-os--settings .think-settings-page {
   width: min(100%, var(--think-content-width-lg));
@@ -6906,6 +6976,774 @@ body.excel-view-is-resizing-column * {
 .bv-group-content > :is(.bv-item, .task-row):last-child {
     border-bottom: 0;
 }
+/* ThinkOS Whiteboard 1.1.0: standalone workspace. Runtime geometry stays inline; fixed visual rules live here. */
+.think-whiteboard-workspace-view,
+.think-whiteboard-workspace-view > .think-os {
+  height: 100%;
+  min-height: 0;
+}
+.think-os.think-os--whiteboard {
+  height: 100%;
+  min-height: 0;
+}
+.think-os .think-whiteboard-workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--think-bg-canvas);
+  color: var(--think-text-primary);
+}
+.think-os .think-whiteboard-source__hint,
+.think-os .think-whiteboard-source__count,
+.think-os .think-whiteboard-source__row-meta,
+.think-os .think-whiteboard-card__date,
+.think-os .think-whiteboard-card__record-id {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+}
+.think-os .think-whiteboard-body {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+}
+.think-os .think-whiteboard-source {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+  border-right: 1px solid var(--think-section-border);
+  background: var(--think-section-bg);
+}
+.think-os .think-whiteboard-source__search {
+  width: auto;
+  margin: 0 var(--think-space-4) var(--think-space-3);
+}
+.think-os .think-whiteboard-source__count {
+  padding: var(--think-space-2) var(--think-space-4);
+  border-top: 1px solid var(--think-list-divider);
+}
+.think-os .think-whiteboard-source__results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-2);
+  min-height: 0;
+  padding: var(--think-space-2) var(--think-space-3) var(--think-space-4);
+  overflow: auto;
+  border-top: 1px solid var(--think-list-divider);
+}
+.think-os .think-whiteboard-source__row {
+  --think-record-type-accent: var(--think-record-type-neutral);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--think-rhythm-related);
+  min-width: 0;
+  padding: var(--think-space-2) var(--think-space-3);
+  border: 1px solid var(--think-border-subtle);
+  border-inline-start: 6px solid var(--think-record-type-accent);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-surface-1);
+  cursor: grab;
+  user-select: none;
+}
+.think-os .think-whiteboard-source__row:hover {
+  border-color: var(--think-border-strong);
+  background: var(--think-bg-hover);
+}
+.think-os .think-whiteboard-source__row[data-whiteboard-source-draggable="false"] { cursor: default; }
+.think-os .think-whiteboard-source__row.is-dragging {
+  opacity: 0.58;
+  cursor: grabbing;
+  border-color: var(--think-border-selection);
+}
+.think-os .think-whiteboard-source__row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.think-os .think-whiteboard-source__row-action { flex: 0 0 auto; }
+.think-os .think-whiteboard-source__remove-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--think-space-2);
+  padding: var(--think-space-5);
+  border: 2px dashed var(--think-border-selection);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  text-align: center;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-source__remove-drop-overlay span { color: var(--think-text-secondary); font-size: var(--think-font-size-sm); }
+.think-os .think-whiteboard-source__row-heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--think-space-2);
+  min-width: 0;
+}
+.think-os .think-whiteboard-source__type,
+.think-os .think-whiteboard-card__type {
+  color: var(--think-record-type-accent, var(--think-record-type-neutral));
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+  white-space: nowrap;
+}
+.think-os .think-whiteboard-source__row-title,
+.think-os .think-whiteboard-source__row-meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.think-os .think-whiteboard-board {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--think-bg-canvas);
+}
+.think-os .think-whiteboard-board.is-source-drop-target { box-shadow: inset 0 0 0 2px var(--think-border-selection); }
+.think-os .think-whiteboard-board__drop-hint {
+  position: absolute;
+  top: var(--think-space-4);
+  left: 50%;
+  z-index: 2200;
+  transform: translateX(-50%);
+  padding: var(--think-space-2) var(--think-space-4);
+  border: 1px solid var(--think-border-selection);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  font-weight: var(--think-font-weight-semibold);
+  pointer-events: none;
+}
+.think-os .think-whiteboard-source-drag-ghost {
+  position: fixed;
+  z-index: 4000;
+  max-width: 220px;
+  padding: var(--think-space-2) var(--think-space-3);
+  overflow: hidden;
+  border: 1px solid var(--think-border-selection);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  box-shadow: var(--think-shadow-overlay);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-empty {
+  margin: var(--think-space-5);
+  padding: var(--think-space-5);
+  color: var(--think-empty-state-text);
+  background: var(--think-empty-state-bg);
+  border-radius: var(--think-radius-md);
+}
+.think-os .think-whiteboard-empty--canvas { position: absolute; top: 50%; left: 50%; z-index: 1; margin: 0; transform: translate(-50%, -50%); pointer-events: none; }
+.think-os .think-whiteboard-canvas-viewport {
+  --think-whiteboard-grid-minor: 40px; --think-whiteboard-grid-major: 200px;
+  --think-whiteboard-grid-minor-x: 0px; --think-whiteboard-grid-minor-y: 0px; --think-whiteboard-grid-major-x: 0px; --think-whiteboard-grid-major-y: 0px;
+  position: absolute; inset: 0; overflow: hidden; cursor: grab; touch-action: none; background-color: var(--think-bg-canvas);
+  background-image: linear-gradient(to right, color-mix(in srgb, var(--think-border-subtle) 45%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--think-border-subtle) 45%, transparent) 1px, transparent 1px), linear-gradient(to right, color-mix(in srgb, var(--think-border-strong) 55%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--think-border-strong) 55%, transparent) 1px, transparent 1px);
+  background-size: var(--think-whiteboard-grid-minor) var(--think-whiteboard-grid-minor), var(--think-whiteboard-grid-minor) var(--think-whiteboard-grid-minor), var(--think-whiteboard-grid-major) var(--think-whiteboard-grid-major), var(--think-whiteboard-grid-major) var(--think-whiteboard-grid-major);
+  background-position: var(--think-whiteboard-grid-minor-x) var(--think-whiteboard-grid-minor-y), var(--think-whiteboard-grid-minor-x) var(--think-whiteboard-grid-minor-y), var(--think-whiteboard-grid-major-x) var(--think-whiteboard-grid-major-y), var(--think-whiteboard-grid-major-x) var(--think-whiteboard-grid-major-y);
+}
+.think-os .think-whiteboard-canvas-viewport[data-whiteboard-grid="off"] { background-image: none; }
+.think-os .think-whiteboard-canvas-viewport[data-whiteboard-panning="true"] { cursor: grabbing; }
+.think-os .think-whiteboard-pan-hint { position: absolute; right: var(--think-space-3); bottom: var(--think-space-3); z-index: 2300; padding: var(--think-space-1) var(--think-space-2); border-radius: var(--think-radius-sm); background: var(--think-bg-elevated); color: var(--think-text-secondary); font-size: var(--think-font-size-sm); opacity: 0.78; pointer-events: none; }
+/* 1.1.5: viewport-sized world layer is only a transform surface; overflow remains unconstrained world space. */
+.think-os .think-whiteboard-canvas { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; transform-origin: 0 0; }
+.think-os .think-whiteboard-edge-layer,
+.think-os .think-whiteboard-edge-controls { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.think-os .think-whiteboard-edge-layer {
+  z-index: 0;
+  overflow: visible;
+  color: var(--think-text-secondary);
+  pointer-events: none;
+}
+.think-os .think-whiteboard-edge__path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  opacity: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+.think-os .think-whiteboard-edge__arrow { fill: currentColor; }
+.think-os .think-whiteboard-edge-controls { z-index: 1000; pointer-events: none; }
+.think-os .think-whiteboard-edge__remove.think-button {
+  position: absolute;
+  min-width: 24px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  pointer-events: auto;
+}
+.think-os .think-whiteboard-card {
+  --think-record-type-accent: var(--think-record-type-neutral);
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 248px;
+  min-height: 168px;
+  gap: var(--think-rhythm-group);
+  border-inline-start: 6px solid var(--think-record-type-accent);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.think-os .think-whiteboard-card.is-dragging { cursor: grabbing; }
+.think-os .think-whiteboard-card.is-committing { cursor: progress; }
+.think-os .think-whiteboard-card.is-connection-source,
+.think-os .think-whiteboard-card[data-whiteboard-connection-target="true"] {
+  outline: 2px solid var(--think-focus-ring-color);
+  outline-offset: 2px;
+}
+.think-os .think-whiteboard-card__header,
+.think-os .think-whiteboard-card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--think-rhythm-related);
+}
+.think-os .think-whiteboard-card__header { justify-content: space-between; }
+.think-os .think-whiteboard-card__goal {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.think-os .think-whiteboard-card__footer { justify-content: flex-end; margin-top: auto; }
+.think-os .think-whiteboard-card__title {
+  color: var(--think-text-primary);
+  font-weight: var(--think-font-weight-semibold);
+  line-height: var(--think-line-height-tight);
+}
+.think-os .think-whiteboard-card__summary {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--think-text-secondary);
+  line-height: var(--think-line-height-normal);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+.think-os .think-whiteboard-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--think-space-2);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+}
+.think-os .think-whiteboard-card--missing {
+  border-style: dashed;
+  border-inline-start-style: solid;
+  --think-record-type-accent: var(--think-data-4);
+}
+@media (max-width: 720px) {
+  .think-os .think-whiteboard-body { grid-template-columns: minmax(220px, 42vw) minmax(0, 1fr); }
+}
+/* 1.1.1: Record Source filters are ephemeral and never affect board layout.
+ * Whiteboard source UI follows the shared flat-list rhythm: hierarchy through
+ * spacing/indentation/dividers, not nested object frames.
+ */
+.think-os .think-whiteboard-source-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 var(--think-space-4);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.think-os .think-whiteboard-source-filters__heading,
+.think-os .think-whiteboard-source-filter-time__dates {
+  display: flex;
+  align-items: center;
+}
+.think-os .think-whiteboard-source-filters__heading {
+  justify-content: space-between;
+  gap: var(--think-space-2);
+  padding: var(--think-space-2) 0;
+  font-weight: var(--think-font-weight-semibold);
+}
+.think-os .think-whiteboard-source-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-1);
+  padding: var(--think-space-2) 0;
+  border-top: 1px solid var(--think-list-divider);
+}
+.think-os .think-whiteboard-source-filter-time {
+  display: flex;
+  flex-direction: column;
+  gap: var(--think-space-2);
+}
+.think-os .think-whiteboard-source-filter-group__label {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-semibold);
+}
+.think-os .think-whiteboard-source-filter-types {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--think-space-4);
+  row-gap: 0;
+}
+.think-os .think-whiteboard-source-filter-type {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.think-os .think-whiteboard-goal-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 18rem;
+  overflow: auto;
+  padding: 0;
+}
+.think-os .think-whiteboard-goal-tree__node { min-width: 0; }
+.think-os .think-whiteboard-goal-tree__row {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-1);
+  min-height: var(--think-list-row-min-height-compact);
+  padding-block: 0;
+}
+.think-os .think-whiteboard-goal-tree__check {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  gap: var(--think-space-2);
+}
+.think-os .think-whiteboard-goal-tree__toggle {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  min-height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--think-text-secondary);
+  cursor: pointer;
+}
+.think-os .think-whiteboard-goal-tree__toggle-placeholder { flex: 0 0 1.5rem; }
+.think-os .think-whiteboard-goal-tree__children {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-left: var(--think-space-4);
+}
+.think-os .think-whiteboard-goal-tree__empty {
+  padding: var(--think-space-1) 0;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+}
+.think-os .think-whiteboard-source-filter-time__dates { gap: var(--think-space-2); }
+.think-os .think-whiteboard-source-filter-time__dates .think-input { min-width: 0; flex: 1 1 0; }
+.think-os .think-whiteboard-source-filter-error { color: var(--think-danger); font-size: var(--think-font-size-sm); }
+/* 1.1.3: board-local find is ephemeral; source/filter collapse changes only workspace chrome. */
+.think-os .think-whiteboard-body.is-source-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
+.think-os .think-whiteboard-body.is-source-collapsed .think-whiteboard-source { width: 0; min-width: 0; overflow: hidden; border-right: 0; visibility: hidden; pointer-events: none; }
+.think-os .think-whiteboard-board-tools { position: absolute; inset: var(--think-space-3) var(--think-space-3) auto var(--think-space-3); z-index: 2400; display: flex; align-items: flex-start; justify-content: space-between; gap: var(--think-space-3); pointer-events: none; }
+.think-os .think-whiteboard-board-tools > * { pointer-events: auto; }
+.think-os .think-whiteboard-find { display: flex; align-items: center; gap: var(--think-space-1); padding: var(--think-space-1); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-elevated); box-shadow: var(--think-shadow-overlay); }
+.think-os .think-whiteboard-find__input { width: min(260px, 26vw); min-width: 150px; }
+.think-os .think-whiteboard-find__count { min-width: 2.75rem; color: var(--think-text-secondary); font-size: var(--think-font-size-sm); text-align: center; white-space: nowrap; }
+.think-os .think-whiteboard-card.is-find-dimmed { opacity: 0.24; }
+.think-os .think-whiteboard-card.is-find-match { box-shadow: 0 0 0 2px var(--think-border-selection); }
+.think-os .think-whiteboard-card.is-find-active { box-shadow: 0 0 0 3px var(--think-focus-ring-color); }
+.think-os .think-whiteboard-source-filters__toggle { display: inline-flex; align-items: center; gap: var(--think-space-2); min-width: 0; padding: 0; border: 0; background: transparent; color: var(--think-text-primary); font: inherit; font-weight: var(--think-font-weight-semibold); cursor: pointer; }
+.think-os .think-whiteboard-source-filters__body { display: flex; flex-direction: column; min-height: 0; }
+.think-os .think-whiteboard-source-filters.is-collapsed .think-whiteboard-source-filters__heading { border-bottom: 1px solid var(--think-list-divider); }
+@media (max-width: 720px) { .think-os .think-whiteboard-find__input { width: min(190px, 34vw); } }
+/* 1.1.4: search is primary retrieval; filters stay secondary. Zoom is bounded and ephemeral. */
+.think-os .think-whiteboard-source__search-zone { padding: var(--think-space-3) var(--think-space-4); border-bottom: 1px solid var(--think-list-divider); background: var(--think-bg-surface-1); }
+.think-os .think-whiteboard-source__search-zone .think-whiteboard-source__search { width: 100%; margin: 0; }
+/* 1.1.5: world layer is camera-transformed instead of a finite scroll canvas; negative world coordinates stay renderable. */
+.think-os .think-whiteboard-world { will-change: transform; }
+.think-os .think-whiteboard-board-tools__left, .think-os .think-whiteboard-board-tools__right, .think-os .think-whiteboard-board-tools__nested-exit { display: flex; align-items: center; gap: var(--think-space-2); min-width: 0; }
+.think-os .think-whiteboard-zoom { display: inline-flex; align-items: center; gap: var(--think-space-1); padding: var(--think-space-1); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-elevated); }
+.think-os .think-whiteboard-zoom__value { min-width: 3.5rem; padding: 0 var(--think-space-1); border: 0; background: transparent; color: var(--think-text-secondary); font: inherit; font-size: var(--think-font-size-sm); cursor: pointer; }
+.think-os .think-whiteboard-find { padding: 0; border: 0; background: transparent; box-shadow: none; }
+@media (max-width: 720px) { .think-os .think-whiteboard-board-tools__right { gap: var(--think-space-1); } .think-os .think-whiteboard-zoom__value { min-width: 3rem; } }
+/* Whiteboard 1.1.6: source multi-select + batch drag. */
+.think-os .think-whiteboard-source__selection-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  padding: var(--think-space-2) var(--think-space-3);
+  border-top: 1px solid var(--think-list-divider);
+  border-bottom: 1px solid var(--think-list-divider);
+  background: var(--think-bg-surface-1);
+}
+.think-os .think-whiteboard-source__selection-count {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+  white-space: nowrap;
+}
+.think-os .think-whiteboard-source__select {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+.think-os .think-whiteboard-source__select .think-selection-control { min-height: 0; }
+.think-os .think-whiteboard-source__select .think-selection-control__text { display: none; }
+.think-os .think-whiteboard-source__row.is-selected {
+  border-color: var(--think-border-selection);
+  background: var(--think-bg-selected, var(--think-bg-hover));
+}
+.think-os .think-whiteboard-source__row.is-selected.is-dragging {
+  box-shadow: 0 0 0 2px var(--think-focus-ring-color);
+}
+/* Whiteboard 1.1.8: ephemeral Canvas selection. */
+.think-os .think-whiteboard-card.is-selected {
+  outline: 3px solid var(--think-border-selection);
+  outline-offset: 3px;
+}
+.think-os .think-whiteboard-selection-marquee {
+  position: absolute;
+  z-index: 2400;
+  border: 1px solid var(--think-focus-ring-color);
+  background: color-mix(in srgb, var(--think-focus-ring-color) 12%, transparent);
+  pointer-events: none;
+}
+.think-os .think-whiteboard-board-selection {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--think-space-1);
+  padding-left: var(--think-space-2);
+  border-left: 1px solid var(--think-border-subtle);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+  white-space: nowrap;
+}
+/* Whiteboard 1.1.8 R2: direct drag-to-connect handles on all four card edges. */
+.think-os .think-whiteboard-card__edge-handle {
+  position: absolute;
+  z-index: 4;
+  width: 12px;
+  height: 12px;
+  min-width: 0;
+  padding: 0;
+  border: 2px solid var(--think-bg-elevated);
+  border-radius: 999px;
+  background: var(--think-focus-ring-color);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--think-focus-ring-color) 65%, transparent);
+  opacity: 0.28;
+  cursor: crosshair;
+  touch-action: none;
+}
+.think-os .think-whiteboard-card:hover > .think-whiteboard-card__edge-handle,
+.think-os .think-whiteboard-card.is-connection-source > .think-whiteboard-card__edge-handle { opacity: 0.9; }
+.think-os .think-whiteboard-card__edge-handle:hover,
+.think-os .think-whiteboard-card__edge-handle:focus-visible { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
+.think-os .think-whiteboard-card__edge-handle.is-top { left: 50%; top: 0; transform: translate(-50%, -50%); }
+.think-os .think-whiteboard-card__edge-handle.is-right { left: 100%; top: 50%; transform: translate(-50%, -50%); }
+.think-os .think-whiteboard-card__edge-handle.is-bottom { left: 50%; top: 100%; transform: translate(-50%, -50%); }
+.think-os .think-whiteboard-card__edge-handle.is-left { left: 0; top: 50%; transform: translate(-50%, -50%); }
+.think-os .think-whiteboard-edge__path--preview { stroke-dasharray: 7 5; opacity: 0.95; }
+.think-os .think-whiteboard-card[data-whiteboard-connection-target="true"] { outline: 3px solid var(--think-focus-ring-color); outline-offset: 4px; }
+/* 1.2.3: edge labels live at the geometry midpoint and stay editable without changing edge semantics. */
+.think-os .think-whiteboard-edge__control { position: absolute; display: flex; align-items: center; gap: 3px; transform: translate(-50%, -50%); pointer-events: auto; }
+.think-os .think-whiteboard-edge__label { max-width: 180px; overflow: hidden; padding: 2px 6px; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-elevated); color: var(--think-text-secondary); font-size: 11px; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; opacity: 0.38; cursor: text; }
+.think-os .think-whiteboard-edge__label.has-label,
+.think-os .think-whiteboard-edge__control:hover .think-whiteboard-edge__label { color: var(--think-text-primary); opacity: 0.96; }
+.think-os .think-whiteboard-edge__label-input { width: 160px; min-width: 120px; height: 28px; font-size: 12px; }
+.think-os .think-whiteboard-edge__control .think-whiteboard-edge__remove { position: static; transform: none; opacity: 0.36; }
+.think-os .think-whiteboard-edge__control:hover .think-whiteboard-edge__remove { opacity: 0.95; }
+/* Whiteboard 1.1.7: durable workbench grouping without Canvas multi-select. */
+.think-os .think-whiteboard-workbench {
+  position: absolute;
+  z-index: 0;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--think-border-selection) 58%, var(--think-border-subtle));
+  border-radius: var(--think-radius-md);
+  background: color-mix(in srgb, var(--think-bg-surface-1) 58%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--think-border-subtle) 30%, transparent);
+  pointer-events: none;
+}
+.think-os .think-whiteboard-workbench.is-drop-target {
+  border-color: var(--think-border-selection);
+  box-shadow: inset 0 0 0 2px var(--think-border-selection);
+  background: color-mix(in srgb, var(--think-bg-hover) 70%, transparent);
+}
+.think-os .think-whiteboard-workbench.is-find-active { outline: 3px solid var(--think-focus-ring-color); outline-offset: 3px; }
+.think-os .think-whiteboard-workbench.is-dragging { opacity: 0.86; }
+.think-os .think-whiteboard-workbench__header {
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-2);
+  height: 44px;
+  padding: 0 var(--think-space-2);
+  border-bottom: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md) var(--think-radius-md) 0 0;
+  background: color-mix(in srgb, var(--think-bg-elevated) 92%, transparent);
+  cursor: grab;
+  user-select: none;
+  pointer-events: auto;
+}
+.think-os .think-whiteboard-workbench.is-dragging .think-whiteboard-workbench__header { cursor: grabbing; }
+.think-os .think-whiteboard-workbench__drag-handle { flex: 0 0 auto; color: var(--think-text-secondary); cursor: grab; }
+.think-os .think-whiteboard-workbench.is-collapsed .think-whiteboard-workbench__header { border-bottom: 0; border-radius: var(--think-radius-md); }
+.think-os .think-whiteboard-workbench__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: var(--think-text-primary);
+  font: inherit;
+  font-weight: var(--think-font-weight-semibold);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+.think-os .think-whiteboard-workbench__title-input { flex: 1 1 auto; min-width: 120px; }
+.think-os .think-whiteboard-workbench__count { flex: 0 0 auto; color: var(--think-text-secondary); font-size: var(--think-font-size-sm); white-space: nowrap; }
+.think-os .think-whiteboard-workbench__empty { position: absolute; inset: 44px 0 0; display: grid; place-items: center; color: var(--think-text-secondary); font-size: var(--think-font-size-sm); pointer-events: none; }
+.think-os .think-whiteboard-card__workbench { color: var(--think-text-secondary); font-size: var(--think-font-size-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 1.2.1: entered Workbench uses the same canvas viewport with breadcrumb navigation. */
+.think-os .think-whiteboard-breadcrumbs {
+  position: absolute;
+  top: 52px;
+  right: var(--think-space-3);
+  left: var(--think-space-3);
+  z-index: 2350;
+  display: flex;
+  align-items: center;
+  gap: var(--think-space-1);
+  min-height: 34px;
+  padding: 0 var(--think-space-3);
+  overflow-x: auto;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: color-mix(in srgb, var(--think-bg-surface-1) 96%, transparent);
+  box-shadow: var(--think-shadow-overlay);
+}
+.think-os .think-whiteboard-breadcrumbs__segment { display: inline-flex; align-items: center; gap: var(--think-space-1); flex: 0 0 auto; }
+.think-os .think-whiteboard-breadcrumbs__item {
+  max-width: 220px;
+  padding: 3px 6px;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--think-radius-sm);
+  background: transparent;
+  color: var(--think-text-secondary);
+  font: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.think-os .think-whiteboard-breadcrumbs__item:hover { background: var(--think-bg-hover); color: var(--think-text-primary); }
+/* 1.2.5: browser-like nested navigation, fit-content and find path context. */
+.think-os .think-whiteboard-breadcrumbs__history { display: inline-flex; align-items: center; gap: var(--think-space-1); flex: 0 0 auto; }
+.think-os .think-whiteboard-breadcrumbs__path { display: flex; align-items: center; gap: var(--think-space-1); flex: 1 1 auto; min-width: 0; overflow-x: auto; }
+.think-os .think-whiteboard-breadcrumbs__fit { flex: 0 0 auto; margin-left: auto; }
+.think-os .think-whiteboard-breadcrumbs__item[aria-current="page"] { color: var(--think-text-primary); font-weight: 600; }
+.think-os .think-whiteboard-find__path { max-width: 220px; overflow: hidden; color: var(--think-text-secondary); font-size: var(--think-font-size-xs); text-overflow: ellipsis; white-space: nowrap; }
+/* 1.2.6-1.2.8: semantic zoom swaps unreadably small nodes for fixed-screen spatial locators. */
+.think-os .think-whiteboard-semantic-status {
+  position: absolute;
+  left: var(--think-space-3);
+  bottom: var(--think-space-3);
+  z-index: 2320;
+  max-width: min(520px, 70%);
+  padding: var(--think-space-1) var(--think-space-2);
+  overflow: hidden;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: color-mix(in srgb, var(--think-bg-elevated) 92%, transparent);
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-card {
+  visibility: hidden;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-workbench__header {
+  visibility: hidden;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-workbench {
+  border-width: calc(1px * var(--think-whiteboard-semantic-inverse-zoom));
+  box-shadow: none;
+}
+.think-os .think-whiteboard-canvas-viewport[data-whiteboard-lod="overview"] .think-whiteboard-annotation {
+  visibility: hidden;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-edge-controls { display: none; }
+.think-os .think-whiteboard-canvas-viewport[data-whiteboard-lod="compact"] .think-whiteboard-edge-layer { opacity: 0.45; }
+.think-os .think-whiteboard-canvas-viewport[data-whiteboard-lod="overview"] .think-whiteboard-edge-layer { opacity: 0.24; }
+.think-os .think-whiteboard-overview-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2000000;
+  overflow: visible;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-overview-marker {
+  position: absolute;
+  width: 0;
+  height: 0;
+  transform: scale(var(--think-whiteboard-semantic-inverse-zoom));
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-overview-marker__button {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 18px;
+  min-height: 18px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--think-border-strong);
+  border-radius: 999px;
+  background: var(--think-bg-elevated);
+  color: var(--think-text-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--think-bg-canvas) 80%, transparent), var(--think-shadow-overlay);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.think-os .think-whiteboard-overview-marker__button:hover,
+.think-os .think-whiteboard-overview-marker__button:focus-visible,
+.think-os .think-whiteboard-overview-marker__button.is-selected,
+.think-os .think-whiteboard-overview-marker__button.is-find-active,
+.think-os .think-whiteboard-overview-marker__button.is-drop-target {
+  border-color: var(--think-border-selection);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--think-focus-ring-color) 38%, transparent), var(--think-shadow-overlay);
+}
+.think-os .think-whiteboard-overview-marker__button.is-find-match { border-color: var(--think-border-selection); }
+.think-os .think-whiteboard-overview-marker--group .think-whiteboard-overview-marker__button { max-width: 180px; min-height: 24px; padding: 0 8px; border-radius: var(--think-radius-sm); font-weight: var(--think-font-weight-semibold); }
+.think-os .think-whiteboard-overview-marker--annotation .think-whiteboard-overview-marker__button { width: 20px; height: 20px; border-style: dashed; }
+.think-os .think-whiteboard-overview-marker__label { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="compact"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button {
+  max-width: 170px;
+  min-width: 76px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: var(--think-radius-sm);
+  justify-content: flex-start;
+}
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="compact"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__dot { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 999px; background: currentColor; }
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="compact"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__label { display: block; }
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button { width: 16px; height: 16px; }
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__label { position: absolute; left: 22px; display: none; max-width: 180px; padding: 4px 6px; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-elevated); box-shadow: var(--think-shadow-overlay); }
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button:hover .think-whiteboard-overview-marker__label,
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button:focus-visible .think-whiteboard-overview-marker__label,
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button.is-selected .think-whiteboard-overview-marker__label,
+.think-os .think-whiteboard-overview-layer[data-whiteboard-overview-level="overview"] .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button.is-find-active .think-whiteboard-overview-marker__label { display: block; }
+/* 1.4.0: semantic zoom keeps Record type identity without rendering full cards. */
+.think-os .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button[data-record-type] {
+  border-color: color-mix(in srgb, var(--think-record-type-accent) 58%, var(--think-border-strong));
+}
+.think-os .think-whiteboard-overview-marker--card .think-whiteboard-overview-marker__button[data-record-type] .think-whiteboard-overview-marker__dot {
+  background: var(--think-record-type-accent);
+}
+/* 1.3.1: Archive is a full spatial workspace; restore origin and archive position are independent. */
+.think-os .think-whiteboard-archive-canvas { position: absolute; inset: 0; z-index: 2600; display: flex; flex-direction: column; overflow: hidden; background: var(--think-bg-canvas); }
+.think-os .think-whiteboard-archive-canvas__toolbar { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: var(--think-space-3); padding: var(--think-space-2) var(--think-space-3); border-bottom: 1px solid var(--think-border-subtle); background: var(--think-bg-elevated); }
+.think-os .think-whiteboard-archive-canvas__title { display: flex; align-items: baseline; gap: var(--think-space-2); min-width: 0; }
+.think-os .think-whiteboard-archive-canvas__title span,
+.think-os .think-whiteboard-archive-card__origin { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
+.think-os .think-whiteboard-archive-canvas__actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--think-space-1); flex-wrap: wrap; }
+.think-os .think-whiteboard-archive-canvas__viewport { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; cursor: grab; touch-action: none; }
+.think-os .think-whiteboard-archive-canvas__viewport:active { cursor: grabbing; }
+.think-os .think-whiteboard-archive-card { position: absolute; box-sizing: border-box; width: 248px; min-height: 210px; padding: var(--think-space-3); border: 1px solid var(--think-border-subtle); border-inline-start: 6px solid var(--think-record-type-accent, var(--think-record-type-neutral)); border-radius: var(--think-radius-md); background: var(--think-bg-elevated); box-shadow: var(--think-shadow-md); cursor: grab; user-select: none; }
+.think-os .think-whiteboard-archive-card.is-selected { border-color: var(--think-border-selection); box-shadow: 0 0 0 3px color-mix(in srgb, var(--think-focus-ring-color) 28%, transparent), var(--think-shadow-md); }
+.think-os .think-whiteboard-archive-card__origin { margin-top: var(--think-space-2); }
+/* 1.2.2: lightweight spatial annotations; these are whiteboard projections, not canonical Records. */
+.think-os .think-whiteboard-annotation {
+  position: absolute;
+  width: 260px;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--think-radius-md);
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-md);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  cursor: grab;
+  user-select: none;
+}
+.think-os .think-whiteboard-annotation.is-text { background: color-mix(in srgb, var(--think-bg-primary) 72%, transparent); }
+.think-os .think-whiteboard-annotation.is-sticky { min-height: 132px; background: color-mix(in srgb, var(--interactive-accent) 13%, var(--think-bg-elevated)); border-color: color-mix(in srgb, var(--interactive-accent) 32%, var(--think-border-subtle)); box-shadow: var(--think-shadow-sm); }
+.think-os .think-whiteboard-annotation:hover,
+.think-os .think-whiteboard-annotation.is-editing { border-color: var(--think-border-default); }
+.think-os .think-whiteboard-annotation__text { min-height: 24px; overflow-wrap: anywhere; }
+.think-os .think-whiteboard-annotation__editor { width: 100%; min-height: 90px; resize: both; font: inherit; line-height: inherit; user-select: text; }
+.think-os .think-whiteboard-annotation__remove { position: absolute; top: -10px; right: -10px; opacity: 0; }
+.think-os .think-whiteboard-annotation:hover .think-whiteboard-annotation__remove,
+.think-os .think-whiteboard-annotation__remove:focus-visible { opacity: 1; }
+.think-os .think-whiteboard-annotation { touch-action: none; }
+.think-os .think-whiteboard-annotation.is-dragging { cursor: grabbing; }
+/* 1.2.4: context-sensitive whiteboard actions keep dense tooling off the permanent toolbar. */
+.think-os .think-whiteboard-context-menu { position: fixed; z-index: 10000; display: grid; min-width: 190px; max-width: 260px; padding: 6px; border: 1px solid var(--think-border-default); border-radius: var(--think-radius-md); background: var(--think-bg-elevated); box-shadow: var(--think-shadow-overlay); transform: translate(4px, 4px); }
+.think-os .think-whiteboard-context-menu > button { width: 100%; padding: 7px 9px; border: 0; border-radius: var(--think-radius-sm); background: transparent; color: var(--think-text-primary); text-align: left; cursor: pointer; }
+.think-os .think-whiteboard-context-menu > button:hover:not(:disabled),
+.think-os .think-whiteboard-context-menu > button:focus-visible { background: var(--think-bg-hover); }
+.think-os .think-whiteboard-context-menu > button:disabled { color: var(--think-text-muted); cursor: default; }
+.think-os .think-whiteboard-context-menu__title { padding: 5px 9px; color: var(--think-text-secondary); font-size: var(--think-font-size-sm); }
+.think-os .think-whiteboard-context-menu__separator { height: 1px; margin: 4px 3px; background: var(--think-border-subtle); }
+.think-os .think-whiteboard-context-menu > .think-whiteboard-context-menu__close { position: absolute; top: 2px; right: 2px; width: 26px; padding: 3px; text-align: center; opacity: 0.45; }
+/* 1.3.3-1.3.4: semantic Goal × Record Type × Time layout guides. */
+.think-os .think-whiteboard-layout-overlay { position: absolute; inset: 0; z-index: 2; overflow: visible; pointer-events: none; }
+.think-os .think-whiteboard-layout-guide { position: absolute; box-sizing: border-box; pointer-events: none; }
+.think-os .think-whiteboard-layout-guide--goal { border: 1px dashed color-mix(in srgb, var(--think-border-selection) 68%, transparent); border-radius: var(--think-radius-md); background: color-mix(in srgb, var(--think-bg-elevated) 8%, transparent); }
+.think-os .think-whiteboard-layout-guide--recordType { border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 75%, transparent); }
+.think-os .think-whiteboard-layout-guide--time { border-right: 1px solid color-mix(in srgb, var(--think-border-subtle) 75%, transparent); }
+.think-os .think-whiteboard-layout-guide__label { position: absolute; z-index: 1; max-width: calc(100% - 8px); padding: 3px 7px; overflow: hidden; transform-origin: left top; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: color-mix(in srgb, var(--think-bg-elevated) 94%, transparent); color: var(--think-text-secondary); font: inherit; font-size: var(--think-font-size-xs); font-weight: var(--think-font-weight-semibold); text-overflow: ellipsis; white-space: nowrap; cursor: pointer; pointer-events: auto; }
+.think-os .think-whiteboard-layout-guide--goal > .think-whiteboard-layout-guide__label { left: 12px; top: 10px; color: var(--think-text-primary); font-size: var(--think-font-size-sm); }
+.think-os .think-whiteboard-layout-guide--recordType > .think-whiteboard-layout-guide__label { left: 12px; top: 6px; }
+.think-os .think-whiteboard-layout-guide--time > .think-whiteboard-layout-guide__label { left: 6px; top: 8px; }
+.think-os .think-whiteboard-layout-guide__label:hover,
+.think-os .think-whiteboard-layout-guide__label:focus-visible { border-color: var(--think-border-selection); color: var(--think-text-primary); }
+/* 1.3.5: keep semantic layout guides readable while the board itself is deeply zoomed out. */
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-layout-guide--goal {
+  border-width: calc(1px * var(--think-whiteboard-semantic-inverse-zoom));
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-layout-guide--recordType {
+  border-bottom-width: calc(1px * var(--think-whiteboard-semantic-inverse-zoom));
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-layout-guide--time {
+  border-right-width: calc(1px * var(--think-whiteboard-semantic-inverse-zoom));
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-layout-guide__label {
+  transform: scale(var(--think-whiteboard-semantic-inverse-zoom));
+}
+/* 1.3.7: semantic guide labels are movable spatial annotations; their guide line/frame follows the label. */
+.think-os .think-whiteboard-layout-guide__label { cursor: grab; touch-action: none; user-select: none; }
+.think-os .think-whiteboard-layout-guide.is-dragging > .think-whiteboard-layout-guide__label { cursor: grabbing; border-color: var(--think-border-selection); }
 /* Event Timeline: date | axis | time | content. The time axis is the structural
  * boundary; records stay flat and use the shared visualization rhythm.
  */

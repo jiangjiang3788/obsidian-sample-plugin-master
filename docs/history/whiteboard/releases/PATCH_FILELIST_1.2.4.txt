@@ -1,0 +1,53 @@
+ThinkOS 1.2.4 PATCH FILE LIST
+Base: 1.1.9 SOURCE
+
+Files: 45
+
+A  doc/PATCH_FILELIST_1.2.4.txt
+A  doc/README_PATCH_1.2.4.txt
+A  doc/WHITEBOARD_IMPLEMENTATION_BASELINE_v1_1.2.4-updated.md
+A  doc/Whiteboard_1.2.4_IMPLEMENTATION_RESULT.md
+M  manifest.json
+M  package-lock.json
+M  package.json
+A  src/core/whiteboard/WhiteboardAnnotationMutations.ts
+A  src/core/whiteboard/WhiteboardGroupTree.ts
+M  src/core/whiteboard/WhiteboardSchema.ts
+M  src/core/whiteboard/WhiteboardStore.ts
+A  src/core/whiteboard/WhiteboardWorkbenchMutations.ts
+M  src/core/whiteboard/public.ts
+A  src/features/whiteboard/WhiteboardAnnotation.tsx
+A  src/features/whiteboard/WhiteboardAnnotationController.ts
+A  src/features/whiteboard/WhiteboardArrangeModel.ts
+M  src/features/whiteboard/WhiteboardBatchPlacementModel.ts
+M  src/features/whiteboard/WhiteboardBoardTools.tsx
+A  src/features/whiteboard/WhiteboardCanvasBreadcrumbs.tsx
+A  src/features/whiteboard/WhiteboardContextMenu.tsx
+A  src/features/whiteboard/WhiteboardContextMenuController.ts
+M  src/features/whiteboard/WhiteboardEdgeLayer.tsx
+A  src/features/whiteboard/WhiteboardHistoryController.ts
+A  src/features/whiteboard/WhiteboardNestedCanvasController.ts
+M  src/features/whiteboard/WhiteboardRecordTransferController.ts
+M  src/features/whiteboard/WhiteboardSelectionController.ts
+M  src/features/whiteboard/WhiteboardWorkbenchController.ts
+M  src/features/whiteboard/WhiteboardWorkbenchGroup.tsx
+M  src/features/whiteboard/WhiteboardWorkbenchModel.ts
+M  src/features/whiteboard/WhiteboardWorkspace.tsx
+A  src/styles/features/whiteboard-annotation.css
+M  src/styles/features/whiteboard-connection.css
+A  src/styles/features/whiteboard-context-menu.css
+M  src/styles/features/whiteboard-workbench.css
+M  src/styles/main.css
+M  test/integration/whiteboardRestartLifecycle.test.ts
+M  test/specs/whiteboard.e2e.ts
+M  test/system/feature-test-map.json
+A  test/unit/whiteboardAnnotationUi.test.tsx
+A  test/unit/whiteboardArrangeModel.test.ts
+A  test/unit/whiteboardContextMenuUi.test.tsx
+A  test/unit/whiteboardEdgeLabelUi.test.tsx
+A  test/unit/whiteboardNestedWorkbenchModel.test.ts
+M  test/unit/whiteboardStore.test.ts
+M  test/unit/whiteboardWorkbenchUi.test.tsx
+
+Legend: A=added, M=modified, D=deleted
+All paths are project-relative.

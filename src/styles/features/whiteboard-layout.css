@@ -1,0 +1,30 @@
+/* 1.3.3-1.3.4: semantic Goal × Record Type × Time layout guides. */
+.think-os .think-whiteboard-layout-overlay { position: absolute; inset: 0; z-index: 2; overflow: visible; pointer-events: none; }
+.think-os .think-whiteboard-layout-guide { position: absolute; box-sizing: border-box; pointer-events: none; }
+.think-os .think-whiteboard-layout-guide--goal { border: 1px dashed color-mix(in srgb, var(--think-border-selection) 68%, transparent); border-radius: var(--think-radius-md); background: color-mix(in srgb, var(--think-bg-elevated) 8%, transparent); }
+.think-os .think-whiteboard-layout-guide--recordType { border-bottom: 1px solid color-mix(in srgb, var(--think-border-subtle) 75%, transparent); }
+.think-os .think-whiteboard-layout-guide--time { border-right: 1px solid color-mix(in srgb, var(--think-border-subtle) 75%, transparent); }
+.think-os .think-whiteboard-layout-guide__label { position: absolute; z-index: 1; max-width: calc(100% - 8px); padding: 3px 7px; overflow: hidden; transform-origin: left top; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: color-mix(in srgb, var(--think-bg-elevated) 94%, transparent); color: var(--think-text-secondary); font: inherit; font-size: var(--think-font-size-xs); font-weight: var(--think-font-weight-semibold); text-overflow: ellipsis; white-space: nowrap; cursor: pointer; pointer-events: auto; }
+.think-os .think-whiteboard-layout-guide--goal > .think-whiteboard-layout-guide__label { left: 12px; top: 10px; color: var(--think-text-primary); font-size: var(--think-font-size-sm); }
+.think-os .think-whiteboard-layout-guide--recordType > .think-whiteboard-layout-guide__label { left: 12px; top: 6px; }
+.think-os .think-whiteboard-layout-guide--time > .think-whiteboard-layout-guide__label { left: 6px; top: 8px; }
+.think-os .think-whiteboard-layout-guide__label:hover,
+.think-os .think-whiteboard-layout-guide__label:focus-visible { border-color: var(--think-border-selection); color: var(--think-text-primary); }
+
+/* 1.3.5: keep semantic layout guides readable while the board itself is deeply zoomed out. */
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-layout-guide--goal {
+  border-width: calc(1px * var(--think-whiteboard-semantic-inverse-zoom));
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-layout-guide--recordType {
+  border-bottom-width: calc(1px * var(--think-whiteboard-semantic-inverse-zoom));
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-layout-guide--time {
+  border-right-width: calc(1px * var(--think-whiteboard-semantic-inverse-zoom));
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-layout-guide__label {
+  transform: scale(var(--think-whiteboard-semantic-inverse-zoom));
+}
+
+/* 1.3.7: semantic guide labels are movable spatial annotations; their guide line/frame follows the label. */
+.think-os .think-whiteboard-layout-guide__label { cursor: grab; touch-action: none; user-select: none; }
+.think-os .think-whiteboard-layout-guide.is-dragging > .think-whiteboard-layout-guide__label { cursor: grabbing; border-color: var(--think-border-selection); }

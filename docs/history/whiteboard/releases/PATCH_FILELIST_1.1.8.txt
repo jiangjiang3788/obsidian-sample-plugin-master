@@ -1,0 +1,24 @@
+ThinkOS 1.1.8 PATCH file list
+Base: 1.1.7
+Target: 1.1.8
+
+doc/PATCH_FILELIST_1.1.8.txt
+doc/README_PATCH_1.1.8.txt
+doc/WHITEBOARD_IMPLEMENTATION_BASELINE_v1_1.1.8-updated.md
+doc/Whiteboard_1.1.8_IMPLEMENTATION_RESULT.md
+manifest.json
+package-lock.json
+package.json
+src/core/whiteboard/WhiteboardStore.ts
+src/features/whiteboard/WhiteboardBoardTools.tsx
+src/features/whiteboard/WhiteboardCard.tsx
+src/features/whiteboard/WhiteboardSelectionController.ts
+src/features/whiteboard/WhiteboardSelectionModel.ts
+src/features/whiteboard/WhiteboardWorkspace.tsx
+src/styles/features/whiteboard-selection.css
+test/integration/whiteboardRestartLifecycle.test.ts
+test/specs/whiteboard.e2e.ts
+test/system/feature-test-map.json
+test/unit/whiteboardSelectionModel.test.ts
+test/unit/whiteboardSelectionUi.test.tsx
+test/unit/whiteboardStore.test.ts

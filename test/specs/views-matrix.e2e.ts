@@ -59,7 +59,7 @@ async function openFile(name: string): Promise<void> {
   }
 }
 
-describe('Think OS 真机 UI：十种 View 矩阵', () => {
+describe('Think OS 真机 UI：十种普通 View 矩阵', () => {
   before(async () => {
     await waitForThinkReady();
     try { await obsidianPage.delete('E2E'); } catch {}
@@ -90,7 +90,7 @@ describe('Think OS 真机 UI：十种 View 矩阵', () => {
     await obsidianPage.write(FILE, `# 十视图真机测试\n\n\`\`\`think\n{"layout":"${LAYOUT_NAME}"}\n\`\`\`\n`);
   });
 
-  it('真实 think 代码块装载同一布局中的十种 View，并且每个模块都能进入实际内容容器', async () => {
+  it('真实 think 代码块装载同一布局中的十种普通 View，并且每个模块都能进入实际内容容器', async () => {
     await openFile('十视图');
     const thinkBlock = await $('.block-language-think');
     await thinkBlock.waitForExist({ timeout: 15_000 });

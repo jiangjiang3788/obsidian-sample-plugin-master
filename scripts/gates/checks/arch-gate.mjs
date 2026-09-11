@@ -161,13 +161,13 @@ function extractModuleSpecifiers(sourceFile) {
 }
 
 function loadTsConfig() {
-  const configPath = ts.findConfigFile(ROOT, ts.sys.fileExists, 'tsconfig.json');
+  const configPath = ts.findConfigFile(ROOT, ts.sys.fileExists, 'config/tsconfig.json');
   if (!configPath) {
-    throw new Error('arch-gate：未找到 tsconfig.json');
+    throw new Error('arch-gate：未找到 config/tsconfig.json');
   }
   const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
   if (configFile.error) {
-    throw new Error('arch-gate：读取 tsconfig.json 失败');
+    throw new Error('arch-gate：读取 config/tsconfig.json 失败');
   }
   const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, path.dirname(configPath));
   return { compilerOptions: parsed.options, configPath };

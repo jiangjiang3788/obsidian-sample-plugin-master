@@ -65,6 +65,7 @@ npm run bundle:report
 ```
 
 Release checks include version synchronization, release-package boundaries and bundle budget/reporting.
+Build artifacts stay in the repository root (`main.js`, `styles.css`, and debug-only `main.js.map`). Release packaging writes `<plugin-id>-release.zip` to the root and does not create a project-local `release/` directory.
 
 CI should run `npm run verify:ci` and `npm run build:release`.
 
@@ -119,3 +120,13 @@ npm --silent run 验证:发布:v9
 ```
 
 发布质量报告必须把“故障实验室核心场景”和“故障实验室超大输入”作为独立运行证据；没有实际执行结果时只能判定为“待补齐运行证据”。
+
+## 1.4.0 presentation-contract verification
+
+Changes to Record presentation must protect three independent contracts:
+
+1. **Record semantics** — 11-type order, unique semantic color tokens and exhaustive `primaryText` fallback.
+2. **View autonomy** — an explicit `title` field remains the real title; `primaryText` is opt-in/defaultable but never injected over user field configuration.
+3. **Whiteboard chrome** — grid/source preferences survive remount; Goal/time/primaryText hierarchy and context-menu actions remain usable.
+
+Feature evidence is tracked as F153 in `test/system/feature-test-map.json`. Documentation governance is also release-blocking: `doc/` and loose root version documents are forbidden, and each formal package version must have `docs/releases/<version>/PLAN.md`, `IMPLEMENTATION_RESULT.md` and `TEST_REPORT.md`.

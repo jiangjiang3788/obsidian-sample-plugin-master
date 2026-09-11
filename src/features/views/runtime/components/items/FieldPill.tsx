@@ -5,6 +5,7 @@ import type { RecordViewItem } from '@core/types/public';
 import { readField } from '@core/types/public';
 import { formatFieldValue, getFieldDefinition, getFieldLabel, isImageFieldDefinition, normalizeImageValue } from '@core/fields/public';
 import { getCategoryColor } from '@core/types/public';
+import { normalizeRecordTypePresentationKey } from '@core/recordTypes/public';
 import { TagsRenderer } from '@shared/ui/public';
 import { getBaseCategory, getLeafPath } from '@core/utils/public';
 import type { OpenRecordOriginHandler, ResolveResourcePathHandler } from '@shared/types/public';
@@ -61,7 +62,19 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, onOpenRecordOri
         );
     }
 
-    // Category 字段特殊处理
+    // Record Type uses the one global semantic color contract.
+    if (fieldKey === 'coreBlock') {
+        const recordType = normalizeRecordTypePresentationKey(value);
+        const displayValue = formatFieldValue(fieldKey, value, item);
+        return (
+            <span {...originProps} class="tag-pill think-record-type-pill" data-record-type={recordType} title={`${label}: ${displayValue} · ${originTitle}`}>
+                {displayValue}
+            </span>
+        );
+    }
+
+    // categoryKey stays a category/path surface. Record type color is owned by coreBlock;
+    // never collapse the independent category color system into Record type identity.
     if (fieldKey === 'categoryKey') {
         const baseCategory = getLeafPath(item.categoryKey) || getBaseCategory(item.categoryKey);
         return (

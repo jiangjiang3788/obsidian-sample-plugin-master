@@ -1,0 +1,34 @@
+/* Whiteboard 1.1.8 R2: direct drag-to-connect handles on all four card edges. */
+.think-os .think-whiteboard-card__edge-handle {
+  position: absolute;
+  z-index: 4;
+  width: 12px;
+  height: 12px;
+  min-width: 0;
+  padding: 0;
+  border: 2px solid var(--think-bg-elevated);
+  border-radius: 999px;
+  background: var(--think-focus-ring-color);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--think-focus-ring-color) 65%, transparent);
+  opacity: 0.28;
+  cursor: crosshair;
+  touch-action: none;
+}
+.think-os .think-whiteboard-card:hover > .think-whiteboard-card__edge-handle,
+.think-os .think-whiteboard-card.is-connection-source > .think-whiteboard-card__edge-handle { opacity: 0.9; }
+.think-os .think-whiteboard-card__edge-handle:hover,
+.think-os .think-whiteboard-card__edge-handle:focus-visible { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
+.think-os .think-whiteboard-card__edge-handle.is-top { left: 50%; top: 0; transform: translate(-50%, -50%); }
+.think-os .think-whiteboard-card__edge-handle.is-right { left: 100%; top: 50%; transform: translate(-50%, -50%); }
+.think-os .think-whiteboard-card__edge-handle.is-bottom { left: 50%; top: 100%; transform: translate(-50%, -50%); }
+.think-os .think-whiteboard-card__edge-handle.is-left { left: 0; top: 50%; transform: translate(-50%, -50%); }
+.think-os .think-whiteboard-edge__path--preview { stroke-dasharray: 7 5; opacity: 0.95; }
+.think-os .think-whiteboard-card[data-whiteboard-connection-target="true"] { outline: 3px solid var(--think-focus-ring-color); outline-offset: 4px; }
+/* 1.2.3: edge labels live at the geometry midpoint and stay editable without changing edge semantics. */
+.think-os .think-whiteboard-edge__control { position: absolute; display: flex; align-items: center; gap: 3px; transform: translate(-50%, -50%); pointer-events: auto; }
+.think-os .think-whiteboard-edge__label { max-width: 180px; overflow: hidden; padding: 2px 6px; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-elevated); color: var(--think-text-secondary); font-size: 11px; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; opacity: 0.38; cursor: text; }
+.think-os .think-whiteboard-edge__label.has-label,
+.think-os .think-whiteboard-edge__control:hover .think-whiteboard-edge__label { color: var(--think-text-primary); opacity: 0.96; }
+.think-os .think-whiteboard-edge__label-input { width: 160px; min-width: 120px; height: 28px; font-size: 12px; }
+.think-os .think-whiteboard-edge__control .think-whiteboard-edge__remove { position: static; transform: none; opacity: 0.36; }
+.think-os .think-whiteboard-edge__control:hover .think-whiteboard-edge__remove { opacity: 0.95; }

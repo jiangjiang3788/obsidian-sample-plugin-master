@@ -139,6 +139,7 @@ export {
     templateFieldTypeUsesOptions,
     parseTagList,
     readFieldValue,
+    getRecordPrimaryText,
     resolveFieldValue,
     splitHierarchyPath,
     canInlineEditField,
@@ -199,8 +200,15 @@ export {
     getTemplateRecordTypeById,
     getTemplateRecordTypes,
     isDirectRecordType,
+    RECORD_TYPE_PRESENTATION_ORDER,
+    RECORD_TYPE_PRESENTATION_REGISTRY,
+    compareRecordTypeKeys,
+    getRecordTypePresentation,
+    getRecordTypePresentationOrder,
+    normalizeRecordTypePresentationKey,
+    sortRecordTypesByPresentation,
 } from './recordTypes/public';
-export type { RecordTypeDefinition, TemplateRecordTypeDefinition } from './recordTypes/public';
+export type { CanonicalRecordTypePresentationKey, RecordTypeDefinition, RecordTypePresentation, TemplateRecordTypeDefinition } from './recordTypes/public';
 
 // -------------------- Core Services（DI 需要的 token / class） --------------------
 // 说明：这些 export 是为了组合根（main/app）和 usecases 能 resolve。

@@ -10,6 +10,7 @@ import {
 } from '@core/services/public';
 import type { ThinkSettings } from '@core/types/public';
 import { ChatSessionStore } from '@core/ai/public';
+import { WhiteboardStore } from '@core/whiteboard/public';
 import { validateServices, type Services } from '@/app/services.types';
 import { STORE_TOKEN, type AppStoreInstance } from '@/app/store/useAppStore';
 import { USECASES_TOKEN, type UseCases } from '@/app/usecases';
@@ -24,6 +25,7 @@ export type BootstrapResolved = {
   inputService: InputService;
   dataStore: DataStore;
   chatSessionStore: ChatSessionStore;
+  whiteboardStore: WhiteboardStore;
 };
 
 /**
@@ -47,6 +49,7 @@ export function buildRuntime(container: DependencyContainer = defaultContainer):
       zustandStore: container.resolve<AppStoreInstance>(STORE_TOKEN),
       dataStore: container.resolve(DataStore),
       inputService: container.resolve(InputService),
+      whiteboardStore: container.resolve(WhiteboardStore),
       useCases: container.resolve<UseCases>(USECASES_TOKEN),
       uiPort: container.resolve(UI_PORT_TOKEN),
       modalPort: container.resolve(MODAL_PORT_TOKEN),
@@ -84,6 +87,7 @@ export function resolveBootstrap(container: DependencyContainer = defaultContain
       inputService: container.resolve(InputService),
       dataStore: container.resolve(DataStore),
       chatSessionStore: container.resolve(ChatSessionStore),
+      whiteboardStore: container.resolve(WhiteboardStore),
     };
   } catch (error) {
     devError('[resolveBootstrap] 解析 bootstrap 依赖失败:', error);
