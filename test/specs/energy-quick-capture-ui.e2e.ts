@@ -30,7 +30,7 @@ describe('Think OS 真机 UI：精力快速采集', () => {
     const beforeIds = await browser.executeObsidian(({ app }, pluginId, goalPath) => {
       const plugin = (app as any).plugins.plugins[pluginId] as any;
       return plugin.serviceManager.dataStore.queryRecords()
-        .filter((item: any) => item.coreBlock === 'energy' && item.goalPath === goalPath)
+        .filter((item: any) => item.recordType === 'energy' && item.goalPath === goalPath)
         .map((item: any) => item.id);
     }, THINK_PLUGIN_ID, GOAL) as string[];
 
@@ -53,7 +53,7 @@ describe('Think OS 真机 UI：精力快速采集', () => {
       const plugin = (app as any).plugins.plugins[pluginId] as any;
       const existing = new Set(existingIds);
       const item = plugin.serviceManager.dataStore.queryRecords()
-        .find((row: any) => row.coreBlock === 'energy' && row.goalPath === goalPath && !existing.has(row.id));
+        .find((row: any) => row.recordType === 'energy' && row.goalPath === goalPath && !existing.has(row.id));
       return item ? { id: item.id, goalPath: item.goalPath, score: item.score ?? item.extra?.['精力值'] } : null;
     }, THINK_PLUGIN_ID, GOAL, beforeIds);
     expect(created).toMatchObject({ goalPath: GOAL, score: 80 });
@@ -65,8 +65,8 @@ describe('Think OS 真机 UI：精力快速采集', () => {
     const restored = await browser.executeObsidian(({ app }, pluginId, recordId) => {
       const plugin = (app as any).plugins.plugins[pluginId] as any;
       const item = plugin.serviceManager.dataStore.getRecordById(recordId);
-      return item ? { id: item.id, coreBlock: item.coreBlock, goalPath: item.goalPath } : null;
+      return item ? { id: item.id, recordType: item.recordType, goalPath: item.goalPath } : null;
     }, THINK_PLUGIN_ID, id);
-    expect(restored).toMatchObject({ id, coreBlock: 'energy', goalPath: GOAL });
+    expect(restored).toMatchObject({ id, recordType: 'energy', goalPath: GOAL });
   });
 });

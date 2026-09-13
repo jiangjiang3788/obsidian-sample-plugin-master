@@ -52,3 +52,18 @@ export async function commitTextInput(input: HTMLInputElement | HTMLTextAreaElem
   });
   await flushUi();
 }
+
+
+export function createPointerEvent(
+  type: string,
+  init: PointerEventInit & { pointerId?: number; pointerType?: string } = {},
+): PointerEvent {
+  return new PointerEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    pointerId: init.pointerId ?? 1,
+    pointerType: init.pointerType ?? 'mouse',
+    isPrimary: init.isPrimary ?? true,
+    ...init,
+  });
+}

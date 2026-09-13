@@ -298,3 +298,24 @@
     margin-left: 0;
   }
 }
+
+/* 1.6 Record Type color ownership: fixed user-visible rows, no custom type creation. */
+.think-os--settings .think-settings-record-type-color-row__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--think-rhythm-related);
+  flex-wrap: wrap;
+}
+.think-os--settings .think-settings-record-type-color-row__picker {
+  inline-size: 36px;
+  block-size: 30px;
+  padding: 2px;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-elevated);
+  cursor: pointer;
+}
+.think-os--settings .think-settings-record-type-color-row__hex {
+  inline-size: 96px;
+  font-family: var(--font-monospace);
+}

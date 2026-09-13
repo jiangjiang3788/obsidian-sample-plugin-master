@@ -8,8 +8,8 @@ import { throwIfAborted } from '../submitPipeline';
 import type { RecordInputWorkflowRuntime } from './types';
 
 
-export function buildCreateRecordFollowUp(createdRecord: { id: string; coreBlock?: string; status?: string }): { startTimerForRecordId: string } | undefined {
-  return createdRecord.coreBlock === 'task' && createdRecord.status === 'open'
+export function buildCreateRecordFollowUp(createdRecord: { id: string; recordType?: string; status?: string }): { startTimerForRecordId: string } | undefined {
+  return createdRecord.recordType === 'task' && createdRecord.status === 'open'
     ? { startTimerForRecordId: createdRecord.id }
     : undefined;
 }
@@ -28,7 +28,7 @@ export class CreateRecordWorkflow {
       const prepared = prepareTemplateSubmit({
         kernel: this.runtime.getKernel(),
         operation: 'create',
-        blockId: params.blockId,
+        recordTypeId: params.recordTypeId,
         formData: params.formData,
         context: params.context,
         normalizeMode: params.source === 'ai_batch' ? 'ai_batch' : 'create',

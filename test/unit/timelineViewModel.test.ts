@@ -25,10 +25,6 @@ const moduleConfig = {
     UNTRACKED_LABEL: '未跟踪',
     MAX_HOURS_PER_DAY: 12,
     defaultHourHeight: 28,
-    progressOrder: ['work'],
-    categories: {
-      work: { color: '#111111' },
-    },
   },
 };
 
@@ -36,7 +32,8 @@ describe('TimelineViewModel', () => {
   it('resolves config and color map with injected model precedence', () => {
     expect(resolveTimelineConfig(moduleConfig).MAX_HOURS_PER_DAY).toBe(12);
     expect(resolveTimelineConfig(moduleConfig, { config: { injected: true } as any })).toEqual({ injected: true });
-    expect(buildTimelineColorMap(resolveTimelineConfig(moduleConfig))).toEqual({ work: '#111111', 未跟踪: '#9ca3af' });
+    const goalSettings = { goals: [{ path: '工作', status: 'active', createdAt: '2026-01-01', updatedAt: '2026-01-01', color: '#111111' }], goalTemplates: [] };
+    expect(buildTimelineColorMap(goalSettings as any, [{ goalPath: '工作' } as any], '未跟踪')).toMatchObject({ 工作: '#111111', 未归属目标: '#9ca3af', 未跟踪: '#d1d5db' });
   });
 
 
@@ -48,13 +45,13 @@ describe('TimelineViewModel', () => {
       currentView: '月',
       injectedModel: {
         timelineTasks: [{ doneDate: '2026-06-01' } as any],
-        summaryCategoryHours: { work: 2 },
+        summaryGoalHours: { work: 2 },
         dailyViewData: { dateRangeDays: [], blocksByDay: {} },
       },
     });
 
     expect(renderModel.timelineTasks).toHaveLength(1);
-    expect(renderModel.summaryCategoryHours).toEqual({ work: 2 });
+    expect(renderModel.summaryGoalHours).toEqual({ work: 2 });
     expect(renderModel.totalSummaryHours).toBe(2);
     expect(renderModel.dailyViewData).toEqual({ dateRangeDays: [], blocksByDay: {} });
   });
@@ -63,12 +60,11 @@ describe('TimelineViewModel', () => {
   it('projects a manual Task start/end range when no TaskSession exists', () => {
     const task = {
       id: 'task.01KZZQ6G798KJN54XBGKJVH7YA',
-      coreBlock: 'task',
+      recordType: 'task',
       status: 'done',
       content: '个地方官方',
       title: '个地方官方',
       tags: [],
-      categoryKey: '任务',
       created: 0,
       modified: 0,
       extra: {},
@@ -97,9 +93,8 @@ describe('TimelineViewModel', () => {
 
   it('projects an open Task range too because lifecycle status does not control timeline visibility', () => {
     const task = {
-      id: 'task.01KZZQ6G798KJN54XBGKJVH7YB', coreBlock: 'task', status: 'open',
-      content: '未完成但已经记录时间', title: '未完成但已经记录时间', tags: [], categoryKey: '任务',
-      created: 0, modified: 0, extra: {}, startAt: '2026-08-14T10:00', expectedDurationMinutes: 30,
+      id: 'task.01KZZQ6G798KJN54XBGKJVH7YB', recordType: 'task', status: 'open',
+      content: '未完成但已经记录时间', title: '未完成但已经记录时间', tags: [], created: 0, modified: 0, extra: {}, startAt: '2026-08-14T10:00', expectedDurationMinutes: 30,
       filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
     } as any;
 
@@ -110,9 +105,8 @@ describe('TimelineViewModel', () => {
 
   it('keeps a start-only unfinished Task visible as a zero-duration point marker', () => {
     const task = {
-      id: 'task.01KZZQ6G798KJN54XBGKJVH7YP', coreBlock: 'task', status: 'open',
-      content: '只计划了开始时间', title: '只计划了开始时间', tags: [], categoryKey: '任务',
-      created: 0, modified: 0, extra: {}, startAt: '2026-08-14T11:20',
+      id: 'task.01KZZQ6G798KJN54XBGKJVH7YP', recordType: 'task', status: 'open',
+      content: '只计划了开始时间', title: '只计划了开始时间', tags: [], created: 0, modified: 0, extra: {}, startAt: '2026-08-14T11:20',
       filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
     } as any;
 
@@ -137,22 +131,21 @@ describe('TimelineViewModel', () => {
       blockStartMinute: 680,
       blockEndMinute: 680,
     });
-    expect(renderModel.summaryCategoryHours).toMatchObject({ 未跟踪: 24 });
+    expect(renderModel.summaryGoalHours).toMatchObject({ 未跟踪: 24 });
     expect(renderModel.totalSummaryHours).toBe(24);
   });
 
   it('prefers TaskSession history over the Task manual range to avoid duplicate timeline blocks', () => {
     const task = {
-      id: 'task.01KZZQ6G798KJN54XBGKJVH7YC', coreBlock: 'task', status: 'done',
-      content: '有 session 的任务', title: '有 session 的任务', tags: [], categoryKey: '任务',
-      created: 0, modified: 0, extra: {}, startAt: '2026-08-14T16:45', endAt: '2026-08-14T17:35',
+      id: 'task.01KZZQ6G798KJN54XBGKJVH7YC', recordType: 'task', status: 'done',
+      content: '有 session 的任务', title: '有 session 的任务', tags: [], created: 0, modified: 0, extra: {}, startAt: '2026-08-14T16:45', endAt: '2026-08-14T17:35',
       expectedDurationMinutes: 50, filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
     } as any;
     const session = {
-      id: 'task-session.01KZZQ6G798KJN54XBGKJVH7YD', coreBlock: 'task-session',
+      id: 'task-session.01KZZQ6G798KJN54XBGKJVH7YD', recordType: 'task-session',
       taskId: task.id, sessionStartedAt: '2026-08-14T16:50:00', sessionEndedAt: '2026-08-14T17:20:00',
       sessionDurationMinutes: 30, sessionResult: 'task-completed', sessionSource: 'timer',
-      title: '', content: '', tags: [], categoryKey: '任务工作块', created: 0, modified: 0, extra: {},
+      title: '', content: '', tags: [], created: 0, modified: 0, extra: {},
     } as any;
 
     const result = resolveTimelineTasks([task], [task, session]);
@@ -221,13 +214,13 @@ describe('TimelineViewModel', () => {
   it('moves and resizes a logical range through one five-minute interaction model', () => {
     const block = {
       ...resolveTimelineTasks([{
-        id: 'task.direct-range', coreBlock: 'task', status: 'open', content: '直接操纵', title: '直接操纵',
-        tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+        id: 'task.direct-range', recordType: 'task', status: 'open', content: '直接操纵', title: '直接操纵',
+        tags: [], created: 0, modified: 0, extra: {},
         startAt: '2026-08-26T09:00', endAt: '2026-08-26T10:00',
         filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
       } as any], [{
-        id: 'task.direct-range', coreBlock: 'task', status: 'open', content: '直接操纵', title: '直接操纵',
-        tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+        id: 'task.direct-range', recordType: 'task', status: 'open', content: '直接操纵', title: '直接操纵',
+        tags: [], created: 0, modified: 0, extra: {},
         startAt: '2026-08-26T09:00', endAt: '2026-08-26T10:00',
         filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
       } as any])[0],
@@ -259,8 +252,8 @@ describe('TimelineViewModel', () => {
 
   it('treats cross-midnight day blocks as projections of one logical range', () => {
     const task = {
-      id: 'task.cross-midnight', coreBlock: 'task', status: 'done', content: '跨午夜', title: '跨午夜',
-      tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+      id: 'task.cross-midnight', recordType: 'task', status: 'done', content: '跨午夜', title: '跨午夜',
+      tags: [], created: 0, modified: 0, extra: {},
       startAt: '2026-08-26T23:30', endAt: '2026-08-27T01:00',
       filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
     } as any;
@@ -281,15 +274,14 @@ describe('TimelineViewModel', () => {
 
   it('keeps historical Session completion result after the source Task is reopened', () => {
     const task = {
-      id: 'task.01KZZQ6G798KJN54XBGKJVH7VR', coreBlock: 'task', status: 'open',
-      content: '重新打开的任务', title: '重新打开的任务', tags: [], categoryKey: '任务',
-      created: 0, modified: 0, extra: {}, filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
+      id: 'task.01KZZQ6G798KJN54XBGKJVH7VR', recordType: 'task', status: 'open',
+      content: '重新打开的任务', title: '重新打开的任务', tags: [], created: 0, modified: 0, extra: {}, filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
     } as any;
     const session = {
-      id: 'task-session.01KZZQ6G798KJN54XBGKJVH7VS', coreBlock: 'task-session',
+      id: 'task-session.01KZZQ6G798KJN54XBGKJVH7VS', recordType: 'task-session',
       taskId: task.id, sessionStartedAt: '2026-08-14T16:50:00', sessionEndedAt: '2026-08-14T17:20:00',
       sessionDurationMinutes: 30, sessionResult: 'task-completed', sessionSource: 'timeline',
-      title: '', content: '', tags: [], categoryKey: '任务工作块', created: 0, modified: 0, extra: {},
+      title: '', content: '', tags: [], created: 0, modified: 0, extra: {},
     } as any;
 
     const result = resolveTimelineTasks([task], [task, session]);
@@ -304,17 +296,17 @@ describe('TimelineViewModel', () => {
 
   it('renders planned and actual layers together while suppressing duplicate legacy actual range', () => {
     const task = {
-      id: 'task.01KZZQ6G798KJN54XBGKJVH7PA', coreBlock: 'task', status: 'done',
-      content: '计划与实际', title: '计划与实际', tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+      id: 'task.01KZZQ6G798KJN54XBGKJVH7PA', recordType: 'task', status: 'done',
+      content: '计划与实际', title: '计划与实际', tags: [], created: 0, modified: 0, extra: {},
       scheduledAt: '2026-08-14T09:00', expectedDurationMinutes: 60,
       startAt: '2026-08-14T09:05', endAt: '2026-08-14T10:05',
       filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
     } as unknown as RecordViewItem;
     const session = {
-      id: 'task-session.01KZZQ6G798KJN54XBGKJVH7PB', coreBlock: 'task-session', taskId: task.id,
+      id: 'task-session.01KZZQ6G798KJN54XBGKJVH7PB', recordType: 'task-session', taskId: task.id,
       sessionStartedAt: '2026-08-14T09:20:00', sessionEndedAt: '2026-08-14T09:50:00',
       sessionDurationMinutes: 30, sessionResult: 'task-completed', sessionSource: 'timer',
-      title: '', content: '', tags: [], categoryKey: '任务工作块', created: 0, modified: 0, extra: {},
+      title: '', content: '', tags: [], created: 0, modified: 0, extra: {},
     } as unknown as RecordViewItem;
 
     const result = resolveTimelineTasks([task], [task, session]);
@@ -331,8 +323,8 @@ describe('TimelineViewModel', () => {
 
   it('uses a distinct projection id for a planned point and excludes planned duration from actual summaries', () => {
     const pointTask = {
-      id: 'task.01KZZQ6G798KJN54XBGKJVH7PC', coreBlock: 'task', status: 'open',
-      content: '计划点', title: '计划点', tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+      id: 'task.01KZZQ6G798KJN54XBGKJVH7PC', recordType: 'task', status: 'open',
+      content: '计划点', title: '计划点', tags: [], created: 0, modified: 0, extra: {},
       scheduledAt: '2026-08-14T08:30', filename: '目标.md', file: { path: '01/目标.md', basename: '目标.md' },
     } as unknown as RecordViewItem;
     const point = resolveTimelineTasks([pointTask], [pointTask])[0];
@@ -352,29 +344,29 @@ describe('TimelineViewModel', () => {
       currentView: '天',
       injectedModel: { timelineTasks: [planned, actual] },
     });
-    expect(renderModel.summaryCategoryHours['目标.md']).toBe(0.5);
+    expect(renderModel.summaryGoalHours['未归属目标']).toBe(0.5);
   });
 
 
   it('builds Goal allocation from full TaskSession records, not filtered Timeline items or legacy Task ranges', () => {
     const workTask = {
-      id: 'task.work', coreBlock: 'task', status: 'done', goalPath: '工作',
-      content: '工作', title: '工作', tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+      id: 'task.work', recordType: 'task', status: 'done', goalPath: '工作',
+      content: '工作', title: '工作', tags: [], created: 0, modified: 0, extra: {},
       startAt: '2026-08-14T08:00:00', endAt: '2026-08-14T18:00:00',
     } as unknown as RecordViewItem;
     const healthTask = {
-      id: 'task.health', coreBlock: 'task', status: 'done', goalPath: '照顾好自己/身体健康',
-      content: '健康', title: '健康', tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+      id: 'task.health', recordType: 'task', status: 'done', goalPath: '照顾好自己/身体健康',
+      content: '健康', title: '健康', tags: [], created: 0, modified: 0, extra: {},
     } as unknown as RecordViewItem;
     const workSession = {
-      id: 'task-session.work', coreBlock: 'task-session', taskId: workTask.id,
+      id: 'task-session.work', recordType: 'task-session', taskId: workTask.id,
       sessionStartedAt: '2026-08-14T09:00:00', sessionEndedAt: '2026-08-14T09:30:00', sessionDurationMinutes: 30,
-      sessionResult: 'task-completed', sessionSource: 'timer', title: '', content: '', tags: [], categoryKey: '任务工作块', created: 0, modified: 0, extra: {},
+      sessionResult: 'task-completed', sessionSource: 'timer', title: '', content: '', tags: [], created: 0, modified: 0, extra: {},
     } as unknown as RecordViewItem;
     const healthSession = {
-      id: 'task-session.health', coreBlock: 'task-session', taskId: healthTask.id,
+      id: 'task-session.health', recordType: 'task-session', taskId: healthTask.id,
       sessionStartedAt: '2026-08-14T10:00:00', sessionEndedAt: '2026-08-14T10:30:00', sessionDurationMinutes: 30,
-      sessionResult: 'task-completed', sessionSource: 'timer', title: '', content: '', tags: [], categoryKey: '任务工作块', created: 0, modified: 0, extra: {},
+      sessionResult: 'task-completed', sessionSource: 'timer', title: '', content: '', tags: [], created: 0, modified: 0, extra: {},
     } as unknown as RecordViewItem;
 
     const renderModel = buildTimelineRenderModel({

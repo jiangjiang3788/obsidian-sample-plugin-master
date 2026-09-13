@@ -21,9 +21,9 @@ function Harness({ onCapture, defaultGoalPath = '' }: { onCapture: jest.Mock; de
   return (
     <EnergyQuickCapturePanel
       blocks={[{ id: 'core.energy', name: '精力' }]}
-      allowBlockSwitch={false}
-      currentBlockId="core.energy"
-      onBlockChange={jest.fn()}
+      allowRecordTypeSwitch={false}
+      currentRecordTypeId="core.energy"
+      onRecordTypeChange={jest.fn()}
       goals={goals}
       selectedGoalPath={selectedGoalPath}
       onSelectGoal={(goal) => setSelectedGoalPath(goal?.value || null)}

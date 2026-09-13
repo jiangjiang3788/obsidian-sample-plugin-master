@@ -18,8 +18,6 @@ export interface BuildViewPropsParams {
   timers: any[];
   inputSettings: any;
   goals?: any[];
-  selectedLayoutCategories: string[];
-  categoryColors: Record<string, string>;
   messageRenderPort?: MessageRenderPort;
   allItems: RecordViewItem[];
   allRecords: RecordViewItem[];
@@ -41,8 +39,6 @@ export function buildViewProps({
   timers,
   inputSettings,
   goals = [],
-  selectedLayoutCategories,
-  categoryColors,
   messageRenderPort,
   allItems,
   allRecords,
@@ -71,8 +67,6 @@ export function buildViewProps({
     onTaskQuadrantChange: viewType === 'EisenhowerView' ? handlers.onTaskQuadrantChange : undefined,
     onOpenStatisticsPopover: viewType === 'StatisticsView' ? onOpenStatisticsPopover : undefined,
     onCloseStatisticsPopover: viewType === 'StatisticsView' ? onCloseStatisticsPopover : undefined,
-    categoryColors: viewType === 'StatisticsView' ? categoryColors : undefined,
-    onCategoryColorsChange: viewType === 'StatisticsView' ? handlers.onCategoryColorsChange : undefined,
     onOpenRecord: handlers.onOpenRecord,
     onOpenRecordOrigin: handlers.onOpenRecordOrigin,
     resolveResourcePath: handlers.resolveResourcePath,
@@ -86,7 +80,6 @@ export function buildViewProps({
     inputSettings,
     goals,
     goalSettings,
-    selectedCategories: selectedLayoutCategories,
     messageRenderPort,
   };
 }

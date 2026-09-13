@@ -5,7 +5,7 @@ import type { InputSettings, RecordViewItem, ViewInstance } from '@core/types/pu
 import type { GoalDefinition } from '@core/goal/public';
 import type { MessageRenderPort } from '@core/ports/public';
 import { exportItemsToMarkdown, getExportConfigByViewType, devLog } from '@core/utils/public';
-import type { CategoryColorMap, CloseStatisticsPopoverHandler, MarkDoneHandler, NoticeHandler, OpenQuickCreateHandler, OpenRecordHandler, OpenRecordOriginHandler, OpenStatisticsPopoverHandler, ResolveResourcePathHandler, TimerController, UpdateCategoryColorsHandler } from '@shared/types/public';
+import type { CloseStatisticsPopoverHandler, MarkDoneHandler, NoticeHandler, OpenQuickCreateHandler, OpenRecordHandler, OpenRecordOriginHandler, OpenStatisticsPopoverHandler, ResolveResourcePathHandler, TimerController } from '@shared/types/public';
 import { StatisticsViewView } from './StatisticsViewView';
 import {
   buildStatisticsGoalBuckets,
@@ -31,9 +31,6 @@ interface StatisticsViewProps {
   onNotice?: NoticeHandler;
   onOpenStatisticsPopover?: OpenStatisticsPopoverHandler;
   onCloseStatisticsPopover?: CloseStatisticsPopoverHandler;
-  categoryColors?: CategoryColorMap;
-  onCategoryColorsChange?: UpdateCategoryColorsHandler;
-  selectedCategories?: string[];
   timerService: TimerController;
   onMarkDone: MarkDoneHandler;
   timers: any[];
@@ -59,9 +56,6 @@ export function StatisticsView({
   onNotice,
   onOpenStatisticsPopover,
   onCloseStatisticsPopover,
-  categoryColors = {},
-  onCategoryColorsChange,
-  selectedCategories: _selectedCategories,
   timerService,
   onMarkDone,
   timers,

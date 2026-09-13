@@ -93,7 +93,7 @@ export class TimerEnergyTracking {
 
     async captureSegmentStart(timer: TimerState, reason: Extract<TimerEnergyCaptureReason, 'tracking-enabled' | 'resume'>): Promise<boolean> {
         const taskItem = this.dataStore.getRecordById(timer.taskId);
-        if (!taskItem || taskItem.coreBlock !== 'task') return false;
+        if (!taskItem || taskItem.recordType !== 'task') return false;
         if (!this.captureHandler) {
             this.ui.notice('精力快捷记录界面未就绪，本次继续正常计时。');
             return false;
@@ -155,7 +155,7 @@ export class TimerEnergyTracking {
     ): Promise<boolean> {
         if (!this.captureHandler || !this.hasActiveBaseline(timer)) return false;
         const taskItem = this.dataStore.getRecordById(timer.taskId);
-        if (!taskItem || taskItem.coreBlock !== 'task') return false;
+        if (!taskItem || taskItem.recordType !== 'task') return false;
 
         const score = await this.captureHandler({
             phase: 'end', reason, timerId: timer.id, taskId: timer.taskId,

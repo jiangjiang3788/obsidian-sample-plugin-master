@@ -1,4 +1,3 @@
-import { getTemplateRecordTypes } from '@/core/recordTypes/public';
 // src/core/ai/AiChatService.ts
 /**
  * AiChatService - AI 聊天服务
@@ -97,10 +96,6 @@ export class AiChatService {
         return this.settingsProvider.getSettings().aiSettings ?? DEFAULT_AI_SETTINGS;
     }
     
-    private getBlocks() {
-        return [...getTemplateRecordTypes()];
-    }
-
     // ============== 构建上下文 ==============
 
     /**
@@ -120,7 +115,7 @@ export class AiChatService {
             const goalPath = item.goalPath || '未归属目标';
             const title = item.title || '无标题';
             const content = (item.content || '').slice(0, 5000); // 提高单条内容长度限制
-            const type = item.coreBlock === 'task' ? '任务' : '记录';
+            const type = item.recordType === 'task' ? '任务' : '记录';
 
             const entry = `- ${type} | ${date} | ${goalPath} | ${title}${content ? ': ' + content : ''}`;
             

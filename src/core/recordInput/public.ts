@@ -13,7 +13,7 @@ export * from './session/types';
 export { applyRecordGoalContext, resolveRecordGoalPath } from './systemContext';
 export { initializeRecordInputSession } from './session/initialize';
 export { getRecordInputSessionDraft, reduceRecordInputSession } from './session/reducer';
-export { preserveRecordInputBlockSwitchState, clearRecordInputGoalContext, RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS, RECORD_INPUT_GOAL_CONTEXT_KEYS, isRecordInputMeaningfulValue, isRecordInputOptionLike, isRecordInputRefreshableSource, isRecordInputSameValue, readRecordInputString } from './session/policy';
+export { preserveRecordInputRecordTypeSwitchState, clearRecordInputGoalContext, RECORD_INPUT_RECORD_TYPE_SWITCH_PRESERVE_KEYS, RECORD_INPUT_GOAL_CONTEXT_KEYS, isRecordInputMeaningfulValue, isRecordInputOptionLike, isRecordInputRefreshableSource, isRecordInputSameValue, readRecordInputString } from './session/policy';
 export * from './submitResult';
 export * from './refreshCoordinator';
 export * from './mutationErrors';

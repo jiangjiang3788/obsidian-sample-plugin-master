@@ -104,6 +104,11 @@
   cursor: pointer;
 }
 .think-os--settings .think-goal-template-matrix__goal-icon:hover { background: var(--think-bg-hover); color: var(--think-text-primary); }
+.think-os--settings .think-goal-template-matrix__goal-color-control { display: inline-flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+.think-os--settings .think-goal-template-matrix__goal-color-picker { width: 24px; min-width: 24px; height: 24px; padding: 1px; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: transparent; cursor: pointer; }
+.think-os--settings .think-goal-template-matrix__goal-color-picker::-webkit-color-swatch-wrapper { padding: 1px; }
+.think-os--settings .think-goal-template-matrix__goal-color-picker::-webkit-color-swatch { border: 0; border-radius: calc(var(--think-radius-sm) - 2px); }
+.think-os--settings .think-goal-template-matrix__goal-color-reset { width: 24px; min-width: 24px; height: 24px; min-height: 24px; }
 .think-os--settings .think-goal-template-matrix__goal-name { min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .think-os--settings .think-goal-template-matrix__goal-row.is-drop-before > td { border-top: 2px solid var(--think-accent); }
 .think-os--settings .think-goal-template-matrix__goal-row.is-drop-after > td { border-bottom: 2px solid var(--think-accent); }

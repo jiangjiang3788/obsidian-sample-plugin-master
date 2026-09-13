@@ -47,8 +47,7 @@ export type QuickInputFieldSource =
 export type QuickInputFieldSourceMap = Record<string, QuickInputFieldSource>;
 
 export interface QuickInputEditorState {
-  blockId: string;
-  recordTypeId?: string | null;
+  recordTypeId: string;
   goalPath?: string | null;
   goalTitle?: string | null;
   rootGoal?: string | null;
@@ -86,11 +85,11 @@ export type QuickInputEnergyCaptureRequest = QuickInputEnergyCaptureTiming & Qui
 export interface QuickInputEditorProps {
   /** 用于渲染 rating 图片资源（由 platform 注入）。 */
   getResourcePath: (path: string) => string;
-  initialBlockId: string;
+  initialRecordTypeId: string;
   context?: QuickInputContext;
   initialFormData?: QuickInputFormData;
   recordInputMode?: RecordInputSessionMode;
-  allowBlockSwitch?: boolean;
+  allowRecordTypeSwitch?: boolean;
   dense?: boolean;
   showDivider?: boolean;
   onStateChange?: (state: QuickInputEditorState) => void;

@@ -64,7 +64,7 @@ describe('P0 Energy Record 持久化与重启恢复', () => {
     env.put('01/目标精力.md', markdown, 100);
 
     const first = await env.boot();
-    const energy = first.queryRecords().find((item) => item.coreBlock === 'energy') as any;
+    const energy = first.queryRecords().find((item) => item.recordType === 'energy') as any;
     expect(energy).toBeTruthy();
     expect(energy.goalPath).toBe('健康/睡眠');
     expect(energy.extra).toMatchObject({ 精力值: 70, 脑力精力: 80, 体力精力: 60 });
@@ -74,7 +74,7 @@ describe('P0 Energy Record 持久化与重启恢复', () => {
 
     const restarted = await env.boot();
     const restored = restarted.getRecordById(id) as any;
-    expect(restored?.coreBlock).toBe('energy');
+    expect(restored?.recordType).toBe('energy');
     expect(restored?.extra).toMatchObject({ 精力值: 70, 脑力精力: 80, 体力精力: 60 });
     restarted.dispose();
   });
@@ -88,7 +88,7 @@ describe('P0 Energy Record 持久化与重启恢复', () => {
     env.put('01/目标精力.md', markdown, 100);
 
     const first = await env.boot();
-    const energy = first.queryRecords().find((item) => item.coreBlock === 'energy');
+    const energy = first.queryRecords().find((item) => item.recordType === 'energy');
     expect(energy).toBeTruthy();
     const id = energy!.id;
     await jest.advanceTimersByTimeAsync(1600);
@@ -106,7 +106,7 @@ describe('P0 Energy Record 持久化与重启恢复', () => {
 
     const restarted = await env.boot();
     expect(restarted.getRecordById(id)).toBeNull();
-    expect(restarted.queryRecords().some((item) => item.coreBlock === 'energy')).toBe(false);
+    expect(restarted.queryRecords().some((item) => item.recordType === 'energy')).toBe(false);
     expect(restarted.getRecordIntegrityIssues().some((issue) => issue.path === '01/目标精力.md')).toBe(true);
     restarted.dispose();
   });

@@ -14,7 +14,7 @@ export function buildTaskCaptureText(text: string, selectedGoalPath?: string | n
   const goal = String(selectedGoalPath || '').trim();
   const rules = [
     '【录入要求】',
-    '- 这是“创建任务”请求；可以返回多条，每一条 target.blockId 必须为 core.task。',
+    '- 这是“创建任务”请求；可以返回多条，每一条 target.recordTypeId 必须为 core.task。',
     '- 把 SOP/步骤拆成真正可执行的多个任务，不要把整段 SOP 只做成一条任务。',
   ];
   if (goal) rules.push(`- 所有任务使用目标路径：${goal}`);

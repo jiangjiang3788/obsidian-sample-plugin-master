@@ -18,7 +18,7 @@ describe('Task 四象限字段持久化与周期边界 V3', () => {
   it('Markdown 只保存重要/紧急事实，重扫后仍可恢复，不保存 quadrant', () => {
     const markdown = encodeRecordBlock({
       recordId: 'task.01J00000000000000000000993',
-      coreBlock: 'task',
+      recordType: 'task',
       fields: { status: 'open', content: '四象限任务', importance: 'important', urgency: 'urgent' },
     });
     expect(markdown).toContain('重要程度:: important');
@@ -29,8 +29,8 @@ describe('Task 四象限字段持久化与周期边界 V3', () => {
 
   it('周期任务只有显式选择本次及以后才把分类同步到 Series', () => {
     const item: RecordViewItem = {
-      id: 'task-1', coreBlock: 'task', status: 'open', seriesId: 'series-1', title: '周期任务', content: '周期任务',
-      tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+      id: 'task-1', recordType: 'task', status: 'open', seriesId: 'series-1', title: '周期任务', content: '周期任务',
+      tags: [], created: 0, modified: 0, extra: {},
     };
     expect(buildExplicitTaskSeriesEditPlan({ item, meta: {} }, { importance: 'important', urgency: 'urgent' })).toBeNull();
     const plan = buildExplicitTaskSeriesEditPlan({

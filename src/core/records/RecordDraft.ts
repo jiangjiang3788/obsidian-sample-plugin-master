@@ -2,11 +2,11 @@ import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
 import { isSafeMarkdownFieldKey, resolveCaptureFieldSchema } from '@/core/fields/CaptureFieldResolver';
 import { getTemplateFieldSemantic } from '@/core/fields/TemplateFieldAdapter';
 import { normalizeImageValue } from '@/core/fields/imageSemantics';
-import type { RecordCoreBlock, RecordFieldContract } from './schema/types';
+import type { RecordType, RecordFieldContract } from './schema/types';
 import { getRecordFieldContract, requireRecordSchemaDefinition } from './schema/registry';
 
 export interface RecordDraft {
-  coreBlock: RecordCoreBlock;
+  recordType: RecordType;
   /** Insertion order is meaningful for generic/custom fields and follows the RecordTemplate. */
   fields: Record<string, unknown>;
 }
@@ -35,15 +35,6 @@ function first(renderData: Record<string, unknown>, keys: readonly string[]): un
 }
 
 
-function normalizeThoughtSubtype(raw: unknown): string | undefined {
-  const parts = optionParts(raw);
-  const text = String(parts.value ?? parts.label ?? '').trim();
-  if (!text) return undefined;
-  const pathParts = text.split('/').map(part => part.trim()).filter(Boolean);
-  const leaf = pathParts.length ? pathParts[pathParts.length - 1] : text;
-  if (leaf === '感受' || leaf === '思考') return leaf;
-  return undefined;
-}
 
 function normalizeFieldValue(field: RecordFieldContract, raw: unknown): unknown {
   if (!nonEmpty(raw)) return undefined;
@@ -107,7 +98,7 @@ function normalizeCustomValue(field: TemplateField, raw: unknown): unknown {
 }
 
 function candidateForField(
-  coreBlock: RecordCoreBlock,
+  recordType: RecordType,
   field: RecordFieldContract,
   renderData: Record<string, unknown>,
 ): unknown {
@@ -126,9 +117,6 @@ function candidateForField(
     case '标签':
       return first(renderData, ['标签', 'tags']);
     case '记录子类型':
-      if (coreBlock === 'thought') {
-        return normalizeThoughtSubtype(first(renderData, ['记录子类型', 'recordSubtype', '分类', 'categoryKey', 'categoryPath']));
-      }
       return first(renderData, ['记录子类型', 'recordSubtype']);
     case '周期粒度': {
       const explicit = first(renderData, ['周期粒度', 'periodGranularity']);
@@ -154,38 +142,33 @@ function candidateForField(
   }
 }
 
-function contractForCaptureField(coreBlock: RecordCoreBlock, field: TemplateField): RecordFieldContract | null {
+function contractForCaptureField(recordType: RecordType, field: TemplateField): RecordFieldContract | null {
   for (const token of [field.key, field.label, ...(field.aliases || [])]) {
-    const contract = getRecordFieldContract(coreBlock, token);
+    const contract = getRecordFieldContract(recordType, token);
     if (contract) return contract;
   }
   const semantic = getTemplateFieldSemantic(field);
-  // Thought keeps one persisted subtype field. A user-facing 分类 path such as
-  // 闪念/思考 is capture UI only and converges to 记录子类型:: 思考.
-  if (coreBlock === 'thought' && semantic === 'categoryPath') {
-    return getRecordFieldContract(coreBlock, '记录子类型');
-  }
   const keyBySemantic: Partial<Record<typeof semantic, string>> = {
     body: '内容', tags: '标签', goalPath: '目标',
     date: '日期', recordSubtype: '记录子类型', rating: '评分', image: '图片', icon: '图标', period: '周期粒度',
   };
   const key = keyBySemantic[semantic];
-  return key ? getRecordFieldContract(coreBlock, key) : null;
+  return key ? getRecordFieldContract(recordType, key) : null;
 }
 
-function targetContract(coreBlock: RecordCoreBlock, contract: RecordFieldContract): RecordFieldContract | null {
+function targetContract(recordType: RecordType, contract: RecordFieldContract): RecordFieldContract | null {
   if (contract.persistence === 'target' || contract.persistence === 'omit-default') return contract;
   return null;
 }
 
 function putCanonical(
   fields: Record<string, unknown>,
-  coreBlock: RecordCoreBlock,
+  recordType: RecordType,
   contract: RecordFieldContract | null,
   renderData: Record<string, unknown>,
 ): void {
   if (!contract || contract.role === 'identity') return;
-  const value = normalizeFieldValue(contract, candidateForField(coreBlock, contract, renderData));
+  const value = normalizeFieldValue(contract, candidateForField(recordType, contract, renderData));
   if (!nonEmpty(value)) return;
   if (contract.persistence === 'omit-default' && contract.defaultValue !== undefined && value === contract.defaultValue) return;
   fields[contract.key] = value;
@@ -196,15 +179,15 @@ function putCanonical(
  * They persist as ordinary KV fields and are parsed back into `extra`.
  */
 export function buildCustomCaptureFields(
-  coreBlock: RecordCoreBlock,
+  recordType: RecordType,
   renderData: Record<string, unknown>,
   captureFields: readonly TemplateField[] = [],
 ): Record<string, unknown> {
-  const schema = requireRecordSchemaDefinition(coreBlock);
+  const schema = requireRecordSchemaDefinition(recordType);
   if (!schema.capabilities.customFields) return {};
   const fields: Record<string, unknown> = {};
   for (const field of captureFields) {
-    if (contractForCaptureField(coreBlock, field)) continue;
+    if (contractForCaptureField(recordType, field)) continue;
     const resolved = resolveCaptureFieldSchema(field);
     // A system-known field may still be enabled on a Record kind whose core contract does not own it
     // (for example 图片 on Thought). In that case Template freedom wins and the field is persisted
@@ -225,35 +208,35 @@ export function buildCustomCaptureFields(
  * custom fields. Markdown grammar remains owned solely by MarkdownRecordCodec.
  */
 export function buildGenericRecordDraft(
-  coreBlock: RecordCoreBlock,
+  recordType: RecordType,
   renderData: Record<string, unknown>,
   captureFields: readonly TemplateField[],
 ): RecordDraft {
-  const schema = requireRecordSchemaDefinition(coreBlock);
-  if (schema.family !== 'generic') throw new Error(`record_draft_not_generic:${coreBlock}`);
+  const schema = requireRecordSchemaDefinition(recordType);
+  if (schema.family !== 'generic') throw new Error(`record_draft_not_generic:${recordType}`);
 
   const fields: Record<string, unknown> = {};
 
   // Goal binding is structural context and remains persisted even when the form hides the Goal selector.
-  putCanonical(fields, coreBlock, getRecordFieldContract(coreBlock, '目标'), renderData);
+  putCanonical(fields, recordType, getRecordFieldContract(recordType, '目标'), renderData);
   // Period policy is template behavior rather than a visible form field.
-  putCanonical(fields, coreBlock, getRecordFieldContract(coreBlock, '周期粒度'), renderData);
+  putCanonical(fields, recordType, getRecordFieldContract(recordType, '周期粒度'), renderData);
 
   for (const captureField of captureFields) {
-    const rawContract = contractForCaptureField(coreBlock, captureField);
-    const contract = rawContract ? targetContract(coreBlock, rawContract) : null;
+    const rawContract = contractForCaptureField(recordType, captureField);
+    const contract = rawContract ? targetContract(recordType, rawContract) : null;
     if (contract) {
-      putCanonical(fields, coreBlock, contract, renderData);
+      putCanonical(fields, recordType, contract, renderData);
       // Habit ratingPair carries the display image in the option value.
-      if (coreBlock === 'habit' && contract.key === '评分') {
-        putCanonical(fields, coreBlock, getRecordFieldContract(coreBlock, '图片'), renderData);
+      if (recordType === 'habit' && contract.key === '评分') {
+        putCanonical(fields, recordType, getRecordFieldContract(recordType, '图片'), renderData);
       }
       continue;
     }
 
-    const custom = buildCustomCaptureFields(coreBlock, renderData, [captureField]);
+    const custom = buildCustomCaptureFields(recordType, renderData, [captureField]);
     for (const [key, value] of Object.entries(custom)) fields[key] = value;
   }
 
-  return { coreBlock, fields };
+  return { recordType, fields };
 }

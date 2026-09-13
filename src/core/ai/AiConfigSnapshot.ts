@@ -7,7 +7,7 @@ import { getGoalTemplates, isSystemRecordContextField } from '@/core/goal';
 import { getEffectiveTemplate } from '@/core/utils/inputTemplateUtils';
 import { resolveCaptureFieldSchema } from '@/core/fields/CaptureFieldResolver';
 
-export interface AiBlockConfigField {
+export interface AiRecordTypeConfigField {
   key: string;
   label: string;
   type: string;
@@ -15,11 +15,10 @@ export interface AiBlockConfigField {
   defaultValue?: unknown;
 }
 
-export interface AiBlockConfig {
+export interface AiRecordTypeConfig {
   id: string;
   name: string;
-  categoryKey: string;
-  fields: AiBlockConfigField[];
+  fields: AiRecordTypeConfigField[];
 }
 
 
@@ -30,14 +29,13 @@ export interface AiGoalConfig {
 export interface AiGoalPresetConfig {
   id: string;
   goalPath: string;
-  blockId: string;
-  categoryKey: string;
+  recordTypeId: string;
   periodPolicy?: { enabled: boolean; granularity: 'week' | 'month' | 'quarter' | 'year' };
-  fields: AiBlockConfigField[];
+  fields: AiRecordTypeConfigField[];
 }
 
 export interface AiConfigSnapshot {
-  blocks: AiBlockConfig[];
+  recordTypes: AiRecordTypeConfig[];
   goals: AiGoalConfig[];
   goalPresets: AiGoalPresetConfig[];
 }
@@ -47,7 +45,7 @@ function isAiVisibleField(field: TemplateField): boolean {
   return !isSystemRecordContextField(field?.key, field?.label, field?.semantic || field?.semanticType);
 }
 
-function normalizeField(field: TemplateField): AiBlockConfigField {
+function normalizeField(field: TemplateField): AiRecordTypeConfigField {
   const schema = resolveCaptureFieldSchema(field);
   return {
     key: field.key,
@@ -66,28 +64,27 @@ export function buildAiConfigSnapshot(
   ai: AiSettings,
   goalSettings?: GoalSettings,
 ): AiConfigSnapshot {
-  const rawEnabledSet = ai.enabledBlockIds?.length ? new Set(ai.enabledBlockIds) : null;
-  const inputBlocks = input?.blocks ?? [];
-  const hasEnabledBlockMatch = !!rawEnabledSet && inputBlocks.some(
-    (block) => rawEnabledSet.has(block.id) || rawEnabledSet.has(block.recordTypeId || ''),
+  const rawEnabledSet = ai.enabledRecordTypeIds?.length ? new Set(ai.enabledRecordTypeIds) : null;
+  const inputRecordTypes = input?.recordTypes ?? [];
+  const hasEnabledRecordTypeMatch = !!rawEnabledSet && inputRecordTypes.some(
+    (recordType) => rawEnabledSet.has(recordType.id) || rawEnabledSet.has(recordType.recordTypeId || ''),
   );
-  const enabledSet = hasEnabledBlockMatch ? rawEnabledSet : null;
+  const enabledSet = hasEnabledRecordTypeMatch ? rawEnabledSet : null;
 
-  const blocks = inputBlocks
-    .filter((block) => !enabledSet || enabledSet.has(block.id) || enabledSet.has(block.recordTypeId || ''))
-    .map((block) => {
-      const effective = input ? getEffectiveTemplate(input, block.id) : undefined;
-      const sourceFields = effective?.template?.fields ?? block.fields ?? [];
+  const recordTypes = inputRecordTypes
+    .filter((recordType) => !enabledSet || enabledSet.has(recordType.id) || enabledSet.has(recordType.recordTypeId || ''))
+    .map((recordType) => {
+      const effective = input ? getEffectiveTemplate(input, recordType.id) : undefined;
+      const sourceFields = effective?.template?.fields ?? recordType.fields ?? [];
       return {
-        id: block.id,
-        name: block.name,
-        categoryKey: block.categoryKey,
+        id: recordType.id,
+        name: recordType.name,
         fields: sourceFields.filter(isAiVisibleField).map(normalizeField),
       };
     });
 
-  const blockById = new Map(inputBlocks.map((block) => [block.id, block]));
-  const blockByCoreId = new Map(inputBlocks.map((block) => [block.recordTypeId || block.id, block]));
+  const recordTypeById = new Map(inputRecordTypes.map((recordType) => [recordType.id, recordType]));
+  const recordTypeByCanonicalId = new Map(inputRecordTypes.map((recordType) => [recordType.recordTypeId || recordType.id, recordType]));
 
   const goals = (goalSettings?.goals ?? [])
     .filter((goal) => goal.status !== 'archived')
@@ -103,19 +100,18 @@ export function buildAiConfigSnapshot(
     .filter((preset) => goalPaths.has(preset.goalPath))
     .filter((preset) => !enabledSet || enabledSet.has(preset.recordTypeId))
     .map((preset) => {
-      const block = blockByCoreId.get(preset.recordTypeId) || blockById.get(preset.recordTypeId);
-      const fields = (preset.fields?.length ? preset.fields : block?.fields || [])
+      const recordType = recordTypeByCanonicalId.get(preset.recordTypeId) || recordTypeById.get(preset.recordTypeId);
+      const fields = (preset.fields?.length ? preset.fields : recordType?.fields || [])
         .filter(isAiVisibleField)
         .map(normalizeField);
       return {
         id: preset.id,
         goalPath: preset.goalPath,
-        blockId: preset.recordTypeId,
-        categoryKey: block?.categoryKey || preset.recordTypeId,
+        recordTypeId: preset.recordTypeId,
         periodPolicy: preset.periodPolicy,
         fields,
       };
     });
 
-  return { blocks, goals, goalPresets };
+  return { recordTypes, goals, goalPresets };
 }

@@ -63,9 +63,10 @@ describe('P0 GoalUseCase → SettingsRepository → 重启恢复', () => {
     await goals.addGoal({ path: '健康', description: '长期健康' });
     await goals.addGoal({ path: '健康 / 运动', description: '每周运动' });
     await goals.pauseGoal('健康/运动');
+    await goals.setGoalColor('健康/运动', '#12AB34');
     await goals.upsertGoalTemplateDraft({
       goalPath: '健康/运动',
-      recordTypeId: 'task',
+      recordTypeId: 'core.task',
       enabled: true,
       requiredFields: ['内容'],
       defaultValues: { 优先级: 'medium' },
@@ -79,9 +80,10 @@ describe('P0 GoalUseCase → SettingsRepository → 重启恢复', () => {
     const current = store.getState().settings;
     expect(current.goalSettings.goals.map((goal: any) => goal.path)).toEqual(['健康', '健康/运动']);
     expect(current.goalSettings.goals.find((goal: any) => goal.path === '健康/运动')?.status).toBe('paused');
+    expect(current.goalSettings.goals.find((goal: { path: string; color?: string }) => goal.path === '健康/运动')?.color).toBe('#12ab34');
     expect(current.goalSettings.goalTemplates).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        goalPath: '健康/运动', recordTypeId: 'task', enabled: true, targetFile: 'E2E/GoalTemplate.md',
+        goalPath: '健康/运动', recordTypeId: 'core.task', enabled: true, targetFile: 'E2E/GoalTemplate.md',
         fields: expect.arrayContaining([expect.objectContaining({ key: '场景', type: 'singleSelect', required: true })]),
       }),
     ]));
@@ -91,9 +93,10 @@ describe('P0 GoalUseCase → SettingsRepository → 重启恢复', () => {
     const restored = await restarted.load();
     expect(restored.goalSettings?.goals.map((goal) => goal.path)).toEqual(['健康', '健康/运动']);
     expect(restored.goalSettings?.goals.find((goal) => goal.path === '健康/运动')?.status).toBe('paused');
+    expect(restored.goalSettings?.goals.find((goal) => goal.path === '健康/运动')?.color).toBe('#12ab34');
     expect(restored.goalSettings?.goalTemplates).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        goalPath: '健康/运动', recordTypeId: 'task', enabled: true, targetFile: 'E2E/GoalTemplate.md',
+        goalPath: '健康/运动', recordTypeId: 'core.task', enabled: true, targetFile: 'E2E/GoalTemplate.md',
         fields: expect.arrayContaining([expect.objectContaining({ key: '场景', type: 'singleSelect', required: true })]),
       }),
     ]));
@@ -107,8 +110,8 @@ describe('P0 GoalUseCase → SettingsRepository → 重启恢复', () => {
     await goals.addGoal({ path: '健康' });
     await goals.addGoal({ path: '健康/运动' });
     await goals.addGoal({ path: '健康/运动/力量' });
-    await goals.upsertGoalTemplateDraft({ goalPath: '健康/运动', recordTypeId: 'task', enabled: true });
-    await goals.upsertGoalTemplateDraft({ goalPath: '健康/运动/力量', recordTypeId: 'thought', enabled: true });
+    await goals.upsertGoalTemplateDraft({ goalPath: '健康/运动', recordTypeId: 'core.task', enabled: true });
+    await goals.upsertGoalTemplateDraft({ goalPath: '健康/运动/力量', recordTypeId: 'core.thought', enabled: true });
 
     await expect(goals.deleteGoalCascade('健康/运动')).resolves.toBe(2);
     expect(store.getState().settings.goalSettings.goals.map((goal: any) => goal.path)).toEqual(['健康']);

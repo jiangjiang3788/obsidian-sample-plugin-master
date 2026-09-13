@@ -56,7 +56,7 @@ requireFeature('F112', 'src/features/settings/tabs/AiSettings.tsx');
 
 const dataSettings = read('src/features/settings/tabs/DataManagementSettings.tsx');
 for (const [value, label, id, source] of [
-  ['recordTypes', '记录类型', 'F115', 'src/features/settings/input/BlockManager.tsx'],
+  ['recordTypes', '记录类型', 'F115', 'src/features/settings/input/RecordTypeManager.tsx'],
   ['goals', '目标', 'F033', 'src/features/settings/input/GoalManager.tsx'],
   ['metrics', '指标', 'F034', 'src/features/settings/input/goalManager/GoalMetricSection.tsx'],
 ]) {

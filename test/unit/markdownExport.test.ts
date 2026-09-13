@@ -9,11 +9,10 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 function item(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: 'rec.export.1',
-    coreBlock: 'thought',
+    recordType: 'thought',
     title: '导出标题',
     content: '第一行\n第二行',
     filename: 'Daily',
-    categoryKey: '思考',
     tags: [],
     created: 1,
     modified: 1,
@@ -35,7 +34,7 @@ describe('Markdown 导出', () => {
   it('Task 使用任务领域字段导出，缺省字段不会输出 undefined/null', () => {
     const markdown = exportItemsToMarkdown([item({
       id: 'task.export.1',
-      coreBlock: 'task',
+      recordType: 'task',
       content: '导出任务',
       status: 'open',
       goalPath: '学习/英语',

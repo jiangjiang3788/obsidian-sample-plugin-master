@@ -36,7 +36,7 @@ function harness(timerState?: TimerState) {
   const recordInput = { submitCompleteRecord, submitTaskLifecycle } as unknown as RecordInputUseCase;
   const dataStore = {
     getRecordById: (id: string) => id === TASK_ID
-      ? { id, coreBlock: 'task', status: 'open', title: '上下文任务', content: '上下文任务' }
+      ? { id, recordType: 'task', status: 'open', title: '上下文任务', content: '上下文任务' }
       : null,
   } as unknown as DataStore;
   return {

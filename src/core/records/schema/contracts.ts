@@ -13,7 +13,7 @@ function f(
 
 const ENVELOPE = [
   f('记录ID', 'identity', 'target', 'record-id', 'Stable Record identity; never derived from file path or line.', { required: true, aliases: ['recordId', 'id'] }),
-  f('记录类型', 'identity', 'target', 'enum', 'Business record type discriminator.', { required: true, aliases: ['coreBlock'] }),
+  f('记录类型', 'identity', 'target', 'enum', 'Business record type discriminator.', { required: true, aliases: ['recordType'] }),
 ] as const;
 
 const GOAL = [
@@ -29,34 +29,37 @@ const GENERIC_COMMON = [...ENVELOPE, ...GOAL, DATE] as const;
 
 export const THOUGHT_SCHEMA: RecordSchemaContract = {
   contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  coreBlock: 'thought',
+  recordType: 'thought',
   displayName: '思考',
   family: 'generic',
-  capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, subtypeAware: true, customFields: true },
-  recordFields: [
-    ...GENERIC_COMMON,
-    f('记录子类型', 'business-fact', 'target', 'enum', 'Thought subtype: 感受 or 思考. This replaces the old 闪念/感受 and 闪念/思考 分类 values.', { aliases: ['recordSubtype'], allowedValues: ['感受', '思考'] }),
-    TAGS,
-    ICON,
-    CONTENT,
-  ],
+  capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
+  recordFields: [...GENERIC_COMMON, TAGS, ICON, CONTENT],
 };
 
-export const EVIDENCE_SCHEMA: RecordSchemaContract = {
+export const FEELING_SCHEMA: RecordSchemaContract = {
   contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  coreBlock: 'evidence',
-  displayName: '事件 / 证据',
+  recordType: 'feeling',
+  displayName: '感受',
   family: 'generic',
-  capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, customFields: true },
+  capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
+  recordFields: [...GENERIC_COMMON, TAGS, ICON, CONTENT],
+};
+
+export const EVENT_SCHEMA: RecordSchemaContract = {
+  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
+  recordType: 'event',
+  displayName: '事件',
+  family: 'generic',
+  capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
   recordFields: [...GENERIC_COMMON, TAGS, ICON, CONTENT],
 };
 
 export const HABIT_SCHEMA: RecordSchemaContract = {
   contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  coreBlock: 'habit',
+  recordType: 'habit',
   displayName: '打卡',
   family: 'generic',
-  capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, customFields: true },
+  capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
   recordFields: [
     ...GENERIC_COMMON,
     f('评分', 'business-fact', 'target', 'number', 'Habit rating/value.', { aliases: ['rating'] }),
@@ -65,13 +68,13 @@ export const HABIT_SCHEMA: RecordSchemaContract = {
   ],
 };
 
-function periodRecord(coreBlock: 'plan' | 'review', displayName: string): RecordSchemaContract {
+function periodRecord(recordType: 'plan' | 'review', displayName: string): RecordSchemaContract {
   return {
     contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-    coreBlock,
+    recordType,
     displayName,
     family: 'generic',
-    capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, periodAware: true, customFields: true },
+    capabilities: { userVisible: true, goalBindable: true, dated: true, periodAware: true, customFields: true },
     recordFields: [
       ...GENERIC_COMMON,
       f('周期粒度', 'business-fact', 'target', 'enum', 'Only persisted period fact. Period ID/label are derived from 日期 + 周期粒度.', { aliases: ['periodGranularity'], allowedValues: ['week', 'month', 'quarter', 'year'] }),
@@ -84,13 +87,13 @@ function periodRecord(coreBlock: 'plan' | 'review', displayName: string): Record
 export const PLAN_SCHEMA = periodRecord('plan', '计划');
 export const REVIEW_SCHEMA = periodRecord('review', '总结');
 
-function simpleGoalRecord(coreBlock: 'blocker' | 'milestone', displayName: string): RecordSchemaContract {
+function simpleGoalRecord(recordType: 'blocker' | 'milestone', displayName: string): RecordSchemaContract {
   return {
     contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-    coreBlock,
+    recordType,
     displayName,
     family: 'generic',
-    capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, customFields: true },
+    capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
     recordFields: [...GENERIC_COMMON, ICON, CONTENT],
   };
 }
@@ -113,10 +116,10 @@ const TASK_DEMAND_FIELDS = [
 
 export const TASK_SCHEMA: RecordSchemaContract = {
   contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  coreBlock: 'task',
+  recordType: 'task',
   displayName: '任务',
   family: 'task-domain',
-  capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, statusful: true, customFields: true },
+  capabilities: { userVisible: true, goalBindable: true, dated: true, statusful: true, customFields: true },
   recordFields: [
     ...ENVELOPE,
     f('状态', 'domain-fact', 'target', 'enum', 'Task lifecycle state.', { required: true, aliases: ['status'], allowedValues: ['open', 'done', 'cancelled', 'skipped'] }),
@@ -140,10 +143,10 @@ export const TASK_SCHEMA: RecordSchemaContract = {
 
 export const TASK_SERIES_SCHEMA: RecordSchemaContract = {
   contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  coreBlock: 'task-series',
+  recordType: 'task-series',
   displayName: '任务系列',
   family: 'task-domain',
-  capabilities: { userVisible: false, goalBindable: true, themeAware: false, dated: true, statusful: true },
+  capabilities: { userVisible: false, goalBindable: true, dated: true, statusful: true },
   recordFields: [
     ...ENVELOPE,
     f('状态', 'domain-fact', 'target', 'enum', 'TaskSeries lifecycle state.', { required: true, aliases: ['status'], allowedValues: ['active', 'stopped'] }),
@@ -161,10 +164,10 @@ export const TASK_SERIES_SCHEMA: RecordSchemaContract = {
 
 export const TASK_SESSION_SCHEMA: RecordSchemaContract = {
   contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  coreBlock: 'task-session',
+  recordType: 'task-session',
   displayName: '任务工作块',
   family: 'internal-history',
-  capabilities: { userVisible: false, goalBindable: true, themeAware: false, dated: true, executionHistory: true },
+  capabilities: { userVisible: false, goalBindable: true, dated: true, executionHistory: true },
   recordFields: [
     ...ENVELOPE,
     f('任务ID', 'canonical-reference', 'target', 'record-id', 'Executed Task reference.', { required: true, aliases: ['taskId'] }),
@@ -186,10 +189,10 @@ export const TASK_SESSION_SCHEMA: RecordSchemaContract = {
 
 export const ENERGY_SCHEMA: RecordSchemaContract = {
   contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  coreBlock: 'energy',
+  recordType: 'energy',
   displayName: '精力',
   family: 'energy-domain',
-  capabilities: { userVisible: true, goalBindable: true, themeAware: false, dated: true, subtypeAware: true, customFields: true },
+  capabilities: { userVisible: true, goalBindable: true, dated: true, subtypeAware: true, customFields: true },
   recordFields: [
     ...ENVELOPE,
     f('记录子类型', 'domain-fact', 'target', 'enum', 'Energy domain discriminator.', { required: true, aliases: ['recordSubtype'], allowedValues: ['snapshot', 'change', 'recovery', 'depletion', 'stop'] }),
@@ -211,7 +214,8 @@ export const ENERGY_SCHEMA: RecordSchemaContract = {
 
 export const RECORD_SCHEMA_CONTRACTS: readonly RecordSchemaContract[] = [
   THOUGHT_SCHEMA,
-  EVIDENCE_SCHEMA,
+  FEELING_SCHEMA,
+  EVENT_SCHEMA,
   HABIT_SCHEMA,
   PLAN_SCHEMA,
   REVIEW_SCHEMA,

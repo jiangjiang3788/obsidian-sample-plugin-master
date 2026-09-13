@@ -34,7 +34,7 @@ interface CommonFilterPanelProps {
 
 export const DEFAULT_QUICK_FILTER_FIELDS: QuickFilterField[] = [
   { field: 'goalPath', label: '目标', placeholder: '选择目标' },
-  { field: 'coreBlock', label: '记录类型', placeholder: '选择记录类型' },
+  { field: 'recordType', label: '记录类型', placeholder: '选择记录类型' },
   { field: 'status', label: '状态', placeholder: '选择状态' },
   { field: 'cadence', label: '任务周期', placeholder: '选择任务周期' },
   { field: 'priority', label: '优先级', placeholder: '选择优先级' },
@@ -77,7 +77,7 @@ function collectFieldValues(items: RecordViewItem[], fields: string[]): Record<s
   const result: Record<string, string[]> = {};
   fields.forEach(rawField => {
     const field = normalizeViewFieldKey(rawField);
-    result[field] = Array.from(valueMap[field] || []).sort(field === 'coreBlock' ? compareRecordTypeKeys : (a, b) => a.localeCompare(b, 'zh-CN'));
+    result[field] = Array.from(valueMap[field] || []).sort(field === 'recordType' ? compareRecordTypeKeys : (a, b) => a.localeCompare(b, 'zh-CN'));
   });
   return result;
 }
@@ -197,7 +197,7 @@ export function CommonFilterPanel({
                 }))}
                 onChange={(newValues) => onChange(upsertQuickRule(filters, config.field, newValues))}
                 placeholder={config.placeholder || `选择${label}`}
-                allowCustom={config.field !== 'coreBlock'}
+                allowCustom={config.field !== 'recordType'}
               />
             </div>
           );

@@ -15,11 +15,10 @@ function item(index: number): RecordViewItem {
   const id = `rec.perf.${String(index).padStart(8, '0')}`;
   return {
     id,
-    coreBlock: 'thought',
+    recordType: 'thought',
     title: `记录 ${index}`,
     content: `性能样本 ${index}`,
     tags: [],
-    categoryKey: 'thought',
     created: index,
     modified: index,
     extra: {},

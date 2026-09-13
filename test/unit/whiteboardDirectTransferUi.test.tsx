@@ -13,11 +13,10 @@ import { WhiteboardRecordSourcePanel } from '@/features/whiteboard/WhiteboardRec
 function record(id: string): RecordViewItem {
   return {
     id,
-    coreBlock: 'thought',
+    recordType: 'thought',
     title: `标题 ${id}`,
     content: `内容 ${id}`,
     tags: [],
-    categoryKey: 'thought',
     goalPath: '爱好能力/电脑',
     date: '2026-09-07',
     created: 0,

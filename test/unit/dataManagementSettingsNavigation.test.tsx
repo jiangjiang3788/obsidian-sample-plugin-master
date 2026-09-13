@@ -7,7 +7,7 @@
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 
-jest.mock('@features/settings/input/BlockManager', () => ({ BlockManager: () => <div data-test="记录类型页">记录类型页</div> }));
+jest.mock('@features/settings/input/RecordTypeManager', () => ({ RecordTypeManager: () => <div data-test="记录类型页">记录类型页</div> }));
 jest.mock('@features/settings/input/GoalManager', () => ({ GoalManager: () => <div data-test="目标页">目标页</div> }));
 jest.mock('@features/settings/input/goalManager/GoalMetricSection', () => ({ GoalMetricSection: () => <div data-test="指标页">指标页</div> }));
 

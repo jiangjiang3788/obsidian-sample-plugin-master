@@ -12,9 +12,8 @@ const baseItem = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   tags: [],
   created: 0,
   modified: 0,
-  coreBlock: 'task',
+  recordType: 'task',
   status: 'open',
-  categoryKey: '任务',
   extra: {},
   ...overrides,
 });

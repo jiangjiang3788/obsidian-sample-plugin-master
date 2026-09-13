@@ -24,10 +24,10 @@ const taskTemplate = {
 function viewProps(overrides: Record<string, unknown> = {}) {
   return {
     getResourcePath: (path: string) => path,
-    blocks: [{ id: 'core.task', name: '任务' }],
-    allowBlockSwitch: false,
-    currentBlockId: 'core.task',
-    onBlockChange: jest.fn(),
+    recordTypes: [{ id: 'core.task', name: '任务' }],
+    allowRecordTypeSwitch: false,
+    currentRecordTypeId: 'core.task',
+    onRecordTypeChange: jest.fn(),
     goals: [],
     selectedGoalPath: null,
     onSelectGoal: jest.fn(),

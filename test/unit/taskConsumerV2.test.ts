@@ -12,13 +12,13 @@ import { fromCachedItem, toCachedItem } from '@/core/types/cache';
 
 function item(overrides: Partial<RecordViewItem>): RecordViewItem {
   return {
-    id: 'record', title: '', content: '', tags: [], categoryKey: '', created: 0, modified: 0, extra: {}, ...overrides,
+    id: 'record', title: '', content: '', tags: [], created: 0, modified: 0, extra: {}, ...overrides,
   } as RecordViewItem;
 }
 
 function task(id: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return item({
-    id, title: id, content: id, coreBlock: 'task', status: 'open',
+    id, title: id, content: id, recordType: 'task', status: 'open',
     file: { path: 'tasks.md', basename: 'tasks', folder: '' },
     ...overrides,
   });
@@ -26,7 +26,7 @@ function task(id: string, overrides: Partial<RecordViewItem> = {}): RecordViewIt
 
 function session(id: string, taskId: string, seriesId: string, delta: number, date: string): RecordViewItem {
   return item({
-    id, coreBlock: 'task-session', taskId, seriesId,
+    id, recordType: 'task-session', taskId, seriesId,
     sessionStartedAt: `${date}T09:00:00`, sessionEndedAt: `${date}T10:00:00`, sessionDurationMinutes: 60,
     sessionResult: 'task-completed', sessionSource: 'timer', endEnergyRecordId: `energy.${id}`, energyDelta: delta,
   });
@@ -59,7 +59,7 @@ describe('Task v2 consumer convergence', () => {
   it('projects Timeline execution rows from TaskSession identity, not Task time fields', () => {
     const t = task('task.timeline', { expectedDurationMinutes: 5 });
     const s = item({
-      id: 'session.timeline', coreBlock: 'task-session', taskId: t.id,
+      id: 'session.timeline', recordType: 'task-session', taskId: t.id,
       sessionStartedAt: '2026-08-10T09:10:00', sessionEndedAt: '2026-08-10T09:48:00', sessionDurationMinutes: 38,
       sessionResult: 'work-block-ended', sessionSource: 'timer',
     });

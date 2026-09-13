@@ -22,14 +22,13 @@ export interface CoreInputFieldPreset {
   /** 推荐的基础字段类型。用户仍然可以在 UI 里改类型。 */
   type: FieldInputType;
   /** 内部核心字段目标。只用于归一化和模板渲染，不暴露成 UI 配置项。 */
-  target: 'categoryKey' | 'recordSubtype' | 'tags' | 'goalPath' | 'image' | 'title' | 'content' | 'date' | 'rating' | 'startTime' | 'endTime' | 'duration';
+  target: 'recordSubtype' | 'tags' | 'goalPath' | 'image' | 'title' | 'content' | 'date' | 'rating' | 'startTime' | 'endTime' | 'duration';
   description: string;
 }
 
 const CORE_FIELD_GUIDE_KEYS = [
   'title',
   'content',
-  'categoryKey',
   'tags',
   'goalPath',
   'date',
@@ -48,7 +47,7 @@ const BUILT_IN_FIELD_GUIDE_GROUPS: BuiltInFieldGuideGroup[] = [
   {
     category: 'core',
     label: '插件核心字段',
-    description: '由插件内置维护。分类、标签、目标等可以作为表单输入字段使用，但不会落到 extra。',
+    description: '由插件内置维护。标签、目标等可以作为表单输入字段使用，但不会落到 extra。',
     fields: CORE_FIELD_GUIDE_KEYS
       .map(key => FIELD_REGISTRY[key])
       .filter(Boolean)
@@ -76,8 +75,7 @@ const BUILT_IN_FIELD_GUIDE_GROUPS: BuiltInFieldGuideGroup[] = [
 ];
 
 const CORE_INPUT_FIELD_PRESETS: CoreInputFieldPreset[] = [
-  { label: '分类', type: 'hierarchicalSingleSelect', target: 'categoryKey', description: 'Record 的分类路径；Thought 可由分类叶节点映射为记录子类型。' },
-  { label: '记录子类型', type: 'singleSelect', target: 'recordSubtype', description: 'Record 内部子类型；Thought 推荐使用 感受/思考。' },
+  { label: '记录子类型', type: 'singleSelect', target: 'recordSubtype', description: '领域内部子类型；当前由 Energy 使用。' },
   { label: '标签', type: 'multiTag', target: 'tags', description: '多标签字段，可填写多个标签。' },
   { label: '目标', type: 'hierarchicalSingleSelect', target: 'goalPath', description: '单值目标路径。Goal 是独立实体，不使用标签语义。' },
   { label: '图片', type: 'image', target: 'image', description: '通用图片字段。' },
@@ -92,10 +90,6 @@ const CORE_INPUT_ALIAS_TARGETS: Record<string, CoreInputFieldPreset['target']> =
   recordsubtype: 'recordSubtype',
   '记录子类型': 'recordSubtype',
   // 分类
-  categorykey: 'categoryKey',
-  categorypath: 'categoryKey',
-  '分类': 'categoryKey',
-  '分类路径': 'categoryKey',
   // 标签
   tags: 'tags',
   '标签': 'tags',
@@ -153,10 +147,7 @@ const RESERVED_NON_INPUT_FIELD_NAMES = [
   '所在章节',
   'header',
   'folder',
-  'baseCategory',
-  'rootCategory',
   '根分类',
-  'leafCategory',
   '叶分类',
   'periodCount',
   '粒度序号',

@@ -15,7 +15,7 @@ export function applyRetrievalFilters(
         const item = indexedItemsById.get(getSearchResultId(sr));
 
         if (!matchesGoalPath(sr, item, filters)) return false;
-        if (!matchesCoreBlock(sr, item, filters)) return false;
+        if (!matchesRecordType(sr, item, filters)) return false;
 
         return true;
     });
@@ -28,9 +28,9 @@ function matchesGoalPath(sr: RetrievalIndexResult, item: RecordViewItem | undefi
     return filters.goalPaths.some((path) => itemGoalPath === normalizeRetrievalText(path) || itemGoalPath.startsWith(`${normalizeRetrievalText(path)}/`));
 }
 
-function matchesCoreBlock(sr: RetrievalIndexResult, item: RecordViewItem | undefined, filters: RetrievalFilters): boolean {
-    const requestedCoreBlocks = filters.coreBlocks;
-    if (!requestedCoreBlocks?.length) return true;
-    const coreBlock = normalizeRetrievalText(item?.coreBlock ?? readSearchResultText(sr, 'coreBlock'));
-    return !!coreBlock && requestedCoreBlocks.map(normalizeRetrievalText).includes(coreBlock);
+function matchesRecordType(sr: RetrievalIndexResult, item: RecordViewItem | undefined, filters: RetrievalFilters): boolean {
+    const requestedRecordTypes = filters.recordTypes;
+    if (!requestedRecordTypes?.length) return true;
+    const recordType = normalizeRetrievalText(item?.recordType ?? readSearchResultText(sr, 'recordType'));
+    return !!recordType && requestedRecordTypes.map(normalizeRetrievalText).includes(recordType);
 }

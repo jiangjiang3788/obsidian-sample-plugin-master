@@ -12,12 +12,11 @@ const seriesId = 'taskseries.01J00000000000000000000000';
 function openTask(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: taskId,
-    coreBlock: 'task',
+    recordType: 'task',
     status: 'open',
     title: 'Current',
     content: 'Current',
     tags: [],
-    categoryKey: '',
     created: 0,
     modified: 0,
     extra: {},
@@ -29,12 +28,11 @@ function openTask(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
 function activeSeries(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: seriesId,
-    coreBlock: 'task-series',
+    recordType: 'task-series',
     status: 'active',
     title: 'Weekly',
     content: 'Series default',
     tags: [],
-    categoryKey: '',
     recurrenceInfo: { unit: 'week', interval: 1, anchor: 'scheduled' },
     currentTaskId: taskId,
     rolloverPolicy: 'carry',
@@ -115,7 +113,7 @@ describe('TaskCompletionMutation v2', () => {
     expect(batches[0][1]).toMatchObject({
       kind: 'create',
       record: {
-        coreBlock: 'task-session',
+        recordType: 'task-session',
         fields: {
           taskId,
           goalPath: '工作能力/通勤',
@@ -229,7 +227,7 @@ describe('TaskCompletionMutation v2', () => {
     expect(batches[0][0]).toMatchObject({ kind: 'update', recordId: taskId, patch: { status: 'done', completedAt: '2026-08-11T09:48:00.000Z' } });
     expect(batches[0][1]).toMatchObject({
       kind: 'create',
-      record: { coreBlock: 'task-session', fields: { taskId, sessionResult: 'task-completed', sessionDurationMinutes: 38 } },
+      record: { recordType: 'task-session', fields: { taskId, sessionResult: 'task-completed', sessionDurationMinutes: 38 } },
     });
   });
 
@@ -247,9 +245,9 @@ describe('TaskCompletionMutation v2', () => {
     expect(batches).toHaveLength(1);
     expect(batches[0]).toHaveLength(4);
     expect(batches[0][0]).toMatchObject({ kind: 'update', recordId: taskId });
-    expect(batches[0][1]).toMatchObject({ kind: 'create', record: { coreBlock: 'task-session' } });
+    expect(batches[0][1]).toMatchObject({ kind: 'create', record: { recordType: 'task-session' } });
     expect(batches[0][1].record.fields).toMatchObject({ taskId, seriesId, sessionSource: 'energy-view', suggestedDurationMinutes: 45 });
-    expect(batches[0][2]).toMatchObject({ kind: 'create', record: { coreBlock: 'task' } });
+    expect(batches[0][2]).toMatchObject({ kind: 'create', record: { recordType: 'task' } });
     expect(batches[0][3]).toMatchObject({ kind: 'update', recordId: seriesId });
   });
 
@@ -268,7 +266,7 @@ describe('TaskCompletionMutation v2', () => {
     expect(batches[0][0]).toMatchObject({ kind: 'update', recordId: taskId, patch: { status: 'cancelled', cancelledAt: '2026-08-11T10:12:00.000Z' } });
     expect(batches[0][1]).toMatchObject({
       kind: 'create',
-      record: { coreBlock: 'task-session', fields: { taskId, sessionResult: 'work-block-ended', sessionDurationMinutes: 12 } },
+      record: { recordType: 'task-session', fields: { taskId, sessionResult: 'work-block-ended', sessionDurationMinutes: 12 } },
     });
   });
 
@@ -284,8 +282,8 @@ describe('TaskCompletionMutation v2', () => {
     });
     expect(batches).toHaveLength(1);
     expect(batches[0][0]).toMatchObject({ kind: 'update', recordId: taskId, patch: { status: 'skipped', skippedAt: '2026-08-11T11:08:00.000Z' } });
-    expect(batches[0][1]).toMatchObject({ kind: 'create', record: { coreBlock: 'task-session' } });
-    expect(batches[0][2]).toMatchObject({ kind: 'create', record: { coreBlock: 'task' } });
+    expect(batches[0][1]).toMatchObject({ kind: 'create', record: { recordType: 'task-session' } });
+    expect(batches[0][2]).toMatchObject({ kind: 'create', record: { recordType: 'task' } });
     expect(batches[0][3]).toMatchObject({ kind: 'update', recordId: seriesId });
   });
 

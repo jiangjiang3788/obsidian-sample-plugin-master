@@ -108,16 +108,16 @@ function AiBatchConfirmForm({
   const settings = buildRecordTypeInputSettings();
   const goalSettings = fullSettings.goalSettings;
   const useCases = useUseCases();
-  const blocks = settings.blocks || [];
+  const recordTypes = settings.recordTypes || [];
   const isMobileLike = useMemo(() => isMobileLikeEnvironment(), []);
   const initialRecords = useMemo(
     () => buildAiBatchConfirmRecordItems({
       items: initialItems,
-      blocks,
+      recordTypes,
       goalSettings,
       inputSettings: settings,
     }),
-    [initialItems, blocks, goalSettings, settings],
+    [initialItems, recordTypes, goalSettings, settings],
   );
 
   const {
@@ -148,7 +148,7 @@ function AiBatchConfirmForm({
     <div className="think-ai-batch" data-ai-batch-busy={isBusy ? 'true' : 'false'}>
       <AiBatchConfirmSidebar
         records={records}
-        blocks={blocks}
+        recordTypes={recordTypes}
         currentIndex={currentIndex}
         savedCount={summary.savedCount}
         pendingCount={summary.pendingCount}
@@ -173,10 +173,10 @@ function AiBatchConfirmForm({
           <QuickInputEditor
             key={currentRecord.id}
             getResourcePath={resolveResourcePath}
-            initialBlockId={currentRecord.blockId}
+            initialRecordTypeId={currentRecord.recordTypeId}
             initialFormData={currentRecord.formData}
             context={currentRecord.editorContext}
-            allowBlockSwitch={true}
+            allowRecordTypeSwitch={true}
             dense={true}
             isMobileLike={isMobileLike}
             onRequestSubmit={() => { void handleSaveCurrent(); }}

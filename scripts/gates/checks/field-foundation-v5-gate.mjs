@@ -37,15 +37,15 @@ if (!fields.includes("key.length > 64") || !fields.includes("/[\\r\\n:：]/.test
   failures.push('dynamic custom fields must be safety-checked before entering the picker');
 }
 
-// Settings Compact V6: RecordTypes are code-registered and never persisted as inputSettings/CoreBlock settings.
+// Settings Compact V6: RecordTypes are code-registered and never persisted as inputSettings/RecordType settings.
 if (!settings.includes('export function toPersistedThinkSettings')) {
   failures.push('currentSettingsSchema must expose the persistence projection');
 }
 if (!settings.includes('delete out.inputSettings')) {
   failures.push('persistence projection must drop legacy inputSettings entirely');
 }
-if (!settings.includes('delete out.coreBlockSettings') || !settings.includes('delete out.recordTypeSettings')) {
-  failures.push('persistence projection must drop legacy RecordType/CoreBlock settings entirely');
+if (!settings.includes('delete out.recordTypeSettings') || !settings.includes('delete out.recordTypeSettings')) {
+  failures.push('persistence projection must drop legacy RecordType/RecordType settings entirely');
 }
 if (!bootstrap.includes('toPersistedThinkSettings(settings)') || !main.includes('toPersistedThinkSettings(settings)')) {
   failures.push('all settings save boundaries must use the compact persistence projection');

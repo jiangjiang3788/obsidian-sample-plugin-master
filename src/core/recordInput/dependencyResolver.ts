@@ -7,7 +7,7 @@ import { resolveRecordGoalPath } from './systemContext';
 
 export interface DependencyResolverInput {
   settings: ThinkSettings;
-  blockId?: string | null;
+  recordTypeId?: string | null;
   item?: RecordViewItem | null;
   context?: Record<string, unknown> | null;
   requireDirectGoalTemplate?: boolean;
@@ -21,17 +21,17 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
   const warnings: RecordSubmitIssue[] = [];
   const errors: RecordSubmitIssue[] = [];
   const fullSettings = input.settings;
-  const requestedRecordTypeId = input.blockId ? String(input.blockId) : null;
+  const requestedRecordTypeId = input.recordTypeId ? String(input.recordTypeId) : null;
   const goalPath = resolveRecordGoalPath({ context: input.context, item: input.item });
 
   if (!requestedRecordTypeId) {
     errors.push(issue('record_type_missing', 'Missing recordTypeId for record submission.', 'recordTypeId'));
     return {
-      blockId: null,
+      recordTypeId: null,
       template: null,
       warnings,
       errors,
-      meta: { templateId: null, templateSourceType: null, usedFallbackBlock: false },
+      meta: { templateId: null, templateSourceType: null, usedFallbackRecordType: false },
     };
   }
 
@@ -39,11 +39,11 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
   if (!recordType) {
     errors.push(issue('record_type_not_found', 'Selected RecordType no longer exists.', 'recordTypeId'));
     return {
-      blockId: requestedRecordTypeId,
+      recordTypeId: requestedRecordTypeId,
       template: null,
       warnings,
       errors,
-      meta: { templateId: null, templateSourceType: null, usedFallbackBlock: false },
+      meta: { templateId: null, templateSourceType: null, usedFallbackRecordType: false },
     };
   }
 
@@ -57,11 +57,11 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
   if (resolved.status === 'disabled') {
     errors.push(issue('record_goal_record_type_disabled', 'This RecordType is disabled for the selected Goal.', 'goalPath'));
     return {
-      blockId: requestedRecordTypeId,
+      recordTypeId: requestedRecordTypeId,
       template: null,
       warnings,
       errors,
-      meta: { templateId: resolved.templateId, templateSourceType: resolved.templateSourceType, usedFallbackBlock: false },
+      meta: { templateId: resolved.templateId, templateSourceType: resolved.templateSourceType, usedFallbackRecordType: false },
     };
   }
 
@@ -73,24 +73,24 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
 
   if (resolved.template) {
     return {
-      blockId: resolved.recordTypeId || requestedRecordTypeId,
+      recordTypeId: resolved.recordTypeId || requestedRecordTypeId,
       template: resolved.template,
       warnings,
       errors,
       meta: {
         templateId: resolved.templateId,
         templateSourceType: resolved.templateSourceType,
-        usedFallbackBlock: false,
+        usedFallbackRecordType: false,
       },
     };
   }
 
   errors.push(issue('record_template_missing', 'No effective Goal + RecordType template is available for this record.', 'recordTypeId'));
   return {
-    blockId: requestedRecordTypeId,
+    recordTypeId: requestedRecordTypeId,
     template: null,
     warnings,
     errors,
-    meta: { templateId: null, templateSourceType: null, usedFallbackBlock: false },
+    meta: { templateId: null, templateSourceType: null, usedFallbackRecordType: false },
   };
 }

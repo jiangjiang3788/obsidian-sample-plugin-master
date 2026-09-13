@@ -5,7 +5,7 @@ import { getQuickInputOperationTitle } from './quickInputOperationMode';
 
 export interface QuickInputModalHeaderProps {
   operationMode: QuickInputOperationMode;
-  currentBlockName: string;
+  currentRecordTypeName: string;
   isTimerCreate: boolean;
   originalGestureHint?: string;
   onClose: () => void;
@@ -22,7 +22,7 @@ const operationOptions = [
 
 export function QuickInputModalHeader({
   operationMode,
-  currentBlockName,
+  currentRecordTypeName,
   isTimerCreate,
   originalGestureHint,
   onClose,
@@ -41,7 +41,7 @@ export function QuickInputModalHeader({
             onClick={editing ? (onOriginalPointerClick as any) : undefined}
             onTouchEnd={editing ? (onOriginalTouchEnd as any) : undefined}
           >
-            {getQuickInputOperationTitle(operationMode, currentBlockName, isTimerCreate)}
+            {getQuickInputOperationTitle(operationMode, currentRecordTypeName, isTimerCreate)}
           </h3>
         }
         onClose={onClose}

@@ -79,12 +79,12 @@ describe('Think OS 真机 Runtime：Record 修改 / 时间 / 删除 / 路径迁�
       const refreshed = manager.dataStore.getRecordById(recordId);
       const prepared = manager.useCases.recordInput.prepareEditRecord({
         item: refreshed,
-        blockId: 'core.task',
+        recordTypeId: 'core.task',
         source: 'quickinput',
       });
       const updateResult = await manager.useCases.recordInput.submitUpdateRecord({
         item: refreshed,
-        blockId: prepared.blockId || 'core.task',
+        recordTypeId: prepared.recordTypeId || 'core.task',
         formData: {
           ...prepared.initialFormData,
           任务内容: '修改后',
@@ -115,10 +115,10 @@ describe('Think OS 真机 Runtime：Record 修改 / 时间 / 删除 / 路径迁�
       const plugin = (app as any).plugins.plugins[pluginId] as any;
       const manager = plugin.serviceManager;
       const item = manager.dataStore.getRecordById(recordId);
-      const prepared = manager.useCases.recordInput.prepareEditRecord({ item, blockId: 'core.task', source: 'quickinput' });
+      const prepared = manager.useCases.recordInput.prepareEditRecord({ item, recordTypeId: 'core.task', source: 'quickinput' });
       return manager.useCases.recordInput.submitUpdateRecord({
         item,
-        blockId: prepared.blockId || 'core.task',
+        recordTypeId: prepared.recordTypeId || 'core.task',
         formData: {
           ...prepared.initialFormData,
           任务内容: '路径迁移后',

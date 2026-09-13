@@ -1,8 +1,10 @@
+import { normalizeRecordTypeColorOverrides } from '@/core/recordTypes/color';
 import { DEFAULT_SETTINGS } from '@/core/settings/ThinkSettings';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { DEFAULT_ENERGY_SETTINGS } from '@/core/energy';
-import { assertCanonicalGoalSettings, normalizeGoalPath, stripGoalTemplateIconDefaults, stripGoalTemplateIconFieldDefaults } from '@/core/goal';
+import { assertCanonicalGoalSettings, normalizeGoalColorHex, normalizeGoalPath, stripGoalTemplateIconDefaults, stripGoalTemplateIconFieldDefaults } from '@/core/goal';
 import type { GoalDefinition, GoalSettings, GoalTemplateStorageRow, GoalTimePresetRevision, GoalTimePresetSnapshotEntry } from '@/core/goal';
+import { getRecordSchemaDefinitionById } from '@/core/records/schema';
 
 /**
  * Goal-only single-user settings policy.
@@ -26,38 +28,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function readLegacyTemplateIcon(entry: Record<string, unknown>): string {
-  const defaults = isRecord(entry.defaultValues) ? entry.defaultValues : {};
-  const direct = String(defaults.icon ?? defaults['图标'] ?? '').trim();
-  if (direct) return direct;
-  const fields = Array.isArray(entry.fields) ? entry.fields : [];
-  for (const rawField of fields) {
-    if (!isRecord(rawField)) continue;
-    const key = String(rawField.key ?? rawField.label ?? '').trim();
-    const semantic = String(rawField.semantic ?? rawField.semanticType ?? '').trim();
-    if (key !== 'icon' && key !== '图标' && semantic !== 'icon') continue;
-    const value = String(rawField.defaultValue ?? '').trim();
-    if (value) return value;
-  }
-  return '';
-}
+const RETIRED_CATEGORY_FIELDS = new Set(['categoryKey','categoryPath','baseCategory','rootCategory','leafCategory','分类','分类路径']);
 
-function backfillGoalIconsFromLegacyTemplates(goals: GoalDefinition[], rawTemplates: unknown[]): void {
-  const candidates = new Map<string, Set<string>>();
-  for (const rawEntry of rawTemplates) {
-    if (!isRecord(rawEntry)) continue;
-    const goalPath = normalizeGoalPath(String(rawEntry.goalPath ?? ''));
-    const icon = readLegacyTemplateIcon(rawEntry);
-    if (!goalPath || !icon) continue;
-    const set = candidates.get(goalPath) || new Set<string>();
-    set.add(icon);
-    candidates.set(goalPath, set);
-  }
-  for (const goal of goals) {
-    if (String(goal.icon || '').trim()) continue;
-    const icons = Array.from(candidates.get(goal.path) || []);
-    if (icons.length === 1) goal.icon = icons[0];
-  }
+function isRetiredTemplateField(field: Record<string, unknown>, keepRecordSubtype: boolean): boolean {
+  const key = String(field.key ?? '').trim();
+  const semantic = String(field.semantic ?? field.semanticType ?? '').trim();
+  if (RETIRED_CATEGORY_FIELDS.has(key) || semantic === 'categoryPath') return true;
+  if (!keepRecordSubtype && (key === '记录子类型' || key === 'recordSubtype' || semantic === 'recordSubtype')) return true;
+  return false;
 }
 
 /** Hydrate compact persisted Goal rows into the existing runtime domain shape. */
@@ -78,7 +56,7 @@ function hydrateGoalOnlySettings(value: unknown): GoalSettings {
       createdAt: typeof entry.createdAt === 'string' ? entry.createdAt : '',
       updatedAt: typeof entry.updatedAt === 'string' ? entry.updatedAt : '',
       ...(typeof entry.icon === 'string' ? { icon: entry.icon } : null),
-      ...(typeof entry.color === 'string' ? { color: entry.color } : null),
+      ...(normalizeGoalColorHex(entry.color) ? { color: normalizeGoalColorHex(entry.color)! } : null),
       ...(typeof entry.sortOrder === 'number' ? { sortOrder: entry.sortOrder } : null),
       ...(typeof entry.timePresetPercent === 'number' ? { timePresetPercent: entry.timePresetPercent } : null),
       ...(typeof entry.weeklyTargetMinutes === 'number' ? { weeklyTargetMinutes: entry.weeklyTargetMinutes } : null),
@@ -87,23 +65,33 @@ function hydrateGoalOnlySettings(value: unknown): GoalSettings {
   const goalPaths = new Set(goals.map((goal) => goal.path));
 
   const rawTemplates = Array.isArray(raw.goalTemplates) ? raw.goalTemplates : [];
-  backfillGoalIconsFromLegacyTemplates(goals, rawTemplates);
   const goalTemplates: GoalTemplateStorageRow[] = rawTemplates.map((entry) => {
     if (!isRecord(entry)) throw new Error('Invalid GoalTemplate row: expected object.');
     const goalPath = normalizeGoalPath(String(entry.goalPath ?? ''));
     const recordTypeId = String(entry.recordTypeId ?? '').trim();
     if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`GoalTemplate references missing Goal path (${goalPath || '<empty>'}).`);
     if (!recordTypeId) throw new Error(`GoalTemplate ${goalPath} is missing recordTypeId.`);
+    const recordSchema = getRecordSchemaDefinitionById(recordTypeId);
+    if (!recordSchema || recordSchema.captureMode !== 'template') {
+      throw new Error(`GoalTemplate ${goalPath} references non-current Record Type (${recordTypeId}). Run the offline 1.5.0 convergence first.`);
+    }
+    const keepRecordSubtype = recordSchema.recordType === 'energy';
     const fields = stripGoalTemplateIconFieldDefaults(Array.isArray(entry.fields)
       ? entry.fields.filter((field) => {
           if (!isRecord(field)) return false;
-          return field.semantic !== 'goalPath' && field.key !== 'goalPath' && field.key !== '目标';
+          if (field.semantic === 'goalPath' || field.key === 'goalPath' || field.key === '目标') return false;
+          return !isRetiredTemplateField(field, keepRecordSubtype);
         }) as GoalTemplateStorageRow['fields']
       : undefined);
     const defaults = stripGoalTemplateIconDefaults(isRecord(entry.defaultValues) ? { ...entry.defaultValues } : undefined);
     if (defaults) {
       delete defaults.goalPath;
       delete defaults['目标'];
+      for (const key of RETIRED_CATEGORY_FIELDS) delete defaults[key];
+      if (!keepRecordSubtype) {
+        delete defaults.recordSubtype;
+        delete defaults['记录子类型'];
+      }
     }
     return {
       goalPath,
@@ -115,7 +103,9 @@ function hydrateGoalOnlySettings(value: unknown): GoalSettings {
       targetFile: typeof entry.targetFile === 'string' ? entry.targetFile : undefined,
       appendUnderHeader: typeof entry.appendUnderHeader === 'string' ? entry.appendUnderHeader : undefined,
       defaultValues: defaults && Object.keys(defaults).length ? defaults : undefined,
-      requiredFields: Array.isArray(entry.requiredFields) ? entry.requiredFields.map(String) : undefined,
+      requiredFields: Array.isArray(entry.requiredFields)
+        ? entry.requiredFields.map(String).filter((key) => !RETIRED_CATEGORY_FIELDS.has(key) && (keepRecordSubtype || (key !== '记录子类型' && key !== 'recordSubtype')))
+        : undefined,
     };
   });
 
@@ -186,14 +176,21 @@ export function toCurrentThinkSettings(rawValue: unknown): ThinkSettings {
   const raw = isRecord(rawValue) ? rawValue : {};
   const partial = raw as Partial<ThinkSettings>;
   const sanitizedViews = sanitizeViewState(raw);
+  // Current-only whitelist: retired top-level keys (for example categoryColors)
+  // are intentionally not spread into runtime settings and cannot be re-persisted.
   const current: ThinkSettings = {
     ...DEFAULT_SETTINGS,
-    ...partial,
     groups: Array.isArray(partial.groups) ? partial.groups : [],
     viewInstances: sanitizedViews.viewInstances,
     layouts: sanitizedViews.layouts,
     goalSettings: hydrateGoalOnlySettings(raw.goalSettings),
     energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...(isRecord(partial.energySettings) ? partial.energySettings : {}) },
+    floatingTimerEnabled: typeof partial.floatingTimerEnabled === 'boolean' ? partial.floatingTimerEnabled : DEFAULT_SETTINGS.floatingTimerEnabled,
+    aiSettings: isRecord(partial.aiSettings) ? partial.aiSettings as ThinkSettings['aiSettings'] : DEFAULT_SETTINGS.aiSettings,
+    devConsoleStackEnabled: typeof partial.devConsoleStackEnabled === 'boolean' ? partial.devConsoleStackEnabled : DEFAULT_SETTINGS.devConsoleStackEnabled,
+    recentGoalPaths: Array.isArray(partial.recentGoalPaths) ? partial.recentGoalPaths.map(String) : [],
+    goalTaskDefaultsSeedVersion: typeof partial.goalTaskDefaultsSeedVersion === 'number' ? partial.goalTaskDefaultsSeedVersion : 0,
+    recordTypeColors: normalizeRecordTypeColorOverrides(raw.recordTypeColors),
   };
   return current;
 }
@@ -219,7 +216,7 @@ function persistGoalOnlySettings(settings: ThinkSettings): Record<string, unknow
       status: goal.status,
       ...(goal.description ? { description: goal.description } : null),
       ...(source.icon ? { icon: source.icon } : null),
-      ...(source.color ? { color: source.color } : null),
+      ...(normalizeGoalColorHex(source.color) ? { color: normalizeGoalColorHex(source.color)! } : null),
       ...(typeof source.sortOrder === 'number' ? { sortOrder: source.sortOrder } : null),
       ...(typeof source.timePresetPercent === 'number' ? { timePresetPercent: source.timePresetPercent } : null),
       ...(typeof source.weeklyTargetMinutes === 'number' ? { weeklyTargetMinutes: source.weeklyTargetMinutes } : null),
@@ -230,12 +227,17 @@ function persistGoalOnlySettings(settings: ThinkSettings): Record<string, unknow
   const goalTemplates = (runtime.goalTemplates || []).map((template) => {
     const path = normalizeGoalPath(template.goalPath);
     if (!path) throw new Error('Cannot persist GoalTemplate without canonical Goal path.');
+    const recordSchema = getRecordSchemaDefinitionById(template.recordTypeId);
+    if (!recordSchema || recordSchema.captureMode !== 'template') throw new Error(`Cannot persist non-current GoalTemplate Record Type: ${template.recordTypeId}`);
+    const keepRecordSubtype = recordSchema.recordType === 'energy';
     const fields = stripGoalTemplateIconFieldDefaults((template.fields || []).filter((field) => {
       const record = field as unknown as Record<string, unknown>;
-      return record.semantic !== 'goalPath' && record.key !== 'goalPath' && record.key !== '目标';
+      if (record.semantic === 'goalPath' || record.key === 'goalPath' || record.key === '目标') return false;
+      return !isRetiredTemplateField(record, keepRecordSubtype);
     })) || [];
     const defaults = { ...(stripGoalTemplateIconDefaults(template.defaultValues) || {}) } as Record<string, unknown>;
-    for (const key of ['goalPath', '目标']) delete defaults[key];
+    for (const key of ['goalPath', '目标', ...RETIRED_CATEGORY_FIELDS]) delete defaults[key];
+    if (!keepRecordSubtype) { delete defaults.recordSubtype; delete defaults['记录子类型']; }
     return {
       goalPath: path,
       recordTypeId: template.recordTypeId,
@@ -246,7 +248,7 @@ function persistGoalOnlySettings(settings: ThinkSettings): Record<string, unknow
       ...(template.targetFile ? { targetFile: template.targetFile } : null),
       ...(template.appendUnderHeader ? { appendUnderHeader: template.appendUnderHeader } : null),
       ...(Object.keys(defaults).length ? { defaultValues: defaults } : null),
-      ...(template.requiredFields?.length ? { requiredFields: template.requiredFields } : null),
+      ...(template.requiredFields?.length ? { requiredFields: template.requiredFields.filter((key) => !RETIRED_CATEGORY_FIELDS.has(key) && (keepRecordSubtype || (key !== '记录子类型' && key !== 'recordSubtype'))) } : null),
     };
   });
   const timePresetRevisions = (runtime.timePresetRevisions || []).map((revision) => ({
@@ -264,8 +266,12 @@ export function toPersistedThinkSettings(settings: ThinkSettings): Record<string
   const out = JSON.parse(JSON.stringify(settings ?? {})) as Record<string, any>;
   // RecordType definitions are code-registered and never persisted in data.json.
   delete out.inputSettings;
-  delete out.coreBlockSettings;
   delete out.recordTypeSettings;
+  delete out.categoryColors;
+
+  const recordTypeColors = normalizeRecordTypeColorOverrides(settings.recordTypeColors);
+  if (Object.keys(recordTypeColors).length > 0) out.recordTypeColors = recordTypeColors;
+  else delete out.recordTypeColors;
 
   out.goalSettings = persistGoalOnlySettings(settings);
   return out;

@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import type { CategoryConfig } from '@core/view/public';
+import type { StatisticsBucketConfig } from '@core/view/public';
 import type { RecordViewItem } from '@core/types/public';
 import type { PeriodData } from '@core/utils/public';
 import { ChartBlock } from '../../components/statistics/ChartBlock';
@@ -26,7 +26,7 @@ interface PeriodStatisticsViewProps extends StatisticsCommonProps {
 }
 
 type StatisticsCommonProps = {
-  categories: CategoryConfig[];
+  categories: StatisticsBucketConfig[];
   onCellClick: StatisticsCellClickHandler;
   displayMode: 'smart' | 'linear' | 'logarithmic';
   minVisibleHeight: number;
@@ -45,7 +45,7 @@ export function PeriodStatisticsView(props: PeriodStatisticsViewProps) {
   const flowStyle = (style?: Record<string, string | number>) => style;
   const effectiveGridStyle = gridStyle;
   const renderChart = (block: PeriodChartBlockModel) => (
-    <ChartBlock key={block.key} data={block.data} label={block.label} categories={categories} onCellClick={onCellClick} cellIdentifier={block.identifier} isCompact={block.isCompact} displayMode={displayMode} minVisibleHeight={minVisibleHeight} bucketAccessor={bucketAccessor} onOpenRecordOrigin={onOpenRecordOrigin} />
+    <ChartBlock key={block.key} data={block.data} label={block.label} buckets={categories} onCellClick={onCellClick} cellIdentifier={block.identifier} isCompact={block.isCompact} displayMode={displayMode} minVisibleHeight={minVisibleHeight} bucketAccessor={bucketAccessor} onOpenRecordOrigin={onOpenRecordOrigin} />
   );
   const renderBlock = (block: PeriodChartBlockModel) => (
     <div key={block.key} class={`${block.wrapperClassName || ''} ${levelClass(block.level)}`} style={flowStyle(block.style)}>{renderChart(block)}</div>

@@ -21,8 +21,7 @@ function record(index: number): RecordViewItem {
     created: index,
     modified: index,
     goalPath: goal,
-    coreBlock: block,
-    categoryKey: block === 'task' ? '任务' : '思考',
+    recordType: block,
     extra: {},
   } as RecordViewItem;
 }
@@ -38,7 +37,7 @@ describe('AI 本地检索性能基线', () => {
 
     const searchStart = Date.now();
     const result = service.search('性能关键字', {
-      goalPaths: ['工作'], coreBlocks: ['task'], limit: 100,
+      goalPaths: ['工作'], recordTypes: ['task'], limit: 100,
     });
     const searchMs = Date.now() - searchStart;
 
@@ -46,7 +45,7 @@ describe('AI 本地检索性能基线', () => {
     recordPerformanceMetric({ id: 'retrieval.search', label: 'AI 本地检索过滤查询', valueMs: searchMs, budgetMs: SEARCH_BUDGET_MS, sampleSize: COUNT });
     console.info(`检索性能：${COUNT} 条建索引 ${buildMs}ms；过滤查询 ${searchMs}ms；命中 ${result.totalMatched} 条`);
     expect(service.getIndexStats().itemCount).toBe(COUNT);
-    expect(result.items.every((item) => item.goalPath?.startsWith('工作/') && item.coreBlock === 'task')).toBe(true);
+    expect(result.items.every((item) => item.goalPath?.startsWith('工作/') && item.recordType === 'task')).toBe(true);
     expect(buildMs).toBeLessThan(BUILD_BUDGET_MS);
     expect(searchMs).toBeLessThan(SEARCH_BUDGET_MS);
   });

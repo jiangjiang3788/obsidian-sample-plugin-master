@@ -32,11 +32,11 @@ export function parseRecordBlock(
   const contentLines = lines.slice(startIdx + 1, endIdx);
   const parsed = decodeRecordContentLines(contentLines, parentFolder);
   if (!parsed.recordId || !isStableRecordId(parsed.recordId)) return null;
-  if (!parsed.coreBlock) return null;
+  if (!parsed.recordType) return null;
 
-  const isTask = parsed.coreBlock === 'task';
-  const isTaskSeries = parsed.coreBlock === 'task-series';
-  const isTaskSession = parsed.coreBlock === 'task-session';
+  const isTask = parsed.recordType === 'task';
+  const isTaskSeries = parsed.recordType === 'task-series';
+  const isTaskSession = parsed.recordType === 'task-session';
   if (isTask && !['open', 'done', 'cancelled', 'skipped'].includes(String(parsed.status || ''))) return null;
   if (isTask && parsed.status === 'skipped' && !parsed.seriesId) return null;
   if (isTaskSeries && !['active', 'stopped'].includes(String(parsed.status || ''))) return null;
@@ -58,11 +58,8 @@ export function parseRecordBlock(
       || localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate
       || localCalendarDate(parsed.dueAt) || parsed.dueDate
       || localCalendarDate(parsed.startAt) || parsed.startDate);
-  const schema = getRecordSchemaDefinition(parsed.coreBlock);
-  const derivedCategory = parsed.coreBlock === 'thought' && parsed.recordSubtype
-    ? `闪念/${parsed.recordSubtype}`
-    : (schema?.categoryKey || parentFolder);
-  const categoryKey = derivedCategory;
+  const schema = getRecordSchemaDefinition(parsed.recordType);
+  if (!schema) return null;
   const item: RecordViewItem = {
     id: parsed.recordId,
     title: parsed.title || '',
@@ -76,9 +73,8 @@ export function parseRecordBlock(
     created: 0,
     modified: 0,
     extra: parsed.extra,
-    categoryKey,
     folder: parentFolder,
-    coreBlock: parsed.coreBlock,
+    recordType: schema.recordType,
     priority: parsed.priority,
     importance: parsed.importance,
     urgency: parsed.urgency,
@@ -114,7 +110,7 @@ export function parseRecordBlock(
     energyDelta: parsed.energyDelta,
     brainDelta: parsed.brainDelta,
     physicalDelta: parsed.physicalDelta,
-    recordSubtype: parsed.recordSubtype,
+    ...(parsed.recordType === 'energy' && parsed.recordSubtype ? { recordSubtype: parsed.recordSubtype } : {}),
     doneDate: parsed.completedAt,
     cancelledDate: parsed.cancelledAt,
     date: canonicalDate,

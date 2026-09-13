@@ -9,9 +9,9 @@ type Props = {
   annotation: WhiteboardAnnotationData;
   zoom: number;
   autoEdit?: boolean;
-  onUpdate: (annotationId: string, text: string) => void | Promise<void>;
-  onMove: (annotationId: string, position: WhiteboardPosition) => void | Promise<void>;
-  onRemove: (annotationId: string) => void | Promise<void>;
+  onUpdate: (annotationId: string, text: string) => void | boolean | Promise<void | boolean>;
+  onMove: (annotationId: string, position: WhiteboardPosition) => void | boolean | Promise<void | boolean>;
+  onRemove: (annotationId: string) => void | boolean | Promise<void | boolean>;
   onAutoEditConsumed?: (annotationId: string) => void;
 };
 
@@ -29,7 +29,7 @@ export function WhiteboardAnnotation({ annotation, zoom, autoEdit = false, onUpd
   useEffect(() => { if (!autoEdit) return; setEditing(true); onAutoEditConsumed?.(annotation.id); }, [annotation.id, autoEdit, onAutoEditConsumed]);
   useEffect(() => () => cleanupRef.current?.(), []);
 
-  const commit = () => { const next = draft.trim(); if (!next && annotation.text === '') { void onRemove(annotation.id); setEditing(false); return; } void onUpdate(annotation.id, next); setEditing(false); };
+  const commit = (value = draft) => { const next = value.trim(); if (!next && annotation.text === '') { void onRemove(annotation.id); setEditing(false); return; } void onUpdate(annotation.id, next); setEditing(false); };
   const cancel = () => { setDraft(annotation.text); setEditing(false); if (!annotation.text) void onRemove(annotation.id); };
   const beginDrag = (event: PointerEvent) => {
     if (editing || (event.pointerType === 'mouse' && event.button !== 0)) return;
@@ -53,7 +53,7 @@ export function WhiteboardAnnotation({ annotation, zoom, autoEdit = false, onUpd
       style={`left:${position.x}px;top:${position.y}px;z-index:${position.zIndex ?? 2};`} onPointerDown={beginDrag as never} onDblClick={((event: Event) => { event.preventDefault(); event.stopPropagation(); setEditing(true); }) as never}>
       {editing ? <ThinkTextarea autoFocus className="think-whiteboard-annotation__editor" value={draft} placeholder={annotation.kind === 'sticky' ? '写下便签…' : '输入文字标注…'}
         onPointerDown={((event: Event) => event.stopPropagation()) as never} onInput={((event: Event) => setDraft((event.currentTarget as HTMLTextAreaElement).value)) as never}
-        onBlur={commit as never} onKeyDown={((event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); cancel(); } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); commit(); } }) as never} />
+        onBlur={((event: FocusEvent) => commit((event.currentTarget as HTMLTextAreaElement).value)) as never} onKeyDown={((event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); cancel(); } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); commit((event.currentTarget as HTMLTextAreaElement).value); } }) as never} />
         : <div class="think-whiteboard-annotation__text">{annotation.text || (annotation.kind === 'sticky' ? '双击编辑便签' : '双击编辑文字')}</div>}
       {!editing && <ThinkButton size="sm" variant="ghost" className="think-whiteboard-annotation__remove" aria-label="删除标注" title="删除标注"
         onPointerDown={((event: Event) => event.stopPropagation()) as never} onClick={((event: Event) => { event.preventDefault(); event.stopPropagation(); void onRemove(annotation.id); }) as never}>×</ThinkButton>}

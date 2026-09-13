@@ -34,17 +34,16 @@ describe('Timeline 空白时间轴创建入口', () => {
         isSummaryView={false}
         summaryData={[]}
         colorMap={{}}
-        progressOrder={[]}
+        goalOrder={[]}
         untrackedLabel="未分类"
         zoomHandlers={{}}
         timeAxisWidth={90}
-        summaryCategoryHours={{}}
+        summaryGoalHours={{}}
         totalSummaryHours={0}
         dailyViewData={{
           dateRangeDays: [day],
           blocksByDay: { '2026-08-26': [] },
         } as any}
-        categoriesConfig={{}}
         hourHeight={60}
         maxHours={24}
         onColumnClick={onColumnClick}
@@ -78,20 +77,19 @@ describe('Timeline 空白时间轴创建入口', () => {
           isSummaryView={false}
           summaryData={[]}
           colorMap={{}}
-          progressOrder={[]}
+          goalOrder={[]}
           untrackedLabel="未分类"
           zoomHandlers={{}}
           onZoomToMax={() => setHourHeight(200)}
           maxHourHeight={200}
           timeAxisWidth={90}
-          summaryCategoryHours={{}}
+          summaryGoalHours={{}}
           totalSummaryHours={0}
           dailyViewData={{
             dateRangeDays: [day],
             blocksByDay: { '2026-08-26': [] },
           } as unknown as DailyViewData}
-          categoriesConfig={{}}
-          hourHeight={hourHeight}
+            hourHeight={hourHeight}
           maxHours={24}
           onColumnClick={() => undefined}
         />
@@ -126,14 +124,13 @@ describe('Timeline 空白时间轴创建入口', () => {
         isSummaryView={true}
         summaryData={[]}
         colorMap={{}}
-        progressOrder={[]}
+        goalOrder={[]}
         untrackedLabel="未分类"
         zoomHandlers={{}}
         timeAxisWidth={90}
-        summaryCategoryHours={{}}
+        summaryGoalHours={{}}
         totalSummaryHours={0}
         dailyViewData={null}
-        categoriesConfig={{}}
         hourHeight={60}
         maxHours={24}
         onColumnClick={() => {}}

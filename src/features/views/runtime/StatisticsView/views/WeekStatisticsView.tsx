@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { RecordViewItem } from '@core/types/public';
-import type { CategoryConfig } from '@core/view/public';
+import type { StatisticsBucketConfig } from '@core/view/public';
 import { aggregateByWeek } from '@core/utils/public';
 import { ChartBlock } from '../../components/statistics/ChartBlock';
 import type { StatisticsCellClickHandler } from '../types';
@@ -18,7 +18,7 @@ export function WeekStatisticsView({
   onOpenRecordOrigin,
 }: {
   items: RecordViewItem[];
-  categories: CategoryConfig[];
+  categories: StatisticsBucketConfig[];
   weekDate: any;
   onCellClick: StatisticsCellClickHandler;
   displayMode: 'smart' | 'linear' | 'logarithmic';
@@ -39,7 +39,7 @@ export function WeekStatisticsView({
           <ChartBlock
             data={data}
             label={`${weekStart.format('YYYY年MM月DD日')} ~ ${weekEnd.format('MM月DD日')} (第${weekStart.isoWeek()}周)`}
-            categories={categories}
+            buckets={categories}
             onCellClick={onCellClick}
             cellIdentifier={(goal: string) => ({
               type: 'week',

@@ -18,7 +18,7 @@ export const RECORD_INPUT_GOAL_CONTEXT_KEYS = [
   'goalTemplateId',
 ] as const;
 
-export const RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS = [
+export const RECORD_INPUT_RECORD_TYPE_SWITCH_PRESERVE_KEYS = [
   '内容', 'content', '日期', 'date', '时间', 'time', '备注', 'note', 'description',
   '目标', 'goalPath',
 ] as const;
@@ -65,13 +65,13 @@ export function clearRecordInputGoalContext(
   return { formData: nextFormData, fieldSources: nextFieldSources };
 }
 
-export function preserveRecordInputBlockSwitchState(
+export function preserveRecordInputRecordTypeSwitchState(
   formData: RecordInputFormData,
   fieldSources: RecordInputFieldSourceMap,
 ) {
   const preservedFormData: RecordInputFormData = {};
   const preservedFieldSources: RecordInputFieldSourceMap = {};
-  RECORD_INPUT_BLOCK_SWITCH_PRESERVE_KEYS.forEach((key) => {
+  RECORD_INPUT_RECORD_TYPE_SWITCH_PRESERVE_KEYS.forEach((key) => {
     if (formData[key] !== undefined) preservedFormData[key] = formData[key];
     if (fieldSources[key]) preservedFieldSources[key] = fieldSources[key];
   });

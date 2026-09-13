@@ -9,7 +9,7 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { buildParsedRecordSnapshot } from '@/core/types/recordSnapshot';
 
 function makeItem(overrides: Partial<RecordViewItem>): RecordViewItem {
-  return { id: 'rec.01J00000000000000000000062', title: '任务', content: '任务', tags: [], coreBlock: 'task', status: 'open', categoryKey: '任务', created: 1, modified: 2, extra: {}, ...overrides } as RecordViewItem;
+  return { id: 'rec.01J00000000000000000000062', title: '任务', content: '任务', tags: [], recordType: 'task', status: 'open', created: 1, modified: 2, extra: {}, ...overrides } as RecordViewItem;
 }
 
 describe('Goal semantics', () => {

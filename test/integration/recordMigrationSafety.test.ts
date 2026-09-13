@@ -10,7 +10,7 @@ describe('P0 Record 路径变化安全迁移', () => {
   it('先确认新位置已经写入并可扫描，再删除旧记录', async () => {
     const movedRecord = {
       id: 'rec.01JWF7T20074QW3VAKQMEWSBF0',
-      coreBlock: 'thought',
+      recordType: 'thought',
       content: '迁移后的记录',
       source: { path: 'new.md', startLine: 1, endLine: 5, modified: 2 },
     } as any;
@@ -50,7 +50,7 @@ describe('P0 Record 路径变化安全迁移', () => {
     const id = 'rec.01JWF7T20074QW3VAKQMEWSBF1';
     const movedRecord = {
       id,
-      coreBlock: 'thought',
+      recordType: 'thought',
       content: '新位置副本',
       source: { path: 'new.md', startLine: 1, endLine: 5, modified: 2 },
     } as any;

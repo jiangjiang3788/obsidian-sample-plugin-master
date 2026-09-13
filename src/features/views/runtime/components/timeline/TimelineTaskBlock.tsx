@@ -6,7 +6,7 @@ import type { TaskBlock } from '@core/types/public';
 import {
   buildTimelineBlockGesturePreview,
   dayjs,
-  mapTaskToCategory,
+  getTimelineGoalKey,
   resizeTimelineLogicalRange,
   shiftTimelineLogicalRange,
   timelineMinuteFromOffset,
@@ -14,7 +14,7 @@ import {
 } from '@core/utils/public';
 import { getTaskSessionResultPresentation, getTaskStatusPresentation } from '@core/records/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, UpdateTimelineRangeHandler } from '@shared/types/public';
-import { createRecordGestureHandlers, RECORD_GESTURE_HINT, ThinkIcon, ThinkIconButton } from '@shared/ui/public';
+import { createRecordGestureHandlers, RECORD_MODIFIER_ORIGIN_HINT, ThinkIcon, ThinkIconButton } from '@shared/ui/public';
 
 interface TimelineTaskBlockProps {
   block: TaskBlock;
@@ -22,7 +22,6 @@ interface TimelineTaskBlockProps {
   nextBlock: TaskBlock | null;
   hourHeight: number;
   maxHours: number;
-  categoriesConfig: Record<string, { files?: string[]; color?: string }>;
   colorMap: Record<string, string>;
   onUpdateTimelineRange?: UpdateTimelineRangeHandler;
   onOpenRecord?: OpenRecordHandler;
@@ -51,7 +50,7 @@ function formatTimeMinute(minute: number): string {
 
 function generateTaskBlockTitle(block: TaskBlock): string {
   if (!block.timelineRange.end) {
-    return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间点: ${formatTimeMinute(block.startMinute)}\n拖动可修改时间\n${RECORD_GESTURE_HINT}`;
+    return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间点: ${formatTimeMinute(block.startMinute)}\n拖动可修改时间\n${RECORD_MODIFIER_ORIGIN_HINT}`;
   }
 
   const start = dayjs(block.timelineRange.start);
@@ -59,7 +58,7 @@ function generateTaskBlockTitle(block: TaskBlock): string {
   const rangeText = start.isSame(end, 'day')
     ? `${start.format('HH:mm')} - ${end.format('HH:mm')}`
     : `${start.format('MM-DD HH:mm')} - ${end.format('MM-DD HH:mm')}`;
-  return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间: ${rangeText}\n拖动块可移动；拖动上下边缘可修改起止\n${RECORD_GESTURE_HINT}`;
+  return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间: ${rangeText}\n拖动块可移动；拖动上下边缘可修改起止\n${RECORD_MODIFIER_ORIGIN_HINT}`;
 }
 
 function formatPreviewLabel(range: { start: string; end?: string }, durationMinutes: number): string {
@@ -78,7 +77,6 @@ export function TimelineTaskBlock({
   nextBlock,
   hourHeight,
   maxHours,
-  categoriesConfig,
   colorMap,
   onUpdateTimelineRange,
   onOpenRecord,
@@ -94,8 +92,8 @@ export function TimelineTaskBlock({
 
   const isPlanned = block.timelineSource === 'task-plan';
   const isPoint = !block.timelineRange.end;
-  const category = mapTaskToCategory(block.fileName || '', categoriesConfig);
-  const color = colorMap[category] || 'var(--think-data-neutral)';
+  const goalKey = getTimelineGoalKey(block);
+  const goalColor = colorMap[goalKey] || 'var(--think-data-neutral)';
   const lifecycle = block.timelineSource === 'task-session'
     ? (getTaskSessionResultPresentation(block.sessionResult) || getTaskStatusPresentation(block.status))
     : getTaskStatusPresentation(block.status);
@@ -106,14 +104,21 @@ export function TimelineTaskBlock({
   const naturalHeight = timelineOffsetFromMinute(visibleEnd, hourHeight) - top;
   const renderHeight = isPoint ? 22 : Math.max(naturalHeight, 2);
 
+  const editItem = { ...block, id: block.taskRecordId, recordType: 'task' } as any;
+  const originItem = block.timelineSource === 'task-session' ? ({ ...block, id: block.sessionRecordId || block.id } as any) : editItem;
   const handleOpenTask = () => {
-    void onOpenRecord?.({ ...block, id: block.taskRecordId } as any);
+    void onOpenRecord?.(editItem);
   };
 
+  // Timeline uses the shared Record interaction contract at the block boundary:
+  // normal click edits the owning Task; Ctrl/⌘+click opens the origin.
+  // Pointer gestures remain responsible only for move/resize and suppress the
+  // synthetic click after a real drag.
   const blockGesture = createRecordGestureHandlers({
-    item: { ...block, id: block.taskRecordId } as any,
+    item: originItem,
     onOpenOrigin: onOpenRecordOrigin,
     onPrimary: handleOpenTask,
+    originActivation: 'modifier-only',
   });
 
   const minuteFromClientY = (clientY: number): number | null => {
@@ -168,12 +173,26 @@ export function TimelineTaskBlock({
     gestureRef.current = null;
     blockRef.current?.releasePointerCapture?.(event.pointerId);
 
-    const committedPreview = previewRef.current;
-    const didDrag = active.dragging && !!committedPreview && !cancelled;
+    let committedPreview = previewRef.current;
+    // Pointer-move events can be coalesced or omitted by hosts/test DOMs. Rebuild the final
+    // preview from pointer-up so a real drag still commits its logical range exactly once.
+    if (!cancelled && !committedPreview && Math.abs(event.clientY - active.startClientY) >= DRAG_THRESHOLD_PX) {
+      const currentMinute = minuteFromClientY(event.clientY);
+      if (currentMinute != null) {
+        committedPreview = buildTimelineBlockGesturePreview({
+          block,
+          mode: active.mode,
+          anchorMinute: active.anchorMinute,
+          currentMinute,
+          maxHours,
+        });
+      }
+    }
+    const didDrag = !!committedPreview && !cancelled;
     previewRef.current = null;
     setPreview(null);
     setIsDragging(false);
-    if (!didDrag) return;
+    if (!didDrag || !committedPreview) return;
 
     suppressClickUntilRef.current = Date.now() + 350;
     event.preventDefault();
@@ -225,7 +244,7 @@ export function TimelineTaskBlock({
   const blockStyle = {
     top: `${top}px`,
     height: `${renderHeight}px`,
-    '--timeline-task-color': color,
+    '--timeline-goal-color': goalColor,
   } as JSX.CSSProperties;
 
   return (
@@ -238,7 +257,11 @@ export function TimelineTaskBlock({
       data-timeline-editable="true"
       title={`${generateTaskBlockTitle(block)}\n状态: ${lifecycle.label}`}
       style={blockStyle}
-      onClick={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        // The whole task block is the primary interaction target. Child controls
+        // stop their own clicks so alignment/resize affordances never open the editor.
+        blockGesture.onClick?.(event as any);
+      }}
       onPointerDown={(event) => beginGesture(event as any, 'move')}
       onPointerMove={(event) => handlePointerMove(event as any)}
       onPointerUp={(event) => finishGesture(event as any)}
@@ -252,33 +275,16 @@ export function TimelineTaskBlock({
           role="separator"
           aria-label="拖动修改开始时间"
           onPointerDown={(event) => beginGesture(event as any, 'resize-start')}
+          onClick={(event) => event.stopPropagation()}
         />
       ) : null}
 
-      <a
+      <div
         class="timeline-task-link"
         role="button"
         tabIndex={0}
-        onClick={(event) => {
-          if (Date.now() < suppressClickUntilRef.current) {
-            event.preventDefault();
-            event.stopPropagation();
-            return;
-          }
-          blockGesture.onClick?.(event as any);
-        }}
-        onDblClick={blockGesture.onDblClick as any}
-        onTouchEnd={(event) => {
-          if (Date.now() < suppressClickUntilRef.current) {
-            event.preventDefault();
-            event.stopPropagation();
-            return;
-          }
-          blockGesture.onTouchEnd?.(event as any);
-        }}
         onKeyDown={blockGesture.onKeyDown as any}
       >
-        <div class="timeline-task-indicator" />
         <div class="timeline-task-content">
           <span class="timeline-task-status" aria-label={lifecycle.label} title={lifecycle.label}>
             {lifecycle.emoji}
@@ -286,7 +292,7 @@ export function TimelineTaskBlock({
           {block.icon ? <span class="timeline-task-icon">{block.icon}</span> : null}
           <span class="timeline-task-title">{block.title || block.pureText}</span>
         </div>
-      </a>
+      </div>
 
       {preview ? (
         <span class="timeline-task-drag-label">
@@ -294,7 +300,11 @@ export function TimelineTaskBlock({
         </span>
       ) : null}
 
-      <div class="task-buttons" onPointerDown={(event) => event.stopPropagation()}>
+      <div
+        class="task-buttons"
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+      >
         {canAlign ? (
           <>
             <ThinkIconButton
@@ -323,6 +333,7 @@ export function TimelineTaskBlock({
           role="separator"
           aria-label="拖动修改结束时间"
           onPointerDown={(event) => beginGesture(event as any, 'resize-end')}
+          onClick={(event) => event.stopPropagation()}
         />
       ) : null}
     </div>

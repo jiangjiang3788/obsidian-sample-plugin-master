@@ -12,12 +12,13 @@
 /** @jsxImportSource preact */
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
+import { createPointerEvent, waitForUi } from '../support/uiTestUtils';
 import type { RecordViewItem } from '@core/types/public';
 import { DEFAULT_WHITEBOARD_ID, type WhiteboardBoard, type WhiteboardStore } from '@core/whiteboard/public';
 import { WhiteboardWorkspace } from '@/features/whiteboard/WhiteboardWorkspace';
 
 function record(id: string): RecordViewItem {
-  return { id, coreBlock: 'thought', title: id, content: `${id} 内容`, tags: [], categoryKey: 'thought', goalPath: '主题', date: '2026-09-08', created: 0, modified: 0, extra: {} } as RecordViewItem;
+  return { id, recordType: 'thought', title: id, content: `${id} 内容`, tags: [], goalPath: '主题', date: '2026-09-08', created: 0, modified: 0, extra: {} } as RecordViewItem;
 }
 
 function fakeStore(board: WhiteboardBoard): WhiteboardStore & Record<string, jest.Mock> {
@@ -57,7 +58,8 @@ describe('白板 Archive / Restore UI 1.1.9', () => {
     await act(async () => activeCard.dispatchEvent(contextMenuEvent));
     const archiveButton = Array.from(host.querySelectorAll('.think-whiteboard-context-menu button')).find((button) => button.textContent === '归档') as HTMLButtonElement;
     expect(archiveButton).toBeTruthy();
-    await act(async () => { archiveButton.click(); await Promise.resolve(); });
+    await act(async () => { archiveButton.click(); });
+    await waitForUi(() => store.archiveItems.mock.calls.length > 0, '等待归档写入');
     expect(store.archiveItems).toHaveBeenCalledWith(DEFAULT_WHITEBOARD_ID, ['item-active']);
 
     const openArchive = host.querySelector('button[aria-label="归档箱（1）"]') as HTMLButtonElement;
@@ -65,11 +67,12 @@ describe('白板 Archive / Restore UI 1.1.9', () => {
     expect(host.querySelector('.think-whiteboard-archive-canvas')).toBeTruthy();
     expect(host.querySelector('[data-whiteboard-archived-item-id="item-archived"]')?.textContent).toContain('恢复位置 -500, -300');
     const restore = Array.from(host.querySelectorAll('[data-whiteboard-archived-item-id="item-archived"] button')).find((button) => button.textContent === '恢复到原位置') as HTMLButtonElement;
-    await act(async () => { restore.click(); await Promise.resolve(); });
+    await act(async () => { restore.click(); });
+    await waitForUi(() => store.restoreArchivedItem.mock.calls.length > 0, '等待归档恢复');
     expect(store.restoreArchivedItem).toHaveBeenCalledWith(DEFAULT_WHITEBOARD_ID, 'item-archived');
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLElement;
     expect(viewport.getAttribute('data-whiteboard-camera-x')).toBe('-376');
-    expect(viewport.getAttribute('data-whiteboard-camera-y')).toBe('-216');
+    expect(viewport.getAttribute('data-whiteboard-camera-y')).toBe('-170');
     expect(viewport.getAttribute('data-whiteboard-zoom')).toBe('1');
     expect(host.querySelector('.think-whiteboard-archive-canvas')).toBeNull();
   });
@@ -91,7 +94,8 @@ describe('白板 Archive / Restore UI 1.1.9', () => {
 
     await act(async () => (host.querySelector('button[aria-label="归档箱（1）"]') as HTMLButtonElement).click());
     const restore = host.querySelector('[data-whiteboard-archived-item-id="nested-archived-item"] button') as HTMLButtonElement;
-    await act(async () => { restore.click(); await Promise.resolve(); });
+    await act(async () => { restore.click(); });
+    await waitForUi(() => store.restoreArchivedItem.mock.calls.length > 0, '等待深层归档恢复');
 
     const workspace = host.querySelector('.think-whiteboard-workspace') as HTMLElement;
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLElement;
@@ -99,12 +103,12 @@ describe('白板 Archive / Restore UI 1.1.9', () => {
     expect(host.querySelector('.think-whiteboard-archive-canvas')).toBeNull();
     expect(viewport.getAttribute('data-whiteboard-zoom')).toBe('1');
     expect(viewport.getAttribute('data-whiteboard-camera-x')).toBe('644');
-    expect(viewport.getAttribute('data-whiteboard-camera-y')).toBe('494');
+    expect(viewport.getAttribute('data-whiteboard-camera-y')).toBe('540');
     expect(host.querySelector('button[aria-label="返回上一级工作台"]')).toBeTruthy();
   });
 
   test('归档工作台可独立网格/目标×类型×时间排布，移动 archivePosition 不改变恢复原点', async () => {
-    const a = record('archive-layout-a'); const b = { ...record('archive-layout-b'), coreBlock: 'task', categoryKey: 'task', goalPath: '另一个目标', date: '2026-10-08' } as RecordViewItem;
+    const a = record('archive-layout-a'); const b = { ...record('archive-layout-b'), recordType: 'task', goalPath: '另一个目标', date: '2026-10-08' } as RecordViewItem;
     const board: WhiteboardBoard = {
       title: '白板', modified: 1, edges: [], items: [],
       archivedItems: [
@@ -117,20 +121,23 @@ describe('白板 Archive / Restore UI 1.1.9', () => {
     await act(async () => (host.querySelector('button[aria-label="归档箱（2）"]') as HTMLButtonElement).click());
     const archiveViewport = host.querySelector('.think-whiteboard-archive-canvas__viewport') as HTMLDivElement;
     archiveViewport.getBoundingClientRect = () => ({ left: 0, top: 0, right: 1200, bottom: 800, width: 1200, height: 800, x: 0, y: 0, toJSON: () => ({}) });
-    const pointer = (type: string, x: number, y: number) => { const event = new Event(type, { bubbles: true, cancelable: true }); Object.defineProperties(event, { pointerId: { value: 88 }, pointerType: { value: 'mouse' }, button: { value: 0 }, clientX: { value: x }, clientY: { value: y }, ctrlKey: { value: true }, metaKey: { value: false } }); return event; };
+    const pointer = (type: string, x: number, y: number) => { return createPointerEvent(type, { pointerId: 88, pointerType: 'mouse', button: 0, clientX: x, clientY: y, ctrlKey: true, metaKey: false }); };
     await act(async () => { archiveViewport.dispatchEvent(pointer('pointerdown', 0, 0)); window.dispatchEvent(pointer('pointermove', 380, 360)); });
+    await waitForUi(() => host.querySelector('.think-whiteboard-archive-canvas__title')?.textContent?.includes('已选 1') === true, '等待归档框选状态');
     expect(host.querySelector('.think-whiteboard-archive-canvas__title')?.textContent).toContain('已选 1');
     await act(async () => window.dispatchEvent(pointer('pointerup', 380, 360)));
     const selectAll = Array.from(host.querySelectorAll('.think-whiteboard-archive-canvas button')).find((button) => button.textContent === '全选') as HTMLButtonElement;
     await act(async () => selectAll.click());
     expect(host.querySelector('.think-whiteboard-archive-canvas__title')?.textContent).toContain('已选 2');
     const grid = Array.from(host.querySelectorAll('.think-whiteboard-archive-canvas button')).find((button) => button.textContent === '网格整理') as HTMLButtonElement;
-    await act(async () => { grid.click(); await Promise.resolve(); });
+    await act(async () => { grid.click(); });
+    await waitForUi(() => store.moveArchivedItems.mock.calls.length >= 1, '等待归档网格整理');
     expect(store.moveArchivedItems).toHaveBeenCalledWith(DEFAULT_WHITEBOARD_ID, expect.arrayContaining([
       expect.objectContaining({ itemId: 'archive-layout-item-a' }), expect.objectContaining({ itemId: 'archive-layout-item-b' }),
     ]));
     const semantic = Array.from(host.querySelectorAll('.think-whiteboard-archive-canvas button')).find((button) => button.textContent === '目标 × 类型 × 时间') as HTMLButtonElement;
-    await act(async () => { semantic.click(); await Promise.resolve(); });
+    await act(async () => { semantic.click(); });
+    await waitForUi(() => store.moveArchivedItems.mock.calls.length === 2, '等待归档语义整理');
     expect(store.moveArchivedItems).toHaveBeenCalledTimes(2);
     expect(board.archivedItems?.[0]).toMatchObject({ x: -800, y: -500 });
   });

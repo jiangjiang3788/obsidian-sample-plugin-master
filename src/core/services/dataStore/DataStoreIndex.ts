@@ -80,7 +80,7 @@ export class DataStoreIndex {
     const cached = this.queryCache.get(key);
     if (cached) return cached;
     const userVisibleItems = this.records
-      .filter(record => record.coreBlock !== 'task-series' && record.coreBlock !== 'task-session')
+      .filter(record => record.recordType !== 'task-series' && record.recordType !== 'task-session')
       .map(toRecordViewItem);
     const result = queryRecordItems(userVisibleItems, { filterGroups: [filters], sort: sortRules });
     this.queryCache.set(key, result);

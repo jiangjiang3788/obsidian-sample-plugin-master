@@ -10,15 +10,15 @@ const mockUseCases = {
   settings: {
     setFloatingTimerEnabled: jest.fn(async () => {}),
     setDevConsoleStackEnabled: jest.fn(async () => {}),
-    updateCategoryColors: jest.fn(async () => {}),
+    setRecordTypeColor: jest.fn(async () => {}),
   },
 };
-const mockState: any = { settings: { floatingTimerEnabled: true, devConsoleStackEnabled: false, categoryColors: { 工作: '#123456' } } };
+const mockState: any = { settings: { floatingTimerEnabled: true, devConsoleStackEnabled: false, recordTypeColors: { task: '#123456' } } };
 
 jest.mock('@/app/public', () => ({
   selectFloatingTimerEnabled: (state: any) => state.settings.floatingTimerEnabled,
   selectDevConsoleStackEnabled: (state: any) => state.settings.devConsoleStackEnabled,
-  selectCategoryColors: (state: any) => state.settings.categoryColors,
+  selectRecordTypeColors: (state: any) => state.settings.recordTypeColors,
   useSelector: (selector: any) => selector(mockState),
   useUseCases: () => mockUseCases,
 }));
@@ -42,13 +42,28 @@ describe('通用设置界面', () => {
     expect(mockUseCases.settings.setFloatingTimerEnabled).toHaveBeenCalledWith(false);
   });
 
-  it('新增分类颜色会提交现有颜色与新增颜色的完整映射', async () => {
+  it('1.6.0 固定渲染 10 种用户记录类型颜色，并且不恢复旧分类颜色编辑器', async () => {
     await act(async () => render(<GeneralSettings />, host));
-    const nameInput = host.querySelector('input[placeholder="新分类名称"]') as HTMLInputElement;
-    nameInput.value = '学习';
-    await act(async () => { nameInput.dispatchEvent(new Event('input', { bubbles: true })); });
-    const add = [...host.querySelectorAll('button')].find((button) => button.textContent?.trim() === '添加') as HTMLButtonElement;
-    await act(async () => add.click());
-    expect(mockUseCases.settings.updateCategoryColors).toHaveBeenCalledWith(expect.objectContaining({ 工作: '#123456', 学习: '#cccccc' }));
+    const section = host.querySelector('[data-settings-section="record-type-colors"]')!;
+    expect(section.querySelectorAll('.think-settings-record-type-color-row')).toHaveLength(10);
+    expect(section.textContent).toContain('任务');
+    expect(section.textContent).toContain('里程碑');
+    expect(section.textContent).not.toContain('任务工作块');
+    expect(section.textContent).not.toContain('任务系列');
+    expect(host.textContent).not.toContain('分类颜色');
+    expect((section.querySelector('input[aria-label="任务颜色"]') as HTMLInputElement).value).toBe('#123456');
+  });
+
+  it('修改任务颜色与恢复默认只走 SettingsUseCase', async () => {
+    await act(async () => render(<GeneralSettings />, host));
+    const picker = host.querySelector('input[aria-label="任务颜色"]') as HTMLInputElement;
+    picker.value = '#abcdef';
+    await act(async () => picker.dispatchEvent(new Event('input', { bubbles: true })));
+    expect(mockUseCases.settings.setRecordTypeColor).toHaveBeenCalledWith('task', '#abcdef');
+
+    const taskRow = picker.closest('.think-settings-record-type-color-row')!;
+    const reset = [...taskRow.querySelectorAll('button')].find((button) => button.textContent?.includes('恢复默认')) as HTMLButtonElement;
+    await act(async () => reset.click());
+    expect(mockUseCases.settings.setRecordTypeColor).toHaveBeenCalledWith('task', null);
   });
 });

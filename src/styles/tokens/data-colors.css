@@ -75,11 +75,10 @@
  */
 .think-os {
   --think-record-type-task: #4f7cff;
-  --think-record-type-task-session: #168ca8;
-  --think-record-type-task-series: #6f66d9;
   --think-record-type-energy: #d98b22;
   --think-record-type-habit: #20a675;
-  --think-record-type-evidence: #e8783d;
+  --think-record-type-event: #e8783d;
+  --think-record-type-feeling: #c85f9e;
   --think-record-type-thought: #8b68d8;
   --think-record-type-review: #d65b74;
   --think-record-type-plan: #547aa5;
@@ -91,11 +90,10 @@
 .theme-dark .think-os,
 .think-os.theme-dark {
   --think-record-type-task: #7da2ff;
-  --think-record-type-task-session: #4ab7ce;
-  --think-record-type-task-series: #9b91ef;
   --think-record-type-energy: #f1b45b;
   --think-record-type-habit: #45c994;
-  --think-record-type-evidence: #f39a69;
+  --think-record-type-event: #f39a69;
+  --think-record-type-feeling: #e787bd;
   --think-record-type-thought: #ac8ee8;
   --think-record-type-review: #ef8095;
   --think-record-type-plan: #80a3c9;

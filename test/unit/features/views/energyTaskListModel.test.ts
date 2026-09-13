@@ -7,11 +7,10 @@ function task(id: string, title: string, overrides: Partial<RecordViewItem> = {}
     title,
     content: title,
     tags: [],
-    categoryKey: '',
     created: 0,
     modified: 0,
     extra: {},
-    coreBlock: 'task',
+    recordType: 'task',
     status: 'open',
     goalPath: '测试目标',
     ...overrides,
@@ -93,7 +92,7 @@ describe('buildEnergyTaskListModel', () => {
     });
     const sessionToday = {
       ...task('session', '执行记录'),
-      coreBlock: 'task-session',
+      recordType: 'task-session',
       taskId: 'done-today',
       sessionStartedAt: '2026-08-10T08:00:00',
       sessionEndedAt: '2026-08-10T08:20:00',

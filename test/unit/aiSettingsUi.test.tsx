@@ -13,7 +13,7 @@ const mockUpdateAiSettings = jest.fn(async () => {});
 const mockState: any = {
   settings: {
     aiSettings: { ...DEFAULT_AI_SETTINGS, enabled: true },
-    inputSettings: { blocks: [{ id: 'core.task', name: '任务' }, { id: 'core.thought', name: '思考' }] },
+    inputSettings: { recordTypes: [{ id: 'core.task', name: '任务' }, { id: 'core.thought', name: '思考' }] },
   },
 };
 

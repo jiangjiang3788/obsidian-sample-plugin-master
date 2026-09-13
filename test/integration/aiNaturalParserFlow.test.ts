@@ -32,16 +32,16 @@ describe('AI 自然语言解析完整编排', () => {
   it('设置、配置快照、HTTP JSON 与领域归一化按同一链路产出可提交记录', async () => {
     const cache = {
       getSnapshot: jest.fn(() => ({
-        blocks: [{ id: 'core.task', name: '任务', categoryKey: '任务' }],
+        recordTypes: [{ id: 'core.task', name: '任务', recordTypeId: 'core.task' }],
         goals: [{ path: GOAL }],
-        goalPresets: [{ id: 'gt-task', goalTemplateId: 'gt-task', goalPath: GOAL, blockId: 'core.task', categoryKey: '任务' }],
+        goalPresets: [{ id: 'gt-task', goalTemplateId: 'gt-task', goalPath: GOAL, recordTypeId: 'core.task' }],
       })),
     } as unknown as AiConfigCache;
     const http = {
       chatCompletion: jest.fn(async () => JSON.stringify({
         items: [
-          { rawText: '', target: { blockId: 'core.task', goalPath: GOAL }, fieldValues: { 内容: '完成测试体系', 目标: '不应保留' } },
-          { rawText: '', target: { blockId: 'core.task', goalPath: GOAL }, fieldValues: { 内容: '第二条' } },
+          { rawText: '', target: { recordTypeId: 'core.task', goalPath: GOAL }, fieldValues: { 内容: '完成测试体系', 目标: '不应保留' } },
+          { rawText: '', target: { recordTypeId: 'core.task', goalPath: GOAL }, fieldValues: { 内容: '第二条' } },
         ],
       })),
     } as unknown as AiHttpClient;
@@ -51,7 +51,7 @@ describe('AI 自然语言解析完整编排', () => {
 
     expect(result.items).toHaveLength(1);
     expect(result.items[0].target).toMatchObject({
-      blockId: 'core.task', goalPath: GOAL, goalTemplateId: 'gt-task',
+      recordTypeId: 'core.task', goalPath: GOAL, goalTemplateId: 'gt-task',
     });
     expect(result.items[0].fieldValues).toEqual({ 内容: '完成测试体系' });
     expect(http.chatCompletion).toHaveBeenCalledWith(expect.objectContaining({

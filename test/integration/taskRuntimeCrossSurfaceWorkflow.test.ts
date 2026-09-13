@@ -36,7 +36,7 @@ describe('跨 View 的 Task runtime 完成工作流', () => {
     } as unknown as TimerUseCase;
     const dataStore = {
       getRecordById: (id: string) => id === TASK_ID
-        ? { id, coreBlock: 'task', status: 'open', content: '跨 View 完成' }
+        ? { id, recordType: 'task', status: 'open', content: '跨 View 完成' }
         : null,
     } as unknown as DataStore;
     const submitCompleteRecord = jest.fn(async () => ({

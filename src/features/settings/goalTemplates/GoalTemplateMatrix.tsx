@@ -9,7 +9,7 @@ import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { selectSettings, useSelector, useUiPort, useUseCases } from '@/app/public';
 import { GoalTemplateEditorModal } from './GoalTemplateEditorModal';
 import { GoalTemplateMatrixTable } from './GoalTemplateMatrixTable';
-import { orderGoalTemplateBlocks } from './goalTemplateCopy';
+import { orderGoalTemplateRecordTypes } from './goalTemplateCopy';
 import {
   cleanDisplayText,
   filterVisibleGoalTemplateMatrixGoals,
@@ -30,7 +30,7 @@ export function GoalTemplateMatrix() {
     [settings.goalSettings?.goals],
   );
   const templates = useMemo(() => getGoalTemplates(settings.goalSettings), [settings.goalSettings]);
-  const coreBlocks = useMemo(() => orderGoalTemplateBlocks(getTemplateRecordTypes()), [settings]);
+  const recordTypes = useMemo(() => orderGoalTemplateRecordTypes(getTemplateRecordTypes()), [settings]);
   const allGoalPaths = useMemo(() => new Set(goals.map(getGoalDisplayPath)), [goals]);
 
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => new Set());
@@ -86,6 +86,14 @@ export function GoalTemplateMatrix() {
     }
   };
 
+  const setGoalColor = async (path: string, color: string | null) => {
+    try {
+      await useCases.goal.setGoalColor(path, color);
+    } catch (error) {
+      ui.notice(`目标颜色保存失败：${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
   const handleDeleteGoal = async (event: MouseEvent, goal: GoalDefinition) => {
     event.preventDefault();
     event.stopPropagation();
@@ -138,13 +146,13 @@ export function GoalTemplateMatrix() {
 
       {goals.length === 0 ? (
         <ThinkNotice>还没有目标。</ThinkNotice>
-      ) : coreBlocks.length === 0 ? (
+      ) : recordTypes.length === 0 ? (
         <ThinkNotice>还没有启用的记录类型。</ThinkNotice>
       ) : (
         <GoalTemplateMatrixTable
           visibleGoals={visibleGoals}
           goals={goals}
-          visibleBlocks={coreBlocks}
+          visibleBlocks={recordTypes}
           templates={templates}
           expandedPaths={expandedPaths}
           draggingGoalPath={draggingGoalPath}
@@ -158,6 +166,7 @@ export function GoalTemplateMatrix() {
           openEditor={openEditor}
           setGoalTimePresetPercent={setGoalTimePresetPercent}
           setGoalWeeklyTargetMinutes={setGoalWeeklyTargetMinutes}
+          setGoalColor={setGoalColor}
         />
       )}
 

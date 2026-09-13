@@ -36,8 +36,8 @@ function buildHeatmapRatingContext(item?: HeatmapCreateParams['item']): Record<s
 }
 
 function buildHeatmapCreateConfig(params: HeatmapCreateParams): QuickInputConfig | null {
-  const resolvedBlockId = params.sourceBlockId || (params.item?.coreBlock ? `core.${params.item.coreBlock}` : null);
-  if (!resolvedBlockId) return null;
+  const resolvedRecordTypeId = params.sourceRecordTypeId || (params.item?.recordType ? `core.${params.item.recordType}` : null);
+  if (!resolvedRecordTypeId) return null;
 
   const goalPath = firstNonEmptyText(params.goalPath, params.item?.goalPath);
   const context: Record<string, unknown> = {
@@ -56,13 +56,13 @@ function buildHeatmapCreateConfig(params: HeatmapCreateParams): QuickInputConfig
     context.goalPath = goalPath;
   }
 
-  return { blockId: resolvedBlockId, context };
+  return { recordTypeId: resolvedRecordTypeId, context };
 }
 
 export function openCreateFromHeatmap(params: HeatmapCreateParams): boolean {
   const config = buildHeatmapCreateConfig(params);
   if (!config) {
-    params.notice?.('当前热力图没有可用于新增的记录类型，请先配置 sourceBlockId。');
+    params.notice?.('当前热力图没有可用于新增的记录类型，请先配置 sourceRecordTypeId。');
     return false;
   }
   return openCreateModal(params.app, config, 'view_quick_create');

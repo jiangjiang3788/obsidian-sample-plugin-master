@@ -12,8 +12,8 @@ import { buildQuarterStatisticsRenderModel, buildQuarterMonthWeekStarts } from '
 import { buildYearStatisticsRenderModel, getYearStatisticsMaxWeeksInMonth } from '@/features/views/runtime/StatisticsView/views/YearStatisticsViewModel';
 
 const goalItems = [
-  { id:'1', title:'A', categoryKey:'任务', coreBlock:'task', goalPath:'项目/目标A', date:'2026-01-05', extra:{}, tags:[], content:'', created:0, modified:0 },
-  { id:'2', title:'B', categoryKey:'事件', coreBlock:'evidence', goalPath:'项目/目标B', date:'2026-01-06', extra:{}, tags:[], content:'', created:0, modified:0 },
+  { id:'1', title:'A', recordType:'task', goalPath:'项目/目标A', date:'2026-01-05', extra:{}, tags:[], content:'', created:0, modified:0 },
+  { id:'2', title:'B', recordType:'event', goalPath:'项目/目标B', date:'2026-01-06', extra:{}, tags:[], content:'', created:0, modified:0 },
 ];
 const categories=[{name:'目标',color:'#000000',files:[]}];
 const emptyYearData={ yearData:createPeriodData(categories), quartersData:Array.from({length:4},()=>createPeriodData(categories)), monthsData:Array.from({length:12},()=>createPeriodData(categories)), weeksData:Array.from({length:53},()=>createPeriodData(categories)) };

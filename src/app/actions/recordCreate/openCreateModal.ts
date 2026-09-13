@@ -4,7 +4,7 @@ import type { QuickInputConfig } from '@core/services/public';
 import type { QuickCreateSource, QuickInputApp } from './types';
 
 export interface OpenCreateModalOptions {
-  allowBlockSwitch?: boolean;
+  allowRecordTypeSwitch?: boolean;
 }
 
 export function openCreateModal(
@@ -13,9 +13,9 @@ export function openCreateModal(
   source: QuickCreateSource = 'view_quick_create',
   options: OpenCreateModalOptions = {},
 ): boolean {
-  if (!config?.blockId) return false;
+  if (!config?.recordTypeId) return false;
   const modalApp = app as ConstructorParameters<typeof QuickInputModal>[0];
-  new QuickInputModal(modalApp, config.blockId, config.context, undefined, options.allowBlockSwitch ?? true, {
+  new QuickInputModal(modalApp, config.recordTypeId, config.context, undefined, options.allowRecordTypeSwitch ?? true, {
     mode: 'create',
     source,
   }).open();

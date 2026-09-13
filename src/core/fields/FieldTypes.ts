@@ -8,7 +8,7 @@
  * - text / path / tag / image 等为单值
  * - multiSelect / multiPath / multiTag / multiImage 等为多值
  *
- * categoryPath / tags / goalPath 这类系统语义保留为内部能力，
+ * tags / goalPath 这类系统语义保留为内部能力，
  * 但不再作为普通字段设置项暴露给用户选择。
  */
 
@@ -61,11 +61,9 @@ export type FieldSemantic =
   | 'recordType'
   | 'title'
   | 'body'
-  | 'categoryPath'
   | 'tags'
   | 'goalPath'
   | 'cycleId'
-  | 'coreBlock'
   | 'recordSubtype'
   | 'status'
   | 'date'

@@ -61,7 +61,7 @@ export function getQuickInputSuccessNotice(mode: QuickInputOperationMode, existi
 
 export function getQuickInputOperationTitle(
   mode: QuickInputOperationMode,
-  _currentBlockName: string,
+  _currentRecordTypeName: string,
   isTimerCreate: boolean,
 ): string {
   // The modal title communicates the operation only. Record type belongs to the

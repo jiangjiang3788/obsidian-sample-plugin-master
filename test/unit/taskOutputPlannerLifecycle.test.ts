@@ -9,7 +9,6 @@ const taskTemplate: RecordCaptureTemplate = {
   id: 'core.task',
   recordTypeId: 'core.task',
   name: '任务',
-  categoryKey: '任务',
   targetFile: '01/目标.md',
   fields: [
     { id: 'status', key: 'status', label: '状态', type: 'singleSelect', semantic: 'status' },

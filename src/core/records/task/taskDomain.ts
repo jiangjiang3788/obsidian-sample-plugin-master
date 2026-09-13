@@ -16,7 +16,7 @@ export type TaskRecord = RuntimeTaskRecord;
 export type TaskSeriesRecord = RuntimeTaskSeriesRecord;
 
 export function asTaskRecord(record: RecordEntity | null | undefined): TaskRecord | null {
-  if (!record || record.coreBlock !== 'task') return null;
+  if (!record || record.recordType !== 'task') return null;
   const candidate = record as Partial<TaskRecord>;
   const status = String(candidate.status || '') as TaskStatus;
   if (!['open', 'done', 'cancelled', 'skipped'].includes(status)) return null;
@@ -24,7 +24,7 @@ export function asTaskRecord(record: RecordEntity | null | undefined): TaskRecor
 }
 
 export function asTaskSeriesRecord(record: RecordEntity | null | undefined): TaskSeriesRecord | null {
-  if (!record || record.coreBlock !== 'task-series') return null;
+  if (!record || record.recordType !== 'task-series') return null;
   const candidate = record as Partial<TaskSeriesRecord>;
   if (!candidate.recurrenceInfo) return null;
   const status = String(candidate.status || '');

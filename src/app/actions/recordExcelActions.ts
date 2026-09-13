@@ -173,17 +173,17 @@ export async function commitExcelCellFromView(params: CommitExcelCellFromViewPar
 
   const prepared = params.useCases.recordInput.prepareEditRecord({
     item: params.item,
-    blockId: params.item.coreBlock ? `core.${String(params.item.coreBlock).replace(/^core\./, '')}` : '',
+    recordTypeId: params.item.recordType ? `core.${String(params.item.recordType).replace(/^core\./, '')}` : '',
     source: 'quickinput',
   });
 
-  if (!prepared.blockId) {
+  if (!prepared.recordTypeId) {
     const message = '无法定位该记录的编辑模板，已取消单元格保存。';
     params.uiPort.notice(message);
     return { ok: false, message };
   }
 
-  const blockId = prepared.blockId;
+  const recordTypeId = prepared.recordTypeId;
   const templateField = resolveTemplateFieldForExcelCommit(prepared.template?.fields as TemplateField[] | undefined, canonicalField);
   if (templateField && getTemplateFieldInputType(templateField).toLowerCase().includes('path')) {
     const message = '路径类模板字段不能在 Excel 视图中修改。';
@@ -201,7 +201,7 @@ export async function commitExcelCellFromView(params: CommitExcelCellFromViewPar
   const { ok, message } = await runUiRecordAction(
     () => params.useCases.recordInput.submitUpdateRecord({
       item: params.item,
-      blockId,
+      recordTypeId,
       formData,
       source: 'quickinput',
     }),

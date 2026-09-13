@@ -18,10 +18,10 @@ import { RecordTypeSwitcher, type RecordTypeSwitcherOption } from './RecordTypeS
 import { SelectablePill } from './SelectablePill';
 
 export interface EnergyQuickCapturePanelProps {
-  blocks: RecordTypeSwitcherOption[];
-  allowBlockSwitch: boolean;
-  currentBlockId: string;
-  onBlockChange: (blockId: string) => void;
+  recordTypes: RecordTypeSwitcherOption[];
+  allowRecordTypeSwitch: boolean;
+  currentRecordTypeId: string;
+  onRecordTypeChange: (recordTypeId: string) => void;
   goals: GoalSelectorOption[];
   selectedGoalPath: string | null;
   onSelectGoal: (goal: GoalSelectorOption | null) => void;
@@ -30,10 +30,10 @@ export interface EnergyQuickCapturePanelProps {
 }
 
 export function EnergyQuickCapturePanel({
-  blocks,
-  allowBlockSwitch,
-  currentBlockId,
-  onBlockChange,
+  recordTypes,
+  allowRecordTypeSwitch,
+  currentRecordTypeId,
+  onRecordTypeChange,
   goals,
   selectedGoalPath,
   onSelectGoal,
@@ -109,13 +109,13 @@ export function EnergyQuickCapturePanel({
 
   return (
     <div class="think-quick-input-energy-panel">
-      {allowBlockSwitch && blocks.length > 1 && (
+      {allowRecordTypeSwitch && recordTypes.length > 1 && (
         <section class="think-quick-input-energy-section">
           <div class="think-quick-input-energy-section__title">记录类型</div>
           <RecordTypeSwitcher
-            blocks={blocks}
-            currentBlockId={currentBlockId}
-            onBlockChange={onBlockChange}
+            recordTypes={recordTypes}
+            currentRecordTypeId={currentRecordTypeId}
+            onRecordTypeChange={onRecordTypeChange}
           />
         </section>
       )}

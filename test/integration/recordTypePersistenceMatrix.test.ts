@@ -69,7 +69,7 @@ describe('integration: every user capture type persists and parses back', () => 
 
       const parsed = parseWholeBlock(plan.targetFilePath!, plan.outputContent);
       expect(parsed).not.toBeNull();
-      expect(parsed?.coreBlock).toBe(recordType.coreBlock);
+      expect(parsed?.recordType).toBe(recordType.recordType);
       expect(parsed?.goalPath).toBe('测试/完整回归');
       expect(parsed?.content).toBeTruthy();
       expect(plan.targetFilePath).toBe(recordType.targetFile);
@@ -104,7 +104,7 @@ describe('integration: every user capture type persists and parses back', () => 
 
     const parsed = parseWholeBlock('01/目标精力.md', markdown);
     expect(parsed).not.toBeNull();
-    expect(parsed?.coreBlock).toBe('energy');
+    expect(parsed?.recordType).toBe('energy');
     expect(parsed?.goalPath).toBe('测试/完整回归');
     expect(parsed?.date).toBe('2026-08-24');
     expect(parsed?.extra['时间']).toBe('10:15');

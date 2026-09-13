@@ -3,8 +3,8 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 export interface RetrievalFilters {
     /** Goal subtree filter. Goal path is both identity and human-readable hierarchy. */
     goalPaths?: string[];
-    /** Canonical business type filter (RecordViewItem.coreBlock). */
-    coreBlocks?: string[];
+    /** Canonical business type filter (RecordViewItem.recordType). */
+    recordTypes?: string[];
     /** Result limit. */
     limit?: number;
 }
@@ -31,10 +31,7 @@ export interface SearchIndexDocument {
     goalPath: string;
     rootGoal: string;
     leafGoal: string;
-    categoryKey: string;
-    baseCategory: string;
-    leafCategory: string;
-    coreBlock: string;
+    recordType: string;
     fileName: string;
     folder: string;
     header: string;
@@ -61,9 +58,7 @@ export const SEARCH_FIELDS: SearchIndexField[] = [
     'goalPath',
     'rootGoal',
     'leafGoal',
-    'categoryKey',
-    'baseCategory',
-    'leafCategory',
+    'recordType',
     'fileName',
     'folder',
     'header',

@@ -22,8 +22,8 @@ function persistentMemoryStorage() {
   };
   return { files, storage };
 }
-function record(id: string, coreBlock: string, goalPath: string, date: string): RecordViewItem {
-  return { id, coreBlock, categoryKey: coreBlock, title: id, content: id, tags: [], goalPath, date, created: Date.parse(date), modified: 0, extra: {} } as RecordViewItem;
+function record(id: string, recordType: string, goalPath: string, date: string): RecordViewItem {
+  return { id, recordType, title: id, content: id, tags: [], goalPath, date, created: Date.parse(date), modified: 0, extra: {} } as RecordViewItem;
 }
 
 describe('Whiteboard 1.3.6 Daily-use Closure', () => {

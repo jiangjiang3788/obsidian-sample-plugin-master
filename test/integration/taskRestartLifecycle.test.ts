@@ -78,7 +78,7 @@ describe('P0 Task 状态、时间、Session 的持久化与重启恢复', () => 
     const first = await env.boot();
     await first.repository.create({
       recordId: TASK_ID,
-      coreBlock: 'task',
+      recordType: 'task',
       targetFilePath: 'tasks.md',
       fields: {
         status: 'open',
@@ -106,12 +106,12 @@ describe('P0 Task 状态、时间、Session 的持久化与重启恢复', () => 
     afterReopenRestart.dataStore.dispose();
   });
 
-  it('修改任务开始时间/时长后落盘，重启后时间范围与时长保持；非法时长不会写坏任务', async () => {
+  it('修改实际任务时间范围后落盘，重启保持；计划时长独立且非法范围不会写坏任务', async () => {
     const env = createEnvironment();
     const first = await env.boot();
     await first.repository.create({
       recordId: TASK_ID,
-      coreBlock: 'task',
+      recordType: 'task',
       targetFilePath: 'tasks.md',
       fields: {
         status: 'open',
@@ -121,20 +121,27 @@ describe('P0 Task 状态、时间、Session 的持久化与重启恢复', () => 
       },
     });
 
-    await first.time.update(TASK_ID, { time: '10:30', duration: 90 });
+    await first.time.updateTimelineRange(
+      { kind: 'task-range', recordId: TASK_ID },
+      { start: '2026-08-24T10:30', end: '2026-08-24T12:00' },
+    );
     const changed = first.dataStore.getRecordById(TASK_ID);
     expect(changed?.startAt).toContain('2026-08-24T10:30');
     expect(changed?.endAt).toContain('2026-08-24T12:00');
-    expect(changed?.expectedDurationMinutes).toBe(90);
-    await expect(first.time.update(TASK_ID, { duration: 0 })).rejects.toThrow('task_duration_invalid');
-    expect(first.dataStore.getRecordById(TASK_ID)?.expectedDurationMinutes).toBe(90);
+    // Timeline actual-range edits no longer overwrite the Task planning duration.
+    expect(changed?.expectedDurationMinutes).toBe(60);
+    await expect(first.time.updateTimelineRange(
+      { kind: 'task-range', recordId: TASK_ID },
+      { start: '2026-08-24T12:00', end: '2026-08-24T12:00' },
+    )).rejects.toThrow('timeline_range_time_order_invalid');
+    expect(first.dataStore.getRecordById(TASK_ID)?.expectedDurationMinutes).toBe(60);
     first.dataStore.dispose();
 
     const restarted = await env.boot();
     const restored = restarted.dataStore.getRecordById(TASK_ID);
     expect(restored?.startAt).toContain('2026-08-24T10:30');
     expect(restored?.endAt).toContain('2026-08-24T12:00');
-    expect(restored?.expectedDurationMinutes).toBe(90);
+    expect(restored?.expectedDurationMinutes).toBe(60);
     restarted.dataStore.dispose();
   });
 
@@ -143,7 +150,7 @@ describe('P0 Task 状态、时间、Session 的持久化与重启恢复', () => 
     const first = await env.boot();
     await first.repository.create({
       recordId: TASK_ID,
-      coreBlock: 'task',
+      recordType: 'task',
       targetFilePath: 'tasks.md',
       fields: { status: 'open', content: 'Session 测试' },
     });
@@ -155,13 +162,13 @@ describe('P0 Task 状态、时间、Session 的持久化与重启恢复', () => 
       result: 'work-block-ended',
       source: 'timer',
     });
-    expect(session.coreBlock).toBe('task-session');
+    expect(session.recordType).toBe('task-session');
     expect((session as any).taskId).toBe(TASK_ID);
     const sessionId = session.id;
     first.dataStore.dispose();
 
     const restarted = await env.boot();
-    expect(restarted.dataStore.getRecordById(sessionId)?.coreBlock).toBe('task-session');
+    expect(restarted.dataStore.getRecordById(sessionId)?.recordType).toBe('task-session');
     expect((restarted.dataStore.getRecordById(sessionId) as any)?.taskId).toBe(TASK_ID);
     await expect(restarted.sessions.createSession('task.missing', {
       startedAt: '2026-08-24T10:00:00.000Z',

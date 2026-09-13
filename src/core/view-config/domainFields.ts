@@ -4,12 +4,12 @@ import { normalizeViewDateRole } from './dateRole';
 /**
  * View domain field policy
  * -----------------------------------------------------------------------------
- * Goal × Block is the primary view axis. View configs use canonical field keys;
+ * Goal × Record Type is the primary view axis. View configs use canonical field keys;
  * only current user-facing labels are normalized at the UI boundary.
  */
 export const VIEW_PRIMARY_FIELD_KEYS = [
   'goalPath',
-  'coreBlock',
+  'recordType',
   'date',
   'content',
   'title',
@@ -17,7 +17,7 @@ export const VIEW_PRIMARY_FIELD_KEYS = [
 
 export const VIEW_FIELD_ALIASES: Record<string, string> = {
   目标: 'goalPath',
-  记录类型: 'coreBlock',
+  记录类型: 'recordType',
   日期: 'date',
   内容: 'content',
   状态: 'status',
@@ -49,7 +49,7 @@ export function isPeriodViewField(field: string): boolean {
 
 function normalizeRuleValue(field: string, value: any): any {
   const normalizedField = normalizeViewFieldKey(field);
-  if (normalizedField !== 'coreBlock') return value;
+  if (normalizedField !== 'recordType') return value;
 
   const mapOne = (item: unknown) => {
     const text = String(item ?? '').trim();
@@ -58,7 +58,7 @@ function normalizeRuleValue(field: string, value: any): any {
     if (text === '计划') return 'plan';
     if (text === '总结') return 'review';
     if (text === '思考' || text === '闪念') return 'thought';
-    if (text === '事件') return 'evidence';
+    if (text === '事件') return 'event';
     if (text === '阻碍项') return 'blocker';
     if (text === '里程碑') return 'milestone';
     if (text.startsWith('core.')) return text.slice('core.'.length);
@@ -79,7 +79,7 @@ export function normalizeViewFilters(filters: readonly FilterRule[] | undefined)
   }
   return result.map((rule, index) => {
     const next: FilterRule = { ...rule };
-    if (index === result.length - 1) delete (next as any).logic;
+    if (index === result.length - 1) delete next.logic;
     else if (!next.logic) next.logic = 'and';
     return next;
   });

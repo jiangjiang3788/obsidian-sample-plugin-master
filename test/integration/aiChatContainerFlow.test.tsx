@@ -11,7 +11,7 @@ import { inputText, waitForUi } from '../support/uiTestUtils';
 const mockState: any = {
   settings: {
     aiSettings: { enabled: true },
-    inputSettings: { blocks: [{ id: 'core.task', name: '任务' }] },
+    inputSettings: { recordTypes: [{ id: 'core.task', name: '任务' }] },
     goalSettings: { goals: [{ path: '工作', status: 'active' }], goalTemplates: [] },
   },
 };
@@ -114,7 +114,7 @@ describe('AI Chat 容器组合流程', () => {
     const s = services(async () => ({ content: '不应该走普通 chat', referencedItemIds: [], model: 'fake-model', retrievalCount: 0 }));
     s.captureNaturalRecords = jest.fn(async () => ({
       items: [
-        { target: { blockId: 'core.task', goalPath: '武装大脑' }, fields: { content: '整理测试结果' } },
+        { target: { recordTypeId: 'core.task', goalPath: '武装大脑' }, fields: { content: '整理测试结果' } },
       ],
     }));
     s.openNaturalRecordBatchConfirm = jest.fn();
@@ -130,7 +130,7 @@ describe('AI Chat 容器组合流程', () => {
     expect(s.chatService.chat).not.toHaveBeenCalled();
     expect(s.openNaturalRecordBatchConfirm).toHaveBeenCalledWith(expect.objectContaining({
       title: '确认任务（1 条）',
-      items: [expect.objectContaining({ target: expect.objectContaining({ blockId: 'core.task' }) })],
+      items: [expect.objectContaining({ target: expect.objectContaining({ recordTypeId: 'core.task' }) })],
     }));
   });
 
@@ -138,8 +138,8 @@ describe('AI Chat 容器组合流程', () => {
     const s = services(async () => ({ content: '不应该走普通 chat', referencedItemIds: [], model: 'fake-model', retrievalCount: 0 }));
     s.captureNaturalRecords = jest.fn(async () => ({
       items: [
-        { target: { blockId: 'core.task', goalPath: '武装大脑' }, fields: { content: '读第一遍' } },
-        { target: { blockId: 'core.task', goalPath: '武装大脑' }, fields: { content: '脱离资料复述' } },
+        { target: { recordTypeId: 'core.task', goalPath: '武装大脑' }, fields: { content: '读第一遍' } },
+        { target: { recordTypeId: 'core.task', goalPath: '武装大脑' }, fields: { content: '脱离资料复述' } },
       ],
     }));
     s.openNaturalRecordBatchConfirm = jest.fn();
@@ -156,7 +156,7 @@ describe('AI Chat 容器组合流程', () => {
     expect(s.openNaturalRecordBatchConfirm).toHaveBeenCalledWith(expect.objectContaining({
       title: '确认任务（2 条）',
       items: expect.arrayContaining([
-        expect.objectContaining({ target: expect.objectContaining({ blockId: 'core.task' }) }),
+        expect.objectContaining({ target: expect.objectContaining({ recordTypeId: 'core.task' }) }),
       ]),
     }));
     expect(s.sessionStore.appendMessage).toHaveBeenCalledWith(expect.any(String), 'assistant', '已拆成 2 条任务，已打开批量确认。');

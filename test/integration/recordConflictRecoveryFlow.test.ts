@@ -54,7 +54,7 @@ describe('P0 Quick Input 冲突恢复真实组合链', () => {
     await h.dataStore.warmStart();
     await h.repository.create({
       recordId: ID,
-      coreBlock: 'thought',
+      recordType: 'thought',
       targetFilePath: FILE,
       fields: { 记录子类型: '思考', 内容: '原内容' },
     });
@@ -102,7 +102,7 @@ describe('P0 Quick Input 冲突恢复真实组合链', () => {
     await h.dataStore.warmStart();
     await h.repository.create({
       recordId: ID,
-      coreBlock: 'thought',
+      recordType: 'thought',
       targetFilePath: FILE,
       fields: { 记录子类型: '思考', 内容: '原内容' },
     });

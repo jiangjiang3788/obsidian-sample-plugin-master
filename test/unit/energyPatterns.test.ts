@@ -7,22 +7,21 @@ import type { RecordViewItem } from '@core/types/public';
 import { buildEnergyPatterns } from '@core/energy/public';
 
 function base(overrides: Partial<RecordViewItem>): RecordViewItem {
-  return { id: 'item', title: '', content: '', tags: [], categoryKey: '', created: 0, modified: 0, extra: {}, ...overrides } as RecordViewItem;
+  return { id: 'item', title: '', content: '', tags: [], created: 0, modified: 0, extra: {}, ...overrides } as RecordViewItem;
 }
 
 function energy(id: string, date: string, time: string, score: number, brainScore?: number, physicalScore?: number): RecordViewItem {
   return base({
-    id, title: 'energy', goalPath: '生活', date, startTime: time, coreBlock: 'energy', categoryKey: '精力',
-    extra: { 记录类型: 'energy', 日期: date, 时间: time, 精力值: score, 精力档位: Math.max(20, Math.round(score / 20) * 20), ...(brainScore != null ? { 脑力精力: brainScore } : {}), ...(physicalScore != null ? { 体力精力: physicalScore } : {}) },
+    id, title: 'energy', goalPath: '生活', date, startTime: time, recordType: 'energy', extra: { 记录类型: 'energy', 日期: date, 时间: time, 精力值: score, 精力档位: Math.max(20, Math.round(score / 20) * 20), ...(brainScore != null ? { 脑力精力: brainScore } : {}), ...(physicalScore != null ? { 体力精力: physicalScore } : {}) },
   });
 }
 
 function task(id: string): RecordViewItem {
-  return base({ id, title: '写代码', content: '写代码', goalPath: '生活', coreBlock: 'task', status: 'open' });
+  return base({ id, title: '写代码', content: '写代码', goalPath: '生活', recordType: 'task', status: 'open' });
 }
 
 function session(id: string, taskId: string, date: string, start: string, end: string, duration: number, beforeId?: string, afterId?: string): RecordViewItem {
-  return base({ id, coreBlock: 'task-session', taskId, sessionStartedAt: `${date}T${start}:00`, sessionEndedAt: `${date}T${end}:00`, sessionDurationMinutes: duration, sessionResult: 'work-block-ended', sessionSource: 'timer', startEnergyRecordId: beforeId, endEnergyRecordId: afterId });
+  return base({ id, recordType: 'task-session', taskId, sessionStartedAt: `${date}T${start}:00`, sessionEndedAt: `${date}T${end}:00`, sessionDurationMinutes: duration, sessionResult: 'work-block-ended', sessionSource: 'timer', startEnergyRecordId: beforeId, endEnergyRecordId: afterId });
 }
 
 describe('buildEnergyPatterns', () => {
@@ -40,7 +39,7 @@ describe('buildEnergyPatterns', () => {
       energy('e4', '2026-08-08', '20:00', 50, 45, 55),
       energy('e5', '2026-08-09', '08:05', 70, 70, 70),
     ];
-    const visibleEnergy = records.filter((item) => item.coreBlock === 'energy');
+    const visibleEnergy = records.filter((item) => item.recordType === 'energy');
     const result = buildEnergyPatterns(visibleEnergy, { activityRecords: records, analysisWindowDays: 30 });
     expect(result).not.toBeNull();
     expect(result?.dayparts.find((row) => row.key === 'morning')?.sampleCount).toBeGreaterThan(0);

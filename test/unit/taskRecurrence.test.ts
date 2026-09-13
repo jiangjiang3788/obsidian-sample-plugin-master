@@ -16,12 +16,11 @@ import type { RecordViewItem } from '@core/types/public';
 function task(seriesId?: string): RecordViewItem {
   return {
     id: 'task.01J00000000000000000000000',
-    coreBlock: 'task',
+    recordType: 'task',
     status: 'open',
     title: 'task',
     content: 'task',
     tags: [],
-    categoryKey: '任务',
     seriesId,
     created: 0,
     modified: 0,

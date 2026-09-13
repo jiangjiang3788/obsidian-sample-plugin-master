@@ -6,23 +6,22 @@ import type { RecordViewItem } from '@core/types/public';
 import { buildEnergyManagement } from '@core/energy/public';
 
 function base(overrides: Partial<RecordViewItem>): RecordViewItem {
-  return { id: 'item', title: '', content: '', tags: [], categoryKey: '', created: 0, modified: 0, extra: {}, ...overrides } as RecordViewItem;
+  return { id: 'item', title: '', content: '', tags: [], created: 0, modified: 0, extra: {}, ...overrides } as RecordViewItem;
 }
 
 function energy(id: string, date: string, time: string, score: number, brain?: number, physical?: number): RecordViewItem {
   return base({
-    id, goalPath: '精力研究示例', date, startTime: time, coreBlock: 'energy', categoryKey: '精力',
-    extra: { 记录类型: 'energy', 精力值: score, 精力档位: Math.max(20, Math.round(score / 20) * 20), 时间: time, 日期: date, 评分模式: brain != null || physical != null ? 'detailed' : 'quick', ...(brain != null ? { 脑力精力: brain } : {}), ...(physical != null ? { 体力精力: physical } : {}) },
+    id, goalPath: '精力研究示例', date, startTime: time, recordType: 'energy', extra: { 记录类型: 'energy', 精力值: score, 精力档位: Math.max(20, Math.round(score / 20) * 20), 时间: time, 日期: date, 评分模式: brain != null || physical != null ? 'detailed' : 'quick', ...(brain != null ? { 脑力精力: brain } : {}), ...(physical != null ? { 体力精力: physical } : {}) },
   });
 }
 
 function task(id: string, title: string): RecordViewItem {
-  return base({ id, goalPath: '精力研究示例', title, content: title, coreBlock: 'task', status: 'open' });
+  return base({ id, goalPath: '精力研究示例', title, content: title, recordType: 'task', status: 'open' });
 }
 
 function session(id: string, taskId: string, date: string, startTime: string, endTime: string, duration: number, beforeId: string, afterId: string): RecordViewItem {
   return base({
-    id, coreBlock: 'task-session', taskId,
+    id, recordType: 'task-session', taskId,
     sessionStartedAt: `${date}T${startTime}:00`, sessionEndedAt: `${date}T${endTime}:00`, sessionDurationMinutes: duration,
     sessionResult: 'work-block-ended', sessionSource: 'timer', startEnergyRecordId: beforeId, endEnergyRecordId: afterId,
   });
@@ -59,7 +58,7 @@ describe('Energy management cues', () => {
       ...activityDay('2026-08-03', 'code', 3), ...activityDay('2026-08-03', 'walk', 3),
       energy('latest', '2026-08-10', '22:00', 80, 72, 88),
     ];
-    const visibleEnergy = evidence.filter((item) => item.coreBlock === 'energy');
+    const visibleEnergy = evidence.filter((item) => item.recordType === 'energy');
     const model = buildEnergyManagement(visibleEnergy, { evidenceRecords: evidence, analysisWindowDays: 30 });
     expect(model).not.toBeNull();
     expect(model?.recoveryCandidates.some((row) => row.label === '运动 / 活动')).toBe(true);

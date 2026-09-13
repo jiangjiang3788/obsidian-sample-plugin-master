@@ -7,7 +7,7 @@
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 import { getEffectiveRecordTypes } from '@core/recordTypes/public';
-import { BlockManager } from '@/features/settings/input/BlockManager';
+import { RecordTypeManager } from '@/features/settings/input/RecordTypeManager';
 
 describe('已注册记录类型查看器', () => {
   let host: HTMLDivElement;
@@ -15,7 +15,7 @@ describe('已注册记录类型查看器', () => {
   afterEach(() => { render(null, host); host.remove(); });
 
   it('展示统一注册表中的全部记录类型，并明确是代码注册的只读能力', async () => {
-    await act(async () => render(<BlockManager />, host));
+    await act(async () => render(<RecordTypeManager />, host));
     const registered = getEffectiveRecordTypes();
     expect(host.querySelectorAll('.think-block-accordion')).toHaveLength(registered.length);
     expect(host.textContent).toContain(`${registered.length} 个`);
@@ -26,12 +26,12 @@ describe('已注册记录类型查看器', () => {
   });
 
   it('展开普通记录类型后显示注册 ID、记录 key 与默认字段信息', async () => {
-    await act(async () => render(<BlockManager />, host));
+    await act(async () => render(<RecordTypeManager />, host));
     const recordType = getEffectiveRecordTypes().find((item) => item.captureMode === 'template' && item.id !== 'core.energy')!;
     const title = [...host.querySelectorAll<HTMLButtonElement>('.think-block-accordion__title')].find((button) => button.textContent?.trim() === recordType.name)!;
     await act(async () => title.click());
     expect(host.textContent).toContain('注册 ID');
     expect(host.textContent).toContain(recordType.id);
-    expect(host.textContent).toContain(recordType.coreBlock);
+    expect(host.textContent).toContain(recordType.recordType);
   });
 });

@@ -76,7 +76,7 @@ describe('TemplateFieldSanitizer', () => {
     expect(text.defaultValue).toBe('hello');
   });
 
-  it('allows core input fields in forms without converting them to extra field names', () => {
+  it('allows supported field types in forms while Category stays an ordinary custom field', () => {
     expect(createCustomTemplateField(1, 'path', '分类')).toMatchObject({ key: '分类', label: '分类', type: 'path' });
     expect(createCustomTemplateField(2, 'hierarchicalSingleSelect', '目标')).toMatchObject({ key: '目标', label: '目标', type: 'hierarchicalSingleSelect' });
     expect(createCustomTemplateField(3, 'multiTag', '标签')).toMatchObject({ key: '标签', label: '标签', type: 'multiTag' });
@@ -84,11 +84,11 @@ describe('TemplateFieldSanitizer', () => {
     expect(getUserTemplateFieldTypeOptions().map(option => option.value)).toContain('multiImage');
   });
 
-  it('protects file and derived field names while allowing core input names', () => {
+  it('protects file and derived field names while keeping only current core input names', () => {
     expect(isCoreInputFieldName('目标')).toBe(true);
     expect(isCoreInputFieldName('主题')).toBe(false);
     expect(isCoreInputFieldName('标签')).toBe(true);
-    expect(isCoreInputFieldName('分类')).toBe(true);
+    expect(isCoreInputFieldName('分类')).toBe(false);
     expect(isReservedCustomFieldName('文件名')).toBe(true);
     expect(isReservedCustomFieldName('所在标题')).toBe(true);
     expect(getCustomFieldNameWarning('目标')).toBeUndefined();

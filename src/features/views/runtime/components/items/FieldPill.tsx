@@ -4,10 +4,10 @@ import type { JSX } from 'preact';
 import type { RecordViewItem } from '@core/types/public';
 import { readField } from '@core/types/public';
 import { formatFieldValue, getFieldDefinition, getFieldLabel, isImageFieldDefinition, normalizeImageValue } from '@core/fields/public';
-import { getCategoryColor } from '@core/types/public';
+import { resolveGoalColor } from '@core/goal/public';
 import { normalizeRecordTypePresentationKey } from '@core/recordTypes/public';
 import { TagsRenderer } from '@shared/ui/public';
-import { getBaseCategory, getLeafPath } from '@core/utils/public';
+import { getLeafPath } from '@core/utils/public';
 import type { OpenRecordOriginHandler, ResolveResourcePathHandler } from '@shared/types/public';
 import { hasPlatformModifier, isKeyboardActivation, stopInteractionEvent } from '@shared/ui/public';
 
@@ -56,14 +56,14 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, onOpenRecordOri
         const fullPath = value;
         const labelText = getLeafPath(fullPath) || fullPath;
         return (
-            <span {...originProps} class="tag-pill" title={`${label}: ${fullPath} · ${originTitle}`} style={{ backgroundColor: getCategoryColor(fullPath) }}>
+            <span {...originProps} class="tag-pill" title={`${label}: ${fullPath} · ${originTitle}`} style={{ backgroundColor: resolveGoalColor(undefined, fullPath) }}>
                 {labelText}
             </span>
         );
     }
 
     // Record Type uses the one global semantic color contract.
-    if (fieldKey === 'coreBlock') {
+    if (fieldKey === 'recordType') {
         const recordType = normalizeRecordTypePresentationKey(value);
         const displayValue = formatFieldValue(fieldKey, value, item);
         return (
@@ -73,16 +73,6 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, onOpenRecordOri
         );
     }
 
-    // categoryKey stays a category/path surface. Record type color is owned by coreBlock;
-    // never collapse the independent category color system into Record type identity.
-    if (fieldKey === 'categoryKey') {
-        const baseCategory = getLeafPath(item.categoryKey) || getBaseCategory(item.categoryKey);
-        return (
-            <span {...originProps} class="tag-pill" title={`${label}: ${value} · ${originTitle}`} style={{ backgroundColor: getCategoryColor(item.categoryKey) }}>
-                {baseCategory}
-            </span>
-        );
-    }
     
     // 图片字段按 image type/semantic 统一渲染。
     const fieldDef = getFieldDefinition(fieldKey);

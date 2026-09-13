@@ -35,8 +35,7 @@ function taskBlock(start: number, end: number, id: string): TaskBlock {
     title: id,
     content: id,
     tags: [],
-    coreBlock: 'task',
-    categoryKey: '任务',
+    recordType: 'task',
     created: 0,
     modified: 0,
     extra: {},
@@ -98,7 +97,7 @@ describe('integration: Timeline click context -> Task persistence', () => {
       expectedDurationMinutes: 40,
     });
     expect(parsed).not.toBeNull();
-    expect(parsed?.coreBlock).toBe('task');
+    expect(parsed?.recordType).toBe('task');
     expect(parsed?.goalPath).toBe('测试/时间轴上下文');
     expect(parsed?.startAt).toBeUndefined();
     expect(parsed?.endAt).toBeUndefined();
@@ -107,7 +106,7 @@ describe('integration: Timeline click context -> Task persistence', () => {
     expect(parsed?.completedAt).toBe('2026-05-13T02:00');
     expect(blocks).toHaveLength(2);
     expect(session).toMatchObject({
-      coreBlock: 'task-session',
+      recordType: 'task-session',
       taskId: parsed?.id,
       sessionDurationMinutes: 40,
       sessionResult: 'task-completed',
@@ -169,7 +168,7 @@ describe('integration: Timeline click context -> Task persistence', () => {
     });
 
     expect(first.formData).toMatchObject({
-      status: { value: 'done', label: '已完成' },
+      status: { value: 'done', label: '✅ 已完成' },
       startAt: '2026-05-13T01:20',
       endAt: '2026-05-13T02:00',
       expectedDurationMinutes: 40,
@@ -199,13 +198,13 @@ describe('integration: Timeline click context -> Task persistence', () => {
     const session = asTaskSessionRecord(parseRecordBlock(plan.targetFilePath!, sessionLines, 0, sessionLines.length - 1, '记录'));
 
     expect(parsed).toMatchObject({
-      coreBlock: 'task',
+      recordType: 'task',
       status: 'done',
       goalPath: '工作能力/通勤',
       completedAt: '2026-05-13T02:00',
     });
     expect(session).toMatchObject({
-      coreBlock: 'task-session',
+      recordType: 'task-session',
       taskId: parsed?.id,
       goalPath: '工作能力/通勤',
       sessionDurationMinutes: 40,
@@ -283,7 +282,7 @@ describe('integration: Timeline click context -> Task persistence', () => {
     expect(parsed?.status).toBe('done');
     expect(blocks).toHaveLength(2);
     expect(session).toMatchObject({
-      coreBlock: 'task-session',
+      recordType: 'task-session',
       taskId: parsed?.id,
       sessionDurationMinutes: 30,
       sessionResult: 'task-completed',

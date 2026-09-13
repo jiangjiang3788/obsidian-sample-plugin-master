@@ -6,6 +6,7 @@ import type { TemplateRecordTypeDefinition } from '@core/recordTypes/public';
 import type { GoalDefinition, GoalTemplate } from '@core/goal/public';
 import { getGoalTimePresetInfo, resolveGoalIcon } from '@core/goal/public';
 import { GoalTemplateMatrixCell } from './GoalTemplateMatrixCell';
+import { GoalColorControl } from './GoalColorControl';
 import { GoalTimePresetInput } from './GoalTimePresetInput';
 import type { GoalTimePresetDraftPreviewHandler } from './GoalTimePresetInput';
 import { GoalTimePresetBalanceRow, getClosedTimePresetParents } from './GoalTimePresetBalanceRow';
@@ -18,7 +19,6 @@ import {
   goalHasChildren,
 } from './goalTemplateMatrixModel';
 import type { GoalDropState } from './goalTemplateMatrixModel';
-
 export interface GoalTemplateMatrixGroupRowsProps {
   group: GoalDefinition[];
   groupIndex: number;
@@ -38,22 +38,19 @@ export interface GoalTemplateMatrixGroupRowsProps {
   openEditor: (goal: GoalDefinition, block: TemplateRecordTypeDefinition, template?: GoalTemplate | null) => void;
   setGoalTimePresetPercent: (path: string, percent: number | null) => Promise<void>;
   setGoalWeeklyTargetMinutes: (path: string, minutes: number | null) => Promise<void>;
+  setGoalColor: (path: string, color: string | null) => Promise<void>;
   previewGoals: GoalDefinition[];
   onTimePresetDraftPreview: GoalTimePresetDraftPreviewHandler;
 }
-
-
-
-function GoalTemplateAddButton({ goal, blocks, openEditor }: {
+function GoalTemplateAddButton({ goal, recordTypes, openEditor }: {
   goal: GoalDefinition;
-  blocks: TemplateRecordTypeDefinition[];
+  recordTypes: TemplateRecordTypeDefinition[];
   openEditor: (goal: GoalDefinition, block: TemplateRecordTypeDefinition, template?: GoalTemplate | null) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const overlay = useOverlayLayer(open, 'goal-template-add-menu');
-
   useEffect(() => {
     if (!open) return;
     const updatePosition = () => {
@@ -61,7 +58,7 @@ function GoalTemplateAddButton({ goal, blocks, openEditor }: {
       if (!button) return;
       const rect = button.getBoundingClientRect();
       const width = 164;
-      const estimatedHeight = Math.min(360, 12 + blocks.length * 36);
+      const estimatedHeight = Math.min(360, 12 + recordTypes.length * 36);
       const margin = 8;
       const left = Math.max(margin, Math.min(rect.left, window.innerWidth - width - margin));
       const below = rect.bottom + 4;
@@ -82,9 +79,8 @@ function GoalTemplateAddButton({ goal, blocks, openEditor }: {
       window.removeEventListener('scroll', updatePosition, true);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open, blocks.length]);
-
-  if (blocks.length === 0) return null;
+  }, [open, recordTypes.length]);
+  if (recordTypes.length === 0) return null;
   return (
     <span className="think-goal-template-matrix__add">
       <button
@@ -120,19 +116,19 @@ function GoalTemplateAddButton({ goal, blocks, openEditor }: {
                 overlay.focus();
               }}
             >
-              {blocks.map((block) => (
+              {recordTypes.map((recordType) => (
                 <button
-                  key={block.id}
+                  key={recordType.id}
                   type="button"
                   role="menuitem"
                   className="think-goal-template-matrix__add-option"
                   onClick={(event) => {
                     event.stopPropagation();
                     setOpen(false);
-                    openEditor(goal, block, null);
+                    openEditor(goal, recordType, null);
                   }}
                 >
-                  <span>{block.name}</span>
+                  <span>{recordType.name}</span>
                 </button>
               ))}
             </div>
@@ -142,7 +138,6 @@ function GoalTemplateAddButton({ goal, blocks, openEditor }: {
     </span>
   );
 }
-
 function GoalDragHandle({ goal, setDraggingGoalPath, setGoalDrop }: {
   goal: GoalDefinition;
   setDraggingGoalPath: (value: string | null) => void;
@@ -208,16 +203,17 @@ function GoalPathCell(props: {
   openEditor: (goal: GoalDefinition, block: TemplateRecordTypeDefinition, template?: GoalTemplate | null) => void;
   setGoalTimePresetPercent: (path: string, percent: number | null) => Promise<void>;
   setGoalWeeklyTargetMinutes: (path: string, minutes: number | null) => Promise<void>;
+  setGoalColor: (path: string, color: string | null) => Promise<void>;
   onTimePresetDraftPreview: GoalTimePresetDraftPreviewHandler;
 }) {
-  const { goal, goals, expandedPaths, setDraggingGoalPath, setGoalDrop, toggleTreePath, handleDeleteGoal, handleEditGoalIcon, visibleBlocks, templates, openEditor, setGoalTimePresetPercent, setGoalWeeklyTargetMinutes, onTimePresetDraftPreview } = props;
+  const { goal, goals, expandedPaths, setDraggingGoalPath, setGoalDrop, toggleTreePath, handleDeleteGoal, handleEditGoalIcon, visibleBlocks, templates, openEditor, setGoalTimePresetPercent, setGoalWeeklyTargetMinutes, setGoalColor, onTimePresetDraftPreview } = props;
   const path = getGoalDisplayPath(goal);
   const depth = getGoalDepth(goal);
   const hasChildren = goalHasChildren(goal, goals);
   const expanded = expandedPaths.has(path);
   const isRoot = depth === 0;
   const configured = new Set(templates.filter((template) => template.goalPath === path).map((template) => template.recordTypeId));
-  const addableBlocks = visibleBlocks.filter((block) => !configured.has(block.id));
+  const addableRecordTypes = visibleBlocks.filter((recordType) => !configured.has(recordType.id));
 
   return (
     <td className="think-goal-template-matrix__path-cell">
@@ -238,6 +234,7 @@ function GoalPathCell(props: {
         >
           {resolveGoalIcon(goal) || '＋'}
         </button>
+        <GoalColorControl goal={goal} setGoalColor={setGoalColor} />
         <span
           className="think-goal-template-matrix__goal-name"
           title="双击修改目标图标"
@@ -246,7 +243,7 @@ function GoalPathCell(props: {
           {cleanDisplayText(getGoalDisplayName(goal))}
         </span>
         <GoalTimePresetInput goal={goal} goals={goals} onRootCommit={setGoalTimePresetPercent} onChildCommit={setGoalWeeklyTargetMinutes} onDraftPreview={onTimePresetDraftPreview} />
-        <GoalTemplateAddButton goal={goal} blocks={addableBlocks} openEditor={openEditor} />
+        <GoalTemplateAddButton goal={goal} recordTypes={addableRecordTypes} openEditor={openEditor} />
         <ThinkIconButton
           className="think-goal-template-matrix__delete"
           size="sm"
@@ -262,7 +259,7 @@ function GoalPathCell(props: {
 }
 
 function GoalTemplateMatrixGoalRow(props: GoalTemplateMatrixGroupRowsProps & { goal: GoalDefinition }) {
-  const { goal, goals, visibleBlocks, templates, expandedPaths, draggingGoalPath, goalDrop, setDraggingGoalPath, setGoalDrop, toggleTreePath, reorderGoalSiblings, handleDeleteGoal, handleEditGoalIcon, openEditor, setGoalTimePresetPercent, setGoalWeeklyTargetMinutes, onTimePresetDraftPreview } = props;
+  const { goal, goals, visibleBlocks, templates, expandedPaths, draggingGoalPath, goalDrop, setDraggingGoalPath, setGoalDrop, toggleTreePath, reorderGoalSiblings, handleDeleteGoal, handleEditGoalIcon, openEditor, setGoalTimePresetPercent, setGoalWeeklyTargetMinutes, setGoalColor, onTimePresetDraftPreview } = props;
   const dropActive = goalDrop?.goalPath === getGoalDisplayPath(goal);
 
   return (
@@ -304,6 +301,7 @@ function GoalTemplateMatrixGoalRow(props: GoalTemplateMatrixGroupRowsProps & { g
         openEditor={openEditor}
         setGoalTimePresetPercent={setGoalTimePresetPercent}
         setGoalWeeklyTargetMinutes={setGoalWeeklyTargetMinutes}
+        setGoalColor={setGoalColor}
         onTimePresetDraftPreview={onTimePresetDraftPreview}
       />
       {visibleBlocks.map((block) => (

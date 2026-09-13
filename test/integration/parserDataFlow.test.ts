@@ -24,7 +24,7 @@ function parseAt(markdown: string, filePath: string, startLine = 1): RecordViewI
 
 describe('Record Block -> RecordViewItem -> RecordIndex v2', () => {
   it('keeps identity stable when a record moves files', () => {
-    const task = encodeRecordBlock({ recordId: TASK_ID, coreBlock: 'task', fields: { status: 'open', content: 'move me' } });
+    const task = encodeRecordBlock({ recordId: TASK_ID, recordType: 'task', fields: { status: 'open', content: 'move me' } });
     const first = parseAt(task, 'a.md', 2);
     const moved = parseAt(task, 'b.md', 20);
     expect(first.id).toBe(moved.id);
@@ -32,8 +32,8 @@ describe('Record Block -> RecordViewItem -> RecordIndex v2', () => {
   });
 
   it('indexes task and non-task records through one identity layer', () => {
-    const task = parseAt(encodeRecordBlock({ recordId: TASK_ID, coreBlock: 'task', fields: { status: 'open', content: 'Task' } }), 'a.md');
-    const note = parseAt(encodeRecordBlock({ recordId: NOTE_ID, coreBlock: 'thought', fields: { 内容: 'Note' } }), 'b.md');
+    const task = parseAt(encodeRecordBlock({ recordId: TASK_ID, recordType: 'task', fields: { status: 'open', content: 'Task' } }), 'a.md');
+    const note = parseAt(encodeRecordBlock({ recordId: NOTE_ID, recordType: 'thought', fields: { 内容: 'Note' } }), 'b.md');
     const index = new RecordIndex();
     const items = index.rebuild(new Map([['a.md', [task]], ['b.md', [note]]]));
     expect(items).toHaveLength(2);
@@ -42,7 +42,7 @@ describe('Record Block -> RecordViewItem -> RecordIndex v2', () => {
   });
 
   it('isolates duplicate IDs instead of choosing a path/line candidate', () => {
-    const block = encodeRecordBlock({ recordId: TASK_ID, coreBlock: 'task', fields: { status: 'open', content: 'duplicate' } });
+    const block = encodeRecordBlock({ recordId: TASK_ID, recordType: 'task', fields: { status: 'open', content: 'duplicate' } });
     const a = parseAt(block, 'a.md', 1);
     const b = parseAt(block, 'b.md', 1);
     const index = new RecordIndex();

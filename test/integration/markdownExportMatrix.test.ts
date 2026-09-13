@@ -9,11 +9,10 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 function item(id: string, block: string, extra: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id,
-    coreBlock: block,
+    recordType: block,
     title: `标题-${id}`,
     content: `内容-${id}`,
     filename: '2026-08-24',
-    categoryKey: block,
     tags: [],
     created: 1,
     modified: 1,

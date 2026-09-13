@@ -8,7 +8,7 @@ import {
   SimpleSelect,
 } from '@shared/ui/public';
 import type { ViewEditorProps } from './ViewEditorProps';
-import { useSelector, selectInputBlocks, useUiPort } from '@/app/public';
+import { useSelector, selectInputRecordTypes, useUiPort } from '@/app/public';
 import { useMemo } from 'preact/hooks';
 import { HEATMAP_VIEW_DEFAULT_CONFIG, type HeatmapViewConfig } from '@core/view/public';
 import { collectGoalPathsForHeatmap } from '@core/utils/public';
@@ -23,7 +23,7 @@ function normalizeHeatmapConfig(value: Record<string, any> | undefined): Heatmap
 
     return {
         displayMode: v.displayMode === 'habit' || v.displayMode === 'count' ? v.displayMode : base.displayMode,
-        sourceBlockId: typeof v.sourceBlockId === 'string' ? v.sourceBlockId : base.sourceBlockId,
+        sourceRecordTypeId: typeof v.sourceRecordTypeId === 'string' ? v.sourceRecordTypeId : base.sourceRecordTypeId,
         goalPaths: Array.isArray(v.goalPaths)
             ? v.goalPaths.filter((x): x is string => typeof x === 'string')
             : base.goalPaths,
@@ -35,16 +35,16 @@ function normalizeHeatmapConfig(value: Record<string, any> | undefined): Heatmap
 export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEditorProps) {
     const ui = useUiPort();
     const config = normalizeHeatmapConfig(value);
-    const allBlocks = useSelector(selectInputBlocks);
+    const allRecordTypes = useSelector(selectInputRecordTypes);
 
-    const blockOptions = useMemo(() =>
-        allBlocks.map(b => ({ value: b.id, label: b.name })),
-        [allBlocks]
+    const recordTypeOptions = useMemo(() =>
+        allRecordTypes.map(b => ({ value: b.id, label: b.name })),
+        [allRecordTypes]
     );
 
     const handleScanGoals = () => {
-        if (!config.sourceBlockId) {
-            ui.notice('请先选择源 Block 模板。');
+        if (!config.sourceRecordTypeId) {
+            ui.notice('请先选择源记录类型。');
             return;
         }
 
@@ -55,9 +55,9 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
         }
 
         const dataSource: ViewInstance = module;
-        const sourceBlock: RecordCaptureTemplate | undefined = allBlocks.find(b => b.id === config.sourceBlockId);
-        if (!sourceBlock) {
-            ui.notice('找不到所选的 Block 模板。');
+        const sourceRecordType: RecordCaptureTemplate | undefined = allRecordTypes.find(b => b.id === config.sourceRecordTypeId);
+        if (!sourceRecordType) {
+            ui.notice('找不到所选的记录类型。');
             return;
         }
 
@@ -66,11 +66,11 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
         const sortedGoals = collectGoalPathsForHeatmap({
             items,
             dataSource,
-            sourceBlock,
+            sourceRecordType,
         });
 
         onChange({ goalPaths: sortedGoals });
-        ui.notice(`扫描完成！已自动添加 ${sortedGoals.length} 个目标路径（来自分类 "${sourceBlock.name}"）。`);
+        ui.notice(`扫描完成！已自动添加 ${sortedGoals.length} 个目标路径（来自记录类型 "${sourceRecordType.name}"）。`);
     };
 
     return (
@@ -79,14 +79,14 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
         >
             <ConfigSection title="数据来源">
                 <ConfigFieldRow
-                    label="源 Block"
-                    description="视图将从此 Block 模板的评分字段中读取 Emoji/图片/颜色映射。"
+                    label="源记录类型"
+                    description="视图将从此记录类型模板的评分字段中读取 Emoji/图片/颜色映射。"
                 >
                     <SimpleSelect
-                        value={config.sourceBlockId}
-                        options={blockOptions}
-                        onChange={val => onChange({ sourceBlockId: val })}
-                        placeholder="-- 请选择用于打卡的 Block 模板 --"
+                        value={config.sourceRecordTypeId}
+                        options={recordTypeOptions}
+                        onChange={val => onChange({ sourceRecordTypeId: val })}
+                        placeholder="-- 请选择用于打卡的记录类型 --"
                     />
                 </ConfigFieldRow>
             </ConfigSection>

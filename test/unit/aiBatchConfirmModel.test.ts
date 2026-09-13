@@ -18,10 +18,10 @@ import {
 import { getGoalTemplateId } from '@/core/public';
 
 const goalPath = '学习/英语/阅读';
-const blocks = [{ id: 'core.task', recordTypeId: 'core.task', name: '任务', categoryKey: '任务', fields: [{ key: '状态', label: '状态', type: 'select', options: [{ value: 'doing', label: '进行中' }] }] }] as any[];
+const recordTypes = [{ id: 'core.task', recordTypeId: 'core.task', name: '任务', fields: [{ key: '状态', label: '状态', type: 'select', options: [{ value: 'doing', label: '进行中' }] }] }] as any[];
 const goalSettings = {
   goals: [{ path: goalPath, status: 'active' }],
-  goalTemplates: [{ goalPath, recordTypeId: 'core.task', enabled: true, fields: blocks[0].fields }],
+  goalTemplates: [{ goalPath, recordTypeId: 'core.task', enabled: true, fields: recordTypes[0].fields }],
 } as any;
 
 describe('AiBatchConfirmModel', () => {
@@ -35,13 +35,13 @@ describe('AiBatchConfirmModel', () => {
 
   it('builds confirm records with Goal context and normalized field values', () => {
     const records = buildAiBatchConfirmRecordItems({
-      items: [{ rawText: '读一篇文章', target: { categoryKey: '任务', goalPath }, fieldValues: { 内容: '读一篇文章', 状态: '进行中' } } as any],
-      blocks,
+      items: [{ rawText: '读一篇文章', target: { recordTypeId: 'core.task', goalPath }, fieldValues: { 内容: '读一篇文章', 状态: '进行中' } } as any],
+      recordTypes,
       goalSettings,
-      inputSettings: { blocks },
+      inputSettings: { recordTypes },
     });
     expect(records).toHaveLength(1);
-    expect(records[0]).toMatchObject({ blockId: 'core.task', goalLabel: '阅读', presetLabel: '已配置' });
+    expect(records[0]).toMatchObject({ recordTypeId: 'core.task', goalLabel: '阅读', presetLabel: '已配置' });
     expect(records[0].formData).toMatchObject({ 内容: '读一篇文章', 目标: goalPath, goalPath, 状态: { value: 'doing', label: '进行中' } });
     expect(records[0].editorContext).toMatchObject({ 内容: '读一篇文章', 目标: goalPath, goalPath, 状态: '进行中' });
   });
@@ -57,23 +57,23 @@ describe('AiBatchConfirmModel', () => {
   });
 
   it('builds Goal-only submit params and merged draft context', () => {
-    const record = { blockId: 'core.task', formData: { 内容: 'new', 目标: goalPath, goalPath }, editorContext: { 内容: 'old', fromAi: true } } as any;
+    const record = { recordTypeId: 'core.task', formData: { 内容: 'new', 目标: goalPath, goalPath }, editorContext: { 内容: 'old', fromAi: true } } as any;
     expect(buildAiBatchConfirmRecordContext(record)).toEqual({ 内容: 'new', fromAi: true, 目标: goalPath, goalPath });
-    expect(buildAiBatchConfirmCreateSubmitParams(record)).toMatchObject({ blockId: 'core.task', formData: { 内容: 'new', 目标: goalPath, goalPath }, source: 'ai_batch' });
+    expect(buildAiBatchConfirmCreateSubmitParams(record)).toMatchObject({ recordTypeId: 'core.task', formData: { 内容: 'new', 目标: goalPath, goalPath }, source: 'ai_batch' });
   });
 
 
   it('materializes editor draft without mutating the immutable editor context seed', () => {
     const [record] = buildAiBatchConfirmRecordItems({
-      items: [{ rawText: '读一篇文章', target: { blockId: 'core.task', goalPath }, fieldValues: { 内容: '读一篇文章' } }],
-      blocks,
+      items: [{ rawText: '读一篇文章', target: { recordTypeId: 'core.task', goalPath }, fieldValues: { 内容: '读一篇文章' } }],
+      recordTypes,
       goalSettings,
-      inputSettings: { blocks },
+      inputSettings: { recordTypes },
     });
     const editorContext = record.editorContext;
 
     const next = materializeAiBatchConfirmRecordDraft(record, {
-      blockId: 'core.task',
+      recordTypeId: 'core.task',
       formData: { 内容: '改成精读两页', goalPath: '学习/英语/听力', 目标: '学习/英语/听力' },
       goalPath: '学习/英语/听力',
       goalTitle: '听力',
@@ -89,10 +89,10 @@ describe('AiBatchConfirmModel', () => {
 
   it('passes an abort signal through the AI submit transaction', () => {
     const [record] = buildAiBatchConfirmRecordItems({
-      items: [{ rawText: '读一篇文章', target: { blockId: 'core.task', goalPath }, fieldValues: { 内容: '读一篇文章' } }],
-      blocks,
+      items: [{ rawText: '读一篇文章', target: { recordTypeId: 'core.task', goalPath }, fieldValues: { 内容: '读一篇文章' } }],
+      recordTypes,
       goalSettings,
-      inputSettings: { blocks },
+      inputSettings: { recordTypes },
     });
     const controller = new AbortController();
     expect(buildAiBatchConfirmCreateSubmitParams(record, controller.signal).signal).toBe(controller.signal);

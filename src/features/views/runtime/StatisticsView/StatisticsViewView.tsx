@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { RecordViewItem } from '@core/types/public';
-import type { CategoryConfig } from '@core/view/public';
+import type { StatisticsBucketConfig } from '@core/view/public';
 import type { PeriodData } from '@core/utils/public';
 import type { StatisticsCurrentView, StatisticsCellClickHandler } from './types';
 import type { OpenRecordOriginHandler } from '@shared/types/public';
@@ -12,7 +12,7 @@ import { MonthStatisticsView, QuarterStatisticsView, YearStatisticsView } from '
 interface StatisticsViewViewProps {
   items: RecordViewItem[];
   currentView: StatisticsCurrentView;
-  categories: CategoryConfig[];
+  categories: StatisticsBucketConfig[];
   startDate: any;
   usePeriod: boolean;
   onToggleUsePeriod: (next: boolean) => void;

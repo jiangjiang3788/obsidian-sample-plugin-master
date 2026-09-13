@@ -12,19 +12,20 @@ function check_record_schema_contract_gate() {
   const recordTypes = read('src/core/recordTypes/registry.ts');
   const recordsPublic = read('src/core/records/public.ts');
 
-  const requiredBlocks = ['thought','evidence','habit','plan','review','blocker','milestone','task','task-series','task-session','energy'];
+  const requiredBlocks = ['thought','feeling','event','habit','plan','review','blocker','milestone','task','task-series','task-session','energy'];
   const schemaMarkers = {
-    thought: "coreBlock: 'thought'",
-    evidence: "coreBlock: 'evidence'",
-    habit: "coreBlock: 'habit'",
+    thought: "recordType: 'thought'",
+    feeling: "recordType: 'feeling'",
+    event: "recordType: 'event'",
+    habit: "recordType: 'habit'",
     plan: "periodRecord('plan'",
     review: "periodRecord('review'",
     blocker: "simpleGoalRecord('blocker'",
     milestone: "simpleGoalRecord('milestone'",
-    task: "coreBlock: 'task'",
-    'task-series': "coreBlock: 'task-series'",
-    'task-session': "coreBlock: 'task-session'",
-    energy: "coreBlock: 'energy'",
+    task: "recordType: 'task'",
+    'task-series': "recordType: 'task-series'",
+    'task-session': "recordType: 'task-session'",
+    energy: "recordType: 'energy'",
   };
   for (const block of requiredBlocks) {
     if (!contracts.includes(schemaMarkers[block])) fail(`missing schema contract for ${block}`);
@@ -32,7 +33,7 @@ function check_record_schema_contract_gate() {
 
   const requiredSemanticMarkers = [
     "f('记录子类型'",
-    "allowedValues: ['感受', '思考']",
+    "allowedValues: ['snapshot', 'change', 'recovery', 'depletion', 'stop']",
     "f('周期粒度'",
     "f('图片'",
     "f('精力值'",
@@ -141,24 +142,24 @@ function check_record_schema_definition_r3_gate() {
   const recordTypeRegistry = read('src/core/recordTypes/registry.ts');
   const settings = read('src/core/settings/ThinkSettings.ts');
   const selectors = read('src/app/store/selectors/index.ts');
-  const blockManager = read('src/features/settings/input/BlockManager.tsx');
+  const blockManager = read('src/features/settings/input/RecordTypeManager.tsx');
 
   if (!types.includes('interface RecordSchemaDefinition extends RecordSchemaContract')) fail('missing authoritative RecordSchemaDefinition');
   if (!types.includes("RecordCaptureMode = 'template' | 'direct' | 'internal'")) fail('capture mode must live in schema definition types');
   if (!definitions.includes('RECORD_SCHEMA_DEFINITIONS')) fail('missing canonical definition catalog');
-  for (const marker of ['THOUGHT_DEFINITION','EVIDENCE_DEFINITION','HABIT_DEFINITION','PLAN_DEFINITION','REVIEW_DEFINITION','BLOCKER_DEFINITION','MILESTONE_DEFINITION','TASK_DEFINITION','TASK_SERIES_DEFINITION','TASK_SESSION_DEFINITION','ENERGY_DEFINITION']) {
+  for (const marker of ['THOUGHT_DEFINITION','FEELING_DEFINITION','EVENT_DEFINITION','HABIT_DEFINITION','PLAN_DEFINITION','REVIEW_DEFINITION','BLOCKER_DEFINITION','MILESTONE_DEFINITION','TASK_DEFINITION','TASK_SERIES_DEFINITION','TASK_SESSION_DEFINITION','ENERGY_DEFINITION']) {
     if (!definitions.includes(marker)) fail(`missing canonical definition: ${marker}`);
   }
   if (!recordTypeRegistry.includes('RECORD_SCHEMA_DEFINITIONS')) fail('RecordTypeRegistry must derive from Record Schema definitions');
   if (!recordTypeRegistry.includes("definition.captureMode !== 'internal'")) fail('user RecordTypeRegistry must exclude internal kinds');
   if (!recordTypeRegistry.includes("definition.captureMode === 'template'")) fail('template RecordType projection must derive from the same registry');
   if (exists('src/core/blocks')) fail('legacy src/core/blocks authority must be deleted');
-  if (exists('src/app/store/slices/blocks.slice.ts')) fail('legacy mutable Blocks slice must be deleted');
-  if (exists('src/app/usecases/blocks.usecase.ts')) fail('legacy Blocks usecase must be deleted');
-  if (/inputSettings\??\s*:/.test(settings)) fail('ThinkSettings must not persist a second inputSettings Block catalog');
-  if (/recordTypeSettings\??\s*:|coreBlockSettings\??\s*:/.test(settings)) fail('ThinkSettings must not persist RecordType/CoreBlock patches');
+  if (exists('src/app/store/slices/blocks.slice.ts')) fail('legacy mutable Record Type slice must be deleted');
+  if (exists('src/app/usecases/blocks.usecase.ts')) fail('legacy Record Type usecase must be deleted');
+  if (/inputSettings\??\s*:/.test(settings)) fail('ThinkSettings must not persist a second inputSettings Record Type catalog');
+  if (/recordTypeSettings\??\s*:|recordTypeSettings\??\s*:/.test(settings)) fail('ThinkSettings must not persist RecordType/RecordType patches');
   if (!selectors.includes('buildRecordTypeInputSettings')) fail('legacy InputSettings consumers must receive only a derived registry adapter');
-  if (!blockManager.includes('记录类型由代码统一注册')) fail('RecordType settings must be read-only registry inspection, not mutable Block CRUD');
+  if (!blockManager.includes('记录类型由代码统一注册')) fail('RecordType settings must be read-only registry inspection, not mutable Record Type CRUD');
 
   if (!process.exitCode) console.log('[record-schema-r3] PASS (RecordSchemaDefinition + RecordTypeRegistry are the single authority)');
 }
@@ -198,7 +199,7 @@ function check_generic_record_codec_r4_gate() {
     'buildGenericRecordDraft',
     'encodeRecordDraft',
     "schema?.family === 'generic'",
-    'unknown_record_schema:${coreBlock}',
+    'unknown_record_schema:${recordType}',
   ]) {
     if (!planner.includes(marker)) failures.push(`OutputPlanner missing ${marker}`);
   }
@@ -216,10 +217,10 @@ function check_generic_record_codec_r4_gate() {
   requireText('src/core/records/codec/MarkdownRecordCodec.ts', "key === '记录子类型'");
   forbidText('src/core/records/codec/MarkdownRecordCodec.ts', 'recordsubtype');
   forbidText('src/core/records/codec/MarkdownRecordCodec.ts', 'subtype].includes');
-  requireText('src/core/utils/parser.ts', 'recordSubtype: parsed.recordSubtype');
-  requireText('src/core/utils/parser.ts', '`闪念/${parsed.recordSubtype}`');
+  requireText('src/core/utils/parser.ts', "...(parsed.recordType === 'energy' && parsed.recordSubtype ? { recordSubtype: parsed.recordSubtype } : {})");
+  forbidText('src/core/utils/parser.ts', '`闪念/${parsed.recordSubtype}`');
   forbidText('src/core/goal/templateMode.ts', 'patch.outputTemplate');
-  requireText('src/features/settings/input/BlockManager.tsx', '记录类型由代码统一注册');
+  requireText('src/features/settings/input/RecordTypeManager.tsx', '记录类型由代码统一注册');
   requireText('src/features/settings/goalTemplates/GoalTemplateEditorModal.tsx', 'Goal Template 只定义字段、默认值与保存位置，不覆盖存储 grammar');
 
   for (const forbidden of ['模板ID', '模板来源', '周期ID', "fields['分类']", "fields.分类"]) {
@@ -281,14 +282,14 @@ function check_field_system_r5_gate() {
 
   for (const marker of [
     "buildCustomCaptureFields('task', renderData, input.template.fields)",
-    'buildGenericRecordDraft(schema.coreBlock, renderData, input.template.fields)',
+    'buildGenericRecordDraft(schema.recordType, renderData, input.template.fields)',
   ]) {
     if (!planner.includes(marker)) failures.push(`OutputPlanner missing ${marker}`);
   }
 
   if (!recordSchemaTypes.includes('customFields?: boolean')) failures.push('RecordSchema capability must explicitly declare custom-field freedom');
   if (!recordRegistry.includes('isSafeCustomRecordFieldKey')) failures.push('schema inspection must distinguish safe custom KV from unknown invalid fields');
-  if (!recordRegistry.includes('if (isSafeCustomRecordFieldKey(schema.coreBlock, key)) continue;')) failures.push('safe custom KV must not be reported as schema corruption');
+  if (!recordRegistry.includes('if (isSafeCustomRecordFieldKey(schema.recordType, key)) continue;')) failures.push('safe custom KV must not be reported as schema corruption');
 
   if (!ai.includes('resolveCaptureFieldSchema(field)')) failures.push('AI field snapshot must consume resolved FieldSchema');
 
@@ -332,7 +333,7 @@ function check_record_query_r6_gate() {
   requireText('src/app/dashboard/useViewData.ts', 'queryViewRecords(');
   requireText('src/features/views/runtime/EventTimelineView/EventTimelineViewModel.ts', 'executeRecordQuery(');
   requireText('src/features/views/runtime/BlockViewModel.ts', 'executeRecordQuery(');
-  requireText('src/features/views/runtime/TimelineView/TimelineViewModel.ts', "record.coreBlock === 'task-session'");
+  requireText('src/features/views/runtime/TimelineView/TimelineViewModel.ts', "record.recordType === 'task-session'");
 
   // Canonical task closure semantics must never regress to category/raw text inference.
   forbidText(queryFile, 'categoryKey');

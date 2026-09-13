@@ -7,6 +7,7 @@
 /** @jsxImportSource preact */
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
+import { createPointerEvent, waitForUi } from '../support/uiTestUtils';
 import { WhiteboardSemanticLayoutOverlay } from '@/features/whiteboard/WhiteboardSemanticLayoutOverlay';
 import type { WhiteboardSemanticLayoutGuide } from '@/features/whiteboard/WhiteboardSemanticLayoutModel';
 
@@ -39,13 +40,15 @@ describe('Whiteboard 1.3.3/1.3.4/1.3.7 语义布局交互', () => {
     ];
     await act(async () => render(<WhiteboardSemanticLayoutOverlay guides={guides} zoom={0.1} onSelectItems={onSelectItems} onMoveGuide={onMoveGuide} />, host));
     const button = host.querySelector('button') as HTMLButtonElement;
-    const pointer = (type: string, id: number, x: number, y: number) => { const event = new Event(type, { bubbles: true, cancelable: true }); Object.defineProperties(event, {
-      pointerId: { value: id }, pointerType: { value: 'mouse' }, button: { value: 0 }, clientX: { value: x }, clientY: { value: y },
-    }); return event; };
+    const pointer = (type: string, id: number, x: number, y: number) => { return createPointerEvent(type, {
+      pointerId: id, pointerType: 'mouse', button: 0, clientX: x, clientY: y,
+    }); };
     await act(async () => { button.dispatchEvent(pointer('pointerdown', 41, 100, 100)); window.dispatchEvent(pointer('pointermove', 41, 80, 130)); });
+    await waitForUi(() => host.querySelector('[data-whiteboard-layout-guide-id="t"]')?.getAttribute('style')?.includes('left:-80px') === true, '等待语义标签拖动预览');
     const guide = host.querySelector('[data-whiteboard-layout-guide-id="t"]') as HTMLElement;
     expect(guide.getAttribute('style')).toContain('left:-80px');
-    await act(async () => { window.dispatchEvent(pointer('pointerup', 41, 80, 130)); await Promise.resolve(); });
+    await act(async () => { window.dispatchEvent(pointer('pointerup', 41, 80, 130)); });
+    await waitForUi(() => onMoveGuide.mock.calls.length > 0, '等待语义标签移动提交');
     expect(onMoveGuide).toHaveBeenCalledWith('t', { x: -80, y: 352 });
     await act(async () => button.click());
     expect(onSelectItems).not.toHaveBeenCalled();

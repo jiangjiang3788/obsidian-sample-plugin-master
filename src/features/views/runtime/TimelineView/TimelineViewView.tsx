@@ -13,20 +13,19 @@ interface TimelineViewViewProps {
   isSummaryView: boolean;
   summaryData: any[];
   colorMap: Record<string, string>;
-  progressOrder: string[];
+  goalOrder: string[];
   untrackedLabel: string;
   zoomHandlers: ZoomHandlers;
   onZoomToMax?: () => void;
   maxHourHeight?: number;
   timeAxisWidth: number;
-  summaryCategoryHours: Record<string, number>;
+  summaryGoalHours: Record<string, number>;
   totalSummaryHours: number;
   goalAllocationSummary?: GoalTimeAllocationSummary | null;
   goalAllocationByDay?: Record<string, GoalTimeAllocationSummary>;
   hasGoalAllocation?: boolean;
   currentView?: TimelineCurrentView;
   dailyViewData: DailyViewData | null;
-  categoriesConfig: Record<string, { files?: string[]; color?: string }>;
   hourHeight: number;
   maxHours: number;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
@@ -41,20 +40,19 @@ export function TimelineViewView(props: TimelineViewViewProps) {
     isSummaryView,
     summaryData,
     colorMap,
-    progressOrder,
+    goalOrder,
     untrackedLabel,
     zoomHandlers,
     onZoomToMax,
     maxHourHeight,
     timeAxisWidth,
-    summaryCategoryHours,
+    summaryGoalHours,
     totalSummaryHours,
     goalAllocationSummary = null,
     goalAllocationByDay = {},
     hasGoalAllocation = false,
     currentView = '天',
     dailyViewData,
-    categoriesConfig,
     hourHeight,
     maxHours,
     onOpenRecordOrigin,
@@ -73,7 +71,7 @@ export function TimelineViewView(props: TimelineViewViewProps) {
       <TimelineSummaryTable
         summaryData={summaryData}
         colorMap={colorMap}
-        progressOrder={progressOrder}
+        goalOrder={goalOrder}
         untrackedLabel={untrackedLabel}
         overallGoalSummary={goalAllocationSummary}
         currentView={currentView === '年' ? '年' : '季'}
@@ -89,17 +87,16 @@ export function TimelineViewView(props: TimelineViewViewProps) {
       onZoomToMax={onZoomToMax}
       maxHourHeight={maxHourHeight}
       timeAxisWidth={timeAxisWidth}
-      summaryCategoryHours={summaryCategoryHours}
+      summaryGoalHours={summaryGoalHours}
       totalSummaryHours={totalSummaryHours}
       goalAllocationSummary={hasGoalAllocation ? goalAllocationSummary : null}
       goalAllocationByDay={hasGoalAllocation ? goalAllocationByDay : {}}
       currentView={currentView}
       dailyViewData={dailyViewData}
-      categoriesConfig={categoriesConfig}
       hourHeight={hourHeight}
       maxHours={maxHours}
       colorMap={colorMap}
-      progressOrder={progressOrder}
+      goalOrder={goalOrder}
       untrackedLabel={untrackedLabel}
       onOpenRecordOrigin={onOpenRecordOrigin}
       onUpdateTimelineRange={onUpdateTimelineRange}

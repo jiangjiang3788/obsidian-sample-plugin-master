@@ -7,7 +7,7 @@ import type { GoalDefinition } from '@core/goal/public';
 export interface ResolveQuickInputRecordTypeRuntimeInput {
   settings: ThinkSettings;
   isEnergyDirect: boolean;
-  currentBlockId: string;
+  currentRecordTypeId: string;
   selectedGoal: GoalDefinition | null;
   selectedGoalPath: string | null;
   requireDirectGoalTemplate?: boolean;
@@ -28,13 +28,13 @@ export function resolveQuickInputRecordTypeRuntime(input: ResolveQuickInputRecor
       goal: input.selectedGoal,
       templateId: null,
       templateSourceType: null,
-      effectiveBlockId: ENERGY_RECORD_TYPE_ID,
+      effectiveRecordTypeId: ENERGY_RECORD_TYPE_ID,
     };
   }
 
   return GoalTemplateResolver.resolve({
     settings: input.settings,
-    recordTypeId: input.currentBlockId,
+    recordTypeId: input.currentRecordTypeId,
     goalPath: input.selectedGoal?.path || input.selectedGoalPath,
     requireDirectGoalTemplate: input.requireDirectGoalTemplate === true,
   });

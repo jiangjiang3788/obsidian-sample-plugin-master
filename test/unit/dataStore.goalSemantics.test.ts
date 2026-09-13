@@ -20,8 +20,8 @@ function createDataStoreForContent(content: string) {
 
 describe('DataStore Goal semantics', () => {
   it('keeps file heading separate from explicit Goal path', async () => {
-    const implicit = encodeRecordBlock({ recordId: 'task.01J00000000000000000000051', coreBlock: 'task', fields: { status: 'open', content: '无目标任务' } });
-    const explicit = encodeRecordBlock({ recordId: 'task.01J00000000000000000000052', coreBlock: 'task', fields: { status: 'open', content: '英语任务', 目标: '学习/英语' } });
+    const implicit = encodeRecordBlock({ recordId: 'task.01J00000000000000000000051', recordType: 'task', fields: { status: 'open', content: '无目标任务' } });
+    const explicit = encodeRecordBlock({ recordId: 'task.01J00000000000000000000052', recordType: 'task', fields: { status: 'open', content: '英语任务', 目标: '学习/英语' } });
     const store = createDataStoreForContent(['# 学习/英语', implicit, explicit].join('\n'));
     const items = await store.scanFileByPath('daily.md');
     expect(items).toHaveLength(2);

@@ -26,6 +26,7 @@ export interface GoalTemplateMatrixTableProps {
   openEditor: (goal: GoalDefinition, block: TemplateRecordTypeDefinition, template?: GoalTemplate | null) => void;
   setGoalTimePresetPercent: (path: string, percent: number | null) => Promise<void>;
   setGoalWeeklyTargetMinutes: (path: string, minutes: number | null) => Promise<void>;
+  setGoalColor: (path: string, color: string | null) => Promise<void>;
 }
 
 function formatHumanMinutes(minutes: number): string {
@@ -63,7 +64,7 @@ function GoalTemplateMatrixHeader({ visibleBlocks }: { visibleBlocks: TemplateRe
       <tr>
         <th className="think-goal-template-matrix__path-header">目标</th>
         {visibleBlocks.map((block) => (
-          <th key={block.id} className="think-goal-template-matrix__block-header think-record-type-header" data-record-type={normalizeRecordTypePresentationKey(block.coreBlock)}>{block.name}</th>
+          <th key={block.id} className="think-goal-template-matrix__block-header think-record-type-header" data-record-type={normalizeRecordTypePresentationKey(block.recordType)}>{block.name}</th>
         ))}
       </tr>
     </thead>

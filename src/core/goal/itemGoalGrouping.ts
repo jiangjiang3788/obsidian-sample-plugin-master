@@ -1,13 +1,17 @@
 import type { RecordViewItem } from '@/core/records/RecordEntity';
-import type { CategoryConfig } from '@/core/config/views';
 import type { GoalDefinition } from './types';
 import { normalizeGoalPath, splitGoalPath } from './path';
 import { createGoalOrderIndex } from './order';
 import { resolveGoalIcon } from './icon';
+import { resolveGoalColor } from './presentation';
 
 export const UNASSIGNED_GOAL_KEY = '未归属目标';
 
-export interface GoalBucket extends CategoryConfig {
+export interface GoalBucket {
+  name: string;
+  alias?: string;
+  color: string;
+  files: string[];
   goalPath?: string;
   icon?: string;
   isUnassigned?: boolean;
@@ -41,12 +45,6 @@ export function getItemGoalLabel(item: RecordViewItem, goals: GoalDefinition[] =
   return splitGoalPath(goal?.path || key).leafGoal || key;
 }
 
-function stableColor(seed: string): string {
-  const palette = ['#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b', '#ef4444', '#6366f1', '#14b8a6', '#f97316', '#a855f7', '#0ea5e9'];
-  let hash = 0;
-  for (const ch of seed || '') hash = ((hash << 5) - hash + ch.charCodeAt(0)) | 0;
-  return palette[Math.abs(hash) % palette.length] || '#8b5cf6';
-}
 
 export function buildGoalBuckets(
   items: RecordViewItem[],
@@ -71,7 +69,7 @@ export function buildGoalBuckets(
     map.set(key, {
       name: key,
       alias: icon && icon !== '•' ? `${icon} ${label}` : label,
-      color: goal?.color || stableColor(key),
+      color: resolveGoalColor(goal, key),
       files: [],
       goalPath: key === UNASSIGNED_GOAL_KEY ? undefined : key,
       icon,

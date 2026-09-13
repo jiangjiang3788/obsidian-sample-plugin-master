@@ -8,17 +8,17 @@ function goal(path: string, patch: Partial<GoalDefinition> = {}): GoalDefinition
 
 function task(id: string, goalPath?: string): RecordViewItem {
   return {
-    id, coreBlock: 'task', title: id, content: id, tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {},
+    id, recordType: 'task', title: id, content: id, tags: [], created: 0, modified: 0, extra: {},
     ...(goalPath ? { goalPath } : null),
   } as RecordViewItem;
 }
 
 function session(id: string, taskId: string, start: string, end: string, minutes: number): RecordViewItem {
   return {
-    id, coreBlock: 'task-session', taskId,
+    id, recordType: 'task-session', taskId,
     sessionStartedAt: start, sessionEndedAt: end, sessionDurationMinutes: minutes,
     sessionResult: 'task-completed', sessionSource: 'timer',
-    title: '', content: '', tags: [], categoryKey: '任务工作块', created: 0, modified: 0, extra: {},
+    title: '', content: '', tags: [], created: 0, modified: 0, extra: {},
   } as RecordViewItem;
 }
 

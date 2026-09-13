@@ -6,6 +6,8 @@ interface RecordGestureParams {
   item: RecordViewItem;
   onPrimary?: () => void;
   onOpenOrigin?: OpenRecordOriginHandler;
+  /** Timeline-style surfaces can use modifier-only origin opening so the primary click stays immediate. */
+  originActivation?: 'modifier-and-double' | 'modifier-only';
 }
 
 /**
@@ -29,11 +31,13 @@ interface RecordGestureParams {
  */
 export const RECORD_GESTURE_MULTI_ACTIVATION_MS = 320;
 export const RECORD_GESTURE_HINT = '点击编辑；Ctrl/⌘+点击或双击打开原文';
+export const RECORD_MODIFIER_ORIGIN_HINT = '点击编辑；Ctrl/⌘+点击打开原文';
 
 export function createRecordGestureHandlers(params: RecordGestureParams) {
   let lastTouchAt = 0;
   let suppressClickUntil = 0;
   let pendingPrimary: ReturnType<typeof setTimeout> | null = null;
+  const originActivation = params.originActivation ?? 'modifier-and-double';
 
   const cancelPendingPrimary = () => {
     if (pendingPrimary !== null) {
@@ -56,7 +60,7 @@ export function createRecordGestureHandlers(params: RecordGestureParams) {
 
   const schedulePrimary = () => {
     cancelPendingPrimary();
-    if (!params.onOpenOrigin) {
+    if (!params.onOpenOrigin || originActivation === 'modifier-only') {
       openPrimary();
       return;
     }
@@ -82,12 +86,13 @@ export function createRecordGestureHandlers(params: RecordGestureParams) {
     onDblClick: (event: any) => {
       stopInteractionEvent(event);
       cancelPendingPrimary();
+      if (originActivation === 'modifier-only') return;
       suppressClickUntil = Date.now() + RECORD_GESTURE_MULTI_ACTIVATION_MS;
       openOrigin();
     },
     onTouchEnd: (event: any) => {
       const now = Date.now();
-      if (lastTouchAt && now - lastTouchAt <= RECORD_GESTURE_MULTI_ACTIVATION_MS) {
+      if (originActivation !== 'modifier-only' && lastTouchAt && now - lastTouchAt <= RECORD_GESTURE_MULTI_ACTIVATION_MS) {
         lastTouchAt = 0;
         cancelPendingPrimary();
         suppressClickUntil = now + RECORD_GESTURE_MULTI_ACTIVATION_MS;

@@ -98,12 +98,12 @@ describe('QuickInput task display template', () => {
 
   it('switches a newly-created done Task to execution timing by semantic status', () => {
     expect(resolveTaskQuickInputTimingMode({
-      effectiveBlockId: 'core.task',
+      effectiveRecordTypeId: 'core.task',
       recordInputMode: 'create',
       formData: { status: { value: 'done', label: '已完成' } },
     })).toBe('execution');
     expect(resolveTaskQuickInputTimingMode({
-      effectiveBlockId: 'core.task',
+      effectiveRecordTypeId: 'core.task',
       recordInputMode: 'create',
       formData: { status: { value: 'open', label: '未完成' } },
     })).toBe('plan');

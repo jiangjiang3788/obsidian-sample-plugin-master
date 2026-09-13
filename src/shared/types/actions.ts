@@ -13,8 +13,6 @@ export type MarkDoneHandler = (id: string) => void;
 
 
 export type NoticeHandler = (message: string) => void;
-export type CategoryColorMap = Record<string, string>;
-export type UpdateCategoryColorsHandler = (nextColors: CategoryColorMap) => void | Promise<void>;
 export type ResolveResourcePathHandler = (path: string) => string;
 export type OpenRecordOriginHandler = (item: RecordViewItem) => void | Promise<void>;
 
@@ -66,7 +64,7 @@ export type OpenTimelineCreateHandler = (payload: TimelineCreatePayload) => void
 
 
 export interface HeatmapCreateRequest {
-  sourceBlockId: string;
+  sourceRecordTypeId: string;
   date: string;
   item?: RecordViewItem;
   goalPath?: string;
@@ -98,7 +96,7 @@ export interface StatisticsQuickCreatePayload {
   /** 目标总览等非统计视图可透传到 QuickInput 的初始上下文。 */
   context?: Record<string, unknown>;
   /** 可选建议 Block，后续 actionService 可用于精确选择核心 block。 */
-  preferredBlockId?: string;
+  preferredRecordTypeId?: string;
   cellIdentifier?: {
     type?: string;
     category?: string;

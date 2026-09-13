@@ -29,7 +29,6 @@ describe('所有注册 View 的 Task runtime 动作接线', () => {
         onUpdateTimelineRange: jest.fn(),
         onTaskQuadrantChange: jest.fn(),
         onQuickCreate: jest.fn(),
-        onCategoryColorsChange: jest.fn(),
         onOpenRecord: jest.fn(),
         onOpenRecordOrigin: jest.fn(),
         resolveResourcePath: jest.fn(),
@@ -57,8 +56,6 @@ describe('所有注册 View 的 Task runtime 动作接线', () => {
         timerService: timerService as never,
         timers,
         inputSettings: {},
-        selectedLayoutCategories: [],
-        categoryColors: {},
         allItems: [],
         allRecords: [],
       });

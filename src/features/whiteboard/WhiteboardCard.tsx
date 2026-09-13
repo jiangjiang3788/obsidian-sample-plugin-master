@@ -228,7 +228,7 @@ export function WhiteboardCard({
     <article
       {...sharedArticleProps}
       class={`think-whiteboard-card think-card think-card--interactive${preview ? ' is-dragging' : ''}${selected ? ' is-selected' : ''}${committing ? ' is-committing' : ''}${connectionActive ? ' is-connection-source' : ''}${findClass}`}
-      data-record-type={record.coreBlock}
+      data-record-type={record.recordType}
       role="button"
       tabIndex={0}
       title={`类型：${presentation.typeLabel}；${RECORD_GESTURE_HINT}；拖动卡片可调整位置；Ctrl/⌘/Shift 点击多选；从四边拖出连线；右键可归档或移出`}

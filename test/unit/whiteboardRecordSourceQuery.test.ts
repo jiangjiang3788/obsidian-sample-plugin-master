@@ -12,14 +12,13 @@ import {
   type WhiteboardRecordSourceState,
 } from '@/features/whiteboard/WhiteboardRecordSourceQuery';
 
-function record(id: string, coreBlock: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
+function record(id: string, recordType: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id,
-    coreBlock,
+    recordType,
     title: id,
     content: `${id} 内容`,
     tags: [],
-    categoryKey: coreBlock,
     date: '2026-08-10',
     created: 0,
     modified: 0,
@@ -43,17 +42,17 @@ describe('白板 Record Source 查询模型 1.1.1', () => {
   const records = [
     record('task-backlog', 'task', { status: 'open', goalPath: '照顾好自己/睡眠', date: '2026-03-01', scheduledAt: '2026-08-10T09:00:00', dueAt: '2026-08-11T18:00:00', completedAt: '2026-08-12T10:00:00', content: '睡眠 手机计划' }),
     record('thought-sleep', 'thought', { goalPath: '照顾好自己/睡眠', date: '2026-08-10', content: '半夜刷手机之后睡眠变差' }),
-    record('evidence-sleep-deep', 'evidence', { goalPath: '照顾好自己/睡眠/刺激', date: '2026-08-11', content: '手机刺激证据' }),
-    record('evidence-prefix-collision', 'evidence', { goalPath: '照顾好自己/睡眠质量', date: '2026-08-11', content: '不属于睡眠子树' }),
+    record('evidence-sleep-deep', 'event', { goalPath: '照顾好自己/睡眠/刺激', date: '2026-08-11', content: '手机刺激证据' }),
+    record('evidence-prefix-collision', 'event', { goalPath: '照顾好自己/睡眠质量', date: '2026-08-11', content: '不属于睡眠子树' }),
     record('session-actual', 'task-session', { goalPath: '照顾好自己/睡眠', date: '2026-08-13', sessionStartedAt: '2026-08-13T23:10:00', sessionEndedAt: '2026-08-13T23:40:00', sessionDurationMinutes: 30, taskId: 'task-backlog', content: '实际睡眠工作块' }),
   ];
 
-  test('空状态返回完整 Record pool，并从实际 records 派生包含 task-session 的类型 facet', () => {
+  test('空状态返回用户 Record pool，并且 internal task-session 不进入类型 facet', () => {
     const result = queryWhiteboardRecordSource(records, EMPTY_STATE);
-    expect(result.totalCount).toBe(records.length);
+    expect(result.totalCount).toBe(records.length - 1);
     const options = collectWhiteboardRecordTypeOptions(records);
-    expect(options.find(option => option.value === 'task-session')?.label).toBe('任务工作块');
-    expect(options.map(option => option.value)).toEqual(expect.arrayContaining(['task', 'thought', 'evidence', 'task-session']));
+    expect(options.find(option => option.value === 'task-session')).toBeUndefined();
+    expect(options.map(option => option.value)).toEqual(expect.arrayContaining(['task', 'thought', 'event']));
   });
 
   test('Goal facet 构造成层级树；父节点保存真实子树精确 paths，不误命中前缀碰撞', () => {
@@ -74,7 +73,7 @@ describe('白板 Record Source 查询模型 1.1.1', () => {
   test('keyword + 多类型 OR + 多 Goal path OR 之间按 AND 组合，并由一次 RecordQuery 执行', () => {
     const state: WhiteboardRecordSourceState = {
       keyword: '手机',
-      recordTypes: ['thought', 'evidence'],
+      recordTypes: ['thought', 'event'],
       goalPaths: ['照顾好自己/睡眠', '照顾好自己/睡眠/刺激'],
       time: null,
     };
@@ -82,7 +81,7 @@ describe('白板 Record Source 查询模型 1.1.1', () => {
     expect(result.matchedItems.map(item => item.id)).toEqual(['thought-sleep', 'evidence-sleep-deep']);
     const spec = buildWhiteboardRecordSourceSpec(records, state);
     expect(spec.filterGroups).toEqual([
-      [{ field: 'coreBlock', op: 'in', value: ['thought', 'evidence'] }],
+      [{ field: 'recordType', op: 'in', value: ['thought', 'event'] }],
       [{ field: 'goalPath', op: 'in', value: ['照顾好自己/睡眠', '照顾好自己/睡眠/刺激'] }],
     ]);
   });
@@ -105,7 +104,7 @@ describe('白板 Record Source 查询模型 1.1.1', () => {
     expect(idsFor('task-scheduled', '2026-08-10')).toEqual(['task-backlog']);
     expect(idsFor('task-due', '2026-08-11')).toEqual(['task-backlog']);
     expect(idsFor('task-completed', '2026-08-12')).toEqual(['task-backlog']);
-    expect(idsFor('task-actual', '2026-08-13')).toEqual(['session-actual']);
+    expect(idsFor('task-actual', '2026-08-13')).toEqual(['task-backlog']);
   });
 
   test('无效时间不生成 date constraint，且返回本地校验错误', () => {

@@ -20,7 +20,7 @@ export const ENERGY_RECORD_TYPE = ENERGY_DEFINITION;
 export const DEFAULT_RECORD_TYPES: readonly RecordTypeDefinition[] = Object.freeze(
   sortRecordTypesByPresentation(
     RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.capabilities.userVisible && definition.captureMode !== 'internal'),
-    (definition) => definition.coreBlock,
+    (definition) => definition.recordType,
   ),
 );
 
@@ -30,7 +30,7 @@ export const DEFAULT_TEMPLATE_RECORD_TYPES: readonly TemplateRecordTypeDefinitio
     RECORD_SCHEMA_DEFINITIONS.filter((definition): definition is TemplateRecordTypeDefinition =>
       definition.capabilities.userVisible && definition.captureMode === 'template' && typeof definition.recordTypeId === 'string'
     ),
-    (definition) => definition.coreBlock,
+    (definition) => definition.recordType,
   ),
 );
 
@@ -53,11 +53,11 @@ export function getTemplateRecordTypeById(recordTypeId: string): TemplateRecordT
 }
 
 /**
- * Thin adapter for older AI/view utilities that still accept InputSettings.
+ * Thin adapter for AI/view utilities that still accept InputSettings.
  * It is derived on demand and is never stored in ThinkSettings or data.json.
  */
 export function buildRecordTypeInputSettings(): InputSettings {
-  return { blocks: [...DEFAULT_TEMPLATE_RECORD_TYPES] };
+  return { recordTypes: [...DEFAULT_TEMPLATE_RECORD_TYPES] };
 }
 
 export function isDirectRecordType(recordType: Pick<RecordTypeDefinition, 'captureMode'>): boolean {

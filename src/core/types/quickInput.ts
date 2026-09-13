@@ -4,7 +4,7 @@ import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
 import type { RecordInputMeta, RecordInputSource } from './recordInput';
 
 export interface QuickInputSaveData {
-    blockId?: string;
+    recordTypeId?: string;
     context?: Record<string, unknown>;
     formData: Record<string, unknown>;
     meta?: RecordInputMeta;

@@ -23,9 +23,8 @@ function truncate(value: string, maxLength: number): string {
 }
 
 export function getWhiteboardRecordTypeLabel(item: RecordViewItem): string {
-  return getRecordTypePresentation(item.coreBlock).label
-    || compactText(item.categoryKey)
-    || compactText(item.coreBlock)
+  return getRecordTypePresentation(item.recordType).label
+    || compactText(item.recordType)
     || '记录';
 }
 
@@ -44,14 +43,13 @@ export function buildWhiteboardRecordPresentation(item: RecordViewItem): Whitebo
     ? rawContent
     : '';
 
-  const temporalLabel = item.coreBlock === 'task-session'
+  const temporalLabel = item.recordType === 'task-session'
     ? formatDateTime(item.sessionStartedAt || item.date, true)
     : formatDateTime(item.date, false);
 
   const detailLabels: string[] = [];
-  if (item.coreBlock === 'thought' && item.recordSubtype) detailLabels.push(String(item.recordSubtype));
-  if (item.coreBlock === 'habit' && item.rating != null && !primaryText.includes(`评分 ${item.rating}`)) detailLabels.push(`评分 ${item.rating}`);
-  if (item.coreBlock === 'task-session' && item.sessionDurationMinutes != null && !primaryText.includes(`${item.sessionDurationMinutes} 分钟`)) {
+  if (item.recordType === 'habit' && item.rating != null && !primaryText.includes(`评分 ${item.rating}`)) detailLabels.push(`评分 ${item.rating}`);
+  if (item.recordType === 'task-session' && item.sessionDurationMinutes != null && !primaryText.includes(`${item.sessionDurationMinutes} 分钟`)) {
     detailLabels.push(`${item.sessionDurationMinutes} 分钟`);
   }
 

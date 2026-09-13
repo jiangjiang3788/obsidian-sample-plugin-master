@@ -27,7 +27,7 @@ export interface StatisticsCreatePayload {
   /** 目标总览等入口透传给 QuickInput 的上下文字段。 */
   context?: Record<string, unknown>;
   /** 建议使用的核心 block，兼容后续更精确的 actionService 选择。 */
-  preferredBlockId?: string;
+  preferredRecordTypeId?: string;
   cellIdentifier?: StatisticsCellIdentifier | null;
   blocks?: RecordViewItem[];
   title?: string;
@@ -46,7 +46,7 @@ export interface TimelineCreateParams {
 
 export interface HeatmapCreateParams {
   app: QuickInputApp;
-  sourceBlockId?: string | null;
+  sourceRecordTypeId?: string | null;
   date: string;
   item?: RecordViewItem;
   goalPath?: string;

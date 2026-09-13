@@ -5,23 +5,23 @@ import type { RecordCaptureTemplate, InputSettings } from '@/core/recordInput/Ca
 
 export function getEffectiveHeatmapTemplate(
     settings: InputSettings,
-    blockId: string,
+    recordTypeId: string,
 ): RecordCaptureTemplate | null {
-    return settings.blocks.find((block) => block.id === blockId || block.recordTypeId === blockId) ?? null;
+    return settings.recordTypes.find((block) => block.id === recordTypeId || block.recordTypeId === recordTypeId) ?? null;
 }
 
 export function buildRatingMapping(
     inputSettings: InputSettings,
-    blockId: string,
+    recordTypeId: string,
 ): Map<string, string> {
-    const effectiveTemplate = getEffectiveHeatmapTemplate(inputSettings, blockId);
+    const effectiveTemplate = getEffectiveHeatmapTemplate(inputSettings, recordTypeId);
     const ratingField = effectiveTemplate?.fields.find((field) => field.type === 'rating');
     return new Map<string, string>(
         ratingField?.options?.filter((option) => option.value).map((option) => [option.label || '', option.value as string]) || [],
     );
 }
 
-/** Rating mapping depends on Goal × Block, not Theme metadata. */
+/** Rating mapping depends on Goal × Record Type, not Theme metadata. */
 export class RatingMappingCache {
     private cache = new Map<string, Map<string, string>>();
 
@@ -29,11 +29,11 @@ export class RatingMappingCache {
         this.cache.clear();
     }
 
-    get(inputSettings: InputSettings, blockId: string, goalPath?: string): Map<string, string> {
-        const cacheKey = `${blockId}:${goalPath || 'default'}`;
+    get(inputSettings: InputSettings, recordTypeId: string, goalPath?: string): Map<string, string> {
+        const cacheKey = `${recordTypeId}:${goalPath || 'default'}`;
         const cached = this.cache.get(cacheKey);
         if (cached) return cached;
-        const mapping = buildRatingMapping(inputSettings, blockId);
+        const mapping = buildRatingMapping(inputSettings, recordTypeId);
         this.cache.set(cacheKey, mapping);
         return mapping;
     }

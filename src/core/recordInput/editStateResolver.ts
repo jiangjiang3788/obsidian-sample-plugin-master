@@ -17,7 +17,7 @@ import { normalizeFieldToken } from "@/core/fields/fieldTokenSemantics";
 export interface BuildEditStateInput {
   settings: ThinkSettings;
   item: RecordViewItem;
-  preferredBlockId?: string | null;
+  preferredRecordTypeId?: string | null;
 }
 
 
@@ -28,7 +28,6 @@ function getItemSemanticTokens(item: RecordViewItem): Set<string> {
     if (normalized) tokens.add(normalized);
   };
 
-  push(item.categoryKey);
   push(item.file?.basename);
   push(item.fileName);
   push(item.header);
@@ -46,30 +45,24 @@ function getItemSemanticTokens(item: RecordViewItem): Set<string> {
   return tokens;
 }
 
-function templateCoreBlock(block: RecordCaptureTemplate): string {
-  const raw = String(block?.recordTypeId || block?.id || '').trim().replace(/^core\./i, '');
+function templateRecordType(recordType: RecordCaptureTemplate): string {
+  const raw = String(recordType?.recordTypeId || recordType?.id || '').trim().replace(/^core\./i, '');
   return normalizeFieldToken(raw);
 }
 
-function itemCoreBlock(item: RecordViewItem): string {
-  return normalizeFieldToken(String(item.coreBlock || '').replace(/^core\./i, ''));
+function itemRecordType(item: RecordViewItem): string {
+  return normalizeFieldToken(String(item.recordType || '').replace(/^core\./i, ''));
 }
 
-function scoreTemplateForItem(block: RecordCaptureTemplate, item: RecordViewItem): number {
+function scoreTemplateForItem(recordType: RecordCaptureTemplate, item: RecordViewItem): number {
   let score = 0;
   const semanticTokens = getItemSemanticTokens(item);
-  const categoryKey = normalizeFieldToken(item.categoryKey);
-  const blockId = normalizeFieldToken(block?.id);
-  const blockName = normalizeFieldToken(block?.name);
-  const blockCategory = normalizeFieldToken(block?.categoryKey);
-  const recordBlock = itemCoreBlock(item);
-  const candidateBlock = templateCoreBlock(block);
+  const recordBlock = itemRecordType(item);
+  const candidateRecordType = templateRecordType(recordType);
 
-  if (recordBlock && candidateBlock === recordBlock) score += 80;
-  if (categoryKey && categoryKey === blockCategory) score += 30;
-  if (categoryKey && categoryKey === blockName) score += 20;
+  if (recordBlock && candidateRecordType === recordBlock) score += 80;
 
-  const fields = Array.isArray(block?.fields) ? block.fields : [];
+  const fields = Array.isArray(recordType?.fields) ? recordType.fields : [];
   for (const field of fields) {
     const key = normalizeFieldToken(field?.key);
     const label = normalizeFieldToken(field?.label);
@@ -81,98 +74,98 @@ function scoreTemplateForItem(block: RecordCaptureTemplate, item: RecordViewItem
   return score;
 }
 
-function looksLikeTaskTemplate(block: RecordCaptureTemplate): boolean {
-  return templateCoreBlock(block) === 'task';
+function looksLikeTaskTemplate(recordType: RecordCaptureTemplate): boolean {
+  return templateRecordType(recordType) === 'task';
 }
 
 
-function readCoreBlockHint(item: RecordViewItem): string | null {
+function readRecordTypeHint(item: RecordViewItem): string | null {
   const text =
-    readFirstString(asUnknownRecord(item), ["coreBlock", "recordTypeId"]) ??
+    readFirstString(asUnknownRecord(item), ["recordType", "recordTypeId"]) ??
     readFirstString(asUnknownRecord(item.extra || {}), [
       "记录类型",
-      "coreBlock",
+      "recordType",
       "recordTypeId",
     ]);
   if (!text) return null;
   return text.startsWith("core.") ? text : `core.${text}`;
 }
 
-function resolveBlockForEdit(
-  blocks: RecordCaptureTemplate[],
+function resolveRecordTypeForEdit(
+  recordTypes: RecordCaptureTemplate[],
   item: RecordViewItem,
-  preferredBlockId?: string | null,
+  preferredRecordTypeId?: string | null,
 ) {
-  if (!Array.isArray(blocks) || blocks.length === 0) {
+  if (!Array.isArray(recordTypes) || recordTypes.length === 0) {
     return {
-      blockId: preferredBlockId ?? null,
+      recordTypeId: preferredRecordTypeId ?? null,
       resolvedBy: "fallback" as const,
-      usedFallbackBlock: true,
-      debugReason: "没有可用 block，只能使用 preferredBlockId。",
+      usedFallbackRecordType: true,
+      debugReason: "没有可用记录类型，只能使用 preferredRecordTypeId。",
     };
   }
 
-  const coreBlockHint = readCoreBlockHint(item);
-  if (coreBlockHint) {
-    const block = blocks.find(
+  const recordTypeHint = readRecordTypeHint(item);
+  if (recordTypeHint) {
+    const recordType = recordTypes.find(
       (candidate) =>
-        candidate.id === coreBlockHint ||
-        candidate.recordTypeId === coreBlockHint,
+        candidate.id === recordTypeHint ||
+        candidate.recordTypeId === recordTypeHint,
     );
-    if (block) {
+    if (recordType) {
       return {
-        blockId: block.id,
+        recordTypeId: recordType.id,
         resolvedBy: "exact" as const,
-        usedFallbackBlock: false,
-        debugReason: `根据记录中的记录类型 ${coreBlockHint} 精确还原 block=${block.id}`,
+        usedFallbackRecordType: false,
+        debugReason: `根据记录中的记录类型 ${recordTypeHint} 精确还原 recordType=${recordType.id}`,
       };
     }
   }
 
-  const preferred = preferredBlockId
-    ? blocks.find((block) => block.id === preferredBlockId)
+  const preferred = preferredRecordTypeId
+    ? recordTypes.find((recordType) => recordType.id === preferredRecordTypeId)
     : null;
   if (preferred) {
-    // preferredBlockId 只有在记录类型 匹配时才作为强候选。
+    // preferredRecordTypeId 只有在记录类型 匹配时才作为强候选。
     const typeMatches =
-      item.coreBlock === 'task'
+      item.recordType === 'task'
         ? looksLikeTaskTemplate(preferred)
         : !looksLikeTaskTemplate(preferred);
     if (typeMatches) {
       return {
-        blockId: preferred.id,
+        recordTypeId: preferred.id,
         resolvedBy: "exact" as const,
-        usedFallbackBlock: false,
-        debugReason: `preferredBlockId 类型匹配，使用 ${preferred.id}。`,
+        usedFallbackRecordType: false,
+        debugReason: `preferredRecordTypeId 类型匹配，使用 ${preferred.id}。`,
       };
     }
   }
 
-  // 记录类型 护栏：Task 只在 core.task 模板中推断，其它记录优先匹配自身 coreBlock。
+  // 记录类型 护栏：Task 只在 core.task 模板中推断，其它记录优先匹配自身 recordType。
   const typedCandidates =
-    item.coreBlock === 'task'
-      ? blocks.filter(looksLikeTaskTemplate)
-      : blocks.filter((block) => !looksLikeTaskTemplate(block));
-  const candidatePool = typedCandidates.length > 0 ? typedCandidates : blocks;
+    item.recordType === 'task'
+      ? recordTypes.filter(looksLikeTaskTemplate)
+      : recordTypes.filter((recordType) => !looksLikeTaskTemplate(recordType));
+  const candidatePool = typedCandidates.length > 0 ? typedCandidates : recordTypes;
 
   const withScores = candidatePool
-    .map((block) => ({ block, score: scoreTemplateForItem(block, item) }))
+    .map((recordType) => ({ recordType, score: scoreTemplateForItem(recordType, item) }))
     .sort((left, right) => right.score - left.score);
 
   const top = withScores[0];
   if (top && top.score > 0) {
     return {
-      blockId: top.block.id,
+      recordTypeId: top.recordType.id,
       resolvedBy: "inferred" as const,
-      usedFallbackBlock: false,
-      debugReason: `按记录类型护栏后推断命中 ${top.block.id}，score=${top.score}。`,
+      usedFallbackRecordType: false,
+      debugReason: `按记录类型护栏后推断命中 ${top.recordType.id}，score=${top.score}。`,
     };
   }
 
   return {
-    blockId: null,
+    recordTypeId: null,
     resolvedBy: "fallback" as const,
-    usedFallbackBlock: true,
+    usedFallbackRecordType: true,
     debugReason: "无法精确/推断命中；不使用任何列表第一项或同类第一项猜测。",
   };
 }
@@ -201,28 +194,27 @@ function buildInitialFormData(
 export function buildEditRecordState(
   input: BuildEditStateInput,
 ): PreparedEditRecord {
-  const { settings, item, preferredBlockId } = input;
+  const { settings, item, preferredRecordTypeId } = input;
   const fullSettings = settings;
-  const canonicalBlocks = getTemplateRecordTypes();
-  // Current-only V5: edit discovery uses canonical CoreBlock definitions only.
-  const runtimeBlocks = canonicalBlocks;
-  const resolvedBlock = resolveBlockForEdit(
-    runtimeBlocks,
+  const canonicalRecordTypes = getTemplateRecordTypes();
+  // Current-only: edit discovery uses canonical Record Type definitions only.
+  const resolvedRecordType = resolveRecordTypeForEdit(
+    canonicalRecordTypes,
     item,
-    preferredBlockId,
+    preferredRecordTypeId,
   );
-  recordDebugLog("编辑模板解析", "任务/块模板选择", {
-    coreBlock: item.coreBlock,
+  recordDebugLog("编辑模板解析", "记录类型模板选择", {
+    recordType: item.recordType,
     itemTitle: item.title,
     itemEditableText: item.editableText,
-    preferredBlockId,
-    resolvedBlockId: resolvedBlock.blockId,
-    resolvedBy: resolvedBlock.resolvedBy,
-    reason: resolvedBlock.debugReason,
+    preferredRecordTypeId,
+    resolvedRecordTypeId: resolvedRecordType.recordTypeId,
+    resolvedBy: resolvedRecordType.resolvedBy,
+    reason: resolvedRecordType.debugReason,
   });
   const resolvedDependencies = resolveRecordDependencies({
     settings: fullSettings,
-    blockId: resolvedBlock.blockId,
+    recordTypeId: resolvedRecordType.recordTypeId,
     item,
   });
 
@@ -235,7 +227,7 @@ export function buildEditRecordState(
   // projection or template resolution is temporarily incomplete. The canonical
   // Task body is a persistence fact, so seed it from the Record snapshot instead
   // of allowing QuickInput to render an apparently empty task.
-  if (item.coreBlock === 'task') {
+  if (item.recordType === 'task') {
     const taskBody = String(
       parsedSnapshot.semantic.editableText
       || parsedSnapshot.semantic.content
@@ -263,7 +255,7 @@ export function buildEditRecordState(
     ? buildEditableRecordSnapshot({
         mode: "edit",
         item,
-        blockId: resolvedDependencies.blockId,
+        recordTypeId: resolvedDependencies.recordTypeId,
         fields: initialFormData,
         template: resolvedDependencies.template,
       })
@@ -278,17 +270,17 @@ export function buildEditRecordState(
   }
 
   return {
-    blockId: resolvedDependencies.blockId,
+    recordTypeId: resolvedDependencies.recordTypeId,
     template: resolvedDependencies.template,
     initialFormData,
     snapshot,
     outputPlan: snapshot?.outputPlan,
     persistencePlan: snapshot?.persistencePlan,
     inferred: {
-      usedFallbackBlock: resolvedBlock.usedFallbackBlock,
-      canonicalBlockId: resolvedDependencies.meta.canonicalBlockId,
+      usedFallbackRecordType: resolvedRecordType.usedFallbackRecordType,
+      canonicalRecordTypeId: resolvedDependencies.meta.canonicalRecordTypeId,
       templateSourceType: resolvedDependencies.meta.templateSourceType,
-      resolvedBy: resolvedBlock.resolvedBy,
+      resolvedBy: resolvedRecordType.resolvedBy,
     },
     warnings,
   };

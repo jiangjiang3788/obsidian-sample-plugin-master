@@ -11,8 +11,6 @@ export interface GoalTemplateResolveInput {
   settings: ThinkSettings;
   /** Canonical RecordType id (for example core.habit). */
   recordTypeId?: string | null;
-  /** @deprecated 1.0.64 internal callers should pass recordTypeId. */
-  blockId?: string | null;
   /** Canonical slash path. Goal has no second identity. */
   goalPath?: string | null;
   /** Create flows require an enabled direct Goal x RecordType template. Edit/settings flows may still use the RecordType base. */
@@ -27,7 +25,7 @@ export interface GoalTemplateResolveResult {
   templateSourceType: GoalTemplateSourceType;
   recordTypeId: string | null;
   /** @deprecated alias kept only while non-capture call sites finish renaming. */
-  effectiveBlockId: string | null;
+  effectiveRecordTypeId: string | null;
 }
 
 
@@ -57,20 +55,19 @@ function mergeTemplate(
   patch: Partial<RecordCaptureTemplate> & {
     defaultValues?: Record<string, unknown>;
     requiredFields?: string[];
-    periodPolicy?: unknown;
   },
 ): RecordCaptureTemplate {
   const required = new Set(patch.requiredFields || []);
   const defaultValues = patch.defaultValues || {};
   const isTaskTemplate = String(base.recordTypeId || base.id || '').replace(/^core\./, '') === 'task';
-  const fields = [...(patch.fields ?? base.fields)].map((field) => {
+  const fields = [...(patch.fields ?? base.fields ?? [])].map((field) => {
     const key = field.key || field.label;
     const defaultValue = defaultValues[key] ?? defaultValues[field.label || ''];
     const mergedField = {
       ...field,
       ...(defaultValue !== undefined ? { defaultValue: String(defaultValue) } : null),
       ...(required.has(key) || required.has(field.label || '') ? { required: true } : null),
-    } as any;
+    };
 
     // Domain invariant: Task expected duration is optional. Goal templates may provide a
     // default, but cannot turn it into a persistence requirement for open/unexecuted tasks.
@@ -84,19 +81,18 @@ function mergeTemplate(
     fields,
     targetFile: patch.targetFile ?? base.targetFile,
     appendUnderHeader: patch.appendUnderHeader ?? base.appendUnderHeader,
-    periodPolicy: (patch as any).periodPolicy ?? (base as any).periodPolicy,
-  } as any;
+    periodPolicy: patch.periodPolicy ?? base.periodPolicy,
+  } as RecordCaptureTemplate;
   const policy = resolveTemplatePeriodPolicy(merged);
   if (policy) merged.periodPolicy = policy;
   else {
     delete merged.periodPolicy;
-    delete merged.granularity;
   }
   return merged;
 }
 
 function applyGoalIdentityIcon(template: RecordCaptureTemplate, goal: GoalDefinition | null): RecordCaptureTemplate {
-  const fields = applyGoalIconToCaptureFields(template.fields, goal);
+  const fields = applyGoalIconToCaptureFields(template.fields, goal) ?? template.fields;
   return fields === template.fields ? template : { ...template, fields };
 }
 
@@ -111,7 +107,7 @@ function applyGoalIdentityIcon(template: RecordCaptureTemplate, goal: GoalDefini
 export class GoalTemplateResolver {
   static resolve(input: GoalTemplateResolveInput): GoalTemplateResolveResult {
     const settings = input.settings;
-    const recordTypeId = String(input.recordTypeId || input.blockId || '').trim();
+    const recordTypeId = String(input.recordTypeId || '').trim();
     const goal = findGoal(settings.goalSettings, input.goalPath);
     const baseTemplate = getTemplateRecordTypeById(recordTypeId);
     if (!baseTemplate) {
@@ -122,7 +118,7 @@ export class GoalTemplateResolver {
         templateId: null,
         templateSourceType: null,
         recordTypeId: null,
-        effectiveBlockId: null,
+        effectiveRecordTypeId: null,
       };
     }
 
@@ -138,7 +134,7 @@ export class GoalTemplateResolver {
         templateId: null,
         templateSourceType: null,
         recordTypeId,
-        effectiveBlockId: recordTypeId,
+        effectiveRecordTypeId: recordTypeId,
       };
     }
 
@@ -150,7 +146,7 @@ export class GoalTemplateResolver {
         templateId: direct.id,
         templateSourceType: 'goal-template',
         recordTypeId,
-        effectiveBlockId: recordTypeId,
+        effectiveRecordTypeId: recordTypeId,
       };
     }
 
@@ -162,7 +158,7 @@ export class GoalTemplateResolver {
         templateId: direct.id,
         templateSourceType: 'goal-template',
         recordTypeId,
-        effectiveBlockId: recordTypeId,
+        effectiveRecordTypeId: recordTypeId,
       };
     }
 
@@ -174,14 +170,14 @@ export class GoalTemplateResolver {
         templateId: null,
         templateSourceType: null,
         recordTypeId,
-        effectiveBlockId: recordTypeId,
+        effectiveRecordTypeId: recordTypeId,
       };
     }
 
-    const policy = resolveTemplatePeriodPolicy(baseTemplate as any);
-    const baseResolved = policy
-      ? { ...(baseTemplate as any), periodPolicy: policy }
-      : { ...(baseTemplate as any), periodPolicy: undefined, granularity: undefined };
+    const policy = resolveTemplatePeriodPolicy(baseTemplate);
+    const baseResolved: RecordCaptureTemplate = { ...baseTemplate };
+    if (policy) baseResolved.periodPolicy = policy;
+    else delete baseResolved.periodPolicy;
     const template = applyGoalIdentityIcon(baseResolved, goal);
     return {
       status: 'available',
@@ -190,7 +186,7 @@ export class GoalTemplateResolver {
       templateId: baseTemplate.id,
       templateSourceType: 'record-type',
       recordTypeId,
-      effectiveBlockId: recordTypeId,
+      effectiveRecordTypeId: recordTypeId,
     };
   }
 }

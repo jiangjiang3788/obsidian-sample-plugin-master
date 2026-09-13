@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Domain convergence gate for the Goal × Block MVP.
- * MVP11 policy: migration is not a runtime/plugin responsibility; AI and views use Goal × Block as the primary axis.
- * The plugin must read already-clean data and expose the new Goal × Block model only.
+ * Domain convergence gate for ThinkOS 1.5 Record Type + Goal.
+ * MVP11 policy: migration is not a runtime/plugin responsibility; AI and views use Record Type + Goal as the primary axes.
+ * The plugin must read already-clean data and expose the current Record Type + Goal model only.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -51,7 +51,7 @@ function isAtLeast(version, min) {
 assert(exists('src/core/goal/templates.ts'), 'Missing GoalTemplate domain contract: src/core/goal/templates.ts');
 assert(!exists('src/core/goal/domainConvergence.ts'), 'Runtime data convergence normalizer must be removed; data is migrated offline.');
 assert(!exists('scripts/migration/one-shot-domain-migration.mjs'), 'Command-line migration script must be removed from the plugin package.');
-assert(!exists('src/core/goal/themeOverrideMigration.ts'), 'Theme × Block migration helpers must not ship in runtime source.');
+assert(!exists('src/core/goal/themeOverrideMigration.ts'), 'legacy Theme × Record Type migration helpers must not ship in runtime source.');
 
 const packageJson = parsePackageJson();
 const nodeTypesVersion = packageJson.devDependencies?.['@types/node'] || packageJson.dependencies?.['@types/node'];
@@ -61,7 +61,7 @@ const goalIndex = read('src/core/goal/index.ts');
 assert(goalIndex.includes('getGoalTemplateId'), 'GoalTemplate helpers are not exported from core/goal.');
 assert(goalIndex.includes('isSystemRecordContextField'), 'System context field helper is not exported from core/goal.');
 assert(!goalIndex.includes('domainConvergence'), 'core/goal must not export runtime data convergence.');
-assert(!goalIndex.includes('themeOverrideMigration'), 'core/goal must not export legacy Theme × Block migration helpers.');
+assert(!goalIndex.includes('themeOverrideMigration'), 'core/goal must not export legacy legacy Theme × Record Type migration helpers.');
 
 const publicApi = read('src/core/public.ts');
 assert(publicApi.includes('getGoalTemplateId'), 'GoalTemplate helpers are not exported from core/public.');
@@ -104,22 +104,22 @@ const goalUseCaseText = read('src/app/usecases/goal.usecase.ts');
 assert(goalUseCaseText.includes('compactGoalTemplateForStorage'), 'GoalUseCase must compact Template Variant storage before persisting.');
 
 const resolver = read('src/core/services/GoalTemplateResolver.ts');
-assert(!/TemplateResolver\.resolve\(/.test(resolver), 'GoalTemplateResolver must not fall back to Theme × Block TemplateResolver.');
+assert(!/TemplateResolver\.resolve\(/.test(resolver), 'GoalTemplateResolver must not fall back to legacy Theme × Record Type TemplateResolver.');
 assert(!/inputSettings\?\.overrides/.test(resolver), 'GoalTemplateResolver must not read inputSettings.overrides at runtime.');
 
 
 const aiSnapshot = read('src/core/ai/AiConfigSnapshot.ts');
 assert(aiSnapshot.includes('isSystemRecordContextField'), 'AI snapshot must hide system context fields from model-visible fields.');
-assert(aiSnapshot.includes('hasEnabledBlockMatch'), 'AI snapshot must ignore stale enabledBlockIds instead of returning an empty Block snapshot.');
+assert(aiSnapshot.includes('hasEnabledRecordTypeMatch'), 'AI snapshot must ignore stale enabledRecordTypeIds instead of returning an empty Record Type snapshot.');
 const aiParser = read('src/core/ai/AiNaturalLanguageRecordParser.ts');
 assertBalancedQuotedArrayLines('src/core/ai/AiNaturalLanguageRecordParser.ts', 'AI parser prompt');
-assert(aiParser.includes('normalizeParsedBatch'), 'AI parser must normalize target.goal/block/preset after model output.');
+assert(aiParser.includes('normalizeParsedBatch'), 'AI parser must normalize target.goal/recordType/preset after model output.');
 assert(aiParser.includes('cleanAiFieldValues'), 'AI parser must remove system context fields from AI fieldValues.');
 assert(aiParser.includes('goalTemplateId'), 'AI parser prompt/normalizer must support goalTemplateId as stable Template Variant id.');
 assert(!aiParser.includes('categoryKey is REQUIRED'), 'AI parser prompt must not make legacy categoryKey the required primary axis.');
-assert(aiParser.includes('blockId is REQUIRED'), 'AI parser prompt must make blockId the required primary axis.');
+assert(aiParser.includes('recordTypeId is REQUIRED'), 'AI parser prompt must make recordTypeId the required primary axis.');
 const aiScope = read('src/features/settings/tabs/AiScopeSection.tsx');
-assert(aiScope.includes('清理旧 Block ID'), 'AI settings must expose stale Block ID cleanup for migrated data.');
+assert(aiScope.includes('清理旧记录类型 ID'), 'AI settings must expose stale Record Type ID cleanup for migrated data.');
 const quickInputContainer = read('src/features/quickinput/editor/QuickInputEditorContainer.tsx');
 assert(!quickInputContainer.includes('settings.overrides'), 'QuickInput must not use Theme × Block overrides to disable themes.');
 
@@ -130,7 +130,7 @@ assert(quickFieldSemantics.includes('isSystemRecordContextField'), 'QuickInput f
 const viewDomain = read('src/core/view-config/domainFields.ts');
 assert(viewDomain.includes('normalizeViewFieldKey'), 'View domain field policy must normalize legacy view fields.');
 assert(viewDomain.includes('normalizeViewConfigDomain'), 'View domain field policy must normalize legacy viewConfig axes.');
-assert(viewDomain.includes("记录类型: 'coreBlock'"), 'View field labels must normalize 记录类型 to canonical coreBlock.');
+assert(viewDomain.includes("记录类型: 'recordType'"), 'View field labels must normalize 记录类型 to canonical recordType.');
 assert(!viewDomain.includes('taskStatus'), 'View domain policy must not restore legacy taskStatus; Task filters use canonical status.');
 const fieldRegistry = read('src/core/fields/FieldRegistry.ts');
 assert(fieldRegistry.includes("status: text({ key: 'status'"), 'Field registry must expose canonical status for Task views.');
@@ -155,10 +155,66 @@ function walk(dir) {
 }
 walk('src');
 for (const file of srcFiles) {
-  if (file === 'src/core/goal/period.ts' || file === 'src/core/types/schema.ts' || file === 'src/core/goal/types.ts') continue;
+  const canonicalFile = file.replace(/\\/g, '/');
+  if (canonicalFile === 'src/core/goal/period.ts' || canonicalFile === 'src/core/types/schema.ts' || canonicalFile === 'src/core/goal/types.ts') continue;
   const text = read(file);
   if (/granularity\s*:\s*['"]day['"]/.test(text)) failures.push(`${file}: must not persist default granularity: day`);
 }
+
+// 1.5 hard cut: Record identity is recordType; Category/evidence are retired runtime semantics.
+const schemaTypes = read('src/core/records/schema/types.ts');
+const schemaDefinitions = read('src/core/records/schema/definitions.ts');
+const presentation = read('src/core/recordTypes/presentation.ts');
+assert(schemaTypes.includes("| 'feeling'") && schemaTypes.includes("| 'event'"), 'RecordType must include feeling and event.');
+assert(!schemaTypes.includes("| 'evidence'"), 'evidence must not remain a canonical RecordType.');
+assert(schemaDefinitions.includes('FEELING_DEFINITION') && schemaDefinitions.includes('EVENT_DEFINITION'), 'feeling/event schema definitions must exist.');
+assert(presentation.includes("'feeling'") && presentation.includes("'event'"), 'presentation order must include feeling/event.');
+assert(!presentation.includes("'evidence'"), 'presentation order must not retain evidence.');
+
+const retiredRuntimePatterns = [/\bcoreBlock\b/, /\bcategoryKey\b/, /\bcategoryColors\b/, /\bbaseCategory\b/, /\bleafCategory\b/, /\bcategoryPath\b/];
+for (const file of srcFiles) {
+  const canonicalFile = file.replace(/\\/g, '/');
+  if (canonicalFile === 'src/core/settings/currentSettingsSchema.ts') continue; // explicit one-shot retirement whitelist
+  const text = read(file);
+  for (const pattern of retiredRuntimePatterns) {
+    if (pattern.test(text)) failures.push(`${file}: retired Record Category/coreBlock semantic remains (${pattern})`);
+  }
+  if (/core\.evidence/.test(text)) failures.push(`${file}: retired core.evidence id remains`);
+}
+const timelineTypes = read('src/core/config/views/types.ts');
+const timelineDefaults = read('src/core/config/views/defaults.ts');
+const timelineAggregation = read('src/core/utils/timelineAggregation.ts');
+assert(!/categories\s*:/.test(timelineDefaults.match(/TIMELINE_VIEW_DEFAULT_CONFIG[\s\S]*?};/)?.[0] || ''), 'Timeline default config must not own categories.');
+assert(!timelineTypes.includes('progressOrder: string[]'), 'Timeline config must not own progressOrder.');
+assert(!timelineAggregation.includes('mapTaskToCategory'), 'Timeline must not map file names to categories.');
+assert(timelineAggregation.includes('getTimelineGoalKey'), 'Timeline aggregation must group by canonical Goal path.');
+const quickInput = read('src/features/quickinput/editor/QuickInputEditorContainer.tsx');
+assert(quickInput.includes('allowRecordTypeSwitch'), 'Quick Input must expose Record Type switch semantics.');
+assert(!quickInput.includes('allowBlockSwitch'), 'Quick Input must not retain Block switch semantics.');
+
+const recordTypeCss = read('src/styles/components/record-type.css');
+const whiteboardCss = read('src/styles/features/whiteboard.css');
+assert(recordTypeCss.includes('[data-record-type="task"]') && recordTypeCss.includes('[data-record-type="feeling"]'), 'global Record Type CSS owner must map canonical type accents.');
+const consumerAccentAssignments = whiteboardCss.match(/--think-record-type-accent\s*:/g) || [];
+assert(consumerAccentAssignments.length === 1 && whiteboardCss.includes('.think-whiteboard-card--missing'), 'Whiteboard consumer CSS must not reset canonical Record Type accent; only explicit missing/error fallback may assign it.');
+
+const recordTypePresentation = read('src/core/recordTypes/presentation.ts');
+const presentationOrderSource = recordTypePresentation.match(/RECORD_TYPE_PRESENTATION_ORDER\s*=\s*\[([\s\S]*?)\]\s*as const/)?.[1] || '';
+assert(!presentationOrderSource.includes('task-session'), 'user-facing Record Type presentation order must not expose task-session.');
+assert(!presentationOrderSource.includes('task-series'), 'user-facing Record Type presentation order must not expose task-series.');
+assert(recordTypePresentation.includes("recordType === 'task-session' || recordType === 'task-series'"), 'internal Task entities must normalize to the Task presentation identity.');
+assert(recordTypeCss.includes('[data-record-type="task-session"] { --think-record-type-accent: var(--think-record-type-task); }'), 'TaskSession must inherit the Task color token.');
+assert(recordTypeCss.includes('[data-record-type="task-series"] { --think-record-type-accent: var(--think-record-type-task); }'), 'TaskSeries must inherit the Task color token.');
+const colorRuntime = read('src/app/presentation/RecordTypeColorRuntime.ts');
+assert(colorRuntime.includes("think-os-record-type-colors-runtime") && colorRuntime.includes('buildRecordTypeColorCssVariables'), 'Record Type overrides must have one app-level runtime style owner.');
+const currentSettingsSchema = read('src/core/settings/currentSettingsSchema.ts');
+assert(currentSettingsSchema.includes('normalizeRecordTypeColorOverrides'), 'settings loader/persistence must whitelist Record Type color overrides.');
+const whiteboardSourcePanel = read('src/features/whiteboard/WhiteboardRecordSourcePanel.tsx');
+assert(!whiteboardSourcePanel.includes('>{presentation.typeLabel}</span>'), 'Whiteboard source rows must not prefix primary text with a Record Type label.');
+const timelineTaskBlock = read('src/features/views/runtime/components/timeline/TimelineTaskBlock.tsx');
+assert(timelineTaskBlock.includes("originActivation: 'modifier-only'") && timelineTaskBlock.includes('id: block.taskRecordId'), 'Timeline normal click must edit Task immediately while modifier click uses origin semantics.');
+assert(timelineTaskBlock.includes('onUpdateTimelineRange({') && timelineTaskBlock.includes('target: block.timelineEditTarget'), 'Timeline drag must persist through the semantic timeline mutation target.');
+
 
 if (failures.length) {
   console.error('Domain convergence gate failed:');

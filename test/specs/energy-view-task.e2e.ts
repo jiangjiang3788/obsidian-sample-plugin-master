@@ -33,7 +33,7 @@ describe('Think OS 真机 UI：精力视图与任务联动', () => {
       await manager.useCases.goal.addGoal({ path: fixture.goal });
       await manager.useCases.goal.upsertGoalTemplateDraft({ goalPath: fixture.goal, recordTypeId: 'core.task', enabled: true, targetFile: 'E2E/EnergyTasks.md' });
       const taskResult = await manager.useCases.recordInput.submitCreateRecord({
-        blockId: 'core.task', source: 'e2e',
+        recordTypeId: 'core.task', source: 'e2e',
         formData: { goalPath: fixture.goal, 目标: fixture.goal, 任务内容: 'V6 精力推荐任务', 脑力要求: 'medium', 体力要求: 'low', 预计时长: 25, 可用场景: ['work'] },
         context: { goalPath: fixture.goal, 目标: fixture.goal },
       });

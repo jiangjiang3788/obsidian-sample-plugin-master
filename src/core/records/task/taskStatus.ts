@@ -20,15 +20,15 @@ export const TASK_STATUS_PRESENTATION: Record<TaskStatus, TaskStatusPresentation
   skipped: { status: 'skipped', label: '已跳过', emoji: '⏭️', className: 'skipped' },
 };
 
-type TaskStatusCarrier = { coreBlock?: string; status?: string };
+type TaskStatusCarrier = { recordType?: string; status?: string };
 type IdentifiedTaskStatusCarrier = TaskStatusCarrier & { id: string };
 
-export function isTaskRecord(item: Pick<TaskStatusCarrier, 'coreBlock'> | null | undefined): boolean {
-  return item?.coreBlock === 'task';
+export function isTaskRecord(item: Pick<TaskStatusCarrier, 'recordType'> | null | undefined): boolean {
+  return item?.recordType === 'task';
 }
 
-export function isTaskSeriesRecord(item: Pick<TaskStatusCarrier, 'coreBlock'> | null | undefined): boolean {
-  return item?.coreBlock === 'task-series';
+export function isTaskSeriesRecord(item: Pick<TaskStatusCarrier, 'recordType'> | null | undefined): boolean {
+  return item?.recordType === 'task-series';
 }
 
 export function normalizeTaskStatus(value: unknown): TaskStatus | null {

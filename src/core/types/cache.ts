@@ -3,7 +3,7 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 
 export interface CachedItem {
   id: string;
-  coreBlock?: string;
+  recordType?: RecordViewItem['recordType'];
   status?: string;
   filePath: string;
   startLine?: number;
@@ -14,7 +14,6 @@ export interface CachedItem {
   rawSource?: string;
   tags: string[];
   goalPath?: string;
-  categoryKey: string;
   recurrenceInfo?: RecordViewItem['recurrenceInfo'];
   priority?: RecordViewItem['priority'];
   importance?: RecordViewItem['importance'];
@@ -83,14 +82,14 @@ export interface CacheV1 {
   };
 }
 
-// v16: persist Task importance/urgency so warm and cold scans classify quadrants identically.
+// v17: remove retired Category projection; v16 persisted Task importance/urgency.
 // v15 persisted scanner integrity diagnostics; v14 added Task recommendation metadata.
-export const CURRENT_CACHE_SCHEMA_VERSION = 16;
+export const CURRENT_CACHE_SCHEMA_VERSION = 17;
 
 export function toCachedItem(it: RecordViewItem): CachedItem {
   return {
     id: it.id,
-    coreBlock: it.coreBlock,
+    recordType: it.recordType,
     status: it.status,
     filePath: it.file?.path || it.source?.path || '',
     startLine: it.source?.startLine ?? it.file?.line,
@@ -101,7 +100,6 @@ export function toCachedItem(it: RecordViewItem): CachedItem {
     rawSource: it.rawSource,
     tags: [...(it.tags || [])],
     goalPath: it.goalPath,
-    categoryKey: it.categoryKey,
     recurrenceInfo: it.recurrenceInfo,
     priority: it.priority,
     importance: it.importance,
@@ -159,14 +157,13 @@ export function fromCachedItem(c: CachedItem): RecordViewItem {
   const folder = c.filePath.split('/').slice(0, -1).pop() || '';
   const it: RecordViewItem & Record<string, any> = {
     id: c.id,
-    coreBlock: c.coreBlock || '',
+    recordType: c.recordType || 'thought',
     status: c.status,
     title: c.title || '',
     content: c.content || '',
     rawSource: c.rawSource,
     tags: [...(c.tags || [])],
     goalPath: c.goalPath,
-    categoryKey: c.categoryKey,
     recurrenceInfo: c.recurrenceInfo,
     priority: c.priority,
     importance: c.importance,

@@ -28,7 +28,7 @@ export interface ParsedRecordMetadata {
   createdAt?: string;
   tags: string[];
   goalPath?: string;
-  coreBlock?: string;
+  recordType?: string;
   recordSubtype?: string;
   extra: Record<string, string | number | boolean>;
   icon?: string;
@@ -65,7 +65,7 @@ export interface ParsedRecordMetadata {
 }
 export interface RecordDocument {
   recordId: string;
-  coreBlock: string;
+  recordType: string;
   fields?: Record<string, unknown>;
 }
 
@@ -140,7 +140,7 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
   let icon: string | undefined;
   let rating: number | undefined;
   let image: string | undefined;
-  let coreBlock: string | undefined;
+  let recordType: string | undefined;
   let recordSubtype: string | undefined;
   let recordId: string | undefined;
   let status: string | undefined;
@@ -186,13 +186,13 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
 
   // Discover the Record kind from the strict current-only envelope first.
   // Only ASCII double-colon is Record metadata; single-colon prose is never a field.
-  const envelopeCoreBlock = contentLines
+  const envelopeRecordType = contentLines
     .map((rawLine) => rawLine.trim().match(/^([^:\r\n]{1,64})::\s*(.*)$/))
     .find((match) => match && normalizeMetaKey(match[1]) === '记录类型')?.[2]?.trim();
-  if (envelopeCoreBlock) coreBlock = envelopeCoreBlock;
-  const recordSchema = getRecordSchemaDefinition(coreBlock);
+  if (envelopeRecordType) recordType = envelopeRecordType;
+  const recordSchema = getRecordSchemaDefinition(recordType);
   const supportsCustomFields = Boolean(recordSchema?.capabilities.customFields);
-  const supportsBody = Boolean(recordSchema && getRecordFieldContract(recordSchema.coreBlock, '内容'));
+  const supportsBody = Boolean(recordSchema && getRecordFieldContract(recordSchema.recordType, '内容'));
 
   for (const rawLine of contentLines) {
     if (contentStarted) {
@@ -226,25 +226,25 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
         else if (key === '系列开始日期') seriesStartDate = parseDate(value);
         else if (key === '当前任务id') currentTaskId = value.trim() || undefined;
         else if (key === '滚动策略') { if (value.trim().toLowerCase() === 'carry') rolloverPolicy = 'carry'; }
-        else if (coreBlock === 'task-session' && key === '任务id') taskId = value.trim() || undefined;
-        else if (coreBlock === 'task-session' && key === '开始于') sessionStartedAt = normalizeStoredDateTime(value);
-        else if (coreBlock === 'task-session' && key === '结束于') sessionEndedAt = normalizeStoredDateTime(value);
-        else if (coreBlock === 'task-session' && key === '时长') sessionDurationMinutes = decodeMarkdownNumber(value);
-        else if (coreBlock === 'task-session' && key === '结果') {
+        else if (recordType === 'task-session' && key === '任务id') taskId = value.trim() || undefined;
+        else if (recordType === 'task-session' && key === '开始于') sessionStartedAt = normalizeStoredDateTime(value);
+        else if (recordType === 'task-session' && key === '结束于') sessionEndedAt = normalizeStoredDateTime(value);
+        else if (recordType === 'task-session' && key === '时长') sessionDurationMinutes = decodeMarkdownNumber(value);
+        else if (recordType === 'task-session' && key === '结果') {
           const result = value.trim().toLowerCase();
           if (['work-block-ended','task-completed'].includes(result)) sessionResult = result as ParsedRecordMetadata['sessionResult'];
         }
-        else if (coreBlock === 'task-session' && key === '来源') {
+        else if (recordType === 'task-session' && key === '来源') {
           const source = value.trim().toLowerCase();
           if (['timer','energy-view','timeline','unknown'].includes(source)) sessionSource = source as ParsedRecordMetadata['sessionSource'];
         }
-        else if (coreBlock === 'task-session' && key === '建议时长') suggestedDurationMinutes = decodeMarkdownNumber(value);
-        else if (coreBlock === 'task-session' && key === '开始精力记录id') startEnergyRecordId = value.trim() || undefined;
-        else if (coreBlock === 'task-session' && key === '结束精力记录id') endEnergyRecordId = value.trim() || undefined;
-        else if (coreBlock === 'task-session' && key === '精力变化') energyDelta = decodeMarkdownNumber(value);
-        else if (coreBlock === 'task-session' && key === '脑力变化') brainDelta = decodeMarkdownNumber(value);
-        else if (coreBlock === 'task-session' && key === '体力变化') physicalDelta = decodeMarkdownNumber(value);
-        else if (key === '记录类型') coreBlock = value.trim();
+        else if (recordType === 'task-session' && key === '建议时长') suggestedDurationMinutes = decodeMarkdownNumber(value);
+        else if (recordType === 'task-session' && key === '开始精力记录id') startEnergyRecordId = value.trim() || undefined;
+        else if (recordType === 'task-session' && key === '结束精力记录id') endEnergyRecordId = value.trim() || undefined;
+        else if (recordType === 'task-session' && key === '精力变化') energyDelta = decodeMarkdownNumber(value);
+        else if (recordType === 'task-session' && key === '脑力变化') brainDelta = decodeMarkdownNumber(value);
+        else if (recordType === 'task-session' && key === '体力变化') physicalDelta = decodeMarkdownNumber(value);
+        else if (key === '记录类型') recordType = value.trim();
         else if (key === '状态') status = value.trim().toLowerCase();
         else if (key === '目标') goalPath = decodeMarkdownString(value, FIELD_CODEC_PRESETS.goalPath);
         else if (key === '日期') date = parseDate(value);
@@ -315,7 +315,7 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
     recordId, title: buildTitle(content, finalTags), content: content.trim(),
     status, date, scheduledAt, startAt, endAt, dueAt, scheduledDate, startDate, dueDate,
     completedAt, cancelledAt, skippedAt, createdAt, tags: finalTags, goalPath,
-    coreBlock, recordSubtype, extra, icon, rating, image, priority, importance, urgency, expectedDurationMinutes, energyDemand, brainDemand, physicalDemand, availabilityContexts, recoveryIntent, seriesId,
+    recordType, recordSubtype, extra, icon, rating, image, priority, importance, urgency, expectedDurationMinutes, energyDemand, brainDemand, physicalDemand, availabilityContexts, recoveryIntent, seriesId,
     recurrenceUnit, recurrenceInterval, recurrenceAnchor, seriesStartDate, currentTaskId, rolloverPolicy,
     taskId, sessionStartedAt, sessionEndedAt, sessionDurationMinutes, sessionResult, sessionSource,
     suggestedDurationMinutes, startEnergyRecordId, endEnergyRecordId, energyDelta, brainDelta, physicalDelta,
@@ -369,10 +369,10 @@ function emitBody(lines: string[], body: string): void {
 /** Canonical Record encoder. Custom metadata is emitted before an optional terminal body. */
 export function encodeRecordBlock(document: RecordDocument): string {
   const fields = document.fields || {};
-  const lines = ['<!-- start -->', `记录ID:: ${document.recordId}`, `记录类型:: ${document.coreBlock}`];
+  const lines = ['<!-- start -->', `记录ID:: ${document.recordId}`, `记录类型:: ${document.recordType}`];
   const emitted = new Set<string>();
 
-  if (document.coreBlock === 'task') {
+  if (document.recordType === 'task') {
     for (const [label, keys] of TASK_FIELD_ORDER) {
       let value = firstValue(fields, keys);
       if (label === '状态' && !value) value = 'open';
@@ -381,17 +381,17 @@ export function encodeRecordBlock(document: RecordDocument): string {
       if (value) { lines.push(`${label}:: ${value}`); keys.forEach(key => emitted.add(key)); }
     }
     for (const [key, raw] of Object.entries(fields)) {
-      if (emitted.has(key) || BODY_FIELD_ALIASES.includes(key) || ['记录ID','recordId','id','记录类型','coreBlock'].includes(key)) continue;
+      if (emitted.has(key) || BODY_FIELD_ALIASES.includes(key) || ['记录ID','recordId','id','记录类型','recordType'].includes(key)) continue;
       const value = markdownScalar(raw);
       if (value) lines.push(`${key}:: ${value}`);
     }
     emitBody(lines, bodyValue(fields));
-  } else if (document.coreBlock === 'task-session') {
+  } else if (document.recordType === 'task-session') {
     for (const [label, keys] of TASK_SESSION_FIELD_ORDER) {
       const value = firstValue(fields, keys);
       if (value) lines.push(`${label}:: ${value}`);
     }
-  } else if (document.coreBlock === 'task-series') {
+  } else if (document.recordType === 'task-series') {
     for (const [label, keys] of TASK_SERIES_FIELD_ORDER) {
       let value = firstValue(fields, keys);
       if (label === '状态' && !value) value = 'active';
@@ -402,11 +402,11 @@ export function encodeRecordBlock(document: RecordDocument): string {
     }
     emitBody(lines, bodyValue(fields));
   } else {
-    const schema = getRecordSchemaDefinition(document.coreBlock);
-    const supportsBody = Boolean(schema && getRecordFieldContract(schema.coreBlock, '内容'));
+    const schema = getRecordSchemaDefinition(document.recordType);
+    const supportsBody = Boolean(schema && getRecordFieldContract(schema.recordType, '内容'));
     for (const [key, raw] of Object.entries(fields)) {
       if (supportsBody && BODY_FIELD_ALIASES.includes(key)) continue;
-      if (['记录ID','recordId','id','记录类型','coreBlock'].includes(key)) continue;
+      if (['记录ID','recordId','id','记录类型','recordType'].includes(key)) continue;
       const value = markdownScalar(raw);
       if (value) lines.push(`${key}:: ${value}`);
     }
@@ -421,18 +421,18 @@ export function encodeRecordBlock(document: RecordDocument): string {
 export function encodeRecordDraft(input: { recordId: string; draft: RecordDraft }): string {
   return encodeRecordBlock({
     recordId: input.recordId,
-    coreBlock: input.draft.coreBlock,
+    recordType: input.draft.recordType,
     fields: input.draft.fields,
   });
 }
 
 /** Adds/replaces the universal envelope in an existing Record Block. */
-export function ensureRecordEnvelope(markdown: string, input: { recordId: string; coreBlock: string }): string {
+export function ensureRecordEnvelope(markdown: string, input: { recordId: string; recordType: string }): string {
   const trimmed = markdown.trim();
   const lines = trimmed.split(/\r?\n/);
   if (lines[0]?.trim() !== '<!-- start -->' || lines[lines.length - 1]?.trim() !== '<!-- end -->') {
     throw new Error('只允许写入 Markdown Record Block。');
   }
   const body = lines.slice(1, -1).filter(line => !/^\s*(?:记录ID|记录类型)\s*::/.test(line));
-  return ['<!-- start -->', `记录ID:: ${input.recordId}`, `记录类型:: ${input.coreBlock}`, ...body, '<!-- end -->'].join('\n');
+  return ['<!-- start -->', `记录ID:: ${input.recordId}`, `记录类型:: ${input.recordType}`, ...body, '<!-- end -->'].join('\n');
 }

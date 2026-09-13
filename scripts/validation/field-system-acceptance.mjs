@@ -19,7 +19,15 @@ const FORBIDDEN_REMOVED_FIELDS = new Map([
   ['主题', 'Theme 已删除；归属请使用目标'],
   ['pintu', '使用 image / 图片'],
   ['tag', '使用 tags / 标签'],
-  ['category', '使用 categoryKey / 分类'],
+  ['category', 'Category 已退休；记录身份使用 recordType，归属使用 goalPath'],
+  ['categoryKey', 'Category 已退休；记录身份使用 recordType，归属使用 goalPath'],
+  ['categoryPath', 'Category 已退休；删除该字段'],
+  ['baseCategory', 'Category 已退休；删除该字段'],
+  ['rootCategory', 'Category 已退休；删除该字段'],
+  ['leafCategory', 'Category 已退休；删除该字段'],
+  ['分类', 'Category 已退休；删除该字段'],
+  ['分类路径', 'Category 已退休；删除该字段'],
+  ['coreBlock', '使用 recordType'],
 ]);
 
 const POLLUTED_EXTRA_ALIASES = new Set(['extra.正文', 'extra.内容', 'extra.任务内容', 'extra.记录内容', 'extra.editableText']);
@@ -129,24 +137,12 @@ function checkFieldDefinition(field, where, issues) {
       '建议改为 multiTag',
     );
   }
-  if ((key === '分类' || key === 'categoryKey' || key === 'categoryPath') && type === 'text') {
-    addIssue(
-      issues,
-      'warn',
-      'category-field-as-text',
-      '分类字段仍是普通文本类型',
-      where,
-      '建议改为 path',
-    );
-  }
+
 }
 
-function checkBlock(block, where, issues) {
-  if (!block?.id) addIssue(issues, 'error', 'block-id-missing', 'Block 缺少 id', where, '补齐 id');
-  if (!String(block?.name ?? '').trim()) addIssue(issues, 'error', 'block-name-missing', 'Block 缺少名称', where, '填写 Block 名称');
-  if (!String(block?.categoryKey ?? '').trim()) addIssue(issues, 'warn', 'block-category-missing', 'Block 缺少默认分类 categoryKey', where, '建议填写默认分类');
-  checkTemplate(block?.appendUnderHeader, `${where}.appendUnderHeader`, issues);
-  (block?.fields || []).forEach((field, index) => checkFieldDefinition(field, `${where}.fields[${index}]`, issues));
+function checkLegacyInputSettings(data, issues) {
+  if (!data?.inputSettings) return;
+  addIssue(issues, 'error', 'legacy-input-settings', 'data.json 仍持久化旧 inputSettings/Block Record Type 定义', 'inputSettings', '运行 1.5.0 离线迁移；Record Type 定义由代码 Registry 提供');
 }
 
 function checkViewInstance(view, index, issues) {
@@ -162,7 +158,8 @@ function checkViewInstance(view, index, issues) {
 function analyze(data) {
   const issues = [];
   (data.viewInstances || []).forEach((view, index) => checkViewInstance(view, index, issues));
-  (data.inputSettings?.blocks || []).forEach((block, index) => checkBlock(block, `inputSettings.blocks[${index}](${block?.name || block?.id || ''})`, issues));
+  checkLegacyInputSettings(data, issues);
+  if ('categoryColors' in data) addIssue(issues, 'error', 'legacy-category-colors', 'data.json 仍包含已退休 categoryColors', 'categoryColors', '运行 1.5.0 离线迁移');
   return issues;
 }
 

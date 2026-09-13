@@ -69,7 +69,6 @@
 }
 
 .think-os .think-whiteboard-source__row {
-  --think-record-type-accent: var(--think-record-type-neutral);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -247,7 +246,6 @@
 }
 
 .think-os .think-whiteboard-card {
-  --think-record-type-accent: var(--think-record-type-neutral);
   position: absolute;
   display: flex;
   flex-direction: column;

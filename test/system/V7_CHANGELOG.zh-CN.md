@@ -20,5 +20,5 @@
 
 ## 语义校准
 
-- F113 不再追踪未注册的 `EnergySettingsSection`，改为真实用户入口 `BlockManager → EnergyRecordTypeSettings`。
+- F113 不再追踪未注册的 `EnergySettingsSection`，改为真实用户入口 `RecordTypeManager → EnergyRecordTypeSettings`。
 - F131 明确为“设备 profile / 响应式行为”，不冒充 iOS/Android 原生 Obsidian App 实机认证。

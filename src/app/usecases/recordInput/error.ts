@@ -27,7 +27,8 @@ export function mapSubmitError(
   warnings: RecordSubmitResult['warnings'] = [],
   options: MapSubmitErrorOptions = {},
 ): RecordSubmitResult {
-  const name = (error as any)?.name;
+  const errorLike = (typeof error === 'object' && error !== null ? error : {}) as { name?: unknown; conflictCode?: unknown; code?: unknown };
+  const name = errorLike.name;
   const message = error instanceof Error ? error.message : String(error);
 
   if (name === 'AbortError' || name === 'CancelledError') {
@@ -41,9 +42,9 @@ export function mapSubmitError(
     );
   }
 
-  const errorCode = typeof (error as any)?.conflictCode === 'string'
-    ? (error as any).conflictCode
-    : (typeof (error as any)?.code === 'string' ? (error as any).code : undefined);
+  const errorCode = typeof errorLike.conflictCode === 'string'
+    ? errorLike.conflictCode
+    : (typeof errorLike.code === 'string' ? errorLike.code : undefined);
   if (errorCode && /^record_/.test(errorCode)) {
     return applyRecoveryRefresh(
       buildConflictResult(operation, message, toArray(warnings), errorCode),

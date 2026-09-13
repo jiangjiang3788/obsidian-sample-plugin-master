@@ -146,11 +146,11 @@ export function splitGoalsByRoot(goals: GoalDefinition[]): GoalDefinition[][] {
   return groups;
 }
 
-export function buildNextActiveBlockIds(previous: Set<string>, blockId: string, coreBlocks: TemplateRecordTypeDefinition[]): Set<string> {
+export function buildNextActiveRecordTypeIds(previous: Set<string>, recordTypeId: string, recordTypes: TemplateRecordTypeDefinition[]): Set<string> {
   const next = new Set(previous);
-  if (next.size === 0) coreBlocks.forEach((block) => next.add(block.id));
-  if (next.has(blockId) && next.size > 1) next.delete(blockId);
-  else next.add(blockId);
+  if (next.size === 0) recordTypes.forEach((block) => next.add(block.id));
+  if (next.has(recordTypeId) && next.size > 1) next.delete(recordTypeId);
+  else next.add(recordTypeId);
   return next;
 }
 

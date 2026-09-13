@@ -14,8 +14,7 @@ function item(id: string, overrides: Partial<RecordViewItem>): RecordViewItem {
     tags: [],
     created: 0,
     modified: 0,
-    coreBlock: 'thought',
-    categoryKey: '思考',
+    recordType: 'thought',
     extra: {},
     ...overrides,
   } as RecordViewItem;
@@ -24,16 +23,16 @@ function item(id: string, overrides: Partial<RecordViewItem>): RecordViewItem {
 describe('AI 检索索引、过滤与结果映射组合链路', () => {
   it('从 DataStore 取数建索引后，同时执行全文、Goal 子树和记录类型过滤', () => {
     const rows = [
-      item('task-child', { title: '测试体系任务', content: '继续完善', goalPath: '工作/Think OS/测试', coreBlock: 'task', categoryKey: '任务' }),
-      item('thought-child', { title: '测试体系想法', content: '继续完善', goalPath: '工作/Think OS/测试', coreBlock: 'thought' }),
-      item('task-other', { title: '测试体系任务', content: '继续完善', goalPath: '生活/健康', coreBlock: 'task', categoryKey: '任务' }),
+      item('task-child', { title: '测试体系任务', content: '继续完善', goalPath: '工作/Think OS/测试', recordType: 'task' }),
+      item('thought-child', { title: '测试体系想法', content: '继续完善', goalPath: '工作/Think OS/测试', recordType: 'thought' }),
+      item('task-other', { title: '测试体系任务', content: '继续完善', goalPath: '生活/健康', recordType: 'task' }),
     ];
     const dataStore = { queryItems: jest.fn(() => rows) };
     const service = new RetrievalService(dataStore as any);
 
     const result = service.search('测试体系', {
       goalPaths: ['工作/Think OS'],
-      coreBlocks: ['task'],
+      recordTypes: ['task'],
       limit: 20,
     });
 

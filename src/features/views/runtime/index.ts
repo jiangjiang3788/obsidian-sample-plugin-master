@@ -16,7 +16,6 @@ export { ExcelView } from './excel-view/ExcelView';
 
 // 共享组件
 export { ViewToolbar } from './ViewToolbar';
-export { CategoryFilter } from './CategoryFilter';
 
 // 工具函数
 export * from './timeline-parser';

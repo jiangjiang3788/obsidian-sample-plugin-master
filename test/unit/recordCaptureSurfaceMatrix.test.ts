@@ -46,12 +46,17 @@ const EXPECTED_CAPTURE = {
     targetFile: '01/目标总结.md',
     fields: ['core.field.content', 'core.field.date', 'core.field.icon'],
   },
+  'core.feeling': {
+    captureMode: 'template',
+    targetFile: '01/目标感受.md',
+    fields: ['core.field.content', 'core.field.date', 'core.field.icon'],
+  },
   'core.thought': {
     captureMode: 'template',
     targetFile: '01/目标思考.md',
     fields: ['core.field.content', 'core.field.date', 'core.field.icon'],
   },
-  'core.evidence': {
+  'core.event': {
     captureMode: 'template',
     targetFile: '01/目标事件.md',
     fields: ['core.field.content', 'core.field.date', 'core.field.icon'],
@@ -77,7 +82,8 @@ const EXPECTED_CAPTURE_ORDER = [
   'core.task',
   'core.energy',
   'core.habit',
-  'core.evidence',
+  'core.event',
+  'core.feeling',
   'core.thought',
   'core.review',
   'core.plan',
@@ -113,7 +119,7 @@ describe('Record capture surface matrix', () => {
     const byId = new Map(DEFAULT_RECORD_TYPES.map((recordType) => [recordType.id, recordType]));
     expect(byId.get('core.plan')?.periodPolicy).toEqual({ enabled: true, granularity: 'week' });
     expect(byId.get('core.review')?.periodPolicy).toEqual({ enabled: true, granularity: 'week' });
-    for (const id of ['core.habit', 'core.thought', 'core.evidence', 'core.blocker', 'core.milestone']) {
+    for (const id of ['core.habit', 'core.event', 'core.feeling', 'core.thought', 'core.blocker', 'core.milestone']) {
       expect(byId.get(id)?.periodPolicy).toBeUndefined();
     }
   });

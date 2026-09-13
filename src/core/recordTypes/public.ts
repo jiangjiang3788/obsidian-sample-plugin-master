@@ -22,4 +22,11 @@ export {
   normalizeRecordTypePresentationKey,
   sortRecordTypesByPresentation,
 } from './presentation';
-export type { CanonicalRecordTypePresentationKey, RecordTypePresentation } from './presentation';
+export type { CanonicalRecordTypePresentationKey, RecordTypePresentation, UserVisibleRecordType } from './presentation';
+export {
+  DEFAULT_RECORD_TYPE_COLOR_HEX,
+  buildRecordTypeColorCssVariables,
+  normalizeRecordTypeColorHex,
+  normalizeRecordTypeColorOverrides,
+} from './color';
+export type { RecordTypeColorOverrides } from './color';

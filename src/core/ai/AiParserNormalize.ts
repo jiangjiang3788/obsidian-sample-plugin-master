@@ -2,15 +2,15 @@ import type { NaturalRecordBatch, NaturalRecordCommand } from '@/core/types/ai-s
 import { isSystemRecordContextField } from '@/core/goal';
 import { asUnknownRecord, isUnknownRecord, readTrimmedString } from '../utils/unknownRecord';
 import type { UnknownRecord } from '../utils/unknownRecord';
-import type { AiParserSnapshot, AiSnapshotBlock, AiSnapshotGoal, AiSnapshotPreset } from './AiParserSnapshot';
+import type { AiParserSnapshot, AiSnapshotRecordType, AiSnapshotGoal, AiSnapshotPreset } from './AiParserSnapshot';
 
 type AiCommandTarget = NaturalRecordCommand['target'] & UnknownRecord;
 type AiParsedCommand = NaturalRecordCommand & { target: AiCommandTarget; fieldValues: Record<string, unknown> };
 
 function ensureCommandTarget(item: Partial<NaturalRecordCommand> & { target?: unknown }): AiCommandTarget {
-  if (!isUnknownRecord(item.target)) item.target = { blockId: '' };
+  if (!isUnknownRecord(item.target)) item.target = { recordTypeId: '' };
   const target = item.target as AiCommandTarget;
-  if (typeof target.blockId !== 'string') target.blockId = '';
+  if (typeof target.recordTypeId !== 'string') target.recordTypeId = '';
   return target;
 }
 
@@ -29,13 +29,10 @@ function targetString(target: UnknownRecord, key: string): string {
   return readTrimmedString(target, key) ?? '';
 }
 
-function findBlockByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): AiSnapshotBlock | null {
-  const blocks = snapshot.blocks ?? [];
-  const blockId = targetString(target, 'blockId');
-  const categoryKey = targetString(target, 'categoryKey');
-  return blocks.find((block) => block.id === blockId)
-    || blocks.find((block) => block.categoryKey === categoryKey || block.name === categoryKey)
-    || null;
+function findRecordTypeByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): AiSnapshotRecordType | null {
+  const recordTypes = snapshot.recordTypes ?? [];
+  const recordTypeId = targetString(target, 'recordTypeId');
+  return recordTypes.find((recordType) => recordType.id === recordTypeId || recordType.name === recordTypeId) || null;
 }
 
 function findGoalByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): AiSnapshotGoal | null {
@@ -51,12 +48,11 @@ function findPresetByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): 
     if (exact) return exact;
   }
   const goalPath = targetString(target, 'goalPath');
-  const blockId = targetString(target, 'blockId');
-  const categoryKey = targetString(target, 'categoryKey');
+  const recordTypeId = targetString(target, 'recordTypeId');
   return presets.find((preset) => {
     const goalMatches = !goalPath || preset.goalPath === goalPath;
-    const blockMatches = (!blockId && !categoryKey) || preset.blockId === blockId || preset.categoryKey === categoryKey;
-    return goalMatches && blockMatches;
+    const recordTypeMatches = !recordTypeId || preset.recordTypeId === recordTypeId;
+    return goalMatches && recordTypeMatches;
   }) || null;
 }
 
@@ -76,14 +72,12 @@ export function normalizeParsedBatch(
     if (preset) {
       target.goalTemplateId = preset.goalTemplateId || preset.id;
       target.goalPath = preset.goalPath || target.goalPath;
-      target.blockId = preset.blockId || target.blockId;
-      target.categoryKey = preset.categoryKey || target.categoryKey;
+      target.recordTypeId = preset.recordTypeId || target.recordTypeId;
     }
 
-    const block = findBlockByTarget(snapshot, target);
-    if (block) {
-      target.blockId = target.blockId || block.id || '';
-      target.categoryKey = target.categoryKey || block.categoryKey;
+    const recordType = findRecordTypeByTarget(snapshot, target);
+    if (recordType) {
+      target.recordTypeId = target.recordTypeId || recordType.id || '';
     }
 
     const goal = findGoalByTarget(snapshot, target);

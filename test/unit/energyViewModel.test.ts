@@ -8,23 +8,23 @@ import type { RecordViewItem } from '@core/types/public';
 import { buildEnergyViewModel } from '@/features/views/models/energyViewModel';
 
 function base(overrides: Partial<RecordViewItem>): RecordViewItem {
-  return { id: 'x', title: '', content: '', tags: [], categoryKey: '', created: 0, modified: 0, extra: {}, ...overrides } as RecordViewItem;
+  return { id: 'x', title: '', content: '', tags: [], created: 0, modified: 0, extra: {}, ...overrides } as RecordViewItem;
 }
 
 function energy(id: string, goalPath: string, date: string, time: string, score: number): RecordViewItem {
   return base({
-    id, goalPath, date, coreBlock: 'energy', categoryKey: '精力', startTime: time,
+    id, goalPath, date, recordType: 'energy', startTime: time,
     extra: { 记录类型: 'energy', 精力值: score, 精力档位: Math.round(score / 20) * 20, 时间: time, 日期: date, 评分模式: 'quick', 记录方式: 'realtime' },
   });
 }
 
 function task(id: string, goalPath: string): RecordViewItem {
-  return base({ id, goalPath, title: '写代码', content: '写代码', coreBlock: 'task', status: 'open' });
+  return base({ id, goalPath, title: '写代码', content: '写代码', recordType: 'task', status: 'open' });
 }
 
 function session(id: string, taskId: string, date: string, start: string, end: string, duration: number, beforeId?: string, afterId?: string): RecordViewItem {
   return base({
-    id, coreBlock: 'task-session', taskId,
+    id, recordType: 'task-session', taskId,
     sessionStartedAt: `${date}T${start}:00`, sessionEndedAt: `${date}T${end}:00`, sessionDurationMinutes: duration,
     sessionResult: 'work-block-ended', sessionSource: 'timer', startEnergyRecordId: beforeId, endEnergyRecordId: afterId,
   });

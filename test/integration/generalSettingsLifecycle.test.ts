@@ -11,7 +11,7 @@ import { SettingsRepository, type ISettingsPersistence } from '@/core/services/S
 import { SettingsUseCase } from '@/app/usecases/settings.usecase';
 
 function createHarness(saveFailure = false) {
-  let persisted: unknown = { groups: [], viewInstances: [], layouts: [], floatingTimerEnabled: true, categoryColors: {}, goalSettings: { goals: [], goalTemplates: [] } };
+  let persisted: unknown = { groups: [], viewInstances: [], layouts: [], floatingTimerEnabled: true, categoryColors: { 工作: '#112233' }, recordTypeColors: { task: '#ABC', unknown: '#ffffff', thought: 'bad' }, goalSettings: { goals: [], goalTemplates: [] } };
   const persistence: ISettingsPersistence = {
     loadData: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
     saveData: jest.fn(async (settings: ThinkSettings) => {
@@ -36,18 +36,27 @@ async function makeUseCase(repository: SettingsRepository) {
 }
 
 describe('通用设置落盘、错误与重启恢复', () => {
-  it('悬浮计时器、开发错误开关和分类颜色通过设置用例持久化并在重启后恢复', async () => {
+  it('当前设置正常持久化，并在下一次保存时清除旧 categoryColors', async () => {
     const h = createHarness();
-    const { useCase } = await makeUseCase(h.repository);
+    const { useCase, state } = await makeUseCase(h.repository);
+    expect((state.settings as unknown as Record<string, unknown>).categoryColors).toBeUndefined();
+    expect(state.settings.recordTypeColors).toEqual({ task: '#aabbcc' });
+
     await useCase.setFloatingTimerEnabled(false);
     await useCase.setDevConsoleStackEnabled(true);
-    await useCase.updateCategoryColors({ 工作: '#112233', 健康: '#445566' });
+    await useCase.setRecordTypeColor('thought', '#123456');
 
     const restarted = new SettingsRepository(h.persistence);
     const restored = await restarted.load();
     expect(restored.floatingTimerEnabled).toBe(false);
     expect(restored.devConsoleStackEnabled).toBe(true);
-    expect(restored.categoryColors).toMatchObject({ 工作: '#112233', 健康: '#445566' });
+    expect(restored.recordTypeColors).toEqual({ task: '#aabbcc', thought: '#123456' });
+    expect((restored as unknown as Record<string, unknown>).categoryColors).toBeUndefined();
+
+    const { useCase: restartedUseCase } = await makeUseCase(restarted);
+    await restartedUseCase.setRecordTypeColor('task', null);
+    const afterReset = new SettingsRepository(h.persistence);
+    expect((await afterReset.load()).recordTypeColors).toEqual({ thought: '#123456' });
   });
 
   it('底层保存失败时向调用方明确抛错，不把失败伪装成保存成功', async () => {

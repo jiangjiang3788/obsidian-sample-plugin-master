@@ -1,0 +1,24 @@
+{
+  "version": "1.5.0",
+  "settings": {
+    "categoryColorsRemoved": true,
+    "thoughtTemplatesSplit": 24,
+    "eventTemplatesRenamed": 22,
+    "duplicateTemplatesDropped": 0,
+    "templateFieldsRemoved": 36,
+    "templateDefaultsRemoved": 0,
+    "templateRequiredRemoved": 0,
+    "aiThoughtScopeExpanded": 0,
+    "retiredFiltersDropped": 0,
+    "retiredViewFieldsDropped": 0,
+    "timelineCategoryConfigRemoved": 1,
+    "timelineProgressOrderRemoved": 1
+  },
+  "markdown": {
+    "recordsSeen": 0,
+    "recordTypesMigrated": 0,
+    "categoryFieldsRemoved": 0,
+    "subtypeFieldsRemoved": 0,
+    "byType": {}
+  }
+}

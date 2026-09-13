@@ -102,7 +102,7 @@ export function patchRecordBlockMarkdown(markdown: string, patch: RecordPatch): 
     const key = rawKey.trim();
     if (!key || protectedKeys.has(key.toLowerCase())) continue;
     const definition = resolvePatchField(key);
-    const isTaskRecord = lines.some((line) => /^\s*(?:记录类型|coreBlock)\s*::\s*task\s*$/i.test(line));
+    const isTaskRecord = lines.some((line) => /^\s*(?:记录类型|recordType)\s*::\s*task\s*$/i.test(line));
     const taskDateTimeLabels = new Set(['创建于', '计划时间', '开始时间', '结束时间', '截止时间', '完成于', '取消于', '跳过于']);
     const rawEncoded = scalar(value);
     const encoded = isTaskRecord && taskDateTimeLabels.has(definition.label)
@@ -156,7 +156,7 @@ export class RecordRepository {
   }
 
   async create(record: NewRecord): Promise<RecordEntity> {
-    const recordId = record.recordId || createRecordId(record.coreBlock);
+    const recordId = record.recordId || createRecordId(record.recordType);
     await this.batch([{ kind: 'create', record: { ...record, recordId } }]);
     const created = this.dataStore.getRecordEntityById(recordId);
     if (!created) throw new Error(`record_create_scan_failed:${recordId}`);
@@ -191,14 +191,14 @@ export class RecordRepository {
 
     for (const operation of operations) {
       if (operation.kind === 'create') {
-        const recordId = operation.record.recordId || createRecordId(operation.record.coreBlock);
+        const recordId = operation.record.recordId || createRecordId(operation.record.recordType);
         if (createdIdsInBatch.has(recordId) || this.dataStore.getRecordLocations(recordId).length > 0) {
           throw new Error(`record_id_duplicate_create:${recordId}`);
         }
         createdIdsInBatch.add(recordId);
         const markdown = encodeRecordBlock({
           recordId,
-          coreBlock: operation.record.coreBlock,
+          recordType: operation.record.recordType,
           fields: operation.record.fields,
         });
         const current = await loadPath(operation.record.targetFilePath);

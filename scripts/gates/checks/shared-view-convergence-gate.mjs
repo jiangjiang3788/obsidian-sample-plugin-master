@@ -116,7 +116,6 @@ for (const [relativePath, maxLines, reason] of viewLineLimits) assertLineLimit(r
 const intentionallyUnsplittedSmallViews = [
   ['src/features/timer/TimerView.tsx', 80, ['src/features/timer/TimerViewModel.ts', 'src/features/timer/TimerViewHeader.tsx']],
   ['src/features/timer/TimerViewView.tsx', 90, ['src/features/timer/TimerViewViewModel.ts']],
-  ['src/features/views/runtime/CategoryFilter.tsx', 80, ['src/features/views/runtime/CategoryFilterModel.ts']],
   ['src/features/views/runtime/StatisticsView/views/DayStatisticsView.tsx', 70, ['src/features/views/runtime/StatisticsView/views/DayStatisticsViewModel.ts']],
   ['src/features/views/runtime/StatisticsView/views/WeekStatisticsView.tsx', 70, ['src/features/views/runtime/StatisticsView/views/WeekStatisticsViewModel.ts']],
 ];

@@ -18,7 +18,7 @@ export function ProgressViewEditor({ value, onChange }: ViewEditorProps) {
         <ConfigFieldRow label="每级 XP"><ThinkInput className="think-settings-field--sm" type="number" value={config.levelStep} onInput={numberPatch('levelStep', 20)} /></ConfigFieldRow>
         <ConfigFieldRow label="评分阈值"><ThinkInput className="think-settings-field--sm" type="number" value={config.ratingBonusThreshold} onInput={numberPatch('ratingBonusThreshold', 4)} /></ConfigFieldRow>
         <ConfigFieldRow label="评分额外积分"><ThinkInput className="think-settings-field--sm" type="number" value={config.ratingBonusPoints} onInput={numberPatch('ratingBonusPoints', 0)} /></ConfigFieldRow>
-        <ConfigFieldRow label="展开统计"><ThinkCheckbox checked={config.showCategoryBreakdown !== false} onChange={(event) => onChange({ mode: 'goal', showCategoryBreakdown: (event.currentTarget as HTMLInputElement).checked })} label="显示 Block 统计" compact /></ConfigFieldRow>
+        <ConfigFieldRow label="展开统计"><ThinkCheckbox checked={config.showRecordTypeBreakdown !== false} onChange={(event) => onChange({ mode: 'goal', showRecordTypeBreakdown: (event.currentTarget as HTMLInputElement).checked })} label="显示记录类型统计" compact /></ConfigFieldRow>
       </ConfigSection>
     </ViewEditorShell>
   );

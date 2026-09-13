@@ -5,7 +5,7 @@ import type { ProgressResult, ProgressBreakdownRow } from './types';
 export interface ProgressComputationOptions {
   basePoints: number;
   levelStep: number;
-  includedCategories?: string[];
+  includedRecordTypes?: string[];
   ratingBonusThreshold?: number;
   ratingBonusPoints?: number;
   topN?: number;
@@ -27,22 +27,22 @@ export function computeProgression(items: RecordViewItem[], options: ProgressCom
   const {
     basePoints = 1,
     levelStep = 20,
-    includedCategories = [],
+    includedRecordTypes = [],
     ratingBonusThreshold = 4,
     ratingBonusPoints = 1,
     topN = 5,
   } = options;
 
-  const allowed = new Set((includedCategories || []).filter(Boolean));
-  const categoryMap = new Map<string, { points: number; count: number }>();
+  const allowed = new Set((includedRecordTypes || []).filter(Boolean));
+  const recordTypeMap = new Map<string, { points: number; count: number }>();
   const goalMap = new Map<string, { points: number; count: number }>();
 
   let totalPoints = 0;
   let matchedCount = 0;
 
   for (const item of items) {
-    const category = (item.categoryKey || '').split('/')[0] || item.categoryKey || '未分类';
-    if (allowed.size > 0 && !allowed.has(category)) continue;
+    const recordType = String(item.recordType || 'unknown');
+    if (allowed.size > 0 && !allowed.has(recordType)) continue;
 
     let points = basePoints;
     if (typeof item.rating === 'number' && item.rating >= ratingBonusThreshold) {
@@ -52,10 +52,10 @@ export function computeProgression(items: RecordViewItem[], options: ProgressCom
     totalPoints += points;
     matchedCount += 1;
 
-    const catRow = categoryMap.get(category) || { points: 0, count: 0 };
-    catRow.points += points;
-    catRow.count += 1;
-    categoryMap.set(category, catRow);
+    const typeRow = recordTypeMap.get(recordType) || { points: 0, count: 0 };
+    typeRow.points += points;
+    typeRow.count += 1;
+    recordTypeMap.set(recordType, typeRow);
 
     const goalPath = getItemGoalKey(item);
     const goalRow = goalMap.get(goalPath) || { points: 0, count: 0 };
@@ -78,7 +78,7 @@ export function computeProgression(items: RecordViewItem[], options: ProgressCom
     nextLevelPoints,
     progressRatio,
     matchedCount,
-    categoryBreakdown: toSortedRows(categoryMap, topN),
+    recordTypeBreakdown: toSortedRows(recordTypeMap, topN),
     goalBreakdown: toSortedRows(goalMap, topN),
   };
 }

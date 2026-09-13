@@ -28,3 +28,53 @@
 /* 1.3.7: semantic guide labels are movable spatial annotations; their guide line/frame follows the label. */
 .think-os .think-whiteboard-layout-guide__label { cursor: grab; touch-action: none; user-select: none; }
 .think-os .think-whiteboard-layout-guide.is-dragging > .think-whiteboard-layout-guide__label { cursor: grabbing; border-color: var(--think-border-selection); }
+
+/* Presentation Geometry: semantic guide labels occupy fixed screen geometry independent of world zoom.
+   Crowded lower-priority labels degrade to an interactive dot instead of covering Goal / Type / Time text. */
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-layout-guide__label {
+  box-sizing: border-box;
+}
+.think-os .think-whiteboard-canvas-viewport:not([data-whiteboard-lod="detail"]) .think-whiteboard-layout-guide__label.is-presentation-dot {
+  width: 18px;
+  min-width: 18px;
+  max-width: 18px !important;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+  border-radius: 999px;
+  overflow: visible;
+}
+.think-os .think-whiteboard-layout-guide__label.is-presentation-dot::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: currentColor;
+}
+.think-os .think-whiteboard-layout-guide__label.is-presentation-dot .think-whiteboard-layout-guide__label-text {
+  position: absolute;
+  left: 24px;
+  top: -3px;
+  display: none;
+  width: max-content;
+  max-width: 180px;
+  padding: 4px 6px;
+  overflow: hidden;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-elevated);
+  box-shadow: var(--think-shadow-overlay);
+  color: var(--think-text-primary);
+  font-size: var(--think-font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.think-os .think-whiteboard-layout-guide__label.is-presentation-dot:hover .think-whiteboard-layout-guide__label-text,
+.think-os .think-whiteboard-layout-guide__label.is-presentation-dot:focus-visible .think-whiteboard-layout-guide__label-text {
+  display: block;
+}

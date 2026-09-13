@@ -15,12 +15,11 @@ import { fromCachedItem, toCachedItem } from '@/core/types/cache';
 function taskFixture(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: 'task-1',
-    coreBlock: 'task',
+    recordType: 'task',
     status: 'open',
     title: 'A',
     content: 'A',
     tags: [],
-    categoryKey: '任务',
     created: 0,
     modified: 0,
     extra: {},
@@ -31,16 +30,16 @@ function taskFixture(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
 
 describe('Task 四象限领域规则 V3', () => {
   it('只有两个分类字段都明确时才进入四象限，否则保持未分类', () => {
-    expect(deriveEisenhowerQuadrant({ coreBlock: 'task' })).toBe('unclassified');
-    expect(deriveEisenhowerQuadrant({ coreBlock: 'task', importance: 'important' })).toBe('unclassified');
-    expect(deriveEisenhowerQuadrant({ coreBlock: 'task', urgency: 'urgent' })).toBe('unclassified');
+    expect(deriveEisenhowerQuadrant({ recordType: 'task' })).toBe('unclassified');
+    expect(deriveEisenhowerQuadrant({ recordType: 'task', importance: 'important' })).toBe('unclassified');
+    expect(deriveEisenhowerQuadrant({ recordType: 'task', urgency: 'urgent' })).toBe('unclassified');
   });
 
   it('四种组合只由 importance 和 urgency 派生，不持久化 quadrant', () => {
-    expect(deriveEisenhowerQuadrant({ coreBlock: 'task', importance: 'important', urgency: 'urgent' })).toBe('q1');
-    expect(deriveEisenhowerQuadrant({ coreBlock: 'task', importance: 'important', urgency: 'normal' })).toBe('q2');
-    expect(deriveEisenhowerQuadrant({ coreBlock: 'task', importance: 'normal', urgency: 'urgent' })).toBe('q3');
-    expect(deriveEisenhowerQuadrant({ coreBlock: 'task', importance: 'normal', urgency: 'normal' })).toBe('q4');
+    expect(deriveEisenhowerQuadrant({ recordType: 'task', importance: 'important', urgency: 'urgent' })).toBe('q1');
+    expect(deriveEisenhowerQuadrant({ recordType: 'task', importance: 'important', urgency: 'normal' })).toBe('q2');
+    expect(deriveEisenhowerQuadrant({ recordType: 'task', importance: 'normal', urgency: 'urgent' })).toBe('q3');
+    expect(deriveEisenhowerQuadrant({ recordType: 'task', importance: 'normal', urgency: 'normal' })).toBe('q4');
   });
 
   it('拖回未分类会清空两个领域字段，而不是保存第五种 quadrant 状态', () => {

@@ -34,7 +34,6 @@ export function isFieldCodecPath(def?: FieldCodecDefinition | null): boolean {
   return def?.valueType === 'path'
     || def?.inputType === 'path'
     || def?.inputType === 'multiPath'
-    || def?.semantic === 'categoryPath'
     || def?.semantic === 'goalPath';
 }
 
@@ -180,7 +179,6 @@ export function formatFieldValueForTemplate(value: unknown, def?: FieldCodecDefi
 }
 
 export const FIELD_CODEC_PRESETS = {
-  categoryPath: { valueType: 'path', inputType: 'path', semantic: 'categoryPath', hierarchical: true } satisfies FieldCodecDefinition,
   tags: { valueType: 'tags', inputType: 'multiTag', semantic: 'tags', cardinality: 'multi', hierarchical: true } satisfies FieldCodecDefinition,
   goalPath: { valueType: 'path', inputType: 'hierarchicalSingleSelect', semantic: 'goalPath', cardinality: 'single', hierarchical: true } satisfies FieldCodecDefinition,
   image: { valueType: 'image', inputType: 'image', semantic: 'image' } satisfies FieldCodecDefinition,

@@ -50,7 +50,7 @@ export async function getRuntimeSnapshot() {
       recordCount: records.length,
       records: records.map((item: any) => ({
         id: item.id,
-        coreBlock: item.coreBlock,
+        recordType: item.recordType,
         status: item.status,
         goalPath: item.goalPath,
         content: item.content,
@@ -80,7 +80,7 @@ export async function getRecordById(recordId: string) {
     if (!item) return null;
     return {
       id: item.id,
-      coreBlock: item.coreBlock,
+      recordType: item.recordType,
       status: item.status,
       goalPath: item.goalPath,
       content: item.content,
@@ -97,7 +97,7 @@ export async function findRecordByContent(content: string) {
     if (!item) return null;
     return {
       id: item.id,
-      coreBlock: item.coreBlock,
+      recordType: item.recordType,
       status: item.status,
       goalPath: item.goalPath,
       content: item.content,

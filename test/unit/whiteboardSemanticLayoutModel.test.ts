@@ -8,8 +8,8 @@ import type { RecordViewItem } from '@core/types/public';
 import type { WhiteboardItem } from '@core/whiteboard/public';
 import { GOAL_TYPE_TIME_LAYOUT_SPEC, arrangeWhiteboardItemsBySpec } from '@/features/whiteboard/WhiteboardSemanticLayoutModel';
 
-function record(id: string, coreBlock: string, goalPath: string, date?: string): RecordViewItem {
-  return { id, coreBlock, categoryKey: coreBlock, title: id, content: id, tags: [], goalPath, date, created: 0, modified: 0, extra: {} } as RecordViewItem;
+function record(id: string, recordType: string, goalPath: string, date?: string): RecordViewItem {
+  return { id, recordType, title: id, content: id, tags: [], goalPath, date, created: 0, modified: 0, extra: {} } as RecordViewItem;
 }
 function item(id: string, recordId: string, x = 0, y = 0): WhiteboardItem { return { id, recordId, x, y, zIndex: 1 }; }
 

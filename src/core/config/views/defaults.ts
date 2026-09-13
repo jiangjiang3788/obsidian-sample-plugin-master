@@ -13,7 +13,7 @@ import type {
 
 export const BLOCK_VIEW_DEFAULT_CONFIG: BlockViewConfig = {
   dateRole: 'default',
-  view: 'BlockView', title: '块视图', collapsed: false, fields: [], group: 'categoryKey',
+  view: 'BlockView', title: '块视图', collapsed: false, fields: [], group: 'recordType',
 };
 
 export const ENERGY_VIEW_DEFAULT_CONFIG: EnergyViewConfig = {
@@ -55,7 +55,7 @@ export const EXCEL_VIEW_DEFAULT_CONFIG: ExcelViewConfig = {
 
 export const HEATMAP_VIEW_DEFAULT_CONFIG: HeatmapViewConfig = {
   dateRole: 'default',
-  displayMode: 'habit', sourceBlockId: '', goalPaths: [], maxDailyChecks: 10, allowManualEdit: true,
+  displayMode: 'habit', sourceRecordTypeId: '', goalPaths: [], maxDailyChecks: 10, allowManualEdit: true,
 };
 
 export const PROGRESS_VIEW_DEFAULT_CONFIG: ProgressViewConfig = {
@@ -65,11 +65,11 @@ export const PROGRESS_VIEW_DEFAULT_CONFIG: ProgressViewConfig = {
   statusFilter: ['active', 'paused'],
   basePoints: 1,
   levelStep: 20,
-  includedCategories: [],
+  includedRecordTypes: [],
   ratingBonusThreshold: 4,
   ratingBonusPoints: 1,
   showGoalBreakdown: true,
-  showCategoryBreakdown: true,
+  showRecordTypeBreakdown: true,
   topN: 5,
 };
 
@@ -88,7 +88,7 @@ export const STATISTICS_VIEW_DEFAULT_CONFIG: StatisticsViewConfig = {
 
 export const TABLE_VIEW_DEFAULT_CONFIG: TableViewConfig = {
   dateRole: 'default',
-  view: 'TableView', title: '表格视图', collapsed: false, rowField: 'categoryKey', colField: 'date',
+  view: 'TableView', title: '表格视图', collapsed: false, rowField: 'recordType', colField: 'date',
 };
 
 export const TIMELINE_VIEW_DEFAULT_CONFIG: TimelineViewConfig = {
@@ -96,10 +96,4 @@ export const TIMELINE_VIEW_DEFAULT_CONFIG: TimelineViewConfig = {
   defaultHourHeight: 50,
   MAX_HOURS_PER_DAY: 24,
   UNTRACKED_LABEL: '未记录',
-  categories: {
-    工作: { name: '工作', color: '#60a5fa', files: ['工作', 'Work'] },
-    学习: { name: '学习', color: '#34d399', files: ['学习', 'Study'] },
-    生活: { name: '生活', color: '#fbbf24', files: ['生活', 'Life'] },
-  },
-  progressOrder: ['工作', '学习', '生活'],
 };

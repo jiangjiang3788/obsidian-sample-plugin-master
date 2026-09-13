@@ -84,8 +84,8 @@ export function WhiteboardWorkbenchGroup({
     cleanupRef.current = () => { window.removeEventListener('pointermove', move, true); window.removeEventListener('pointerup', up, true); window.removeEventListener('pointercancel', cancel, true); };
   };
   const stopPointer = (event: Event) => event.stopPropagation();
-  const saveTitle = () => {
-    const next = draftTitle.trim();
+  const saveTitle = (value = draftTitle) => {
+    const next = value.trim();
     if (!next) { setDraftTitle(group.title); setEditing(false); return; }
     setEditing(false); void onRename(group.id, next);
   };
@@ -113,9 +113,9 @@ export function WhiteboardWorkbenchGroup({
             aria-label="工作台名称"
             onPointerDown={stopPointer as never}
             onInput={(event: Event) => setDraftTitle((event.currentTarget as HTMLInputElement).value)}
-            onBlur={saveTitle}
+            onBlur={((event: FocusEvent) => saveTitle((event.currentTarget as HTMLInputElement).value)) as never}
             onKeyDown={((event: KeyboardEvent) => {
-              if (event.key === 'Enter') { event.preventDefault(); saveTitle(); }
+              if (event.key === 'Enter') { event.preventDefault(); saveTitle((event.currentTarget as HTMLInputElement).value); }
               if (event.key === 'Escape') { event.preventDefault(); setDraftTitle(group.title); setEditing(false); }
             }) as never}
           />

@@ -10,14 +10,13 @@ import type { WhiteboardBoard, WhiteboardStore } from '@core/whiteboard/public';
 import { WhiteboardRecordSourcePanel } from '@/features/whiteboard/WhiteboardRecordSourcePanel';
 import { WhiteboardWorkspace } from '@/features/whiteboard/WhiteboardWorkspace';
 
-function record(id: string, coreBlock: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
+function record(id: string, recordType: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id,
-    coreBlock,
+    recordType,
     title: id,
     content: `${id} 内容`,
     tags: [],
-    categoryKey: coreBlock,
     goalPath: '照顾好自己/睡眠',
     date: '2026-08-10',
     created: 0,
@@ -37,6 +36,14 @@ function goalNode(host: HTMLElement, path: string): HTMLElement {
   const node = host.querySelector(`[data-goal-path="${path}"]`) as HTMLElement | null;
   if (!node) throw new Error(`未找到目标节点：${path}`);
   return node;
+}
+
+
+function sourceRecordIds(host: HTMLElement): string[] {
+  return Array.from(host.querySelectorAll('[data-whiteboard-source-record-id]'))
+    .map((node) => node.getAttribute('data-whiteboard-source-record-id') || '')
+    .filter(Boolean)
+    .sort();
 }
 
 function createReadyStore(board: WhiteboardBoard): WhiteboardStore & Record<string, jest.Mock> {
@@ -63,7 +70,7 @@ describe('白板 Record Source 筛选 UI 1.1.1', () => {
   test('类型使用简洁复选框且不显示数量；关键词、类型、时间可组合', async () => {
     const records = [
       record('thought-phone', 'thought', { content: '半夜手机', goalPath: '照顾好自己/睡眠', date: '2026-08-10' }),
-      record('evidence-phone', 'evidence', { content: '手机刺激', goalPath: '照顾好自己/睡眠/刺激', date: '2026-08-11' }),
+      record('evidence-phone', 'event', { content: '手机刺激', goalPath: '照顾好自己/睡眠/刺激', date: '2026-08-11' }),
       record('task-phone', 'task', { content: '手机任务', goalPath: '我若安好便是晴天/娱乐', date: '2026-08-10', status: 'open' }),
       record('thought-code', 'thought', { content: '编程', goalPath: '爱好能力/电脑', date: '2026-08-10' }),
     ];
@@ -74,7 +81,7 @@ describe('白板 Record Source 筛选 UI 1.1.1', () => {
 
     const search = host.querySelector('input[aria-label="搜索记录"]') as HTMLInputElement;
     await act(async () => { search.value = '手机'; search.dispatchEvent(new Event('input', { bubbles: true })); });
-    expect(host.textContent).toContain('匹配 3 条记录');
+    expect(sourceRecordIds(host)).toEqual(['evidence-phone', 'task-phone', 'thought-phone']);
 
     await act(async () => { (thoughtType.querySelector('input') as HTMLInputElement).click(); });
     expect(host.textContent).toContain('thought-phone');
@@ -91,13 +98,13 @@ describe('白板 Record Source 筛选 UI 1.1.1', () => {
       end.value = '2026-08-10';
       end.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    expect(host.textContent).toContain('匹配 1 条记录');
+    expect(sourceRecordIds(host)).toEqual(['thought-phone']);
   });
 
   test('目标使用层级复选树：折叠父目标勾选整个子树，展开后可逐个取消子目标并呈现半选', async () => {
     const records = [
       record('sleep', 'thought', { goalPath: '照顾好自己/睡眠' }),
-      record('stimulus', 'evidence', { goalPath: '照顾好自己/睡眠/刺激' }),
+      record('stimulus', 'event', { goalPath: '照顾好自己/睡眠/刺激' }),
       record('body', 'habit', { goalPath: '照顾好自己/身体' }),
       record('code', 'thought', { goalPath: '爱好能力/电脑' }),
     ];
@@ -107,7 +114,7 @@ describe('白板 Record Source 筛选 UI 1.1.1', () => {
     const care = goalNode(host, '照顾好自己');
     const careCheckbox = care.querySelector(':scope > .think-whiteboard-goal-tree__row input[type="checkbox"]') as HTMLInputElement;
     await act(async () => { careCheckbox.click(); });
-    expect(host.textContent).toContain('匹配 3 条记录');
+    expect(sourceRecordIds(host)).toEqual(['body', 'sleep', 'stimulus']);
 
     const expand = care.querySelector(':scope > .think-whiteboard-goal-tree__row button[aria-label^="展开"]') as HTMLButtonElement;
     await act(async () => { expand.click(); });
@@ -116,12 +123,12 @@ describe('白板 Record Source 筛选 UI 1.1.1', () => {
     expect(sleepCheckbox.checked).toBe(true);
 
     await act(async () => { sleepCheckbox.click(); });
-    expect(host.textContent).toContain('匹配 1 条记录');
+    expect(sourceRecordIds(host)).toEqual(['body']);
     expect(careCheckbox.indeterminate).toBe(true);
   });
 
   test('左侧任何查询变化都不隐藏右侧卡片，也不调用 WhiteboardStore mutation', async () => {
-    const onBoard = record('board-record', 'evidence', { content: '右侧持久卡', goalPath: '照顾好自己/睡眠', date: '2026-08-01' });
+    const onBoard = record('board-record', 'event', { content: '右侧持久卡', goalPath: '照顾好自己/睡眠', date: '2026-08-01' });
     const candidate = record('candidate', 'thought', { content: '左侧手机候选', goalPath: '爱好能力/电脑', date: '2026-09-01' });
     const board: WhiteboardBoard = { title: '白板', items: [{ id: 'board-item', recordId: onBoard.id, x: 24, y: 24 }], edges: [], modified: 1 };
     const store = createReadyStore(board);

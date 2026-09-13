@@ -4,7 +4,7 @@ import {
   isRecordInputOptionLike,
   isRecordInputRefreshableSource,
   isRecordInputSameValue,
-  preserveRecordInputBlockSwitchState,
+  preserveRecordInputRecordTypeSwitchState,
 } from '@core/recordInput/public';
 
 import type {
@@ -66,11 +66,11 @@ export function clearQuickInputGoalContext(
   };
 }
 
-export function preserveQuickInputBlockSwitchState(
+export function preserveQuickInputRecordTypeSwitchState(
   formData: QuickInputFormData,
   fieldSources: QuickInputFieldSourceMap,
 ) {
-  return preserveRecordInputBlockSwitchState(formData, fieldSources) as {
+  return preserveRecordInputRecordTypeSwitchState(formData, fieldSources) as {
     formData: QuickInputFormData;
     fieldSources: QuickInputFieldSourceMap;
   };

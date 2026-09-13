@@ -15,7 +15,7 @@ import {
   buildQuickInputPeriodUi,
   deriveQuickInputInitialSelection,
   hydrateQuickInputTemplateDefaults,
-  preserveQuickInputBlockSwitchState,
+  preserveQuickInputRecordTypeSwitchState,
 } from '@features/quickinput/editor/QuickInputEditorModel';
 
 describe('QuickInputEditorModel', () => {
@@ -376,7 +376,7 @@ describe('QuickInputEditorModel', () => {
 
 
   it('preserves only stable fields when switching block', () => {
-    const preserved = preserveQuickInputBlockSwitchState(
+    const preserved = preserveQuickInputRecordTypeSwitchState(
       {
         内容: '继续保留',
         日期: '2026-06-30',
@@ -413,8 +413,8 @@ describe('QuickInputEditorModel', () => {
   it('builds QuickInput state with Goal path summary and period fields', () => {
     const periodUi = buildQuickInputPeriodUi({ id: '2026-W01', label: '2026 第 1 周', granularity: 'week' });
     const state = buildQuickInputEditorState({
-      blockId: 'event',
-      effectiveBlockId: 'event',
+      recordTypeId: 'event',
+      effectiveRecordTypeId: 'event',
       selectedGoal: { path: '学习/英语' } as any,
       currentGoalPath: '学习/英语',
       currentGoalTitle: '英语',

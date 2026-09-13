@@ -53,9 +53,8 @@ export type EnergySnapshotInput = EnergyQuickSnapshotInput | EnergyDetailedSnaps
 
 export interface EnergySnapshotRecord extends EnergySnapshotBaseInput {
   recordId: string;
-  coreBlock: 'energy';
+  recordType: 'energy';
   subtype: 'snapshot';
-  categoryKey: '精力';
   score: number;
   scoreMode: EnergyScoreMode;
   captureMode: EnergyCaptureMode;

@@ -191,7 +191,7 @@ export class TaskCompletionMutation {
     if (pointed && pointed.seriesId === series.id && getTaskStatus(pointed) === 'open') return 'already-valid';
 
     const candidates = this.dataStore.queryRecords()
-      .filter(item => item.coreBlock === 'task' && item.seriesId === series.id && getTaskStatus(item) === 'open');
+      .filter(item => item.recordType === 'task' && item.seriesId === series.id && getTaskStatus(item) === 'open');
     if (candidates.length !== 1) {
       throw new Error(`task_series_repair_ambiguous:${seriesId}:${candidates.length}`);
     }
@@ -284,7 +284,7 @@ export class TaskCompletionMutation {
     operations.push(
       { kind: 'create', record: {
         recordId: nextId,
-        coreBlock: 'task',
+        recordType: 'task',
         targetFilePath: path,
         targetHeader: task.header || null,
         fields: nextTaskFields(task, series, at, nextDates),

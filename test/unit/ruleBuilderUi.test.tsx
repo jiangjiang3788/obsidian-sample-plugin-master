@@ -10,8 +10,8 @@ import { RuleBuilder } from '@/features/settings/views/editors/RuleBuilder';
 
 const dataStore = {
   queryItems: () => [
-    { id: '1', content: '第一条', status: 'open', coreBlock: 'task' },
-    { id: '2', content: '第二条', status: 'done', coreBlock: 'task' },
+    { id: '1', content: '第一条', status: 'open', recordType: 'task' },
+    { id: '2', content: '第二条', status: 'done', recordType: 'task' },
   ],
 } as any;
 
@@ -32,7 +32,7 @@ describe('筛选规则编辑器界面', () => {
         title="筛选"
         mode="filter"
         rows={rows}
-        fieldOptions={['content', 'status', 'coreBlock']}
+        fieldOptions={['content', 'status', 'recordType']}
         onChange={onChange}
         dataStore={dataStore}
       />,

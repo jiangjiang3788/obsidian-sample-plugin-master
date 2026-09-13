@@ -4,7 +4,8 @@ import type { RecordSchemaContract, RecordSchemaDefinition } from './types';
 import {
   BLOCKER_SCHEMA,
   ENERGY_SCHEMA,
-  EVIDENCE_SCHEMA,
+  EVENT_SCHEMA,
+  FEELING_SCHEMA,
   HABIT_SCHEMA,
   MILESTONE_SCHEMA,
   PLAN_SCHEMA,
@@ -20,8 +21,9 @@ export const RECORD_TYPE_IDS = {
   PLAN: 'core.plan',
   REVIEW: 'core.review',
   THOUGHT: 'core.thought',
+  FEELING: 'core.feeling',
   HABIT: 'core.habit',
-  EVIDENCE: 'core.evidence',
+  EVENT: 'core.event',
   BLOCKER: 'core.blocker',
   MILESTONE: 'core.milestone',
   ENERGY: 'core.energy',
@@ -40,7 +42,7 @@ function define(
   return {
     ...contract,
     ...capture,
-    key: contract.coreBlock,
+    key: contract.recordType,
     system: true,
     version: 1,
   };
@@ -88,17 +90,17 @@ const TASK_FIELDS: TemplateField[] = [
 ];
 
 export const TASK_DEFINITION = define(TASK_SCHEMA, {
-  id: RECORD_TYPE_IDS.TASK, name: '任务', categoryKey: '任务', captureMode: 'template', recordTypeId: RECORD_TYPE_IDS.TASK,
+  id: RECORD_TYPE_IDS.TASK, name: '任务', captureMode: 'template', recordTypeId: RECORD_TYPE_IDS.TASK,
   description: '目标下的可执行任务。', fields: TASK_FIELDS,
   targetFile: '01/目标.md', appendUnderHeader: '## {{goalPath}}',
 });
 
 function genericTemplate(
   contract: RecordSchemaContract,
-  input: { id: string; name: string; categoryKey: string; description: string; targetFile: string; extraFields?: TemplateField[]; period?: boolean },
+  input: { id: string; name: string; description: string; targetFile: string; extraFields?: TemplateField[]; period?: boolean },
 ): RecordSchemaDefinition {
   return define(contract, {
-    id: input.id, name: input.name, categoryKey: input.categoryKey, captureMode: 'template', recordTypeId: input.id,
+    id: input.id, name: input.name, captureMode: 'template', recordTypeId: input.id,
     description: input.description,
     fields: [contentField, dateField, ...(input.extraFields || []), iconField],
     periodPolicy: input.period ? { enabled: true, granularity: 'week' } : undefined,
@@ -107,29 +109,30 @@ function genericTemplate(
   });
 }
 
-export const PLAN_DEFINITION = genericTemplate(PLAN_SCHEMA, { id: RECORD_TYPE_IDS.PLAN, name: '计划', categoryKey: '计划', description: '目标周期计划。', targetFile: '01/目标计划.md', period: true });
-export const REVIEW_DEFINITION = genericTemplate(REVIEW_SCHEMA, { id: RECORD_TYPE_IDS.REVIEW, name: '总结', categoryKey: '总结', description: '目标复盘总结。', targetFile: '01/目标总结.md', period: true });
-export const THOUGHT_DEFINITION = genericTemplate(THOUGHT_SCHEMA, { id: RECORD_TYPE_IDS.THOUGHT, name: '思考', categoryKey: '思考', description: '目标相关思考。', targetFile: '01/目标思考.md' });
+export const PLAN_DEFINITION = genericTemplate(PLAN_SCHEMA, { id: RECORD_TYPE_IDS.PLAN, name: '计划', description: '目标周期计划。', targetFile: '01/目标计划.md', period: true });
+export const REVIEW_DEFINITION = genericTemplate(REVIEW_SCHEMA, { id: RECORD_TYPE_IDS.REVIEW, name: '总结', description: '目标复盘总结。', targetFile: '01/目标总结.md', period: true });
+export const THOUGHT_DEFINITION = genericTemplate(THOUGHT_SCHEMA, { id: RECORD_TYPE_IDS.THOUGHT, name: '思考', description: '目标相关思考。', targetFile: '01/目标思考.md' });
+export const FEELING_DEFINITION = genericTemplate(FEELING_SCHEMA, { id: RECORD_TYPE_IDS.FEELING, name: '感受', description: '目标相关的主观感受与体验。', targetFile: '01/目标感受.md' });
 export const HABIT_DEFINITION = genericTemplate(HABIT_SCHEMA, {
-  id: RECORD_TYPE_IDS.HABIT, name: '打卡', categoryKey: '打卡', description: '目标习惯或进度打卡。', targetFile: '01/目标打卡.md',
+  id: RECORD_TYPE_IDS.HABIT, name: '打卡', description: '目标习惯或进度打卡。', targetFile: '01/目标打卡.md',
   extraFields: [{ id: 'core.habit.rating', key: '评分', label: '评分', type: 'rating', semantic: 'rating' }],
 });
-export const EVIDENCE_DEFINITION = genericTemplate(EVIDENCE_SCHEMA, { id: RECORD_TYPE_IDS.EVIDENCE, name: '事件', categoryKey: '事件', description: '目标相关事件、证据和外部反馈。', targetFile: '01/目标事件.md' });
-export const BLOCKER_DEFINITION = genericTemplate(BLOCKER_SCHEMA, { id: RECORD_TYPE_IDS.BLOCKER, name: '阻碍项', categoryKey: '阻碍项', description: '目标推进过程中的阻碍和风险。', targetFile: '01/目标阻碍.md' });
-export const MILESTONE_DEFINITION = genericTemplate(MILESTONE_SCHEMA, { id: RECORD_TYPE_IDS.MILESTONE, name: '里程碑', categoryKey: '里程碑', description: '目标阶段成果和重要节点。', targetFile: '01/目标里程碑.md' });
+export const EVENT_DEFINITION = genericTemplate(EVENT_SCHEMA, { id: RECORD_TYPE_IDS.EVENT, name: '事件', description: '目标相关事件与外部事实。', targetFile: '01/目标事件.md' });
+export const BLOCKER_DEFINITION = genericTemplate(BLOCKER_SCHEMA, { id: RECORD_TYPE_IDS.BLOCKER, name: '阻碍项', description: '目标推进过程中的阻碍和风险。', targetFile: '01/目标阻碍.md' });
+export const MILESTONE_DEFINITION = genericTemplate(MILESTONE_SCHEMA, { id: RECORD_TYPE_IDS.MILESTONE, name: '里程碑', description: '目标阶段成果和重要节点。', targetFile: '01/目标里程碑.md' });
 
 export const ENERGY_DEFINITION = define(ENERGY_SCHEMA, {
-  id: RECORD_TYPE_IDS.ENERGY, name: '精力', categoryKey: '精力', captureMode: 'direct',
+  id: RECORD_TYPE_IDS.ENERGY, name: '精力', captureMode: 'direct',
   description: '目标绑定的精力状态记录；不创建 GoalTemplate，使用直接采集协议。',
   fields: [], targetFile: '01/目标精力.md', appendUnderHeader: '## {{goalPath}}',
 });
 
 export const TASK_SERIES_DEFINITION = define(TASK_SERIES_SCHEMA, {
-  id: RECORD_TYPE_IDS.TASK_SERIES, name: '任务系列', categoryKey: '任务系列', captureMode: 'internal',
+  id: RECORD_TYPE_IDS.TASK_SERIES, name: '任务系列', captureMode: 'internal',
   description: '循环任务的长期领域定义。', fields: [], targetFile: '',
 });
 export const TASK_SESSION_DEFINITION = define(TASK_SESSION_SCHEMA, {
-  id: RECORD_TYPE_IDS.TASK_SESSION, name: '任务工作块', categoryKey: '任务工作块', captureMode: 'internal',
+  id: RECORD_TYPE_IDS.TASK_SESSION, name: '任务工作块', captureMode: 'internal',
   description: '一次已发生的任务执行事实。', fields: [], targetFile: '',
 });
 
@@ -139,7 +142,8 @@ export const RECORD_SCHEMA_DEFINITIONS: readonly RecordSchemaDefinition[] = [
   PLAN_DEFINITION,
   REVIEW_DEFINITION,
   THOUGHT_DEFINITION,
-  EVIDENCE_DEFINITION,
+  FEELING_DEFINITION,
+  EVENT_DEFINITION,
   BLOCKER_DEFINITION,
   MILESTONE_DEFINITION,
   ENERGY_DEFINITION,

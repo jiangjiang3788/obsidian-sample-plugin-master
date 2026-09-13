@@ -54,30 +54,30 @@ export function summarizeEndpointHost(endpoint: string | undefined): string {
     }
 }
 
-export function readAiRuntimeConfig(store: AppStoreInstance, traceId: string): { settings: ThinkSettings; ai: AiSettings | undefined; blocks: unknown[] } {
+export function readAiRuntimeConfig(store: AppStoreInstance, traceId: string): { settings: ThinkSettings; ai: AiSettings | undefined; recordTypes: unknown[] } {
     const readSettingsStart = nowMs();
     const settings = getZustandState(store, s => s.settings);
     const ai = settings.aiSettings;
-    const blocks = [...getTemplateRecordTypes()];
+    const recordTypes = [...getTemplateRecordTypes()];
     logAiInputStep(traceId, '读取 settings 完成', readSettingsStart, {
         aiEnabled: !!ai?.enabled,
         hasEndpoint: !!ai?.apiEndpoint,
         endpointHost: summarizeEndpointHost(ai?.apiEndpoint),
         hasApiKey: !!ai?.apiKey,
         model: ai?.model ?? '(missing)',
-        blocksCount: blocks.length,
+        recordTypesCount: recordTypes.length,
         allowMultipleResults: !!ai?.allowMultipleResults,
         maxResults: ai?.maxResults,
         timeoutMs: ai?.requestTimeoutMs ?? 30000,
     });
-    return { settings, ai, blocks };
+    return { settings, ai, recordTypes };
 }
 
 export function validateAiRuntimeConfig(
     ui: AiInputUiPort,
     traceId: string,
     ai: AiSettings | undefined,
-    blocks: unknown[]
+    recordTypes: unknown[]
 ): ai is AiSettings {
     if (!ai?.enabled) {
         devWarn(`[AiInput][${traceId}] 中止: AI 未启用`);
@@ -95,9 +95,9 @@ export function validateAiRuntimeConfig(
         return false;
     }
 
-    if (blocks.length === 0) {
-        devWarn(`[AiInput][${traceId}] 中止: 没有可用 Block`);
-        ui.notice('没有可用的 Block 模板，请先在"快速输入"设置中创建', 5000);
+    if (recordTypes.length === 0) {
+        devWarn(`[AiInput][${traceId}] 中止: 没有可用 Record Type`);
+        ui.notice('没有可用的 记录类型模板，请先在"快速输入"设置中创建', 5000);
         return false;
     }
 

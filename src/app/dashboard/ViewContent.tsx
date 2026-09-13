@@ -5,10 +5,9 @@ import { useEffect, useMemo } from 'preact/hooks';
 import type { ActionService, DataStore } from '@core/services/public';
 import type { FilterRule, InputSettings, RecordViewItem, ViewInstance } from '@core/types/public';
 import { getAllFields } from '@core/types/public';
-import { getCategoryValuesFromFilters } from '@core/utils/public';
 import { queryViewBaseRecords } from '@core/view/public';
 import { getViewRuntimeComponent } from '@features/views/public';
-import { selectCategoryColors, selectSettings } from '@/app/store/selectors';
+import { selectSettings } from '@/app/store/selectors';
 import { useMessageRenderPort } from '@/app/AppStoreContext';
 import { useSelector } from '@/app/store/useSelector';
 import type { TimerController } from '@shared/types/public';
@@ -59,7 +58,6 @@ export function ViewContent({
   onDataLoaded,
 }: ViewContentProps) {
   const messageRenderPort = useMessageRenderPort();
-  const categoryColors = useSelector(selectCategoryColors);
   const settings = useSelector(selectSettings);
   const normalizedViewInstance = viewInstance;
 
@@ -84,7 +82,6 @@ export function ViewContent({
       })
     : viewItems,
   [allItems, keyword, layoutFilters, normalizedViewInstance, viewItems]);
-  const selectedLayoutCategories = useMemo(() => getCategoryValuesFromFilters(layoutFilters), [layoutFilters]);
   const excelAvailableFields = useMemo(() => getAllFields(allItems), [allItems]);
 
   useEffect(() => {
@@ -117,8 +114,6 @@ export function ViewContent({
     timers,
     inputSettings,
     goals: settings.goalSettings?.goals || [],
-    selectedLayoutCategories,
-    categoryColors,
     messageRenderPort,
     allItems,
     allRecords,

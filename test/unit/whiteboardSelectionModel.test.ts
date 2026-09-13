@@ -31,7 +31,7 @@ describe('Whiteboard Canvas selection 1.1.8 纯模型', () => {
     expect(rects.screen).toMatchObject({ left: 20, top: 40, width: 300, height: 300 });
     expect(rects.world).toMatchObject({ left: -490, top: -280, right: -340, bottom: -130 });
     expect(getWhiteboardItemsIntersectingRect([
-      item('a', -470, -260), item('b', -100, -100), item('c', -600, -500),
+      item('a', -470, -260), item('b', -100, -100), item('c', -800, -600),
     ], rects.world)).toEqual(['a']);
   });
 

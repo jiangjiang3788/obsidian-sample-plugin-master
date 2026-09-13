@@ -27,11 +27,11 @@ describe('record input closure', () => {
 
   it('prepares submit from formData before applying Goal context and never self-references withGoalContext', () => {
     const resolveMissingDependencies = jest.fn(() => ({
-      blockId: 'core.habit',
+      recordTypeId: 'core.habit',
       template: { id: 'core.habit', name: '打卡', fields: [] },
       warnings: [],
       errors: [],
-      meta: { usedFallbackBlock: false, templateId: 'core.habit', templateSourceType: 'record-type' },
+      meta: { usedFallbackRecordType: false, templateId: 'core.habit', templateSourceType: 'record-type' },
     }));
     const normalizeRecordInput = jest.fn((input: any) => ({ normalizedFormData: input.formData, warnings: [] }));
     const validateRecordInput = jest.fn(() => ({ ok: true, errors: [], warnings: [] }));
@@ -39,7 +39,7 @@ describe('record input closure', () => {
     const result = prepareTemplateSubmit({
       kernel: { resolveMissingDependencies, normalizeRecordInput, validateRecordInput } as any,
       operation: 'create',
-      blockId: 'core.habit',
+      recordTypeId: 'core.habit',
       formData: { 内容: '今天心情' },
       context: { __recordUiContext: { goalContext: { goalPath: '照顾好自己/健康/心情' } } },
       normalizeMode: 'create',
@@ -48,7 +48,7 @@ describe('record input closure', () => {
 
     expect(result.ok).toBe(true);
     expect(resolveMissingDependencies).toHaveBeenCalledWith(expect.objectContaining({
-      blockId: 'core.habit',
+      recordTypeId: 'core.habit',
       context: expect.objectContaining({ goalPath: '照顾好自己/健康/心情' }),
     }));
     expect(normalizeRecordInput).toHaveBeenCalledWith(expect.objectContaining({
@@ -87,7 +87,7 @@ describe('record input closure', () => {
     const cell = read('src/features/settings/goalTemplates/GoalTemplateMatrixCell.tsx');
     const card = read('src/features/settings/goalTemplates/GoalPresetCard.tsx');
     expect(row).toContain('className="think-goal-template-matrix__add-button"');
-    expect(row).toContain('icon={<ThinkIcon name="plus" />}');
+    expect(row).toContain('<ThinkIcon name="plus" />');
     expect(row).not.toContain('placeholder="添加模板"');
     expect(cell).toContain('Empty matrix cells are intentionally inert');
     expect(cell).toContain('className="think-goal-template-matrix__preset-cell is-empty"');

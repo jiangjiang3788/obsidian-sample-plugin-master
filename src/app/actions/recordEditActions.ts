@@ -6,6 +6,7 @@ export interface EditFromItemParams {
   app: QuickInputApp;
   item: RecordViewItem;
   openedFrom?: 'list' | 'detail' | 'search' | 'timeline' | 'quickinput' | 'timer' | 'unknown';
+  resolveRecordById?: (recordId: string) => RecordViewItem | null | undefined;
 }
 
 
@@ -59,14 +60,29 @@ export function mergeRecordItemForEdit(
   return {
     ...rendered,
     ...primary,
-    coreBlock: primary.coreBlock || rendered.coreBlock,
-    categoryKey: primary.categoryKey || rendered.categoryKey,
+    recordType: primary.recordType || rendered.recordType,
     goalPath: primary.goalPath || rendered.goalPath,
     title,
     ...(content ? { content } : null),
     ...(editableText ? { editableText } : null),
     extra,
   };
+}
+
+
+export function resolveEditableRecordItem(
+  item: RecordViewItem,
+  resolveRecordById?: (recordId: string) => RecordViewItem | null | undefined,
+): RecordViewItem | null {
+  if (item.recordType === 'task-session') {
+    const taskId = String(item.taskId || '').trim();
+    return taskId && resolveRecordById ? (resolveRecordById(taskId) ?? null) : null;
+  }
+  if (item.recordType === 'task-series') {
+    const taskId = String(item.currentTaskId || '').trim();
+    return taskId && resolveRecordById ? (resolveRecordById(taskId) ?? null) : null;
+  }
+  return item;
 }
 
 function deriveEntryContext(item: RecordViewItem, openedFrom: EditFromItemParams['openedFrom'] = 'unknown') {
@@ -78,17 +94,18 @@ function deriveEntryContext(item: RecordViewItem, openedFrom: EditFromItemParams
       ? source.lineNumber
       : null;
   return {
-    entryKind: item.coreBlock === 'task' ? 'task' : 'block',
+    entryKind: item.recordType === 'task' ? 'task' : 'block',
     entryId: item.id,
     sourcePath,
     sourceLine,
-    categoryKey: item.categoryKey || null,
     openedFrom: openedFrom || 'unknown',
   };
 }
 
 export function openEditFromItem(params: EditFromItemParams): boolean {
-  const item = mergeRecordItemForEdit(undefined, params.item);
+  const resolvedItem = resolveEditableRecordItem(params.item, params.resolveRecordById);
+  if (!resolvedItem) return false;
+  const item = mergeRecordItemForEdit(undefined, resolvedItem);
   const editContext = {
     __recordUiContext: {
       kind: 'entry_edit',
@@ -97,8 +114,8 @@ export function openEditFromItem(params: EditFromItemParams): boolean {
   };
 
   const modalApp = params.app as ConstructorParameters<typeof QuickInputModal>[0];
-  const blockId = item.coreBlock ? `core.${String(item.coreBlock).replace(/^core\./, '')}` : '';
-  new QuickInputModal(modalApp, blockId, editContext, undefined, false, {
+  const recordTypeId = item.recordType ? `core.${String(item.recordType).replace(/^core\./, '')}` : '';
+  new QuickInputModal(modalApp, recordTypeId, editContext, undefined, false, {
     mode: 'edit',
     editItem: item,
   }).open();

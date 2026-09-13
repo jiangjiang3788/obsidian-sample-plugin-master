@@ -10,8 +10,8 @@ import type {
 } from './types';
 
 export interface BuildQuickInputEditorStateInput {
-  blockId: string;
-  effectiveBlockId?: string | null;
+  recordTypeId: string;
+  effectiveRecordTypeId?: string | null;
   selectedGoal?: GoalDefinition | null;
   currentGoalPath?: string | null;
   currentGoalTitle?: string | null;
@@ -28,8 +28,7 @@ export interface BuildQuickInputEditorStateInput {
 
 export function buildQuickInputEditorState(input: BuildQuickInputEditorStateInput): QuickInputEditorState {
   return {
-    blockId: input.blockId,
-    recordTypeId: input.effectiveBlockId,
+    recordTypeId: input.effectiveRecordTypeId || input.recordTypeId,
     goalPath: input.currentGoalPath,
     goalTitle: input.currentGoalTitle,
     rootGoal: input.currentGoalParts.root,

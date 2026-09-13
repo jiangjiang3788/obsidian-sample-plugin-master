@@ -6,14 +6,13 @@
 import { RecordIndex } from '@/core/records/RecordIndex';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 
-function item(id: string, coreBlock: string, extra: Partial<RecordViewItem> = {}): RecordViewItem {
+function item(id: string, recordType: string, extra: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id,
-    coreBlock,
+    recordType,
     title: id,
     content: id,
     tags: [],
-    categoryKey: coreBlock,
     created: 1,
     modified: 1,
     extra: {},

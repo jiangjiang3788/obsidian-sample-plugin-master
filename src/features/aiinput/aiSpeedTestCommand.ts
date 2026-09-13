@@ -32,8 +32,8 @@ export function createAiSpeedTestCommand({
         const totalStart = nowMs();
         devLog(`[AiInput][${traceId}][SpeedTest] 命令触发`);
 
-        const { ai, blocks } = readAiRuntimeConfig(store, traceId);
-        if (!validateAiRuntimeConfig(ui, traceId, ai, blocks)) {
+        const { ai, recordTypes } = readAiRuntimeConfig(store, traceId);
+        if (!validateAiRuntimeConfig(ui, traceId, ai, recordTypes)) {
             devWarn(`[AiInput][${traceId}][SpeedTest] 配置校验未通过，总耗时 ${elapsedMs(totalStart)}`);
             return;
         }

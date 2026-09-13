@@ -48,9 +48,6 @@ function displayText(task: RecordViewItem): string {
   return String(task.content || task.editableText || task.title || '').trim();
 }
 
-function taskFileName(task: RecordViewItem): string {
-  return task.file?.basename || task.filename || task.fileName || '';
-}
 
 function buildTimelineTask(args: {
   task: RecordViewItem;
@@ -72,9 +69,6 @@ function buildTimelineTask(args: {
   const startMinute = localMinute(args.startedAt);
   if (!actualStartDate || startMinute == null) return null;
 
-  const fileName = taskFileName(args.task);
-  if (!fileName) return null;
-
   return {
     ...args.task,
     id: args.id,
@@ -93,7 +87,6 @@ function buildTimelineTask(args: {
     // Keep endMinute monotonic across midnight. splitTaskIntoDayBlocks() will split it per day.
     endMinute: startMinute + args.durationMinutes,
     pureText: displayText(args.task),
-    fileName,
     actualStartDate,
   };
 }
@@ -109,9 +102,6 @@ function buildTimelinePointTask(
   const actualStartDate = localDate(startedAt);
   const startMinute = localMinute(startedAt);
   if (!actualStartDate || startMinute == null) return null;
-
-  const fileName = taskFileName(task);
-  if (!fileName) return null;
 
   return {
     ...task,
@@ -130,7 +120,6 @@ function buildTimelinePointTask(
     startMinute,
     endMinute: startMinute,
     pureText: displayText(task),
-    fileName,
     actualStartDate,
   };
 }
@@ -240,7 +229,7 @@ export function processItemsToTimelineTasks(records: RecordViewItem[]): Timeline
     const session = asTaskSessionRecord(record);
     if (!session) continue;
     const task = byId.get(session.taskId);
-    if (!task || task.coreBlock !== 'task') continue;
+    if (!task || task.recordType !== 'task') continue;
 
     const projected = projectSession(task, record);
     if (!projected) continue;
@@ -249,7 +238,7 @@ export function processItemsToTimelineTasks(records: RecordViewItem[]): Timeline
   }
 
   for (const record of records) {
-    if (record.coreBlock !== 'task') continue;
+    if (record.recordType !== 'task') continue;
 
     // Planning is an independent layer. A Task may have both a planned slot and
     // one or more actual Sessions without either suppressing the other.

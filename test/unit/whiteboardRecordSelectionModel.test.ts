@@ -11,7 +11,7 @@ import {
 } from '@/features/whiteboard/WhiteboardRecordSelectionModel';
 
 function record(id: string): RecordViewItem {
-  return { id, coreBlock: 'thought', title: id, content: id, tags: [], categoryKey: 'thought', created: 0, modified: 0, extra: {} } as RecordViewItem;
+  return { id, recordType: 'thought', title: id, content: id, tags: [], created: 0, modified: 0, extra: {} } as RecordViewItem;
 }
 
 describe('白板 Record Source 多选模型 1.1.6', () => {

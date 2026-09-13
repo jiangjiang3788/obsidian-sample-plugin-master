@@ -10,7 +10,7 @@ export class DeleteRecordWorkflow {
   constructor(private runtime: RecordInputWorkflowRuntime) {}
 
   async submit(params: SubmitDeleteRecordParams): Promise<RecordSubmitResult> {
-    if (params.item.coreBlock === 'task' && String(params.item.seriesId || '').trim()) {
+    if (params.item.recordType === 'task' && String(params.item.seriesId || '').trim()) {
       return buildValidationErrorResult('delete', [{
         code: 'recurring_task_delete_requires_lifecycle_command',
         message: '周期任务当前实例不能直接删除，请使用“跳过本次”或“停止重复”。',

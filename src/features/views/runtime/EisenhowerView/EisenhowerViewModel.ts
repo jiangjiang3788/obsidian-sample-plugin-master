@@ -13,7 +13,7 @@ export function buildEisenhowerColumns(items: RecordViewItem[]): Record<Eisenhow
     q1: [], q2: [], q3: [], q4: [], unclassified: [],
   };
   for (const item of items) {
-    if (item.coreBlock !== 'task' || item.status !== 'open') continue;
+    if (item.recordType !== 'task' || item.status !== 'open') continue;
     columns[deriveEisenhowerQuadrant(item)].push(item);
   }
   return columns;

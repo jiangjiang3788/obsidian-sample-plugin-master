@@ -1,17 +1,21 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { RecordViewItem } from '@core/types/public';
+import type { OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/public';
+import { createRecordGestureHandlers, RECORD_GESTURE_HINT } from '@shared/ui/public';
 import type { WhiteboardAnnotation, WhiteboardGroup, WhiteboardItem, WhiteboardPosition } from '@core/whiteboard/public';
 import { getWhiteboardGroupPathIds } from '@core/whiteboard/public';
-import { WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX, WHITEBOARD_CARD_WIDTH_PX, WHITEBOARD_DRAG_THRESHOLD_PX } from './WhiteboardDragModel';
+import { WHITEBOARD_DRAG_THRESHOLD_PX } from './WhiteboardDragModel';
 import { buildWhiteboardRecordPresentation } from './WhiteboardRecordPresentation';
 import type { WhiteboardWorldPoint } from './WhiteboardCameraModel';
 import type { WhiteboardSemanticZoomState } from './WhiteboardSemanticZoomModel';
-import { WHITEBOARD_WORKBENCH_COLLAPSED_WIDTH_PX, WHITEBOARD_WORKBENCH_HEADER_HEIGHT_PX, WHITEBOARD_WORKBENCH_MIN_WIDTH_PX } from './WhiteboardWorkbenchModel';
+import type { WhiteboardSemanticPresentationModel, WhiteboardPresentationMode } from './WhiteboardSemanticPresentationModel';
+import { getWhiteboardAnnotationWorldAnchor, getWhiteboardGroupWorldAnchor, getWhiteboardItemWorldAnchor } from './WhiteboardWorldGeometryModel';
 
 export interface WhiteboardSemanticOverviewLayerProps {
   semantic: WhiteboardSemanticZoomState;
+  presentation?: WhiteboardSemanticPresentationModel | null;
   items: readonly WhiteboardItem[];
   groups: readonly WhiteboardGroup[];
   annotations: readonly WhiteboardAnnotation[];
@@ -26,17 +30,117 @@ export interface WhiteboardSemanticOverviewLayerProps {
   onFocusItem: (item: WhiteboardItem) => void;
   onFocusGroup: (group: WhiteboardGroup) => void;
   onFocusAnnotation: (annotation: WhiteboardAnnotation) => void;
-  onMoveAnnotation?: (annotationId: string, position: WhiteboardPosition) => void | Promise<void>;
+  onMoveAnnotation?: (annotationId: string, position: WhiteboardPosition) => void | boolean | Promise<void | boolean>;
   onNodePointerDown?: (event: PointerEvent, kind: 'item' | 'group', id: string) => void;
+  onOpenRecord?: OpenRecordHandler;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
+  onBeginConnection?: (whiteboardItemId: string, event: PointerEvent) => void;
+  onContextMenu?: (event: MouseEvent) => void;
+  connectionSourceItemId?: string | null;
+  connectionTargetItemId?: string | null;
   shouldSuppressFocusClick?: () => boolean;
 }
 
 type AnnotationDrag = { annotationId: string; dx: number; dy: number };
 
+interface OverviewCardMarkerProps {
+  item: WhiteboardItem;
+  record: RecordViewItem | null;
+  label: string;
+  selected: boolean;
+  findState: string;
+  shiftedPoint: WhiteboardWorldPoint;
+  markerMode?: WhiteboardPresentationMode;
+  workbenchTitle?: string | null;
+  onFocusItem: (item: WhiteboardItem) => void;
+  onNodePointerDown?: (event: PointerEvent, kind: 'item' | 'group', id: string) => void;
+  onOpenRecord?: OpenRecordHandler;
+  onOpenRecordOrigin?: OpenRecordOriginHandler;
+  onBeginConnection?: (whiteboardItemId: string, event: PointerEvent) => void;
+  onContextMenu?: (event: MouseEvent) => void;
+  connectionActive?: boolean;
+  connectionTarget?: boolean;
+  shouldSuppressFocusClick?: () => boolean;
+}
+
+function OverviewCardMarker({
+  item, record, label, selected, findState, shiftedPoint, markerMode = 'label', workbenchTitle = null,
+  onFocusItem, onNodePointerDown, onOpenRecord, onOpenRecordOrigin, onBeginConnection, onContextMenu,
+  connectionActive = false, connectionTarget = false, shouldSuppressFocusClick,
+}: OverviewCardMarkerProps) {
+  const presentation = record ? buildWhiteboardRecordPresentation(record) : null;
+  const gesture = useMemo(() => record ? createRecordGestureHandlers({
+    item: record,
+    onOpenOrigin: onOpenRecordOrigin,
+    onPrimary: () => { void onOpenRecord?.(record); },
+  }) : null, [onOpenRecord, onOpenRecordOrigin, record]);
+  useEffect(() => () => gesture?.cancelPendingPrimary(), [gesture]);
+  const pointerDown = (event: PointerEvent) => onNodePointerDown ? onNodePointerDown(event, 'item', item.id) : stopPointer(event);
+  const guardGesture = (event: Event, handler?: (event: Event) => void) => {
+    if (shouldSuppressFocusClick?.()) { event.preventDefault(); event.stopPropagation(); return; }
+    handler?.(event);
+  };
+  const beginConnection = (event: PointerEvent) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.preventDefault(); event.stopPropagation(); onBeginConnection?.(item.id, event);
+  };
+  const suppressConnectionClick = (event: Event) => { event.preventDefault(); event.stopPropagation(); };
+  const connectionHandles = (['top', 'right', 'bottom', 'left'] as const).map((side) => (
+    <button key={side} type="button" class={`think-whiteboard-card__edge-handle is-${side}`} aria-label={`从卡片${side === 'top' ? '上' : side === 'right' ? '右' : side === 'bottom' ? '下' : '左'}边拖出连线`} data-whiteboard-edge-handle={side} onPointerDown={beginConnection as never} onClick={suppressConnectionClick as never} />
+  ));
+  return (
+    <div class={`think-whiteboard-overview-marker think-whiteboard-overview-marker--card${markerMode === 'dot' ? ' is-presentation-dot' : ''}`} style={pointStyle(shiftedPoint)} data-whiteboard-overview-item-id={item.id}>
+      <button type="button" class={`think-whiteboard-overview-marker__button${selected ? ' is-selected' : ''}${findState}${connectionActive ? ' is-connection-source' : ''}${connectionTarget ? ' is-connection-target' : ''}`} aria-label={`定位卡片：${label}`}
+        title={`${label}；Ctrl/⌘ 点击多选，拖动可移动；悬浮后可直接编辑、打开原文、连线或右键整理；单击定位点回到 100%`} data-record-type={record?.recordType ?? 'missing'}
+        onPointerDown={pointerDown as never}
+        onContextMenu={onContextMenu as never}
+        onClick={((event: Event) => stopAndRun(event, () => { if (!shouldSuppressFocusClick?.()) onFocusItem(item); })) as never}>
+        <span class="think-whiteboard-overview-marker__dot" aria-hidden="true" /><span class="think-whiteboard-overview-marker__label">{label}</span>
+      </button>
+      <article
+        class={`think-whiteboard-overview-card-preview think-whiteboard-card think-card${record ? ' think-card--interactive' : ' think-whiteboard-card--missing'}${selected ? ' is-selected' : ''}${connectionActive ? ' is-connection-source' : ''}${findState}`}
+        data-whiteboard-hover-item-id={item.id}
+        data-whiteboard-selected={selected ? 'true' : 'false'}
+        data-whiteboard-connection-source={connectionActive ? 'true' : 'false'}
+        data-whiteboard-connection-target={connectionTarget ? 'true' : 'false'}
+        data-record-type={record?.recordType ?? 'missing'}
+        role="button"
+        tabIndex={0}
+        title={record ? `类型：${presentation?.typeLabel ?? ''}；${RECORD_GESTURE_HINT}；拖动可调整位置；Ctrl/⌘ 点击多选；从四边拖出连线；右键可归档或移出` : '原记录当前不可用；拖动仍可调整位置，右键可整理'}
+        onPointerDown={pointerDown as never}
+        onContextMenu={onContextMenu as never}
+        onClick={record ? ((event: Event) => guardGesture(event, gesture?.onClick)) as never : undefined}
+        onDblClick={record ? ((event: Event) => guardGesture(event, gesture?.onDblClick)) as never : undefined}
+        onTouchEnd={record ? ((event: Event) => guardGesture(event, gesture?.onTouchEnd)) as never : undefined}
+        onKeyDown={record ? gesture?.onKeyDown as never : undefined}
+      >
+        {connectionHandles}
+        {record ? (
+          <>
+            <div class="think-whiteboard-card__header">
+              <span class="think-whiteboard-card__goal" title={presentation?.goalLabel || '未归属目标'}>{presentation?.goalLabel || '未归属目标'}</span>
+              {presentation?.temporalLabel && <span class="think-whiteboard-card__date">{presentation.temporalLabel}</span>}
+            </div>
+            <div class="think-whiteboard-card__title">{presentation?.primaryText}</div>
+            {workbenchTitle && <div class="think-whiteboard-card__workbench">▣ {workbenchTitle}</div>}
+            {presentation?.summary && <div class="think-whiteboard-card__summary">{presentation.summary}</div>}
+            {(presentation?.detailLabels.length ?? 0) > 0 && <div class="think-whiteboard-card__meta">{presentation?.detailLabels.map((detail) => <span key={detail}>{detail}</span>)}</div>}
+          </>
+        ) : (
+          <>
+            <div class="think-whiteboard-card__header"><span class="think-whiteboard-card__goal">原记录不可用</span></div>
+            <div class="think-whiteboard-card__title">⚠ 原记录当前不可用</div>
+            <div class="think-whiteboard-card__record-id">{item.recordId}</div>
+            {workbenchTitle && <div class="think-whiteboard-card__workbench">▣ {workbenchTitle}</div>}
+          </>
+        )}
+      </article>
+    </div>
+  );
+}
+
+
 function pointStyle(point: WhiteboardWorldPoint): string { return `left:${point.x}px;top:${point.y}px;`; }
-function cardPoint(item: WhiteboardItem): WhiteboardWorldPoint { return { x: item.x + WHITEBOARD_CARD_WIDTH_PX / 2, y: item.y + WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX / 2 }; }
-function groupPoint(group: WhiteboardGroup): WhiteboardWorldPoint { return { x: group.x + (group.collapsed ? WHITEBOARD_WORKBENCH_COLLAPSED_WIDTH_PX : WHITEBOARD_WORKBENCH_MIN_WIDTH_PX) / 2, y: group.y + WHITEBOARD_WORKBENCH_HEADER_HEIGHT_PX / 2 }; }
-function annotationPoint(annotation: WhiteboardAnnotation): WhiteboardWorldPoint { return { x: annotation.x + 130, y: annotation.y + (annotation.kind === 'sticky' ? 66 : 24) }; }
 function stopPointer(event: Event) { event.stopPropagation(); }
 function stopAndRun(event: Event, run: () => void) { event.preventDefault(); event.stopPropagation(); run(); }
 function coveredBySelectedGroup(groupId: string | undefined, groups: readonly WhiteboardGroup[], selected: ReadonlySet<string>): boolean {
@@ -48,9 +152,10 @@ function moved(point: WhiteboardWorldPoint, shouldMove: boolean, delta?: { dx: n
 }
 
 export function WhiteboardSemanticOverviewLayer({
-  semantic, items, groups, annotations, recordsById, selectedItemIds, selectedGroupIds = new Set<string>(), semanticDragDelta = null,
+  semantic, presentation = null, items, groups, annotations, recordsById, selectedItemIds, selectedGroupIds = new Set<string>(), semanticDragDelta = null,
   activeFindItemId = null, findMatchSet = new Set<string>(), activeFindGroupId = null, dropTargetGroupId = null,
-  onFocusItem, onFocusGroup, onFocusAnnotation, onMoveAnnotation, onNodePointerDown, shouldSuppressFocusClick,
+  onFocusItem, onFocusGroup, onFocusAnnotation, onMoveAnnotation, onNodePointerDown, onOpenRecord, onOpenRecordOrigin, onBeginConnection, onContextMenu,
+  connectionSourceItemId = null, connectionTargetItemId = null, shouldSuppressFocusClick,
 }: WhiteboardSemanticOverviewLayerProps) {
   const [annotationDrag, setAnnotationDrag] = useState<AnnotationDrag | null>(null);
   const annotationCleanupRef = useRef<(() => void) | null>(null);
@@ -85,7 +190,8 @@ export function WhiteboardSemanticOverviewLayer({
     <div class="think-whiteboard-overview-layer" data-whiteboard-overview-level={semantic.level} aria-label="白板缩放概览定位层">
       {semantic.showGroupLocators && groups.map((group) => {
         const selected = selectedGroupIds.has(group.id); const shift = selected || coveredBySelectedGroup(group.parentGroupId, groups, selectedGroupIds);
-        return <div key={group.id} class="think-whiteboard-overview-marker think-whiteboard-overview-marker--group" style={pointStyle(moved(groupPoint(group), shift, semanticDragDelta))} data-whiteboard-overview-group-id={group.id}>
+        const placement = presentation?.groups.get(group.id); const basePoint = placement?.worldPoint ?? getWhiteboardGroupWorldAnchor(group);
+        return <div key={group.id} class={`think-whiteboard-overview-marker think-whiteboard-overview-marker--group${placement?.mode === 'dot' ? ' is-presentation-dot' : ''}`} style={pointStyle(moved(basePoint, shift, semanticDragDelta))} data-whiteboard-overview-group-id={group.id}>
           <button type="button" class={`think-whiteboard-overview-marker__button${selected ? ' is-selected' : ''}${activeFindGroupId === group.id ? ' is-find-active' : ''}${dropTargetGroupId === group.id ? ' is-drop-target' : ''}`}
             aria-label={`定位工作台：${group.title}`} title={`工作台：${group.title}；Ctrl/⌘ 点击多选，拖动已选节点可整体移动，右键整理，单击回到 100%`}
             onPointerDown={((event: PointerEvent) => onNodePointerDown ? onNodePointerDown(event, 'group', group.id) : stopPointer(event)) as never}
@@ -98,18 +204,17 @@ export function WhiteboardSemanticOverviewLayer({
         const record = recordsById.get(item.recordId) ?? null; const label = record ? buildWhiteboardRecordPresentation(record).primaryText : '原记录不可用';
         const findState = activeFindItemId === item.id ? ' is-find-active' : findMatchSet.has(item.id) ? ' is-find-match' : '';
         const selected = selectedItemIds.has(item.id); const shift = selected || coveredBySelectedGroup(item.groupId, groups, selectedGroupIds);
-        return <div key={item.id} class="think-whiteboard-overview-marker think-whiteboard-overview-marker--card" style={pointStyle(moved(cardPoint(item), shift, semanticDragDelta))} data-whiteboard-overview-item-id={item.id}>
-          <button type="button" class={`think-whiteboard-overview-marker__button${selected ? ' is-selected' : ''}${findState}`} aria-label={`定位卡片：${label}`}
-            title={`${label}；Ctrl/⌘ 点击多选，拖动已选节点可整体移动，也可拖回左侧移出白板；右键整理，单击回到 100%`} data-record-type={record?.coreBlock ?? 'missing'}
-            onPointerDown={((event: PointerEvent) => onNodePointerDown ? onNodePointerDown(event, 'item', item.id) : stopPointer(event)) as never}
-            onClick={((event: Event) => focus(event, () => onFocusItem(item))) as never}>
-            <span class="think-whiteboard-overview-marker__dot" aria-hidden="true" /><span class="think-whiteboard-overview-marker__label">{label}</span>
-          </button>
-        </div>;
+        const workbenchTitle = item.groupId ? groups.find((group) => group.id === item.groupId)?.title ?? null : null;
+        const placement = presentation?.items.get(item.id); const basePoint = placement?.worldPoint ?? getWhiteboardItemWorldAnchor(item);
+        return <OverviewCardMarker key={item.id} item={item} record={record} label={label} selected={selected} findState={findState}
+          shiftedPoint={moved(basePoint, shift, semanticDragDelta)} markerMode={placement?.mode ?? (semantic.level === 'overview' ? 'dot' : 'label')} workbenchTitle={workbenchTitle} onFocusItem={onFocusItem}
+          onNodePointerDown={onNodePointerDown} onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} onBeginConnection={onBeginConnection} onContextMenu={onContextMenu}
+          connectionActive={connectionSourceItemId === item.id} connectionTarget={connectionTargetItemId === item.id} shouldSuppressFocusClick={shouldSuppressFocusClick} />;
       })}
       {semantic.showAnnotationLocators && annotations.map((annotation) => {
         const shift = annotationDrag?.annotationId === annotation.id ? annotationDrag : null;
-        return <div key={annotation.id} class="think-whiteboard-overview-marker think-whiteboard-overview-marker--annotation" style={pointStyle(moved(annotationPoint(annotation), Boolean(shift), shift))} data-whiteboard-overview-annotation-id={annotation.id}>
+        const placement = presentation?.annotations.get(annotation.id); const basePoint = placement?.worldPoint ?? getWhiteboardAnnotationWorldAnchor(annotation);
+        return <div key={annotation.id} class="think-whiteboard-overview-marker think-whiteboard-overview-marker--annotation" style={pointStyle(moved(basePoint, Boolean(shift), shift))} data-whiteboard-overview-annotation-id={annotation.id}>
           <button type="button" class={`think-whiteboard-overview-marker__button${shift ? ' is-dragging' : ''}`} aria-label={`定位${annotation.kind === 'sticky' ? '便签' : '文字标注'}`} title="拖动可移动标注；单击回到 100%"
             onPointerDown={((event: PointerEvent) => beginAnnotationDrag(event, annotation)) as never}
             onClick={((event: Event) => { if (Date.now() >= suppressAnnotationClickUntilRef.current) focus(event, () => onFocusAnnotation(annotation)); else { event.preventDefault(); event.stopPropagation(); } }) as never}>

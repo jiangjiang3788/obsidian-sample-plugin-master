@@ -14,9 +14,9 @@
 import { VIEW_DEFINITIONS, VIEW_OPTIONS, getViewDefaultConfig } from '@core/view/public';
 import { VIEW_RUNTIME_BINDINGS, getViewRuntimeComponent } from '@/features/views/registry';
 
-describe('十一种 View 的注册表 → 默认配置 → Runtime 绑定组合契约', () => {
-  it('十一种内建 View 在唯一注册表、默认配置和 Runtime 组件之间一一对应', () => {
-    expect(VIEW_OPTIONS).toHaveLength(11);
+describe('十种 View 的注册表 → 默认配置 → Runtime 绑定组合契约', () => {
+  it('十种内建 View 在唯一注册表、默认配置和 Runtime 组件之间一一对应', () => {
+    expect(VIEW_OPTIONS).toHaveLength(10);
     expect(Object.keys(VIEW_RUNTIME_BINDINGS).sort()).toEqual([...VIEW_OPTIONS].sort());
     for (const viewType of VIEW_OPTIONS) {
       expect(VIEW_DEFINITIONS[viewType].label.trim()).not.toBe('');

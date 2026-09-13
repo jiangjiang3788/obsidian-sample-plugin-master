@@ -24,7 +24,7 @@ export function RuleBuilderValueInput({ rule, uniqueFieldValues, onValueChange }
     : [String(rule.value ?? '').trim()].filter(Boolean);
   const rawOptions = Array.from(new Set([...(uniqueFieldValues[rule.field] || []), ...selectedValues]));
   const options = rawOptions.map((value) => ({ value, label: formatFieldValue(rule.field, value) }));
-  const allowCustom = rule.field !== 'coreBlock';
+  const allowCustom = rule.field !== 'recordType';
 
   if (isMultiValueOperator(rule.op)) {
     return (

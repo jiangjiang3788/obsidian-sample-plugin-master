@@ -15,13 +15,12 @@ import type { RecordViewItem } from '@core/types/public';
 function task(status: string, seriesId?: string): RecordViewItem {
   return {
     id: 'task.01J00000000000000000000000',
-    coreBlock: 'task',
+    recordType: 'task',
     status,
     seriesId,
     title: 'Task',
     content: 'Task',
     tags: [],
-    categoryKey: 'ignored',
     created: 0,
     modified: 0,
     extra: {},

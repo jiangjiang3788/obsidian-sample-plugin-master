@@ -10,7 +10,7 @@ import { buildRecordOutputPlan, buildRecordPersistencePlan } from './OutputPlann
 export function buildEditableRecordSnapshot(input: {
   mode: 'create' | 'edit';
   item?: RecordViewItem | null;
-  blockId: string | null;
+  recordTypeId: string | null;
   fields: Record<string, unknown>;
   template: any;
 }): EditableRecordSnapshot {
@@ -28,7 +28,7 @@ export function buildEditableRecordSnapshot(input: {
   return {
     mode: input.mode,
     parsed,
-    blockId: input.blockId,
+    recordTypeId: input.recordTypeId,
     fields: { ...input.fields },
     outputPlan,
     persistencePlan,

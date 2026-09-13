@@ -50,8 +50,8 @@ function goalValue(record: RecordViewItem | null): FieldValue {
 }
 function typeValue(record: RecordViewItem | null): FieldValue {
   if (!record) return { key: 'missing', label: '原记录不可用', sort: Number.MAX_SAFE_INTEGER };
-  const coreBlock = clean(record.coreBlock); const label = getWhiteboardRecordTypeLabel(record);
-  return { key: coreBlock || label, label, sort: getRecordTypePresentationOrder(record.coreBlock) };
+  const recordType = clean(record.recordType); const label = getWhiteboardRecordTypeLabel(record);
+  return { key: recordType || label, label, sort: getRecordTypePresentationOrder(record.recordType) };
 }
 function timeMs(record: RecordViewItem | null): number | null {
   if (!record) return null;

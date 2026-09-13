@@ -7,9 +7,9 @@ import type { OpenCheckinManagerHandler, OpenHeatmapCreateHandler, OpenRecordOri
 import { HEATMAP_VIEW_DEFAULT_CONFIG } from '@core/view/public';
 import {
     filterGoalHeatmapGroups,
-    inferHeatmapBlockIdByGoal,
-    normalizeHeatmapBlockId,
-    resolveHeatmapCreateBlockId,
+    inferHeatmapRecordTypeIdByGoal,
+    normalizeHeatmapRecordTypeId,
+    resolveHeatmapCreateRecordTypeId,
     type HeatmapPresetContext,
 } from './HeatmapViewModel';
 import { HeatmapViewContent } from './HeatmapViewContent';
@@ -61,26 +61,26 @@ export function HeatmapView({
     const dataByGoalAndDate = dataModel.dataByGoalAndDate;
     const goalGroupsToDisplay = useMemo(() => filterGoalHeatmapGroups(dataModel.goalGroups), [dataModel.goalGroups]);
 
-    const resolveBlockId = (candidate?: string | null): string => normalizeHeatmapBlockId({
+    const resolveRecordTypeId = (candidate?: string | null): string => normalizeHeatmapRecordTypeId({
         candidate,
         inputSettings,
-        configuredSourceBlockId: config.sourceBlockId,
+        configuredSourceRecordTypeId: config.sourceRecordTypeId,
     });
-    const heatmapSourceBlockId = resolveBlockId(config.sourceBlockId);
+    const heatmapSourceRecordTypeId = resolveRecordTypeId(config.sourceRecordTypeId);
 
     const resolveCellRatingMapping = (goalPath: string, presetContext?: HeatmapPresetContext): Map<string, string> => {
         if (presetContext?.ratingOptions?.length) return buildHeatmapRatingMapping(presetContext.ratingOptions);
-        return ratingMappingsCache.get(inputSettings, heatmapSourceBlockId || '', goalPath);
+        return ratingMappingsCache.get(inputSettings, heatmapSourceRecordTypeId || '', goalPath);
     };
 
-    const inferredBlockIdByGoal = useMemo(() => inferHeatmapBlockIdByGoal(items), [items]);
-    const resolveCreateBlockId = (goalPath?: string, item?: RecordViewItem, sourceBlockId?: string) => resolveHeatmapCreateBlockId({
+    const inferredRecordTypeIdByGoal = useMemo(() => inferHeatmapRecordTypeIdByGoal(items), [items]);
+    const resolveCreateRecordTypeId = (goalPath?: string, item?: RecordViewItem, sourceRecordTypeId?: string) => resolveHeatmapCreateRecordTypeId({
         goalPath,
         item,
-        sourceBlockId,
-        heatmapSourceBlockId,
-        inferredBlockIdByGoal,
-        normalizeBlockId: resolveBlockId,
+        sourceRecordTypeId,
+        heatmapSourceRecordTypeId,
+        inferredRecordTypeIdByGoal,
+        normalizeRecordTypeId: resolveRecordTypeId,
     });
 
     const openQuickCreate = (date: string, item?: RecordViewItem, goalPath?: string, presetContext?: HeatmapPresetContext) => {
@@ -89,7 +89,7 @@ export function HeatmapView({
             return;
         }
         onOpenHeatmapCreate({
-            sourceBlockId: resolveCreateBlockId(goalPath, item, presetContext?.sourceBlockId),
+            sourceRecordTypeId: resolveCreateRecordTypeId(goalPath, item, presetContext?.sourceRecordTypeId),
             date,
             item,
             goalPath,

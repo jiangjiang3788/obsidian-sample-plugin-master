@@ -113,13 +113,12 @@ describe('recordUiActions', () => {
   it('carries Heatmap date, Goal, content and rating context into QuickInput', () => {
     const opened = openCreateFromHeatmap({
       app: { name: 'app' },
-      sourceBlockId: 'core.habit',
+      sourceRecordTypeId: 'core.habit',
       date: '2026-05-14',
       goalPath: '生活/健康',
       item: {
         id: 'habit-1',
-        coreBlock: 'habit',
-        categoryKey: '打卡',
+        recordType: 'habit',
         goalPath: '生活/健康',
         content: '早睡',
         rating: 4,
@@ -164,7 +163,7 @@ describe('recordUiActions', () => {
       currentView: '月',
       fallbackDate: dayjs('2026-05-01'),
       payload: {
-        preferredBlockId: 'core.habit',
+        preferredRecordTypeId: 'core.habit',
         title: '健康打卡',
         context: {
           目标: '生活/健康',
@@ -211,7 +210,7 @@ describe('recordUiActions', () => {
 
   it('preserves view-header context returned by the ActionService', () => {
     const config = {
-      blockId: 'core.plan',
+      recordTypeId: 'core.plan',
       context: { 日期: '2026-05-14', 周期: '周', goalPath: '工作/项目' },
     };
     const opened = openCreateFromViewHeader({
@@ -250,8 +249,7 @@ describe('recordUiActions', () => {
   it('opens edit mode with item context', () => {
     const item = {
       id: 'item-1',
-      categoryKey: 'Task',
-      coreBlock: 'task',
+      recordType: 'task',
       path: 'Daily/2026-05-13.md',
       line: 8,
     } as never;
@@ -274,7 +272,32 @@ describe('recordUiActions', () => {
       }),
       undefined,
       false,
-      expect.objectContaining({ mode: 'edit', editItem: expect.objectContaining({ id: 'item-1', coreBlock: 'task' }) }),
+      expect.objectContaining({ mode: 'edit', editItem: expect.objectContaining({ id: 'item-1', recordType: 'task' }) }),
+    );
+  });
+
+  it('internal Task Session / Series 编辑入口统一解析回 Task', () => {
+    const task = { id: 'task-1', recordType: 'task', title: '写 ThinkOS', content: '写 ThinkOS', extra: {} } as never;
+    const resolveRecordById = jest.fn((id: string) => id === 'task-1' ? task : null);
+
+    expect(openEditFromItem({
+      app: {},
+      item: { id: 'session-1', recordType: 'task-session', taskId: 'task-1', extra: {} } as never,
+      resolveRecordById,
+    })).toBe(true);
+    expect(QuickInputModal).toHaveBeenLastCalledWith(
+      {}, 'core.task', expect.objectContaining({}), undefined, false,
+      expect.objectContaining({ mode: 'edit', editItem: expect.objectContaining({ id: 'task-1', recordType: 'task' }) }),
+    );
+
+    expect(openEditFromItem({
+      app: {},
+      item: { id: 'series-1', recordType: 'task-series', currentTaskId: 'task-1', extra: {} } as never,
+      resolveRecordById,
+    })).toBe(true);
+    expect(QuickInputModal).toHaveBeenLastCalledWith(
+      {}, 'core.task', expect.objectContaining({}), undefined, false,
+      expect.objectContaining({ mode: 'edit', editItem: expect.objectContaining({ id: 'task-1', recordType: 'task' }) }),
     );
   });
 
@@ -328,7 +351,7 @@ describe('recordUiActions', () => {
   it('合并 View 投影和 canonical Record 后，Table 等视图打开历史 Task 不会丢失可编辑正文', () => {
     const canonical = {
       id: 'task.table-1',
-      coreBlock: 'task',
+      recordType: 'task',
       status: 'done',
       title: '',
       content: '',
@@ -337,7 +360,7 @@ describe('recordUiActions', () => {
     } as never;
     const rendered = {
       id: 'task.table-1',
-      coreBlock: 'task',
+      recordType: 'task',
       status: 'done',
       title: '八段锦',
       content: '八段锦',
@@ -355,7 +378,7 @@ describe('recordUiActions', () => {
   it('编辑边界会用可见标题补齐缺失正文，避免 QuickInput 打开空白 Task', () => {
     const item = {
       id: 'task.table-2',
-      coreBlock: 'task',
+      recordType: 'task',
       status: 'done',
       title: '整理收藏夹',
       content: '',
@@ -368,7 +391,7 @@ describe('recordUiActions', () => {
     expect(QuickInputModal).toHaveBeenLastCalledWith(
       {},
       'core.task',
-      expect.any(Object),
+      expect.objectContaining({}),
       undefined,
       false,
       expect.objectContaining({

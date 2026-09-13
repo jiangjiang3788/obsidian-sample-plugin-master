@@ -28,11 +28,11 @@ export interface AiPromptRulesSectionProps extends AiSettingsSectionProps {
 }
 
 export interface AiScopeSectionProps extends AiSettingsSectionProps {
-  blocks: RecordCaptureTemplate[];
-  staleEnabledBlockIds?: string[];
-  onInitAllBlocks: () => void;
-  onClearStaleBlockIds?: () => void;
-  onToggleBlock: (blockId: string) => void;
+  recordTypes: RecordCaptureTemplate[];
+  staleEnabledRecordTypeIds?: string[];
+  onInitAllRecordTypes: () => void;
+  onClearStaleRecordTypeIds?: () => void;
+  onToggleRecordType: (recordTypeId: string) => void;
 }
 
 export interface AiSettingsFooterProps {

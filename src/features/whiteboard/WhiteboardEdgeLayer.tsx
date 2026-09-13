@@ -3,7 +3,7 @@ import { h, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
 import type { WhiteboardEdge, WhiteboardItem, WhiteboardPosition } from '@core/whiteboard/public';
 import { ThinkButton, ThinkInput } from '@shared/ui/public';
-import { getWhiteboardConnectionPreviewPath, getWhiteboardEdgeGeometry, resolveWhiteboardItemPosition } from './WhiteboardEdgeGeometry';
+import { getWhiteboardConnectionPreviewPath, getWhiteboardEdgeGeometry, getWhiteboardPointEdgeGeometry, resolveWhiteboardItemPosition } from './WhiteboardEdgeGeometry';
 
 export interface WhiteboardEdgeLayerProps {
   boardId: string;
@@ -14,6 +14,7 @@ export interface WhiteboardEdgeLayerProps {
   onUpdateEdgeLabel?: (edgeId: string, label: string) => void | Promise<void>;
   removingEdgeId?: string | null;
   connectionPreview?: { start: { x: number; y: number }; end: { x: number; y: number } } | null;
+  presentationItemPoints?: ReadonlyMap<string, { x: number; y: number }> | null;
 }
 
 function safeMarkerId(boardId: string): string {
@@ -22,7 +23,7 @@ function safeMarkerId(boardId: string): string {
 }
 
 export function WhiteboardEdgeLayer({
-  boardId, items, edges, dragPreview = null, onRemoveEdge, onUpdateEdgeLabel, removingEdgeId = null, connectionPreview = null,
+  boardId, items, edges, dragPreview = null, onRemoveEdge, onUpdateEdgeLabel, removingEdgeId = null, connectionPreview = null, presentationItemPoints = null,
 }: WhiteboardEdgeLayerProps) {
   const [editingEdgeId, setEditingEdgeId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
@@ -30,10 +31,15 @@ export function WhiteboardEdgeLayer({
   const markerId = safeMarkerId(boardId);
   const renderable = edges.flatMap((edge) => {
     const from = itemById.get(edge.fromItemId); const to = itemById.get(edge.toItemId); if (!from || !to) return [];
-    return [{ edge, geometry: getWhiteboardEdgeGeometry(resolveWhiteboardItemPosition(from, dragPreview), resolveWhiteboardItemPosition(to, dragPreview)) }];
+    const fromPresentation = presentationItemPoints?.get(edge.fromItemId) ?? null;
+    const toPresentation = presentationItemPoints?.get(edge.toItemId) ?? null;
+    const geometry = fromPresentation && toPresentation
+      ? getWhiteboardPointEdgeGeometry(fromPresentation, toPresentation)
+      : getWhiteboardEdgeGeometry(resolveWhiteboardItemPosition(from, dragPreview), resolveWhiteboardItemPosition(to, dragPreview));
+    return [{ edge, geometry }];
   });
   const beginEdit = (edge: WhiteboardEdge) => { setDraft(edge.label ?? ''); setEditingEdgeId(edge.id); };
-  const finishEdit = (edgeId: string) => { void onUpdateEdgeLabel?.(edgeId, draft); setEditingEdgeId(null); };
+  const finishEdit = (edgeId: string, value = draft) => { void onUpdateEdgeLabel?.(edgeId, value); setEditingEdgeId(null); };
 
   return (
     <Fragment>
@@ -47,7 +53,7 @@ export function WhiteboardEdgeLayer({
           <div key={edge.id} class="think-whiteboard-edge__control" style={`left:${geometry.midpointX}px;top:${geometry.midpointY}px;`} data-whiteboard-edge-control-id={edge.id}>
             {editingEdgeId === edge.id ? <ThinkInput autoFocus className="think-whiteboard-edge__label-input" value={draft} maxLength={200} aria-label="连线标注"
               onPointerDown={((event: Event) => event.stopPropagation()) as never} onInput={((event: Event) => setDraft((event.currentTarget as HTMLInputElement).value)) as never}
-              onBlur={() => finishEdit(edge.id)} onKeyDown={((event: KeyboardEvent) => { if (event.key === 'Enter') { event.preventDefault(); finishEdit(edge.id); } else if (event.key === 'Escape') { event.preventDefault(); setEditingEdgeId(null); } }) as never} />
+              onBlur={((event: FocusEvent) => finishEdit(edge.id, (event.currentTarget as HTMLInputElement).value)) as never} onKeyDown={((event: KeyboardEvent) => { if (event.key === 'Enter') { event.preventDefault(); finishEdit(edge.id, (event.currentTarget as HTMLInputElement).value); } else if (event.key === 'Escape') { event.preventDefault(); setEditingEdgeId(null); } }) as never} />
               : <button type="button" class={`think-whiteboard-edge__label${edge.label ? ' has-label' : ''}`} aria-label={edge.label ? `编辑连线标注：${edge.label}` : '添加连线标注'} title="双击或点击编辑连线标注"
                 onPointerDown={((event: Event) => event.stopPropagation()) as never} onClick={((event: Event) => { event.preventDefault(); event.stopPropagation(); beginEdit(edge); }) as never}>{edge.label || '+ 标注'}</button>}
             <ThinkButton className="think-whiteboard-edge__remove" size="sm" variant="ghost" aria-label="删除连线" title="删除这条连线" disabled={removingEdgeId === edge.id}

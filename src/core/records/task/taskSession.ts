@@ -53,7 +53,7 @@ export function buildTaskSessionFields(task: Pick<TaskRecordEntity, 'id' | 'seri
 }
 
 export function asTaskSessionRecord(record: RecordEntity | null | undefined): TaskSessionRecord | null {
-  if (!record || record.coreBlock !== 'task-session') return null;
+  if (!record || record.recordType !== 'task-session') return null;
   const candidate = record as Partial<TaskSessionRecord>;
   if (!candidate.taskId) return null;
   if (!candidate.sessionStartedAt || !Number.isFinite(Date.parse(candidate.sessionStartedAt))) return null;

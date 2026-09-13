@@ -27,9 +27,8 @@ function block(input: Partial<TaskBlock> & Pick<TaskBlock, 'blockStartMinute' | 
     pureText: input.pureText || 'task',
     actualStartDate: input.actualStartDate || '2026-05-13',
     title: input.title || 'task',
-    coreBlock: 'task',
-    categoryKey: '任务',
-  } as TaskBlock;
+    recordType: 'task',
+    } as TaskBlock;
 }
 
 function hydrateTaskContext(context: Record<string, unknown>, current: Record<string, unknown> = {}, fieldSources: QuickInputFieldSourceMap = {}, timeDirection: 'forward' | 'backward' = 'forward') {

@@ -3,19 +3,19 @@ import { h } from 'preact';
 import { ThinkButton, ThinkCheckbox, ThinkDisclosure, ThinkNotice } from '@shared/ui/public';
 import type { AiScopeSectionProps } from './aiSettingsUiTypes';
 
-export function AiScopeSection({ settings, blocks, onUpdate: _onUpdate, staleEnabledBlockIds = [], onInitAllBlocks, onClearStaleBlockIds, onToggleBlock }: AiScopeSectionProps) {
+export function AiScopeSection({ settings, recordTypes, onUpdate: _onUpdate, staleEnabledRecordTypeIds = [], onInitAllRecordTypes, onClearStaleRecordTypeIds, onToggleRecordType }: AiScopeSectionProps) {
   return (
-    <ThinkDisclosure title="Block 参与范围">
+    <ThinkDisclosure title="记录类型参与范围">
       <div className="think-settings-stack think-settings-stack--tight">
         <div className="think-settings-actions think-settings-actions--start">
-          <ThinkButton variant="secondary" size="sm" onClick={onInitAllBlocks}>全部记录类型</ThinkButton>
-          {staleEnabledBlockIds.length > 0 && onClearStaleBlockIds && <ThinkButton variant="secondary" size="sm" onClick={onClearStaleBlockIds}>清理旧 Block ID</ThinkButton>}
+          <ThinkButton variant="secondary" size="sm" onClick={onInitAllRecordTypes}>全部记录类型</ThinkButton>
+          {staleEnabledRecordTypeIds.length > 0 && onClearStaleRecordTypeIds && <ThinkButton variant="secondary" size="sm" onClick={onClearStaleRecordTypeIds}>清理旧记录类型 ID</ThinkButton>}
         </div>
-        {staleEnabledBlockIds.length > 0 && <ThinkNotice tone="warning">AI 范围中有 {staleEnabledBlockIds.length} 个已失效 Block ID。</ThinkNotice>}
+        {staleEnabledRecordTypeIds.length > 0 && <ThinkNotice tone="warning">AI 范围中有 {staleEnabledRecordTypeIds.length} 个已失效记录类型 ID。</ThinkNotice>}
         <div className="think-ai-scope-list">
-          {blocks.map((block) => <ThinkCheckbox key={block.id} checked={(settings.enabledBlockIds ?? []).length === 0 || (settings.enabledBlockIds ?? []).includes(block.id)} onChange={() => onToggleBlock(block.id)} label={block.name} compact />)}
+          {recordTypes.map((recordType) => <ThinkCheckbox key={recordType.id} checked={(settings.enabledRecordTypeIds ?? []).length === 0 || (settings.enabledRecordTypeIds ?? []).includes(recordType.id)} onChange={() => onToggleRecordType(recordType.id)} label={recordType.name} compact />)}
         </div>
-        {blocks.length === 0 && <div className="think-settings-caption">暂无 Block 模板。</div>}
+        {recordTypes.length === 0 && <div className="think-settings-caption">暂无记录类型模板。</div>}
       </div>
     </ThinkDisclosure>
   );

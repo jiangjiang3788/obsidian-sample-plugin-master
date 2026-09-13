@@ -96,7 +96,7 @@ export function WhiteboardArchiveCanvas({ items, recordsById, restoringItemIds, 
         {displayItems.map((item, index) => {
           const archived = items[index]; const record = recordsById.get(item.recordId) ?? null; const presentation = record ? buildWhiteboardRecordPresentation(record) : null;
           const selected = selectedIds.has(item.id); const shift = selected && dragDelta ? dragDelta : null; const x = item.x + (shift?.dx ?? 0); const y = item.y + (shift?.dy ?? 0);
-          return <article key={item.id} class={`think-whiteboard-archive-card think-card${selected ? ' is-selected' : ''}`} style={`left:${x}px;top:${y}px;z-index:${item.zIndex ?? 1};`} data-record-type={record?.coreBlock ?? 'missing'} data-whiteboard-archived-item-id={item.id} onPointerDown={((event: PointerEvent) => beginDrag(event, item.id)) as never}>
+          return <article key={item.id} class={`think-whiteboard-archive-card think-card${selected ? ' is-selected' : ''}`} style={`left:${x}px;top:${y}px;z-index:${item.zIndex ?? 1};`} data-record-type={record?.recordType ?? 'missing'} data-whiteboard-archived-item-id={item.id} onPointerDown={((event: PointerEvent) => beginDrag(event, item.id)) as never}>
             <div class="think-whiteboard-card__header"><span class="think-whiteboard-card__goal">{presentation?.goalLabel || '未归属目标'}</span>{presentation?.temporalLabel && <span class="think-whiteboard-card__date">{presentation.temporalLabel}</span>}</div>
             <div class="think-whiteboard-card__title">{presentation?.primaryText ?? item.recordId}</div>
             {presentation?.detailLabels.length ? <div class="think-whiteboard-card__meta">{presentation.detailLabels.map((label) => <span key={label}>{label}</span>)}</div> : null}

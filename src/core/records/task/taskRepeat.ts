@@ -9,7 +9,7 @@ export function buildRepeatedTaskFormData<T extends Record<string, unknown>>(for
   const next: Record<string, unknown> = { ...formData };
 
   const resetKeys = [
-    'id', 'recordId', '记录ID', 'coreBlock', '记录类型',
+    'id', 'recordId', '记录ID', 'recordType', '记录类型',
     'createdAt', '创建于',
     'completedAt', '完成于', 'cancelledAt', '取消于', 'skippedAt', '跳过于',
     'startAt', '开始时间', 'endAt', '结束时间',

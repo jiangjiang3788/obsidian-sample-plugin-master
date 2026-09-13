@@ -32,7 +32,7 @@ function stableId(index: number): string {
 function makeRecord(index: number): string {
   return encodeRecordBlock({
     recordId: stableId(index),
-    coreBlock: 'thought',
+    recordType: 'thought',
     fields: { 记录子类型: '思考', 内容: `大 Vault 样本 ${index}` },
   });
 }

@@ -9,7 +9,7 @@ import { findGoalTemplate, normalizeGoalPath, splitGoalPath } from '@core/goal/p
 export interface AiBatchConfirmRecordItem {
   id: string;
   cmd: NaturalRecordCommand;
-  blockId: string;
+  recordTypeId: string;
   goalLabel: string;
   presetLabel: string;
   formData: Record<string, unknown>;
@@ -21,7 +21,7 @@ export interface AiBatchConfirmRecordItem {
 
 export interface BuildAiBatchConfirmRecordItemsInput {
   items: NaturalRecordCommand[];
-  blocks: RecordCaptureTemplate[];
+  recordTypes: RecordCaptureTemplate[];
   goalSettings?: GoalSettings;
   inputSettings: InputSettings;
 }
@@ -33,7 +33,7 @@ export interface AiBatchConfirmRecordSummary {
 }
 
 export interface AiBatchConfirmEditorDraftState {
-  blockId: string;
+  recordTypeId: string;
   formData: Record<string, unknown>;
   goalPath?: string | null;
   goalTitle?: string | null;
@@ -54,11 +54,11 @@ export function resolveGoalForAiTarget(
 export function resolvePresetForAiTarget(
   goalSettings: GoalSettings | undefined,
   goal: GoalDefinition | null,
-  blockId: string,
+  recordTypeId: string,
   target: NaturalRecordCommand['target'],
 ): GoalTemplate | null {
-  if (!goal || !blockId) return null;
-  const resolved = findGoalTemplate(goalSettings, goal, blockId);
+  if (!goal || !recordTypeId) return null;
+  const resolved = findGoalTemplate(goalSettings, goal, recordTypeId);
   if (!resolved || resolved.enabled === false) return null;
   const explicitId = String(target.goalTemplateId || '').trim();
   if (explicitId && resolved.id !== explicitId) return null;
@@ -82,18 +82,17 @@ export function goalDisplayName(goal: GoalDefinition | null, goalPath?: string):
 
 export function buildAiBatchConfirmRecordItems({
   items,
-  blocks,
+  recordTypes,
   goalSettings,
   inputSettings,
 }: BuildAiBatchConfirmRecordItemsInput): AiBatchConfirmRecordItem[] {
   return items.map((cmd, index) => {
-    let block = cmd.target.blockId ? blocks.find((entry) => entry.id === cmd.target.blockId) : undefined;
-    if (!block && cmd.target.categoryKey) block = blocks.find((entry) => entry.categoryKey === cmd.target.categoryKey);
+    const recordType = cmd.target.recordTypeId ? recordTypes.find((entry) => entry.id === cmd.target.recordTypeId) : undefined;
 
     const goal = resolveGoalForAiTarget(goalSettings, cmd.target);
     const goalPath = normalizeGoalPath(goal?.path || cmd.target.goalPath || '');
-    const preset = block ? resolvePresetForAiTarget(goalSettings, goal, block.id, cmd.target) : null;
-    const initialTemplate = preset || (block ? getEffectiveTemplate(inputSettings, block.id).template : undefined);
+    const preset = recordType ? resolvePresetForAiTarget(goalSettings, goal, recordType.id, cmd.target) : null;
+    const initialTemplate = preset || (recordType ? getEffectiveTemplate(inputSettings, recordType.id).template : undefined);
     const initialFormData = {
       ...(cmd.fieldValues || {}),
       ...(goalPath ? { goalPath, '目标': goalPath } : {}),
@@ -106,7 +105,7 @@ export function buildAiBatchConfirmRecordItems({
     return {
       id: `record-${index}`,
       cmd,
-      blockId: block?.id || '',
+      recordTypeId: recordType?.id || '',
       goalLabel: goalDisplayName(goal, goalPath || undefined),
       presetLabel: presetDisplayName(preset),
       formData: normalizeRecordInputFormDataForTemplate(initialTemplate ?? undefined, initialFormData),
@@ -133,7 +132,7 @@ export function materializeAiBatchConfirmRecordDraft(
 
   return {
     ...record,
-    blockId: state.blockId || record.blockId,
+    recordTypeId: state.recordTypeId || record.recordTypeId,
     goalLabel: nextGoalLabel,
     presetLabel: nextPresetLabel,
     formData: { ...state.formData },
@@ -174,7 +173,7 @@ export function buildAiBatchConfirmCreateSubmitParams(
   signal?: AbortSignal,
 ): SubmitCreateRecordParams {
   return {
-    blockId: record.blockId,
+    recordTypeId: record.recordTypeId,
     formData: record.formData,
     context: buildAiBatchConfirmRecordContext(record),
     signal,

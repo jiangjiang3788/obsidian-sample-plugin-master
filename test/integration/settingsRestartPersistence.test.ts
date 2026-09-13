@@ -62,7 +62,7 @@ describe('P0 SettingsRepository 落盘与重启恢复', () => {
       });
       draft.goalSettings!.goalTemplates.push({
         goalPath: '健康/运动',
-        recordTypeId: 'task',
+        recordTypeId: 'core.task',
         enabled: true,
         requiredFields: ['内容'],
         defaultValues: { 优先级: 'medium' },
@@ -74,10 +74,10 @@ describe('P0 SettingsRepository 落盘与重启恢复', () => {
     expect(persisted.layouts).toHaveLength(1);
     expect(persisted.goalSettings.goals.map((goal: any) => goal.path)).toEqual(['健康', '健康/运动']);
     expect(persisted.goalSettings.goalTemplates).toEqual(expect.arrayContaining([
-      expect.objectContaining({ goalPath: '健康/运动', recordTypeId: 'task', enabled: true }),
+      expect.objectContaining({ goalPath: '健康/运动', recordTypeId: 'core.task', enabled: true }),
     ]));
     expect(persisted.inputSettings).toBeUndefined();
-    expect(persisted.coreBlockSettings).toBeUndefined();
+    expect(persisted.recordTypeSettings).toBeUndefined();
     expect(persisted.recordTypeSettings).toBeUndefined();
 
     const restarted = new SettingsRepository(h.persistence);
@@ -86,7 +86,7 @@ describe('P0 SettingsRepository 落盘与重启恢复', () => {
     expect(restored.layouts[0]?.id).toBe('layout-main');
     expect(restored.goalSettings?.goals.map((goal) => goal.path)).toEqual(['健康', '健康/运动']);
     expect(restored.goalSettings?.goalTemplates).toEqual(expect.arrayContaining([
-      expect.objectContaining({ goalPath: '健康/运动', recordTypeId: 'task', enabled: true }),
+      expect.objectContaining({ goalPath: '健康/运动', recordTypeId: 'core.task', enabled: true }),
     ]));
   });
 
@@ -95,7 +95,7 @@ describe('P0 SettingsRepository 落盘与重启恢复', () => {
       ...initialData,
       goalSettings: {
         goals: [{ path: '健康', status: 'active' }],
-        goalTemplates: [{ goalPath: '不存在的目标', recordTypeId: 'task', enabled: true }],
+        goalTemplates: [{ goalPath: '不存在的目标', recordTypeId: 'core.task', enabled: true }],
       },
     });
     const repository = new SettingsRepository(h.persistence);

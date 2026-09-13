@@ -205,7 +205,7 @@ export function WhiteboardRecordSourcePanel({
             <div
               class={`think-whiteboard-source__row${selected ? ' is-selected' : ''}${isDragging ? ' is-dragging' : ''}`}
               key={record.id}
-              data-record-type={record.coreBlock}
+              data-record-type={record.recordType}
               data-whiteboard-source-record-id={record.id}
               data-whiteboard-source-selected={selected ? 'true' : 'false'}
               data-whiteboard-source-draggable={selectionBusy ? 'false' : 'true'}
@@ -224,7 +224,6 @@ export function WhiteboardRecordSourcePanel({
               </div>
               <div class="think-whiteboard-source__row-main">
                 <div class="think-whiteboard-source__row-heading">
-                  <span class="think-whiteboard-source__type">{presentation.typeLabel}</span>
                   <span class="think-whiteboard-source__row-title">{presentation.primaryText}</span>
                 </div>
                 <div class="think-whiteboard-source__row-meta">

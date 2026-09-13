@@ -5,7 +5,7 @@
  */
 import { createRecordGestureHandlers, RECORD_GESTURE_MULTI_ACTIVATION_MS } from '@shared/ui/public';
 
-const item: any = { id: 'record.1', title: 'Record 1', coreBlock: 'thought' };
+const item: any = { id: 'record.1', title: 'Record 1', recordType: 'thought' };
 
 function event(overrides: Record<string, unknown> = {}) {
   return {
@@ -57,6 +57,26 @@ describe('view interaction contract', () => {
     gesture.onClick(event({ metaKey: true }));
     expect(origin).toHaveBeenCalledTimes(1);
     expect(primary).not.toHaveBeenCalled();
+  });
+
+
+  test('modifier-only contract opens editor immediately while Ctrl/Meta opens origin', () => {
+    const primary = jest.fn();
+    const origin = jest.fn();
+    const gesture = createRecordGestureHandlers({
+      item,
+      onPrimary: primary,
+      onOpenOrigin: origin,
+      originActivation: 'modifier-only',
+    });
+
+    gesture.onClick(event());
+    expect(primary).toHaveBeenCalledTimes(1);
+    expect(origin).not.toHaveBeenCalled();
+
+    gesture.onClick(event({ ctrlKey: true }));
+    expect(origin).toHaveBeenCalledTimes(1);
+    expect(origin).toHaveBeenCalledWith(item);
   });
 
   test('keyboard activation uses primary, modifier keyboard activation uses origin', () => {

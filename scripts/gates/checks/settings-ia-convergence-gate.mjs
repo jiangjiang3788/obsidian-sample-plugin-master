@@ -8,7 +8,7 @@ const root = read('src/platform/obsidian/SettingsRoot.tsx');
 const nav = read('src/features/settings/components/SettingsNavigation.tsx');
 const shell = read('src/styles/components/settings-shell.css');
 const data = read('src/features/settings/tabs/DataManagementSettings.tsx');
-const blockManager = read('src/features/settings/input/BlockManager.tsx');
+const blockManager = read('src/features/settings/input/RecordTypeManager.tsx');
 const goalManager = read('src/features/settings/input/GoalManager.tsx');
 const goalMatrix = read('src/features/settings/goalTemplates/GoalTemplateMatrix.tsx');
 const metrics = read('src/features/settings/input/goalManager/GoalMetricSection.tsx');
@@ -31,7 +31,7 @@ if (!nav.includes("variant?: 'primary' | 'secondary'")) {
 if (!data.includes('variant="secondary"') || data.includes('ThinkSegmentedControl')) {
   failures.push('Data Management categories must use secondary navigation, not a segmented form control.');
 }
-if (!data.includes("section === 'recordTypes' && <BlockManager />")) {
+if (!data.includes("section === 'recordTypes' && <RecordTypeManager />")) {
   failures.push('Record Type management must enter one management list instead of stacking a separate Energy section above it.');
 }
 if (!blockManager.includes('EnergyRecordTypeSettings') || !blockManager.includes('think-block-accordion--builtin')) {
@@ -43,7 +43,7 @@ if (goalManager.includes('cleanupGoalSettings') || goalManager.includes('整理�
 if (goalManager.includes('记录预设') || goalManager.includes('think-goal-manager__presets-header')) {
   failures.push('Goal management must not repeat a competing preset heading above the matrix.');
 }
-if (goalMatrix.includes('think-goal-template-matrix__block-filter') || goalMatrix.includes('buildNextActiveBlockIds')) {
+if (goalMatrix.includes('think-goal-template-matrix__block-filter') || goalMatrix.includes('buildNextActiveRecordTypeIds')) {
   failures.push('Goal matrix must not permanently expose a row of Record Type filter chips.');
 }
 if (!goalMatrix.includes('think-management-toolbar')) {

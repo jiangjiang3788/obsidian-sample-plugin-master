@@ -7,9 +7,9 @@ import { EnergyRecordTypeSettings } from './EnergyRecordTypeSettings';
 /**
  * RecordTypes are code-registered domain definitions.
  * This screen is intentionally read-only for schema/capture defaults; per-Goal
- * differences belong to GoalTemplate overrides, not mutable runtime Block rows.
+ * differences belong to GoalTemplate overrides, not mutable runtime Record Type rows.
  */
-export function BlockManager() {
+export function RecordTypeManager() {
   const recordTypes = getEffectiveRecordTypes();
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -38,7 +38,7 @@ export function BlockManager() {
                   className="think-block-accordion__title"
                   onClick={() => setOpenId(open ? null : recordType.id)}
                 >
-                  <span className="think-record-type-marker" data-record-type={normalizeRecordTypePresentationKey(recordType.coreBlock)}>{recordType.name}</span>
+                  <span className="think-record-type-marker" data-record-type={normalizeRecordTypePresentationKey(recordType.recordType)}>{recordType.name}</span>
                 </button>
                 <span className="think-block-accordion__meta">
                   {recordType.captureMode === 'template' ? '模板录入' : recordType.captureMode === 'direct' ? '直接记录' : '内部记录'}
@@ -54,7 +54,7 @@ export function BlockManager() {
               {open && (
                 <div className="think-block-accordion__details think-settings-stack think-settings-stack--tight">
                   <div className="think-settings-row"><span className="think-settings-row__label">注册 ID</span><code>{recordType.id}</code></div>
-                  <div className="think-settings-row"><span className="think-settings-row__label">记录 key</span><code>{recordType.coreBlock}</code></div>
+                  <div className="think-settings-row"><span className="think-settings-row__label">记录 key</span><code>{recordType.recordType}</code></div>
                   <div className="think-settings-row"><span className="think-settings-row__label">目标</span><span>{recordType.capabilities.goalBindable ? '必选系统上下文' : '不绑定目标'}</span></div>
                   {recordType.captureMode === 'template' && (
                     <>

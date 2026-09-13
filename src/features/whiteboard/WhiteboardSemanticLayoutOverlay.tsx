@@ -3,17 +3,19 @@ import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { WHITEBOARD_DRAG_THRESHOLD_PX } from './WhiteboardDragModel';
 import type { WhiteboardSemanticLayoutGuide } from './WhiteboardSemanticLayoutModel';
+import type { WhiteboardSemanticPresentationModel } from './WhiteboardSemanticPresentationModel';
 
 interface Props {
   guides: readonly WhiteboardSemanticLayoutGuide[];
   zoom?: number;
+  presentation?: WhiteboardSemanticPresentationModel | null;
   onSelectItems?: (itemIds: readonly string[]) => void;
   onMoveGuide?: (guideId: string, position: { x: number; y: number }) => void;
 }
 
 type GuideDragPreview = { guideId: string; dx: number; dy: number };
 
-export function WhiteboardSemanticLayoutOverlay({ guides, zoom = 1, onSelectItems, onMoveGuide }: Props) {
+export function WhiteboardSemanticLayoutOverlay({ guides, zoom = 1, presentation = null, onSelectItems, onMoveGuide }: Props) {
   const [dragPreview, setDragPreview] = useState<GuideDragPreview | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const suppressClickUntilRef = useRef(0);
@@ -48,10 +50,19 @@ export function WhiteboardSemanticLayoutOverlay({ guides, zoom = 1, onSelectItem
     {guides.map((guide) => {
       const shift = dragPreview?.guideId === guide.id ? dragPreview : null;
       const x = guide.x + (shift?.dx ?? 0); const y = guide.y + (shift?.dy ?? 0);
+      const guidePresentation = presentation?.guides.get(guide.id) ?? null;
+      const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+      const presentationStyle = guidePresentation
+        ? `left:${guidePresentation.offsetScreenX / safeZoom}px;top:${guidePresentation.offsetScreenY / safeZoom}px;max-width:${guidePresentation.widthPx}px;`
+        : undefined;
       return <div key={guide.id} class={`think-whiteboard-layout-guide think-whiteboard-layout-guide--${guide.kind}${shift ? ' is-dragging' : ''}`} data-whiteboard-layout-guide-id={guide.id} style={`left:${x}px;top:${y}px;width:${guide.width}px;height:${guide.height}px;`}>
-        <button type="button" class="think-whiteboard-layout-guide__label" title={`拖动可移动“${guide.label}”标注与边框；点击选择 ${guide.itemIds.length} 张卡片`}
+        <button type="button" class={`think-whiteboard-layout-guide__label${guidePresentation?.mode === 'dot' ? ' is-presentation-dot' : ''}`} style={presentationStyle}
+          aria-label={`${guide.label}；点击选择 ${guide.itemIds.length} 张卡片`}
+          title={`拖动可移动“${guide.label}”标注与边框；点击选择 ${guide.itemIds.length} 张卡片`}
           onPointerDown={((event: PointerEvent) => beginGuideDrag(event, guide)) as never}
-          onClick={((event: Event) => { event.stopPropagation(); if (Date.now() >= suppressClickUntilRef.current) onSelectItems?.(guide.itemIds); }) as never}>{guide.label}</button>
+          onClick={((event: Event) => { event.stopPropagation(); if (Date.now() >= suppressClickUntilRef.current) onSelectItems?.(guide.itemIds); }) as never}>
+          <span class="think-whiteboard-layout-guide__label-text">{guide.label}</span>
+        </button>
       </div>;
     })}
   </div>;

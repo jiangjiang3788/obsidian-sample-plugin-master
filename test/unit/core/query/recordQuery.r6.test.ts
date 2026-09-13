@@ -6,9 +6,8 @@ function record(partial: Partial<RecordViewItem>): RecordViewItem {
     id: partial.id || 'record',
     title: partial.title || '',
     content: partial.content || '',
-    coreBlock: partial.coreBlock || 'thought',
+    recordType: partial.recordType || 'thought',
     tags: partial.tags || [],
-    categoryKey: partial.categoryKey || '记录/默认',
     created: partial.created || 0,
     modified: partial.modified || 0,
     extra: {},
@@ -18,11 +17,11 @@ function record(partial: Partial<RecordViewItem>): RecordViewItem {
 
 describe('RecordQuery R6', () => {
   const items = [
-    record({ id: 'a', title: 'Alpha', coreBlock: 'task', status: 'open', goalPath: '工作/A', date: '2026-08-11', extra: { 清晰度: 4, 发生时间: '2026-08-11T09:30:00' } }),
-    record({ id: 'b', title: 'Beta', coreBlock: 'thought', goalPath: '工作/A', date: '2026-08-12', extra: { 清晰度: 2, 发生时间: '2026-08-11T08:00:00' } }),
-    record({ id: 'c', title: 'Closed undated', coreBlock: 'task', status: 'done', goalPath: '生活/B' }),
-    record({ id: 'd', title: 'Open undated', coreBlock: 'task', status: 'open', goalPath: '生活/B' }),
-    record({ id: 'e', title: 'Open backlog', coreBlock: 'task', status: 'open', goalPath: '生活/B', date: '2026-03-23', dueDate: '2026-03-23' }),
+    record({ id: 'a', title: 'Alpha', recordType: 'task', status: 'open', goalPath: '工作/A', date: '2026-08-11', extra: { 清晰度: 4, 发生时间: '2026-08-11T09:30:00' } }),
+    record({ id: 'b', title: 'Beta', recordType: 'thought', goalPath: '工作/A', date: '2026-08-12', extra: { 清晰度: 2, 发生时间: '2026-08-11T08:00:00' } }),
+    record({ id: 'c', title: 'Closed undated', recordType: 'task', status: 'done', goalPath: '生活/B' }),
+    record({ id: 'd', title: 'Open undated', recordType: 'task', status: 'open', goalPath: '生活/B' }),
+    record({ id: 'e', title: 'Open backlog', recordType: 'task', status: 'open', goalPath: '生活/B', date: '2026-03-23', dueDate: '2026-03-23' }),
   ];
 
   test('filter groups are ANDed while each group preserves FilterRule logic', () => {
@@ -84,12 +83,12 @@ describe('RecordQuery R6', () => {
   test('explicit Task date roles keep planned, due, completed and actual execution facts separate', () => {
     const facts = [
       record({
-        id: 'task-facts', coreBlock: 'task', status: 'done',
+        id: 'task-facts', recordType: 'task', status: 'done',
         scheduledAt: '2026-08-10T09:00', dueAt: '2026-08-11T18:00', completedAt: '2026-08-12T10:00',
         date: '2026-08-10',
       }),
       record({
-        id: 'session-facts', coreBlock: 'task-session', taskId: 'task-facts',
+        id: 'session-facts', recordType: 'task-session', taskId: 'task-facts',
         sessionStartedAt: '2026-08-13T14:00', sessionEndedAt: '2026-08-13T14:30',
         sessionDurationMinutes: 30, sessionResult: 'task-completed', sessionSource: 'timer',
         date: '2026-08-13',

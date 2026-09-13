@@ -137,7 +137,7 @@ function completionHistoryMap(
   const map = new Map<string, EnergyTaskRecordVM[]>();
 
   for (const item of records) {
-    if (item.coreBlock !== 'task' || item.status !== 'done') continue;
+    if (item.recordType !== 'task' || item.status !== 'done') continue;
     const completedAt = text(item.completedAt || item.doneDate);
     if (!completedAt) continue;
     const occurred = dayjs(completedAt);
@@ -197,7 +197,7 @@ export function buildEnergyTaskListModel(args: {
   currentContext?: 'any' | 'work' | 'home' | 'commute' | 'out';
 }): EnergyTaskListModel {
   const { items, historyItems, management, goals = [], today, dateRange, currentContext = 'any' } = args;
-  const openTasks = items.filter((item) => item.coreBlock === 'task' && isTaskOpen(item));
+  const openTasks = items.filter((item) => item.recordType === 'task' && isTaskOpen(item));
   const visibleItems = openTasks;
   const visibleIds = new Set(visibleItems.map((item) => item.id));
   const completionHistory = completionHistoryMap(historyItems, dateRange);

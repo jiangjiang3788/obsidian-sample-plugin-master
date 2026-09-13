@@ -11,7 +11,7 @@ import { buildInitialEditFormData } from '../../src/core/recordInput/EditBackfil
 
 const baseItem = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   id: 'task.01J00000000000000000000004',
-  coreBlock: 'task',
+  recordType: 'task',
   status: 'open',
   title: '默认标题',
   content: '默认标题',
@@ -19,7 +19,6 @@ const baseItem = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   tags: [],
   created: 0,
   modified: 0,
-  categoryKey: '任务',
   extra: {},
   ...overrides,
 });
@@ -29,15 +28,15 @@ function template(fields: RecordCaptureTemplate['fields']): Pick<RecordCaptureTe
 }
 
 describe('EditBackfillMapper', () => {
-  it('category fields backfill from canonical categoryKey without using Goal context', () => {
-    const item = baseItem({ categoryKey: '闪念/感受', goalPath: '了解自我/记录感受' });
+  it('Goal fields backfill from canonical goalPath without any Category projection', () => {
+    const item = baseItem({ goalPath: '了解自我/记录感受' });
     const snapshot = buildParsedRecordSnapshot(item);
     const data = buildInitialEditFormData({
-      template: template([{ id: 'f1', key: '思考分类', label: '思考分类', type: 'path', semantic: 'categoryPath' }]),
+      template: template([{ id: 'f1', key: '目标', label: '目标', type: 'hierarchicalSingleSelect', semantic: 'goalPath' }]),
       item,
       snapshot,
     });
-    expect(data['思考分类']).toEqual({ value: '闪念/感受', label: '感受' });
+    expect(data['目标']).toEqual({ value: '了解自我/记录感受', label: '记录感受' });
   });
 
   it('任务正文回填使用 canonical content 并保留正文内部空格', () => {

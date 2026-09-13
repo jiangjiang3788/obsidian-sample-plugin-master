@@ -22,7 +22,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
     const aiSettings = useSelector(selectAiSettings);
     const inputSettings = useSelector(selectInputSettings);
     const settings = useSelector(selectSettings);
-    const blocks = inputSettings?.blocks ?? [];
+    const recordTypes = inputSettings?.recordTypes ?? [];
     const goals = (settings.goalSettings?.goals ?? [])
         .map((goal) => String(goal.path || '').trim())
         .filter(Boolean)
@@ -51,7 +51,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
     const [enableRetrieval, setEnableRetrieval] = useState(true);
     const [selectedGoalPath, setSelectedGoalPath] = useState<string>('');
     const [selectedType, setSelectedType] = useState<string>(''); // 'task' | '' (全部)
-    const [selectedBlockId, setSelectedBlockId] = useState<string>(''); // Block 模板 ID
+    const [selectedRecordTypeId, setSelectedRecordTypeId] = useState<string>(''); // 记录类型模板 ID
 
     // 滚动引用
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -106,8 +106,8 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
     const handleNewSession = async () => {
         const filters: SessionFilters = {};
         if (selectedGoalPath) filters.goalPaths = [selectedGoalPath];
-        if (selectedType) filters.coreBlocks = [selectedType];
-        if (selectedBlockId) filters.coreBlocks = [String(selectedBlockId).replace(/^core\./, '')];
+        if (selectedType) filters.recordTypes = [selectedType];
+        if (selectedRecordTypeId) filters.recordTypes = [String(selectedRecordTypeId).replace(/^core\./, '')];
 
         const session = await sessionStore.createSession(undefined, filters);
         setActiveSessionId(session.id);
@@ -124,8 +124,8 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
         const session = sessionStore.getSession(sessionId);
         if (session?.filters) {
             setSelectedGoalPath(session.filters.goalPaths?.[0] ?? '');
-            setSelectedType(session.filters.coreBlocks?.[0] ?? '');
-            setSelectedBlockId(session.filters.coreBlocks?.[0] ? `core.${String(session.filters.coreBlocks[0]).replace(/^core\./, '')}` : '');
+            setSelectedType(session.filters.recordTypes?.[0] ?? '');
+            setSelectedRecordTypeId(session.filters.recordTypes?.[0] ? `core.${String(session.filters.recordTypes[0]).replace(/^core\./, '')}` : '');
         }
     };
 
@@ -169,7 +169,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
                     ...item,
                     target: {
                         ...item.target,
-                        blockId: 'core.task',
+                        recordTypeId: 'core.task',
                         ...(selectedGoalPath ? { goalPath: selectedGoalPath, goalTemplateId: undefined } : null),
                     },
                 }));
@@ -195,8 +195,8 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
             // 构建过滤器
             const filters: any = {};
             if (selectedGoalPath) filters.goalPaths = [selectedGoalPath];
-            if (selectedType) filters.coreBlocks = [selectedType];
-            if (selectedBlockId) filters.coreBlocks = [String(selectedBlockId).replace(/^core\./, '')];
+            if (selectedType) filters.recordTypes = [selectedType];
+            if (selectedRecordTypeId) filters.recordTypes = [String(selectedRecordTypeId).replace(/^core\./, '')];
 
             // 发送请求
             const response: ChatResponse = await takeLatestRef.current.run((signal) =>
@@ -234,7 +234,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
         } finally {
             if (isMountedRef.current) setIsLoading(false);
         }
-    }, [inputText, isLoading, currentSessionId, selectedGoalPath, selectedType, selectedBlockId, enableRetrieval, setActiveSessionId]);
+    }, [inputText, isLoading, currentSessionId, selectedGoalPath, selectedType, selectedRecordTypeId, enableRetrieval, setActiveSessionId]);
 
     // 处理按键
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -280,9 +280,9 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
             setSelectedGoalPath={setSelectedGoalPath}
             selectedType={selectedType}
             setSelectedType={setSelectedType}
-            blocks={blocks}
-            selectedBlockId={selectedBlockId}
-            setSelectedBlockId={setSelectedBlockId}
+            recordTypes={recordTypes}
+            selectedRecordTypeId={selectedRecordTypeId}
+            setSelectedRecordTypeId={setSelectedRecordTypeId}
             indexItemCount={retrievalService.getIndexStats().itemCount}
             messages={messages}
             isLoading={isLoading}

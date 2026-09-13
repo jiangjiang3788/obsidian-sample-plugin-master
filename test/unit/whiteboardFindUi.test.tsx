@@ -14,11 +14,10 @@ import { WhiteboardWorkspace } from '@/features/whiteboard/WhiteboardWorkspace';
 function record(id: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id,
-    coreBlock: 'thought',
+    recordType: 'thought',
     title: id,
     content: `${id} 内容`,
     tags: [],
-    categoryKey: 'thought',
     goalPath: '照顾好自己/睡眠',
     date: '2026-09-08',
     created: 0,

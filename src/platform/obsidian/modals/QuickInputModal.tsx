@@ -46,10 +46,10 @@ export class QuickInputModal extends Modal {
 
   constructor(
     app: App,
-    private blockId: string,
+    private recordTypeId: string,
     private context?: Record<string, unknown>,
     private onSave?: (data: QuickInputSaveData) => void,
-    private allowBlockSwitch: boolean = true,
+    private allowRecordTypeSwitch: boolean = true,
     private options?: QuickInputEditOptions,
   ) {
     super(app);
@@ -61,7 +61,7 @@ export class QuickInputModal extends Modal {
     const context = this.context || {};
     return [
       this.options?.mode || 'create',
-      this.blockId,
+      this.recordTypeId,
       this.options?.editItem?.id || '',
       this.options?.source || '',
       String(context.goalPath || ''),
@@ -86,7 +86,7 @@ export class QuickInputModal extends Modal {
 
   private getCreateAvailabilityFailure(): string | null {
     if ((this.options?.mode || 'create') !== 'create') return null;
-    const recordType = getRecordTypeById(this.blockId);
+    const recordType = getRecordTypeById(this.recordTypeId);
     if (!recordType || recordType.captureMode === 'direct') return null;
 
     const settings = this.services.zustandStore.getState().settings;
@@ -138,11 +138,11 @@ export class QuickInputModal extends Modal {
       this.contentEl,
       <QuickInputModalContent
         getResourcePath={(path) => resolveVaultResourcePath(this.app, path)}
-        initialBlockId={this.blockId}
+        initialRecordTypeId={this.recordTypeId}
         context={this.context}
         onSave={this.onSave}
         closeModal={() => this.close()}
-        allowBlockSwitch={this.allowBlockSwitch}
+        allowRecordTypeSwitch={this.allowRecordTypeSwitch}
         mode={this.options?.mode || 'create'}
         editItem={this.options?.editItem}
         source={this.options?.source}

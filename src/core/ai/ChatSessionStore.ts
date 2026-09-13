@@ -53,7 +53,7 @@ export const ChatMessageSchema = z.object({
 /** 会话过滤器 schema */
 export const SessionFiltersSchema = z.object({
     goalPaths: z.array(z.string()).optional(),
-    coreBlocks: z.array(z.string()).optional(),
+    recordTypes: z.array(z.string()).optional(),
 });
 
 /** 聊天会话 schema */

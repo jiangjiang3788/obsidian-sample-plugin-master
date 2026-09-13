@@ -33,7 +33,7 @@ export function TableViewCell(props: TableViewCellProps) {
     <td>
       {items.map(item => (
         <div key={item.id} class="think-table-cell-item">
-          {item.coreBlock === 'task' ? (
+          {item.recordType === 'task' ? (
             <TaskRow
               item={item}
               onMarkDone={onMarkDone}

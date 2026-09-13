@@ -9,6 +9,7 @@
 /** @jsxImportSource preact */
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
+import { createPointerEvent, waitForUi } from '../support/uiTestUtils';
 import type { RecordViewItem } from '@core/types/public';
 import { DEFAULT_WHITEBOARD_ID, WhiteboardStore } from '@core/whiteboard/public';
 import type { IPluginStorage } from '@/core/services/StorageService';
@@ -25,14 +26,10 @@ function persistentMemoryStorage() {
   return { files, storage };
 }
 function record(id: string): RecordViewItem {
-  return { id, coreBlock: 'thought', title: id, content: `${id} content`, tags: [], categoryKey: 'thought', goalPath: '测试/白板', date: '2026-09-09', created: 0, modified: 0, extra: {} } as RecordViewItem;
+  return { id, recordType: 'thought', title: id, content: `${id} content`, tags: [], goalPath: '测试/白板', date: '2026-09-09', created: 0, modified: 0, extra: {} } as RecordViewItem;
 }
-function pointer(type: string, pointerId: number, clientX: number, clientY: number): Event {
-  const event = new Event(type, { bubbles: true, cancelable: true });
-  Object.defineProperties(event, {
-    pointerId: { value: pointerId }, pointerType: { value: 'mouse' }, button: { value: 0 }, clientX: { value: clientX }, clientY: { value: clientY },
-  });
-  return event;
+function pointer(type: string, pointerId: number, clientX: number, clientY: number): PointerEvent {
+  return createPointerEvent(type, { pointerId, pointerType: 'mouse', button: 0, clientX, clientY });
 }
 async function setupNestedStore(storage: IPluginStorage) {
   const store = new WhiteboardStore(storage); await store.initialize();
@@ -72,7 +69,9 @@ describe('Whiteboard 1.2.5 R2 Nested Workbench 可靠性回归', () => {
     const h = persistentMemoryStorage(); const { store, parent, child } = await setupNestedStore(h.storage); const rec = record('nested-source-drop');
     await act(async () => render(<WhiteboardWorkspace records={[rec]} whiteboardStore={store} />, host));
     await act(async () => (host.querySelector(`[data-whiteboard-group-id="${parent.id}"] button[aria-label="全屏进入工作台"]`) as HTMLButtonElement).click());
+    await waitForUi(() => (host.querySelector('.think-whiteboard-workspace') as HTMLElement | null)?.dataset.whiteboardActiveGroupId === parent.id, '等待进入一级工作台');
     await act(async () => (host.querySelector(`[data-whiteboard-group-id="${child.id}"] button[aria-label="全屏进入工作台"]`) as HTMLButtonElement).click());
+    await waitForUi(() => (host.querySelector('.think-whiteboard-workspace') as HTMLElement | null)?.dataset.whiteboardActiveGroupId === child.id, '等待进入二级工作台');
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLDivElement;
     viewport.getBoundingClientRect = () => ({ left: 320, top: 80, right: 1320, bottom: 780, width: 1000, height: 700, x: 320, y: 80, toJSON: () => ({}) });
     Object.defineProperties(viewport, { clientWidth: { configurable: true, value: 1000 }, clientHeight: { configurable: true, value: 700 } });
@@ -81,8 +80,8 @@ describe('Whiteboard 1.2.5 R2 Nested Workbench 可靠性回归', () => {
       source.dispatchEvent(pointer('pointerdown', 71, 100, 140));
       window.dispatchEvent(pointer('pointermove', 71, 720, 420));
       window.dispatchEvent(pointer('pointerup', 71, 720, 420));
-      await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
     });
+    await waitForUi(() => (store.getBoard(DEFAULT_WHITEBOARD_ID)?.items.length ?? 0) === 1, '等待二级工作台单条拖入落盘');
     expect(store.getBoard(DEFAULT_WHITEBOARD_ID)?.items).toEqual([expect.objectContaining({ recordId: rec.id, groupId: child.id })]);
     expect(host.querySelector(`[data-whiteboard-source-record-id="${rec.id}"]`)).toBeNull();
     expect(host.querySelector(`[data-whiteboard-item-id]`)).toBeTruthy();
@@ -94,19 +93,22 @@ describe('Whiteboard 1.2.5 R2 Nested Workbench 可靠性回归', () => {
     const records = [record('nested-batch-a'), record('nested-batch-b')];
     await act(async () => render(<WhiteboardWorkspace records={records} whiteboardStore={store} />, host));
     await act(async () => (host.querySelector(`[data-whiteboard-group-id="${parent.id}"] button[aria-label="全屏进入工作台"]`) as HTMLButtonElement).click());
+    await waitForUi(() => (host.querySelector('.think-whiteboard-workspace') as HTMLElement | null)?.dataset.whiteboardActiveGroupId === parent.id, '等待进入一级工作台');
     await act(async () => (host.querySelector(`[data-whiteboard-group-id="${child.id}"] button[aria-label="全屏进入工作台"]`) as HTMLButtonElement).click());
+    await waitForUi(() => (host.querySelector('.think-whiteboard-workspace') as HTMLElement | null)?.dataset.whiteboardActiveGroupId === child.id, '等待进入二级工作台');
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLDivElement;
     viewport.getBoundingClientRect = () => ({ left: 320, top: 80, right: 1320, bottom: 780, width: 1000, height: 700, x: 320, y: 80, toJSON: () => ({}) });
     Object.defineProperties(viewport, { clientWidth: { configurable: true, value: 1000 }, clientHeight: { configurable: true, value: 700 } });
     await act(async () => (host.querySelector('.think-whiteboard-source__selection-bar button') as HTMLButtonElement).click());
+    await waitForUi(() => host.textContent?.includes('已选 2') === true, '等待 Record Source 全选');
     expect(host.textContent).toContain('已选 2');
     const source = host.querySelector('[data-whiteboard-source-record-id="nested-batch-a"]') as HTMLElement;
     await act(async () => {
       source.dispatchEvent(pointer('pointerdown', 72, 100, 160));
       window.dispatchEvent(pointer('pointermove', 72, 760, 460));
       window.dispatchEvent(pointer('pointerup', 72, 760, 460));
-      await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
     });
+    await waitForUi(() => (store.getBoard(DEFAULT_WHITEBOARD_ID)?.items.length ?? 0) === 2, '等待二级工作台批量拖入落盘');
     const saved = store.getBoard(DEFAULT_WHITEBOARD_ID)?.items ?? [];
     expect(saved).toHaveLength(2);
     expect(saved.map((item) => item.recordId).sort()).toEqual(['nested-batch-a', 'nested-batch-b']);

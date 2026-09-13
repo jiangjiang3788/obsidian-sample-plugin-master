@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { useMemo } from 'preact/hooks';
 import { dayjs } from '@core/utils/public';
-import { buildDailyCategoryHours } from '@core/utils/public';
+import { buildDailyGoalHours } from '@core/utils/public';
 import { ProgressBlock } from './ProgressBlock';
 import type { TaskBlock } from '@core/types/public';
 import type { GoalTimeAllocationSummary } from '@core/goal/public';
@@ -13,28 +13,26 @@ import type { GoalAllocationTimelineView } from './GoalAllocationBlock';
 interface DayColumnHeaderProps {
     day: string;
     blocks: TaskBlock[];
-    categoriesConfig: Record<string, { files?: string[]; color?: string }>;
     colorMap: Record<string, string>;
     untrackedLabel: string;
-    progressOrder?: string[];
+    goalOrder?: string[];
     goalAllocationSummary?: GoalTimeAllocationSummary;
     currentView?: GoalAllocationTimelineView;
 }
 
-export function DayColumnHeader({ 
-    day, 
-    blocks, 
-    categoriesConfig, 
-    colorMap, 
-    untrackedLabel, 
-    progressOrder,
+export function DayColumnHeader({
+    day,
+    blocks,
+    colorMap,
+    untrackedLabel,
+    goalOrder,
     goalAllocationSummary,
     currentView = '天',
 }: DayColumnHeaderProps) {
-    const { categoryHours, totalDayHours } = useMemo(() => {
-        return buildDailyCategoryHours(blocks, categoriesConfig, untrackedLabel);
-    }, [blocks, categoriesConfig, untrackedLabel]);
-    
+    const { goalHours, totalDayHours } = useMemo(() => {
+        return buildDailyGoalHours(blocks, untrackedLabel);
+    }, [blocks, untrackedLabel]);
+
     return (
         <div class="day-column-header">
             <div class="day-header-title">
@@ -49,12 +47,12 @@ export function DayColumnHeader({
                         hideZeroActual
                     />
                 ) : (
-                    <ProgressBlock 
-                        categoryHours={categoryHours} 
-                        order={progressOrder} 
-                        totalHours={totalDayHours} 
-                        colorMap={colorMap} 
-                        untrackedLabel={untrackedLabel} 
+                    <ProgressBlock
+                        goalHours={goalHours}
+                        order={goalOrder}
+                        totalHours={totalDayHours}
+                        colorMap={colorMap}
+                        untrackedLabel={untrackedLabel}
                     />
                 )}
             </div>

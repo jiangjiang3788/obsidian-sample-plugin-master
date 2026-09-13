@@ -34,7 +34,7 @@ export class TaskSessionMutation {
     const prepared = this.prepareCreateOperation(task, input);
     await this.repository.batch([prepared.operation]);
     const created = await this.repository.getById(prepared.recordId);
-    if (!created || created.coreBlock !== 'task-session') {
+    if (!created || created.recordType !== 'task-session') {
       throw new Error(`task_session_create_scan_failed:${prepared.recordId}`);
     }
     return created;
@@ -116,7 +116,7 @@ export class TaskSessionMutation {
         kind: 'create',
         record: {
           recordId,
-          coreBlock: 'task-session',
+          recordType: 'task-session',
           targetFilePath: path,
           targetHeader: taskRecord.header || null,
           fields: buildTaskSessionFields(taskRecord, input),

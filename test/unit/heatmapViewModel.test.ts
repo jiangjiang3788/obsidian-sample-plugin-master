@@ -11,9 +11,9 @@ import {
 import {
   buildDayGoalGroups,
   filterGoalHeatmapGroups,
-  inferHeatmapBlockIdByGoal,
-  normalizeHeatmapBlockId,
-  resolveHeatmapCreateBlockId,
+  inferHeatmapRecordTypeIdByGoal,
+  normalizeHeatmapRecordTypeId,
+  resolveHeatmapCreateRecordTypeId,
 } from '@/features/views/runtime/HeatmapViewModel';
 
 describe('HeatmapLayoutModel', () => {
@@ -35,28 +35,28 @@ describe('HeatmapLayoutModel', () => {
   });
 });
 
-const inputSettings = { blocks: [
-  { id: 'habit-block', recordTypeId: 'core.habit', categoryKey: '打卡', name: '打卡' },
-  { id: 'task-block', recordTypeId: 'core.task', categoryKey: '任务', name: '任务' },
+const inputSettings = { recordTypes: [
+  { id: 'habit-block', recordTypeId: 'core.habit', name: '打卡' },
+  { id: 'task-block', recordTypeId: 'core.task', name: '任务' },
 ] } as any;
 
 describe('HeatmapViewModel', () => {
-  it('normalizes block ids and keeps core.habit as convergence fallback', () => {
-    expect(normalizeHeatmapBlockId({ candidate: 'core.habit', inputSettings })).toBe('habit-block');
-    expect(normalizeHeatmapBlockId({ candidate: '任务', inputSettings })).toBe('task-block');
-    expect(normalizeHeatmapBlockId({ candidate: 'old-habit', inputSettings, configuredSourceBlockId: 'old-habit' })).toBe('habit-block');
+  it('normalizes Record Type ids and keeps core.habit as convergence fallback', () => {
+    expect(normalizeHeatmapRecordTypeId({ candidate: 'core.habit', inputSettings })).toBe('habit-block');
+    expect(normalizeHeatmapRecordTypeId({ candidate: '任务', inputSettings })).toBe('task-block');
+    expect(normalizeHeatmapRecordTypeId({ candidate: 'old-habit', inputSettings, configuredSourceRecordTypeId: 'old-habit' })).toBe('habit-block');
   });
 
-  it('infers dominant block by Goal and resolves create block precedence', () => {
-    const inferred = inferHeatmapBlockIdByGoal([
-      { goalPath: '照顾好自己/睡眠', coreBlock: 'habit' },
-      { goalPath: '照顾好自己/睡眠', coreBlock: 'habit' },
-      { goalPath: '照顾好自己/睡眠', coreBlock: 'task' },
+  it('infers dominant Record Type by Goal and resolves create precedence', () => {
+    const inferred = inferHeatmapRecordTypeIdByGoal([
+      { goalPath: '照顾好自己/睡眠', recordType: 'habit' },
+      { goalPath: '照顾好自己/睡眠', recordType: 'habit' },
+      { goalPath: '照顾好自己/睡眠', recordType: 'task' },
     ] as any[]);
     expect(inferred.get('照顾好自己/睡眠')).toBe('core.habit');
-    expect(resolveHeatmapCreateBlockId({
-      goalPath: '照顾好自己/睡眠', heatmapSourceBlockId: '', inferredBlockIdByGoal: inferred,
-      normalizeBlockId: (candidate) => normalizeHeatmapBlockId({ candidate, inputSettings }),
+    expect(resolveHeatmapCreateRecordTypeId({
+      goalPath: '照顾好自己/睡眠', heatmapSourceRecordTypeId: '', inferredRecordTypeIdByGoal: inferred,
+      normalizeRecordTypeId: (candidate) => normalizeHeatmapRecordTypeId({ candidate, inputSettings }),
     })).toBe('habit-block');
   });
 

@@ -14,7 +14,6 @@ export type TemplateField = CaptureFieldConfig;
 export interface RecordCaptureTemplate {
   id: string;
   name: string;
-  categoryKey: string;
   fields: TemplateField[];
   targetFile: string;
   recordTypeId?: string;
@@ -23,5 +22,5 @@ export interface RecordCaptureTemplate {
 }
 
 export interface InputSettings {
-  blocks: RecordCaptureTemplate[];
+  recordTypes: RecordCaptureTemplate[];
 }

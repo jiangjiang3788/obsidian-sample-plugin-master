@@ -64,10 +64,10 @@ function normalizedTaskStatus(value: unknown): string {
 }
 
 export function buildTaskLifecycleBypassIssue(
-  item: Pick<SubmitUpdateRecordParams['item'], 'coreBlock' | 'status'>,
+  item: Pick<SubmitUpdateRecordParams['item'], 'recordType' | 'status'>,
   formData: Record<string, unknown>,
 ): RecordSubmitIssue | null {
-  if (item.coreBlock !== 'task') return null;
+  if (item.recordType !== 'task') return null;
   const current = normalizedTaskStatus(item.status);
   const requested = normalizedTaskStatus(formData.status ?? formData['状态'] ?? current);
   if (!requested || requested === current) return null;
@@ -133,7 +133,7 @@ export function buildExplicitTaskSeriesEditPlan(
   const intent = normalizeTaskSeriesEditIntent(params.meta?.taskSeriesEdit);
   if (!intent || intent.scope === 'current') return null;
   const seriesId = String(params.item.seriesId || '').trim();
-  if (params.item.coreBlock !== 'task' || !seriesId) {
+  if (params.item.recordType !== 'task' || !seriesId) {
     return { error: 'task_series_edit_requires_recurring_task' as const };
   }
   return {
@@ -204,7 +204,7 @@ export class UpdateRecordWorkflow {
       const prepared = prepareTemplateSubmit({
         kernel: this.runtime.getKernel(),
         operation: 'update',
-        blockId: params.blockId,
+        recordTypeId: params.recordTypeId,
         item: params.item,
         formData: { ...params.formData, seriesId: params.item.seriesId },
         normalizeMode: 'edit',

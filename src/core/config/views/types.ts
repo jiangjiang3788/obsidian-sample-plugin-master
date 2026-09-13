@@ -20,7 +20,7 @@ export interface StatisticsViewConfig extends ViewTemporalConfig {
 /** HeatmapView 默认配置（供视图 + 编辑器复用）。 */
 export interface HeatmapViewConfig extends ViewTemporalConfig {
   displayMode: 'habit' | 'count';
-  sourceBlockId: string;
+  sourceRecordTypeId: string;
   goalPaths: string[];
   maxDailyChecks: number;
   allowManualEdit: boolean;
@@ -34,11 +34,11 @@ export interface ProgressViewConfig extends ViewTemporalConfig {
   statusFilter?: string[];
   basePoints: number;
   levelStep: number;
-  includedCategories: string[];
+  includedRecordTypes: string[];
   ratingBonusThreshold: number;
   ratingBonusPoints: number;
   showGoalBreakdown: boolean;
-  showCategoryBreakdown: boolean;
+  showRecordTypeBreakdown: boolean;
   topN: number;
 }
 
@@ -81,8 +81,8 @@ export interface TableViewConfig extends ViewTemporalConfig {
   colField: string;
 }
 
-/** TimelineView 分类配置。 */
-export interface CategoryConfig {
+/** Generic Statistics chart bucket. This is not the retired Record Category domain. */
+export interface StatisticsBucketConfig {
   /** Stable identifier used across aggregation / charting. */
   name: string;
   color: string;
@@ -91,13 +91,11 @@ export interface CategoryConfig {
   alias?: string;
 }
 
-/** TimelineView 默认配置（供视图 + 编辑器复用）。 */
+/** TimelineView 默认配置（供视图 + 编辑器复用）。 Goal identity/color is external domain data. */
 export interface TimelineViewConfig extends ViewTemporalConfig {
   defaultHourHeight: number;
   MAX_HOURS_PER_DAY: number;
   UNTRACKED_LABEL: string;
-  categories: Record<string, CategoryConfig>;
-  progressOrder: string[];
 }
 
 /** BlockView 默认配置（供视图 + 编辑器复用）。 */

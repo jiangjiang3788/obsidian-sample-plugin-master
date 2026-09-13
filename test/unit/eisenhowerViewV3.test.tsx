@@ -12,8 +12,8 @@ import { buildEisenhowerColumns } from '@/features/views/runtime/EisenhowerView/
 
 function item(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
-    id: 'task-1', coreBlock: 'task', status: 'open', title: 'task-1', content: 'task-1',
-    tags: [], categoryKey: '任务', created: 0, modified: 0, extra: {}, ...overrides,
+    id: 'task-1', recordType: 'task', status: 'open', title: 'task-1', content: 'task-1',
+    tags: [], created: 0, modified: 0, extra: {}, ...overrides,
   };
 }
 
@@ -31,7 +31,7 @@ describe('四象限 View V3', () => {
       task('q1', 'important', 'urgent'),
       task('inbox'),
       task('done', 'important', 'normal', 'done'),
-      item({ id: 'note', coreBlock: 'thought', status: 'open', categoryKey: '思考' }),
+      item({ id: 'note', recordType: 'thought', status: 'open' }),
     ]);
     expect(columns.q1.map((row) => row.id)).toEqual(['q1']);
     expect(columns.unclassified.map((row) => row.id)).toEqual(['inbox']);
@@ -44,7 +44,7 @@ describe('四象限 View V3', () => {
     const card = host.querySelector('.think-eisenhower-card') as HTMLButtonElement;
     expect(card).toBeTruthy();
     await act(async () => card.click());
-    expect(onOpenRecord).toHaveBeenCalledWith(expect.objectContaining({ id: 'task-1', coreBlock: 'task' }));
+    expect(onOpenRecord).toHaveBeenCalledWith(expect.objectContaining({ id: 'task-1', recordType: 'task' }));
   });
 
   it('拖到 Q1 只发出 Task 分类意图', async () => {

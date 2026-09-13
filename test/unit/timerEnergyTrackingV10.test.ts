@@ -8,7 +8,7 @@ import { TimerService } from '@/features/timer/TimerService';
 import type { TimerState } from '@core/types/public';
 
 function task(taskId: string) {
-  return { id: taskId, coreBlock: 'task', status: 'open', title: '写代码', goalPath: '爱好能力/武装大脑' };
+  return { id: taskId, recordType: 'task', status: 'open', title: '写代码', goalPath: '爱好能力/武装大脑' };
 }
 
 function makeRuntime(initial: TimerState[]) {

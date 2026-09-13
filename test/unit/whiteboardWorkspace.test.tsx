@@ -7,12 +7,13 @@
 /** @jsxImportSource preact */
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
+import { createPointerEvent, waitForUi } from '../support/uiTestUtils';
 import type { RecordViewItem } from '@core/types/public';
 import { DEFAULT_WHITEBOARD_ID, type WhiteboardBoard, type WhiteboardStore } from '@core/whiteboard/public';
 import { WhiteboardWorkspace } from '@/features/whiteboard/WhiteboardWorkspace';
 
-function record(id: string, coreBlock: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
-  return { id, coreBlock, title: id, content: `${id} content`, tags: [], categoryKey: coreBlock, goalPath: '真实/主题', date: '2026-09-01', created: 0, modified: 0, extra: {}, ...overrides };
+function record(id: string, recordType: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
+  return { id, recordType, title: id, content: `${id} content`, tags: [], goalPath: '真实/主题', date: '2026-09-01', created: 0, modified: 0, extra: {}, ...overrides };
 }
 
 function fakeStore(initial: WhiteboardBoard | undefined) {
@@ -76,7 +77,7 @@ describe('ThinkOS 独立白板 Workspace 1.1.0', () => {
   afterEach(() => { render(null, host); host.remove(); });
 
   it('左侧是永久 Record Source，右侧白板不依赖 ViewInstance / Layout / Toolbar', async () => {
-    const old = record('rec-old', 'evidence', { content: '睡眠相关证据' });
+    const old = record('rec-old', 'event', { content: '睡眠相关证据' });
     const other = record('rec-other', 'thought', { content: '编程想法' });
     const store = fakeStore({ title: '白板', items: [{ id: 'item-old', recordId: old.id, x: 24, y: 24 }], edges: [], modified: 1 });
     await act(async () => render(<WhiteboardWorkspace records={[old, other]} whiteboardStore={store} />, host));
@@ -99,16 +100,16 @@ describe('ThinkOS 独立白板 Workspace 1.1.0', () => {
     const store = fakeStore({ title: '白板', items: [], edges: [], modified: 1 });
     await act(async () => render(<WhiteboardWorkspace records={[rec]} whiteboardStore={store} />, host));
     const add = Array.from(host.querySelectorAll('button')).find((button) => button.textContent === '加入') as HTMLButtonElement;
-    await act(async () => { add.click(); await Promise.resolve(); await Promise.resolve(); });
-    expect((store.addRecord as jest.Mock)).toHaveBeenCalledWith(DEFAULT_WHITEBOARD_ID, rec.id, { x: 24, y: 24, zIndex: 1 });
-    expect(host.querySelector('[data-whiteboard-item-id="item-1"]')).toBeTruthy();
+    await act(async () => { add.click(); });
+    await waitForUi(() => Boolean(host.querySelector('[data-whiteboard-item-id="item-1"]')), '等待加入后的白板卡片渲染');
+    expect((store.addRecord as jest.Mock)).toHaveBeenCalledWith(DEFAULT_WHITEBOARD_ID, rec.id, { x: 24, y: 24, zIndex: 1 }, null);
     expect(host.querySelector('[data-whiteboard-source-record-id="rec-add"]')).toBeNull();
   });
 
   // Pointer Capture 的浏览器级行为由真机验收；jsdom 仅保留 WhiteboardDragModel 纯模型覆盖。
 
   it('卡片四边都可直接拖出 A→B 连线，不再需要“连线/连到这里”按钮', async () => {
-    const a = record('rec-a', 'evidence');
+    const a = record('rec-a', 'event');
     const b = record('rec-b', 'thought');
     const store = fakeStore({ title: '白板', items: [{ id: 'item-a', recordId: a.id, x: 24, y: 24 }, { id: 'item-b', recordId: b.id, x: 360, y: 180 }], edges: [], modified: 1 });
     await act(async () => render(<WhiteboardWorkspace records={[a, b]} whiteboardStore={store} />, host));
@@ -119,16 +120,17 @@ describe('ThinkOS 独立白板 Workspace 1.1.0', () => {
     expect(aCard.querySelectorAll('[data-whiteboard-edge-handle]')).toHaveLength(4);
     expect(aCard.textContent).not.toContain('连到这里'); expect(aCard.textContent).not.toContain('取消连线');
     const original = document.elementFromPoint; Object.defineProperty(document, 'elementFromPoint', { configurable: true, value: jest.fn(() => bCard) });
-    const pointer = (type: string, x: number, y: number) => { const event = new Event(type, { bubbles: true, cancelable: true }); Object.defineProperties(event, {
-      pointerId: { value: 31 }, pointerType: { value: 'mouse' }, button: { value: 0 }, clientX: { value: x }, clientY: { value: y },
-    }); return event; };
+    const pointer = (type: string, x: number, y: number) => { return createPointerEvent(type, {
+      pointerId: 31, pointerType: 'mouse', button: 0, clientX: x, clientY: y,
+    }); };
     const start = aCard.querySelector('[data-whiteboard-edge-handle="right"]') as HTMLButtonElement;
     await act(async () => { start.dispatchEvent(pointer('pointerdown', 272, 90)); window.dispatchEvent(pointer('pointermove', 380, 220)); });
+    await waitForUi(() => Boolean(host.querySelector('[data-whiteboard-edge-preview="true"]')), '等待连线预览');
     expect(host.querySelector('[data-whiteboard-edge-preview="true"]')).toBeTruthy();
     expect(bCard.getAttribute('data-whiteboard-connection-target')).toBe('true');
-    await act(async () => { window.dispatchEvent(pointer('pointerup', 380, 220)); await Promise.resolve(); await Promise.resolve(); });
+    await act(async () => { window.dispatchEvent(pointer('pointerup', 380, 220)); });
+    await waitForUi(() => Boolean(host.querySelector('[data-whiteboard-edge-id="edge-1"]')), '等待连线写入后的 UI 刷新');
     expect((store.addEdge as jest.Mock)).toHaveBeenCalledWith(DEFAULT_WHITEBOARD_ID, 'item-a', 'item-b');
-    expect(host.querySelector('[data-whiteboard-edge-id="edge-1"]')).toBeTruthy();
     Object.defineProperty(document, 'elementFromPoint', { configurable: true, value: original });
   });
 });

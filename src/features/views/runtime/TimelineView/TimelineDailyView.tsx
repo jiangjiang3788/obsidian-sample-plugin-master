@@ -12,17 +12,16 @@ interface TimelineDailyViewProps {
   onZoomToMax?: () => void;
   maxHourHeight?: number;
   timeAxisWidth: number;
-  summaryCategoryHours: Record<string, number>;
+  summaryGoalHours: Record<string, number>;
   totalSummaryHours: number;
   goalAllocationSummary?: GoalTimeAllocationSummary | null;
   goalAllocationByDay?: Record<string, GoalTimeAllocationSummary>;
   currentView?: TimelineCurrentView;
   dailyViewData: DailyViewData;
-  categoriesConfig: Record<string, { files?: string[]; color?: string }>;
   hourHeight: number;
   maxHours: number;
   colorMap: Record<string, string>;
-  progressOrder: string[];
+  goalOrder: string[];
   untrackedLabel: string;
   onOpenRecordOrigin?: OpenRecordOriginHandler;
   onUpdateTimelineRange?: UpdateTimelineRangeHandler;
@@ -36,17 +35,16 @@ export function TimelineDailyView({
   onZoomToMax,
   maxHourHeight,
   timeAxisWidth,
-  summaryCategoryHours,
+  summaryGoalHours,
   totalSummaryHours,
   goalAllocationSummary = null,
   goalAllocationByDay = {},
   currentView = '天',
   dailyViewData,
-  categoriesConfig,
   hourHeight,
   maxHours,
   colorMap,
-  progressOrder,
+  goalOrder,
   untrackedLabel,
   onOpenRecordOrigin,
   onUpdateTimelineRange,
@@ -67,9 +65,9 @@ export function TimelineDailyView({
           width={timeAxisWidth}
           goalSummary={goalAllocationSummary}
           currentView={currentView}
-          categoryHours={summaryCategoryHours}
+          goalHours={summaryGoalHours}
           totalHours={totalSummaryHours}
-          progressOrder={progressOrder}
+          goalOrder={goalOrder}
           colorMap={colorMap}
           untrackedLabel={untrackedLabel}
         />
@@ -79,10 +77,9 @@ export function TimelineDailyView({
             key={day}
             day={day}
             blocks={blocks.filter((block) => block.timelineSource !== 'task-plan')}
-            categoriesConfig={categoriesConfig}
             colorMap={colorMap}
             untrackedLabel={untrackedLabel}
-            progressOrder={progressOrder}
+            goalOrder={goalOrder}
             goalAllocationSummary={goalAllocationByDay[day]}
             currentView={currentView}
           />
@@ -106,7 +103,6 @@ export function TimelineDailyView({
             day={day}
             blocks={blocks}
             hourHeight={hourHeight}
-            categoriesConfig={categoriesConfig}
             colorMap={colorMap}
             maxHours={maxHours}
             onUpdateTimelineRange={onUpdateTimelineRange}

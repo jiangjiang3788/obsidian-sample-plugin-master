@@ -9,19 +9,19 @@ import type { RecordViewItem } from '@core/types/public';
 
 function item(overrides: Partial<RecordViewItem>): RecordViewItem {
   return {
-    id: 'item', title: '事项', content: '', tags: [], categoryKey: '', created: 0, modified: 0, extra: {}, ...overrides,
+    id: 'item', title: '事项', content: '', tags: [], created: 0, modified: 0, extra: {}, ...overrides,
   } as RecordViewItem;
 }
 
 function task(id: string, title: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
-  return item({ id, title, content: title, coreBlock: 'task', status: 'open', ...overrides });
+  return item({ id, title, content: title, recordType: 'task', status: 'open', ...overrides });
 }
 
 function session(id: string, taskId: string, duration: number, startedAt: string): RecordViewItem {
   const start = new Date(startedAt);
   const end = new Date(start.getTime() + duration * 60_000);
   return item({
-    id, coreBlock: 'task-session', taskId,
+    id, recordType: 'task-session', taskId,
     sessionStartedAt: start.toISOString(), sessionEndedAt: end.toISOString(), sessionDurationMinutes: duration,
     sessionResult: 'task-completed', sessionSource: 'timer',
   });
@@ -43,7 +43,7 @@ describe('Energy recommendation candidate adapter', () => {
 
   it('does not recommend Habit check-ins or recurring Task instances by default', () => {
     const rows = buildEnergyActionCandidates([
-      item({ id: 'habit-repeat', title: '身体状态', coreBlock: 'habit' }),
+      item({ id: 'habit-repeat', title: '身体状态', recordType: 'habit' }),
       task('task-repeat', '每天习惯', { seriesId: 'taskseries.daily', recurrenceInfo: { unit: 'day', interval: 1, anchor: 'scheduled' } }),
       task('task-real', '整理代码'),
     ], { today: '2026-08-10' });
@@ -52,8 +52,8 @@ describe('Energy recommendation candidate adapter', () => {
 
   it('allows explicit opt-in for special Plan/Habit/recurring actions', () => {
     const rows = buildEnergyActionCandidates([
-      item({ id: 'habit', title: '散步', coreBlock: 'habit', recoveryIntent: true, extra: { 可推荐: true } }),
-      item({ id: 'plan', title: '恢复计划', coreBlock: 'plan', extra: { 可推荐: true } }),
+      item({ id: 'habit', title: '散步', recordType: 'habit', recoveryIntent: true, extra: { 可推荐: true } }),
+      item({ id: 'plan', title: '恢复计划', recordType: 'plan', extra: { 可推荐: true } }),
       task('repeat', '瑜伽', { seriesId: 'taskseries.yoga', recurrenceInfo: { unit: 'day', interval: 1, anchor: 'scheduled' }, extra: { 可推荐: true } }),
     ], { today: '2026-08-10', includeHabits: true, includePlans: true });
     expect(rows.map((row) => row.id).sort()).toEqual(['habit', 'plan', 'repeat']);

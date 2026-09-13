@@ -11,7 +11,7 @@ export { ChatSessionStore } from './ChatSessionStore';
 export { RetrievalService } from './RetrievalService';
 export { AiChatService } from './AiChatService';
 
-export type { AiConfigSnapshot, AiBlockConfig, AiBlockConfigField } from './AiConfigSnapshot';
+export type { AiConfigSnapshot, AiRecordTypeConfig, AiRecordTypeConfigField } from './AiConfigSnapshot';
 export type { INaturalLanguageRecordParser, ParseInput } from './INaturalLanguageRecordParser';
 export type { OpenAIChatMessage, ChatCompletionRequest, ListModelsRequest, AiHttpTransport, AiHttpResponse, AiHttpTransportFactory } from './AiHttpClient';
 

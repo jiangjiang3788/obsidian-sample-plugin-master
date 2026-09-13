@@ -38,7 +38,7 @@ describe('Timer 连续执行段 V9', () => {
       },
     } as unknown as ConstructorParameters<typeof TimerService>[0];
     const dataStore = {
-      getRecordById: () => ({ id: timers[0]?.taskId, coreBlock: 'task', status: 'open' }),
+      getRecordById: () => ({ id: timers[0]?.taskId, recordType: 'task', status: 'open' }),
     } as unknown as ConstructorParameters<typeof TimerService>[1];
     const ui = { notice: jest.fn() } as unknown as ConstructorParameters<typeof TimerService>[2];
     const service = new TimerService(useCases, dataStore, ui);
@@ -90,7 +90,7 @@ describe('Timer 连续执行段 V9', () => {
       taskRuntime: { completeTask },
     } as unknown as ConstructorParameters<typeof TimerService>[0];
     const dataStore = {
-      getRecordById: () => ({ id: timer.taskId, coreBlock: 'task', status: 'open' }),
+      getRecordById: () => ({ id: timer.taskId, recordType: 'task', status: 'open' }),
     } as unknown as ConstructorParameters<typeof TimerService>[1];
     const ui = { notice: jest.fn() } as unknown as ConstructorParameters<typeof TimerService>[2];
 
@@ -118,7 +118,7 @@ describe('Timer 连续执行段 V9', () => {
       taskRuntime: { completeTask: jest.fn() },
     } as unknown as ConstructorParameters<typeof TimerService>[0];
     const dataStore = {
-      getRecordById: () => ({ id: timer.taskId, coreBlock: 'task', status: 'open' }),
+      getRecordById: () => ({ id: timer.taskId, recordType: 'task', status: 'open' }),
     } as unknown as ConstructorParameters<typeof TimerService>[1];
     const ui = { notice: jest.fn() } as unknown as ConstructorParameters<typeof TimerService>[2];
 
@@ -155,7 +155,7 @@ describe('Timer 连续执行段 V9', () => {
       taskRuntime: { completeTask: jest.fn() },
     } as unknown as ConstructorParameters<typeof TimerService>[0];
     const dataStore = {
-      getRecordById: (id: string) => ({ id, coreBlock: 'task', status: 'open' }),
+      getRecordById: (id: string) => ({ id, recordType: 'task', status: 'open' }),
     } as unknown as ConstructorParameters<typeof TimerService>[1];
     const ui = { notice: jest.fn() } as unknown as ConstructorParameters<typeof TimerService>[2];
     jest.spyOn(Date, 'now')
@@ -179,7 +179,7 @@ describe('Timer 连续执行段 V9', () => {
     const records = new Map<string, Record<string, unknown>>([
       [oldTaskId, {
         id: oldTaskId,
-        coreBlock: 'task',
+        recordType: 'task',
         status: 'done',
         content: '八段锦',
         goalPath: '照顾好自己/运动',
@@ -193,7 +193,7 @@ describe('Timer 连续执行段 V9', () => {
       return created;
     });
     const prepareEditRecord = jest.fn(() => ({
-      blockId: 'core.task',
+      recordTypeId: 'core.task',
       template: { id: 'core.task' },
       initialFormData: {
         content: '八段锦',
@@ -211,7 +211,7 @@ describe('Timer 连续执行段 V9', () => {
         expectedDurationMinutes: 30,
       });
       expect(params.formData).not.toHaveProperty('completedAt');
-      records.set(newTaskId, { id: newTaskId, coreBlock: 'task', status: 'open', content: '八段锦' });
+      records.set(newTaskId, { id: newTaskId, recordType: 'task', status: 'open', content: '八段锦' });
       return { status: 'success' as const, affectedRecordId: newTaskId, followUp: { startTimerForRecordId: newTaskId } };
     });
     const useCases = {
@@ -237,9 +237,9 @@ describe('Timer 连续执行段 V9', () => {
     const currentTaskId = 'task.01J00000000000000000000021';
     const seriesId = 'taskseries.01J000000000000000000020';
     const records = new Map<string, Record<string, unknown>>([
-      [oldTaskId, { id: oldTaskId, coreBlock: 'task', status: 'done', seriesId, content: '通勤' }],
-      [seriesId, { id: seriesId, coreBlock: 'task-series', currentTaskId }],
-      [currentTaskId, { id: currentTaskId, coreBlock: 'task', status: 'open', seriesId, content: '通勤' }],
+      [oldTaskId, { id: oldTaskId, recordType: 'task', status: 'done', seriesId, content: '通勤' }],
+      [seriesId, { id: seriesId, recordType: 'task-series', currentTaskId }],
+      [currentTaskId, { id: currentTaskId, recordType: 'task', status: 'open', seriesId, content: '通勤' }],
     ]);
     const timers: TimerState[] = [];
     const addTimer = jest.fn(async (input: Omit<TimerState, 'id'>) => {

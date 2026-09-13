@@ -57,15 +57,15 @@ function readNumber(value: unknown): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function normalizeCoreBlock(item: RecordViewItem): string {
-  return String(item.coreBlock || item.extra?.['记录类型'] || '')
+function normalizeRecordType(item: RecordViewItem): string {
+  return String(item.recordType || item.extra?.['记录类型'] || '')
     .replace(/^core\./i, '')
     .trim()
     .toLowerCase();
 }
 
 function isHabitLike(item: RecordViewItem): boolean {
-  return normalizeCoreBlock(item) === 'habit';
+  return normalizeRecordType(item) === 'habit';
 }
 
 function matchesEnergyGoal(energyItem: RecordViewItem, candidate: RecordViewItem): boolean {
@@ -75,7 +75,7 @@ function matchesEnergyGoal(energyItem: RecordViewItem, candidate: RecordViewItem
 }
 
 function occurrenceDate(item: RecordViewItem): string | undefined {
-  if (item.coreBlock === 'task-session' && item.sessionStartedAt) {
+  if (item.recordType === 'task-session' && item.sessionStartedAt) {
     const value = new Date(item.sessionStartedAt);
     if (Number.isFinite(value.getTime())) {
       return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
@@ -148,7 +148,7 @@ function resolveActivityInterval(record: RecordViewItem, byId: Map<string, Recor
   const session = asTaskSessionRecord(record);
   if (!session) return null;
   const task = byId.get(session.taskId);
-  if (!task || task.coreBlock !== 'task') return null;
+  if (!task || task.recordType !== 'task') return null;
   const start = localSessionParts(session.sessionStartedAt);
   const end = localSessionParts(session.sessionEndedAt);
   if (!start || !end) return null;
@@ -231,7 +231,7 @@ function activityRank(activity: EnergyActivityContext): number {
 
 function classifyDailySignal(item: RecordViewItem): EnergyDailySignalKind | null {
   if (!isHabitLike(item)) return null;
-  const text = [item.title, item.content, item.goalPath, item.categoryKey]
+  const text = [item.title, item.content, item.goalPath]
     .map((value) => String(value || ''))
     .join(' ');
   if (/睡眠|睡觉|睡醒/.test(text)) return 'sleep';
@@ -294,7 +294,7 @@ export function resolveEnergyContext(
 
   const byId = new Map(items.map((item) => [item.id, item] as const));
   const nearbyActivities = items
-    .filter((item) => item.id !== energyItem.id && item.coreBlock === 'task-session')
+    .filter((item) => item.id !== energyItem.id && item.recordType === 'task-session')
     .map((item) => buildActivityContext(item, byId, energyItem.id, energyAbsolute, recentWindowMinutes))
     .filter((row): row is EnergyActivityContext => !!row)
     .sort((left, right) => activityRank(left) - activityRank(right))

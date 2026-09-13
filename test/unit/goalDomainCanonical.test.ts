@@ -23,7 +23,7 @@ describe('Goal canonical domain', () => {
     })).toThrow(/must not persist Goal|system context/i);
   });
 
-  it('rejects duplicate Goal x CoreBlock templates', () => {
+  it('rejects duplicate Goal x RecordType templates', () => {
     expect(() => assertCanonicalGoalSettings({
       goals: [{ path: '照顾好自己', status: 'active' } as any],
       goalTemplates: [

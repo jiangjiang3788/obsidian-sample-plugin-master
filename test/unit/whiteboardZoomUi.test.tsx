@@ -18,11 +18,10 @@ import { WhiteboardWorkspace } from '@/features/whiteboard/WhiteboardWorkspace';
 function record(id: string): RecordViewItem {
   return {
     id,
-    coreBlock: 'thought',
+    recordType: 'thought',
     title: id,
     content: `${id} 内容`,
     tags: [],
-    categoryKey: 'thought',
     goalPath: '照顾好自己/睡眠',
     date: '2026-09-08',
     created: 0,
@@ -101,7 +100,7 @@ describe('白板 Zoom + Camera UI 1.1.5', () => {
     expect(store.removeEdge).not.toHaveBeenCalled();
   });
 
-  test('右上角“回到画布中心”把 camera 带回内容中心并同时恢复 100%，不写 Store', async () => {
+  test('右上角“回到画布中心”回到真实可见内容锚点并同时恢复 100%，不写 Store', async () => {
     const a = record('rec-center-a');
     const b = record('rec-center-b');
     const board: WhiteboardBoard = {
@@ -123,8 +122,8 @@ describe('白板 Zoom + Camera UI 1.1.5', () => {
     expect(viewport.getAttribute('data-whiteboard-zoom')).toBe('1.25');
     const center = host.querySelector('button[aria-label="回到画布中心"]') as HTMLButtonElement;
     await act(async () => center.click());
-    expect(viewport.getAttribute('data-whiteboard-camera-x')).toBe('324');
-    expect(viewport.getAttribute('data-whiteboard-camera-y')).toBe('230');
+    expect(viewport.getAttribute('data-whiteboard-camera-x')).toBe('-76');
+    expect(viewport.getAttribute('data-whiteboard-camera-y')).toBe('30');
     expect(viewport.getAttribute('data-whiteboard-zoom')).toBe('1');
     expect(store.moveItem).not.toHaveBeenCalled();
     expect(store.addRecord).not.toHaveBeenCalled();

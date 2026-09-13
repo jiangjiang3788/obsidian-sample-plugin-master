@@ -199,7 +199,7 @@ export function sortItems(items: RecordViewItem[], rules: SortRule[] = []) {
 
 /* ---------- 日期区间（仅保留有统一 date 的项） ---------- */
 function isClosed(it: RecordViewItem) {
-  if (it.coreBlock !== 'task') return false;
+  if (it.recordType !== 'task') return false;
   return it.status === 'done' || it.status === 'cancelled' || it.status === 'skipped';
 }
 
@@ -244,7 +244,7 @@ export function filterByKeyword(items: RecordViewItem[], kw: string) {
     const contentLower = readString(itemRecord, 'contentLower') ?? (it.content || '').toLowerCase();
     const fullDataLower = readString(itemRecord, 'fullDataLower') ?? (it.fullData || it.rawSource || '').toLowerCase();
     const tagsLower = (it.tags || []).join(' ').toLowerCase();
-    const semanticText = [it.goalPath, it.coreBlock, it.status].filter(Boolean).join(' ').toLowerCase();
+    const semanticText = [it.goalPath, it.recordType, it.status].filter(Boolean).join(' ').toLowerCase();
     // Global keyword search is intentionally broader than the canonical `content` field:
     // it may discover explicit Record KV/custom fields through fullData without polluting clean content semantics.
     return (titleLower + ' ' + contentLower + ' ' + fullDataLower + ' ' + tagsLower + ' ' + semanticText).includes(s);

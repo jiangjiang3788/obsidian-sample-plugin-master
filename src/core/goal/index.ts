@@ -16,6 +16,8 @@ export { DEFAULT_GOAL_SETTINGS } from './types';
 export { assertCanonicalGoalSettings } from './invariants';
 export { getGoalPathCandidates, normalizeGoalPath, requireGoalPath, splitGoalPath, getParentGoalPath, getGoalLeaf, isGoalPathDescendant } from './path';
 export { normalizeGoalIcon, resolveGoalIcon, resolveRecordDisplayIcon, stripGoalTemplateIconDefaults, stripGoalTemplateIconFieldDefaults, applyGoalIconToCaptureFields } from './icon';
+export { UNASSIGNED_GOAL_COLOR, normalizeGoalColorHex, resolveGoalColor, getGoalPresentation } from './presentation';
+export type { GoalPresentation } from './presentation';
 export { getGoalOrderPath, getGoalOrderLabel, createGoalOrderIndex, sortGoalsBySettingsOrder, compareGoalPathsBySettingsOrder, sortGoalPathsBySettingsOrder, sortGoalTemplatesBySettingsOrder } from './order';
 export type { GoalOrderIndex } from './order';
 export type { GoalPathParts } from './path';

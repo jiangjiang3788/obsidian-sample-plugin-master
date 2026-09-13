@@ -49,10 +49,10 @@ describe('RuleBuilderModel', () => {
 
   it('builds labels, grid templates and value input decisions', () => {
     expect(buildRuleLabel('filter', filterRule)).toContain('状态');
-    expect(buildRuleLabel('filter', { field: 'coreBlock', op: '=', value: 'plan' } as any)).toBe('记录类型 = "计划"');
-    expect(buildRuleLabel('filter', { field: 'coreBlock', op: '=', value: 'evidence' } as any)).toBe('记录类型 = "事件"');
-    expect(buildRuleLabel('filter', { field: 'coreBlock', op: '=', value: 'review' } as any)).toBe('记录类型 = "总结"');
-    expect(buildRuleLabel('filter', { field: 'coreBlock', op: '=', value: 'thought' } as any)).toBe('记录类型 = "思考"');
+    expect(buildRuleLabel('filter', { field: 'recordType', op: '=', value: 'plan' } as any)).toBe('记录类型 = "计划"');
+    expect(buildRuleLabel('filter', { field: 'recordType', op: '=', value: 'event' } as any)).toBe('记录类型 = "事件"');
+    expect(buildRuleLabel('filter', { field: 'recordType', op: '=', value: 'review' } as any)).toBe('记录类型 = "总结"');
+    expect(buildRuleLabel('filter', { field: 'recordType', op: '=', value: 'thought' } as any)).toBe('记录类型 = "思考"');
     expect(buildRuleLabel('sort', sortRule)).toContain('降序');
     expect(shouldShowRuleValueInput('filter', { field: 'x', op: 'empty', value: '' } as any)).toBe(false);
     expect(getPanelRuleGridTemplate('filter', true)).toContain('260px');

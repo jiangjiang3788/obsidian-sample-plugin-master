@@ -57,7 +57,7 @@ export function createGoalOrderIndex(goals: GoalDefinition[] = []): GoalOrderInd
       return {
         path,
         parentPath: parts.slice(0, -1).join('/'),
-        order: finiteNumber((goal as any)?.sortOrder, originalIndex),
+        order: finiteNumber(goal.sortOrder, originalIndex),
         originalIndex,
       };
     })

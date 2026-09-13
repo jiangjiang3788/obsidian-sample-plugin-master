@@ -28,9 +28,8 @@ export function buildEnergySnapshotRecord(input: EnergySnapshotInput): EnergySna
     period: clean(input.period) || undefined,
     recordedAt: clean(input.recordedAt) || undefined,
     source: clean(input.source) || undefined,
-    coreBlock: 'energy',
+    recordType: 'energy',
     subtype: 'snapshot',
-    categoryKey: '精力',
     score,
     scoreMode: input.scoreMode || 'quick',
     captureMode,
@@ -47,10 +46,10 @@ export function buildEnergySnapshotRecord(input: EnergySnapshotInput): EnergySna
  * Goal path is the only persisted ownership identity.
  */
 export function buildEnergySnapshotMarkdown(input: EnergySnapshotInput | EnergySnapshotRecord): string {
-  const record = 'coreBlock' in input ? input : buildEnergySnapshotRecord(input);
+  const record = 'recordType' in input ? input : buildEnergySnapshotRecord(input);
   return encodeRecordBlock({
     recordId: record.recordId,
-    coreBlock: 'energy',
+    recordType: 'energy',
     fields: {
       '记录子类型': 'snapshot',
       '目标': record.goalPath,

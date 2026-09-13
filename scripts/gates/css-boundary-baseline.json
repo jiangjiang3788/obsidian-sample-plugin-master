@@ -952,7 +952,7 @@
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/core/blocks/defaultCoreBlocks.ts": {
+    "src/core/blocks/defaultRecordTypes.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -964,7 +964,7 @@
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/core/blocks/resolveCoreBlocks.ts": {
+    "src/core/blocks/resolveRecordTypes.ts": {
       "staticStyle": 0,
       "staticSx": 0
     },
@@ -2260,7 +2260,7 @@
       "staticStyle": 0,
       "staticSx": 0
     },
-    "src/features/settings/input/BlockManager.tsx": {
+    "src/features/settings/input/RecordTypeManager.tsx": {
       "staticStyle": 0,
       "staticSx": 0
     },

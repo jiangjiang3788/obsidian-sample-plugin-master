@@ -30,8 +30,8 @@ if (!statsModel.includes('includeKnownGoals: true')) {
 if (statsPeriod.includes('hasPeriodData') || statsPeriod.includes('blocks.filter((block)')) {
   failures.push('Statistics period layout must preserve zero-data time slots');
 }
-if (statsChart.includes('categories.filter') || !statsChart.includes('const chartCategories = categories;')) {
-  failures.push('Statistics ChartBlock must preserve zero-count category columns');
+if (statsChart.includes('buckets.filter') || !statsChart.includes('const chartBuckets = buckets;')) {
+  failures.push('Statistics ChartBlock must preserve zero-count bucket columns');
 }
 if (dayView.includes('hasPeriodData') || weekView.includes('hasPeriodData')) {
   failures.push('Day/Week Statistics must render zero-state charts rather than replace them with blank placeholders');

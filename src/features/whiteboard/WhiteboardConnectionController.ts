@@ -33,8 +33,8 @@ interface ConnectionSession {
 
 function targetItemIdAtPoint(sourceItemId: string, clientX: number, clientY: number): string | null {
   const element = document.elementFromPoint?.(clientX, clientY) ?? null;
-  const card = element?.closest?.('[data-whiteboard-item-id]') ?? null;
-  const itemId = card?.getAttribute('data-whiteboard-item-id')?.trim() ?? '';
+  const card = element?.closest?.('[data-whiteboard-item-id],[data-whiteboard-overview-item-id]') ?? null;
+  const itemId = (card?.getAttribute('data-whiteboard-item-id') ?? card?.getAttribute('data-whiteboard-overview-item-id'))?.trim() ?? '';
   return itemId && itemId !== sourceItemId ? itemId : null;
 }
 

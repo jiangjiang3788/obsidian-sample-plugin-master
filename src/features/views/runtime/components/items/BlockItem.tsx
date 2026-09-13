@@ -39,7 +39,7 @@ export const BlockItem = ({ item, fields, resolveResourcePath, onOpenRecordOrigi
     });
 
     return (
-        <div class="bv-item bv-item--block think-list-row think-list-row--interactive" data-record-type={item.coreBlock}>
+        <div class="bv-item bv-item--block think-list-row think-list-row--interactive" data-record-type={item.recordType}>
             <div class="bv-block-metadata">
                 <div class="bv-fields-list-wrapper">
                     {metadataFields.map(fieldKey => (

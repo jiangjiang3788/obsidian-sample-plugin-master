@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { RecordViewItem } from '@core/types/public';
-import type { CategoryConfig } from '@core/view/public';
+import type { StatisticsBucketConfig } from '@core/view/public';
 import { aggregateByDay } from '@core/utils/public';
 import { ChartBlock } from '../../components/statistics/ChartBlock';
 import type { StatisticsCellClickHandler } from '../types';
@@ -18,7 +18,7 @@ export function DayStatisticsView({
   onOpenRecordOrigin,
 }: {
   items: RecordViewItem[];
-  categories: CategoryConfig[];
+  categories: StatisticsBucketConfig[];
   selectedDate: any;
   onCellClick: StatisticsCellClickHandler;
   displayMode: 'smart' | 'linear' | 'logarithmic';
@@ -37,7 +37,7 @@ export function DayStatisticsView({
           <ChartBlock
             data={data}
             label={selectedDate.format('YYYY年MM月DD日 dddd')}
-            categories={categories}
+            buckets={categories}
             onCellClick={onCellClick}
             cellIdentifier={(goal: string) => ({ type: 'day', date: selectedDate.format('YYYY-MM-DD'), goal })}
             displayMode={displayMode}

@@ -8,11 +8,10 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 function makeItem(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: 'rec.01J00000000000000000000061',
-    coreBlock: 'thought',
+    recordType: 'thought',
     title: '标题',
     content: '内容',
     tags: [],
-    categoryKey: '项目/插件',
     created: 1,
     modified: 2,
     extra: {},
@@ -37,16 +36,16 @@ describe('FieldValueResolver', () => {
   });
 
   it('returns resolution metadata for field source and derived state', () => {
-    const item = makeItem({ extra: { 地点: '办公室' } });
+    const item = makeItem({ goalPath: '项目/ThinkOS', extra: { 地点: '办公室' } });
 
     const extra = resolveFieldValue(item, 'extra.地点');
     expect(extra.value).toBe('办公室');
     expect(extra.source).toBe('extra');
 
-    const base = resolveFieldValue(item, '根分类');
-    expect(base.field).toBe('baseCategory');
-    expect(base.value).toBe('项目');
-    expect(base.derived).toBe(true);
+    const rootGoal = resolveFieldValue(item, '根目标');
+    expect(rootGoal.field).toBe('rootGoal');
+    expect(rootGoal.value).toBe('项目');
+    expect(rootGoal.derived).toBe(true);
   });
 
   it('resolves the canonical image field', () => {

@@ -12,16 +12,17 @@ import {
 
 describe('Record Schema Contract R10 current-only', () => {
   it('covers every current persisted/domain record kind', () => {
-    expect(RECORD_SCHEMA_CONTRACTS.map(schema => schema.coreBlock).sort()).toEqual([
-      'blocker', 'energy', 'evidence', 'habit', 'milestone', 'plan', 'review',
+    expect(RECORD_SCHEMA_CONTRACTS.map(schema => schema.recordType).sort()).toEqual([
+      'blocker', 'energy', 'event', 'feeling', 'habit', 'milestone', 'plan', 'review',
       'task', 'task-series', 'task-session', 'thought',
     ]);
   });
 
-  it('uses 记录子类型 as the only Thought subtype field', () => {
-    expect(canonicalRecordFieldKey('thought', '记录子类型')).toBe('记录子类型');
-    expect(getRecordFieldContract('thought', '分类')).toBeNull();
-    expect(getRecordFieldContract('thought', '记录子类型')?.allowedValues).toEqual(['感受', '思考']);
+  it('keeps Feeling/Thought as first-class types and reserves recordSubtype for Energy', () => {
+    expect(getRecordFieldContract('thought', '记录子类型')).toBeNull();
+    expect(getRecordFieldContract('feeling', '记录子类型')).toBeNull();
+    expect(canonicalRecordFieldKey('energy', '记录子类型')).toBe('记录子类型');
+    expect(getRecordFieldContract('energy', '记录子类型')?.allowedValues).toEqual(['snapshot', 'change', 'recovery', 'depletion', 'stop']);
   });
 
   it('persists only period granularity for Plan/Review', () => {
@@ -63,7 +64,8 @@ describe('Record Schema Contract R10 current-only', () => {
 
   it('drives RecordType capabilities from the same contract vocabulary', () => {
     expect(getRecordSchemaDefinition('plan')?.capabilities.periodAware).toBe(true);
-    expect(getRecordSchemaDefinition('thought')?.capabilities.subtypeAware).toBe(true);
+    expect(getRecordSchemaDefinition('thought')?.capabilities.subtypeAware).not.toBe(true);
+    expect(getRecordSchemaDefinition('energy')?.capabilities.subtypeAware).toBe(true);
     expect(getRecordSchemaDefinition('task-session')?.capabilities.userVisible).toBe(false);
   });
 });

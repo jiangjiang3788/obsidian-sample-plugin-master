@@ -87,7 +87,7 @@ describe('Think OS 真机 UI：四列 Goal Cascade 与 Quick Input', () => {
 
     const record: any = await findRecordByContent(TASK_CONTENT);
     expect(record).not.toBeNull();
-    expect(record.coreBlock).toBe('task');
+    expect(record.recordType).toBe('task');
     expect(record.goalPath).toBe(E2E_LEAF_GOAL);
     expect(record.status).toBe('open');
   });

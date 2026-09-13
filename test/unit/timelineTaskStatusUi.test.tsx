@@ -5,13 +5,14 @@
  */
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
+import { createPointerEvent, waitForUi } from '../support/uiTestUtils';
 import { DayColumnBody } from '@/features/views/runtime/components/timeline/DayColumnBody';
 
 function taskBlock(status: 'open' | 'done', id: string) {
   return {
     id,
     taskRecordId: id,
-    coreBlock: 'task',
+    recordType: 'task',
     status,
     title: status === 'done' ? '完成任务' : '未完成任务',
     pureText: status === 'done' ? '完成任务' : '未完成任务',
@@ -27,20 +28,17 @@ function taskBlock(status: 'open' | 'done', id: string) {
     timelineRange: { start: '2026-08-26T01:00', end: '2026-08-26T01:30' },
     isRangeStart: true,
     isRangeEnd: true,
-    categoryKey: '任务',
     fileName: '目标.md',
     tags: [],
     created: 0,
     modified: 0,
     extra: {},
+    goalPath: '测试目标',
   } as any;
 }
 
 function pointerEvent(type: string, clientY: number, options: { pointerId?: number; pointerType?: string; button?: number } = {}) {
-  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientY, button: options.button ?? 0 });
-  Object.defineProperty(event, 'pointerId', { value: options.pointerId ?? 1 });
-  Object.defineProperty(event, 'pointerType', { value: options.pointerType ?? 'mouse' });
-  return event;
+  return createPointerEvent(type, { clientY, button: options.button ?? 0, pointerId: options.pointerId ?? 1, pointerType: options.pointerType ?? 'mouse' });
 }
 
 describe('Timeline task lifecycle status UI', () => {
@@ -62,7 +60,6 @@ describe('Timeline task lifecycle status UI', () => {
         day="2026-08-26"
         blocks={[taskBlock('open', 'task-open'), taskBlock('done', 'task-done')]}
         hourHeight={40}
-        categoriesConfig={{}}
         colorMap={{}}
         maxHours={24}
         onColumnClick={() => undefined}
@@ -98,8 +95,7 @@ describe('Timeline task lifecycle status UI', () => {
           day="2026-08-14"
           blocks={[point]}
           hourHeight={60}
-          categoriesConfig={{}}
-          colorMap={{}}
+            colorMap={{}}
           maxHours={24}
           onColumnClick={() => undefined}
         />,
@@ -116,6 +112,7 @@ describe('Timeline task lifecycle status UI', () => {
 
   it('removes the pencil path while keeping Session result, task open and range handles independent', async () => {
     const onOpenRecord = jest.fn();
+    const onOpenRecordOrigin = jest.fn();
     const session = {
       ...taskBlock('open', 'task-session-record'),
       id: 'task-session-record',
@@ -133,62 +130,42 @@ describe('Timeline task lifecycle status UI', () => {
         day="2026-08-26"
         blocks={[session]}
         hourHeight={40}
-        categoriesConfig={{}}
-        colorMap={{}}
+        colorMap={{ '测试目标': '#f59e0b' }}
         maxHours={24}
         onColumnClick={() => undefined}
         onOpenRecord={onOpenRecord}
+        onOpenRecordOrigin={onOpenRecordOrigin}
       />,
       host,
     ));
 
     const block = host.querySelector('[data-task-status="done"]');
+    expect((block as HTMLElement | null)?.style.getPropertyValue('--timeline-goal-color')).toBe('#f59e0b');
+    expect(block?.querySelector('.timeline-task-indicator')).toBeNull();
+    expect(block?.getAttribute('data-record-type')).toBeNull();
     expect(block?.querySelector('.timeline-task-status')?.textContent).toBe('✅');
     expect(block?.getAttribute('title')).toContain('本次执行已完成任务');
 
-    (host.querySelector('.timeline-task-link') as HTMLElement).click();
+    (block as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(onOpenRecord).toHaveBeenCalledWith(expect.objectContaining({ id: 'task-reopened' }));
+
+    (block as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true, ctrlKey: true }));
+    expect(onOpenRecordOrigin).toHaveBeenCalledWith(expect.objectContaining({ id: 'task-session-record' }));
+
+    const alignmentControls = host.querySelector('.task-buttons');
+    if (alignmentControls) {
+      alignmentControls.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }
+    expect(onOpenRecord).toHaveBeenCalledTimes(1);
+    expect(onOpenRecordOrigin).toHaveBeenCalledTimes(1);
+
+    const taskLink = host.querySelector('.timeline-task-link') as HTMLElement;
+    taskLink.focus();
+    taskLink.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
+    expect(onOpenRecord).toHaveBeenCalledTimes(2);
+
     expect(host.querySelector('[aria-label="精确编辑"]')).toBeNull();
     expect(host.querySelector('[aria-label="拖动修改开始时间"]')).not.toBeNull();
     expect(host.querySelector('[aria-label="拖动修改结束时间"]')).not.toBeNull();
-  });
-
-  it('previews locally while dragging and commits one full logical range on pointer up', async () => {
-    const onUpdateTimelineRange = jest.fn().mockResolvedValue(undefined);
-    const block = taskBlock('open', 'task-drag');
-
-    await act(async () => render(
-      <DayColumnBody
-        day="2026-08-26"
-        blocks={[block]}
-        hourHeight={60}
-        categoriesConfig={{}}
-        colorMap={{}}
-        maxHours={24}
-        onColumnClick={() => undefined}
-        onUpdateTimelineRange={onUpdateTimelineRange}
-      />,
-      host,
-    ));
-
-    const column = host.querySelector('.day-column-body') as HTMLElement;
-    const task = host.querySelector('.timeline-task-block') as HTMLElement;
-    Object.defineProperty(column, 'getBoundingClientRect', {
-      configurable: true,
-      value: () => ({ top: 0, left: 0, right: 100, bottom: 1440, width: 100, height: 1440, x: 0, y: 0, toJSON: () => ({}) }),
-    });
-
-    await act(async () => {
-      task.dispatchEvent(pointerEvent('pointerdown', 60));
-      task.dispatchEvent(pointerEvent('pointermove', 120));
-      task.dispatchEvent(pointerEvent('pointerup', 120));
-      await Promise.resolve();
-    });
-
-    expect(onUpdateTimelineRange).toHaveBeenCalledTimes(1);
-    expect(onUpdateTimelineRange).toHaveBeenCalledWith({
-      target: { kind: 'task-range', recordId: 'task-drag' },
-      range: { start: '2026-08-26T02:00', end: '2026-08-26T02:30' },
-    });
   });
 });

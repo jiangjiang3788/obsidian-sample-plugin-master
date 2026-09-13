@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { RecordViewItem } from '@core/types/public';
-import { DEFAULT_WHITEBOARD_ID, DEFAULT_WHITEBOARD_TITLE, type WhiteboardBoard, type WhiteboardPosition,
+import { DEFAULT_WHITEBOARD_ID, DEFAULT_WHITEBOARD_TITLE, getWhiteboardGroupPathIds, type WhiteboardBoard, type WhiteboardPosition,
   type WhiteboardStore, type WhiteboardStoreStatus } from '@core/whiteboard/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler } from '@shared/types/public';
 import { WhiteboardCard } from './WhiteboardCard';
@@ -36,15 +36,17 @@ import { WhiteboardSemanticLayoutOverlay } from './WhiteboardSemanticLayoutOverl
 import { useWhiteboardSemanticSourceDropController } from './WhiteboardSemanticSourceDropController';
 import { useWhiteboardUiPreferences } from './WhiteboardUiPreferences';
 import type { WhiteboardSemanticLayoutGuide } from './WhiteboardSemanticLayoutModel';
+import { buildWhiteboardSemanticPresentationModel, type WhiteboardSemanticPresentationModel } from './WhiteboardSemanticPresentationModel';
+import { getWhiteboardAnnotationWorldAnchor, getWhiteboardGroupWorldAnchor, getWhiteboardItemWorldAnchor } from './WhiteboardWorldGeometryModel';
 export interface WhiteboardWorkspaceProps {
-  records: RecordViewItem[]; whiteboardStore: WhiteboardStore; boardId?: string;
+  records: RecordViewItem[]; sourceRecords?: RecordViewItem[]; whiteboardStore: WhiteboardStore; boardId?: string;
   onOpenRecord?: OpenRecordHandler; onOpenRecordOrigin?: OpenRecordOriginHandler; onNotice?: (message: string) => void;
 }
 function elementRect(element: Element): { left: number; top: number; right: number; bottom: number } {
   const rect = element.getBoundingClientRect();
   return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
 }
-export function WhiteboardWorkspace({ records, whiteboardStore, boardId = DEFAULT_WHITEBOARD_ID, onOpenRecord, onOpenRecordOrigin, onNotice }: WhiteboardWorkspaceProps) {
+export function WhiteboardWorkspace({ records, sourceRecords = records, whiteboardStore, boardId = DEFAULT_WHITEBOARD_ID, onOpenRecord, onOpenRecordOrigin, onNotice }: WhiteboardWorkspaceProps) {
   const [board, setBoard] = useState<WhiteboardBoard | undefined>(undefined);
   const [storeStatus, setStoreStatus] = useState<WhiteboardStoreStatus>(() => whiteboardStore.getStatus());
   const [removingItemIds, setRemovingItemIds] = useState<ReadonlySet<string>>(() => new Set());
@@ -58,6 +60,7 @@ export function WhiteboardWorkspace({ records, whiteboardStore, boardId = DEFAUL
   const [semanticLayoutGuides, setSemanticLayoutGuides] = useState<WhiteboardSemanticLayoutGuide[]>([]);
   const sourceElementRef = useRef<HTMLElement | null>(null);
   const canvasViewportRef = useRef<HTMLDivElement | null>(null);
+  const semanticPresentationRef = useRef<WhiteboardSemanticPresentationModel | null>(null);
   const viewportController = useWhiteboardViewportController(canvasViewportRef);
   const syncBoard = useCallback(() => {
     const nextStatus = whiteboardStore.getStatus();
@@ -122,6 +125,7 @@ export function WhiteboardWorkspace({ records, whiteboardStore, boardId = DEFAUL
     boardId, items, groups, activeGroupId: nested.activeGroupId, visibleItems: workbench.visibleItems, visibleGroups: workbench.visibleGroups, storeReady, whiteboardStore, viewportRef: canvasViewportRef,
     camera: viewportController.camera, zoom: viewportController.zoom, onNotice, onSemanticMoveStart: () => setSemanticLayoutGuides([]),
     onSemanticItemDragPointerChange: handleSemanticItemDragPointerChange, onSemanticItemDrop: handleSemanticItemDrop,
+    semanticPresentationRef,
   });
   const connection = useWhiteboardConnectionController({ boardId, items, storeReady, whiteboardStore, viewportRef: canvasViewportRef, camera: viewportController.camera, zoom: viewportController.zoom, onNotice });
   const annotation = useWhiteboardAnnotationController({ boardId, annotations: workbench.renderAnnotations, groups: workbench.renderGroups, activeGroupId: nested.activeGroupId, storeReady, whiteboardStore, onNotice });
@@ -135,6 +139,46 @@ export function WhiteboardWorkspace({ records, whiteboardStore, boardId = DEFAUL
   const currentLayoutItems = useMemo(() => items.filter((item) => (item.groupId ?? null) === nested.activeGroupId), [items, nested.activeGroupId]);
   const currentLayoutGroups = useMemo(() => groups.filter((group) => (group.parentGroupId ?? null) === nested.activeGroupId), [groups, nested.activeGroupId]);
   const semanticZoom = getWhiteboardSemanticZoomState(viewportController.zoom); const semanticStatus = getWhiteboardSemanticZoomStatus(semanticZoom, currentLayoutItems.length, currentLayoutGroups.length);
+  const semanticPresentation = useMemo(() => buildWhiteboardSemanticPresentationModel({
+    level: semanticZoom.level,
+    zoom: semanticZoom.zoom,
+    guides: semanticLayoutGuides,
+    nodes: [
+      ...currentLayoutGroups.map((group) => ({
+        id: group.id, kind: 'group' as const, worldAnchor: getWhiteboardGroupWorldAnchor(group), label: group.title,
+        emphasized: selection.selectedGroupIds.has(group.id) || activeFindGroupId === group.id || workbench.dropTargetGroupId === group.id || sourceDropTargetGroupId === group.id,
+      })),
+      ...currentLayoutItems.map((item) => {
+        const record = recordsById.get(item.recordId) ?? null;
+        return {
+          id: item.id, kind: 'item' as const, worldAnchor: getWhiteboardItemWorldAnchor(item),
+          label: record ? buildWhiteboardRecordPresentation(record).primaryText : '原记录不可用',
+          emphasized: selection.selectedItemIds.has(item.id) || find.activeItemId === item.id || find.matchSet.has(item.id)
+            || connection.preview?.sourceItemId === item.id || connection.preview?.targetItemId === item.id,
+        };
+      }),
+      ...annotation.visibleAnnotations.map((entry) => ({
+        id: entry.id, kind: 'annotation' as const, worldAnchor: getWhiteboardAnnotationWorldAnchor(entry), label: entry.text || (entry.kind === 'sticky' ? '便签' : '文字'),
+      })),
+    ],
+  }), [
+    activeFindGroupId, annotation.visibleAnnotations, connection.preview?.sourceItemId, connection.preview?.targetItemId,
+    currentLayoutGroups, currentLayoutItems, find.activeItemId, find.matchSet, recordsById, selection.selectedGroupIds,
+    selection.selectedItemIds, semanticLayoutGuides, semanticZoom.level, semanticZoom.zoom, sourceDropTargetGroupId, workbench.dropTargetGroupId,
+  ]);
+  semanticPresentationRef.current = semanticPresentation;
+  const semanticPresentationItemPoints = useMemo(() => {
+    if (semanticZoom.level === 'detail') return null;
+    const delta = selection.semanticDragDelta;
+    return new Map(currentLayoutItems.map((item) => {
+      const placement = semanticPresentation.items.get(item.id);
+      const point = placement?.worldPoint ?? getWhiteboardItemWorldAnchor(item);
+      const coveredBySelectedGroup = Boolean(item.groupId && selection.selectedGroupIds.size > 0
+        && getWhiteboardGroupPathIds(groups, item.groupId).some((id) => selection.selectedGroupIds.has(id)));
+      const movesWithSelection = Boolean(delta && (selection.selectedItemIds.has(item.id) || coveredBySelectedGroup));
+      return [item.id, movesWithSelection ? { x: point.x + delta!.dx, y: point.y + delta!.dy } : point] as const;
+    }));
+  }, [currentLayoutItems, groups, selection.selectedGroupIds, selection.selectedItemIds, selection.semanticDragDelta, semanticPresentation, semanticZoom.level]);
   const currentCanvasBounds = useMemo(() => getWhiteboardCanvasContentBounds(workbench.visibleItems, workbench.visibleGroups, annotation.visibleAnnotations), [annotation.visibleAnnotations, workbench.visibleGroups, workbench.visibleItems]);
   const currentCanvasHome = useMemo(() => getWhiteboardCanvasHomePoint(workbench.visibleItems, workbench.visibleGroups, annotation.visibleAnnotations, nested.activeCanvasCenter), [annotation.visibleAnnotations, nested.activeCanvasCenter, workbench.visibleGroups, workbench.visibleItems]);
   const activeCanvasTitle = nested.activeGroupId ? groupTitleById.get(nested.activeGroupId) ?? '当前工作台' : null;
@@ -207,7 +251,7 @@ export function WhiteboardWorkspace({ records, whiteboardStore, boardId = DEFAUL
     <div class="think-whiteboard-workspace" data-whiteboard-selection-count={selection.selectionCount} data-whiteboard-active-group-id={nested.activeGroupId ?? ''} onKeyDown={((event: KeyboardEvent) => { history.handleKeyDown(event); find.handleWorkspaceKeyDown(event); selection.handleKeyDown(event); nested.handleKeyDown(event); }) as never}>
       <div class={`think-whiteboard-body${sourceCollapsed ? ' is-source-collapsed' : ''}`}>
         <WhiteboardRecordSourcePanel
-          records={records}
+          records={sourceRecords}
           boardRecordIds={boardRecordIds}
           onAdd={recordTransfer.addRecord}
           onDropRecords={recordTransfer.dropRecords}
@@ -272,7 +316,7 @@ export function WhiteboardWorkspace({ records, whiteboardStore, boardId = DEFAUL
                 class="think-whiteboard-canvas think-whiteboard-world"
                 style={`transform:${viewportController.worldTransform};`}
               >
-                <WhiteboardSemanticLayoutOverlay guides={semanticLayoutGuides} zoom={viewportController.zoom} onSelectItems={selection.selectItems} onMoveGuide={(guideId, position) => setSemanticLayoutGuides((current) => current.map((guide) => guide.id === guideId ? { ...guide, ...position } : guide))} />
+                <WhiteboardSemanticLayoutOverlay guides={semanticLayoutGuides} zoom={viewportController.zoom} presentation={semanticPresentation} onSelectItems={selection.selectItems} onMoveGuide={(guideId, position) => setSemanticLayoutGuides((current) => current.map((guide) => guide.id === guideId ? { ...guide, ...position } : guide))} />
                 {workbench.visibleGroups.map((group) => (
                   <WhiteboardWorkbenchGroup
                     key={group.id}
@@ -301,6 +345,7 @@ export function WhiteboardWorkspace({ records, whiteboardStore, boardId = DEFAUL
                   onUpdateEdgeLabel={(edgeId, label) => void whiteboardStore.updateEdgeLabel(boardId, edgeId, label).catch((error) => onNotice?.(`保存连线标注失败：${error instanceof Error ? error.message : String(error)}`))}
                   removingEdgeId={removingEdgeId}
                   connectionPreview={connection.preview}
+                  presentationItemPoints={semanticPresentationItemPoints}
                 />
                 {semanticZoom.level === 'detail' && renderVisibleItems.map((item) => (
                   <WhiteboardCard
@@ -324,7 +369,7 @@ export function WhiteboardWorkspace({ records, whiteboardStore, boardId = DEFAUL
                     findState={!find.active ? 'idle' : find.activeItemId === item.id ? 'active' : find.matchSet.has(item.id) ? 'match' : 'dimmed'}
                   />
                 ))}
-                <WhiteboardSemanticOverviewLayer semantic={semanticZoom} items={currentLayoutItems} groups={currentLayoutGroups} annotations={annotation.visibleAnnotations} recordsById={recordsById} selectedItemIds={selection.selectedItemIds} selectedGroupIds={selection.selectedGroupIds} semanticDragDelta={selection.semanticDragDelta} activeFindItemId={find.activeItemId} findMatchSet={find.matchSet} activeFindGroupId={activeFindGroupId} dropTargetGroupId={workbench.dropTargetGroupId ?? sourceDropTargetGroupId} onNodePointerDown={selection.beginSemanticNodePointer} shouldSuppressFocusClick={selection.consumeOverviewClickSuppression} onFocusItem={(item) => { selection.clear(); viewportController.resetViewOnWorldPoint({ x: item.x + 124, y: item.y + 84 }); }} onFocusGroup={(group) => { selection.clear(); viewportController.resetViewOnWorldPoint({ x: group.x + (group.collapsed ? 180 : 360), y: group.y + 22 }); }} onFocusAnnotation={(entry) => viewportController.resetViewOnWorldPoint({ x: entry.x + 130, y: entry.y + (entry.kind === 'sticky' ? 66 : 24) })} onMoveAnnotation={annotation.move} />
+                <WhiteboardSemanticOverviewLayer semantic={semanticZoom} presentation={semanticPresentation} items={currentLayoutItems} groups={currentLayoutGroups} annotations={annotation.visibleAnnotations} recordsById={recordsById} selectedItemIds={selection.selectedItemIds} selectedGroupIds={selection.selectedGroupIds} semanticDragDelta={selection.semanticDragDelta} activeFindItemId={find.activeItemId} findMatchSet={find.matchSet} activeFindGroupId={activeFindGroupId} dropTargetGroupId={workbench.dropTargetGroupId ?? sourceDropTargetGroupId} onNodePointerDown={selection.beginSemanticNodePointer} onOpenRecord={onOpenRecord} onOpenRecordOrigin={onOpenRecordOrigin} onBeginConnection={connection.beginConnection} onContextMenu={contextMenu.handleContextMenu} connectionSourceItemId={connection.preview?.sourceItemId ?? null} connectionTargetItemId={connection.preview?.targetItemId ?? null} shouldSuppressFocusClick={selection.consumeOverviewClickSuppression} onFocusItem={(item) => { selection.clear(); viewportController.resetViewOnWorldPoint({ x: item.x + WHITEBOARD_CARD_WIDTH_PX / 2, y: item.y + WHITEBOARD_CARD_HEIGHT_ESTIMATE_PX / 2 }); }} onFocusGroup={(group) => { selection.clear(); viewportController.resetViewOnWorldPoint({ x: group.x + (group.collapsed ? 180 : 360), y: group.y + 22 }); }} onFocusAnnotation={(entry) => viewportController.resetViewOnWorldPoint({ x: entry.x + 130, y: entry.y + (entry.kind === 'sticky' ? 66 : 24) })} onMoveAnnotation={annotation.move} />
               </div>
             </div>
           )}

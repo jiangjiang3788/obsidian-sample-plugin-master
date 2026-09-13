@@ -17,7 +17,6 @@ interface DayColumnBodyProps {
   day: string;
   blocks: TaskBlock[];
   hourHeight: number;
-  categoriesConfig: Record<string, { files?: string[]; color?: string }>;
   colorMap: Record<string, string>;
   maxHours: number;
   onColumnClick: (day: string, e: MouseEvent | TouchEvent | PointerEvent, selectedRange?: { startMinute: number; endMinute: number } | null) => void;
@@ -42,7 +41,6 @@ export function DayColumnBody({
   day,
   blocks,
   hourHeight,
-  categoriesConfig,
   colorMap,
   maxHours,
   onColumnClick,
@@ -177,7 +175,6 @@ export function DayColumnBody({
           nextBlock={index < blocks.length - 1 ? blocks[index + 1] : null}
           hourHeight={hourHeight}
           maxHours={maxHours}
-          categoriesConfig={categoriesConfig}
           colorMap={colorMap}
           onUpdateTimelineRange={onUpdateTimelineRange}
           onOpenRecord={onOpenRecord}

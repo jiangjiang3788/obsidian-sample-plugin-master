@@ -20,7 +20,6 @@ export * from './heatmapTemplate';
 export * from './heatmapVisual';
 export * from './inputTemplateUtils';
 export * from './itemGrouping';
-export * from './layoutFilterAdapter';
 export * from './normalize';
 export * from './obsidian';
 export * from './parser';

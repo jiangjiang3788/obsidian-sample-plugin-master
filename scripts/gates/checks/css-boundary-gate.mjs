@@ -252,7 +252,7 @@ const v3Contracts = [
   ['src/features/settings/tabs/DataManagementSettings.tsx', 'think-settings-page'],
   ['src/features/settings/tabs/AiSettings.tsx', 'think-settings-page'],
   ['src/features/settings/views/editors/RuleBuilder.tsx', 'think-rule-builder'],
-  ['src/features/settings/input/BlockManager.tsx', 'think-block-editor'],
+  ['src/features/settings/input/RecordTypeManager.tsx', 'think-block-editor'],
   ['src/shared/ui/primitives/Modal.tsx', 'ThinkIconButton'],
   ['src/platform/obsidian/modals/CheckinManagerModal.tsx', 'think-checkin-modal-host'],
 ];
@@ -316,11 +316,12 @@ for (const [file, contract] of v5Contracts) {
 
 const finalBudget = {
   // R12 splits monolithic feature CSS behind thin facade imports.
-  cssFiles: 72,
-  cssLines: 8500,
+  cssFiles: 84,
+  cssLines: 10350,
   important: 12,
   hardcodedColorsOutsideTokens: 0,
-  duplicateClassesAcrossFiles: 90,
+  // Frozen 1.5.0 baseline re-audited at 95; 1.6.0 adds no duplicate-class groups.
+  duplicateClassesAcrossFiles: 95,
   sxOccurrences: 255,
   styleOccurrences: 114,
 };

@@ -37,63 +37,9 @@
       "parentId": null,
       "title": "时间轴",
       "viewType": "TimelineView",
-      "viewConfig": {
-        "categories": {
-          "0": {
-            "name": "0",
-            "color": "#88e7c7",
-            "files": [
-              "2-1健康"
-            ]
-          },
-          "1": {
-            "name": "1",
-            "color": "#9eeabe",
-            "files": [
-              "2-2三餐"
-            ]
-          },
-          "2": {
-            "name": "2",
-            "color": "#72b8e4",
-            "files": [
-              "2-3生活"
-            ]
-          },
-          "3": {
-            "name": "3",
-            "color": "#dd8888",
-            "files": [
-              "2-4思考"
-            ]
-          },
-          "4": {
-            "name": "4",
-            "color": "#edf854",
-            "files": [
-              "2-5电脑"
-            ]
-          },
-          "5": {
-            "name": "5",
-            "color": "#e5bf8a",
-            "files": [
-              "2-6工作"
-            ]
-          }
-        },
-        "progressOrder": [
-          "0",
-          "1",
-          "2",
-          "3",
-          "4",
-          "5"
-        ],
-        "topN": 50
-      },
+      "viewConfig": {},
       "fields": [
-        "coreBlock",
+        "recordType",
         "content"
       ],
       "groupFields": [],
@@ -112,32 +58,6 @@
       "title": "打卡",
       "viewType": "HeatmapView",
       "viewConfig": {
-        "categories": [
-          {
-            "name": "打卡",
-            "color": "#b888e7"
-          },
-          {
-            "name": "计划",
-            "color": "#9eeabe"
-          },
-          {
-            "name": "闪念",
-            "color": "#e47272"
-          },
-          {
-            "name": "任务",
-            "color": "#88c1dd"
-          },
-          {
-            "name": "总结",
-            "color": "#e5bf8a"
-          }
-        ],
-        "sourceBlockId": "core.habit",
-        "groupBy": "goalPreset",
-        "goalFirst": true,
-        "presetFirst": false,
         "goalPaths": [
           "照顾好自己/粑粑",
           "照顾好自己/喝水",
@@ -150,13 +70,14 @@
           "武装大脑/读书",
           "武装大脑/了解自我/专注",
           "照顾好自己/仪容仪表/卫生"
-        ]
+        ],
+        "sourceRecordTypeId": "core.habit"
       },
       "fields": [
         "date"
       ],
       "groupFields": [
-        "coreBlock",
+        "recordType",
         "goalPath"
       ],
       "filters": [],
@@ -169,33 +90,7 @@
       "title": "block",
       "viewType": "BlockView",
       "viewConfig": {
-        "categories": [
-          {
-            "name": "打卡",
-            "color": "#b888e7"
-          },
-          {
-            "name": "计划",
-            "color": "#9eeabe"
-          },
-          {
-            "name": "闪念",
-            "color": "#e47272"
-          },
-          {
-            "name": "事件",
-            "color": "#e0e0e0"
-          },
-          {
-            "name": "任务",
-            "color": "#88c1dd"
-          },
-          {
-            "name": "总结",
-            "color": "#e5bf8a"
-          }
-        ],
-        "rowField": "coreBlock",
+        "rowField": "recordType",
         "colField": "goalPath"
       },
       "fields": [
@@ -206,32 +101,35 @@
         "extra.精力值"
       ],
       "groupFields": [
-        "coreBlock",
+        "recordType",
         "rootGoal"
       ],
       "filters": [
         {
-          "field": "coreBlock",
+          "field": "recordType",
           "op": "=",
-          "value": "evidence",
+          "value": "event",
           "logic": "or"
         },
         {
-          "field": "coreBlock",
+          "field": "recordType",
           "op": "=",
           "value": "plan",
           "logic": "or"
         },
         {
-          "field": "coreBlock",
+          "field": "recordType",
           "op": "=",
           "value": "review",
           "logic": "or"
         },
         {
-          "field": "coreBlock",
-          "op": "=",
-          "value": "thought"
+          "field": "recordType",
+          "op": "in",
+          "value": [
+            "thought",
+            "feeling"
+          ]
         }
       ],
       "sort": [
@@ -253,7 +151,7 @@
         "chartType": "bar",
         "topN": 10,
         "usePeriodField": false,
-        "rowField": "coreBlock",
+        "rowField": "recordType",
         "colField": "rootGoal"
       },
       "fields": [
@@ -265,7 +163,7 @@
       "groupFields": [],
       "filters": [
         {
-          "field": "coreBlock",
+          "field": "recordType",
           "op": "in",
           "value": [
             "task"
@@ -294,51 +192,7 @@
       "title": "Statistics",
       "viewType": "StatisticsView",
       "viewConfig": {
-        "categories": {
-          "健康": {
-            "name": "健康",
-            "color": "#60a5fa",
-            "files": [
-              "2-1健康",
-              "2-2三餐"
-            ]
-          },
-          "生活": {
-            "name": "生活",
-            "color": "#98e47c",
-            "files": [
-              "2-3生活"
-            ]
-          },
-          "思考": {
-            "name": "思考",
-            "color": "#fb6060",
-            "files": [
-              "2-4思考"
-            ]
-          },
-          "电脑": {
-            "name": "电脑",
-            "color": "#ff9838",
-            "files": [
-              "2-5电脑"
-            ]
-          },
-          "工作": {
-            "name": "工作",
-            "color": "#fbe160",
-            "files": [
-              "2-6工作"
-            ]
-          }
-        },
-        "progressOrder": [
-          "健康",
-          "生活",
-          "思考",
-          "电脑",
-          "工作"
-        ],
+        "categories": [],
         "topN": 50,
         "rowField": "rootGoal",
         "colField": "content"
@@ -358,28 +212,6 @@
       "title": "excle",
       "viewType": "ExcelView",
       "viewConfig": {
-        "categories": [
-          {
-            "name": "打卡",
-            "color": "#b888e7"
-          },
-          {
-            "name": "计划",
-            "color": "#9eeabe"
-          },
-          {
-            "name": "闪念",
-            "color": "#e47272"
-          },
-          {
-            "name": "任务",
-            "color": "#88c1dd"
-          },
-          {
-            "name": "总结",
-            "color": "#e5bf8a"
-          }
-        ],
         "colField": "goalPath",
         "rowField": "status"
       },
@@ -387,7 +219,7 @@
       "groupFields": [],
       "filters": [
         {
-          "field": "coreBlock",
+          "field": "recordType",
           "op": "=",
           "value": "task",
           "logic": "and"
@@ -406,7 +238,9 @@
       "parentId": null,
       "title": "1",
       "viewType": "StatisticsView",
-      "viewConfig": {},
+      "viewConfig": {
+        "categories": []
+      },
       "fields": [],
       "groupFields": [],
       "filters": [],
@@ -422,7 +256,7 @@
         "view": "TableView",
         "title": "表格视图",
         "collapsed": false,
-        "rowField": "coreBlock",
+        "rowField": "recordType",
         "colField": "rootGoal",
         "dateRole": "task-completed"
       },
@@ -430,7 +264,7 @@
       "groupFields": [],
       "filters": [
         {
-          "field": "coreBlock",
+          "field": "recordType",
           "op": "in",
           "value": [
             "task"
@@ -446,7 +280,7 @@
         }
       ],
       "sort": [],
-      "collapsed": false
+      "collapsed": true
     },
     {
       "id": "vi_msr6vt761p1ns9e",
@@ -535,7 +369,8 @@
       "id": "layout_mpi3dfhyn14bsio",
       "name": "全局布局 2",
       "viewInstanceIds": [
-        "vi_mm9z0oe1cvlr53c"
+        "vi_mm9z0oe1cvlr53c",
+        "vi_msr6vrojamvaf1t"
       ],
       "displayMode": "list",
       "initialView": "周",
@@ -550,6 +385,7 @@
         "path": "武装大脑/了解世界",
         "status": "active",
         "icon": "🤩",
+        "color": "#F87171",
         "sortOrder": 10,
         "metrics": [
           {
@@ -565,18 +401,21 @@
         "path": "武装大脑/了解自我",
         "status": "active",
         "icon": "🐈",
+        "color": "#F87171",
         "sortOrder": 0
       },
       {
         "path": "照顾好自己/仪容仪表",
         "status": "active",
         "icon": "👩‍🦰",
+        "color": "#60A5FA",
         "sortOrder": 0
       },
       {
         "path": "工作能力",
         "status": "active",
         "icon": "🖥",
+        "color": "#FB923C",
         "sortOrder": 8,
         "timePresetPercent": 10
       },
@@ -584,6 +423,7 @@
         "path": "我若安好便是晴天",
         "status": "active",
         "icon": "✨",
+        "color": "#4ADE80",
         "sortOrder": 3,
         "timePresetPercent": 20
       },
@@ -591,6 +431,7 @@
         "path": "武装大脑",
         "status": "active",
         "icon": "🧠",
+        "color": "#F87171",
         "sortOrder": 10,
         "timePresetPercent": 2
       },
@@ -598,6 +439,7 @@
         "path": "照顾好自己",
         "status": "active",
         "icon": "💖",
+        "color": "#60A5FA",
         "sortOrder": 2,
         "timePresetPercent": 53
       },
@@ -605,6 +447,7 @@
         "path": "爱好能力",
         "status": "active",
         "icon": "💻",
+        "color": "#A78BFA",
         "sortOrder": 9,
         "timePresetPercent": 15
       },
@@ -612,60 +455,70 @@
         "path": "我若安好便是晴天/生活",
         "status": "active",
         "icon": "✨",
+        "color": "#4ADE80",
         "sortOrder": 20
       },
       {
         "path": "照顾好自己/健康",
         "status": "active",
         "icon": "💤",
+        "color": "#60A5FA",
         "sortOrder": 120
       },
       {
         "path": "爱好能力/电脑",
         "status": "active",
         "icon": "🖥",
+        "color": "#A78BFA",
         "sortOrder": 0
       },
       {
         "path": "武装大脑/垚垚教育",
         "status": "active",
         "icon": "👶",
+        "color": "#F87171",
         "sortOrder": 20
       },
       {
         "path": "武装大脑/了解世界/婆婆",
         "status": "active",
         "icon": "🧓",
+        "color": "#F87171",
         "sortOrder": 3
       },
       {
         "path": "武装大脑/了解世界/家庭",
         "status": "active",
         "icon": "👪",
+        "color": "#F87171",
         "sortOrder": 4
       },
       {
         "path": "武装大脑/时间整理",
         "status": "active",
         "icon": "🧠",
+        "color": "#F87171",
         "sortOrder": 60
       },
       {
         "path": "武装大脑/了解世界/芦苇",
         "status": "active",
         "icon": "🔆",
+        "color": "#F87171",
         "sortOrder": 5
       },
       {
         "path": "武装大脑/了解世界/阳阳",
         "status": "active",
         "icon": "👨",
+        "color": "#F87171",
         "sortOrder": 2
       },
       {
         "path": "我若安好便是晴天/垚垚",
         "status": "active",
         "icon": "👶",
+        "color": "#4ADE80",
         "sortOrder": 10,
         "weeklyTargetMinutes": 1620
       },
@@ -673,24 +526,28 @@
         "path": "武装大脑/了解自我/自我",
         "status": "active",
         "icon": "🐈",
+        "color": "#F87171",
         "sortOrder": 0
       },
       {
         "path": "照顾好自己/仪容仪表/剪头发",
         "status": "active",
         "icon": "✂",
+        "color": "#60A5FA",
         "sortOrder": 11
       },
       {
         "path": "照顾好自己/仪容仪表/剪指甲",
         "status": "active",
         "icon": "✋",
+        "color": "#60A5FA",
         "sortOrder": 12
       },
       {
         "path": "照顾好自己/仪容仪表/卫生",
         "status": "active",
         "icon": "🛁",
+        "color": "#60A5FA",
         "sortOrder": 10,
         "weeklyTargetMinutes": 180
       },
@@ -698,120 +555,140 @@
         "path": "工作能力/其他",
         "status": "active",
         "icon": "📋",
+        "color": "#FB923C",
         "sortOrder": 30
       },
       {
         "path": "工作能力/手续、对账",
         "status": "active",
         "icon": "📋",
+        "color": "#FB923C",
         "sortOrder": 40
       },
       {
         "path": "工作能力/投标",
         "status": "active",
         "icon": "🎟",
+        "color": "#FB923C",
         "sortOrder": 20
       },
       {
         "path": "工作能力/老板任务",
         "status": "active",
         "icon": "💥",
+        "color": "#FB923C",
         "sortOrder": 50
       },
       {
         "path": "工作能力/设计",
         "status": "active",
         "icon": "🖥",
+        "color": "#FB923C",
         "sortOrder": 10
       },
       {
         "path": "工作能力/通勤",
         "status": "active",
         "icon": "🛵",
+        "color": "#FB923C",
         "sortOrder": 0
       },
       {
         "path": "我若安好便是晴天/娱乐",
         "status": "active",
         "icon": "📺",
+        "color": "#4ADE80",
         "sortOrder": 30
       },
       {
         "path": "我若安好便是晴天/家务",
         "status": "active",
         "icon": "🧹",
+        "color": "#4ADE80",
         "sortOrder": 70
       },
       {
         "path": "我若安好便是晴天/小手机",
         "status": "active",
         "icon": "🍓",
+        "color": "#4ADE80",
         "sortOrder": 40
       },
       {
         "path": "我若安好便是晴天/开车",
         "status": "active",
         "icon": "🚗",
+        "color": "#4ADE80",
         "sortOrder": 80
       },
       {
         "path": "我若安好便是晴天/收纳",
         "status": "active",
         "icon": "📦",
+        "color": "#4ADE80",
         "sortOrder": 90
       },
       {
         "path": "我若安好便是晴天/整理",
         "status": "active",
         "icon": "📦",
+        "color": "#4ADE80",
         "sortOrder": 60
       },
       {
         "path": "我若安好便是晴天/车车",
         "status": "active",
         "icon": "🚗",
+        "color": "#4ADE80",
         "sortOrder": 50
       },
       {
         "path": "我若安好便是晴天/高级生活",
         "status": "active",
         "icon": "🔆",
+        "color": "#4ADE80",
         "sortOrder": 0
       },
       {
         "path": "武装大脑/复盘整理",
         "status": "active",
         "icon": "🧠",
+        "color": "#F87171",
         "sortOrder": 50
       },
       {
         "path": "武装大脑/思路整理",
         "status": "active",
         "icon": "🧠",
+        "color": "#F87171",
         "sortOrder": 70
       },
       {
         "path": "武装大脑/整理笔记",
         "status": "active",
         "icon": "🧠",
+        "color": "#F87171",
         "sortOrder": 40
       },
       {
         "path": "武装大脑/读书",
         "status": "active",
         "icon": "📚",
+        "color": "#F87171",
         "sortOrder": 30
       },
       {
         "path": "照顾好自己/习惯",
         "status": "active",
         "icon": "🥛",
+        "color": "#60A5FA",
         "sortOrder": 90
       },
       {
         "path": "照顾好自己/午餐",
         "status": "active",
         "icon": "🍱",
+        "color": "#60A5FA",
         "sortOrder": 50,
         "weeklyTargetMinutes": 480
       },
@@ -819,6 +696,7 @@
         "path": "照顾好自己/喝水",
         "status": "active",
         "icon": "💧",
+        "color": "#60A5FA",
         "sortOrder": 70,
         "weeklyTargetMinutes": 30
       },
@@ -826,18 +704,21 @@
         "path": "照顾好自己/姨妈",
         "status": "active",
         "icon": "🩸",
+        "color": "#60A5FA",
         "sortOrder": 110
       },
       {
         "path": "照顾好自己/心情",
         "status": "active",
         "icon": "😄",
+        "color": "#60A5FA",
         "sortOrder": 100
       },
       {
         "path": "照顾好自己/早餐",
         "status": "active",
         "icon": "🥚",
+        "color": "#60A5FA",
         "sortOrder": 40,
         "weeklyTargetMinutes": 240
       },
@@ -845,6 +726,7 @@
         "path": "照顾好自己/晚餐",
         "status": "active",
         "icon": "🥣",
+        "color": "#60A5FA",
         "sortOrder": 60,
         "weeklyTargetMinutes": 240
       },
@@ -852,6 +734,7 @@
         "path": "照顾好自己/睡眠",
         "status": "active",
         "icon": "💤",
+        "color": "#60A5FA",
         "sortOrder": 10,
         "weeklyTargetMinutes": 3360
       },
@@ -859,6 +742,7 @@
         "path": "照顾好自己/粑粑",
         "status": "active",
         "icon": "💩",
+        "color": "#60A5FA",
         "sortOrder": 20,
         "weeklyTargetMinutes": 180
       },
@@ -866,12 +750,14 @@
         "path": "照顾好自己/身体",
         "status": "active",
         "icon": "🔋",
+        "color": "#60A5FA",
         "sortOrder": 80
       },
       {
         "path": "照顾好自己/运动",
         "status": "active",
         "icon": "💪",
+        "color": "#60A5FA",
         "sortOrder": 30,
         "weeklyTargetMinutes": 180
       },
@@ -879,36 +765,42 @@
         "path": "武装大脑/了解自我/专注",
         "status": "active",
         "icon": "⏰",
+        "color": "#F87171",
         "sortOrder": 6
       },
       {
         "path": "爱好能力/AI",
         "status": "active",
         "icon": "🤖",
+        "color": "#A78BFA",
         "sortOrder": 10
       },
       {
         "path": "爱好能力/ob基础",
         "status": "active",
         "icon": "🎚",
+        "color": "#A78BFA",
         "sortOrder": 30
       },
       {
         "path": "爱好能力/整理",
         "status": "active",
         "icon": "✒",
+        "color": "#A78BFA",
         "sortOrder": 20
       },
       {
         "path": "爱好能力/笔记系统",
         "status": "active",
         "icon": "📕",
+        "color": "#A78BFA",
         "sortOrder": 40
       },
       {
         "path": "爱好能力/记录系统",
         "status": "active",
         "icon": "🎴",
+        "color": "#A78BFA",
         "sortOrder": 50
       }
     ],
@@ -1856,22 +1748,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "照顾好自己/身体",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -1894,22 +1790,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "照顾好自己/睡眠",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -1932,22 +1832,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "照顾好自己/运动",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -1970,22 +1874,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "照顾好自己/健康",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -2008,22 +1916,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "照顾好自己/习惯",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -2046,22 +1958,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "照顾好自己/心情",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -2080,7 +1996,7 @@
       },
       {
         "goalPath": "照顾好自己/身体",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -2101,7 +2017,7 @@
       },
       {
         "goalPath": "照顾好自己/睡眠",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -2122,7 +2038,7 @@
       },
       {
         "goalPath": "照顾好自己/运动",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -2143,7 +2059,7 @@
       },
       {
         "goalPath": "照顾好自己/健康",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -2419,22 +2335,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "我若安好便是晴天/生活",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -2453,7 +2373,7 @@
       },
       {
         "goalPath": "我若安好便是晴天/生活",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -2702,22 +2622,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "武装大脑/了解自我/自我",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -2736,7 +2660,7 @@
       },
       {
         "goalPath": "武装大脑/了解自我/自我",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -2938,8 +2862,19 @@
         "enabled": true
       },
       {
+        "goalPath": "武装大脑/了解世界/婆婆",
+        "recordTypeId": "core.feeling",
+        "description": "由「任务」预设复制到「思考」",
+        "enabled": true
+      },
+      {
         "goalPath": "武装大脑/了解世界/阳阳",
         "recordTypeId": "core.thought",
+        "enabled": true
+      },
+      {
+        "goalPath": "武装大脑/了解世界/阳阳",
+        "recordTypeId": "core.feeling",
         "enabled": true
       },
       {
@@ -2948,8 +2883,18 @@
         "enabled": true
       },
       {
+        "goalPath": "武装大脑/了解世界/家庭",
+        "recordTypeId": "core.feeling",
+        "enabled": true
+      },
+      {
         "goalPath": "武装大脑/了解世界/芦苇",
         "recordTypeId": "core.thought",
+        "enabled": true
+      },
+      {
+        "goalPath": "武装大脑/了解世界/芦苇",
+        "recordTypeId": "core.feeling",
         "enabled": true
       },
       {
@@ -2958,29 +2903,34 @@
         "enabled": true
       },
       {
+        "goalPath": "武装大脑/垚垚教育",
+        "recordTypeId": "core.feeling",
+        "enabled": true
+      },
+      {
         "goalPath": "武装大脑/了解世界/婆婆",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "description": "由「任务」预设复制到「事件」",
         "enabled": true
       },
       {
         "goalPath": "我若安好便是晴天/垚垚",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true
       },
       {
         "goalPath": "武装大脑/了解世界/阳阳",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true
       },
       {
         "goalPath": "武装大脑/了解世界/芦苇",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true
       },
       {
         "goalPath": "武装大脑/时间整理",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true
       },
       {
@@ -3702,22 +3652,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "工作能力/设计",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -3740,22 +3694,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "工作能力/投标",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -3778,22 +3736,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "工作能力/手续、对账",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -3816,22 +3778,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "工作能力/其他",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -3863,27 +3829,45 @@
         ]
       },
       {
+        "goalPath": "工作能力/通勤",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ]
+      },
+      {
         "goalPath": "工作能力",
         "recordTypeId": "core.thought",
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "工作能力",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -3902,7 +3886,7 @@
       },
       {
         "goalPath": "工作能力/设计",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -3923,7 +3907,7 @@
       },
       {
         "goalPath": "工作能力/投标",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -3944,7 +3928,7 @@
       },
       {
         "goalPath": "工作能力/手续、对账",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -3965,7 +3949,7 @@
       },
       {
         "goalPath": "工作能力/老板任务",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -3986,7 +3970,7 @@
       },
       {
         "goalPath": "工作能力",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -4691,22 +4675,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "爱好能力/电脑",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -4729,22 +4717,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "爱好能力/AI",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -4767,22 +4759,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "爱好能力/记录系统",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -4801,7 +4797,7 @@
       },
       {
         "goalPath": "爱好能力/电脑",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -4822,7 +4818,7 @@
       },
       {
         "goalPath": "爱好能力/记录系统",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -4843,7 +4839,7 @@
       },
       {
         "goalPath": "爱好能力/AI",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -5045,22 +5041,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "武装大脑",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -5083,22 +5083,26 @@
         "enabled": true,
         "fields": [
           {
-            "id": "field_mewjlt4j",
-            "key": "记录子类型",
-            "label": "记录子类型",
-            "type": "singleSelect",
-            "options": [
-              {
-                "value": "感受",
-                "label": "感受"
-              },
-              {
-                "value": "思考",
-                "label": "思考"
-              }
-            ],
-            "semantic": "recordSubtype"
+            "id": "field_mewjlypl",
+            "key": "内容",
+            "label": "内容",
+            "type": "textarea"
           },
+          {
+            "id": "core.field.icon",
+            "key": "icon",
+            "label": "图标",
+            "type": "text",
+            "semantic": "icon"
+          }
+        ],
+        "targetFile": "01/闪念.md"
+      },
+      {
+        "goalPath": "武装大脑/思路整理",
+        "recordTypeId": "core.feeling",
+        "enabled": true,
+        "fields": [
           {
             "id": "field_mewjlypl",
             "key": "内容",
@@ -5117,7 +5121,7 @@
       },
       {
         "goalPath": "武装大脑",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -5138,7 +5142,7 @@
       },
       {
         "goalPath": "武装大脑/思路整理",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -5159,7 +5163,7 @@
       },
       {
         "goalPath": "武装大脑/读书",
-        "recordTypeId": "core.evidence",
+        "recordTypeId": "core.event",
         "enabled": true,
         "fields": [
           {
@@ -5188,21 +5192,10 @@
   "devConsoleStackEnabled": false,
   "recentGoalPaths": [
     "武装大脑/时间整理",
-    "工作能力/通勤",
     "照顾好自己/睡眠",
     "我若安好便是晴天/小手机",
-    "我若安好便是晴天/娱乐"
+    "爱好能力/记录系统",
+    "工作能力/设计"
   ],
-  "goalTaskDefaultsSeedVersion": 1,
-  "categoryColors": {
-    "总结": "#e5bf8a",
-    "计划": "#9eeabe",
-    "打卡": "#b888e7",
-    "闪念": "#e47272",
-    "事件": "#a5c8ee",
-    "生活": "#8cd4ee",
-    "01": "#a8e184",
-    "精力": "#96b0e8",
-    "任务": "#ebebeb"
-  }
+  "goalTaskDefaultsSeedVersion": 1
 }

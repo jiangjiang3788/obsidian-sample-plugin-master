@@ -34,7 +34,7 @@ describe('Think OS 真机 Runtime：精力记录', () => {
         source: 'desktop-panel',
       });
       const records = plugin.serviceManager.dataStore.queryRecords();
-      const energy = records.find((item: any) => item.coreBlock === 'energy' && item.goalPath === goalPath);
+      const energy = records.find((item: any) => item.recordType === 'energy' && item.goalPath === goalPath);
       return { status: result.status, recordId: energy?.id || null, score: energy?.score ?? energy?.extra?.score ?? null };
     }, THINK_PLUGIN_ID, GOAL);
 
@@ -49,8 +49,8 @@ describe('Think OS 真机 Runtime：精力记录', () => {
     const restored = await browser.executeObsidian(({ app }, pluginId, id) => {
       const plugin = (app as any).plugins.plugins[pluginId] as any;
       const item = plugin.serviceManager.dataStore.getRecordById(id);
-      return item ? { id: item.id, coreBlock: item.coreBlock, goalPath: item.goalPath } : null;
+      return item ? { id: item.id, recordType: item.recordType, goalPath: item.goalPath } : null;
     }, THINK_PLUGIN_ID, recordId);
-    expect(restored).toMatchObject({ id: recordId, coreBlock: 'energy', goalPath: GOAL });
+    expect(restored).toMatchObject({ id: recordId, recordType: 'energy', goalPath: GOAL });
   });
 });

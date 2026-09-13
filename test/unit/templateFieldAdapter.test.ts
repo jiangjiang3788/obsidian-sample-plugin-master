@@ -14,12 +14,10 @@ import type { RecordCaptureTemplate, TemplateField } from '../../src/core/record
 describe('TemplateFieldAdapter', () => {
   it('recognizes explicit current semantics without fixed field names', () => {
     expect(getTemplateFieldSemantic({ key: 'my_goal', label: '任意名称', type: 'path', semantic: 'goalPath' })).toBe('goalPath');
-    expect(getTemplateFieldSemantic({ key: 'my_category', label: '任意分类', type: 'path', semantic: 'categoryPath' })).toBe('categoryPath');
     expect(getTemplateFieldSemantic({ key: 'labels', label: '随便叫', type: 'multiTag', semantic: 'tags' })).toBe('tags');
   });
 
   it('recognizes current Chinese core field names', () => {
-    expect(getTemplateFieldSemantic({ key: '分类', label: '分类', type: 'hierarchicalSingleSelect' })).toBe('categoryPath');
     expect(getTemplateFieldSemantic({ key: '目标', label: '目标', type: 'hierarchicalSingleSelect' })).toBe('goalPath');
     expect(getTemplateFieldSemantic({ key: '图片', label: '图片', type: 'image' })).toBe('image');
   });

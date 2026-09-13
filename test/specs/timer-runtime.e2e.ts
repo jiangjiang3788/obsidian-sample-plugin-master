@@ -61,7 +61,7 @@ describe('Think OS 真机 Runtime：Task / Timer / TaskSession', () => {
       return {
         ok,
         taskStatus: plugin.serviceManager.dataStore.getRecordById(taskId)?.status || null,
-        sessionCount: records.filter((item: any) => item.coreBlock === 'task-session' && item.taskId === taskId).length,
+        sessionCount: records.filter((item: any) => item.recordType === 'task-session' && item.taskId === taskId).length,
         timerRemaining: plugin.serviceManager.useCases.timer.getTimers().some((entry: any) => entry.taskId === taskId),
       };
     }, THINK_PLUGIN_ID, TASK_ID);

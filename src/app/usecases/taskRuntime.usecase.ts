@@ -38,7 +38,7 @@ export class TaskRuntimeUseCase {
     const taskId = String(params.taskId || '').trim();
     const task = taskId ? this.dataStore.getRecordById(taskId) : null;
     const operation = params.command === 'complete' ? 'complete' : 'update';
-    if (!task || task.coreBlock !== 'task') {
+    if (!task || task.recordType !== 'task') {
       return buildValidationErrorResult(operation, [{
         code: 'task_runtime_context_missing',
         field: 'taskId',

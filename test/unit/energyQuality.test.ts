@@ -11,8 +11,7 @@ function energy(id: string, date: string, time: string, mode: 'realtime' | 'retr
     id,
     date,
     startTime: time,
-    coreBlock: 'energy',
-    categoryKey: '精力',
+    recordType: 'energy',
     extra: {
       记录类型: 'energy',
       精力值: 60,

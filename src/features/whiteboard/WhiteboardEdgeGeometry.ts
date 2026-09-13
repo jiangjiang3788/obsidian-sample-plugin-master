@@ -81,6 +81,33 @@ export function getWhiteboardEdgeGeometry(
   };
 }
 
+
+export function getWhiteboardPointEdgeGeometry(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): WhiteboardEdgeGeometry {
+  const dx = to.x - from.x;
+  const direction = dx >= 0 ? 1 : -1;
+  const curve = Math.min(WHITEBOARD_EDGE_MAX_CURVE_PX, Math.max(WHITEBOARD_EDGE_MIN_CURVE_PX, Math.abs(dx) / 2));
+  const control1X = from.x + curve * direction;
+  const control2X = to.x - curve * direction;
+  const midpointX = cubicPoint(from.x, control1X, control2X, to.x, 0.5);
+  const midpointY = cubicPoint(from.y, from.y, to.y, to.y, 0.5);
+  return {
+    startX: from.x,
+    startY: from.y,
+    control1X,
+    control1Y: from.y,
+    control2X,
+    control2Y: to.y,
+    endX: to.x,
+    endY: to.y,
+    midpointX,
+    midpointY,
+    pathD: `M ${from.x} ${from.y} C ${control1X} ${from.y}, ${control2X} ${to.y}, ${to.x} ${to.y}`,
+  };
+}
+
 export function resolveWhiteboardItemPosition(
   item: WhiteboardItem,
   preview?: { itemId: string; position: WhiteboardPosition } | null,

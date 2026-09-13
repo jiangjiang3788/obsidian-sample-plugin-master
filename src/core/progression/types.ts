@@ -11,6 +11,6 @@ export interface ProgressResult {
   nextLevelPoints: number;
   progressRatio: number;
   matchedCount: number;
-  categoryBreakdown: ProgressBreakdownRow[];
+  recordTypeBreakdown: ProgressBreakdownRow[];
   goalBreakdown: ProgressBreakdownRow[];
 }

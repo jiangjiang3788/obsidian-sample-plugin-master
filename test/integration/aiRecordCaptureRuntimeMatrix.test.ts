@@ -37,7 +37,7 @@ function parseWholeBlock(path: string, markdown: string) {
   return parseRecordBlock(path, lines, 0, lines.length - 1, '记录');
 }
 
-describe('AI Record Capture eight-type runtime matrix', () => {
+describe('AI Record Capture template-type runtime matrix', () => {
   it.each(DEFAULT_TEMPLATE_RECORD_TYPES.map((recordType) => [recordType.id, recordType] as const))(
     '%s: AI draft → Goal template → QuickInput hydration → Markdown save all use one capture runtime',
     (recordTypeId, recordType) => {
@@ -48,15 +48,15 @@ describe('AI Record Capture eight-type runtime matrix', () => {
       const [draft] = buildAiBatchConfirmRecordItems({
         items: [{
           rawText: aiContent,
-          target: { blockId: recordTypeId, categoryKey: recordType.categoryKey, goalPath },
+          target: { recordTypeId: recordTypeId, goalPath },
           fieldValues: { [bodyField!.key]: aiContent },
         }],
-        blocks: [...DEFAULT_TEMPLATE_RECORD_TYPES],
+        recordTypes: [...DEFAULT_TEMPLATE_RECORD_TYPES],
         goalSettings: settings.goalSettings,
-        inputSettings: { blocks: [...DEFAULT_TEMPLATE_RECORD_TYPES] } as never,
+        inputSettings: { recordTypes: [...DEFAULT_TEMPLATE_RECORD_TYPES] } as never,
       });
 
-      expect(draft.blockId).toBe(recordTypeId);
+      expect(draft.recordTypeId).toBe(recordTypeId);
       expect(draft.formData[bodyField!.key]).toBe(aiContent);
       expect(draft.formData.goalPath).toBe(goalPath);
 
@@ -91,7 +91,7 @@ describe('AI Record Capture eight-type runtime matrix', () => {
       const plan = buildRecordOutputPlan({ template: resolved.template!, formData: hydrated.formData });
       const parsed = parseWholeBlock(plan.targetFilePath!, plan.outputContent);
       expect(parsed).not.toBeNull();
-      expect(parsed?.coreBlock).toBe(recordType.coreBlock);
+      expect(parsed?.recordType).toBe(recordType.recordType);
       expect(parsed?.goalPath).toBe(goalPath);
       expect(parsed?.content).toBe(aiContent);
     },

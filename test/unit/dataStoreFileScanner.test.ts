@@ -36,7 +36,7 @@ describe('DataStoreFileScanner 单文件扫描规则', () => {
   it('扫描合法 Record 时把 heading 与 section tag 一起归一化到 Record 来源上下文', async () => {
     const block = encodeRecordBlock({
       recordId: 'rec.01JWF7T20074QW3VAKQMEWSBK0',
-      coreBlock: 'thought',
+      recordType: 'thought',
       fields: { 内容: '扫描测试' },
     });
     const content = `# 健康 #项目/ThinkOS\n${block}`;

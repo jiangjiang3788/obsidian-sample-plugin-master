@@ -68,7 +68,7 @@ describe('P0 Record 创建/修改/删除在插件重启后的真实持久化生�
     const first = await env.boot();
     await first.repository.create({
       recordId: ID,
-      coreBlock: 'thought',
+      recordType: 'thought',
       targetFilePath: 'records.md',
       fields: { 记录子类型: '思考', 内容: '创建后的内容', 清晰度: 2 },
     });

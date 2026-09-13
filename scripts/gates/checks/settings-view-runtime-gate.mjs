@@ -48,7 +48,7 @@ for (const file of [
   'src/features/settings/views/models/timelineViewModel.ts',
   'src/features/settings/views/models/statisticsViewModel.ts',
   'src/features/settings/views/models/progressViewModel.ts',
-  'src/features/views/runtime/StatisticsView/useStatisticsCategoryConfigs.ts',
+  'src/features/views/runtime/StatisticsView/useStatisticsStatisticsBucketConfigs.ts',
 ]) forbidFile(file);
 
 const forbiddenRuntimeInjectionMarkers = [

@@ -29,13 +29,13 @@ describe('周期任务专用编辑器 V2', () => {
   });
 
   it('没有显式范围或选择仅本次时，不生成任何 TaskSeries 更新计划', () => {
-    const item = { id: 'task-1', coreBlock: 'task', seriesId: 'series-1' } as any;
+    const item = { id: 'task-1', recordType: 'task', seriesId: 'series-1' } as any;
     expect(buildExplicitTaskSeriesEditPlan({ item, meta: {} }, { content: '本次' })).toBeNull();
     expect(buildExplicitTaskSeriesEditPlan({ item, meta: { taskSeriesEdit: { scope: 'current' } } }, { content: '本次' })).toBeNull();
   });
 
   it('只有显式选择本次及以后时才生成系列默认值与重复规则更新', () => {
-    const item = { id: 'task-1', coreBlock: 'task', seriesId: 'series-1' } as any;
+    const item = { id: 'task-1', recordType: 'task', seriesId: 'series-1' } as any;
     const plan = buildExplicitTaskSeriesEditPlan({
       item,
       meta: {
@@ -63,7 +63,7 @@ describe('周期任务专用编辑器 V2', () => {
   });
 
   it('本次及以后会把精力推荐默认值同步到 TaskSeries', () => {
-    const item = { id: 'task-1', coreBlock: 'task', seriesId: 'series-1' } as Parameters<typeof buildExplicitTaskSeriesEditPlan>[0]['item'];
+    const item = { id: 'task-1', recordType: 'task', seriesId: 'series-1' } as Parameters<typeof buildExplicitTaskSeriesEditPlan>[0]['item'];
     const plan = buildExplicitTaskSeriesEditPlan({
       item,
       meta: { taskSeriesEdit: { scope: 'current_and_future' } },
@@ -89,7 +89,7 @@ describe('周期任务专用编辑器 V2', () => {
   });
 
   it('系列规则范围只更新 recurrence，不把当前表单内容写进系列默认值', () => {
-    const item = { id: 'task-1', coreBlock: 'task', seriesId: 'series-1' } as any;
+    const item = { id: 'task-1', recordType: 'task', seriesId: 'series-1' } as any;
     const plan = buildExplicitTaskSeriesEditPlan({
       item,
       meta: { taskSeriesEdit: { scope: 'series_rules', recurrence: { unit: 'month', interval: 1, anchor: 'scheduled' } } },
@@ -105,7 +105,7 @@ describe('周期任务专用编辑器 V2', () => {
 
 
   it('已有 Task 的普通 Update 不能绕过生命周期命令直接改状态', () => {
-    const item = { id: 'task-1', coreBlock: 'task', status: 'open' } as Parameters<typeof buildTaskLifecycleBypassIssue>[0];
+    const item = { id: 'task-1', recordType: 'task', status: 'open' } as Parameters<typeof buildTaskLifecycleBypassIssue>[0];
     expect(buildTaskLifecycleBypassIssue(item, { content: '只改内容', status: 'open' })).toBeNull();
     expect(buildTaskLifecycleBypassIssue(item, { content: '试图直接完成', status: 'done' })).toMatchObject({
       code: 'task_status_requires_lifecycle_command',
@@ -163,7 +163,7 @@ describe('周期任务专用编辑器 V2', () => {
   it('通用删除工作流拒绝直接删除周期任务当前实例', async () => {
     const workflow = new DeleteRecordWorkflow({ deps: {} as never } as never);
     await expect(workflow.submit({
-      item: { id: 'task-1', coreBlock: 'task', seriesId: 'series-1' } as any,
+      item: { id: 'task-1', recordType: 'task', seriesId: 'series-1' } as any,
       source: 'quickinput',
     })).resolves.toMatchObject({
       status: 'validation_error',

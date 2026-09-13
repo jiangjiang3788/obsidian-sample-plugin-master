@@ -25,8 +25,7 @@ import { isEnergyItem, readEnergyItemSnapshot } from '@core/energy/public';
 describe('Energy RecordViewItem adapter', () => {
   it('restores detailed Energy fields without converting missing data to zero', () => {
     const item: any = {
-      coreBlock: 'energy',
-      categoryKey: '精力',
+      recordType: 'energy',
       date: '2026-08-10',
       extra: {
         '时间': '14:35',
@@ -62,10 +61,9 @@ function energy(id: string, date: string, time: string, score: number, brain?: n
     title: 'energy',
     content: '',
     tags: [],
-    categoryKey: '精力',
     created: 0,
     modified: 0,
-    coreBlock: 'energy',
+    recordType: 'energy',
     date,
     startTime: time,
     extra: {

@@ -54,7 +54,7 @@ export function EventTimelineEventList(props: EventTimelineEventListProps) {
         if (showDate) lastDate = dateLabel;
 
         const titleForKey = (readField(item, titleField) as string) || (readField(item, 'title') as string) || '';
-        const taskDisplayTitle = item.coreBlock === 'task'
+        const taskDisplayTitle = item.recordType === 'task'
           ? getEventTimelineTaskDisplayTitle({ item, titleField, contentField, maxContentLength })
           : '';
 
@@ -71,7 +71,7 @@ export function EventTimelineEventList(props: EventTimelineEventListProps) {
             <div class="et-time-label">{t ? timeLabel : ''}</div>
 
             <div class="et-event-content">
-              {item.coreBlock === 'task' ? (
+              {item.recordType === 'task' ? (
                 <TaskRow
                   item={item}
                   onMarkDone={(id: string) => onMarkDone?.(id)}

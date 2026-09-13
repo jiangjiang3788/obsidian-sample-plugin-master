@@ -35,14 +35,14 @@ export function createRecordInputDraftSnapshot(
 export function initializeRecordInputSession(
   input: InitializeRecordInputSessionInput,
 ): RecordInputSessionState {
-  const initialBlockId = String(input.initialBlockId || '');
+  const initialRecordTypeId = String(input.initialRecordTypeId || '');
   const draft = createRecordInputDraftSnapshot(input);
   return {
     mode: input.mode || 'create',
-    currentBlockId: initialBlockId,
-    originBlockId: initialBlockId,
+    currentRecordTypeId: initialRecordTypeId,
+    originRecordTypeId: initialRecordTypeId,
     ...copyDraft(draft),
-    draftByBlockId: { [initialBlockId]: copyDraft(draft) },
+    draftByRecordTypeId: { [initialRecordTypeId]: copyDraft(draft) },
     dirty: false,
     revision: 0,
   };

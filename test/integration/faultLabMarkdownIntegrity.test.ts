@@ -86,7 +86,7 @@ describe('v9 故障实验室：Markdown 与索引完整性', () => {
 
     await h.dataStore.scanAll();
 
-    expect(h.dataStore.getRecordById(ORPHAN_TASK_ID)?.coreBlock).toBe('task');
+    expect(h.dataStore.getRecordById(ORPHAN_TASK_ID)?.recordType).toBe('task');
     expect(h.dataStore.getRecordIntegrityIssues()).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: 'task_series_reference_orphan', recordId: ORPHAN_TASK_ID }),
     ]));

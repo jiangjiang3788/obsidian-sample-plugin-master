@@ -20,7 +20,7 @@ function baseSettings(): ThinkSettings {
 
 describe('GoalTemplateResolver Goal-only', () => {
   it('falls back to the registered RecordType when the Goal has no custom template', () => {
-    const result = GoalTemplateResolver.resolve({ settings: baseSettings(), blockId: 'core.task', goalPath: '产品化/目标中心' });
+    const result = GoalTemplateResolver.resolve({ settings: baseSettings(), recordTypeId: 'core.task', goalPath: '产品化/目标中心' });
     expect(result.templateSourceType).toBe('record-type');
     expect(result.goal?.path).toBe('产品化/目标中心');
     expect(result.template?.id).toBe('core.task');
@@ -52,7 +52,7 @@ describe('GoalTemplateResolver Goal-only', () => {
       goalPath: '产品化/目标中心', recordTypeId: 'core.task', enabled: true,
       defaultValues: { priority: 'high' },
     } as never);
-    const result = GoalTemplateResolver.resolve({ settings, blockId: 'core.task', goalPath: '产品化/目标中心' });
+    const result = GoalTemplateResolver.resolve({ settings, recordTypeId: 'core.task', goalPath: '产品化/目标中心' });
     expect(result.templateSourceType).toBe('goal-template');
     expect(result.template?.fields.find((field) => field.key === 'priority')?.defaultValue).toBe('high');
   });
@@ -72,7 +72,7 @@ describe('GoalTemplateResolver Goal-only', () => {
     const settings = baseSettings();
     settings.goalSettings!.goals.push({ path: '产品化/目标中心/插件', status: 'active', metrics: [], createdAt: '', updatedAt: '' } as never);
     settings.goalSettings!.goalTemplates.push({ goalPath: '产品化/目标中心', recordTypeId: 'core.task', enabled: true, targetFile: '01/父目标.md' } as never);
-    const result = GoalTemplateResolver.resolve({ settings, blockId: 'core.task', goalPath: '产品化/目标中心/插件' });
+    const result = GoalTemplateResolver.resolve({ settings, recordTypeId: 'core.task', goalPath: '产品化/目标中心/插件' });
     expect(result.templateSourceType).toBe('record-type');
     expect(result.template?.targetFile).toBe('01/目标.md');
   });
@@ -113,7 +113,7 @@ describe('GoalTemplateResolver Goal-only', () => {
       goalPath: '产品化/目标中心', recordTypeId: 'core.task', enabled: true,
       defaultValues: { availabilityContexts: ['work', 'home'], recurrenceUnit: 'month' },
     } as never);
-    const result = GoalTemplateResolver.resolve({ settings, blockId: 'core.task', goalPath: '产品化/目标中心' });
+    const result = GoalTemplateResolver.resolve({ settings, recordTypeId: 'core.task', goalPath: '产品化/目标中心' });
     expect(result.template?.fields.find((field) => field.key === 'availabilityContexts')?.defaultValue).toBe('work,home');
     expect(result.template?.fields.find((field) => field.key === 'recurrenceUnit')?.defaultValue).toBe('month');
   });

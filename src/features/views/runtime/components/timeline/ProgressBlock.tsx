@@ -5,70 +5,70 @@ import type { JSX } from 'preact';
 import { useMemo } from 'preact/hooks';
 
 interface ProgressBlockProps {
-    categoryHours: Record<string, number>;
+    goalHours: Record<string, number>;
     order?: string[];
     totalHours: number;
     colorMap: Record<string, string>;
     untrackedLabel: string;
 }
 
-export function ProgressBlock({ 
-    categoryHours, 
-    order, 
-    totalHours, 
-    colorMap, 
-    untrackedLabel 
+export function ProgressBlock({
+    goalHours,
+    order,
+    totalHours,
+    colorMap,
+    untrackedLabel
 }: ProgressBlockProps) {
-    const sortedCategories = useMemo(() => {
+    const sortedGoals = useMemo(() => {
         const orderToUse = Array.isArray(order) ? order : [];
-        const presentCategories = new Set<string>();
-        
-        // 先添加指定顺序的分类
-        orderToUse.forEach(cat => {
-            if ((categoryHours[cat] || 0) > 0.01) {
-                presentCategories.add(cat);
-            }
-        });
-        
-        // 再添加其他存在的分类
-        Object.keys(categoryHours).forEach(cat => {
-            if ((categoryHours[cat] || 0) > 0.01) {
-                presentCategories.add(cat);
-            }
-        });
-        
-        return Array.from(presentCategories);
-    }, [categoryHours, order, untrackedLabel]);
+        const presentGoals = new Set<string>();
 
-    if (sortedCategories.length === 0) return null;
+        // 先添加指定顺序的分类
+        orderToUse.forEach((goalKey: string) => {
+            if ((goalHours[goalKey] || 0) > 0.01) {
+                presentGoals.add(goalKey);
+            }
+        });
+
+        // 再添加其他存在的分类
+        Object.keys(goalHours).forEach((goalKey: string) => {
+            if ((goalHours[goalKey] || 0) > 0.01) {
+                presentGoals.add(goalKey);
+            }
+        });
+
+        return Array.from(presentGoals);
+    }, [goalHours, order, untrackedLabel]);
+
+    if (sortedGoals.length === 0) return null;
 
     return (
         <div class="progress-block-container">
-            {sortedCategories.map((category) => {
-                const hours = categoryHours[category];
+            {sortedGoals.map((goalKey: string) => {
+                const hours = goalHours[goalKey];
                 const percent = totalHours > 0 ? (hours / totalHours) * 100 : 0;
-                
+
                 if (percent < 0.1 && hours < 0.01) return null;
-                
-                const color = colorMap[category] || 'var(--think-data-neutral)';
+
+                const color = colorMap[goalKey] || 'var(--think-data-neutral)';
                 const displayPercent = Math.max(percent, 0.5);
-                
+
                 return (
-                    <div 
-                        key={category} 
-                        title={`${category}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`} 
+                    <div
+                        key={goalKey}
+                        title={`${goalKey}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`}
                         class="progress-block-item"
                     >
-                        <div 
-                            class="progress-block-bar" 
-                            style={{ width: `${displayPercent}%`, '--timeline-progress-color': color } as JSX.CSSProperties} 
+                        <div
+                            class="progress-block-bar"
+                            style={{ width: `${displayPercent}%`, '--timeline-progress-color': color } as JSX.CSSProperties}
                         />
-                        <span 
+                        <span
                             class={`progress-block-text ${
                                 displayPercent > 50 ? 'progress-block-text-light' : 'progress-block-text-dark'
                             }`}
                         >
-                            {`${category} ${hours.toFixed(1)}h`}
+                            {`${goalKey} ${hours.toFixed(1)}h`}
                         </span>
                     </div>
                 );

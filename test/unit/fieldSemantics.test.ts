@@ -15,8 +15,8 @@ import { getAvailableFieldsByCategory, getFieldLabel, getFieldPickerOptions } fr
 const TASK_ID = 'task.01J00000000000000000000000';
 const REC_ID = 'rec.01J00000000000000000000000';
 
-function parseRecord(coreBlock: string, fields: Record<string, unknown>, id = REC_ID): RecordViewItem {
-  const markdown = encodeRecordBlock({ recordId: id, coreBlock, fields });
+function parseRecord(recordType: string, fields: Record<string, unknown>, id = REC_ID): RecordViewItem {
+  const markdown = encodeRecordBlock({ recordId: id, recordType, fields });
   const lines = markdown.split('\n');
   const item = parseRecordBlock('records.md', lines, 0, lines.length - 1, 'root');
   if (!item) throw new Error('测试夹具解析失败');
@@ -50,15 +50,15 @@ describe('field semantics on Record Foundation v2', () => {
     expect(filterByKeyword([item], '09:00')).toHaveLength(1);
   });
 
-  it('exposes coreBlock and 主显示值 as stable view fields', () => {
+  it('exposes recordType and 主显示值 as stable view fields', () => {
     const allFields = getAllFields([] as any);
-    expect(allFields).toContain('coreBlock');
+    expect(allFields).toContain('recordType');
     expect(allFields).toContain('primaryText');
-    expect(getFieldLabel('coreBlock')).toBe('记录类型');
+    expect(getFieldLabel('recordType')).toBe('记录类型');
     expect(getFieldLabel('primaryText')).toBe('主显示值');
     expect(getFieldPickerOptions(allFields)).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ value: 'coreBlock', label: '记录类型' }),
+        expect.objectContaining({ value: 'recordType', label: '记录类型' }),
         expect.objectContaining({ value: 'primaryText', label: '主显示值' }),
       ]),
     );

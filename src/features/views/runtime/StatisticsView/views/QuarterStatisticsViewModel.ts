@@ -1,4 +1,4 @@
-import type { CategoryConfig } from '@core/view/public';
+import type { StatisticsBucketConfig } from '@core/view/public';
 import type { RecordViewItem } from '@core/types/public';
 import type { PeriodData } from '@core/utils/public';
 import { aggregateByMonth, aggregateByQuarter, getMonthWeeksData, isSameIsoWeek } from '@core/utils/public';
@@ -41,7 +41,7 @@ export function buildQuarterMonthWeekStarts(month: any): any[] {
 
 export function buildQuarterStatisticsRenderModel(input: {
   items: RecordViewItem[];
-  categories: CategoryConfig[];
+  categories: StatisticsBucketConfig[];
   quarterDate: any;
   usePeriod: boolean;
   bucketAccessor?: (item: RecordViewItem) => string;

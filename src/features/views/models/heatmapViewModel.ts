@@ -8,7 +8,7 @@ import { createGoalOrderIndex, normalizeGoalPath, splitGoalPath, UNASSIGNED_GOAL
 export interface HeatmapGoalEntry {
     presetKey: string;
     templateId?: string;
-    sourceBlockId?: string;
+    sourceRecordTypeId?: string;
     ratingOptions?: HeatmapRatingOptionLike[];
     presetOriginalIndex?: number;
     goalPath: string;
@@ -28,7 +28,7 @@ type HeatmapViewConfigLike = {
     goalPaths?: unknown;
 };
 
-type HeatmapGoalTemplateLike = GoalTemplateStorageRow & { blockId?: unknown; id?: unknown };
+type HeatmapGoalTemplateLike = GoalTemplateStorageRow & { recordTypeId?: unknown; id?: unknown };
 type HeatmapRatingFieldLike = {
     type?: unknown;
     semantic?: unknown;
@@ -65,8 +65,8 @@ function itemGoalPath(item: RecordViewItem): string {
     return normalizeGoalPath(String(item.goalPath || item.extra?.['目标'] || '')) || '';
 }
 
-function itemCoreBlock(item: RecordViewItem): string {
-    const raw = firstText(item.coreBlock) || firstText(item.categoryKey);
+function itemRecordType(item: RecordViewItem): string {
+    const raw = firstText(item.recordType);
     if (raw === 'habit' || raw === '打卡') return 'core.habit';
     if (raw === 'task' || raw === '任务') return 'core.task';
     return raw.startsWith('core.') ? raw : raw;
@@ -83,15 +83,15 @@ function extractRatingOptions(template: GoalTemplateStorageRow | null | undefine
 }
 
 function buildPresetLookups(goalSettings: GoalSettings | undefined): {
-    byGoalAndBlock: Map<string, PresetMeta>;
+    byGoalAndRecordType: Map<string, PresetMeta>;
     allHabits: PresetMeta[];
 } {
-    const byGoalAndBlock = new Map<string, PresetMeta>();
+    const byGoalAndRecordType = new Map<string, PresetMeta>();
     const allHabits: PresetMeta[] = [];
     for (const [index, raw] of (goalSettings?.goalTemplates || []).entries()) {
         const template: HeatmapGoalTemplateLike = raw;
         const goalPath = normalizeGoalPath(firstText(template.goalPath));
-        const recordTypeId = firstText(template.recordTypeId) || firstText(template.blockId);
+        const recordTypeId = firstText(template.recordTypeId) || firstText(template.recordTypeId);
         if (!goalPath || !recordTypeId || template.enabled === false) continue;
         const id = firstText(template.id) || `${goalPath}\u0000${recordTypeId}`;
         const meta: PresetMeta = {
@@ -102,10 +102,10 @@ function buildPresetLookups(goalSettings: GoalSettings | undefined): {
             ratingOptions: extractRatingOptions(template),
             order: index,
         };
-        byGoalAndBlock.set(`${goalPath}\u0000${recordTypeId}`, meta);
+        byGoalAndRecordType.set(`${goalPath}\u0000${recordTypeId}`, meta);
         if (recordTypeId === 'core.habit') allHabits.push(meta);
     }
-    return { byGoalAndBlock, allHabits };
+    return { byGoalAndRecordType, allHabits };
 }
 
 function rowLabel(goalPath: string): string {
@@ -173,7 +173,7 @@ export function buildHeatmapViewModel(params: {
             entry = {
                 presetKey: preset?.key || `${path}\u0000core.habit`,
                 templateId: preset?.id || undefined,
-                sourceBlockId: preset?.recordTypeId,
+                sourceRecordTypeId: preset?.recordTypeId,
                 ratingOptions: preset?.ratingOptions || [],
                 presetOriginalIndex: preset?.order,
                 goalPath: path,
@@ -197,8 +197,8 @@ export function buildHeatmapViewModel(params: {
         const path = itemGoalPath(item);
         if (!date || !path) continue;
         if (configuredSet.size && !configuredSet.has(path)) continue;
-        const recordTypeId = itemCoreBlock(item);
-        const preset = lookups.byGoalAndBlock.get(`${path}\u0000${recordTypeId}`) || null;
+        const recordTypeId = itemRecordType(item);
+        const preset = lookups.byGoalAndRecordType.get(`${path}\u0000${recordTypeId}`) || null;
         const entry = ensureEntry(path, preset);
         const group = ensureGroup(path);
         entry.count += 1;

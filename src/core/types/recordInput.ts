@@ -66,24 +66,23 @@ export interface EntryContext {
   entryId: string;
   sourcePath?: string | null;
   sourceLine?: number | null;
-  categoryKey?: string | null;
   openedFrom?: 'list' | 'detail' | 'search' | 'timeline' | 'quickinput' | 'timer' | 'unknown';
 }
 
 export interface PrepareCreateRecordParams {
-  blockId?: string | null;
+  recordTypeId?: string | null;
   context?: Record<string, unknown>;
   source?: RecordInputSource;
 }
 
 export interface PrepareEditRecordParams {
   item: RecordViewItem;
-  blockId?: string | null;
+  recordTypeId?: string | null;
   source?: Extract<RecordInputSource, 'quickinput' | 'timer' | 'unknown'>;
 }
 
 export interface PreparedCreateRecord {
-  blockId: string | null;
+  recordTypeId: string | null;
   template: RecordCaptureTemplate | null;
   initialFormData: Record<string, unknown>;
   snapshot?: EditableRecordSnapshot | null;
@@ -93,15 +92,15 @@ export interface PreparedCreateRecord {
 }
 
 export interface PreparedEditRecord {
-  blockId: string | null;
+  recordTypeId: string | null;
   template: RecordCaptureTemplate | null;
   initialFormData: Record<string, unknown>;
   snapshot?: EditableRecordSnapshot | null;
   outputPlan?: RecordOutputPlan;
   persistencePlan?: RecordPersistencePlan;
   inferred: {
-    usedFallbackBlock: boolean;
-    canonicalBlockId?: string | null;
+    usedFallbackRecordType: boolean;
+    canonicalRecordTypeId?: string | null;
     templateSourceType?: 'record-type' | 'goal-template' | null;
     resolvedBy?: 'exact' | 'inferred' | 'fallback';
   };
@@ -109,7 +108,7 @@ export interface PreparedEditRecord {
 }
 
 export interface SubmitCreateRecordParams {
-  blockId: string;
+  recordTypeId: string;
   formData: Record<string, unknown>;
   context?: Record<string, unknown>;
   meta?: RecordInputMeta;
@@ -119,7 +118,7 @@ export interface SubmitCreateRecordParams {
 
 export interface SubmitUpdateRecordParams {
   item: RecordViewItem;
-  blockId: string;
+  recordTypeId: string;
   formData: Record<string, unknown>;
   meta?: RecordInputMeta;
   expectedOutputPlan?: Pick<RecordOutputPlan, 'targetFilePath' | 'targetHeader'> | null;
@@ -156,15 +155,15 @@ export interface SubmitUpdateTimelineRangeParams {
 }
 
 export interface ResolveDependenciesResult {
-  blockId: string | null;
+  recordTypeId: string | null;
   template: RecordCaptureTemplate | null;
   warnings: RecordSubmitIssue[];
   errors: RecordSubmitIssue[];
   meta: {
     templateId?: string | null;
     templateSourceType?: 'record-type' | 'goal-template' | null;
-    usedFallbackBlock: boolean;
-    canonicalBlockId?: string | null;
+    usedFallbackRecordType: boolean;
+    canonicalRecordTypeId?: string | null;
   };
 }
 

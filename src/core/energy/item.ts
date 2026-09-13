@@ -2,8 +2,7 @@ import { isEnergyQuickLevel, toEnergyQuickLevel } from './scale';
 import type { EnergyCaptureMode, EnergyQuickLevel, EnergyScoreMode, EnergyTimePrecision } from './types';
 
 export interface EnergyItemLike {
-  coreBlock?: string;
-  categoryKey?: string;
+  recordType?: string;
   date?: string;
   startTime?: string;
   extra?: Record<string, string | number | boolean>;
@@ -43,13 +42,11 @@ function readScore(value: unknown): number | undefined {
 }
 
 export function isEnergyItem(item: EnergyItemLike): boolean {
-  const block = String(item.coreBlock || item.extra?.['记录类型'] || '')
+  const block = String(item.recordType || item.extra?.['记录类型'] || '')
     .replace(/^core\./i, '')
     .trim()
     .toLowerCase();
-  if (block === 'energy') return true;
-  const category = String(item.categoryKey || '').split('/')[0]?.trim();
-  return category === '精力';
+  return block === 'energy';
 }
 
 /**

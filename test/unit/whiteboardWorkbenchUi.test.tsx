@@ -9,12 +9,13 @@
 /** @jsxImportSource preact */
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
+import { inputText, waitForUi } from '../support/uiTestUtils';
 import type { RecordViewItem } from '@core/types/public';
 import type { WhiteboardBoard, WhiteboardStore } from '@core/whiteboard/public';
 import { WhiteboardWorkspace } from '@/features/whiteboard/WhiteboardWorkspace';
 
 function record(id: string): RecordViewItem {
-  return { id, coreBlock: 'thought', title: id, content: `${id} content`, tags: [], categoryKey: 'thought', goalPath: '测试', date: '2026-09-08', created: 0, modified: 0, extra: {} };
+  return { id, recordType: 'thought', title: id, content: `${id} content`, tags: [], goalPath: '测试', date: '2026-09-08', created: 0, modified: 0, extra: {} };
 }
 
 function fakeStore(initial: WhiteboardBoard) {
@@ -82,13 +83,15 @@ describe('Whiteboard Workbench 1.1.7 UI', () => {
     expect(host.querySelector('[data-whiteboard-item-id="item-a"]')).toBeTruthy();
     expect(host.querySelector('[data-whiteboard-edge-id="edge-a"]')).toBeTruthy();
     const collapse = host.querySelector('button[aria-label="折叠工作台"]') as HTMLButtonElement;
-    await act(async () => { collapse.click(); await Promise.resolve(); });
+    await act(async () => { collapse.click(); });
+    await waitForUi(() => Boolean(host.querySelector('[data-whiteboard-group-collapsed="true"]')), '等待工作台折叠');
     expect(host.querySelector('[data-whiteboard-group-collapsed="true"]')).toBeTruthy();
     expect(host.querySelector('[data-whiteboard-item-id="item-a"]')).toBeNull();
     expect(host.querySelector('[data-whiteboard-edge-id="edge-a"]')).toBeNull();
     expect(host.querySelector('[data-whiteboard-source-record-id="rec-a"]')).toBeNull();
     const expand = host.querySelector('button[aria-label="展开工作台"]') as HTMLButtonElement;
-    await act(async () => { expand.click(); await Promise.resolve(); });
+    await act(async () => { expand.click(); });
+    await waitForUi(() => Boolean(host.querySelector('[data-whiteboard-item-id="item-a"]')), '等待工作台展开');
     expect(host.querySelector('[data-whiteboard-item-id="item-a"]')).toBeTruthy();
   });
 
@@ -103,14 +106,21 @@ describe('Whiteboard Workbench 1.1.7 UI', () => {
     const rename = Array.from(host.querySelectorAll('button')).find((button) => button.textContent === '重命名') as HTMLButtonElement;
     await act(async () => rename.click());
     const input = host.querySelector('input[aria-label="工作台名称"]') as HTMLInputElement;
-    await act(async () => { input.value = '睡眠研究'; input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); await Promise.resolve(); });
+    await inputText(input, '睡眠研究');
+    await act(async () => { input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); });
+    await waitForUi(() => host.textContent?.includes('睡眠研究') === true, '等待工作台重命名');
     expect(host.textContent).toContain('睡眠研究');
-    const removeFromGroup = Array.from(host.querySelectorAll('button')).find((button) => button.textContent === '移出工作台') as HTMLButtonElement;
-    await act(async () => { removeFromGroup.click(); await Promise.resolve(); });
+    const card = host.querySelector('[data-whiteboard-item-id="item-a"]') as HTMLElement;
+    await act(async () => card.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 40, clientY: 40 })));
+    const removeFromGroup = Array.from(host.querySelectorAll('.think-whiteboard-context-menu button')).find((button) => button.textContent === '移出工作台') as HTMLButtonElement;
+    expect(removeFromGroup).toBeTruthy();
+    await act(async () => { removeFromGroup.click(); });
+    await waitForUi(() => (store.moveItem as jest.Mock).mock.calls.length > 0, '等待成员移出工作台');
     expect(host.querySelector('[data-whiteboard-item-id="item-a"]')).toBeTruthy();
     expect((store.moveItem as jest.Mock).mock.calls.at(-1)?.[3]).toBeNull();
     const create = host.querySelector('button[aria-label="新建工作台"]') as HTMLButtonElement;
-    await act(async () => { create.click(); await Promise.resolve(); });
+    await act(async () => { create.click(); });
+    await waitForUi(() => (store.createGroup as jest.Mock).mock.calls.length > 0, '等待新工作台创建');
     expect((store.createGroup as jest.Mock)).toHaveBeenCalled();
     expect(host.querySelectorAll('[data-whiteboard-group-id]').length).toBe(2);
   });
@@ -121,9 +131,11 @@ describe('Whiteboard Workbench 1.1.7 UI', () => {
     const undo = host.querySelector('button[aria-label="撤销白板操作"]') as HTMLButtonElement;
     const redo = host.querySelector('button[aria-label="重做白板操作"]') as HTMLButtonElement;
     expect(undo.disabled).toBe(false); expect(redo.disabled).toBe(true);
-    await act(async () => { undo.click(); await Promise.resolve(); });
+    await act(async () => { undo.click(); });
+    await waitForUi(() => (store.undo as jest.Mock).mock.calls.length === 1, '等待 Undo');
     expect(store.undo).toHaveBeenCalledTimes(1);
-    await act(async () => { host.querySelector('.think-whiteboard-workspace')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true })); await Promise.resolve(); });
+    await act(async () => { host.querySelector('.think-whiteboard-workspace')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true })); });
+    await waitForUi(() => (store.undo as jest.Mock).mock.calls.length === 2, '等待快捷键 Undo');
     expect(store.undo).toHaveBeenCalledTimes(2);
   });
 
@@ -140,14 +152,17 @@ describe('Whiteboard Workbench 1.1.7 UI', () => {
     await act(async () => render(<WhiteboardWorkspace records={[a]} whiteboardStore={store} />, host));
     const parent = host.querySelector('[data-whiteboard-group-id="group-a"]') as HTMLElement;
     const enter = parent.querySelector('button[aria-label="全屏进入工作台"]') as HTMLButtonElement;
-    await act(async () => { enter.click(); await Promise.resolve(); });
+    await act(async () => { enter.click(); });
+    await waitForUi(() => host.querySelector('.think-whiteboard-workspace')?.getAttribute('data-whiteboard-active-group-id') === 'group-a', '等待进入工作台');
     expect(host.querySelector('.think-whiteboard-workspace')?.getAttribute('data-whiteboard-active-group-id')).toBe('group-a');
     expect(host.querySelector('[data-whiteboard-group-id="group-a"]')).toBeNull();
     expect(host.querySelector('[data-whiteboard-group-id="group-b"]')).toBeTruthy();
     expect(host.querySelector('[data-whiteboard-item-id="item-a"]')).toBeTruthy();
     expect(host.querySelector('[data-whiteboard-breadcrumb-group-id="group-a"]')?.textContent).toBe('产品');
     const create = host.querySelector('button[aria-label="新建工作台"]') as HTMLButtonElement;
-    await act(async () => { create.click(); await Promise.resolve(); });
+    const beforeCreateCount = (store.createGroup as jest.Mock).mock.calls.length;
+    await act(async () => { create.click(); });
+    await waitForUi(() => (store.createGroup as jest.Mock).mock.calls.length === beforeCreateCount + 1, '等待子工作台创建');
     expect((store.createGroup as jest.Mock).mock.calls.at(-1)?.[3]).toBe('group-a');
   });
 

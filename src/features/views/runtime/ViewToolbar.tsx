@@ -9,7 +9,6 @@ import {
     ThinkIconButton,
     ThinkSegmentedControl,
 } from '@shared/ui/public';
-import { CategoryFilter } from './CategoryFilter';
 import { ViewToolbarDateControls } from './ViewToolbarDateControls';
 import {
     buildViewToolbarDateLabel,
@@ -24,10 +23,7 @@ export interface ViewToolbarProps {
     onViewChange: (view: string) => void;
     onDateChange: (date: dayjs.Dayjs) => void;
     filterSlot?: ComponentChildren;
-    selectedCategories?: string[];
-    onCategorySelectionChange?: (categories: string[]) => void;
     viewInstances: ViewInstance[];
-    predefinedCategories?: string[];
     hideToolbar?: boolean;
     onLayoutSettingsClick?: () => void;
 }
@@ -36,14 +32,14 @@ const VIEW_SEGMENTS = VIEW_TOOLBAR_OPTIONS.map((value) => ({ value, label: value
 
 export function ViewToolbar({
     currentView, currentDate, onViewChange, onDateChange, filterSlot,
-    selectedCategories = [], onCategorySelectionChange, viewInstances, predefinedCategories,
+    viewInstances,
     hideToolbar = false, onLayoutSettingsClick,
 }: ViewToolbarProps) {
     const dateLabel = useMemo(() => buildViewToolbarDateLabel(currentDate, currentView), [currentDate, currentView]);
     const dateTargets = useMemo(() => buildViewToolbarDateTargets(currentDate, currentView), [currentDate, currentView]);
     const fallbackFilters = shouldRenderViewToolbarFallbackFilters({
         hasFilterSlot: Boolean(filterSlot),
-        canSelectCategories: Boolean(onCategorySelectionChange),
+        canSelectCategories: false,
     });
 
     if (hideToolbar) return null;
@@ -60,11 +56,7 @@ export function ViewToolbar({
             <span class="tp-toolbar__spacer" aria-hidden="true" />
             {(filterSlot || fallbackFilters) && (
                 <div class="tp-toolbar__filters">
-                    {filterSlot || (
-                        <>
-                            {onCategorySelectionChange && <CategoryFilter selectedCategories={selectedCategories} onSelectionChange={onCategorySelectionChange} viewInstances={viewInstances} predefinedCategories={predefinedCategories} />}
-                        </>
-                    )}
+                    {filterSlot}
                 </div>
             )}
             {onLayoutSettingsClick && (

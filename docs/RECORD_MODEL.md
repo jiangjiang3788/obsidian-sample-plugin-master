@@ -67,7 +67,7 @@ For goal-bindable user RecordTypes, create capture always resolves from an expli
 
 Goal selection is system context, not a removable template field. Entry points may preselect it when they already know the Goal (for example a Heatmap cell), but they must never guess the first Goal or first RecordType.
 
-## Record presentation (1.4.0)
+## Record presentation (1.6.0)
 
 A persisted field and a human-facing representative value are not the same concept.
 
@@ -76,17 +76,17 @@ A persisted field and a human-facing representative value are not the same conce
 - Explicit title always wins inside `primaryText`.
 - Value-shaped types can derive natural values when title is absent (for example `精力 65`, `打卡 · 评分 4`, `任务工作块 · 120 分钟`).
 - Text-shaped types use content and finally the schema-owned Record Type label as fallback.
-- The resolver is exhaustive for the 11 canonical Record kinds and never mutates Markdown or Record storage.
+- The resolver remains exhaustive for all 12 technical Record kinds and never mutates Markdown or Record storage.
 
-Canonical presentation order for Record Types is:
+Canonical **user-facing** presentation order is:
 
 ```text
-任务 → 任务工作块 → 任务系列 → 精力 → 打卡 → 事件 → 思考 → 总结 → 计划 → 阻碍项 → 里程碑
+任务 → 精力 → 打卡 → 事件 → 感受 → 思考 → 总结 → 计划 → 阻碍项 → 里程碑
 ```
 
-This order is a presentation contract, not schema/persistence order. It applies when UI enumerates or groups **Record Types**. It must not override a user-selected date/title/custom sort, and it must not be applied to independent Category values.
+`TaskSession` and `TaskSeries` remain internal technical records. They normalize to the Task presentation identity and never own a separate user-facing order, label or color. The order above applies when UI enumerates or groups user Record Types. It must not override a user-selected date/title/custom sort. Category remains retired; Goal remains an independent domain keyed by `goalPath`.
 
-Each canonical Record Type also owns one semantic color token (`--think-record-type-*`). A View can decide whether type color is visually useful, but if it renders a type accent it must consume that global token rather than invent a local color mapping.
+Each user-facing Record Type owns one semantic color token (`--think-record-type-*`). Product CSS owns defaults; Settings persists only valid user overrides. Views consume the global semantic token rather than inventing local color maps.
 
 ### Display-field priority
 

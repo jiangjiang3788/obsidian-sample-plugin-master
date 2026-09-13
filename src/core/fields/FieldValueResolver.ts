@@ -43,17 +43,6 @@ function readFileField(item: RecordViewItem, field: string): unknown {
   return readUnknown(fileRecord, key);
 }
 
-function readCategoryPath(item: RecordViewItem): string | undefined {
-  return splitHierarchyPath(readString(asUnknownRecord(item), 'categoryPath') ?? item.categoryKey).path;
-}
-
-function readRootCategory(item: RecordViewItem): string | undefined {
-  return splitHierarchyPath(readString(asUnknownRecord(item), 'categoryPath') ?? item.categoryKey).root;
-}
-
-function readLeafCategory(item: RecordViewItem): string | undefined {
-  return splitHierarchyPath(readString(asUnknownRecord(item), 'categoryPath') ?? item.categoryKey).leaf;
-}
 
 function readImageField(item: RecordViewItem): unknown {
   return normalizeImageValue(item.image ?? item.extra?.['图片'] ?? item.extra?.['image']);
@@ -80,19 +69,10 @@ function readCanonicalField(item: RecordViewItem, canonicalField: string): unkno
     return item.leafGoal || splitHierarchyPath(item.goalPath).leaf;
   }
 
-  if (canonicalField === 'categoryKey') {
-    return readCategoryPath(item);
-  }
-  if (canonicalField === 'baseCategory') {
-    return readRootCategory(item);
-  }
-  if (canonicalField === 'leafCategory') {
-    return readLeafCategory(item);
-  }
 
 
   if (canonicalField === 'status') return item.status;
-  if (canonicalField === 'cadence') return item.coreBlock === 'task' ? getTaskCadence(item) : undefined;
+  if (canonicalField === 'cadence') return item.recordType === 'task' ? getTaskCadence(item) : undefined;
   if (canonicalField === 'recurrence') return formatTaskRecurrence(item.recurrenceInfo);
 
   if (canonicalField === 'period.id') {

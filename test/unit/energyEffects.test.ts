@@ -6,13 +6,13 @@ import { buildEnergyEffects } from '@core/energy/public';
 
 function makeItem(overrides: Record<string, unknown> = {}) {
   return {
-    id: 'item', title: '', content: '', tags: [], categoryKey: '', created: 0, modified: 0, extra: {}, ...overrides,
+    id: 'item', title: '', content: '', tags: [], created: 0, modified: 0, extra: {}, ...overrides,
   } as any;
 }
 
 function energy(id: string, date: string, time: string, score: number, extra: Record<string, unknown> = {}, goalPath = '照顾好自己') {
   return makeItem({
-    id, coreBlock: 'energy', categoryKey: '精力', goalPath, date, startTime: time,
+    id, recordType: 'energy', goalPath, date, startTime: time,
     extra: {
       精力值: score,
       精力档位: score <= 30 ? 20 : score <= 50 ? 40 : score <= 70 ? 60 : score <= 90 ? 80 : 100,
@@ -25,14 +25,14 @@ function energy(id: string, date: string, time: string, score: number, extra: Re
 
 function task(id: string, overrides: Record<string, unknown> = {}) {
   return makeItem({
-    id, coreBlock: 'task', status: 'open', goalPath: '工作/开发', title: '写 Think OS 代码', content: '写 Think OS 代码', ...overrides,
+    id, recordType: 'task', status: 'open', goalPath: '工作/开发', title: '写 Think OS 代码', content: '写 Think OS 代码', ...overrides,
   });
 }
 
 function session(id: string, taskId: string, date: string, startTime: string, endTime: string, duration: number, beforeId?: string, afterId?: string, overrides: Record<string, unknown> = {}) {
   return makeItem({
     id,
-    coreBlock: 'task-session',
+    recordType: 'task-session',
     taskId,
     sessionStartedAt: `${date}T${startTime}:00`,
     sessionEndedAt: `${date}T${endTime}:00`,

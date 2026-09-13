@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { SettingsNavigation } from '@features/settings/components/SettingsNavigation';
-import { BlockManager } from '@features/settings/input/BlockManager';
+import { RecordTypeManager } from '@features/settings/input/RecordTypeManager';
 import { GoalManager } from '@features/settings/input/GoalManager';
 import { GoalMetricSection } from '@features/settings/input/goalManager/GoalMetricSection';
 
@@ -26,7 +26,7 @@ export function DataManagementSettings() {
         className="think-data-management-nav"
       />
       <div className="think-data-management__content">
-        {section === 'recordTypes' && <BlockManager />}
+        {section === 'recordTypes' && <RecordTypeManager />}
         {section === 'goals' && <GoalManager />}
         {section === 'metrics' && <GoalMetricSection />}
       </div>

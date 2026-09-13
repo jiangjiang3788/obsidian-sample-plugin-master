@@ -4,6 +4,7 @@ import type { WhiteboardCamera } from './WhiteboardCameraModel';
 import { WHITEBOARD_DRAG_THRESHOLD_PX } from './WhiteboardDragModel';
 import { WHITEBOARD_SEMANTIC_DETAIL_MIN_ZOOM } from './WhiteboardSemanticZoomModel';
 import type { WhiteboardClientPoint } from './WhiteboardTransferModel';
+import type { WhiteboardSemanticPresentationModel, WhiteboardSemanticPresentationPlacement } from './WhiteboardSemanticPresentationModel';
 import {
   applyWhiteboardSelectionPreview,
   buildWhiteboardSelectionMoves,
@@ -35,11 +36,27 @@ interface WhiteboardSelectionControllerInput {
   onSemanticMoveStart?: () => void;
   onSemanticItemDragPointerChange?: (itemIds: readonly string[], point: WhiteboardClientPoint | null) => void;
   onSemanticItemDrop?: (itemIds: readonly string[], point: WhiteboardClientPoint) => boolean | Promise<boolean>;
+  semanticPresentationRef?: { current: WhiteboardSemanticPresentationModel | null };
+}
+
+
+function presentationIntersectsScreenRect(
+  placement: WhiteboardSemanticPresentationPlacement,
+  session: WhiteboardMarqueeSession,
+  rect: WhiteboardRect,
+): boolean {
+  const centerX = (placement.worldPoint.x - session.camera.x) * session.zoom;
+  const centerY = (placement.worldPoint.y - session.camera.y) * session.zoom;
+  const left = centerX - placement.widthPx / 2;
+  const right = centerX + placement.widthPx / 2;
+  const top = centerY - placement.heightPx / 2;
+  const bottom = centerY + placement.heightPx / 2;
+  return left <= rect.right && right >= rect.left && top <= rect.bottom && bottom >= rect.top;
 }
 
 export function useWhiteboardSelectionController({
   boardId, items, groups, activeGroupId, visibleItems, visibleGroups, storeReady, whiteboardStore, viewportRef, camera, zoom, onNotice, onSemanticMoveStart,
-  onSemanticItemDragPointerChange, onSemanticItemDrop,
+  onSemanticItemDragPointerChange, onSemanticItemDrop, semanticPresentationRef,
 }: WhiteboardSelectionControllerInput) {
   const [selectedItemIds, setSelectedItemIdsState] = useState<Set<string>>(() => new Set());
   const [selectedGroupIds, setSelectedGroupIdsState] = useState<Set<string>>(() => new Set());
@@ -92,15 +109,29 @@ export function useWhiteboardSelectionController({
     const move = (next: PointerEvent) => {
       if (marqueeRef.current?.pointerId !== next.pointerId) return;
       next.preventDefault(); next.stopPropagation(); const resolved = resolveWhiteboardMarqueeRects(session, next.clientX, next.clientY); setMarqueeRect(resolved.screen);
-      setSelectedItemIds(mergeWhiteboardSelection(session.baseSelection, getWhiteboardItemsIntersectingRect(selectableItems, resolved.world)));
-      const groupHits = zoom < WHITEBOARD_SEMANTIC_DETAIL_MIN_ZOOM ? getWhiteboardGroupsIntersectingRect(selectableGroups, items, resolved.world) : [];
+      const presentation = zoom < WHITEBOARD_SEMANTIC_DETAIL_MIN_ZOOM ? semanticPresentationRef?.current ?? null : null;
+      const itemHits = presentation
+        ? selectableItems.filter((item) => {
+          const placement = presentation.items.get(item.id);
+          return placement ? presentationIntersectsScreenRect(placement, session, resolved.screen) : getWhiteboardItemsIntersectingRect([item], resolved.world).length > 0;
+        }).map((item) => item.id)
+        : getWhiteboardItemsIntersectingRect(selectableItems, resolved.world);
+      setSelectedItemIds(mergeWhiteboardSelection(session.baseSelection, itemHits));
+      const groupHits = zoom < WHITEBOARD_SEMANTIC_DETAIL_MIN_ZOOM
+        ? presentation
+          ? selectableGroups.filter((group) => {
+            const placement = presentation.groups.get(group.id);
+            return placement ? presentationIntersectsScreenRect(placement, session, resolved.screen) : getWhiteboardGroupsIntersectingRect([group], items, resolved.world).length > 0;
+          }).map((group) => group.id)
+          : getWhiteboardGroupsIntersectingRect(selectableGroups, items, resolved.world)
+        : [];
       setSelectedGroupIds(mergeWhiteboardSelection(baseGroups, groupHits));
     };
     const up = (next: PointerEvent) => finishMarquee(next); const cancel = (next: PointerEvent) => finishMarquee(next);
     window.addEventListener('pointermove', move, true); window.addEventListener('pointerup', up, true); window.addEventListener('pointercancel', cancel, true);
     cleanupRef.current = () => { window.removeEventListener('pointermove', move, true); window.removeEventListener('pointerup', up, true); window.removeEventListener('pointercancel', cancel, true); };
     return true;
-  }, [camera, finishMarquee, items, selectableGroups, selectableItems, setSelectedGroupIds, setSelectedItemIds, viewportRef, zoom]);
+  }, [camera, finishMarquee, items, selectableGroups, selectableItems, semanticPresentationRef, setSelectedGroupIds, setSelectedItemIds, viewportRef, zoom]);
 
   const isMultiDrag = useCallback((itemId: string) => selectedRef.current.has(itemId) && selectedRef.current.size > 1 && selectedGroupsRef.current.size === 0, []);
   const previewItemDrag = useCallback((itemId: string, position: WhiteboardPosition | null) => { if (!position || !isMultiDrag(itemId)) { setDragMoves([]); return; } setDragMoves(buildWhiteboardSelectionMoves({ items, selectedItemIds: selectedRef.current, draggedItemId: itemId, draggedPosition: position })); }, [isMultiDrag, items]);

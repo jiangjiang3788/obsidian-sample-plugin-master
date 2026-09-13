@@ -46,12 +46,12 @@ export interface RecordQueryResult {
 }
 
 function isClosedTask(item: RecordViewItem): boolean {
-  if (item.coreBlock !== 'task') return false;
+  if (item.recordType !== 'task') return false;
   return item.status === 'done' || item.status === 'cancelled' || item.status === 'skipped';
 }
 
 function isOpenTask(item: RecordViewItem): boolean {
-  return item.coreBlock === 'task' && !isClosedTask(item);
+  return item.recordType === 'task' && !isClosedTask(item);
 }
 
 function itemGranularity(item: RecordViewItem): string {
@@ -85,16 +85,16 @@ function isWithinMinuteRange(value: unknown, range: [Date, Date]): boolean {
 function readDateConstraintValue(item: RecordViewItem, constraint: RecordQueryDateConstraint): unknown {
   const role = constraint.role || 'default';
   if (role === 'task-scheduled') {
-    return item.coreBlock === 'task' ? (item.scheduledAt ?? item.scheduledDate) : undefined;
+    return item.recordType === 'task' ? (item.scheduledAt ?? item.scheduledDate) : undefined;
   }
   if (role === 'task-due') {
-    return item.coreBlock === 'task' ? (item.dueAt ?? item.dueDate) : undefined;
+    return item.recordType === 'task' ? (item.dueAt ?? item.dueDate) : undefined;
   }
   if (role === 'task-completed') {
-    return item.coreBlock === 'task' ? (item.completedAt ?? item.doneDate) : undefined;
+    return item.recordType === 'task' ? (item.completedAt ?? item.doneDate) : undefined;
   }
   if (role === 'task-actual') {
-    return item.coreBlock === 'task-session' ? item.sessionStartedAt : undefined;
+    return item.recordType === 'task-session' ? item.sessionStartedAt : undefined;
   }
   return readField(item, constraint.field || 'date');
 }

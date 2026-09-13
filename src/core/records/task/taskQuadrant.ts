@@ -28,9 +28,9 @@ export function normalizeTaskUrgency(value: unknown): TaskUrgency | null {
 }
 
 export function deriveEisenhowerQuadrant(
-  task: Pick<RecordViewItem, 'coreBlock' | 'importance' | 'urgency'> | null | undefined,
+  task: Pick<RecordViewItem, 'recordType' | 'importance' | 'urgency'> | null | undefined,
 ): EisenhowerQuadrant {
-  if (!task || task.coreBlock !== 'task') return 'unclassified';
+  if (!task || task.recordType !== 'task') return 'unclassified';
   const importance = normalizeTaskImportance(task.importance);
   const urgency = normalizeTaskUrgency(task.urgency);
   if (!importance || !urgency) return 'unclassified';

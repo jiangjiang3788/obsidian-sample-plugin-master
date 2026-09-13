@@ -1,14 +1,15 @@
 import type { ZustandAppStore } from '@/app/store/useAppStore';
-import { buildRecordTypeInputSettings } from '@core/recordTypes/public';
+import { buildRecordTypeInputSettings, type RecordTypeColorOverrides } from '@core/recordTypes/public';
 
 
 export const selectSettings = (s: ZustandAppStore) => s.settings;
 
 const RECORD_TYPE_INPUT_SETTINGS = buildRecordTypeInputSettings();
+const EMPTY_RECORD_TYPE_COLORS: RecordTypeColorOverrides = Object.freeze({});
 
 /** Derived adapter for older view/AI props. It is not persisted settings. */
 export const selectInputSettings = (_s: ZustandAppStore) => RECORD_TYPE_INPUT_SETTINGS;
-export const selectInputBlocks = (_s: ZustandAppStore) => RECORD_TYPE_INPUT_SETTINGS.blocks;
+export const selectInputRecordTypes = (_s: ZustandAppStore) => RECORD_TYPE_INPUT_SETTINGS.recordTypes;
 
 export const selectAiSettings = (s: ZustandAppStore) => s.settings.aiSettings;
 
@@ -25,10 +26,10 @@ export const makeSelectViewInstanceById = (instanceId: string) => (s: ZustandApp
 export const selectFloatingTimerEnabled = (s: ZustandAppStore) => s.settings.floatingTimerEnabled;
 
 
+export const selectRecordTypeColors = (s: ZustandAppStore): RecordTypeColorOverrides => s.settings.recordTypeColors ?? EMPTY_RECORD_TYPE_COLORS;
+
 export const selectDevConsoleStackEnabled = (s: ZustandAppStore) => !!s.settings.devConsoleStackEnabled;
 
-const EMPTY_CATEGORY_COLORS: Record<string, string> = {};
-export const selectCategoryColors = (s: ZustandAppStore) => s.settings.categoryColors ?? EMPTY_CATEGORY_COLORS;
 
 export const selectEnergyDefaultGoalPath = (s: ZustandAppStore) => s.settings.energySettings?.defaultGoalPath ?? '';
 import { isActiveTimerState } from '@core/types/public';

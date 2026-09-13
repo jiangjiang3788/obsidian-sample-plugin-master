@@ -4,10 +4,9 @@ export interface AiSnapshotField {
   type?: string;
 }
 
-export interface AiSnapshotBlock {
+export interface AiSnapshotRecordType {
   id?: string;
   name?: string;
-  categoryKey?: string;
   fields?: AiSnapshotField[];
 }
 
@@ -20,40 +19,36 @@ export interface AiSnapshotPreset {
   id?: string;
   goalTemplateId?: string;
   goalPath?: string;
-  blockId?: string;
-  categoryKey?: string;
+  recordTypeId?: string;
 }
 
 export interface AiParserSnapshot {
-  blocks?: AiSnapshotBlock[];
+  recordTypes?: AiSnapshotRecordType[];
   goals?: AiSnapshotGoal[];
   goalPresets?: AiSnapshotPreset[];
 }
 
 export interface CompactAiParserSnapshot {
-  blocks: Array<{ id?: string; name?: string; categoryKey?: string; fields: AiSnapshotField[] }>;
+  recordTypes: Array<{ id?: string; name?: string; fields: AiSnapshotField[] }>;
   goals: Array<{ path?: string }>;
   goalPresets: Array<{
     goalPath?: string;
-    blockId?: string;
-    categoryKey?: string;
-    goalTemplateId?: string;
+    recordTypeId?: string;
+      goalTemplateId?: string;
   }>;
 }
 
 export function compactSnapshotForFastMode(snapshot: AiParserSnapshot): CompactAiParserSnapshot {
   return {
-    blocks: (snapshot.blocks ?? []).map((block) => ({
-      id: block.id,
-      name: block.name,
-      categoryKey: block.categoryKey,
-      fields: (block.fields ?? []).map((field) => ({ key: field.key, label: field.label, type: field.type })),
+    recordTypes: (snapshot.recordTypes ?? []).map((recordType) => ({
+      id: recordType.id,
+      name: recordType.name,
+      fields: (recordType.fields ?? []).map((field) => ({ key: field.key, label: field.label, type: field.type })),
     })),
     goals: (snapshot.goals ?? []).map((goal) => ({ path: goal.path })),
     goalPresets: (snapshot.goalPresets ?? []).map((preset) => ({
       goalPath: preset.goalPath,
-      blockId: preset.blockId,
-      categoryKey: preset.categoryKey,
+      recordTypeId: preset.recordTypeId,
       goalTemplateId: preset.goalTemplateId || preset.id,
     })),
   };

@@ -5,12 +5,13 @@
 /** @jsxImportSource preact */
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
+import { createPointerEvent, waitForUi } from '../support/uiTestUtils';
 import type { RecordViewItem } from '@core/types/public';
 import { DEFAULT_WHITEBOARD_ID, type WhiteboardBoard, type WhiteboardStore } from '@core/whiteboard/public';
 import { WhiteboardWorkspace } from '@/features/whiteboard/WhiteboardWorkspace';
 
 function record(id: string): RecordViewItem {
-  return { id, coreBlock: 'thought', title: id, content: id, tags: [], categoryKey: 'thought', goalPath: '测试', date: '2026-09-09', created: 0, modified: 0, extra: {} };
+  return { id, recordType: 'thought', title: id, content: id, tags: [], goalPath: '测试', date: '2026-09-09', created: 0, modified: 0, extra: {} };
 }
 
 function fakeStore(board: WhiteboardBoard): WhiteboardStore {
@@ -25,9 +26,7 @@ function fakeStore(board: WhiteboardBoard): WhiteboardStore {
 }
 
 function modifierPointerDown(target: Element, key: 'ctrlKey' | 'shiftKey' = 'ctrlKey') {
-  const event = new Event('pointerdown', { bubbles: true, cancelable: true });
-  Object.defineProperties(event, { pointerId: { value: 1 }, pointerType: { value: 'mouse' }, button: { value: 0 }, [key]: { value: true } });
-  target.dispatchEvent(event);
+  target.dispatchEvent(createPointerEvent('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 0, [key]: true }));
 }
 
 describe('Whiteboard Canvas selection 1.1.8 UI', () => {
@@ -44,6 +43,7 @@ describe('Whiteboard Canvas selection 1.1.8 UI', () => {
     const itemA = host.querySelector('[data-whiteboard-item-id="item-a"]')!;
     const itemB = host.querySelector('[data-whiteboard-item-id="item-b"]')!;
     await act(async () => { modifierPointerDown(itemA); modifierPointerDown(itemB, 'shiftKey'); });
+    await waitForUi(() => host.querySelector('.think-whiteboard-workspace')?.getAttribute('data-whiteboard-selection-count') === '2', '等待白板多选状态');
     expect(itemA.getAttribute('data-whiteboard-selected')).toBe('true');
     expect(itemB.getAttribute('data-whiteboard-selected')).toBe('true');
     expect(host.querySelector('.think-whiteboard-board-selection')?.textContent).toContain('已选 2');
@@ -61,14 +61,13 @@ describe('Whiteboard Canvas selection 1.1.8 UI', () => {
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLDivElement;
     viewport.getBoundingClientRect = () => ({ left: 0, top: 0, right: 800, bottom: 600, width: 800, height: 600, x: 0, y: 0, toJSON: () => ({}) });
     const pointer = (type: string, x: number, y: number, ctrlKey = false, shiftKey = false) => {
-      const event = new Event(type, { bubbles: true, cancelable: true });
-      Object.defineProperties(event, { pointerId: { value: 7 }, pointerType: { value: 'mouse' }, button: { value: 0 }, clientX: { value: x }, clientY: { value: y }, ctrlKey: { value: ctrlKey }, shiftKey: { value: shiftKey } });
-      return event;
+      return createPointerEvent(type, { pointerId: 7, pointerType: 'mouse', button: 0, clientX: x, clientY: y, ctrlKey, shiftKey });
     };
     await act(async () => {
       viewport.dispatchEvent(pointer('pointerdown', 0, 0, true));
       window.dispatchEvent(pointer('pointermove', 260, 270, true));
     });
+    await waitForUi(() => host.querySelector('[data-whiteboard-item-id="item-a"]')?.getAttribute('data-whiteboard-selected') === 'true', '等待白板框选状态');
     expect(host.querySelector('[data-whiteboard-item-id="item-a"]')?.getAttribute('data-whiteboard-selected')).toBe('true');
     expect(host.querySelector('[data-whiteboard-item-id="item-b"]')?.getAttribute('data-whiteboard-selected')).toBe('false');
     expect(host.querySelector('.think-whiteboard-selection-marquee')).not.toBeNull();
@@ -91,14 +90,17 @@ describe('Whiteboard Canvas selection 1.1.8 UI', () => {
     const itemA = host.querySelector('[data-whiteboard-item-id="item-a"]')!;
     const itemB = host.querySelector('[data-whiteboard-item-id="item-b"]')!;
     await act(async () => { modifierPointerDown(itemA); modifierPointerDown(itemB); });
-    const drag = (type: string, x: number, y: number) => { const event = new Event(type, { bubbles: true, cancelable: true }); Object.defineProperties(event, {
-      pointerId: { value: 21 }, pointerType: { value: 'mouse' }, button: { value: 0 }, clientX: { value: x }, clientY: { value: y },
-    }); return event; };
-    await act(async () => { itemA.dispatchEvent(drag('pointerdown', 20, 100)); window.dispatchEvent(drag('pointermove', 470, 100)); window.dispatchEvent(drag('pointerup', 470, 100)); await Promise.resolve(); });
+    await waitForUi(() => host.querySelector('.think-whiteboard-workspace')?.getAttribute('data-whiteboard-selection-count') === '2', '等待白板多选拖动准备');
+    const drag = (type: string, x: number, y: number) => { return createPointerEvent(type, {
+      pointerId: 21, pointerType: 'mouse', button: 0, clientX: x, clientY: y,
+    }); };
+    await act(async () => { itemA.dispatchEvent(drag('pointerdown', 20, 100)); window.dispatchEvent(drag('pointermove', 470, 100)); window.dispatchEvent(drag('pointerup', 470, 100)); });
+    await waitForUi(() => (store.moveItems as jest.Mock).mock.calls.length > 0, '等待多选拖入工作台');
     expect(store.moveItems).toHaveBeenCalled();
     expect((store.moveItems as jest.Mock).mock.calls.at(-1)?.[2]).toBe('group-a');
     const remove = Array.from(itemA.querySelectorAll('button')).find((button) => button.textContent === '移出') as HTMLButtonElement;
-    await act(async () => { remove.click(); await Promise.resolve(); });
+    await act(async () => { remove.click(); });
+    await waitForUi(() => (store.removeItems as jest.Mock).mock.calls.length > 0, '等待批量移出白板');
     expect(store.removeItems).toHaveBeenCalledWith(DEFAULT_WHITEBOARD_ID, expect.arrayContaining(['item-a', 'item-b']));
   });
 

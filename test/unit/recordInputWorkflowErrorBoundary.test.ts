@@ -11,9 +11,9 @@ import { UpdateRecordWorkflow } from '@/app/usecases/recordInput/workflows/Updat
 
 describe('record input create follow-up', () => {
   it('starts a timer only for a newly created open Task', () => {
-    expect(buildCreateRecordFollowUp({ id: 'task-open', coreBlock: 'task', status: 'open' })).toEqual({ startTimerForRecordId: 'task-open' });
-    expect(buildCreateRecordFollowUp({ id: 'task-done', coreBlock: 'task', status: 'done' })).toBeUndefined();
-    expect(buildCreateRecordFollowUp({ id: 'event-1', coreBlock: 'evidence', status: 'open' })).toBeUndefined();
+    expect(buildCreateRecordFollowUp({ id: 'task-open', recordType: 'task', status: 'open' })).toEqual({ startTimerForRecordId: 'task-open' });
+    expect(buildCreateRecordFollowUp({ id: 'task-done', recordType: 'task', status: 'done' })).toBeUndefined();
+    expect(buildCreateRecordFollowUp({ id: 'event-1', recordType: 'event', status: 'open' })).toBeUndefined();
   });
 });
 
@@ -27,7 +27,7 @@ describe('record input workflow error boundary', () => {
     });
 
     await expect(workflow.submit({
-      blockId: 'task',
+      recordTypeId: 'task',
       formData: { 内容: '测试任务' },
       source: 'ai_batch',
     } as never)).resolves.toMatchObject({
@@ -49,7 +49,7 @@ describe('record input workflow error boundary', () => {
     });
 
     await expect(workflow.submit({
-      blockId: 'task',
+      recordTypeId: 'task',
       formData: { 内容: '测试任务' },
       item: { id: 'task-1', source: { path: 'Tasks.md', startLine: 0 } },
       source: 'ai_batch',

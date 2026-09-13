@@ -3,7 +3,7 @@
  * @covers F038/unit
  */
 import {
-  buildNextActiveBlockIds,
+  buildNextActiveRecordTypeIds,
   filterVisibleGoalTemplateMatrixGoals,
   getPresetCardName,
   orderDraggedGoalSiblings,
@@ -38,8 +38,8 @@ describe('goalTemplateMatrixModel', () => {
   });
 
   it('keeps at least one block active when toggling chips', () => {
-    expect(Array.from(buildNextActiveBlockIds(new Set(['core.habit', 'core.task']), 'core.habit', blocks))).toEqual(['core.task']);
-    expect(Array.from(buildNextActiveBlockIds(new Set(['core.task']), 'core.task', blocks))).toEqual(['core.task']);
+    expect(Array.from(buildNextActiveRecordTypeIds(new Set(['core.habit', 'core.task']), 'core.habit', blocks))).toEqual(['core.task']);
+    expect(Array.from(buildNextActiveRecordTypeIds(new Set(['core.task']), 'core.task', blocks))).toEqual(['core.task']);
   });
 
   it('splits visible goals by root groups', () => {

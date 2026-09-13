@@ -112,7 +112,7 @@ export class RecordIndex {
       // Integrity inspection is intentionally looser than domain projection. A malformed
       // TaskSession must still participate in reference diagnostics instead of disappearing
       // merely because the strict runtime projection rejects its timing/result payload.
-      const session = record.coreBlock === 'task-session'
+      const session = record.recordType === 'task-session'
         ? record as RecordEntity & Partial<TaskSessionRecordEntity>
         : null;
       if (session) {
@@ -122,7 +122,7 @@ export class RecordIndex {
         const seriesInvalid = Boolean(session.seriesId) && !sessionSeries;
         const relationMismatch = Boolean(sessionTask && session.seriesId && sessionTask.seriesId !== session.seriesId);
         const energyRefs = [session.startEnergyRecordId, session.endEnergyRecordId].filter(Boolean) as string[];
-        const invalidEnergyRef = energyRefs.find(recordId => this.recordsById.get(recordId)?.coreBlock !== 'energy');
+        const invalidEnergyRef = energyRefs.find(recordId => this.recordsById.get(recordId)?.recordType !== 'energy');
         if (taskInvalid || seriesInvalid || relationMismatch || invalidEnergyRef) {
           this.issues.push({
             code: 'task_session_reference_orphan',

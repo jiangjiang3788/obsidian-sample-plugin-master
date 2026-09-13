@@ -19,9 +19,9 @@
  */
 
 import type { AiSettings } from '@core/types/public';
+import { normalizeRecordTypeColorHex, type UserVisibleRecordType } from '@core/recordTypes/public';
 import type { AppStoreApi } from './AppStoreApi';
 import { devLog, devError } from '@core/utils/public';
-import { updateCategoryColorMap } from '@core/types/public';
 
 /**
  * 设置用例类
@@ -151,6 +151,29 @@ export class SettingsUseCase {
 
 
 
+
+    /** Set or restore one user-visible Record Type color override. Null restores the product default. */
+    async setRecordTypeColor(recordType: UserVisibleRecordType, color: string | null): Promise<void> {
+        try {
+            const state = this.store.getState();
+            if (!state.isInitialized) {
+                devError('[SettingsUseCase] Store 未初始化，无法设置 Record Type 颜色');
+                return;
+            }
+            const normalized = color == null ? null : normalizeRecordTypeColorHex(color);
+            if (color != null && !normalized) throw new Error(`无效的 Record Type 颜色: ${color}`);
+            await state.updateSettings((draft) => {
+                const next = { ...(draft.recordTypeColors || {}) };
+                if (normalized) next[recordType] = normalized;
+                else delete next[recordType];
+                draft.recordTypeColors = next;
+            });
+        } catch (error) {
+            devError('[SettingsUseCase] setRecordTypeColor 失败:', error);
+            throw error;
+        }
+    }
+
     /** 记录最近在 QuickInput 中明确选择的 Goal；用于选择器快捷入口。 */
     async rememberRecentGoalPath(goalPath: string, limit = 5): Promise<void> {
         try {
@@ -164,28 +187,6 @@ export class SettingsUseCase {
             });
         } catch (error) {
             devError('[SettingsUseCase] rememberRecentGoalPath 失败:', error);
-        }
-    }
-
-    /**
-     * 更新全局分类颜色配置
-     * @param colors categoryKey 基础类别 → 颜色 映射
-     */
-    async updateCategoryColors(colors: Record<string, string>): Promise<void> {
-        try {
-            const state = this.store.getState();
-            if (!state.isInitialized) {
-                devError('[SettingsUseCase] Store 未初始化，无法更新分类颜色');
-                return;
-            }
-            await state.updateSettings((draft) => {
-                draft.categoryColors = colors;
-            });
-            // 同步更新运行时颜色映射
-            updateCategoryColorMap(colors);
-        } catch (error) {
-            devError('[SettingsUseCase] updateCategoryColors 失败:', error);
-            throw error;
         }
     }
 }

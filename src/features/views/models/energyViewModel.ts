@@ -174,7 +174,7 @@ function compactReviewLines(args: {
 
 
 function recordOccurrenceDate(item: RecordViewItem): string {
-  if (item.coreBlock === 'task-session' && item.sessionStartedAt) {
+  if (item.recordType === 'task-session' && item.sessionStartedAt) {
     const date = new Date(item.sessionStartedAt);
     if (Number.isFinite(date.getTime())) {
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -188,7 +188,7 @@ function recordAtOrBefore(item: RecordViewItem, today: string, nowTime: string):
   if (!itemDate) return true;
   if (itemDate < today) return true;
   if (itemDate > today) return false;
-  if (item.coreBlock === 'task-session' && item.sessionEndedAt) return Date.parse(item.sessionEndedAt) <= Date.now();
+  if (item.recordType === 'task-session' && item.sessionEndedAt) return Date.parse(item.sessionEndedAt) <= Date.now();
   if (!isEnergyItem(item)) return true;
   const itemTime = String(item.startTime || item.extra?.['时间'] || '00:00').slice(0, 5);
   return itemTime <= nowTime;
@@ -202,10 +202,10 @@ function evidenceRecordsForGoal(
   endDate?: string,
 ): RecordViewItem[] {
   const goalTaskIds = new Set(records
-    .filter((item) => item.coreBlock === 'task' && getItemGoalKey(item, goals) === goalKey)
+    .filter((item) => item.recordType === 'task' && getItemGoalKey(item, goals) === goalKey)
     .map((item) => item.id));
   const sessions = records.filter((item) => {
-    if (item.coreBlock !== 'task-session') return false;
+    if (item.recordType !== 'task-session') return false;
     if (getItemGoalKey(item, goals) !== goalKey && !goalTaskIds.has(String(item.taskId || ''))) return false;
     if (!startDate || !endDate) return true;
     const date = recordOccurrenceDate(item);

@@ -18,7 +18,7 @@
 | `core.plan` | 计划 | template | `01/目标计划.md` | 必须 | 必须有直接启用模板 | 周期按“周”派生 |
 | `core.review` | 总结 | template | `01/目标总结.md` | 必须 | 必须有直接启用模板 | 周期按“周”派生 |
 | `core.thought` | 思考 | template | `01/目标思考.md` | 必须 | 必须有直接启用模板 | 日期、内容、图标 |
-| `core.evidence` | 事件/证据 | template | `01/目标事件.md` | 必须 | 必须有直接启用模板 | 日期、内容、图标 |
+| `core.event` | 事件 | template | `01/目标事件.md` | 必须 | 必须有直接启用模板 | 日期、内容、图标 |
 | `core.blocker` | 阻碍 | template | `01/目标阻碍.md` | 必须 | 必须有直接启用模板 | 日期、内容、图标 |
 | `core.milestone` | 里程碑 | template | `01/目标里程碑.md` | 必须 | 必须有直接启用模板 | 日期、内容、图标 |
 | `core.energy` | 精力 | **direct** | `01/目标精力.md` | **必须** | **不需要/不得依赖** | 快捷/详细、实时/补录 |
@@ -98,7 +98,7 @@
 
 必须断言：
 
-- `coreBlock`
+- `recordType`
 - `goalPath`
 - `content`
 - target file / target header
@@ -249,7 +249,7 @@
 | ProgressView | Goal 成长 | 非 Energy 用户记录作为 progress items；Energy 单独进入 energy summary |
 | EnergyView | **Energy 专用** | Energy 是主样本；Task/task-session 可作为推荐/上下文证据，不能把其它记录伪装成 Energy 样本 |
 
-> 重要：如果产品未来决定“某 View 只允许某 RecordType”，应在本表先改产品契约，再改代码和测试。不要直接在组件里加一个 `if (coreBlock !== ...) return`。
+> 重要：如果产品未来决定“某 View 只允许某 RecordType”，应在本表先改产品契约，再改代码和测试。不要直接在组件里加一个 `if (recordType !== ...) return`。
 
 ---
 
@@ -321,7 +321,7 @@
 
 9. [ ] 打开对应 Markdown target file。
 10. [ ] 检查落在 `## <goalPath>` 下。
-11. [ ] 检查 stable id / coreBlock / 关键字段都存在。
+11. [ ] 检查 stable id / recordType / 关键字段都存在。
 12. [ ] 关闭再重开 Obsidian 后仍能被解析。
 
 ### C. Generic Views

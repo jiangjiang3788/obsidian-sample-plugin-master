@@ -68,7 +68,7 @@ describe('P0 循环任务与 TaskSeries 在真实 Record 数据层的长期一�
         kind: 'create',
         record: {
           recordId: SERIES_ID,
-          coreBlock: 'task-series',
+          recordType: 'task-series',
           targetFilePath: 'tasks.md',
           fields: {
             status: 'active',
@@ -85,7 +85,7 @@ describe('P0 循环任务与 TaskSeries 在真实 Record 数据层的长期一�
         kind: 'create',
         record: {
           recordId: FIRST_TASK_ID,
-          coreBlock: 'task',
+          recordType: 'task',
           targetFilePath: 'tasks.md',
           fields: {
             status: 'open',
@@ -106,7 +106,7 @@ describe('P0 循环任务与 TaskSeries 在真实 Record 数据层的长期一�
 
     const nextTaskId = String(series.currentTaskId);
     const next = first.dataStore.getRecordById(nextTaskId) as any;
-    expect(next?.coreBlock).toBe('task');
+    expect(next?.recordType).toBe('task');
     expect(next?.status).toBe('open');
     expect(next?.seriesId).toBe(SERIES_ID);
     expect(next?.scheduledDate).toBe('2026-08-31');
@@ -127,7 +127,7 @@ describe('P0 循环任务与 TaskSeries 在真实 Record 数据层的长期一�
         kind: 'create',
         record: {
           recordId: SERIES_ID,
-          coreBlock: 'task-series',
+          recordType: 'task-series',
           targetFilePath: 'tasks.md',
           fields: {
             status: 'active',
@@ -143,7 +143,7 @@ describe('P0 循环任务与 TaskSeries 在真实 Record 数据层的长期一�
         kind: 'create',
         record: {
           recordId: FIRST_TASK_ID,
-          coreBlock: 'task',
+          recordType: 'task',
           targetFilePath: 'tasks.md',
           fields: { status: 'open', content: '唯一候选', seriesId: SERIES_ID },
         },
@@ -155,7 +155,7 @@ describe('P0 循环任务与 TaskSeries 在真实 Record 数据层的长期一�
 
     await first.repository.create({
       recordId: EXTRA_TASK_ID,
-      coreBlock: 'task',
+      recordType: 'task',
       targetFilePath: 'tasks.md',
       fields: { status: 'open', content: '第二候选', seriesId: SERIES_ID },
     });

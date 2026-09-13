@@ -35,11 +35,11 @@ export type { QuickInputEditorProps, QuickInputEditorState } from './QuickInputE
 
 export function QuickInputEditor({
   getResourcePath,
-  initialBlockId,
+  initialRecordTypeId,
   context,
   initialFormData,
   recordInputMode = 'create',
-  allowBlockSwitch = true,
+  allowRecordTypeSwitch = true,
   dense = false,
   showDivider = true,
   onStateChange,
@@ -55,7 +55,7 @@ export function QuickInputEditor({
     reduceRecordInputSession,
     initializeRecordInputSession({
       mode: recordInputMode,
-      initialBlockId,
+      initialRecordTypeId,
       initialFormData: initialFormData ?? EMPTY_FORM_DATA,
       initialFieldSources: buildInitialFieldSources(initialFormData, initialFieldSource),
       initialSelection: deriveQuickInputInitialSelection(initialFormData, context),
@@ -63,7 +63,7 @@ export function QuickInputEditor({
   );
 
   const {
-    currentBlockId,
+    currentRecordTypeId,
     selectedGoalPath,
     formData,
     fieldSources,
@@ -78,20 +78,20 @@ export function QuickInputEditor({
       type: 'reset',
       payload: {
         mode: modeForReset,
-        initialBlockId,
+        initialRecordTypeId,
         initialFormData: initialFormData ?? EMPTY_FORM_DATA,
         initialFieldSources: buildInitialFieldSources(initialFormData, sourceForReset),
         initialSelection: deriveQuickInputInitialSelection(initialFormData, context),
       },
     });
-  }, [initialBlockId, context]);
+  }, [initialRecordTypeId, context]);
 
   useEffect(() => {
     recordInputModeRef.current = recordInputMode;
     dispatchSession({ type: 'setMode', mode: recordInputMode });
   }, [recordInputMode]);
 
-  const blocks = useMemo(() => {
+  const recordTypes = useMemo(() => {
     const all = getEffectiveRecordTypes();
     if (recordInputMode !== 'create') return all;
     const selectedPath = normalizeGoalPath(selectedGoalPath) || '';
@@ -102,8 +102,8 @@ export function QuickInputEditor({
     });
   }, [fullSettings.goalSettings?.goalTemplates, selectedGoalPath, recordInputMode]);
   const currentRecordType = useMemo(
-    () => blocks.find((recordType) => recordType.id === currentBlockId) || null,
-    [blocks, currentBlockId],
+    () => recordTypes.find((recordType) => recordType.id === currentRecordTypeId) || null,
+    [recordTypes, currentRecordTypeId],
   );
   const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID && currentRecordType.captureMode === 'direct';
   const requireDirectGoalTemplate = shouldRequireDirectGoalTemplateForQuickInput(recordInputMode, isEnergyDirect);
@@ -112,14 +112,14 @@ export function QuickInputEditor({
     return selectedGoalPath ? goals.find((goal) => getGoalPath(goal) === selectedGoalPath) || null : null;
   }, [fullSettings.goalSettings?.goals, selectedGoalPath]);
 
-  const currentEffectiveBlockIdForTemplates = useMemo(
-    () => isEnergyDirect ? '' : resolveQuickInputRecordTypeId(fullSettings, currentBlockId),
-    [currentBlockId, isEnergyDirect]
+  const currentEffectiveRecordTypeIdForTemplates = useMemo(
+    () => isEnergyDirect ? '' : resolveQuickInputRecordTypeId(fullSettings, currentRecordTypeId),
+    [currentRecordTypeId, isEnergyDirect]
   );
 
-  const { template: rawTemplate, goal: resolvedGoal, templateId, templateSourceType, effectiveBlockId } = useMemo(
-    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath, requireDirectGoalTemplate }),
-    [fullSettings, isEnergyDirect, currentBlockId, selectedGoal, selectedGoalPath, recordInputMode],
+  const { template: rawTemplate, goal: resolvedGoal, templateId, templateSourceType, effectiveRecordTypeId } = useMemo(
+    () => resolveQuickInputRecordTypeRuntime({ settings: fullSettings, isEnergyDirect, currentRecordTypeId, selectedGoal, selectedGoalPath, requireDirectGoalTemplate }),
+    [fullSettings, isEnergyDirect, currentRecordTypeId, selectedGoal, selectedGoalPath, recordInputMode],
   );
 
   // Goal is one field in the form, not a separate pre-form screen. For create
@@ -129,26 +129,26 @@ export function QuickInputEditor({
     () => resolveQuickInputRecordTypeRuntime({
       settings: fullSettings,
       isEnergyDirect,
-      currentBlockId,
+      currentRecordTypeId,
       selectedGoal: null,
       selectedGoalPath: null,
       requireDirectGoalTemplate: false,
     }),
-    [fullSettings, isEnergyDirect, currentBlockId],
+    [fullSettings, isEnergyDirect, currentRecordTypeId],
   );
 
   const displayRawTemplate = rawTemplate || baseDisplayRuntime.template;
   const displayTemplateId = rawTemplate ? templateId : baseDisplayRuntime.templateId;
   const displayTemplateSourceType = rawTemplate ? templateSourceType : baseDisplayRuntime.templateSourceType;
-  const displayEffectiveBlockId = rawTemplate ? effectiveBlockId : baseDisplayRuntime.effectiveBlockId;
+  const displayEffectiveRecordTypeId = rawTemplate ? effectiveRecordTypeId : baseDisplayRuntime.effectiveRecordTypeId;
 
   const goalOptions = useMemo<GoalSelectorOption[]>(
     () => buildQuickInputGoalOptions(
       fullSettings,
-      currentBlockId,
+      currentRecordTypeId,
       requireDirectGoalTemplate,
     ),
-    [fullSettings.goalSettings?.goals, fullSettings.goalSettings?.goalTemplates, currentBlockId, requireDirectGoalTemplate]
+    [fullSettings.goalSettings?.goals, fullSettings.goalSettings?.goalTemplates, currentRecordTypeId, requireDirectGoalTemplate]
   );
 
   const goalFieldOptions = useMemo(() => goalOptions.map((goal) => ({ value: goal.value, label: goal.label || goal.value })), [goalOptions]);
@@ -175,8 +175,8 @@ export function QuickInputEditor({
     context,
     formData,
     recordInputMode: recordInputMode === 'create' ? 'create' : 'edit',
-    effectiveBlockId: displayEffectiveBlockId || currentBlockId,
-  }), [context, formData.status, formData['状态'], recordInputMode, displayEffectiveBlockId, currentBlockId]);
+    effectiveRecordTypeId: displayEffectiveRecordTypeId || currentRecordTypeId,
+  }), [context, formData.status, formData['状态'], recordInputMode, displayEffectiveRecordTypeId, currentRecordTypeId]);
 
   const template = useMemo(
     () => {
@@ -185,9 +185,9 @@ export function QuickInputEditor({
       // RecordType base form before Goal selection (and for stale Goal context);
       // the modal submit boundary separately requires a direct GoalTemplate in
       // create mode, so showing fields never weakens persistence rules.
-      return buildQuickInputDisplayTemplate(displayRawTemplate, displayEffectiveBlockId, goalFieldOptions, { taskTimingMode, recordInputMode: recordInputMode === 'create' ? 'create' : 'edit' });
+      return buildQuickInputDisplayTemplate(displayRawTemplate, displayEffectiveRecordTypeId, goalFieldOptions, { taskTimingMode, recordInputMode: recordInputMode === 'create' ? 'create' : 'edit' });
     },
-    [displayRawTemplate, displayEffectiveBlockId, goalFieldOptions, isEnergyDirect, taskTimingMode, recordInputMode]
+    [displayRawTemplate, displayEffectiveRecordTypeId, goalFieldOptions, isEnergyDirect, taskTimingMode, recordInputMode]
   );
 
   const showTimeDirectionControl = useMemo(() => shouldShowQuickInputTimeDirectionControl(template), [template]);
@@ -216,8 +216,8 @@ export function QuickInputEditor({
 
 
   const makeEditorState = (draftFormData: QuickInputFormData, directionOverride: TimeDirection = timeDirection, sourceOverride: QuickInputFieldSourceMap = fieldSources) => buildQuickInputEditorState({
-    blockId: currentBlockId,
-    effectiveBlockId: isEnergyDirect ? ENERGY_RECORD_TYPE_ID : effectiveBlockId,
+    recordTypeId: currentRecordTypeId,
+    effectiveRecordTypeId: isEnergyDirect ? ENERGY_RECORD_TYPE_ID : effectiveRecordTypeId,
     selectedGoal,
     currentGoalPath,
     currentGoalTitle,
@@ -234,7 +234,7 @@ export function QuickInputEditor({
 
   useEffect(() => {
     onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
-  }, [currentBlockId, effectiveBlockId, selectedGoalPath, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, formData, timeDirection, template, displayTemplateId, displayTemplateSourceType, fieldSources]);
+  }, [currentRecordTypeId, effectiveRecordTypeId, selectedGoalPath, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, formData, timeDirection, template, displayTemplateId, displayTemplateSourceType, fieldSources]);
 
   const handleUpdateField = (key: string, value: any, isOptionObject = false) => {
     const updated = applyQuickInputFieldUpdate({ formData, fieldSources, key, value, isOptionObject, timeDirection });
@@ -247,7 +247,7 @@ export function QuickInputEditor({
   };
 
   const handleTimeDirectionChange = (nextDirection: TimeDirection) => {
-    const isTaskTimeForm = String(displayEffectiveBlockId || currentBlockId || '').replace(/^core\./, '') === 'task';
+    const isTaskTimeForm = String(displayEffectiveRecordTypeId || currentRecordTypeId || '').replace(/^core\./, '') === 'task';
     const updated = applyQuickInputTimeDirectionChange({
       formData,
       fieldSources,
@@ -262,9 +262,9 @@ export function QuickInputEditor({
     });
   };
 
-  const handleBlockChange = (newBlockId: string) => {
-    if (newBlockId === currentBlockId || newBlockId === currentEffectiveBlockIdForTemplates) return;
-    dispatchSession({ type: 'switchRecordType', blockId: newBlockId });
+  const handleRecordTypeChange = (newRecordTypeId: string) => {
+    if (newRecordTypeId === currentRecordTypeId || newRecordTypeId === currentEffectiveRecordTypeIdForTemplates) return;
+    dispatchSession({ type: 'switchRecordType', recordTypeId: newRecordTypeId });
   };
 
   const handleSelectGoal = (option: GoalSelectorOption | null) => {
@@ -284,10 +284,10 @@ export function QuickInputEditor({
   if (isEnergyDirect) {
     return (
       <EnergyQuickCapturePanel
-        blocks={blocks}
-        allowBlockSwitch={allowBlockSwitch}
-        currentBlockId={currentBlockId}
-        onBlockChange={handleBlockChange}
+        recordTypes={recordTypes}
+        allowRecordTypeSwitch={allowRecordTypeSwitch}
+        currentRecordTypeId={currentRecordTypeId}
+        onRecordTypeChange={handleRecordTypeChange}
         goals={goalOptions}
         selectedGoalPath={currentGoalPath}
         onSelectGoal={handleSelectGoal}
@@ -300,10 +300,10 @@ export function QuickInputEditor({
   return (
     <QuickInputEditorView
       getResourcePath={getResourcePath}
-      blocks={blocks}
-      allowBlockSwitch={allowBlockSwitch}
-      currentBlockId={currentEffectiveBlockIdForTemplates || currentBlockId}
-      onBlockChange={handleBlockChange}
+      recordTypes={recordTypes}
+      allowRecordTypeSwitch={allowRecordTypeSwitch}
+      currentRecordTypeId={currentEffectiveRecordTypeIdForTemplates || currentRecordTypeId}
+      onRecordTypeChange={handleRecordTypeChange}
       goals={goalOptions}
       recentGoalPaths={fullSettings.recentGoalPaths || []}
       selectedGoalPath={currentGoalPath}

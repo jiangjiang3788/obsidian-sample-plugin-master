@@ -3,6 +3,7 @@ import { readField } from '@/core/fields/ViewFieldCatalog';
 import { getFieldDefinition } from '@/core/fields/FieldRegistry';
 import { normalizeFieldKey } from '@/core/fields/FieldValueResolver';
 import { getTaskStatus } from '@/core/records/task/taskStatus';
+import { getRecordTypePresentation } from '@/core/recordTypes/public';
 import {
     BLOCK_EXPORT_DEFAULT_CONFIG,
     getViewExportConfig,
@@ -53,7 +54,11 @@ export function exportItemsToMarkdown(items: RecordViewItem[], config: ExportVie
         const map = new Map<string, RecordViewItem[]>();
 
         itemsToGroup.forEach(item => {
-            const keys = field ? normalizeExportGroupKeys(readField(item, field)) : [UNGROUPED_KEY];
+            const rawGroupValue = field ? readField(item, field) : undefined;
+            const presentationValue = field === 'recordType'
+                ? getRecordTypePresentation(rawGroupValue).label
+                : rawGroupValue;
+            const keys = field ? normalizeExportGroupKeys(presentationValue) : [UNGROUPED_KEY];
             keys.forEach(key => {
                 if (!map.has(key)) {
                     map.set(key, []);
@@ -108,7 +113,7 @@ export function exportItemsToMarkdown(items: RecordViewItem[], config: ExportVie
 
             // 渲染当前层级的 items
             node.items.forEach((item, index) => {
-                if (item.coreBlock === 'task') {
+                if (item.recordType === 'task') {
                     lines.push(formatTaskItem(item));
                 } else {
                     lines.push(...formatBlockItem(item, index + 1, config));
@@ -135,7 +140,7 @@ function formatBlockItem(item: RecordViewItem, index: number, config: ExportView
         .replace('{{filename}}', item.filename || '未知文件')
         .replace('{{id}}', item.id || '');
 
-    // 支持更多变量替换（允许在模板中写 {{date}}、{{categoryKey}} 等）
+    // 支持更多变量替换（允许在模板中写 {{date}}、{{recordType}} 等）
     idLine = idLine.replace(/\{\{(\w+)\}\}/g, (match, key) => {
         const val = readField(item, key);
         return val !== undefined ? String(val) : match;

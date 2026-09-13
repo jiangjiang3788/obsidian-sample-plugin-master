@@ -53,10 +53,10 @@ export function resolveTaskQuickInputTimingMode(input: {
   context?: Record<string, unknown> | null;
   formData?: Record<string, unknown> | null;
   recordInputMode?: 'create' | 'edit';
-  effectiveBlockId?: string | null;
+  effectiveRecordTypeId?: string | null;
 }): TaskQuickInputTimingMode {
-  const blockId = String(input.effectiveBlockId || '').replace(/^core\./, '');
-  if (blockId && blockId !== 'task') return 'plan';
+  const recordTypeId = String(input.effectiveRecordTypeId || '').replace(/^core\./, '');
+  if (recordTypeId && recordTypeId !== 'task') return 'plan';
 
   const uiContext = input.context?.__recordUiContext;
   if (uiContext && typeof uiContext === 'object' && !Array.isArray(uiContext)) {
@@ -79,8 +79,8 @@ function keyOf(field: TemplateField): string {
   return String(field.key || field.label || '').trim();
 }
 
-function isTaskTemplate(rawTemplate: QuickInputTemplateLike, effectiveBlockId: string | null | undefined): boolean {
-  return String(effectiveBlockId || rawTemplate.recordTypeId || rawTemplate.id || '').replace(/^core\./, '') === 'task';
+function isTaskTemplate(rawTemplate: QuickInputTemplateLike, effectiveRecordTypeId: string | null | undefined): boolean {
+  return String(effectiveRecordTypeId || rawTemplate.recordTypeId || rawTemplate.id || '').replace(/^core\./, '') === 'task';
 }
 
 function findField(fields: TemplateField[], predicate: (field: TemplateField) => boolean): TemplateField | undefined {
@@ -205,12 +205,12 @@ function normalizeTaskFields(fields: TemplateField[], timingMode: TaskQuickInput
 
 export function buildQuickInputDisplayTemplate(
   rawTemplate: QuickInputTemplateLike | null | undefined,
-  effectiveBlockId: string | null | undefined,
+  effectiveRecordTypeId: string | null | undefined,
   goalFieldOptions: Array<{ value: string; label: string }>,
   options: QuickInputDisplayTemplateOptions = {},
 ): QuickInputTemplateLike | null {
   if (!rawTemplate?.fields?.length) return rawTemplate ?? null;
-  const task = isTaskTemplate(rawTemplate, effectiveBlockId);
+  const task = isTaskTemplate(rawTemplate, effectiveRecordTypeId);
 
   const mappedFields = rawTemplate.fields.map((field: TemplateField) => {
     const semantic = getTemplateFieldSemantic(field);
@@ -223,7 +223,7 @@ export function buildQuickInputDisplayTemplate(
 
   return {
     ...rawTemplate,
-    recordTypeId: effectiveBlockId || rawTemplate.recordTypeId,
+    recordTypeId: effectiveRecordTypeId || rawTemplate.recordTypeId,
     fields: task ? normalizeTaskFields(mappedFields, options.taskTimingMode ?? 'plan', options.recordInputMode ?? 'create') : mappedFields,
   };
 }

@@ -11,8 +11,7 @@ import { FieldPill } from '@/features/views/runtime/components/items/FieldPill';
 
 function energy(): RecordViewItem {
   return {
-    id: 'rec.energy', coreBlock: 'energy', title: '', content: '', tags: [], categoryKey: '精力',
-    goalPath: '照顾好自己', created: 0, modified: 0, extra: { 精力值: 65 },
+    id: 'rec.energy', recordType: 'energy', title: '', content: '', tags: [], goalPath: '照顾好自己', created: 0, modified: 0, extra: { 精力值: 65 },
   } as RecordViewItem;
 }
 
@@ -29,9 +28,9 @@ describe('Record presentation and per-view field configuration', () => {
     expect(host.textContent).toContain('精力 65');
   });
 
-  it('记录类型字段使用全局 Record type 色彩契约，同时不吞并独立的分类颜色语义', async () => {
-    await act(async () => render(<div><FieldPill item={energy()} fieldKey="coreBlock" /><FieldPill item={energy()} fieldKey="categoryKey" /></div>, host));
+  it('记录类型字段使用全局 Record type presentation contract', async () => {
+    await act(async () => render(<div><FieldPill item={energy()} fieldKey="recordType" /><FieldPill item={energy()} fieldKey="goalPath" /></div>, host));
     expect(host.querySelectorAll('.think-record-type-pill[data-record-type="energy"]')).toHaveLength(1);
-    expect(host.querySelectorAll('.tag-pill')).toHaveLength(2);
+    expect(host.textContent).toContain('照顾好自己');
   });
 });

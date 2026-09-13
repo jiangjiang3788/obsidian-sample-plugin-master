@@ -4,23 +4,20 @@ import type { ViewInstance } from '@/core/view/ViewConfig';
 import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
 import { queryRecordItems } from '@/core/query/RecordQuery';
 
-/** Collect canonical Goal paths for a Heatmap source block. */
+/** Collect canonical Goal paths for a Heatmap source Record Type. */
 export function collectGoalPathsForHeatmap(params: {
     items: RecordViewItem[];
     dataSource: ViewInstance;
-    sourceBlock: RecordCaptureTemplate;
+    sourceRecordType: RecordCaptureTemplate;
 }): string[] {
-    const { items, dataSource, sourceBlock } = params;
+    const { items, dataSource, sourceRecordType } = params;
     const filteredItems = queryRecordItems(items, { filterGroups: [dataSource.filters || []] });
     const paths = new Set<string>();
     filteredItems.forEach((item) => {
-        const itemBlock = item.coreBlock ? `core.${String(item.coreBlock).replace(/^core\./, '')}` : '';
-        const sourceBlockKey = sourceBlock.recordTypeId || sourceBlock.id || sourceBlock.name || sourceBlock.categoryKey;
-        const isSourceBlock = itemBlock === sourceBlockKey
-            || item.categoryKey === sourceBlock.categoryKey
-            || item.categoryKey === sourceBlock.name;
+        const itemRecordTypeId = item.recordType ? `core.${String(item.recordType).replace(/^core\./, '')}` : '';
+        const sourceRecordTypeId = sourceRecordType.recordTypeId || sourceRecordType.id;
         const goalPath = String(item.goalPath || item.extra?.['目标'] || '').trim();
-        if (isSourceBlock && goalPath) paths.add(goalPath);
+        if (itemRecordTypeId === sourceRecordTypeId && goalPath) paths.add(goalPath);
     });
     return Array.from(paths).sort((a, b) => a.localeCompare(b, 'zh-CN'));
 }

@@ -44,7 +44,7 @@ describe('AI 设置保存与重启恢复', () => {
       persistApiKey: true,
       model: 'test-model',
       customPrompt: '只返回结构化结果',
-      enabledBlockIds: ['core.task', 'core.thought'],
+      enabledRecordTypeIds: ['core.task', 'core.thought'],
       requestTimeoutMs: 43210,
     };
     await useCase.updateAiSettings(settings);
@@ -58,7 +58,7 @@ describe('AI 设置保存与重启恢复', () => {
       persistApiKey: true,
       model: 'test-model',
       customPrompt: '只返回结构化结果',
-      enabledBlockIds: ['core.task', 'core.thought'],
+      enabledRecordTypeIds: ['core.task', 'core.thought'],
       requestTimeoutMs: 43210,
     });
   });

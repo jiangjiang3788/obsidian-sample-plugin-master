@@ -1,9 +1,9 @@
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { dayjs } from '@core/utils/date';
 import { readField } from '@/core/fields/ViewFieldCatalog';
-import { getBaseCategory } from '@core/utils/itemGrouping';
+import { getItemRootGoalKey } from '@core/goal/public';
 import { isSameIsoWeek } from '@core/utils/timelineRange';
-import type { CategoryConfig } from '@/core/config/views';
+import type { StatisticsBucketConfig } from '@/core/config/views';
 
 export interface PeriodData {
     counts: Record<string, number>;
@@ -21,7 +21,7 @@ export function hasPeriodData(data: PeriodData): boolean {
 }
 
 function defaultBucketAccessor(item: RecordViewItem): string {
-    return getBaseCategory(item.categoryKey);
+    return getItemRootGoalKey(item);
 }
 
 function addItemToPeriod(data: PeriodData, categoryOrder: string[], item: RecordViewItem, bucketAccessor?: StatisticsBucketAccessor) {
@@ -34,7 +34,7 @@ function addItemToPeriod(data: PeriodData, categoryOrder: string[], item: Record
 /**
  * 创建空的周期数据
  */
-export function createPeriodData(categories: CategoryConfig[]): PeriodData {
+export function createPeriodData(categories: StatisticsBucketConfig[]): PeriodData {
     return {
         counts: Object.fromEntries(categories.map(c => [c.name, 0])),
         blocks: [],
@@ -46,7 +46,7 @@ export function createPeriodData(categories: CategoryConfig[]): PeriodData {
  */
 export function aggregateByDay(
     items: RecordViewItem[],
-    categories: CategoryConfig[],
+    categories: StatisticsBucketConfig[],
     targetDate: dayjs.Dayjs,
     bucketAccessor?: StatisticsBucketAccessor
 ): PeriodData {
@@ -67,7 +67,7 @@ export function aggregateByDay(
  */
 export function aggregateByWeek(
     items: RecordViewItem[],
-    categories: CategoryConfig[],
+    categories: StatisticsBucketConfig[],
     targetDate: dayjs.Dayjs,
     usePeriod = false,
     bucketAccessor?: StatisticsBucketAccessor
@@ -98,7 +98,7 @@ export function aggregateByWeek(
  */
 export function aggregateByMonth(
     items: RecordViewItem[],
-    categories: CategoryConfig[],
+    categories: StatisticsBucketConfig[],
     targetDate: dayjs.Dayjs,
     usePeriod = false,
     bucketAccessor?: StatisticsBucketAccessor
@@ -126,7 +126,7 @@ export function aggregateByMonth(
  */
 export function aggregateByQuarter(
     items: RecordViewItem[],
-    categories: CategoryConfig[],
+    categories: StatisticsBucketConfig[],
     targetDate: dayjs.Dayjs,
     usePeriod = false,
     bucketAccessor?: StatisticsBucketAccessor
@@ -154,7 +154,7 @@ export function aggregateByQuarter(
  */
 export function aggregateByYear(
     items: RecordViewItem[],
-    categories: CategoryConfig[],
+    categories: StatisticsBucketConfig[],
     targetDate: dayjs.Dayjs,
     usePeriod = false,
     bucketAccessor?: StatisticsBucketAccessor
@@ -182,7 +182,7 @@ export function aggregateByYear(
  */
 export function getMonthWeeksData(
     items: RecordViewItem[],
-    categories: CategoryConfig[],
+    categories: StatisticsBucketConfig[],
     targetMonth: dayjs.Dayjs,
     usePeriod = false,
     bucketAccessor?: StatisticsBucketAccessor

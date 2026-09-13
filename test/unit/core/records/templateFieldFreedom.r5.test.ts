@@ -40,7 +40,7 @@ describe('R5 template field freedom', () => {
   });
 
   it('persists arbitrary safe template fields as Record extensions', () => {
-    const custom = buildGenericRecordDraft('evidence', {
+    const custom = buildGenericRecordDraft('event', {
       可信度: '4',
       来源渠道: '访谈',
     }, [field('可信度', 'number'), field('来源渠道')]);

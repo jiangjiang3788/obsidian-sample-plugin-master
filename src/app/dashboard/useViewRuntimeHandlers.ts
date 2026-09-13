@@ -38,7 +38,6 @@ export interface ViewRuntimeHandlers {
   onUpdateTimelineRange: UpdateTimelineRangeHandler;
   onTaskQuadrantChange: UpdateTaskQuadrantHandler;
   onQuickCreate: OpenQuickCreateHandler;
-  onCategoryColorsChange: (nextColors: Record<string, string>) => void;
   onOpenRecord: OpenRecordHandler;
   onOpenRecordOrigin: OpenRecordOriginHandler;
   resolveResourcePath: ResolveResourcePathHandler;
@@ -95,13 +94,10 @@ export function useViewRuntimeHandlers({
     });
   }, [actionService, app, dateRange, layoutView, ui, viewInstance]);
 
-  const onCategoryColorsChange = useCallback((nextColors: Record<string, string>) => {
-    void useCases.settings.updateCategoryColors(nextColors);
-  }, [useCases.settings]);
 
   const onOpenRecord = useCallback<OpenRecordHandler>((item: RecordViewItem) => {
     const canonicalItem = dataStore.getRecordById(item.id);
-    openEditFromItem({ app, item: mergeRecordItemForEdit(canonicalItem, item) });
+    openEditFromItem({ app, item: mergeRecordItemForEdit(canonicalItem, item), resolveRecordById: (id) => dataStore.getRecordById(id) });
   }, [app, dataStore]);
 
   const onOpenRecordOrigin = useCallback<OpenRecordOriginHandler>((item: RecordViewItem) => {
@@ -129,7 +125,7 @@ export function useViewRuntimeHandlers({
   const onOpenHeatmapCreate = useCallback<OpenHeatmapCreateHandler>((request) => {
     openCreateFromHeatmap({
       app,
-      sourceBlockId: request.sourceBlockId,
+      sourceRecordTypeId: request.sourceRecordTypeId,
       date: request.date,
       item: request.item,
       goalPath: request.goalPath,
@@ -186,7 +182,6 @@ export function useViewRuntimeHandlers({
     onUpdateTimelineRange,
     onTaskQuadrantChange,
     onQuickCreate,
-    onCategoryColorsChange,
     onOpenRecord,
     onOpenRecordOrigin,
     resolveResourcePath,

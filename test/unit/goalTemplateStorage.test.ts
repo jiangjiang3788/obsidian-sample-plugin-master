@@ -26,7 +26,7 @@ const goal: GoalDefinition = {
 };
 
 describe('GoalTemplate storage helpers', () => {
-  it('upserts and removes one template by Goal path × CoreBlock', () => {
+  it('upserts and removes one template by Goal path × RecordType', () => {
     const template: GoalTemplate = {
       id: getGoalTemplateId('照顾好自己/健康/睡眠', 'core.task'),
       goalPath: '照顾好自己/健康/睡眠',
@@ -40,7 +40,7 @@ describe('GoalTemplate storage helpers', () => {
     expect(getGoalTemplates(removed)).toHaveLength(0);
   });
 
-  it('stores only overrides that differ from the CoreBlock', () => {
+  it('stores only overrides that differ from the RecordType', () => {
     const template: GoalTemplate = {
       id: getGoalTemplateId(goal.path, 'core.task'),
       goalPath: goal.path,

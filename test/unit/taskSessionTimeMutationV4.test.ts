@@ -8,7 +8,7 @@ import { TaskSessionMutation } from '@/core/services/item/TaskSessionMutation';
 function session(overrides: Record<string, unknown> = {}) {
   return {
     id: 'task-session.01KZZQ6G798KJN54XBGKJVH7TM',
-    coreBlock: 'task-session',
+    recordType: 'task-session',
     taskId: 'task.01KZZQ6G798KJN54XBGKJVH7TN',
     sessionStartedAt: '2026-08-26T23:00:00',
     sessionEndedAt: '2026-08-27T01:00:00',

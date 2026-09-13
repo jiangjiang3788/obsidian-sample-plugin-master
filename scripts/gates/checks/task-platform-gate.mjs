@@ -73,13 +73,13 @@ function check_task_domain_v2_gate() {
   forbid('src/core/services/item/InlineFieldMutation.ts', [/ItemLocator/, /ItemMutationWriter/, /upsertKvTag/, /TaskLine/]);
   forbid('src/core/services/item/GoalTemplateMigrationMutation.ts', [/ItemLocator/, /ItemMutationWriter/, /parseItemId/, /resolveBlockRangeForMutation/, /upsertKvTag/]);
   requireText('src/core/records/task/RecurrenceTypes.ts', "type RecurrenceAnchor = 'scheduled' | 'start' | 'due' | 'completion'");
-  requireText('src/core/records/RecordEntity.ts', "coreBlock: 'task-series'");
+  requireText('src/core/records/RecordEntity.ts', "recordType: 'task-series'");
   requireText('src/core/records/task/taskDomain.ts', 'type TaskSeriesRecord = RuntimeTaskSeriesRecord');
   requireText('src/core/records/RecordIndex.ts', 'single-active-instance');
   requireText('src/core/services/item/TaskCompletionMutation.ts', 'series.currentTaskId !== task.id');
   requireText('src/core/services/item/TaskCompletionMutation.ts', "series.status === 'stopped'");
   requireText('src/core/services/item/TaskCompletionMutation.ts', 'Series owns future-instance defaults');
-  requireText('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 16');
+  requireText('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 17');
 
   if (failures.length) {
     console.error('[task-domain-v2-gate] failed');
@@ -107,9 +107,9 @@ function check_task_session_v2_gate() {
   requireText('src/core/types/timer.ts', 'startedAt: number');
   requireText('src/core/services/TimerStateService.ts', 'TIMER_RUNTIME_SCHEMA_VERSION = 3');
   forbid('src/core/services/TimerStateService.ts', [/feedback-recorded/, /awaiting-energy/]);
-  requireText('src/core/records/RecordEntity.ts', "coreBlock: 'task-session'");
+  requireText('src/core/records/RecordEntity.ts', "recordType: 'task-session'");
   requireText('src/core/records/task/taskSession.ts', 'type TaskSessionRecord = RuntimeTaskSessionRecord');
-  requireText('src/core/records/codec/MarkdownRecordCodec.ts', "document.coreBlock === 'task-session'");
+  requireText('src/core/records/codec/MarkdownRecordCodec.ts', "document.recordType === 'task-session'");
   requireText('src/core/records/RecordIndex.ts', "code: 'task_session_reference_orphan'");
   requireText('src/core/services/item/TaskCompletionMutation.ts', 'completeItemWithSession');
   requireText('src/core/services/item/TaskCompletionMutation.ts', 'operations.push(sessionOperation)');
@@ -120,8 +120,8 @@ function check_task_session_v2_gate() {
   forbid('src/app/usecases/recordInput.usecase.ts', [/attachEnergyTaskFeedback/, /feedback-recorded/, /awaiting-energy/]);
   forbid('src/core/energy/recommendationLearning.ts', [/TimerState/, /feedback-recorded/, /energyFeedback/]);
   requireText('src/core/energy/record.ts', "recordId: createRecordId('energy')");
-  requireText('src/core/energy/record.ts', "coreBlock: 'energy'");
-  requireText('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 16');
+  requireText('src/core/energy/record.ts', "recordType: 'energy'");
+  requireText('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 17');
 
   if (failures.length) {
     console.error('[task-session-v2-gate] failed');
@@ -189,12 +189,12 @@ function check_task_consumer_v2_gate() {
   requireText('src/core/fields/FieldRegistry.ts', "key: 'cadence'");
   forbid('src/core/fields/FieldEditPolicy.ts', [/status\s*:\s*['"]categoryKey['"]/]);
   forbid('src/features/settings/layout/DataFilterPanel.tsx', [/['"]type['"]\s*,?\s*\/\//, /value=['"]type['"]/]);
-  requireText('src/core/recordInput/snapshot/OutputPlanner.ts', "if (coreBlock === 'task')");
+  requireText('src/core/recordInput/snapshot/OutputPlanner.ts', "if (recordType === 'task')");
   forbid('src/core/recordInput/snapshot/OutputPlanner.ts', [/buildTaskRenderTokens/, /taskStatusPrefix/, /taskDateToken/, /repeatToken/, /-\s*\[\s*\]/]);
   requireText('src/core/recordInput/EditBackfillMapper.ts', 'result.status = input.item.status');
   requireText('src/core/recordInput/EditBackfillMapper.ts', 'result.seriesId = input.item.seriesId');
   requireText('src/core/recordInput/snapshot/OutputPlanner.ts', 'task_series_recurrence_edit_requires_series_command');
-  requireText('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 16');
+  requireText('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 17');
   requireText('src/core/types/cache.ts', 'expectedDurationMinutes?: number');
   requireText('src/core/types/cache.ts', 'scheduledDate?: string');
 
@@ -267,7 +267,7 @@ function check_no_task_line_runtime_gate() {
   if (/\brecurrence\??\s*:\s*string\b/.test(recordEntity)) failures.push('RecordEntity.ts: recurrence string projection must not exist');
 
   const cache = fs.readFileSync('src/core/types/cache.ts', 'utf8');
-  if (!cache.includes('CURRENT_CACHE_SCHEMA_VERSION = 16')) failures.push('cache.ts: cache schema must match the current persisted CachedItem shape');
+  if (!cache.includes('CURRENT_CACHE_SCHEMA_VERSION = 17')) failures.push('cache.ts: cache schema must match the current persisted CachedItem shape');
   if (/\btype\??\s*:\s*['"]task['"]\s*\|\s*['"]block['"]/.test(cache)) failures.push('cache.ts: cached Item.type legacy projection must not exist');
   if (/\brecurrence\??\s*:\s*string\b/.test(cache)) failures.push('cache.ts: cached recurrence string projection must not exist');
 

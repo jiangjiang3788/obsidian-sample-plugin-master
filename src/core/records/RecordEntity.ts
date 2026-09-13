@@ -1,5 +1,6 @@
 // src/core/records/RecordEntity.ts
 import type { RecurrenceInfo } from './task/RecurrenceTypes';
+import type { RecordType } from './schema/types';
 
 /** Current Markdown storage location. Location is mutable metadata, never identity. */
 export interface RecordSourceLocation {
@@ -18,7 +19,7 @@ export interface RecordSourceLocation {
  */
 export interface RecordEntity {
   id: string;
-  coreBlock: string;
+  recordType: RecordType;
 
   title: string;
   content: string;
@@ -32,8 +33,6 @@ export interface RecordEntity {
   rootGoal?: string;
   leafGoal?: string;
 
-  /** Human-facing category label derived from the canonical Record type. */
-  categoryKey: string;
 
   date?: string;
   dateMs?: number;
@@ -70,20 +69,15 @@ export interface RecordEntity {
   cycleId?: string;
 }
 
-export type GenericRecordCoreBlock = 'thought' | 'evidence' | 'plan' | 'review' | 'blocker' | 'milestone';
+export type GenericRecordType = 'thought' | 'feeling' | 'event' | 'plan' | 'review' | 'blocker' | 'milestone';
 
 export interface GenericRecord extends RecordEntity {
-  coreBlock: GenericRecordCoreBlock;
+  recordType: GenericRecordType;
 }
 
-export interface ThoughtRecord extends RecordEntity {
-  coreBlock: 'thought';
-  /** Canonical thought subtype. */
-  recordSubtype?: '感受' | '思考';
-}
 
 export interface HabitRecord extends RecordEntity {
-  coreBlock: 'habit';
+  recordType: 'habit';
   rating?: number;
   image?: string;
   displayCount?: number;
@@ -99,7 +93,7 @@ export type TaskUrgency = 'urgent' | 'normal';
 export type TaskAvailabilityContext = 'any' | 'work' | 'home' | 'commute' | 'out';
 
 export interface TaskRecordEntity extends RecordEntity {
-  coreBlock: 'task';
+  recordType: 'task';
   status: TaskRecordStatus;
   seriesId?: string;
   /** Derived from TaskSeries for consumers; never persisted on Task instances. */
@@ -130,7 +124,7 @@ export interface TaskRecordEntity extends RecordEntity {
 }
 
 export interface TaskSeriesRecordEntity extends RecordEntity {
-  coreBlock: 'task-series';
+  recordType: 'task-series';
   status: 'active' | 'stopped';
   recurrenceInfo: RecurrenceInfo;
   priority?: RecordTaskPriority;
@@ -148,7 +142,7 @@ export interface TaskSeriesRecordEntity extends RecordEntity {
 }
 
 export interface TaskSessionRecordEntity extends RecordEntity {
-  coreBlock: 'task-session';
+  recordType: 'task-session';
   taskId: string;
   seriesId?: string;
   sessionStartedAt: string;
@@ -166,12 +160,11 @@ export interface TaskSessionRecordEntity extends RecordEntity {
 
 /** Parsed Energy records currently expose their domain payload through extra/FieldResolver. */
 export interface EnergyRecordEntity extends RecordEntity {
-  coreBlock: 'energy';
+  recordType: 'energy';
 }
 
 export type AnyRecordEntity =
   | GenericRecord
-  | ThoughtRecord
   | HabitRecord
   | TaskRecordEntity
   | TaskSeriesRecordEntity
@@ -230,7 +223,8 @@ export interface RecordViewItem extends RecordEntity {
   brainDelta?: number;
   physicalDelta?: number;
 
-  recordSubtype?: '感受' | '思考' | string;
+  /** Domain-specific subtype; currently owned by Energy records, not Thought/Feeling. */
+  recordSubtype?: string;
   rating?: number;
   image?: string;
   displayCount?: number;
@@ -244,7 +238,7 @@ export function toRecordViewItem(record: RecordEntity): RecordViewItem {
 }
 
 export function asHabitRecord(record: RecordEntity | null | undefined): HabitRecord | null {
-  return record?.coreBlock === 'habit' ? record as HabitRecord : null;
+  return record?.recordType === 'habit' ? record as HabitRecord : null;
 }
 
 /** 文件级扫描上下文。 */

@@ -1,5 +1,5 @@
 // src/core/utils/inputTemplateUtils.ts
-// Single-user Goal-only capture helpers: resolve only CoreBlock fallback templates.
+// Single-user Goal-only capture helpers: resolve only RecordType fallback templates.
 
 import type { InputSettings, RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
 import { DEFAULT_TEMPLATE_RECORD_TYPES } from '@/core/recordTypes/public';
@@ -12,14 +12,14 @@ export interface TemplateResolveResult {
 
 export function getEffectiveTemplate(
     settings: InputSettings,
-    blockId: string,
+    recordTypeId: string,
 ): TemplateResolveResult {
-    const configured = settings.blocks || [];
+    const configured = settings.recordTypes || [];
     const templates = [
         ...configured,
         ...DEFAULT_TEMPLATE_RECORD_TYPES.filter((block) => !configured.some((existing) => existing.id === block.id)),
     ];
-    const template = templates.find((block) => block.id === blockId || block.recordTypeId === blockId) ?? null;
+    const template = templates.find((block) => block.id === recordTypeId || block.recordTypeId === recordTypeId) ?? null;
     return {
         template,
         templateId: template?.id ?? null,
@@ -29,7 +29,7 @@ export function getEffectiveTemplate(
 
 export function getEffectiveTemplateOnly(
     settings: InputSettings,
-    blockId: string,
+    recordTypeId: string,
 ): RecordCaptureTemplate | null {
-    return getEffectiveTemplate(settings, blockId).template;
+    return getEffectiveTemplate(settings, recordTypeId).template;
 }

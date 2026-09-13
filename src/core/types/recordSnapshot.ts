@@ -3,7 +3,7 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 /** Output location/content computed before persistence. */
 export interface RecordOutputPlan {
   recordId?: string | null;
-  coreBlock?: string | null;
+  recordType?: string | null;
   targetFilePath: string | null;
   targetHeader: string | null;
   outputContent: string;
@@ -32,7 +32,6 @@ export interface ParsedRecordSnapshot {
     startTime: string | null;
     endTime: string | null;
     duration: number | null;
-    categoryKey: string | null;
   };
   extra: Record<string, unknown>;
 }
@@ -40,7 +39,7 @@ export interface ParsedRecordSnapshot {
 export interface EditableRecordSnapshot {
   mode: 'create' | 'edit';
   parsed: ParsedRecordSnapshot | null;
-  blockId: string | null;
+  recordTypeId: string | null;
   fields: Record<string, unknown>;
   outputPlan: RecordOutputPlan;
   persistencePlan: RecordPersistencePlan;
@@ -54,7 +53,7 @@ function pickEditableText(item: RecordViewItem): string | null {
 }
 
 function taskDurationForEdit(item: RecordViewItem): number | null {
-  if (item.coreBlock !== 'task') return item.duration ?? null;
+  if (item.recordType !== 'task') return item.duration ?? null;
   if (typeof item.expectedDurationMinutes === 'number' && Number.isFinite(item.expectedDurationMinutes) && item.expectedDurationMinutes > 0) {
     return item.expectedDurationMinutes;
   }
@@ -72,7 +71,7 @@ export function buildParsedRecordSnapshot(item: RecordViewItem): ParsedRecordSna
   const editableText = pickEditableText(item);
   return {
     itemId: item.id,
-    entryKind: item.coreBlock === 'task' ? 'task' : 'block',
+    entryKind: item.recordType === 'task' ? 'task' : 'block',
     locator: { path, line },
     raw: { sourceText: item.rawSource || item.content || '' },
     semantic: {
@@ -83,12 +82,11 @@ export function buildParsedRecordSnapshot(item: RecordViewItem): ParsedRecordSna
       period: item.period || null,
       tags: [...(item.tags || [])],
       goalPath: item.goalPath || null,
-      startTime: (item.coreBlock === 'task'
+      startTime: (item.recordType === 'task'
         ? (item.scheduledAt || (item.startAt && !item.endAt ? item.startAt : undefined))
         : item.startTime) || item.startTime || null,
-      endTime: (item.coreBlock === 'task' ? item.endAt : item.endTime) || item.endTime || null,
+      endTime: (item.recordType === 'task' ? item.endAt : item.endTime) || item.endTime || null,
       duration: taskDurationForEdit(item),
-      categoryKey: item.categoryKey || null,
     },
     extra: { ...(item.extra || {}) },
   };

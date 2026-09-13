@@ -27,12 +27,12 @@ describe('ChatSessionStore', () => {
     const session = await store.createSession('测试会话', { goalPaths: ['健康'] });
     const user = await store.appendMessage(session.id, 'user', '你好');
     const assistant = await store.appendMessage(session.id, 'assistant', '**你好**', { model: 'test-model' });
-    await store.updateSession(session.id, { filters: { coreBlocks: ['task'] } });
+    await store.updateSession(session.id, { filters: { recordTypes: ['task'] } });
 
     expect(user?.contentType).toBe('plain');
     expect(assistant?.contentType).toBe('markdown');
     expect(store.getMessages(session.id)).toHaveLength(2);
-    expect(store.getSession(session.id)?.filters).toEqual({ coreBlocks: ['task'] });
+    expect(store.getSession(session.id)?.filters).toEqual({ recordTypes: ['task'] });
     expect(h.storage.writeJSON).toHaveBeenCalled();
 
     expect(await store.deleteSession(session.id)).toBe(true);

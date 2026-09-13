@@ -89,14 +89,14 @@ describe('Think OS 真机 AI：自然语言 → 批量确认 → Vault', () => {
     await confirm.waitForExist({ reverse: true, timeout: 10_000 });
 
     const created = await findRecordByContent(CONTENT);
-    expect(created).toMatchObject({ coreBlock: 'task', goalPath: GOAL, content: CONTENT });
+    expect(created).toMatchObject({ recordType: 'task', goalPath: GOAL, content: CONTENT });
     const createdId = String(created?.id || '');
     expect(createdId).not.toBe('');
 
     await browser.reloadObsidian();
     await waitForThinkReady();
     const restored = await findRecordByContent(CONTENT);
-    expect(restored).toMatchObject({ id: createdId, coreBlock: 'task', goalPath: GOAL, content: CONTENT });
+    expect(restored).toMatchObject({ id: createdId, recordType: 'task', goalPath: GOAL, content: CONTENT });
   });
 
   it('本地 AI 服务模拟失败时只展示失败提示，不打开批量确认窗口，也不产生记录', async () => {

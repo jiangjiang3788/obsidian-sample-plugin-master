@@ -59,15 +59,15 @@ RecordType + Goal context
 
 Goal is fixed system context for goal-bindable RecordTypes. Create capture requires an enabled direct Goal × RecordType template; absence means the Quick Input create surface must not open for that context. RecordType supplies the structural base that the direct GoalTemplate customizes. No parent-template inheritance and no first-item business fallback are allowed.
 
-## Record Presentation Contract (1.4.0)
+## Record Domain + Presentation Contract (1.6.0)
 
 Record identity and View layout are separate layers:
 
 ```text
 Record / RecordType facts
         -> Record Presentation Contract
-           - canonical Record Type order
-           - semantic Record Type color token
+           - canonical 10-type user presentation order
+           - semantic Record Type color token + user override
            - derived primaryText
         -> View display-field configuration
         -> View-specific layout/rendering
@@ -77,6 +77,6 @@ The Core presentation contract is the single owner for facts that remain true af
 
 `title` is the real Record field. `primaryText` is a derived display field and never writes back to Record storage. User-explicit `ViewInstance.fields` has higher priority than View defaults; selecting `title` must not silently opt into `primaryText`.
 
-Record Type and Category remain independent dimensions. Type presentation is keyed by canonical `coreBlock`; category ordering/colors are not derived from Record Type presentation.
+Record identity is keyed only by canonical `recordType`; Category is retired. The technical schema registry may contain internal Task entities, but Presentation normalizes `task-session` and `task-series` to Task and exposes only 10 user-facing types. Goal ownership remains independent through `goalPath` and `GoalDefinition`. Record Type presentation owns type order/default semantic color and the Settings runtime override contract; Goal presentation owns Goal color. Views consume these contracts and do not own semantic identity or color maps.
 
 Whiteboard grid visibility and Record Source collapse are UI preferences. They intentionally live outside the durable Whiteboard store (`Think/whiteboards.json`).

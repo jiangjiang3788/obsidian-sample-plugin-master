@@ -1,30 +1,30 @@
-import { RECORD_SCHEMA_DEFINITIONS, type RecordCoreBlock } from '@/core/records/schema';
+import { RECORD_SCHEMA_DEFINITIONS, type RecordType } from '@/core/records/schema';
 
 /**
  * Canonical human-facing Record type presentation contract.
  *
- * Schema/catalog order remains a persistence/domain concern. Any UI that needs
- * to enumerate, group or compare Record types must use this contract instead
- * of array position, locale sorting or a view-local list.
+ * Technical internal records (TaskSeries / TaskSession) remain valid persisted
+ * entities, but they never own a separate user-facing identity. Presentation
+ * consumers normalize them to Task before ordering, labeling or coloring.
  */
 export const RECORD_TYPE_PRESENTATION_ORDER = [
   'task',
-  'task-session',
-  'task-series',
   'energy',
   'habit',
-  'evidence',
+  'event',
+  'feeling',
   'thought',
   'review',
   'plan',
   'blocker',
   'milestone',
-] as const satisfies readonly RecordCoreBlock[];
+] as const satisfies readonly Exclude<RecordType, 'task-session' | 'task-series'>[];
 
-export type CanonicalRecordTypePresentationKey = (typeof RECORD_TYPE_PRESENTATION_ORDER)[number];
+export type UserVisibleRecordType = (typeof RECORD_TYPE_PRESENTATION_ORDER)[number];
+export type CanonicalRecordTypePresentationKey = UserVisibleRecordType;
 
 export interface RecordTypePresentation {
-  coreBlock: RecordCoreBlock | string;
+  recordType: UserVisibleRecordType | string;
   label: string;
   order: number;
   /** CSS semantic token name. Consumers must not hard-code type colors. */
@@ -36,27 +36,27 @@ type RecordTypePresentationIdentity = {
   colorToken: string;
 };
 
-/**
- * Compile-time exhaustive identity registry for the 11 canonical Record kinds.
- * Human labels continue to come from RecordSchemaDefinition, so labels cannot
- * drift away from the domain schema while order/color remain presentation-owned.
- */
 export const RECORD_TYPE_PRESENTATION_REGISTRY = Object.freeze(
   Object.fromEntries(
-    RECORD_TYPE_PRESENTATION_ORDER.map((coreBlock, index) => [
-      coreBlock,
-      { order: (index + 1) * 10, colorToken: `--think-record-type-${coreBlock}` },
+    RECORD_TYPE_PRESENTATION_ORDER.map((recordType, index) => [
+      recordType,
+      { order: (index + 1) * 10, colorToken: `--think-record-type-${recordType}` },
     ]),
-  ) as Record<RecordCoreBlock, RecordTypePresentationIdentity>,
+  ) as Record<UserVisibleRecordType, RecordTypePresentationIdentity>,
 );
 
-const ALIASES = new Map<string, RecordCoreBlock>();
+const ALIASES = new Map<string, RecordType>();
 for (const schema of RECORD_SCHEMA_DEFINITIONS) {
-  const candidates = [schema.coreBlock, schema.id, schema.key, schema.name, schema.displayName, schema.categoryKey];
+  const candidates = [schema.recordType, schema.id, schema.key, schema.name, schema.displayName];
   for (const candidate of candidates) {
     const key = String(candidate || '').trim().toLocaleLowerCase();
-    if (key) ALIASES.set(key, schema.coreBlock);
+    if (key) ALIASES.set(key, schema.recordType);
   }
+}
+
+function toUserVisibleRecordType(recordType: RecordType | string): UserVisibleRecordType | string {
+  if (recordType === 'task-session' || recordType === 'task-series') return 'task';
+  return recordType;
 }
 
 /** Accept canonical keys, core./internal. ids and canonical Chinese type labels. */
@@ -64,23 +64,24 @@ export function normalizeRecordTypePresentationKey(value: unknown): string {
   const raw = String(value ?? '').trim();
   if (!raw) return '';
   const direct = ALIASES.get(raw.toLocaleLowerCase());
-  if (direct) return direct;
+  if (direct) return toUserVisibleRecordType(direct);
   const withoutNamespace = raw.replace(/^(?:core|internal)\./i, '').trim().toLocaleLowerCase();
-  return ALIASES.get(withoutNamespace) || withoutNamespace;
+  const aliased = ALIASES.get(withoutNamespace) || withoutNamespace;
+  return toUserVisibleRecordType(aliased);
 }
 
 export function getRecordTypePresentationOrder(value: unknown): number {
-  const key = normalizeRecordTypePresentationKey(value) as RecordCoreBlock;
+  const key = normalizeRecordTypePresentationKey(value) as UserVisibleRecordType;
   return RECORD_TYPE_PRESENTATION_REGISTRY[key]?.order ?? Number.MAX_SAFE_INTEGER;
 }
 
 export function getRecordTypePresentation(value: unknown): RecordTypePresentation {
-  const coreBlock = normalizeRecordTypePresentationKey(value);
-  const schema = RECORD_SCHEMA_DEFINITIONS.find((candidate) => candidate.coreBlock === coreBlock);
-  const identity = RECORD_TYPE_PRESENTATION_REGISTRY[coreBlock as RecordCoreBlock];
+  const recordType = normalizeRecordTypePresentationKey(value);
+  const schema = RECORD_SCHEMA_DEFINITIONS.find((candidate) => candidate.recordType === recordType);
+  const identity = RECORD_TYPE_PRESENTATION_REGISTRY[recordType as UserVisibleRecordType];
   return {
-    coreBlock,
-    label: schema?.name || schema?.displayName || coreBlock || '记录',
+    recordType,
+    label: schema?.name || schema?.displayName || recordType || '记录',
     order: identity?.order ?? Number.MAX_SAFE_INTEGER,
     colorToken: identity?.colorToken || '--think-record-type-neutral',
   };
@@ -95,9 +96,6 @@ export function compareRecordTypeKeys(left: unknown, right: unknown): number {
   return leftKey.localeCompare(rightKey, 'zh-CN');
 }
 
-export function sortRecordTypesByPresentation<T>(
-  items: readonly T[],
-  getKey: (item: T) => unknown,
-): T[] {
+export function sortRecordTypesByPresentation<T>(items: readonly T[], getKey: (item: T) => unknown): T[] {
   return [...items].sort((left, right) => compareRecordTypeKeys(getKey(left), getKey(right)));
 }

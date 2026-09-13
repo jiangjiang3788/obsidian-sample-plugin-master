@@ -118,7 +118,7 @@ export function useAiBatchConfirmActions({
   };
 
   const handleEditorStateChange = (recordId: string, state: QuickInputEditorState) => {
-    // Ref-only by design: feeding draft state back into initialBlockId/context would reset the editor.
+    // Ref-only by design: feeding draft state back into initialRecordTypeId/context would reset the editor.
     draftStateByRecordIdRef.current.set(recordId, state);
   };
 
@@ -140,7 +140,7 @@ export function useAiBatchConfirmActions({
       logAiBatchSubmit(traceId, 'before submitCreateRecord', {
         mode: 'single',
         index: indexToSave,
-        blockId: recordToSave.blockId,
+        recordTypeId: recordToSave.recordTypeId,
       });
       const result = await submitCreateRecord(buildAiBatchConfirmCreateSubmitParams(recordToSave, abortController.signal));
       if (!mountedRef.current) return;
@@ -241,7 +241,7 @@ export function useAiBatchConfirmActions({
         results.push(result);
         logAiBatchSubmit(traceId, 'batch submitCreateRecord item', {
           index,
-          blockId: recordToSave.blockId,
+          recordTypeId: recordToSave.recordTypeId,
           status: result.status,
           hasAffectedRecordId: !!result.affectedRecordId,
         });

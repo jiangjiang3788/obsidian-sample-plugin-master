@@ -86,9 +86,9 @@ function buildStatisticsCreateConfig(params: StatisticsCreateParams): QuickInput
   const anchorDate = resolveStatisticsAnchorDate(cell, params.fallbackDate);
   const periodContext = mapStatisticsCellTypeToPeriod(cell?.type, params.currentView);
 
-  if (params.payload?.preferredBlockId) {
+  if (params.payload?.preferredRecordTypeId) {
     return {
-      blockId: params.payload.preferredBlockId,
+      recordTypeId: params.payload.preferredRecordTypeId,
       context: buildStatisticsExplicitContext(
         params.payload,
         anchorDate,
@@ -107,7 +107,7 @@ function buildStatisticsCreateConfig(params: StatisticsCreateParams): QuickInput
   if (!base) return null;
 
   return {
-    blockId: base.blockId,
+    recordTypeId: base.recordTypeId,
     context: {
       ...(base.context || {}),
       ...buildStatisticsExplicitContext(

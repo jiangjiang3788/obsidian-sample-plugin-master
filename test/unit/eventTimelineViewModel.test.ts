@@ -18,8 +18,7 @@ const task = (id: string, date: string, content = '') => ({
   title: `字段标题${id}`,
   content,
   date,
-  categoryKey: '工作',
-  coreBlock: 'task',
+  recordType: 'task',
   status: 'open',
   tags: [],
   extra: {},
@@ -31,7 +30,7 @@ function recordItem(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
     id: 'task.01J00000000000000000000001', title: '标题', content: '干净内容',
     fullData: '<!-- start -->\n记录ID:: task.01J00000000000000000000001\n记录类型:: task\n状态:: open\n内容:: 干净内容\n<!-- end -->',
     rawSource: '<!-- start -->\n记录ID:: task.01J00000000000000000000001\n记录类型:: task\n状态:: open\n内容:: 干净内容\n<!-- end -->',
-    tags: [], categoryKey: '任务', coreBlock: 'task', status: 'open', date: '2026-06-04T09:00:00', created: 1, modified: 2, extra: {}, ...overrides,
+    tags: [], recordType: 'task', status: 'open', date: '2026-06-04T09:00:00', created: 1, modified: 2, extra: {}, ...overrides,
   } as RecordViewItem;
 }
 function moduleConfig(viewConfig: Record<string, any> = {}) {
@@ -53,10 +52,9 @@ describe('EventTimelineViewModel', () => {
   it('builds grouped tree and render model', () => {
     const items=[task('1','2026-06-01T10:00:00')] as any[];
     expect(buildEventTimelineGroupedTree({ filteredItems: items, groupFields: [] })).toBeNull();
-    expect(buildEventTimelineGroupedTree({ filteredItems: items, groupFields: ['categoryKey'] })?.[0]?.label).toBe('工作');
-    expect(buildEventTimelineGroupFields({ groupFields:['coreBlock'] } as any)).toEqual(['coreBlock']);
-    const model=buildEventTimelineRenderModel({ items, dateRange:[new Date('2026-06-01T00:00:00'),new Date('2026-06-01T23:59:59')], module:{ fields:['title'], groupFields:['coreBlock'], viewConfig:{ maxContentLength:20 } } as any });
-    expect(model.filteredItems).toHaveLength(1); expect(model.groupFields).toEqual(['coreBlock']); expect(model.displayFields).toEqual(['title']);
+    expect(buildEventTimelineGroupFields({ groupFields:['recordType'] } as any)).toEqual(['recordType']);
+    const model=buildEventTimelineRenderModel({ items, dateRange:[new Date('2026-06-01T00:00:00'),new Date('2026-06-01T23:59:59')], module:{ fields:['title'], groupFields:['recordType'], viewConfig:{ maxContentLength:20 } } as any });
+    expect(model.filteredItems).toHaveLength(1); expect(model.groupFields).toEqual(['recordType']); expect(model.displayFields).toEqual(['title']);
   });
   it('derives task display title from content then fallback title', () => {
     expect(getEventTimelineTaskDisplayTitle({ item: task('1','2026-06-01T10:00:00','正文标题') as any, titleField:'title', contentField:'content', maxContentLength:20 })).toBe('正文标题');

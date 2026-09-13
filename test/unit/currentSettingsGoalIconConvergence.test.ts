@@ -4,7 +4,7 @@
 import { toCurrentThinkSettings, toPersistedThinkSettings } from '@/core/settings/currentSettingsSchema';
 
 describe('current settings Goal icon convergence', () => {
-  it('backfills one unambiguous legacy template icon to Goal.icon and removes template icon defaults', () => {
+  it('current-only loader strips retired template icon defaults without guessing Goal.icon', () => {
     const current = toCurrentThinkSettings({
       groups: [], viewInstances: [], layouts: [], floatingTimerEnabled: true,
       goalSettings: {
@@ -22,13 +22,13 @@ describe('current settings Goal icon convergence', () => {
       },
     });
 
-    expect(current.goalSettings?.goals[0]?.icon).toBe('💪');
+    expect(current.goalSettings?.goals[0]?.icon).toBeUndefined();
     const template = current.goalSettings?.goalTemplates[0];
     expect(template?.defaultValues).toEqual({ 内容: '保留' });
     expect(template?.fields?.find((field) => field.key === 'icon')?.defaultValue).toBeUndefined();
 
     const persisted = toPersistedThinkSettings(current) as any;
-    expect(persisted.goalSettings.goals[0].icon).toBe('💪');
+    expect(persisted.goalSettings.goals[0].icon).toBeUndefined();
     expect(persisted.goalSettings.goalTemplates[0].defaultValues).toEqual({ 内容: '保留' });
     expect(persisted.goalSettings.goalTemplates[0].fields.find((field: any) => field.key === 'icon')?.defaultValue).toBeUndefined();
   });

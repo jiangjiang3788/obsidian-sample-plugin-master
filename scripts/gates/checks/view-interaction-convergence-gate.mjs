@@ -58,8 +58,8 @@ if (!heatmapCell.includes('items?.length === 1') || !heatmapCell.includes('onOpe
   failures.push('Heatmap cells must allow Ctrl/⌘ origin jump when the cell identifies exactly one Record');
 }
 
-if (!statsChart.includes('openCategory') || !statsChart.includes('sv-chart-number') || !statsChart.includes('onKeyDown')) {
-  failures.push('Statistics category number/bar/label clicks must resolve to the same category action');
+if (!statsChart.includes('openBucket') || !statsChart.includes('sv-chart-number') || !statsChart.includes('onKeyDown')) {
+  failures.push('Statistics bucket number/bar/label clicks must resolve to the same bucket action');
 }
 if (!statsChart.includes('blocks.length === 1') || !statsChart.includes('onOpenRecordOrigin') || !statsChart.includes('hasPlatformModifier')) {
   failures.push('Statistics must allow Ctrl/⌘ origin jump when a visual bucket identifies exactly one Record');

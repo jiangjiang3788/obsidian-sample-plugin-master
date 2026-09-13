@@ -23,8 +23,7 @@ const item = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   tags: [],
   created: 0,
   modified: 0,
-  categoryKey: '任务',
-  coreBlock: 'task',
+  recordType: 'task',
   extra: {},
   ...overrides,
 } as RecordViewItem);
@@ -41,13 +40,13 @@ describe('retrieval model helpers', () => {
     expect(extraText).not.toContain('隐藏正文');
   });
 
-  it('applies Goal and CoreBlock filters through the shared helper', () => {
+  it('applies Goal and RecordType filters through the shared helper', () => {
     const indexed = new Map<string, RecordViewItem>([
-      ['a', item({ id: 'a', goalPath: '武装大脑/学习/英语', coreBlock: 'task', categoryKey: '任务' })],
-      ['b', item({ id: 'b', goalPath: '照顾好自己/健康/运动', coreBlock: 'habit', categoryKey: '打卡' })],
+      ['a', item({ id: 'a', goalPath: '武装大脑/学习/英语', recordType: 'task' })],
+      ['b', item({ id: 'b', goalPath: '照顾好自己/健康/运动', recordType: 'habit' })],
     ]);
     const results = [searchResult('a'), searchResult('b')];
 
-    expect(applyRetrievalFilters(results, { goalPaths: ['武装大脑/学习'], coreBlocks: ['task'] }, indexed).map((result) => result.id)).toEqual(['a']);
+    expect(applyRetrievalFilters(results, { goalPaths: ['武装大脑/学习'], recordTypes: ['task'] }, indexed).map((result) => result.id)).toEqual(['a']);
   });
 });

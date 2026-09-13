@@ -1,6 +1,6 @@
 import type { RecordViewItem, ViewInstance } from '@core/types/public';
 import type { PeriodData } from '@core/utils/public';
-import type { CategoryConfig, StatisticsViewConfig } from '@core/view/public';
+import type { StatisticsBucketConfig, StatisticsViewConfig } from '@core/view/public';
 import {
   aggregateByMonth,
   aggregateByQuarter,
@@ -36,7 +36,7 @@ export interface StatisticsRuntimeModel {
   year: number;
   bucketAccessor: (item: RecordViewItem) => string;
   yearlyWeekStructure: StatisticsYearlyWeekMonth[];
-  filteredCategories: CategoryConfig[];
+  filteredCategories: StatisticsBucketConfig[];
 }
 
 export function buildStatisticsViewConfig(module: ViewInstance): StatisticsViewConfig {
@@ -80,7 +80,7 @@ export function buildStatisticsGoalBuckets(args: {
   items: RecordViewItem[];
   goals?: GoalDefinition[];
   topN?: number;
-}): CategoryConfig[] {
+}): StatisticsBucketConfig[] {
   // Statistics is intentionally a strategic overview: child Goal records roll up to
   // their root Goal instead of expanding every leaf into a separate chart category.
   const buckets = buildGoalBuckets(args.items, args.goals || [], {
@@ -96,7 +96,7 @@ export function buildStatisticsProcessedData(input: {
   isYearView: boolean;
   items: RecordViewItem[];
   year: number;
-  filteredCategories: CategoryConfig[];
+  filteredCategories: StatisticsBucketConfig[];
   usePeriod: boolean;
   bucketAccessor?: (item: RecordViewItem) => string;
 }): StatisticsPeriodDataModel {

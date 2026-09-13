@@ -24,10 +24,10 @@ export function isGoalOrderField(field?: string | null): boolean {
     return ['goalPath', 'rootGoal', 'leafGoal'].includes(canonical);
 }
 
-/** Record type identity is owned by coreBlock. Category remains an independent grouping dimension. */
+/** Record type identity is owned by recordType. Category remains an independent grouping dimension. */
 export function isRecordTypeOrderField(field?: string | null): boolean {
     const canonical = getCanonicalFieldKey(String(field || '').trim());
-    return canonical === 'coreBlock';
+    return canonical === 'recordType';
 }
 
 function normalizeText(value: unknown): string {
@@ -247,51 +247,4 @@ export function buildTableMatrix(items: RecordViewItem[], rowField: string, colF
     const sortedCols = Array.from(colVals).sort((a, b) => compareFieldValuesByViewOrder(colField, a, b, context));
 
     return { matrix, sortedRows, sortedCols };
-}
-
-/**
- * 提取 categoryKey 的基础分类（第一级路径）
- */
-export function getBaseCategory(categoryKey?: string): string {
-    return getBasePath(categoryKey);
-}
-
-/**
- * 从 items 中收集所有基础分类
- */
-export function collectBaseCategories(items: RecordViewItem[]): string[] {
-    const categorySet = new Set<string>();
-    items.forEach(item => {
-        const baseCategory = getBaseCategory(item.categoryKey);
-        if (baseCategory) {
-            categorySet.add(baseCategory);
-        }
-    });
-    return Array.from(categorySet).sort((a, b) => a.localeCompare(b, 'zh-CN'));
-}
-
-/**
- * 从视图实例中收集所有可用的分类名称
- */
-export function collectCategoriesFromViews(
-    viewInstances: any[], 
-    predefinedCategories: string[] = []
-): string[] {
-    const categorySet = new Set<string>();
-    
-    // 从视图实例中收集分类
-    viewInstances.forEach(view => {
-        if (view.viewType === 'StatisticsView' && view.viewConfig?.categories) {
-            view.viewConfig.categories.forEach((cat: any) => {
-                if (cat.name) {
-                    categorySet.add(getBasePath(cat.name) || cat.name);
-                }
-            });
-        }
-    });
-
-    // 从预定义分类中收集
-    predefinedCategories.forEach((cat: string) => categorySet.add(cat));
-
-    return Array.from(categorySet).sort();
 }

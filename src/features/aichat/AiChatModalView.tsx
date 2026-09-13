@@ -2,7 +2,7 @@
 import type { RefObject } from 'preact';
 import { ChatIcon, ModalHeader } from '@shared/ui/public';
 import type { ChatMessage, ChatSession } from '@core/ai/public';
-import { FiltersBar, type BlockDefinition } from './components/FiltersBar';
+import { FiltersBar, type RecordTypeDefinition } from './components/FiltersBar';
 import { SessionList } from './components/SessionList';
 import { ChatMessages } from './components/ChatMessages';
 import { ChatComposer } from './components/ChatComposer';
@@ -22,9 +22,9 @@ export interface AiChatModalViewProps {
     setSelectedGoalPath: (path: string) => void;
     selectedType: string;
     setSelectedType: (t: string) => void;
-    blocks: BlockDefinition[];
-    selectedBlockId: string;
-    setSelectedBlockId: (id: string) => void;
+    recordTypes: RecordTypeDefinition[];
+    selectedRecordTypeId: string;
+    setSelectedRecordTypeId: (id: string) => void;
     indexItemCount: number;
     messages: ChatMessage[];
     isLoading: boolean;
@@ -43,7 +43,7 @@ export function AiChatModalView(props: AiChatModalViewProps) {
     const {
         closeModal, sessions, currentSessionId, currentSessionTitle, onNewSession, onSelectSession, onDeleteSession,
         enableRetrieval, setEnableRetrieval, goals, selectedGoalPath, setSelectedGoalPath, selectedType, setSelectedType,
-        blocks, selectedBlockId, setSelectedBlockId, indexItemCount, messages, isLoading, messagesEndRef, error,
+        recordTypes, selectedRecordTypeId, setSelectedRecordTypeId, indexItemCount, messages, isLoading, messagesEndRef, error,
         inputText, setInputText, onKeyDown, onSend, composerDisabled, composerPlaceholder, emptyHint,
     } = props;
 
@@ -76,9 +76,9 @@ export function AiChatModalView(props: AiChatModalViewProps) {
                     setSelectedGoalPath={setSelectedGoalPath}
                     selectedType={selectedType}
                     setSelectedType={setSelectedType}
-                    blocks={blocks}
-                    selectedBlockId={selectedBlockId}
-                    setSelectedBlockId={setSelectedBlockId}
+                    recordTypes={recordTypes}
+                    selectedRecordTypeId={selectedRecordTypeId}
+                    setSelectedRecordTypeId={setSelectedRecordTypeId}
                     indexItemCount={indexItemCount}
                 />
 

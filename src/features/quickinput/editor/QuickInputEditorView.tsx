@@ -10,10 +10,10 @@ import { QuickInputFormRow } from './components/FormRow';
 export interface QuickInputEditorViewProps {
   getResourcePath: (path: string) => string;
 
-  blocks: any[];
-  allowBlockSwitch: boolean;
-  currentBlockId: string;
-  onBlockChange: (blockId: string) => void;
+  recordTypes: any[];
+  allowRecordTypeSwitch: boolean;
+  currentRecordTypeId: string;
+  onRecordTypeChange: (recordTypeId: string) => void;
 
   goals: GoalSelectorOption[];
   recentGoalPaths?: string[];
@@ -41,10 +41,10 @@ export interface QuickInputEditorViewProps {
 
 export function QuickInputEditorView({
   getResourcePath,
-  blocks,
-  allowBlockSwitch,
-  currentBlockId,
-  onBlockChange,
+  recordTypes,
+  allowRecordTypeSwitch,
+  currentRecordTypeId,
+  onRecordTypeChange,
   goals,
   recentGoalPaths = [],
   selectedGoalPath,
@@ -113,17 +113,17 @@ export function QuickInputEditorView({
     return (
       <div ref={rootRef} className={`think-quick-input-editor${dense ? ' is-dense' : ''}`}>
         <div className="think-quick-input-context-grid">
-          {allowBlockSwitch && blocks.length > 1 && (
+          {allowRecordTypeSwitch && recordTypes.length > 1 && (
             <QuickInputFormRow label="记录类型">
               <RecordTypeSwitcher
-                blocks={blocks}
-                currentBlockId={currentBlockId}
-                onBlockChange={onBlockChange}
+                recordTypes={recordTypes}
+                currentRecordTypeId={currentRecordTypeId}
+                onRecordTypeChange={onRecordTypeChange}
               />
             </QuickInputFormRow>
           )}
 
-          {currentBlockId ? (
+          {currentRecordTypeId ? (
             <QuickInputFormRow label="目标">
               <GoalSelector
                 goals={goals}
@@ -137,7 +137,7 @@ export function QuickInputEditorView({
           ) : null}
         </div>
         <div className="think-quick-input-context-hint">
-          {currentBlockId ? '请选择已配置模板的目标后继续。' : '请选择记录类型后继续。'}
+          {currentRecordTypeId ? '请选择已配置模板的目标后继续。' : '请选择记录类型后继续。'}
         </div>
       </div>
     );
@@ -145,17 +145,17 @@ export function QuickInputEditorView({
 
   const shouldShowRecordTypeFallbackHint = Boolean(currentGoalPath)
     && templateSourceType === 'record-type';
-  const isTaskTemplate = String(currentBlockId || template?.recordTypeId || template?.id || '').replace(/^core\./, '') === 'task';
+  const isTaskTemplate = String(currentRecordTypeId || template?.recordTypeId || template?.id || '').replace(/^core\./, '') === 'task';
 
   return (
     <div ref={rootRef} className={`think-quick-input-editor${dense ? ' is-dense' : ''}`}>
       <div className="think-quick-input-context-grid">
-          {allowBlockSwitch && blocks.length > 1 && (
+          {allowRecordTypeSwitch && recordTypes.length > 1 && (
             <QuickInputFormRow label="记录类型">
               <RecordTypeSwitcher
-                blocks={blocks}
-                currentBlockId={currentBlockId}
-                onBlockChange={onBlockChange}
+                recordTypes={recordTypes}
+                currentRecordTypeId={currentRecordTypeId}
+                onRecordTypeChange={onRecordTypeChange}
               />
             </QuickInputFormRow>
           )}

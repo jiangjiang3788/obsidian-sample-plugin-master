@@ -35,7 +35,7 @@ export {
   isOptionLike,
   isRefreshableSource,
   isSameValue,
-  preserveQuickInputBlockSwitchState,
+  preserveQuickInputRecordTypeSwitchState,
 } from './quickInputFieldSourceModel';
 export {
   getGoalPath,

@@ -14,7 +14,7 @@ describe('视图头部创建记录组合链路', () => {
 
   it('支持头部创建的普通视图通过 ActionService 上下文打开 Quick Input', () => {
     const actionService = {
-      getQuickInputConfigForView: jest.fn(() => ({ blockId: 'core.task', context: { 日期: '2026-08-24' } })),
+      getQuickInputConfigForView: jest.fn(() => ({ recordTypeId: 'core.task', context: { 日期: '2026-08-24' } })),
     } as any;
     const result = openCreateFromViewHeader({
       app: {} as any,

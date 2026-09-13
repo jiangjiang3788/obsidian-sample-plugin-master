@@ -3,13 +3,13 @@ import { readFieldValue } from './FieldValueResolver';
 import { getAvailableFields } from './FieldRegistry';
 
 export const CORE_FIELDS = [
-  'id', 'title', 'primaryText', 'content', 'categoryKey', 'tags', 'goalPath', 'coreBlock', 'status', 'cycleId',
+  'id', 'title', 'primaryText', 'content', 'tags', 'goalPath', 'recordType', 'status', 'cycleId',
   'icon', 'priority', 'importance', 'urgency', 'expectedDurationMinutes', 'date', 'startTime', 'endTime', 'duration',
   'period', 'rating', 'image', 'folder', 'periodCount',
 ] as const;
 
 export const SEMANTIC_FIELDS = [
-  'baseCategory', 'leafCategory', 'rootGoal', 'leafGoal', 'cadence',
+  'rootGoal', 'leafGoal', 'cadence',
 ] as const;
 
 export const FILE_FIELDS = [

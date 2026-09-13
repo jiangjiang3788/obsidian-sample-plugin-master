@@ -55,8 +55,8 @@ export class ObsidianModalPort implements ModalPort {
     return modal.openAndGetResult();
   }
 
-  openQuickInput(blockId?: string): void {
-    new QuickInputModal(this.app, blockId || '').open();
+  openQuickInput(recordTypeId?: string): void {
+    new QuickInputModal(this.app, recordTypeId || '').open();
   }
 
   openNamePrompt(options: NamePromptOptions): Promise<string | null> {

@@ -49,7 +49,7 @@ export function TimerView({ app, actionService, timerService, dataStore }: Timer
     const handleCreateNewTask = () => {
         const config = actionService.getQuickInputConfigForNewTimer();
         if (!config) return;
-        new QuickInputModal(app, config.blockId, config.context, undefined, false, {
+        new QuickInputModal(app, config.recordTypeId, config.context, undefined, false, {
             mode: 'create',
             source: 'timer',
             onSubmitSuccess: async (result: RecordSubmitResult) => {

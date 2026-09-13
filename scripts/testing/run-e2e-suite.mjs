@@ -60,7 +60,7 @@ function startLocalAiServer() {
         const parsed = {
           items: [{
             rawText: 'V6 AI 真机任务',
-            target: { blockId: 'core.task', goalPath: 'E2E/AI' },
+            target: { recordTypeId: 'core.task', goalPath: 'E2E/AI' },
             fieldValues: { 内容: 'V6 AI 真机任务' },
             meta: { confidence: 0.99 },
           }],

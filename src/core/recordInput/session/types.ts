@@ -30,16 +30,16 @@ export interface RecordInputDraftSnapshot extends RecordInputSessionSelection {
 
 export interface RecordInputSessionState extends RecordInputDraftSnapshot {
   mode: RecordInputSessionMode;
-  currentBlockId: string;
-  originBlockId: string;
-  draftByBlockId: Record<string, RecordInputDraftSnapshot>;
+  currentRecordTypeId: string;
+  originRecordTypeId: string;
+  draftByRecordTypeId: Record<string, RecordInputDraftSnapshot>;
   dirty: boolean;
   revision: number;
 }
 
 export interface InitializeRecordInputSessionInput {
   mode?: RecordInputSessionMode;
-  initialBlockId: string;
+  initialRecordTypeId: string;
   initialFormData?: RecordInputFormData;
   initialFieldSources?: RecordInputFieldSourceMap;
   initialSelection?: Partial<RecordInputSessionSelection>;
@@ -48,7 +48,7 @@ export interface InitializeRecordInputSessionInput {
 export type RecordInputSessionAction =
   | { type: 'reset'; payload: InitializeRecordInputSessionInput }
   | { type: 'setMode'; mode: RecordInputSessionMode }
-  | { type: 'switchRecordType'; blockId: string }
+  | { type: 'switchRecordType'; recordTypeId: string }
   | {
       type: 'updateDraft';
       formData: RecordInputFormData;

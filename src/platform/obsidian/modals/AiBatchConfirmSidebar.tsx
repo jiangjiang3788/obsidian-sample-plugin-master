@@ -11,7 +11,7 @@ import { shortDisplay } from './AiBatchConfirmModel';
 
 export interface AiBatchConfirmSidebarProps {
   records: AiBatchConfirmRecordItem[];
-  blocks: Array<{ id?: string; name?: string }>;
+  recordTypes: Array<{ id?: string; name?: string }>;
   currentIndex: number;
   savedCount: number;
   pendingCount: number;
@@ -23,7 +23,7 @@ export interface AiBatchConfirmSidebarProps {
 
 export function AiBatchConfirmSidebar({
   records,
-  blocks,
+  recordTypes,
   currentIndex,
   savedCount,
   pendingCount,
@@ -40,7 +40,7 @@ export function AiBatchConfirmSidebar({
       </div>
       <div className="think-ai-batch-sidebar__list">
         {records.map((record, index) => {
-          const block = blocks.find((entry) => entry.id === record.blockId);
+          const recordType = recordTypes.find((entry) => entry.id === record.recordTypeId);
           const active = index === currentIndex;
           return (
             <button
@@ -55,7 +55,7 @@ export function AiBatchConfirmSidebar({
                 {record.saved ? <CheckCircleIcon fontSize="small" /> : record.skipped ? <DeleteIcon fontSize="small" /> : <RadioButtonUncheckedIcon fontSize="small" />}
               </span>
               <span className="think-ai-batch-sidebar__text">
-                <strong>{block?.name || '未知类型'}</strong>
+                <strong>{recordType?.name || '未知类型'}</strong>
                 <span>{shortDisplay(record.goalLabel, '未匹配目标', 18)} · {shortDisplay(record.presetLabel, '默认预设', 18)}</span>
                 <span>{record.cmd.fieldValues?.内容?.slice(0, 20) || record.cmd.rawText?.slice(0, 20) || `记录 ${index + 1}`}</span>
               </span>

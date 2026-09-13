@@ -16,8 +16,7 @@ export function getWhiteboardFindHaystack(record: RecordViewItem | null, item: W
   return normalize([
     item.recordId,
     record.id,
-    record.coreBlock,
-    record.categoryKey,
+    record.recordType,
     record.title,
     record.content,
     record.goalPath,

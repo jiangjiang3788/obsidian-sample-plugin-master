@@ -8,10 +8,9 @@ import { WhiteboardBoardSchema, WhiteboardEdgeSchema, WhiteboardItemSchema, Whit
 import { archiveWhiteboardItems, moveWhiteboardArchivedItems, restoreWhiteboardArchivedItem } from './WhiteboardArchiveMutations';
 import { createWhiteboardAnnotation, moveWhiteboardAnnotation, removeWhiteboardAnnotation, updateWhiteboardAnnotation, type WhiteboardAnnotationKind } from './WhiteboardAnnotationMutations';
 import { assertWhiteboardGroupParent, dissolveWhiteboardGroupTree, moveWhiteboardGroupTree } from './WhiteboardWorkbenchMutations';
-import { moveWhiteboardNodes, translateWhiteboardNodes } from './WhiteboardSelectionMutations';
+import { moveWhiteboardNodes, translateWhiteboardNodes } from './WhiteboardSelectionMutations'; import { normalizeWhiteboardRecordReferences } from './WhiteboardRecordReferenceMutations';
 export const DEFAULT_WHITEBOARD_STORE_PATH = 'Think/whiteboards.json';
-export const LEGACY_ASSOCIATION_STORE_PATH = 'Think/association-spaces.json';
-export const DEFAULT_WHITEBOARD_ID = 'whiteboard-default';
+export const LEGACY_ASSOCIATION_STORE_PATH = 'Think/association-spaces.json'; export const DEFAULT_WHITEBOARD_ID = 'whiteboard-default';
 export const DEFAULT_WHITEBOARD_TITLE = '白板';
 export interface WhiteboardRecordPlacement {
     recordId: string;
@@ -228,6 +227,7 @@ export class WhiteboardStore {
             return changed(cloneBoard(this.ensureMutableBoard(draft, boardId, title)));
         }, false);
     }
+    async normalizeRecordReferences(replacements: Readonly<Record<string, string>>): Promise<number> { this.assertReady(); if (Object.keys(replacements).length === 0) return 0; return this.enqueueMutation((draft) => { let total = 0; Object.values(draft.boards).forEach((board) => { const count = normalizeWhiteboardRecordReferences(board, replacements); if (count > 0) { this.touch(board); total += count; } }); return total > 0 ? changed(total) : unchanged(0); }, false); }
     async addRecord(boardId: string, recordId: string, position: WhiteboardPosition, groupId?: string | null): Promise<WhiteboardItem> {
         this.assertReady();
         this.assertBoardId(boardId);

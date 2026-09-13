@@ -5,10 +5,9 @@
 import type { RecordViewItem } from '@core/types/public';
 import { getRecordPrimaryText, readFieldValue } from '@core/fields/public';
 
-function record(coreBlock: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
+function record(recordType: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
-    id: `rec.${coreBlock}`, coreBlock, title: '', content: '', tags: [], categoryKey: coreBlock,
-    created: 0, modified: 0, extra: {}, ...overrides,
+    id: `rec.${recordType}`, recordType, title: '', content: '', tags: [], created: 0, modified: 0, extra: {}, ...overrides,
   } as RecordViewItem;
 }
 
@@ -35,13 +34,13 @@ describe('Record primaryText derived display field', () => {
     expect(getRecordPrimaryText(record('plan'))).toBe('计划');
   });
 
-  it('11 种 Record 都有明确的无标题展示策略，不依赖视图自己猜测', () => {
+  it('12 种 Record 都有明确的无标题展示策略，不依赖视图自己猜测', () => {
     const expected: Record<string, string> = {
       task: '任务', 'task-session': '任务工作块', 'task-series': '任务系列', energy: '精力', habit: '打卡',
-      evidence: '事件', thought: '思考', review: '总结', plan: '计划', blocker: '阻碍项', milestone: '里程碑',
+      event: '事件', feeling: '感受', thought: '思考', review: '总结', plan: '计划', blocker: '阻碍项', milestone: '里程碑',
     };
-    for (const [coreBlock, label] of Object.entries(expected)) {
-      expect(getRecordPrimaryText(record(coreBlock))).toBe(label);
+    for (const [recordType, label] of Object.entries(expected)) {
+      expect(getRecordPrimaryText(record(recordType))).toBe(label);
     }
   });
 });

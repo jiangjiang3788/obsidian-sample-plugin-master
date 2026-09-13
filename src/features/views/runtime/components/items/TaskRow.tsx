@@ -52,7 +52,7 @@ export function TaskRow({
     const gesture = createRecordGestureHandlers({ item, onOpenOrigin: onOpenRecordOrigin, onPrimary: () => openEdit() });
     
     return (
-        <div class={`task-row ${listRow ? 'think-list-row think-list-row--task think-list-row--interactive' : ''} ${compact ? `task-row--compact ${listRow ? 'think-list-row--compact' : ''}` : ''} ${done ? 'task-row--done' : ''}`}>
+        <div class={`task-row ${listRow ? 'think-list-row think-list-row--task think-list-row--interactive' : ''} ${compact ? `task-row--compact ${listRow ? 'think-list-row--compact' : ''}` : ''} ${done ? 'task-row--done' : ''}`} data-record-type={item.recordType}>
             <div class="task-row-checkbox-wrapper" onClick={(e) => e.stopPropagation()}>
                 <TaskCheckbox done={done} onMarkDone={() => onMarkDone(item.id)} />
             </div>

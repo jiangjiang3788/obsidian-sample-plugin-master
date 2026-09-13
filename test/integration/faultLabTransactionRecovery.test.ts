@@ -25,7 +25,7 @@ const ID_C = 'rec.01JWF7T20074QW3VAKQMEWSBKC';
 function 记录(id: string, content: string): string {
   return encodeRecordBlock({
     recordId: id,
-    coreBlock: 'thought',
+    recordType: 'thought',
     fields: { 记录子类型: '思考', 内容: content },
   });
 }
@@ -93,7 +93,7 @@ describe('v9 故障实验室：事务、并发与恢复', () => {
 
     await expect(h.repository.create({
       recordId: ID_C,
-      coreBlock: 'thought',
+      recordType: 'thought',
       targetFilePath: '记录/C.md',
       fields: { 记录子类型: '思考', 内容: '已经落盘但第一次扫描失败' },
     })).rejects.toThrow('record_post_commit_rescan_failed:记录/C.md');

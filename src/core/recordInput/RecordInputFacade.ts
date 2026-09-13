@@ -13,7 +13,7 @@ import type {
 import { findMatchingOption, isOptionLikeValue, readOptionText } from '@/core/semantics/option';
 
 export interface RecordInputEditorStateLike {
-  blockId?: string | null;
+  recordTypeId?: string | null;
   formData?: Record<string, unknown> | null;
   template?: {
     fields?: TemplateField[];
@@ -61,10 +61,10 @@ export function buildCreateRecordExecutionContext(
   state: RecordInputEditorStateLike,
   context?: Record<string, unknown>,
 ): Record<string, unknown> | undefined {
-  const blockId = String(state.blockId || '').replace(/^core\./, '');
+  const recordTypeId = String(state.recordTypeId || '').replace(/^core\./, '');
   const formData = state.formData || {};
   const status = readRecordInputScalar(formData.status ?? formData['状态']).toLowerCase();
-  if (blockId !== 'task' || status !== 'done') return context;
+  if (recordTypeId !== 'task' || status !== 'done') return context;
 
   const existingUi = context?.__recordUiContext;
   if (existingUi && typeof existingUi === 'object' && !Array.isArray(existingUi)) {
@@ -114,7 +114,7 @@ export function buildRecordCreateDraftFromEditorState({
   source,
 }: BuildRecordCreateDraftParams): QuickInputSaveData {
   return {
-    blockId: state.blockId || undefined,
+    recordTypeId: state.recordTypeId || undefined,
     formData: { ...(state.formData || {}) },
     context,
     meta: state.meta,
@@ -129,7 +129,7 @@ export function buildCreateRecordSubmitParamsFromEditorState({
   signal,
 }: BuildCreateRecordSubmitParamsInput): SubmitCreateRecordParams {
   return {
-    blockId: String(state.blockId || ''),
+    recordTypeId: String(state.recordTypeId || ''),
     formData: { ...(state.formData || {}) },
     context: buildCreateRecordExecutionContext(state, context),
     meta: state.meta,
@@ -148,7 +148,7 @@ export function buildUpdateRecordSubmitParamsFromEditorState({
 }: BuildUpdateRecordSubmitParamsInput): SubmitUpdateRecordParams {
   return {
     item,
-    blockId: String(state.blockId || ''),
+    recordTypeId: String(state.recordTypeId || ''),
     formData: { ...(state.formData || {}) },
     meta: state.meta,
     expectedOutputPlan: expectedOutputPlan ?? null,

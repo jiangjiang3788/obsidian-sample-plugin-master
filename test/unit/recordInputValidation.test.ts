@@ -9,7 +9,6 @@ function template(fields: RecordCaptureTemplate['fields']): RecordCaptureTemplat
   return {
     id: 'test-template',
     name: 'test',
-    categoryKey: 'test',
     targetFile: 'Inbox.md',
     fields,
   };
@@ -70,7 +69,6 @@ describe('record input domain validation', () => {
       id: 'core.task',
       recordTypeId: 'core.task',
       name: '任务',
-      categoryKey: '任务',
       targetFile: 'Tasks.md',
       fields: [
         { id: 'core.task.content', key: 'content', label: '任务内容', type: 'text', required: true },

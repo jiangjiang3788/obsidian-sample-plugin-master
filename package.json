@@ -1,6 +1,6 @@
 {
   "name": "think-os",
-  "version": "1.4.0",
+  "version": "1.6.0",
   "scripts": {
     "dev": "vite --config config/vite.config.ts",
     "cleanup:layout": "node scripts/maintenance/cleanup-legacy-layout.mjs",
@@ -169,7 +169,14 @@
     "test:smoke": "npm --silent run 测试:真机",
     "test:release": "npm --silent run 测试:发布",
     "test:help": "node ./scripts/testing/test-help.mjs",
-    "pretest": "node ./scripts/testing/check-test-ready-zh.mjs"
+    "pretest": "node ./scripts/testing/check-test-ready-zh.mjs",
+    "test:1.5-core:unit": "node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.unit.config.js --runInBand --runTestsByPath test/unit/recordSchemaContract.test.ts test/unit/recordTypeRegistryConvergence.test.ts test/unit/recordTypePresentation.test.ts test/unit/recordCaptureSurfaceMatrix.test.ts test/unit/viewRecordTypeCompatibilityMatrix.test.ts test/unit/recordPresentationViewFields.test.tsx test/unit/recordInputFacade.test.ts test/unit/recordInputValidation.test.ts test/unit/recordNormalizer.test.ts test/unit/parser.test.ts test/unit/core/query/recordQuery.r6.test.ts test/unit/goalTemplateResolver.test.ts test/unit/goalTemplateStorage.test.ts test/unit/currentSettingsGoalTaskDefaults.test.ts test/unit/quickInputRecordTypeEligibilityMatrix.test.ts test/unit/heatmapViewModel.test.ts test/unit/statisticsViewModel.test.ts test/unit/timelineViewModel.test.ts test/unit/timelineTaskStatusUi.test.tsx test/unit/eventTimelineViewModel.test.ts test/unit/generalSettingsUi.test.tsx test/unit/markdownExport.test.ts test/unit/app/actions/recordUiActions.test.ts test/unit/whiteboardRecordSourceQuery.test.ts test/unit/whiteboardRecordReferenceMutations.test.ts",
+    "test:1.5-core:integration": "node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.integration.config.js --runInBand --runTestsByPath test/integration/featureRegistrationComposition.test.ts test/integration/viewRegistryRuntimeComposition.test.ts test/integration/recordTypePersistenceMatrix.test.ts test/integration/recordMigrationSafety.test.ts test/integration/settingsRestartPersistence.test.ts test/integration/goalSettingsLifecycle.test.ts test/integration/timelineContextPersistence.test.ts test/integration/taskRestartLifecycle.test.ts test/integration/recordRepositoryLifecycle.test.ts test/integration/recordTemplateQueryFlow.test.ts test/integration/faultLabMarkdownIntegrity.test.ts test/integration/parserDataFlow.test.ts test/integration/markdownExportMatrix.test.ts test/integration/quickInputFieldDefaultsComposition.test.ts test/integration/dataStoreRestartRecovery.test.ts",
+    "test:1.5-core": "npm --silent run typecheck:src && npm --silent run gate && npm --silent run test:1.5-core:unit && npm --silent run test:1.5-core:integration",
+    "test:timeline:pointer-ui": "node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.unit.config.js --runInBand --runTestsByPath test/unit/timelineTaskDragUi.test.tsx",
+    "test:1.6-core:unit": "npm --silent run test:1.5-core:unit && node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.unit.config.js --runInBand --runTestsByPath test/unit/recordTypeColorRuntime.test.ts test/unit/viewInteractionContract.test.ts test/unit/timelineTaskDragUi.test.tsx",
+    "test:1.6-core:integration": "npm --silent run test:1.5-core:integration && node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.integration.config.js --runInBand --runTestsByPath test/integration/generalSettingsLifecycle.test.ts",
+    "test:1.6-core": "npm --silent run typecheck:src && npm --silent run gate && npm --silent run test:1.6-core:unit && npm --silent run test:1.6-core:integration"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -16,7 +16,7 @@ import {
 } from '@core/energy/public';
 
 describe('Energy direct record foundation', () => {
-  it('keeps energy outside the GoalTemplate/CoreBlock matrix', () => {
+  it('keeps energy outside the GoalTemplate/RecordType matrix', () => {
     expect(DEFAULT_TEMPLATE_RECORD_TYPES.some((block) => block.id === 'core.energy')).toBe(false);
     expect(ENERGY_RECORD_TYPE.captureMode).toBe('direct');
     expect(ENERGY_RECORD_TYPE.capabilities.goalBindable).toBe(true);

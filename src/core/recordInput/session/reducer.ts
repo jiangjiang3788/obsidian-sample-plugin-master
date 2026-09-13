@@ -6,7 +6,7 @@ import type {
 import { initializeRecordInputSession } from './initialize';
 import {
   clearRecordInputGoalContext,
-  preserveRecordInputBlockSwitchState,
+  preserveRecordInputRecordTypeSwitchState,
   readRecordInputString,
 } from './policy';
 
@@ -29,7 +29,7 @@ export function getRecordInputSessionDraft(state: RecordInputSessionState): Reco
 }
 
 function withCachedCurrentDraft(state: RecordInputSessionState) {
-  return { ...state.draftByBlockId, [state.currentBlockId]: getRecordInputSessionDraft(state) };
+  return { ...state.draftByRecordTypeId, [state.currentRecordTypeId]: getRecordInputSessionDraft(state) };
 }
 
 function commitDraft(
@@ -46,15 +46,15 @@ function commitDraft(
   };
   return {
     ...next,
-    draftByBlockId: {
-      ...next.draftByBlockId,
-      [next.currentBlockId]: getRecordInputSessionDraft(next),
+    draftByRecordTypeId: {
+      ...next.draftByRecordTypeId,
+      [next.currentRecordTypeId]: getRecordInputSessionDraft(next),
     },
   };
 }
 
 function buildSwitchFallbackDraft(state: RecordInputSessionState): RecordInputDraftSnapshot {
-  const preserved = preserveRecordInputBlockSwitchState(state.formData, state.fieldSources);
+  const preserved = preserveRecordInputRecordTypeSwitchState(state.formData, state.fieldSources);
   return {
     formData: preserved.formData,
     fieldSources: preserved.fieldSources,
@@ -74,16 +74,16 @@ export function reduceRecordInputSession(
       if (action.mode === state.mode) return state;
       return { ...state, mode: action.mode, dirty: true, revision: state.revision + 1 };
     case 'switchRecordType': {
-      const nextBlockId = String(action.blockId || '');
-      if (!nextBlockId || nextBlockId === state.currentBlockId) return state;
+      const nextRecordTypeId = String(action.recordTypeId || '');
+      if (!nextRecordTypeId || nextRecordTypeId === state.currentRecordTypeId) return state;
       const cachedDrafts = withCachedCurrentDraft(state);
-      const restored = cachedDrafts[nextBlockId]
-        ? copyDraft(cachedDrafts[nextBlockId])
+      const restored = cachedDrafts[nextRecordTypeId]
+        ? copyDraft(cachedDrafts[nextRecordTypeId])
         : buildSwitchFallbackDraft(state);
       return commitDraft(
-        { ...state, currentBlockId: nextBlockId, draftByBlockId: cachedDrafts },
+        { ...state, currentRecordTypeId: nextRecordTypeId, draftByRecordTypeId: cachedDrafts },
         restored,
-        { currentBlockId: nextBlockId },
+        { currentRecordTypeId: nextRecordTypeId },
       );
     }
     case 'updateDraft':

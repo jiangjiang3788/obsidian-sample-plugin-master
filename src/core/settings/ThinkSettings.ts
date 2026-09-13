@@ -5,6 +5,7 @@ import { DEFAULT_GOAL_SETTINGS } from '@/core/goal/types';
 import type { EnergySettings } from '@/core/energy/types';
 import { DEFAULT_ENERGY_SETTINGS } from '@/core/energy/types';
 import type { Group, Layout, ViewInstance } from '@/core/view/ViewConfig';
+import type { RecordTypeColorOverrides } from '@/core/recordTypes/color';
 
 export interface ThinkSettings {
   groups: Group[];
@@ -15,11 +16,12 @@ export interface ThinkSettings {
   floatingTimerEnabled: boolean;
   aiSettings?: AiSettings;
   devConsoleStackEnabled?: boolean;
-  categoryColors?: Record<string, string>;
   /** 最近在 QuickInput 中明确选择的 Goal，最新在前。 */
   recentGoalPaths?: string[];
   /** One-time Goal -> Task default seed version. Prevents upgrade data from re-overwriting later user edits. */
   goalTaskDefaultsSeedVersion?: number;
+  /** User overrides only. Product default Record Type colors remain code/CSS owned. */
+  recordTypeColors?: RecordTypeColorOverrides;
 }
 
 export const DEFAULT_SETTINGS: ThinkSettings = {
@@ -33,4 +35,5 @@ export const DEFAULT_SETTINGS: ThinkSettings = {
   devConsoleStackEnabled: false,
   recentGoalPaths: [],
   goalTaskDefaultsSeedVersion: 0,
+  recordTypeColors: {},
 };

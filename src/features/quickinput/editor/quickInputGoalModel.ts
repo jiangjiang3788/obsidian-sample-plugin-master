@@ -120,9 +120,9 @@ export function buildQuickInputGoalOptions(
 
 export function resolveQuickInputRecordTypeId(
   _fullSettings: ThinkSettings,
-  blockId: string,
+  recordTypeId: string,
 ): string {
-  return String(blockId || "");
+  return String(recordTypeId || "");
 }
 
 export function applyQuickInputGoalSelection(params: {

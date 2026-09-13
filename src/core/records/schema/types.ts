@@ -1,10 +1,11 @@
 import type { PeriodPolicy } from '@/core/period/PeriodPolicy';
 import type { TemplateField } from '@/core/recordInput/CaptureTemplate';
-export const RECORD_SCHEMA_CONTRACT_VERSION = 1;
+export const RECORD_SCHEMA_CONTRACT_VERSION = 2;
 
-export type RecordCoreBlock =
+export type RecordType =
   | 'thought'
-  | 'evidence'
+  | 'feeling'
+  | 'event'
   | 'habit'
   | 'plan'
   | 'review'
@@ -66,7 +67,6 @@ export interface RecordFieldContract {
 export interface RecordSchemaCapabilities {
   userVisible: boolean;
   goalBindable: boolean;
-  themeAware: boolean;
   dated: boolean;
   subtypeAware?: boolean;
   periodAware?: boolean;
@@ -78,7 +78,7 @@ export interface RecordSchemaCapabilities {
 
 export interface RecordSchemaContract {
   contractVersion: number;
-  coreBlock: RecordCoreBlock;
+  recordType: RecordType;
   displayName: string;
   family: RecordFamily;
   capabilities: RecordSchemaCapabilities;
@@ -98,10 +98,9 @@ export type RecordCaptureMode = 'template' | 'direct' | 'internal';
 export interface RecordSchemaDefinition extends RecordSchemaContract {
   /** Stable type/capture id (for example core.task / core.energy). */
   id: string;
-  /** Runtime key; equal to coreBlock for the canonical definition. */
-  key: RecordCoreBlock;
+  /** Runtime key; equal to recordType for the canonical definition. */
+  key: RecordType;
   name: string;
-  categoryKey: string;
   captureMode: RecordCaptureMode;
   /** Stable template-type binding. Direct/internal records leave this undefined. */
   recordTypeId?: string;
@@ -125,7 +124,7 @@ export type RecordSchemaIssueCode =
 
 export interface RecordSchemaIssue {
   code: RecordSchemaIssueCode;
-  coreBlock: string;
+  recordType: string;
   field: string;
   value?: unknown;
   message: string;

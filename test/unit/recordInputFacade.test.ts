@@ -42,13 +42,13 @@ describe('RecordInputFacade', () => {
 
   it('builds create and update submit params from one editor state shape', () => {
     const state = {
-      blockId: 'task',
+      recordTypeId: 'task',
       formData: { 内容: 'write' },
       meta: { timeDirection: 'forward' as const },
     };
 
     expect(buildCreateRecordSubmitParamsFromEditorState({ state, context: { goalPath: '生活/写作' }, source: 'quickinput' })).toMatchObject({
-      blockId: 'task',
+      recordTypeId: 'task',
       formData: { 内容: 'write' },
       context: { goalPath: '生活/写作' },
       meta: { timeDirection: 'forward' },
@@ -57,7 +57,7 @@ describe('RecordInputFacade', () => {
 
     expect(buildUpdateRecordSubmitParamsFromEditorState({ state, item: { id: 'item-1' } as any })).toMatchObject({
       item: { id: 'item-1' },
-      blockId: 'task',
+      recordTypeId: 'task',
       formData: { 内容: 'write' },
       meta: { timeDirection: 'forward' },
       source: 'quickinput',
@@ -66,7 +66,7 @@ describe('RecordInputFacade', () => {
 
   it('marks create-only completed Task capture as execution context without overwriting Timeline provenance', () => {
     const state = {
-      blockId: 'core.task',
+      recordTypeId: 'core.task',
       formData: { status: { value: 'done', label: '已完成' }, startAt: '2026-08-26T09:30', endAt: '2026-08-26T10:00' },
     };
     expect(buildCreateRecordSubmitParamsFromEditorState({ state, source: 'quickinput' }).context).toMatchObject({
@@ -80,14 +80,14 @@ describe('RecordInputFacade', () => {
   it('builds QuickInput callback draft without mutating editor state', () => {
     const formData = { 内容: 'timer task' };
     const draft = buildRecordCreateDraftFromEditorState({
-      state: { blockId: 'task', formData },
+      state: { recordTypeId: 'task', formData },
       context: { from: 'timer' },
       source: 'timer',
     });
 
     draft.formData.内容 = 'changed';
     expect(formData.内容).toBe('timer task');
-    expect(draft).toMatchObject({ blockId: 'task', context: { from: 'timer' }, source: 'timer' });
+    expect(draft).toMatchObject({ recordTypeId: 'task', context: { from: 'timer' }, source: 'timer' });
   });
 
   it('normalizes selectable values for AI and other non-QuickInput callers', () => {

@@ -70,7 +70,7 @@ export class TimerService {
         const timers = this.useCases.timer.getTimers();
         const existingTimer = timers.find((timer) => timer.taskId === taskId);
         const taskItem = this.dataStore.getRecordById(taskId);
-        if (!taskItem || taskItem.coreBlock !== 'task') {
+        if (!taskItem || taskItem.recordType !== 'task') {
             if (existingTimer) await this.useCases.timer.removeTimer(existingTimer.id);
             this.ui.notice('找不到要执行的任务');
             return;
@@ -118,23 +118,23 @@ export class TimerService {
             const series = this.dataStore.getRecordById(seriesId);
             const currentTaskId = String(series?.currentTaskId || '').trim();
             const currentTask = currentTaskId ? this.dataStore.getRecordById(currentTaskId) : null;
-            if (currentTask?.coreBlock === 'task' && currentTask.status === 'open' && currentTask.seriesId === seriesId) {
+            if (currentTask?.recordType === 'task' && currentTask.status === 'open' && currentTask.seriesId === seriesId) {
                 return currentTask.id;
             }
         }
 
         const prepared = this.useCases.recordInput.prepareEditRecord({
             item: taskItem,
-            blockId: 'core.task',
+            recordTypeId: 'core.task',
             source: 'timer',
         });
-        if (!prepared.template || !prepared.blockId) {
+        if (!prepared.template || !prepared.recordTypeId) {
             this.ui.notice('无法读取历史任务内容，不能再次执行');
             return null;
         }
 
         const result = await this.useCases.recordInput.submitCreateRecord({
-            blockId: 'core.task',
+            recordTypeId: 'core.task',
             formData: buildRepeatedTaskFormData(prepared.initialFormData),
             source: 'timer',
         });
@@ -159,7 +159,7 @@ export class TimerService {
         }
 
         const taskItem = this.dataStore.getRecordById(taskId);
-        if (!taskItem || taskItem.coreBlock !== 'task' || taskItem.status !== 'open') {
+        if (!taskItem || taskItem.recordType !== 'task' || taskItem.status !== 'open') {
             this.ui.notice('找不到要执行的任务');
             return;
         }
@@ -231,7 +231,7 @@ export class TimerService {
         if (!timer || timer.status !== 'running') return false;
 
         const taskItem = this.dataStore.getRecordById(timer.taskId);
-        if (!taskItem || taskItem.coreBlock !== 'task') {
+        if (!taskItem || taskItem.recordType !== 'task') {
             this.ui.notice('找不到原始任务，本次工作无法保存。');
             return false;
         }
@@ -293,7 +293,7 @@ export class TimerService {
         const timer = this.useCases.timer.getTimers().find((entry) => entry.id === timerId);
         if (!timer) return false;
         const taskItem = this.dataStore.getRecordById(timer.taskId);
-        if (!taskItem || taskItem.coreBlock !== 'task') {
+        if (!taskItem || taskItem.recordType !== 'task') {
             this.ui.notice('找不到原始任务，本次工作无法保存。');
             return false;
         }

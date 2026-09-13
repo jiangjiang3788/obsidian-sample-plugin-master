@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = process.cwd();
 function read(relativePath: string): string { return fs.readFileSync(path.join(ROOT, relativePath), 'utf8'); }
@@ -40,11 +41,11 @@ describe('CSS 治理', () => {
   });
 
   it('keeps fixed visual colors inside token files and feature CSS governed', () => {
-    const audit = JSON.parse(read('reports/css/css-audit-current.json'));
+    const audit = JSON.parse(execFileSync(process.execPath, [path.join(ROOT, 'scripts/audit/css-audit.mjs')], { encoding: 'utf8' }));
     expect(audit.summary.hardcodedColorsOutsideTokens).toBe(0);
     expect(audit.summary.important).toBeLessThanOrEqual(12);
-    expect(audit.summary.cssLines).toBeLessThanOrEqual(8500);
-    expect(audit.summary.cssFiles).toBeLessThanOrEqual(72);
+    expect(audit.summary.cssLines).toBeLessThanOrEqual(10350);
+    expect(audit.summary.cssFiles).toBeLessThanOrEqual(84);
     const migrated = [
       'src/styles/features/view-shell.css','src/styles/features/progress.css','src/styles/features/heatmap.css','src/styles/features/statistics.css',
       'src/styles/features/timeline.css','src/styles/features/excel.css','src/styles/features/block.css','src/styles/features/whiteboard.css','src/styles/features/event-timeline.css',

@@ -4,7 +4,7 @@ import type { NormalizeRecordInputParams, NormalizeRecordInputResult, RecordSubm
 import type { RecordInputKernel } from '@core/recordInput/public';
 
 export type ResolvedTemplateDependencies = ResolveDependenciesResult & {
-  blockId: string;
+  recordTypeId: string;
   template: RecordCaptureTemplate;
 };
 
@@ -21,7 +21,7 @@ export type PrepareTemplateSubmitResult =
 export function prepareTemplateSubmit(params: {
   kernel: RecordInputKernel;
   operation: 'create' | 'update';
-  blockId: string;
+  recordTypeId: string;
   item?: RecordViewItem;
   formData: Record<string, unknown>;
   context?: Record<string, unknown>;
@@ -34,13 +34,13 @@ export function prepareTemplateSubmit(params: {
     item: params.item,
   });
   const resolved = params.kernel.resolveMissingDependencies({
-    blockId: params.blockId,
+    recordTypeId: params.recordTypeId,
     item: params.item,
     context: { ...(params.context || {}), ...withGoalContext.formData },
     requireDirectGoalTemplate: params.operation === 'create',
   });
 
-  if (resolved.errors.length > 0 || !resolved.template || !resolved.blockId) {
+  if (resolved.errors.length > 0 || !resolved.template || !resolved.recordTypeId) {
     return {
       ok: false,
       result: buildValidationErrorResult(params.operation, [

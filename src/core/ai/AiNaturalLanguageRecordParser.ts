@@ -26,8 +26,8 @@ export { cleanAiFieldValues, normalizeParsedBatch } from './AiParserNormalize';
  * V12 拆分后，这个类只保留流程编排：读取设置、拿 snapshot、构造 prompt、
  * 调用 HTTP、解析 JSON、规范化输出。字段清理、snapshot 压缩、prompt 文案和
  * JSON 兜底解析都进入同目录 helper，避免 AI 入口继续膨胀成巨型文件。
- * Domain policy marker for gates: prompt helpers still require `blockId is REQUIRED` and support
- * `goalTemplateId` as the optional Goal × Block template reference; parser re-exports `cleanAiFieldValues`
+ * Domain policy marker for gates: prompt helpers still require `recordTypeId is REQUIRED` and support
+ * `goalTemplateId` as the optional Goal × Record Type template reference; parser re-exports `cleanAiFieldValues`
  * and `normalizeParsedBatch` for tests and downstream normalization checks.
  */
 export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordParser {
@@ -67,7 +67,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
         const snapshot: AiParserSnapshot = input.fastMode ? compactSnapshotForFastMode(rawSnapshot) : rawSnapshot;
         logParserStep(traceId, '获取 AI 配置 snapshot 完成', snapshotStart, {
             fastMode: !!input.fastMode,
-            blocksCount: snapshot.blocks?.length ?? 0,
+            recordTypesCount: snapshot.recordTypes?.length ?? 0,
             goalsCount: snapshot.goals?.length ?? 0,
             goalPresetsCount: snapshot.goalPresets?.length ?? 0,
             compacted: input.fastMode ? true : false,
@@ -100,7 +100,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
         logParserStep(traceId, '构建 user prompt 完成', userPromptStart, {
             fastMode: !!input.fastMode,
             userChars: user.length,
-            blocksJsonChars: JSON.stringify(snapshot.blocks).length,
+            recordTypesJsonChars: JSON.stringify(snapshot.recordTypes).length,
             goalsJsonChars: JSON.stringify(snapshot.goals || []).length,
             goalPresetsJsonChars: JSON.stringify(snapshot.goalPresets || []).length,
             maxResults: effectiveMaxResults,

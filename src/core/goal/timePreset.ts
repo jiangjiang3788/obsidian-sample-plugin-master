@@ -169,7 +169,8 @@ function resolveWeeklyTargetForDate(
 ): { minutes: number | null; historical: boolean; fallback: boolean } {
   const revision = findEffectiveRevision(date, revisions);
   if (revision) {
-    const fromRevision = weeklyTargetFromSnapshot(goalPath, revision.presets[normalizeGoalPath(goalPath)]);
+    const canonicalGoalPath = normalizeGoalPath(goalPath);
+    const fromRevision = weeklyTargetFromSnapshot(goalPath, canonicalGoalPath ? revision.presets[canonicalGoalPath] : undefined);
     if (fromRevision !== null) return { minutes: fromRevision, historical: true, fallback: false };
     // Product contract: if that period had no preset for this Goal, reinterpret it with today's preset.
     return { minutes: getGoalWeeklyTargetMinutes(goalPath, goals), historical: false, fallback: true };

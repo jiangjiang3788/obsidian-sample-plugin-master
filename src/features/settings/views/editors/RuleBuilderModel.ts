@@ -205,7 +205,7 @@ export function buildUniqueFieldValues(dataStore: DataStore | null | undefined):
   const result: Record<string, string[]> = {};
   for (const field in valueMap) {
     if (valueMap[field].size > 0) {
-      result[field] = Array.from(valueMap[field]).sort(field === 'coreBlock' ? compareRecordTypeKeys : (a, b) => a.localeCompare(b, 'zh-CN'));
+      result[field] = Array.from(valueMap[field]).sort(field === 'recordType' ? compareRecordTypeKeys : (a, b) => a.localeCompare(b, 'zh-CN'));
     }
   }
   return result;

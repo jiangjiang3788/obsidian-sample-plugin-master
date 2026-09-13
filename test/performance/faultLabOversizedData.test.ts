@@ -16,7 +16,7 @@ describe('v9 故障实验室：超大单条记录性能边界', () => {
     const huge = 生成超大字段字符(512 * 1024);
     const markdown = encodeRecordBlock({
       recordId: HUGE_ID,
-      coreBlock: 'thought',
+      recordType: 'thought',
       fields: { 记录子类型: '思考', 内容: huge },
     });
     const h = 创建故障实验环境({ '规模/超大记录.md': markdown });

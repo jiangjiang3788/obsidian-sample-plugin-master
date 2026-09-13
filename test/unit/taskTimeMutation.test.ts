@@ -7,12 +7,11 @@ import { TaskTimeMutation } from '@/core/services/item/TaskTimeMutation';
 function taskRecord(overrides: Record<string, unknown> = {}) {
   return {
     id: 'task.01KZZQ6G798KJN54XBGKJVH7YA',
-    coreBlock: 'task',
+    recordType: 'task',
     status: 'done',
     title: '个地方官方',
     content: '个地方官方',
     tags: [],
-    categoryKey: '任务',
     created: 0,
     modified: 0,
     extra: {},
@@ -91,7 +90,7 @@ describe('TaskTimeMutation Timeline range boundary', () => {
   it('dispatches an explicit TaskSession target to TaskSessionMutation', async () => {
     const session = {
       id: 'task-session.01KZZQ6G798KJN54XBGKJVH7YB',
-      coreBlock: 'task-session',
+      recordType: 'task-session',
       taskId: 'task.01KZZQ6G798KJN54XBGKJVH7YA',
       sessionStartedAt: '2026-08-14T16:45:00',
       sessionEndedAt: '2026-08-14T17:35:00',

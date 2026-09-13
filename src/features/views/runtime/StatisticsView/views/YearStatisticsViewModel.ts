@@ -1,4 +1,4 @@
-import type { CategoryConfig } from '@core/view/public';
+import type { StatisticsBucketConfig } from '@core/view/public';
 import type { PeriodData } from '@core/utils/public';
 import { createPeriodData } from '@core/utils/public';
 import type { StatisticsYearlyWeekMonth } from '../StatisticsViewModel';
@@ -49,7 +49,7 @@ export function getYearStatisticsMaxWeeksInMonth(yearlyWeekStructure: Statistics
 
 export function buildYearStatisticsRenderModel(input: {
   year: number;
-  categories: CategoryConfig[];
+  categories: StatisticsBucketConfig[];
   processedData: {
     yearData: PeriodData;
     quartersData: PeriodData[];

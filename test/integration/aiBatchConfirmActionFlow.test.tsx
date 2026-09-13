@@ -13,8 +13,8 @@ import { useAiBatchConfirmActions } from '@/platform/obsidian/modals/useAiBatchC
 function record(id: string, content: string): AiBatchConfirmRecordItem {
   return {
     id,
-    cmd: { rawText: content, target: { blockId: 'core.task', goalPath: 'E2E/AI' }, fieldValues: { 内容: content } } as any,
-    blockId: 'core.task',
+    cmd: { rawText: content, target: { recordTypeId: 'core.task', goalPath: 'E2E/AI' }, fieldValues: { 内容: content } } as any,
+    recordTypeId: 'core.task',
     goalLabel: 'AI',
     presetLabel: '已配置',
     formData: { 内容: content, goalPath: 'E2E/AI', 目标: 'E2E/AI' },

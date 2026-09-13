@@ -10,7 +10,6 @@ import { InputService } from '@core/services/InputService';
 import type { QuickInputConfig, ISettingsProvider } from '@core/services/types';
 import { SettingsProviderToken } from '@core/services/types';
 import { readField } from '@/core/fields/ViewFieldCatalog';
-import { buildPathOption, getLeafPath } from '@core/utils/pathSemantic';
 import { formatTagsForField } from '@/core/utils/tagUtils';
 import type { UiPort } from '@core/ports/UiPort';
 import { UI_PORT_TOKEN } from '@core/ports/UiPort';
@@ -24,31 +23,18 @@ export class ActionService {
         @inject(InputService) private inputService: InputService
     ) {}
 
-    private getRuntimeBlocks(): RecordCaptureTemplate[] {
+    private getRuntimeRecordTypes(): RecordCaptureTemplate[] {
         return getTemplateRecordTypes();
     }
 
-    private findBlockByCoreBlock(coreBlock: string | undefined): RecordCaptureTemplate | undefined {
-        const normalized = String(coreBlock || '').trim().replace(/^core\./i, '');
+    private findRecordTypeTemplate(recordType: string | undefined): RecordCaptureTemplate | undefined {
+        const normalized = String(recordType || '').trim().replace(/^core\./i, '');
         if (!normalized) return undefined;
-        return this.getRuntimeBlocks().find((block) =>
-            String(block.recordTypeId || block.id || '').trim().replace(/^core\./i, '') === normalized
+        return this.getRuntimeRecordTypes().find((recordType) =>
+            String(recordType.recordTypeId || recordType.id || '').trim().replace(/^core\./i, '') === normalized
         );
     }
 
-    private findBlockByCategoryKey(categoryKey: string | undefined): RecordCaptureTemplate | undefined {
-        if (!categoryKey) return undefined;
-        const blocks = this.getRuntimeBlocks();
-        const exact = blocks.find((b) => b.categoryKey === categoryKey);
-        if (exact) return exact;
-        const segments = categoryKey.split('/');
-        while (segments.length > 1) {
-            segments.pop();
-            const matched = blocks.find((b) => b.categoryKey === segments.join('/'));
-            if (matched) return matched;
-        }
-        return undefined;
-    }
 
     public getQuickInputConfigForView(viewInstance: ViewInstance, dateContext: dayjs.Dayjs, periodContext: string): QuickInputConfig | null {
 
@@ -57,16 +43,16 @@ export class ActionService {
         }
 
         const filters = viewInstance.filters || [];
-        const coreBlockFilter = filters.find((f) => f.field === 'coreBlock' && (f.op === '=' || f.op === 'includes'));
-        if (!coreBlockFilter || !coreBlockFilter.value) {
-            this.ui.notice('快捷输入失败：此视图未按 "coreBlock" 进行筛选。');
+        const recordTypeFilter = filters.find((f) => f.field === 'recordType' && (f.op === '=' || f.op === 'includes'));
+        if (!recordTypeFilter || !recordTypeFilter.value) {
+            this.ui.notice('快捷输入失败：此视图未按 "recordType" 进行筛选。');
             return null;
         }
 
-        const coreBlock = String(coreBlockFilter.value);
-        const targetBlock = this.findBlockByCoreBlock(coreBlock);
-        if (!targetBlock) {
-            this.ui.notice(`快捷输入失败：找不到记录类型 为 "${coreBlock}" 的模板。`);
+        const recordType = String(recordTypeFilter.value);
+        const targetRecordType = this.findRecordTypeTemplate(recordType);
+        if (!targetRecordType) {
+            this.ui.notice(`快捷输入失败：找不到记录类型 为 "${recordType}" 的模板。`);
             return null;
         }
 
@@ -77,9 +63,9 @@ export class ActionService {
 
         const equalityFilters = filters.filter((f) => f.op === '=');
         for (const filter of equalityFilters) {
-            if (filter.field === 'coreBlock') continue;
+            if (filter.field === 'recordType') continue;
 
-            for (const templateField of targetBlock.fields) {
+            for (const templateField of targetRecordType.fields) {
                 if (filter.field === templateField.key || filter.field === templateField.label) {
                     context[templateField.key] = filter.value;
                     break;
@@ -88,7 +74,7 @@ export class ActionService {
         }
 
         return {
-            blockId: targetBlock.id,
+            recordTypeId: targetRecordType.id,
             context,
         };
     }
@@ -96,9 +82,6 @@ export class ActionService {
 
     private buildFieldContextValue(field: TemplateField, item: RecordViewItem): unknown {
         const direct = readField(item, field.key) ?? readField(item, field.label);
-        const fieldName = String(field.key || field.label || '');
-        const isCategoryField = fieldName.includes('分类') || fieldName.toLowerCase().includes('category');
-
         if (field.type === 'rating') {
             const score = item.rating ?? item.extra?.['评分'] ?? item.extra?.['rating'];
             const visual = item.image ?? item.extra?.['图片'] ?? item.extra?.image;
@@ -114,15 +97,6 @@ export class ActionService {
             if (score !== undefined && score !== null) return { value: visual || '', label: String(score) };
         }
 
-        if ((field.type === 'select' || field.type === 'radio') && isCategoryField) {
-            const pathValue = String(item.categoryKey || direct || '');
-            if (!pathValue) return direct;
-            if (field.options?.length) {
-                const matched = field.options.find((opt) => String(opt.value) === pathValue || String(opt.label) === getLeafPath(pathValue));
-                if (matched) return { value: matched.value, label: matched.label || matched.value };
-            }
-            return buildPathOption(pathValue) || direct;
-        }
 
         return direct;
     }
@@ -134,16 +108,16 @@ export class ActionService {
             return null;
         }
 
-        const coreBlock = String(item.coreBlock || '').trim();
-        const targetBlock = this.findBlockByCoreBlock(coreBlock);
+        const recordType = String(item.recordType || '').trim();
+        const targetRecordType = this.findRecordTypeTemplate(recordType);
 
-        if (!targetBlock) {
-            this.ui.notice(`找不到与记录类型 "${coreBlock}" 匹配的模板，无法编辑。`);
+        if (!targetRecordType) {
+            this.ui.notice(`找不到与记录类型 "${recordType}" 匹配的模板，无法编辑。`);
             return null;
         }
 
         const context: Record<string, unknown> = {};
-        for (const field of targetBlock.fields) {
+        for (const field of targetRecordType.fields) {
             const value = this.buildFieldContextValue(field, item);
             if (value !== undefined && value !== null) {
                 context[field.key] = value;
@@ -151,72 +125,40 @@ export class ActionService {
         }
 
         if (!context.title && !context['标题']) {
-            context[targetBlock.fields.find(f => f.label === '标题')?.key || '标题'] = item.title;
+            context[targetRecordType.fields.find(f => f.label === '标题')?.key || '标题'] = item.title;
         }
-        const tagsField = targetBlock.fields.find(f => f.label === '标签' || f.key === 'tags');
+        const tagsField = targetRecordType.fields.find(f => f.label === '标签' || f.key === 'tags');
         if (tagsField && !context[tagsField.key]) {
             context[tagsField.key] = formatTagsForField(item.tags);
         }
 
         return {
-            blockId: targetBlock.id,
+            recordTypeId: targetRecordType.id,
             context,
         };
     }
 
     public getQuickInputConfigForStatisticsView(
-        viewInstance: ViewInstance,
-        dateContext: dayjs.Dayjs,
-        periodContext: string,
-        categoryName?: string
+        _viewInstance: ViewInstance,
+        _dateContext: dayjs.Dayjs,
+        _periodContext: string,
+        _goalPath?: string
     ): QuickInputConfig | null {
-        const viewConfig = viewInstance.viewConfig || {};
-        const categories = viewConfig.categories || [];
-
-        if (categories.length === 0) {
-            this.ui.notice('快捷输入失败：统计视图未配置分类。');
-            return null;
-        }
-
-        const targetCategoryKey = categoryName || categories[0].name;
-        const targetBlock = this.findBlockByCategoryKey(targetCategoryKey);
-
-        if (!targetBlock) {
-            this.ui.notice(`快捷输入失败：找不到分类为 "${targetCategoryKey}" 的 Block 模板。`);
-            return null;
-        }
-
-        const context: Record<string, unknown> = {
-            '日期': dateContext.format('YYYY-MM-DD'),
-            '周期': periodContext,
-        };
-
-        const filters = viewInstance.filters || [];
-        const equalityFilters = filters.filter((filter) => filter.op === '=' && filter.field !== 'categoryKey');
-        for (const filter of equalityFilters) {
-            for (const templateField of targetBlock.fields) {
-                if (filter.field === templateField.key || filter.field === templateField.label) {
-                    context[templateField.key] = filter.value;
-                    break;
-                }
-            }
-        }
-
-        return {
-            blockId: targetBlock.id,
-            context,
-        };
+        // Statistics is Goal-centric and a Goal does not imply a Record Type.
+        // Callers must provide an explicit Record Type when they expose create UI.
+        this.ui.notice('快捷输入失败：统计视图需要明确记录类型。');
+        return null;
     }
 
     public getQuickInputConfigForNewTimer(): QuickInputConfig | null {
-        const blocks = this.getRuntimeBlocks();
-        const taskBlock = blocks.find((b) => String(b.recordTypeId || b.id).replace(/^core\./i, '') === 'task');
-        if (!taskBlock) {
+        const recordTypes = this.getRuntimeRecordTypes();
+        const taskRecordType = recordTypes.find((recordType) => String(recordType.recordTypeId || recordType.id).replace(/^core\./i, '') === 'task');
+        if (!taskRecordType) {
             this.ui.notice('快捷输入失败：任务记录类型未注册。');
             return null;
         }
         return {
-            blockId: taskBlock.id,
+            recordTypeId: taskRecordType.id,
         };
     }
 }

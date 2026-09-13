@@ -8,7 +8,6 @@ import { createRecordId } from '@/core/records/RecordId';
 import { encodeRecordBlock, encodeRecordDraft } from '@/core/records/codec';
 import { buildCustomCaptureFields, buildGenericRecordDraft } from '@/core/records/RecordDraft';
 import { getRecordSchemaDefinition } from '@/core/records/schema';
-import { splitHierarchyPathValue } from '@/core/semantics/path';
 import { buildTimelineCompletedExecutionPersistence, isTimelineCompletedExecutionContext } from '@/core/records/task/taskExecutionCapture';
 import { buildTaskSessionFields } from '@/core/records/task/taskSession';
 
@@ -65,13 +64,10 @@ function buildRenderData(
   formData: Record<string, unknown>,
 ): Record<string, unknown> {
   const normalizedData = normalizeTemplateRenderData(template, formData);
-  const categoryPartsValue = splitHierarchyPathValue(normalizedData.categoryKey ?? normalizedData.categoryPath ?? template.categoryKey ?? null);
-  const categoryPath = categoryPartsValue.path || '';
-  const categoryParts = categoryPartsValue.parts;
   const rawGoalPath = String(normalizedData.goalPath ?? normalizedData['目标'] ?? '').trim();
   const goalPath = rawGoalPath ? requireGoalPath(rawGoalPath) : '';
   const goalParts = goalPath ? goalPath.split('/').filter(Boolean) : [];
-  const coreBlock = String(normalizedData.coreBlock ?? normalizedData['记录类型'] ?? (template as any).recordTypeId ?? template.id ?? '').trim();
+  const recordType = String(normalizedData.recordType ?? normalizedData['记录类型'] ?? (template as any).recordTypeId ?? template.id ?? '').trim();
   const recordDate = String(normalizedData['日期'] ?? normalizedData.date ?? '').trim();
   const periodPolicy = resolveTemplatePeriodPolicy(template as any);
   const derivedPeriod = periodPolicy ? resolveDerivedPeriod(recordDate || undefined, periodPolicy.granularity) : null;
@@ -80,12 +76,6 @@ function buildRenderData(
 
   return {
     ...normalizedData,
-    block: { name: template.name, id: template.id, categoryKey: categoryPath || template.categoryKey },
-    categoryKey: categoryPath,
-    categoryPath,
-    baseCategory: categoryParts[0] || '',
-    rootCategory: categoryParts[0] || '',
-    leafCategory: categoryParts.length ? categoryParts[categoryParts.length - 1] : '',
     goal: {
       title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
       path: goalPath,
@@ -95,7 +85,7 @@ function buildRenderData(
     goalPath,
     rootGoal: goalParts[0] || '',
     leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : '',
-    coreBlock,
+    recordType,
     period: derivedPeriod ? { ...derivedPeriod, id: cycleId || derivedPeriod.id, label: cycleTitle || derivedPeriod.label } : null,
     cycle: derivedPeriod ? { ...derivedPeriod, id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label } : null,
     cycleId: derivedPeriod ? cycleId || derivedPeriod.id : '',
@@ -125,7 +115,7 @@ export function buildRecordOutputPlan(input: {
   if (!input.template) {
     return {
       recordId: null,
-      coreBlock: null,
+      recordType: null,
       targetFilePath: null,
       targetHeader: null,
       outputContent: '',
@@ -136,16 +126,16 @@ export function buildRecordOutputPlan(input: {
   const renderData = buildRenderData(input.template, input.formData);
   const explicitRecordTypeId = String((input.template as any).recordTypeId || '').trim();
   const systemRecordTypeId = String(input.template.id || '').trim().startsWith('core.') ? String(input.template.id || '').trim() : '';
-  const trustedCoreBlock = (explicitRecordTypeId || systemRecordTypeId).replace(/^core\./, '');
-  const hintedCoreBlock = String(renderData.coreBlock || input.template.id || '').trim().replace(/^core\./, '');
-  const coreBlock = trustedCoreBlock || hintedCoreBlock;
-  if (!coreBlock) throw new Error('每条记录都必须有记录类型。');
-  const schema = getRecordSchemaDefinition(coreBlock);
-  if (!schema) throw new Error(`unknown_record_schema:${coreBlock}`);
-  const recordId = String(input.recordId || '').trim() || createRecordId(coreBlock);
+  const trustedRecordType = (explicitRecordTypeId || systemRecordTypeId).replace(/^core\./, '');
+  const hintedRecordType = String(renderData.recordType || input.template.id || '').trim().replace(/^core\./, '');
+  const recordType = trustedRecordType || hintedRecordType;
+  if (!recordType) throw new Error('每条记录都必须有记录类型。');
+  const schema = getRecordSchemaDefinition(recordType);
+  if (!schema) throw new Error(`unknown_record_schema:${recordType}`);
+  const recordId = String(input.recordId || '').trim() || createRecordId(recordType);
 
   let outputContent: string;
-  if (coreBlock === 'task') {
+  if (recordType === 'task') {
     const statusOption = readOptionText(renderData['状态'] ?? renderData.status);
     const candidateStatus = String(statusOption.value || statusOption.label || 'open').trim().toLowerCase();
     // A Timeline completed-execution invocation is authoritative. Force lifecycle
@@ -220,7 +210,7 @@ export function buildRecordOutputPlan(input: {
       );
       const seriesBlock = encodeRecordBlock({
         recordId: seriesId,
-        coreBlock: 'task-series',
+        recordType: 'task-series',
         fields: {
           status: 'active',
           content: taskFields.content,
@@ -241,21 +231,21 @@ export function buildRecordOutputPlan(input: {
           currentTaskId: recordId,
         },
       });
-      const taskBlock = encodeRecordBlock({ recordId, coreBlock: 'task', fields: taskFields });
+      const taskBlock = encodeRecordBlock({ recordId, recordType: 'task', fields: taskFields });
       outputContent = `${seriesBlock}\n\n${taskBlock}`;
     } else {
       const timelineExecution = buildTimelineCompletedExecutionPersistence({
         context: input.context,
         taskFields,
       });
-      const taskBlock = encodeRecordBlock({ recordId, coreBlock: 'task', fields: timelineExecution.taskFields });
+      const taskBlock = encodeRecordBlock({ recordId, recordType: 'task', fields: timelineExecution.taskFields });
       if (!timelineExecution.session) {
         outputContent = taskBlock;
       } else {
         const sessionId = createRecordId('task-session');
         const sessionBlock = encodeRecordBlock({
           recordId: sessionId,
-          coreBlock: 'task-session',
+          recordType: 'task-session',
           fields: buildTaskSessionFields({
             id: recordId,
             seriesId: existingSeriesId || undefined,
@@ -266,10 +256,10 @@ export function buildRecordOutputPlan(input: {
       }
     }
   } else if (schema?.family === 'generic') {
-    const draft = buildGenericRecordDraft(schema.coreBlock, renderData, input.template.fields);
+    const draft = buildGenericRecordDraft(schema.recordType, renderData, input.template.fields);
     outputContent = encodeRecordDraft({ recordId, draft });
   } else {
-    throw new Error(`record_capture_not_supported:${schema.coreBlock}:${schema.captureMode}`);
+    throw new Error(`record_capture_not_supported:${schema.recordType}:${schema.captureMode}`);
   }
   const targetFilePath = normalizeNonEmptyPath(renderTemplate(input.template.targetFile, renderData));
   const targetHeader = input.template.appendUnderHeader
@@ -278,7 +268,7 @@ export function buildRecordOutputPlan(input: {
 
   return {
     recordId,
-    coreBlock,
+    recordType,
     targetFilePath,
     targetHeader,
     outputContent,

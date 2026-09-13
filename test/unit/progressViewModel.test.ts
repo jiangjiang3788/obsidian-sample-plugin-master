@@ -6,7 +6,7 @@
 import { buildProgressViewRenderModel } from '@/features/views/runtime/ProgressViewModel';
 import type { RecordViewItem } from '@/core/types/public';
 import {
-  buildProgressBlockCountRows,
+  buildProgressRecordTypeCountRows,
   buildProgressCollapsedFacts,
   buildProgressSkillRows,
   formatProgressRecordDate,
@@ -22,10 +22,10 @@ import {
 } from '@/features/views/runtime/ProgressViewModel';
 
 const items = [
-  { id: '1', title: 'A', categoryKey: '任务', coreBlock: 'task', goalPath: '项目/目标A', extra: {}, tags: [], content: '', created: 0, modified: 0 },
-  { id: '2', title: 'B', categoryKey: '打卡', coreBlock: 'habit', goalPath: '项目/目标A', extra: {}, tags: [], content: '', created: 0, modified: 0 },
-  { id: '3', title: 'C', categoryKey: '事件', coreBlock: 'evidence', goalPath: '项目/目标B', extra: {}, tags: [], content: '', created: 0, modified: 0 },
-  { id: '4', title: '', categoryKey: '精力', coreBlock: 'energy', goalPath: '项目/目标A', date: '2026-08-10', extra: { '时间': '14:35', '精力值': 80, '精力档位': 80, '评分模式': 'quick' }, tags: [], content: '', created: 0, modified: 0 },
+  { id: '1', title: 'A', recordType: 'task', goalPath: '项目/目标A', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+  { id: '2', title: 'B', recordType: 'habit', goalPath: '项目/目标A', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+  { id: '3', title: 'C', recordType: 'event', goalPath: '项目/目标B', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+  { id: '4', title: '', recordType: 'energy', goalPath: '项目/目标A', date: '2026-08-10', extra: { '时间': '14:35', '精力值': 80, '精力档位': 80, '评分模式': 'quick' }, tags: [], content: '', created: 0, modified: 0 },
 ];
 
 describe('ProgressView goal mode', () => {
@@ -34,10 +34,10 @@ describe('ProgressView goal mode', () => {
     expect(model.mode).toBe('goal');
     expect(model.goalCards).toHaveLength(1);
     expect(model.goalCards[0]?.goalPath).toBe('项目');
-    expect(model.goalCards[0]?.blockCounts.task).toBe(1);
-    expect(model.goalCards[0]?.blockCounts.habit).toBe(1);
-    expect(model.goalCards[0]?.blockCounts.evidence).toBe(1);
-    expect(model.goalCards[0]?.blockCounts.energy).toBe(1);
+    expect(model.goalCards[0]?.recordTypeCounts.task).toBe(1);
+    expect(model.goalCards[0]?.recordTypeCounts.habit).toBe(1);
+    expect(model.goalCards[0]?.recordTypeCounts.event).toBe(1);
+    expect(model.goalCards[0]?.recordTypeCounts.energy).toBe(1);
     expect(model.goalCards[0]?.goalBreakdown).toEqual([
       { key: '项目/目标A', points: 2, count: 2 },
       { key: '项目/目标B', points: 1, count: 1 },
@@ -57,9 +57,9 @@ describe('ProgressView goal mode', () => {
 
   it('groups recent records by child Goal inside each root Goal card', () => {
     const themedItems = [
-      { id: 'sleep-1', title: '昨晚睡眠', coreBlock: 'habit', categoryKey: '打卡', goalPath: '照顾好自己/睡眠', date: '2026-08-12', extra: {}, tags: [], content: '', created: 0, modified: 0 },
-      { id: 'sleep-2', title: '午休记录', coreBlock: 'habit', categoryKey: '打卡', goalPath: '照顾好自己/睡眠', date: '2026-08-11', extra: {}, tags: [], content: '', created: 0, modified: 0 },
-      { id: 'sport-1', title: '跑步', coreBlock: 'task', categoryKey: '任务', goalPath: '照顾好自己/运动', date: '2026-08-10', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'sleep-1', title: '昨晚睡眠', recordType: 'habit', goalPath: '照顾好自己/睡眠', date: '2026-08-12', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'sleep-2', title: '午休记录', recordType: 'habit', goalPath: '照顾好自己/睡眠', date: '2026-08-11', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'sport-1', title: '跑步', recordType: 'task', goalPath: '照顾好自己/运动', date: '2026-08-10', extra: {}, tags: [], content: '', created: 0, modified: 0 },
     ];
     const model = buildProgressViewRenderModel({ items: themedItems, module: { viewConfig: { topN: 8 } }, goals: [] });
     const card = model.goalCards[0];
@@ -72,11 +72,11 @@ describe('ProgressView goal mode', () => {
 
   it('attaches reliable nearby activity and same-day health signals to recent Energy samples', () => {
     const contextItems: RecordViewItem[] = [
-      { id: 'task', title: '写代码', categoryKey: '任务', coreBlock: 'task', goalPath: '项目/目标A', extra: {}, tags: [], content: '写代码', created: 0, modified: 0 },
-      { id: 'session', title: '', categoryKey: '', coreBlock: 'task-session', taskId: 'task', sessionStartedAt: '2026-08-10T14:00:00', sessionEndedAt: '2026-08-10T15:30:00', sessionDurationMinutes: 90, sessionResult: 'work-block-ended', sessionSource: 'timer', extra: {}, tags: [], content: '', created: 0, modified: 0 },
-      { id: 'sleep', title: '睡眠', categoryKey: '打卡', coreBlock: 'habit', goalPath: '项目/目标A', date: '2026-08-10', rating: 40, extra: {}, tags: [], content: '', created: 0, modified: 0 },
-      { id: 'body', title: '身体状态', categoryKey: '打卡', coreBlock: 'habit', goalPath: '项目/目标A', date: '2026-08-10', rating: 60, extra: {}, tags: [], content: '', created: 0, modified: 0 },
-      { id: 'energy', title: '', categoryKey: '精力', coreBlock: 'energy', goalPath: '项目/目标A', date: '2026-08-10', extra: { '时间': '15:38', '精力值': 20, '精力档位': 20, '评分模式': 'quick' }, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'task', title: '写代码', recordType: 'task', goalPath: '项目/目标A', extra: {}, tags: [], content: '写代码', created: 0, modified: 0 },
+      { id: 'session', title: '', recordType: 'task-session', taskId: 'task', sessionStartedAt: '2026-08-10T14:00:00', sessionEndedAt: '2026-08-10T15:30:00', sessionDurationMinutes: 90, sessionResult: 'work-block-ended', sessionSource: 'timer', extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'sleep', title: '睡眠', recordType: 'habit', goalPath: '项目/目标A', date: '2026-08-10', rating: 40, extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'body', title: '身体状态', recordType: 'habit', goalPath: '项目/目标A', date: '2026-08-10', rating: 60, extra: {}, tags: [], content: '', created: 0, modified: 0 },
+      { id: 'energy', title: '', recordType: 'energy', goalPath: '项目/目标A', date: '2026-08-10', extra: { '时间': '15:38', '精力值': 20, '精力档位': 20, '评分模式': 'quick' }, tags: [], content: '', created: 0, modified: 0 },
     ];
     const model = buildProgressViewRenderModel({ items: contextItems, module: { viewConfig: {} }, goals: [] });
     const sample = model.goalCards[0]?.energySummary?.recentSamples[0];
@@ -102,7 +102,7 @@ const card = {
   progressRatio: 1.4,
   matchedCount: 3,
   latestDate: '2026-06-01',
-  blockCounts: { task: 2, habit: 0, milestone: 1, energy: 4 },
+  recordTypeCounts: { task: 2, habit: 0, milestone: 1, energy: 4 },
   goalBreakdown: [
     { key: '工作/代码', points: 80, count: 2 },
     { key: '工作/会议', points: 0, count: 0 },
@@ -147,17 +147,17 @@ describe('ProgressViewModel', () => {
 
   it('uses the global Record Type order for the full Progress type breakdown', () => {
     const counts = {
-      milestone: 1, blocker: 1, plan: 1, review: 1, thought: 1, evidence: 1,
+      milestone: 1, blocker: 1, plan: 1, review: 1, thought: 1, feeling: 1, event: 1,
       habit: 1, energy: 1, 'task-series': 1, 'task-session': 1, task: 1,
     };
-    expect(buildProgressBlockCountRows(counts).map((row) => row.key)).toEqual([
-      'task', 'task-session', 'task-series', 'energy', 'habit', 'evidence',
-      'thought', 'review', 'plan', 'blocker', 'milestone',
+    expect(buildProgressRecordTypeCountRows(counts).map((row) => row.key)).toEqual([
+      'task', 'task-session', 'task-series', 'energy', 'habit', 'event',
+      'feeling', 'thought', 'review', 'plan', 'blocker', 'milestone',
     ]);
   });
 
-  it('builds block rows and fallback summary', () => {
-    expect(buildProgressBlockCountRows(card.blockCounts).map((row) => [row.key, row.count])).toEqual([
+  it('builds Record Type rows and fallback summary', () => {
+    expect(buildProgressRecordTypeCountRows(card.recordTypeCounts).map((row) => [row.key, row.count])).toEqual([
       ['task', 2],
       ['energy', 4],
       ['milestone', 1],

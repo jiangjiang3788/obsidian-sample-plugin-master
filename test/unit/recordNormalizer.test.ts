@@ -8,14 +8,13 @@ import { normalizeRecordItem } from '../../src/core/records/RecordNormalizer';
 
 const baseItem = (overrides: Partial<RecordViewItem> = {}): RecordViewItem => ({
   id: 'task.01J00000000000000000000003',
-  coreBlock: 'task',
+  recordType: 'task',
   status: 'open',
   title: '任务',
   content: '任务',
   tags: [],
   created: 0,
   modified: 0,
-  categoryKey: '任务',
   extra: {},
   ...overrides,
 });

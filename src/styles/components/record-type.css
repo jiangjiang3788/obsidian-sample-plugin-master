@@ -1,11 +1,12 @@
 /* Global Record type presentation surface. One type -> one semantic accent token. */
 .think-os [data-record-type] { --think-record-type-accent: var(--think-record-type-neutral); }
 .think-os [data-record-type="task"] { --think-record-type-accent: var(--think-record-type-task); }
-.think-os [data-record-type="task-session"] { --think-record-type-accent: var(--think-record-type-task-session); }
-.think-os [data-record-type="task-series"] { --think-record-type-accent: var(--think-record-type-task-series); }
+.think-os [data-record-type="task-session"] { --think-record-type-accent: var(--think-record-type-task); }
+.think-os [data-record-type="task-series"] { --think-record-type-accent: var(--think-record-type-task); }
 .think-os [data-record-type="energy"] { --think-record-type-accent: var(--think-record-type-energy); }
 .think-os [data-record-type="habit"] { --think-record-type-accent: var(--think-record-type-habit); }
-.think-os [data-record-type="evidence"] { --think-record-type-accent: var(--think-record-type-evidence); }
+.think-os [data-record-type="event"] { --think-record-type-accent: var(--think-record-type-event); }
+.think-os [data-record-type="feeling"] { --think-record-type-accent: var(--think-record-type-feeling); }
 .think-os [data-record-type="thought"] { --think-record-type-accent: var(--think-record-type-thought); }
 .think-os [data-record-type="review"] { --think-record-type-accent: var(--think-record-type-review); }
 .think-os [data-record-type="plan"] { --think-record-type-accent: var(--think-record-type-plan); }
@@ -34,3 +35,9 @@
 .think-os .think-record-type-header {
   box-shadow: inset 0 -3px 0 var(--think-record-type-accent);
 }
+
+/* Shared record-backed list surfaces consume the global accent; views never remap colors locally. */
+.think-os .think-list-row[data-record-type] {
+  border-inline-start: 3px solid var(--think-record-type-accent);
+}
+

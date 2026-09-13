@@ -54,6 +54,11 @@ export interface WhiteboardRecordSourceResult {
   dateError: string | null;
 }
 
+function isWhiteboardUserRecord(record: RecordViewItem): boolean {
+  const definition = getRecordSchemaDefinition(String(record.recordType || '').trim());
+  return definition?.capabilities.userVisible === true;
+}
+
 function compareText(a: string, b: string): number {
   return a.localeCompare(b, 'zh');
 }
@@ -66,8 +71,9 @@ function goalLeaf(path: string): string {
 export function collectWhiteboardRecordTypeOptions(records: readonly RecordViewItem[]): WhiteboardRecordTypeOption[] {
   const values = new Set<string>();
   for (const record of records) {
-    const coreBlock = String(record.coreBlock || '').trim();
-    if (coreBlock) values.add(coreBlock);
+    if (!isWhiteboardUserRecord(record)) continue;
+    const recordType = String(record.recordType || '').trim();
+    if (recordType) values.add(recordType);
   }
 
   return Array.from(values)
@@ -83,6 +89,7 @@ export function collectWhiteboardGoalTree(records: readonly RecordViewItem[]): W
   const exactPaths = new Set<string>();
   const allPaths = new Set<string>();
   for (const record of records) {
+    if (!isWhiteboardUserRecord(record)) continue;
     const goalPath = normalizeGoalPath(record.goalPath);
     if (!goalPath) continue;
     exactPaths.add(goalPath);
@@ -121,6 +128,7 @@ export function buildWhiteboardGoalScope(records: readonly RecordViewItem[], sel
   if (!selected) return [];
   const observed = new Set<string>();
   for (const record of records) {
+    if (!isWhiteboardUserRecord(record)) continue;
     const goalPath = normalizeGoalPath(record.goalPath);
     if (!goalPath) continue;
     if (goalPath === selected || goalPath.startsWith(`${selected}/`)) observed.add(goalPath);
@@ -141,7 +149,7 @@ function buildFilterGroups(state: WhiteboardRecordSourceState): FilterRule[][] {
   const groups: FilterRule[][] = [];
 
   const recordTypes = Array.from(new Set(state.recordTypes.map((value) => String(value || '').trim()).filter(Boolean)));
-  if (recordTypes.length) groups.push([{ field: 'coreBlock', op: 'in', value: recordTypes }]);
+  if (recordTypes.length) groups.push([{ field: 'recordType', op: 'in', value: recordTypes }]);
 
   const goalPaths = Array.from(new Set(state.goalPaths.map((value) => normalizeGoalPath(value)).filter((value): value is string => Boolean(value))));
   if (goalPaths.length) groups.push([{ field: 'goalPath', op: 'in', value: goalPaths }]);
@@ -179,7 +187,25 @@ export function queryWhiteboardRecordSource(
   state: WhiteboardRecordSourceState,
   excludedRecordIds?: ReadonlySet<string>,
 ): WhiteboardRecordSourceResult {
-  const queriedItems = queryRecordItems(records, buildWhiteboardRecordSourceSpec(records, state));
+  const userRecords = records.filter(isWhiteboardUserRecord);
+  let queriedItems: RecordViewItem[];
+
+  if (state.time?.role === 'task-actual' && !validateWhiteboardRecordSourceTime(state.time)) {
+    const start = dayjs(state.time.startDate).startOf('day');
+    const end = dayjs(state.time.endDate).endOf('day');
+    const sessions = queryRecordItems(records.filter((record) => record.recordType === 'task-session'), {
+      date: { range: [start.toDate(), end.toDate()], mode: 'strict', precision: 'day', role: 'task-actual' },
+    });
+    const taskIds = new Set(sessions.map((session) => String(session.taskId || '').trim()).filter(Boolean));
+    const stateWithoutActualTime = { ...state, time: null };
+    queriedItems = queryRecordItems(
+      userRecords.filter((record) => record.recordType === 'task' && taskIds.has(record.id)),
+      buildWhiteboardRecordSourceSpec(userRecords, stateWithoutActualTime),
+    );
+  } else {
+    queriedItems = queryRecordItems(userRecords, buildWhiteboardRecordSourceSpec(userRecords, state));
+  }
+
   const matchedItems = excludedRecordIds?.size
     ? queriedItems.filter((record) => !excludedRecordIds.has(record.id))
     : queriedItems;

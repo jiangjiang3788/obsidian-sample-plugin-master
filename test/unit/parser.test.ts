@@ -21,13 +21,13 @@ describe('current Record parser', () => {
   it('reads a current Task Record Block with stable identity', () => {
     const markdown = encodeRecordBlock({
       recordId: TASK_ID,
-      coreBlock: 'task',
+      recordType: 'task',
       fields: { status: 'open', content: '整理代码', goalPath: '工作/开发', scheduledDate: '2026-08-11' },
     });
     const item = parse(markdown);
     expect(item).not.toBeNull();
     expect(item!.id).toBe(TASK_ID);
-    expect(item!.coreBlock).toBe('task');
+    expect(item!.recordType).toBe('task');
     const task = asTaskRecord(item);
     expect(task?.status).toBe('open');
     expect(item!.content).toBe('整理代码');
@@ -35,11 +35,11 @@ describe('current Record parser', () => {
   });
 
   it('reads ordinary Record Blocks through the same codec/parser', () => {
-    const markdown = encodeRecordBlock({ recordId: REC_ID, coreBlock: 'thought', fields: { 记录子类型: '思考', 目标: '了解自我', 内容: '统一 Record parser' } });
+    const markdown = encodeRecordBlock({ recordId: REC_ID, recordType: 'thought', fields: { 目标: '了解自我', 内容: '统一 Record parser' } });
     const item = parse(markdown);
     expect(item).not.toBeNull();
     expect(item!.id).toBe(REC_ID);
-    expect(item!.coreBlock).toBe('thought');
+    expect(item!.recordType).toBe('thought');
     expect(item!.content).toBe('统一 Record parser');
   });
 
@@ -47,7 +47,7 @@ describe('current Record parser', () => {
     const sessionId = 'tasksession.01J00000000000000000000000';
     const markdown = encodeRecordBlock({
       recordId: sessionId,
-      coreBlock: 'task-session',
+      recordType: 'task-session',
       fields: {
         taskId: TASK_ID,
         sessionStartedAt: '2026-08-11T09:10:00.000Z',
@@ -61,7 +61,7 @@ describe('current Record parser', () => {
     const item = parse(markdown);
     expect(item).not.toBeNull();
     expect(item!.id).toBe(sessionId);
-    expect(item!.coreBlock).toBe('task-session');
+    expect(item!.recordType).toBe('task-session');
     const session = asTaskSessionRecord(item);
     expect(session?.taskId).toBe(TASK_ID);
     expect(session?.sessionDurationMinutes).toBe(38);
@@ -116,7 +116,7 @@ describe('current Record parser', () => {
   it('keeps explicit custom metadata before 内容 as extra', () => {
     const markdown = encodeRecordBlock({
       recordId: REC_ID,
-      coreBlock: 'thought',
+      recordType: 'thought',
       fields: { 清晰度: 4, 内容: '正文' },
     });
     expect(markdown.indexOf('清晰度:: 4')).toBeLessThan(markdown.indexOf('内容:: 正文'));

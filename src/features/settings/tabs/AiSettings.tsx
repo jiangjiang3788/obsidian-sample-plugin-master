@@ -37,7 +37,7 @@ export function AiSettings(_props: AiSettingsProps) {
     const useCases = useUseCases();
     const aiSettings = useSelector(selectAiSettings) ?? DEFAULT_AI_SETTINGS;
     const inputSettings = useSelector(selectInputSettings);
-    const blocks = inputSettings?.blocks ?? [];
+    const recordTypes = inputSettings?.recordTypes ?? [];
 
     const [localSettings, setLocalSettings] = useState<AiSettingsType>(aiSettings);
     const [testStatus, setTestStatus] = useState<AiTestStatus>('idle');
@@ -101,8 +101,8 @@ export function AiSettings(_props: AiSettingsProps) {
         }
     };
 
-    const validBlockIds = useMemo(() => new Set(blocks.map((block: any) => block.id)), [blocks]);
-    const staleEnabledBlockIds = useMemo(() => (localSettings.enabledBlockIds || []).filter((id) => !validBlockIds.has(id)), [localSettings.enabledBlockIds, validBlockIds]);
+    const validRecordTypeIds = useMemo(() => new Set(recordTypes.map((recordType: any) => recordType.id)), [recordTypes]);
+    const staleEnabledRecordTypeIds = useMemo(() => (localSettings.enabledRecordTypeIds || []).filter((id) => !validRecordTypeIds.has(id)), [localSettings.enabledRecordTypeIds, validRecordTypeIds]);
 
     const readiness = useMemo(() => getAiSettingsReadiness(localSettings), [localSettings]);
     const apiAccessReadiness = useMemo(() => getAiApiAccessReadiness(localSettings), [localSettings]);
@@ -177,26 +177,26 @@ export function AiSettings(_props: AiSettingsProps) {
         }
     };
 
-    const handleInitAllBlocks = () => {
-        updateLocal({ enabledBlockIds: blocks.map(b => b.id) });
+    const handleInitAllRecordTypes = () => {
+        updateLocal({ enabledRecordTypeIds: recordTypes.map((recordType) => recordType.id) });
     };
 
-    const handleClearStaleBlockIds = () => {
-        const stale = new Set(staleEnabledBlockIds);
-        updateLocal({ enabledBlockIds: (localSettings.enabledBlockIds || []).filter((id) => !stale.has(id)) });
+    const handleClearStaleRecordTypeIds = () => {
+        const stale = new Set(staleEnabledRecordTypeIds);
+        updateLocal({ enabledRecordTypeIds: (localSettings.enabledRecordTypeIds || []).filter((id) => !stale.has(id)) });
     };
 
-    const toggleBlock = (blockId: string) => {
-        const allIds = blocks.map((block: any) => block.id);
-        const current = localSettings.enabledBlockIds ?? [];
+    const toggleRecordType = (recordTypeId: string) => {
+        const allIds = recordTypes.map((recordType: any) => recordType.id);
+        const current = localSettings.enabledRecordTypeIds ?? [];
         if (current.length === 0) {
-            updateLocal({ enabledBlockIds: allIds.filter(id => id !== blockId) });
+            updateLocal({ enabledRecordTypeIds: allIds.filter(id => id !== recordTypeId) });
             return;
         }
-        const next = current.includes(blockId)
-            ? current.filter(id => id !== blockId)
-            : [...current, blockId];
-        updateLocal({ enabledBlockIds: next.length === allIds.length ? [] : next });
+        const next = current.includes(recordTypeId)
+            ? current.filter(id => id !== recordTypeId)
+            : [...current, recordTypeId];
+        updateLocal({ enabledRecordTypeIds: next.length === allIds.length ? [] : next });
     };
 
     const handleInsertExample = () => {
@@ -237,11 +237,11 @@ export function AiSettings(_props: AiSettingsProps) {
             <AiScopeSection
                 settings={localSettings}
                 onUpdate={updateLocal}
-                blocks={blocks}
-                staleEnabledBlockIds={staleEnabledBlockIds}
-                onInitAllBlocks={handleInitAllBlocks}
-                onClearStaleBlockIds={handleClearStaleBlockIds}
-                onToggleBlock={toggleBlock}
+                recordTypes={recordTypes}
+                staleEnabledRecordTypeIds={staleEnabledRecordTypeIds}
+                onInitAllRecordTypes={handleInitAllRecordTypes}
+                onClearStaleRecordTypeIds={handleClearStaleRecordTypeIds}
+                onToggleRecordType={toggleRecordType}
             />
             <AiAdvancedSettingsSection settings={localSettings} onUpdate={updateLocal} />
 

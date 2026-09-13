@@ -27,7 +27,7 @@ describe('appendUnderHeader', () => {
   it('keeps legacy non-record payload behavior before the next same-or-higher level header', async () => {
     const vault = createMemoryVault({ 'log.md': '## 今天\n旧内容\n## 明天' });
     await appendUnderHeader(vault, 'log.md', '## 今天', '记录块B');
-    expect(vault.files.get('log.md')).toBe('## 今天\n旧内容\n\n记录块B\n## 明天');
+    expect(vault.files.get('log.md')).toBe('## 今天\n旧内容\n\n记录块B\n\n## 明天');
   });
 
   it('inserts Record Markdown newest first under the Goal header', () => {

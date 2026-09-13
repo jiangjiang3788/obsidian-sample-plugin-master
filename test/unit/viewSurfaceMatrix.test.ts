@@ -21,25 +21,25 @@ const USER_RECORDS: RecordViewItem[] = [
   ['habit', '打卡'],
   ['plan', '计划'],
   ['review', '总结'],
+  ['feeling', '感受'],
   ['thought', '思考'],
-  ['evidence', '事件'],
+  ['event', '事件'],
   ['blocker', '阻碍项'],
   ['milestone', '里程碑'],
   ['energy', '精力'],
-].map(([coreBlock, categoryKey], index) => ({
+].map(([recordType, label], index) => ({
   id: `record-${index + 1}`,
-  coreBlock,
-  title: `${categoryKey}-${index + 1}`,
-  content: `${categoryKey}内容`,
+  recordType,
+  title: `${label}-${index + 1}`,
+  content: `${label}内容`,
   tags: [],
-  categoryKey,
   goalPath: '测试/目标',
   date: '2026-08-24',
   created: 0,
   modified: 0,
   extra: {},
-  ...(coreBlock === 'task' ? { status: 'open', startAt: '2026-08-24T09:00' } : {}),
-  ...(coreBlock === 'energy' ? { startTime: '10:00', extra: { 精力值: 80, 评分模式: 'quick', 记录方式: 'realtime', 时间精度: 'exact' } } : {}),
+  ...(recordType === 'task' ? { status: 'open', startAt: '2026-08-24T09:00' } : {}),
+  ...(recordType === 'energy' ? { startTime: '10:00', extra: { 精力值: 80, 评分模式: 'quick', 记录方式: 'realtime', 时间精度: 'exact' } } : {}),
 })) as RecordViewItem[];
 
 describe('View surface matrix', () => {
@@ -66,6 +66,6 @@ describe('View surface matrix', () => {
 
   it('keeps the shared view query neutral across all user-visible Record types', () => {
     const result = queryViewBaseRecords({ items: USER_RECORDS });
-    expect(result.map((item) => item.coreBlock)).toEqual(USER_RECORDS.map((item) => item.coreBlock));
+    expect(result.map((item) => item.recordType)).toEqual(USER_RECORDS.map((item) => item.recordType));
   });
 });

@@ -520,7 +520,6 @@
       "evidence": {
         "unit": [
           "test/unit/fieldBehavior.test.ts",
-          "test/unit/fieldRegistryCategories.test.ts",
           "test/unit/fieldSemantics.test.ts"
         ],
         "regression": [
@@ -840,8 +839,7 @@
       ],
       "evidence": {
         "integration": [
-          "test/integration/goalSettingsLifecycle.test.ts",
-          "test/integration/recordTemplateQueryFlow.test.ts"
+          "test/integration/goalSettingsLifecycle.test.ts"
         ],
         "persistence": [
           "test/integration/goalSettingsLifecycle.test.ts",
@@ -1022,8 +1020,7 @@
       ],
       "evidence": {
         "integration": [
-          "test/integration/recordRepositoryLifecycle.test.ts",
-          "test/integration/recordTemplateQueryFlow.test.ts"
+          "test/integration/recordRepositoryLifecycle.test.ts"
         ],
         "persistence": [
           "test/integration/recordRepositoryLifecycle.test.ts"
@@ -3058,7 +3055,7 @@
       "name": "精力记录默认目标设置",
       "risk": "P2",
       "sources": [
-        "src/features/settings/input/BlockManager.tsx",
+        "src/features/settings/input/RecordTypeManager.tsx",
         "src/features/settings/input/EnergyRecordTypeSettings.tsx",
         "src/app/usecases/settings.usecase.ts"
       ],
@@ -3122,10 +3119,10 @@
     {
       "id": "F115",
       "area": "设置系统",
-      "name": "已注册记录类型查看器 BlockManager（只读）",
+      "name": "已注册记录类型查看器 RecordTypeManager（只读）",
       "risk": "P1",
       "sources": [
-        "src/features/settings/input/BlockManager.tsx"
+        "src/features/settings/input/RecordTypeManager.tsx"
       ],
       "required": [
         "unit",
@@ -3151,7 +3148,7 @@
           "test/unit/recordTypeRegistryConvergence.test.ts"
         ]
       },
-      "note": "审计校准：BlockManager 是代码注册 RecordType 的只读查看器，不提供 CRUD，因此 persistence/restart 不是该 UI 的产品职责。Goal 差异由 GoalTemplate 管理。"
+      "note": "审计校准：RecordTypeManager 是代码注册 RecordType 的只读查看器，不提供 CRUD，因此 persistence/restart 不是该 UI 的产品职责。Goal 差异由 GoalTemplate 管理。"
     },
     {
       "id": "F116",
@@ -4588,7 +4585,7 @@
           "test/unit/progressViewModel.test.ts"
         ]
       },
-      "note": "1.4.0：建立 Record Presentation Contract。记录类型的顺序与 semantic color 只有一个 Core 真源，固定为 任务→任务工作块→任务系列→精力→打卡→事件→思考→总结→计划→阻碍项→里程碑；Category 仍是独立维度。新增派生字段“主显示值 primaryText”，不改写真实 title，且用户显式 ViewInstance.fields 优先。白板默认以目标/时间/主显示值组织卡片、6px 类型色条表达类型，归档/移出降级到右键/拖拽；网格与左侧 Record Source 折叠成为独立可持久 UI preference。"
+      "note": "1.6.0：Presentation Convergence。技术层仍保留 12 个 Record Schema，但用户 Presentation 固定为 10 类型：任务→精力→打卡→事件→感受→思考→总结→计划→阻碍项→里程碑；TaskSession/TaskSeries 继承 Task 的 label/order/color。Record Type 默认色由全局 CSS owner 提供，Settings 只持久化用户 override；Goal color 继续独立归 Goal。Whiteboard Source 不再显示类型前缀；Timeline 普通点击编辑 Task、Ctrl/⌘ 点击原文、拖动通过 semantic mutation 更新时间。"
     }
   ]
 }

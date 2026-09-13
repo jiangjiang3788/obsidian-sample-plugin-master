@@ -4,25 +4,25 @@ import { SelectablePill } from './SelectablePill';
 
 export interface RecordTypeSwitcherOption { id: string; name?: string }
 export interface RecordTypeSwitcherProps {
-  blocks: RecordTypeSwitcherOption[];
-  currentBlockId: string;
-  onBlockChange: (blockId: string) => void;
+  recordTypes: RecordTypeSwitcherOption[];
+  currentRecordTypeId: string;
+  onRecordTypeChange: (recordTypeId: string) => void;
 }
 
-export function RecordTypeSwitcher({ blocks, currentBlockId, onBlockChange }: RecordTypeSwitcherProps) {
-  if (blocks.length <= 1) return null;
+export function RecordTypeSwitcher({ recordTypes, currentRecordTypeId, onRecordTypeChange }: RecordTypeSwitcherProps) {
+  if (recordTypes.length <= 1) return null;
   return (
     <div className="think-quick-input-record-type-switcher" role="tablist" aria-label="记录类型">
-      {blocks.map((block) => {
-        const label = block.name || block.id;
+      {recordTypes.map((recordType) => {
+        const label = recordType.name || recordType.id;
         return (
           <SelectablePill
-            key={block.id}
-            selected={currentBlockId === block.id}
-            onClick={() => onBlockChange(block.id)}
+            key={recordType.id}
+            selected={currentRecordTypeId === recordType.id}
+            onClick={() => onRecordTypeChange(recordType.id)}
             title={label}
             className="think-quick-input-record-type-switcher__item"
-          ><span className="think-record-type-marker" data-record-type={normalizeRecordTypePresentationKey(block.id)}>{label}</span></SelectablePill>
+          ><span className="think-record-type-marker" data-record-type={normalizeRecordTypePresentationKey(recordType.id)}>{label}</span></SelectablePill>
         );
       })}
     </div>

@@ -163,7 +163,7 @@ export function buildGoalTimeAllocationSummary(args: {
 
   const taskById = new Map<string, RecordEntity>();
   for (const record of records) {
-    if (record?.coreBlock === 'task' && record.id) taskById.set(record.id, record);
+    if (record?.recordType === 'task' && record.id) taskById.set(record.id, record);
   }
 
   const goalByPath = new Map<string, GoalDefinition>();

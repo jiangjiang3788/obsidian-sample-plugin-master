@@ -36,8 +36,8 @@ export interface GoalProgressCardModel {
   progressRatio: number;
   matchedCount: number;
   latestDate?: string | null;
-  blockCounts: Record<string, number>;
-  categoryBreakdown?: ProgressBreakdownLike[];
+  recordTypeCounts: Record<string, number>;
+  recordTypeBreakdown?: ProgressBreakdownLike[];
   goalBreakdown?: ProgressBreakdownLike[];
   goalRecentRecords?: Record<string, ProgressRecentRecordModel[]>;
   energySummary?: GoalEnergySummaryModel | null;
@@ -64,7 +64,7 @@ export interface ProgressGoalViewRenderModel extends ProgressViewRenderModel {
   summary: ProgressSummaryModel;
 }
 
-export interface ProgressBlockCountRow {
+export interface ProgressRecordTypeCountRow {
   key: string;
   label: string;
   count: number;
@@ -94,8 +94,8 @@ export interface ProgressSkillRowModel {
 }
 
 
-function normalizeProgressBlockKey(item: RecordViewItem): string {
-  return normalizeRecordTypePresentationKey(item.coreBlock) || 'unknown';
+function normalizeProgressRecordTypeKey(item: RecordViewItem): string {
+  return normalizeRecordTypePresentationKey(item.recordType) || 'unknown';
 }
 
 function progressDateSource(item: RecordViewItem): unknown {
@@ -166,15 +166,15 @@ export function buildProgressViewRenderModel(args: {
     const progression = computeProgression(progressItems, {
       basePoints: config.basePoints,
       levelStep,
-      includedCategories: config.includedCategories,
+      includedRecordTypes: config.includedRecordTypes,
       ratingBonusThreshold: config.ratingBonusThreshold,
       ratingBonusPoints: config.ratingBonusPoints,
       topN: config.topN,
     });
-    const blockCounts: Record<string, number> = {};
+    const recordTypeCounts: Record<string, number> = {};
     for (const item of goalItems) {
-      const key = normalizeProgressBlockKey(item);
-      blockCounts[key] = (blockCounts[key] || 0) + 1;
+      const key = normalizeProgressRecordTypeKey(item);
+      recordTypeCounts[key] = (recordTypeCounts[key] || 0) + 1;
     }
     const dates = progressItems.map(progressItemDate).filter(Boolean).sort();
     return {
@@ -191,8 +191,8 @@ export function buildProgressViewRenderModel(args: {
       progressRatio: progression.progressRatio,
       matchedCount: progression.matchedCount,
       latestDate: dates.length ? dates[dates.length - 1] : null,
-      blockCounts,
-      categoryBreakdown: progression.categoryBreakdown,
+      recordTypeCounts,
+      recordTypeBreakdown: progression.recordTypeBreakdown,
       goalBreakdown: progression.goalBreakdown,
       goalRecentRecords: Object.fromEntries(
         progression.goalBreakdown.map((row) => [
@@ -300,7 +300,7 @@ export function getVisibleProgressGoalBreakdown(rows?: ProgressBreakdownLike[]) 
   return (rows || []).filter((row) => row.count > 0).slice(0, 8);
 }
 
-export function buildProgressBlockCountRows(counts: Record<string, number>): ProgressBlockCountRow[] {
+export function buildProgressRecordTypeCountRows(counts: Record<string, number>): ProgressRecordTypeCountRow[] {
   return EXPANDED_BLOCK_ORDER
     .map((key) => ({ key, label: PROGRESS_BLOCK_LABELS[key] || key, count: Number(counts?.[key] || 0) }))
     .filter((row) => row.count > 0);
@@ -310,7 +310,7 @@ export function buildProgressCollapsedFacts(card: GoalProgressCardModel): Progre
   const blockFacts = DEFAULT_COLLAPSED_BLOCKS.map((key) => ({
     key,
     label: PROGRESS_BLOCK_LABELS[key] || key,
-    value: Number(card.blockCounts?.[key] || 0),
+    value: Number(card.recordTypeCounts?.[key] || 0),
   }));
   return [
     ...blockFacts,

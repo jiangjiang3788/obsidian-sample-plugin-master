@@ -30,7 +30,7 @@ function fieldCodecDefinition(field: TemplateField): FieldCodecDefinition {
   return {
     valueType: semantic === 'tags'
       ? 'tags'
-      : semantic === 'categoryPath' || semantic === 'goalPath' || inputType === 'path' || inputType === 'multiPath'
+      : semantic === 'goalPath' || inputType === 'path' || inputType === 'multiPath'
         ? 'path'
         : semantic === 'image' || inputType === 'image' || inputType === 'multiImage'
           ? 'image'
@@ -40,7 +40,7 @@ function fieldCodecDefinition(field: TemplateField): FieldCodecDefinition {
     inputType,
     semantic,
     cardinality: field.cardinality || (['multiSelect', 'multiPath', 'multiTag', 'multiImage'].includes(inputType) ? 'multi' : 'single'),
-    hierarchical: field.hierarchical || semantic === 'categoryPath' || semantic === 'goalPath' || semantic === 'tags',
+    hierarchical: field.hierarchical || semantic === 'goalPath' || semantic === 'tags',
   };
 }
 
@@ -77,12 +77,12 @@ function readSemanticFieldValue(field: TemplateField, item: RecordViewItem, snap
   const semantic = getTemplateFieldSemantic(field);
   switch (semantic) {
     case 'body':
-      return item.coreBlock === 'task'
+      return item.recordType === 'task'
         ? snapshot.semantic.editableText || snapshot.semantic.title || snapshot.semantic.content
         : snapshot.semantic.editableText || snapshot.semantic.content || snapshot.semantic.title;
     case 'title':
       // Task title mirrors canonical editable content so editing does not truncate the record.
-      return item.coreBlock === 'task'
+      return item.recordType === 'task'
         ? snapshot.semantic.editableText || snapshot.semantic.title || snapshot.semantic.content
         : snapshot.semantic.title || snapshot.semantic.editableText || snapshot.semantic.content;
     case 'date':
@@ -99,8 +99,6 @@ function readSemanticFieldValue(field: TemplateField, item: RecordViewItem, snap
       return snapshot.semantic.endTime;
     case 'duration':
       return snapshot.semantic.duration;
-    case 'categoryPath':
-      return snapshot.semantic.categoryKey;
     case 'rating':
       if (isTemplateRatingPairField(field)) return buildRatingPairOption(field, item, snapshot);
       return item.rating;
@@ -173,7 +171,7 @@ export function buildInitialEditFormData(input: {
   // Task lifecycle/series identity is domain state, not editable form state.
   // Preserve it as hidden context so a normal content edit cannot reopen a task
   // or detach a recurring instance from its TaskSeries.
-  if (input.item.coreBlock === 'task') {
+  if (input.item.recordType === 'task') {
     if (isPresent(input.item.status)) result.status = input.item.status;
     if (isPresent(input.item.seriesId)) result.seriesId = input.item.seriesId;
     // Legacy/manual actual ranges remain compatibility facts until explicitly edited

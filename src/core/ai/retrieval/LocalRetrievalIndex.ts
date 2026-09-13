@@ -11,7 +11,7 @@ const FIELD_BOOSTS: Partial<Record<SearchIndexField, number>> = {
     editableText: 1.8,
     goalPath: 1.5,
     tags: 1.3,
-    categoryKey: 1.2,
+    recordType: 1.2,
     extraText: 0.8,
 };
 

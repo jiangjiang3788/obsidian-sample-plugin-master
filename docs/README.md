@@ -14,6 +14,8 @@
 
 ## 版本实施
 
+- `releases/1.6.0/` — 1.6.0 Presentation Convergence：10 种用户记录类型颜色所有权、Whiteboard/Timeline 交互收敛与发布验证。
+- `releases/1.5.0/` — 1.5.0 Record Domain Convergence 的计划、实施结果与测试报告。
 - `releases/1.4.0/` — 1.4.0 Record Presentation Contract + Whiteboard Visual Cleanup 的计划、实施结果与测试报告。
 
 ## 专项文档
@@ -21,3 +23,7 @@
 - `testing/` — 测试体系、命令、真实数据/E2E 规范。
 - `reports/` — 仍需要随当前源码携带的专题报告。
 - `history/` — 历史 Whiteboard 基线、旧 PATCH 说明、旧实施结果与迁移资料；仅用于追溯，不是当前接口。
+
+## 1.5.0 数据迁移
+
+离线迁移入口：`scripts/migration/converge-record-domain-1.5.0.mjs`。它可清洗 Settings，并可选通过 `--vault` 迁移 Markdown Record Blocks；迁移前应保留原始数据备份。

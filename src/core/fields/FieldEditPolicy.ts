@@ -25,7 +25,7 @@ export type FieldEditValueSource = FieldSource | 'unknown';
 export interface FieldEditPolicy {
   /** 原始字段名，保留调用方上下文。 */
   field: string;
-  /** 标准字段名；status 与 categoryKey 是两个独立业务语义。 */
+  /** 标准字段名。 */
   canonicalField: string;
   editable: boolean;
   editorKind: FieldEditorKind;
@@ -37,10 +37,7 @@ export interface FieldEditPolicy {
   reason?: string;
 }
 
-const FIELD_ALIASES: Record<string, string> = {
-  category: 'categoryKey',
-  categoryPath: 'categoryKey',
-};
+const FIELD_ALIASES: Record<string, string> = {};
 
 const NEVER_INLINE_EDITABLE = new Set<string>([
   'id',
@@ -68,8 +65,6 @@ const NEVER_INLINE_EDITABLE = new Set<string>([
 ]);
 
 const DERIVED_FIELDS = new Set<string>([
-  'baseCategory',
-  'leafCategory',
   'fullData',
   'startISO',
   'endISO',
@@ -81,7 +76,6 @@ const MEDIUM_RISK_FIELDS = new Set<string>([
   'startTime',
   'endTime',
   'duration',
-  'categoryKey',
   'theme',
   'tags',
   'goalPath',

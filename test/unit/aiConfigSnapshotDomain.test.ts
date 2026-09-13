@@ -8,28 +8,28 @@ import { DEFAULT_AI_SETTINGS, DEFAULT_TEMPLATE_RECORD_TYPES, getGoalTemplateId }
 import type { GoalSettings, InputSettings } from '@/core/public';
 
 describe('AI config snapshot domain model', () => {
-  const input: InputSettings = { blocks: DEFAULT_TEMPLATE_RECORD_TYPES as any };
+  const input: InputSettings = { recordTypes: [...DEFAULT_TEMPLATE_RECORD_TYPES] };
   const goalPath = '照顾好自己/健康/睡眠';
   const goalSettings: GoalSettings = {
     goals: [{ path: goalPath, status: 'active', metrics: [], createdAt: '', updatedAt: '' }],
     goalTemplates: [{ goalPath, recordTypeId: 'core.habit', enabled: true }],
   };
 
-  it('ignores stale enabledBlockIds so AI snapshot does not become empty', () => {
-    const snapshot = buildAiConfigSnapshot(input, { ...DEFAULT_AI_SETTINGS, enabledBlockIds: ['blk_old_1'] }, goalSettings);
-    expect(snapshot.blocks.length).toBeGreaterThan(0);
+  it('ignores stale enabledRecordTypeIds so AI snapshot does not become empty', () => {
+    const snapshot = buildAiConfigSnapshot(input, { ...DEFAULT_AI_SETTINGS, enabledRecordTypeIds: ['blk_old_1'] }, goalSettings);
+    expect(snapshot.recordTypes.length).toBeGreaterThan(0);
     expect(snapshot.goalPresets).toHaveLength(1);
   });
 
-  it('hides Goal context fields from editable block and preset fields', () => {
-    const snapshot = buildAiConfigSnapshot(input, { ...DEFAULT_AI_SETTINGS, enabledBlockIds: [] }, goalSettings);
-    const allFieldKeys = [...snapshot.blocks.flatMap((block) => block.fields.map((field) => field.key)), ...snapshot.goalPresets.flatMap((preset) => preset.fields.map((field) => field.key))];
+  it('hides Goal context fields from editable Record Type and preset fields', () => {
+    const snapshot = buildAiConfigSnapshot(input, { ...DEFAULT_AI_SETTINGS, enabledRecordTypeIds: [] }, goalSettings);
+    const allFieldKeys = [...snapshot.recordTypes.flatMap((block) => block.fields.map((field) => field.key)), ...snapshot.goalPresets.flatMap((preset) => preset.fields.map((field) => field.key))];
     expect(allFieldKeys).not.toContain('目标');
     expect(allFieldKeys).not.toContain('goalPath');
     expect(snapshot.goalPresets[0]).toMatchObject({
       id: getGoalTemplateId(goalPath, 'core.habit'),
       goalPath,
-      blockId: 'core.habit',
+      recordTypeId: 'core.habit',
     });
   });
 });

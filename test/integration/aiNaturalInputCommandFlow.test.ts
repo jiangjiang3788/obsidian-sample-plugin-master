@@ -50,7 +50,7 @@ describe('AI 自然语言命令编排', () => {
 
   it('输入文本经过解析器后打开真实批量确认边界，并向用户报告识别数量', async () => {
     const notice = jest.fn(() => ({ hide: jest.fn(), setMessage: jest.fn() }));
-    const parser = { parse: jest.fn(async () => ({ items: [{ rawText: '完成 V6', target: { blockId: 'core.task', goalPath: 'E2E/AI' }, fieldValues: { 内容: '完成 V6' } }] })) } as any;
+    const parser = { parse: jest.fn(async () => ({ items: [{ rawText: '完成 V6', target: { recordTypeId: 'core.task', goalPath: 'E2E/AI' }, fieldValues: { 内容: '完成 V6' } }] })) } as any;
     const runner = createNaturalInputCommandRunner({
       plugin: { app: {}, register: jest.fn(), addCommand: jest.fn() } as any,
       store: makeStore(),

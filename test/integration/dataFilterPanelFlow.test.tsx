@@ -9,8 +9,8 @@ import { act } from 'preact/test-utils';
 import { DataFilterPanel } from '@/features/settings/layout/DataFilterPanel';
 
 const items = [
-  { id: '1', content: '关键字任务', status: 'open', coreBlock: 'task', goalPath: 'E2E' },
-  { id: '2', content: '其他任务', status: 'done', coreBlock: 'task', goalPath: 'E2E' },
+  { id: '1', content: '关键字任务', status: 'open', recordType: 'task', goalPath: 'E2E' },
+  { id: '2', content: '其他任务', status: 'done', recordType: 'task', goalPath: 'E2E' },
 ] as any[];
 
 const dataStore = { queryItems: () => items } as any;

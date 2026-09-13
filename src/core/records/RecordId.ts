@@ -25,8 +25,8 @@ function randomChars(length: number): string {
 
 export type RecordIdPrefix = 'rec' | 'task' | 'taskseries' | 'tasksession' | 'energy';
 
-export function recordIdPrefixForCoreBlock(coreBlock: string | null | undefined): RecordIdPrefix {
-  switch (String(coreBlock || '').trim().toLowerCase()) {
+export function recordIdPrefixForRecordType(recordType: string | null | undefined): RecordIdPrefix {
+  switch (String(recordType || '').trim().toLowerCase()) {
     case 'task': return 'task';
     case 'task-series': return 'taskseries';
     case 'task-session': return 'tasksession';
@@ -35,8 +35,8 @@ export function recordIdPrefixForCoreBlock(coreBlock: string | null | undefined)
   }
 }
 
-export function createRecordId(coreBlock?: string | null, now = Date.now()): string {
-  const prefix = recordIdPrefixForCoreBlock(coreBlock);
+export function createRecordId(recordType?: string | null, now = Date.now()): string {
+  const prefix = recordIdPrefixForRecordType(recordType);
   return `${prefix}.${encodeTime(now)}${randomChars(16)}`;
 }
 

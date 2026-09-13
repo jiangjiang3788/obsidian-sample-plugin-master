@@ -1,13 +1,13 @@
 import type { ExportViewConfig } from './types';
 
 export const BLOCK_EXPORT_DEFAULT_CONFIG: ExportViewConfig = {
-  groupFields: ['filename', 'categoryKey'],
+  groupFields: ['filename', 'recordType'],
   groupTitlePrefix: '',
   useMarkdownHeadingForGroup: true,
   idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['categoryKey', 'date', 'rating', 'image', 'content'],
+  detailFields: ['recordType', 'date', 'rating', 'image', 'content'],
   fieldLabels: {
-    categoryKey: '分类',
+    recordType: '记录类型',
     date: '日期',
     rating: '评分',
     image: '图片',
@@ -22,15 +22,15 @@ export const BLOCK_EXPORT_DEFAULT_CONFIG: ExportViewConfig = {
 };
 
 export const EVENT_TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
-  groupFields: ['date', 'categoryKey'],
+  groupFields: ['date', 'recordType'],
   groupTitlePrefix: '',
   useMarkdownHeadingForGroup: true,
   idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['title', 'date', 'categoryKey', 'content'],
+  detailFields: ['title', 'date', 'recordType', 'content'],
   fieldLabels: {
     title: '标题',
     date: '日期',
-    categoryKey: '分类',
+    recordType: '记录类型',
     content: '内容',
     fullData: '完整数据',
   },
@@ -41,15 +41,15 @@ export const EVENT_TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
 };
 
 export const EXCEL_EXPORT_CONFIG: ExportViewConfig = {
-  groupFields: ['categoryKey', 'date'],
+  groupFields: ['recordType', 'date'],
   groupTitlePrefix: '',
   useMarkdownHeadingForGroup: true,
   idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['title', 'date', 'categoryKey', 'content'],
+  detailFields: ['title', 'date', 'recordType', 'content'],
   fieldLabels: {
     title: '标题',
     date: '日期',
-    categoryKey: '分类',
+    recordType: '记录类型',
     content: '内容',
     fullData: '完整数据',
   },
@@ -60,15 +60,15 @@ export const EXCEL_EXPORT_CONFIG: ExportViewConfig = {
 };
 
 export const STATISTICS_EXPORT_CONFIG: ExportViewConfig = {
-  groupFields: ['period', 'categoryKey'],
+  groupFields: ['period', 'recordType'],
   groupTitlePrefix: '',
   useMarkdownHeadingForGroup: true,
   idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['title', 'date', 'categoryKey', 'period', 'content'],
+  detailFields: ['title', 'date', 'recordType', 'period', 'content'],
   fieldLabels: {
     title: '标题',
     date: '日期',
-    categoryKey: '分类',
+    recordType: '记录类型',
     period: '周期',
     content: '内容',
     fullData: '完整数据',
@@ -80,14 +80,14 @@ export const STATISTICS_EXPORT_CONFIG: ExportViewConfig = {
 };
 
 export const HEATMAP_EXPORT_CONFIG: ExportViewConfig = {
-  groupFields: ['date', 'categoryKey'],
+  groupFields: ['date', 'recordType'],
   groupTitlePrefix: '',
   useMarkdownHeadingForGroup: true,
   idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['date', 'categoryKey', 'rating', 'content'],
+  detailFields: ['date', 'recordType', 'rating', 'content'],
   fieldLabels: {
     date: '日期',
-    categoryKey: '分类',
+    recordType: '记录类型',
     rating: '评分',
     content: '内容',
     fullData: '完整数据',
@@ -99,17 +99,17 @@ export const HEATMAP_EXPORT_CONFIG: ExportViewConfig = {
 };
 
 export const TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
-  groupFields: ['filename', 'categoryKey'],
+  groupFields: ['filename', 'recordType'],
   groupTitlePrefix: '',
   useMarkdownHeadingForGroup: true,
   idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['title', 'startTime', 'endTime', 'duration', 'categoryKey', 'content'],
+  detailFields: ['title', 'startTime', 'endTime', 'duration', 'recordType', 'content'],
   fieldLabels: {
     title: '标题',
     startTime: '开始时间',
     endTime: '结束时间',
     duration: '时长',
-    categoryKey: '分类',
+    recordType: '记录类型',
     content: '内容',
     fullData: '完整数据',
   },
@@ -120,15 +120,15 @@ export const TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
 };
 
 export const TABLE_EXPORT_CONFIG: ExportViewConfig = {
-  groupFields: ['categoryKey', 'date'],
+  groupFields: ['recordType', 'date'],
   groupTitlePrefix: '',
   useMarkdownHeadingForGroup: true,
   idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['title', 'date', 'categoryKey', 'content'],
+  detailFields: ['title', 'date', 'recordType', 'content'],
   fieldLabels: {
     title: '标题',
     date: '日期',
-    categoryKey: '分类',
+    recordType: '记录类型',
     content: '内容',
     fullData: '完整数据',
   },

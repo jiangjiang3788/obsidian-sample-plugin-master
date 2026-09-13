@@ -32,7 +32,7 @@ const RECORD_ID = 'rec.01JWF7T20074QW3VAKQMEWSBE9';
 function recordMarkdown(content: string) {
   return encodeRecordBlock({
     recordId: RECORD_ID,
-    coreBlock: 'thought',
+    recordType: 'thought',
     fields: { 记录子类型: '思考', 内容: content },
   });
 }

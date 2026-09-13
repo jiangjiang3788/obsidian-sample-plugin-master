@@ -1095,7 +1095,7 @@ sx={{
 
 ## 2.5 Record Type semantic color contract（1.4.0）
 
-Record Type color is product identity, not View decoration. The 11 canonical types use global `--think-record-type-*` tokens from `tokens/data-colors.css`; feature CSS must consume `--think-record-type-accent` through `data-record-type`, and must not maintain a second type-to-color table.
+Record Type color is product identity, not View decoration. The 12 canonical types use global `--think-record-type-*` tokens from `tokens/data-colors.css`; feature CSS must consume `--think-record-type-accent` through `data-record-type`, and must not maintain a second type-to-color table.
 
 Rules:
 

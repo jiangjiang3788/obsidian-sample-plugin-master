@@ -1,5 +1,5 @@
 import type { RecordViewItem } from '@/core/records/RecordEntity';
-import type { RecordCoreBlock } from '@/core/records/public';
+import type { RecordType } from '@/core/records/public';
 import { readEnergyItemSnapshot } from '@/core/energy/item';
 import { getRecordTypePresentation, normalizeRecordTypePresentationKey } from '@/core/recordTypes/public';
 
@@ -8,7 +8,7 @@ function compact(value: unknown): string {
 }
 
 function fallbackLabel(item: RecordViewItem): string {
-  return getRecordTypePresentation(item.coreBlock).label || '记录';
+  return getRecordTypePresentation(item.recordType).label || '记录';
 }
 
 function genericPrimary(item: RecordViewItem): string {
@@ -42,16 +42,17 @@ const taskSessionPrimary: PrimaryTextResolver = (item) => {
 /**
  * Exhaustive Record-type policy table. Most text-shaped Records deliberately
  * share the generic resolver; value-shaped Records own explicit resolvers.
- * Having all 11 keys here prevents a new Record type from silently bypassing
+ * Having all 12 keys here prevents a new Record type from silently bypassing
  * the global presentation contract.
  */
-const PRIMARY_TEXT_RESOLVERS: Record<RecordCoreBlock, PrimaryTextResolver> = {
+const PRIMARY_TEXT_RESOLVERS: Record<RecordType, PrimaryTextResolver> = {
   task: genericPrimary,
   'task-session': taskSessionPrimary,
   'task-series': genericPrimary,
   energy: energyPrimary,
   habit: habitPrimary,
-  evidence: genericPrimary,
+  event: genericPrimary,
+  feeling: genericPrimary,
   thought: genericPrimary,
   review: genericPrimary,
   plan: genericPrimary,
@@ -73,7 +74,7 @@ export function getRecordPrimaryText(item: RecordViewItem): string {
   const title = compact(item.title);
   if (title) return title;
 
-  const coreBlock = normalizeRecordTypePresentationKey(item.coreBlock) as RecordCoreBlock;
-  const resolver = PRIMARY_TEXT_RESOLVERS[coreBlock];
+  const recordType = normalizeRecordTypePresentationKey(item.recordType) as RecordType;
+  const resolver = PRIMARY_TEXT_RESOLVERS[recordType];
   return resolver ? resolver(item) : genericPrimary(item);
 }

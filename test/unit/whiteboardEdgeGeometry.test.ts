@@ -4,7 +4,7 @@
  * @covers F098/unit
  * @covers F098/regression
  */
-import { getWhiteboardConnectionPreviewPath, getWhiteboardEdgeGeometry, resolveWhiteboardItemPosition } from '@/features/whiteboard/WhiteboardEdgeGeometry';
+import { getWhiteboardConnectionPreviewPath, getWhiteboardEdgeGeometry, getWhiteboardPointEdgeGeometry, resolveWhiteboardItemPosition } from '@/features/whiteboard/WhiteboardEdgeGeometry';
 
 describe('白板 edge geometry', () => {
   it('A→B 从卡片边缘生成稳定有方向的贝塞尔路径', () => {
@@ -37,6 +37,15 @@ describe('白板 edge geometry', () => {
     const resolved = resolveWhiteboardItemPosition(item, { itemId: 'item-a', position: { x: 110, y: 220, zIndex: 9 } });
     expect(resolved).toEqual({ ...item, x: 110, y: 220, zIndex: 9 });
     expect(item).toEqual({ id: 'item-a', recordId: 'rec-a', x: 10, y: 20, zIndex: 1 });
+  });
+
+  it('低倍率 presentation edge 使用临时 locator worldPoint，不改 durable card geometry', () => {
+    const geometry = getWhiteboardPointEdgeGeometry({ x: 120, y: 80 }, { x: 460, y: 260 });
+    expect(geometry.startX).toBe(120);
+    expect(geometry.startY).toBe(80);
+    expect(geometry.endX).toBe(460);
+    expect(geometry.endY).toBe(260);
+    expect(geometry.pathD).toContain('M 120 80 C');
   });
 
   it('四边拖线时使用 pointer world 起点生成临时贝塞尔预览，不写 durable edge', () => {

@@ -213,11 +213,6 @@
   outline-offset: 1px;
 }
 
-.timeline-task-indicator {
-  flex: 0 0 3px;
-  background: var(--timeline-task-color, var(--think-accent));
-}
-
 .timeline-task-content {
   display: flex;
   flex: 1 1 auto;
@@ -226,7 +221,7 @@
   gap: var(--think-space-2);
   overflow: hidden;
   padding: var(--think-space-1) var(--think-space-2);
-  background: color-mix(in srgb, var(--timeline-task-color, var(--think-accent)) 14%, transparent);
+  background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 14%, transparent);
   color: var(--think-text-primary);
   font-size: var(--think-viz-font-meta);
   line-height: var(--think-line-height-tight);
@@ -255,12 +250,12 @@
 
 /* Lifecycle status is independent from timeline occupancy, but it must be visible. */
 .timeline-task-block--open .timeline-task-link {
-  outline: 1px dashed color-mix(in srgb, var(--timeline-task-color, var(--think-accent)) 72%, transparent);
+  outline: 1px dashed var(--think-border-strong);
   outline-offset: -1px;
 }
 
 .timeline-task-block--open .timeline-task-content {
-  background: color-mix(in srgb, var(--timeline-task-color, var(--think-accent)) 7%, transparent);
+  background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 7%, transparent);
 }
 
 .timeline-task-block--open .timeline-task-status {
@@ -268,7 +263,7 @@
 }
 
 .timeline-task-block--done .timeline-task-content {
-  background: color-mix(in srgb, var(--timeline-task-color, var(--think-accent)) 18%, transparent);
+  background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 18%, transparent);
 }
 
 .timeline-task-block--done .timeline-task-status {
@@ -355,9 +350,6 @@
 .timeline-task-block--point .timeline-task-link {
   border-radius: var(--think-radius-pill);
 }
-.timeline-task-block--point .timeline-task-indicator {
-  flex-basis: 4px;
-}
 .timeline-task-block--point .timeline-task-content {
   padding-block: 2px;
 }
@@ -384,12 +376,9 @@
 .timeline-task-block.timeline-task-block--planned {
   border-style: dashed;
   opacity: 0.62;
-  background: color-mix(in srgb, var(--timeline-task-color) 10%, transparent);
+  background: color-mix(in srgb, var(--timeline-goal-color) 10%, transparent);
 }
 
-.timeline-task-block.timeline-task-block--planned .timeline-task-indicator {
-  opacity: 0.55;
-}
 
 /* Timeline direct manipulation: the block itself moves; logical range boundaries resize. */
 .timeline-task-block[data-timeline-editable="true"] {
@@ -422,7 +411,7 @@
   width: 28px;
   height: 2px;
   border-radius: var(--think-radius-pill);
-  background: color-mix(in srgb, var(--timeline-task-color, var(--think-accent)) 72%, var(--think-bg-elevated));
+  background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 72%, var(--think-bg-elevated));
   opacity: 0;
   transform: translateX(-50%);
   transition: opacity var(--think-duration-fast) var(--think-ease-standard);

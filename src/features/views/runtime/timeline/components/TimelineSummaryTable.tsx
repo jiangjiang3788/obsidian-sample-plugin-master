@@ -23,26 +23,26 @@ interface MonthData {
 interface TimelineSummaryTableProps {
     summaryData: MonthData[];
     colorMap: Record<string, string>;
-    progressOrder?: string[];
+    goalOrder?: string[];
     untrackedLabel: string;
     overallGoalSummary?: GoalTimeAllocationSummary | null;
     currentView: '年' | '季';
 }
 
-function SummaryCell({ goalSummary, categoryHours, totalHours, colorMap, progressOrder, untrackedLabel, view }: {
+function SummaryCell({ goalSummary, goalHours, totalHours, colorMap, goalOrder, untrackedLabel, view }: {
     goalSummary?: GoalTimeAllocationSummary | null;
-    categoryHours: Record<string, number>;
+    goalHours: Record<string, number>;
     totalHours: number;
     colorMap: Record<string, string>;
-    progressOrder?: string[];
+    goalOrder?: string[];
     untrackedLabel: string;
     view: GoalAllocationTimelineView;
 }) {
     if (goalSummary) return <GoalAllocationBlock summary={goalSummary} currentView={view} metric="deviation" />;
-    return <ProgressBlock categoryHours={categoryHours} order={progressOrder} totalHours={totalHours} colorMap={colorMap} untrackedLabel={untrackedLabel} />;
+    return <ProgressBlock goalHours={goalHours} order={goalOrder} totalHours={totalHours} colorMap={colorMap} untrackedLabel={untrackedLabel} />;
 }
 
-export function TimelineSummaryTable({ summaryData, colorMap, progressOrder, untrackedLabel, overallGoalSummary, currentView }: TimelineSummaryTableProps) {
+export function TimelineSummaryTable({ summaryData, colorMap, goalOrder, untrackedLabel, overallGoalSummary, currentView }: TimelineSummaryTableProps) {
     if (!summaryData || summaryData.length === 0) {
         return <div class="timeline-empty-state think-viz-empty">此时间范围内无数据可供总结。</div>;
     }
@@ -68,10 +68,10 @@ export function TimelineSummaryTable({ summaryData, colorMap, progressOrder, unt
                         <td>
                             <SummaryCell
                                 goalSummary={monthData.monthlyGoalSummary}
-                                categoryHours={monthData.monthlySummary}
+                                goalHours={monthData.monthlySummary}
                                 totalHours={monthData.totalMonthHours}
                                 colorMap={colorMap}
-                                progressOrder={progressOrder}
+                                goalOrder={goalOrder}
                                 untrackedLabel={untrackedLabel}
                                 view="月"
                             />
@@ -81,10 +81,10 @@ export function TimelineSummaryTable({ summaryData, colorMap, progressOrder, unt
                                 {weekData ? (
                                     <SummaryCell
                                         goalSummary={weekData.goalSummary}
-                                        categoryHours={weekData.summary}
+                                        goalHours={weekData.summary}
                                         totalHours={weekData.totalHours}
                                         colorMap={colorMap}
-                                        progressOrder={progressOrder}
+                                        goalOrder={goalOrder}
                                         untrackedLabel={untrackedLabel}
                                         view="周"
                                     />

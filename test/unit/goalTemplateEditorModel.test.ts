@@ -10,8 +10,7 @@ import {
 } from '@/features/settings/goalTemplates/GoalTemplateEditorModel';
 
 const block = {
-  id: 'core.habit', key: 'habit', system: true, version: 1, name: '打卡', categoryKey: '打卡',
-  fields: [{ id: 'content', key: '内容', label: '内容', type: 'text' }],
+  id: 'core.habit', key: 'habit', system: true, version: 1, name: '打卡', fields: [{ id: 'content', key: '内容', label: '内容', type: 'text' }],
   outputTemplate: '内容:: {{内容}}', targetFile: '01/打卡.md', appendUnderHeader: '## {{goalPath}}',
 } as any;
 const goal = { path: '学习/英语', status: 'active', createdAt: '', updatedAt: '' } as any;
@@ -24,7 +23,7 @@ describe('GoalTemplateEditorModel Goal-only', () => {
     expect((draft as any).variantId).toBeUndefined();
   });
 
-  it('keeps inherited draft aligned with the CoreBlock source', () => {
+  it('keeps inherited draft aligned with the RecordType source', () => {
     const draft = makeDraftFromTemplate({ id: '学习/英语::core.habit', goalPath: '学习/英语', recordTypeId: 'core.habit', enabled: true, fields: [] } as any, block);
     const inherited = buildDefaultDraft(draft, block);
     expect(inherited.fields.length).toBe(block.fields.length);
@@ -43,8 +42,7 @@ describe('GoalTemplateEditorModel Goal-only', () => {
 
   it('把 GoalTemplate.defaultValues 回填到字段编辑器，并从字段编辑结果持久化回来', () => {
     const taskBlock = {
-      id: 'core.task', key: 'task', system: true, version: 1, name: '任务', categoryKey: '任务',
-      fields: [
+      id: 'core.task', key: 'task', system: true, version: 1, name: '任务', fields: [
         { id: 'priority', key: 'priority', label: '优先级', type: 'singleSelect', options: [{ value: 'low', label: '低' }, { value: 'high', label: '高' }] },
         { id: 'contexts', key: 'availabilityContexts', label: '场景', type: 'multiSelect', options: [{ value: 'work', label: '工作' }, { value: 'home', label: '家' }] },
       ],

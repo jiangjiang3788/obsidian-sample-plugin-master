@@ -1,4 +1,4 @@
-import type { CategoryConfig } from '@core/view/public';
+import type { StatisticsBucketConfig } from '@core/view/public';
 import type { RecordViewItem } from '@core/types/public';
 import type { PeriodData } from '@core/utils/public';
 import { aggregateByMonth, getMonthWeeksData, isSameIsoWeek } from '@core/utils/public';
@@ -40,7 +40,7 @@ export function buildMonthWeekMeta(monthDate: any): Array<{ weekStart: any; labe
 
 export function buildMonthStatisticsRenderModel(input: {
   items: RecordViewItem[];
-  categories: CategoryConfig[];
+  categories: StatisticsBucketConfig[];
   monthDate: any;
   usePeriod: boolean;
   bucketAccessor?: (item: RecordViewItem) => string;

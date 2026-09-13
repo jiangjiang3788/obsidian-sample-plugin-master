@@ -57,7 +57,6 @@ export function normalizeRecordItem(item: RecordEntity, context: RecordNormalize
 
 
   if (!item.extra) item.extra = {};
-  if (!item.categoryKey) item.categoryKey = item.coreBlock === 'task' ? '任务' : context.parentFolder;
 
   normalizeItemDates(toRecordViewItem(item));
 

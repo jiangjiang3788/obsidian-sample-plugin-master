@@ -43,8 +43,8 @@ if (periodView.includes('blocks.filter((block) => hasPeriodData(block.data))')) 
 if (periodView.includes('column.blocks.filter((block) => hasPeriodData(block.data))')) {
   failures.push('Statistics must preserve zero-data nested period slots');
 }
-if (!chart.includes('const chartCategories = categories;')) {
-  failures.push('Statistics charts must keep stable category columns even when a count is zero');
+if (!chart.includes('const chartBuckets = buckets;')) {
+  failures.push('Statistics charts must keep stable bucket columns even when a count is zero');
 }
 if (!chart.includes('{count}')) {
   failures.push('Statistics charts must render explicit zero counts instead of blank number cells');

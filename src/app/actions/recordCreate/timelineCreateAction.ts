@@ -176,7 +176,7 @@ export function buildTimelineCreateConfig(params: TimelineCreateParams): QuickIn
       maxHours: params.maxHours,
     });
     if (selected) {
-      return { blockId: RECORD_TYPE_IDS.TASK, context: selected.context };
+      return { recordTypeId: RECORD_TYPE_IDS.TASK, context: selected.context };
     }
   }
 
@@ -194,11 +194,11 @@ export function buildTimelineCreateConfig(params: TimelineCreateParams): QuickIn
   });
 
   return {
-    blockId: RECORD_TYPE_IDS.TASK,
+    recordTypeId: RECORD_TYPE_IDS.TASK,
     context: resolved.context,
   };
 }
 
 export function openCreateFromTimeline(params: TimelineCreateParams): boolean {
-  return openCreateModal(params.app, buildTimelineCreateConfig(params), 'view_quick_create', { allowBlockSwitch: false });
+  return openCreateModal(params.app, buildTimelineCreateConfig(params), 'view_quick_create', { allowRecordTypeSwitch: false });
 }

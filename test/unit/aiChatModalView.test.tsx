@@ -23,7 +23,7 @@ function props(overrides: Record<string, any> = {}): any {
     closeModal: jest.fn(), sessions: [{ id: 's1', title: '测试会话', created: 1, modified: 1, messages: [] }],
     currentSessionId: 's1', currentSessionTitle: '测试会话', onNewSession: jest.fn(), onSelectSession: jest.fn(), onDeleteSession: jest.fn(),
     enableRetrieval: true, setEnableRetrieval: jest.fn(), goals: ['工作'], selectedGoalPath: '', setSelectedGoalPath: jest.fn(), selectedType: '', setSelectedType: jest.fn(),
-    blocks: [{ id: 'core.task', name: '任务' }], selectedBlockId: '', setSelectedBlockId: jest.fn(), indexItemCount: 3,
+    recordTypes: [{ id: 'core.task', name: '任务' }], selectedRecordTypeId: '', setSelectedRecordTypeId: jest.fn(), indexItemCount: 3,
     messages: [{ id: 'm1', role: 'assistant', content: '你好', contentType: 'markdown', created: 1 }], isLoading: false,
     messagesEndRef: createRef(), error: null, inputText: '', setInputText: jest.fn(), onKeyDown: jest.fn(), onSend: jest.fn(), composerDisabled: false,
     composerPlaceholder: '输入消息...', emptyHint: { title: '开始新的对话', retrievalHint: '检索已开启' }, ...overrides,

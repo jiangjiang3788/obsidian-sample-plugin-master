@@ -3,7 +3,6 @@ import type { PluginHost } from '@core/ports/public';
 
 import { SETTINGS_PERSISTENCE_TOKEN } from '@core/services/public';
 import { devError, devLog } from '@core/utils/public';
-import { updateCategoryColorMap } from '@core/types/public';
 
 import { diDebug, diWarn } from '@/app/diagnostics/diDiagnostics';
 
@@ -18,6 +17,7 @@ import type { ServiceManagerServices } from '@/app/ServiceManager.services';
 import type { Disposables } from '@/app/runtime/disposables';
 import type { BootstrapResolved } from '@/app/bootstrap/buildRuntime';
 import { setDevConsoleStackEnabled } from '@shared/utils/public';
+import { applyRecordTypeColorOverrides, clearRecordTypeColorOverrides } from '@/app/presentation/RecordTypeColorRuntime';
 
 export async function initializeCore(opts: {
     plugin: PluginHost;
@@ -65,19 +65,15 @@ export async function initializeCore(opts: {
 
                 // 开发模式：初始化 console.error stack 开关
                 setDevConsoleStackEnabled(!!zustandStore.getState().settings.devConsoleStackEnabled);
-
-                // 初始化全局分类颜色映射（从用户设置覆盖硬编码默认值）
-                const savedCategoryColors = zustandStore.getState().settings.categoryColors;
-                if (savedCategoryColors) {
-                    updateCategoryColorMap(savedCategoryColors);
-                }
-
+                applyRecordTypeColorOverrides(zustandStore.getState().settings.recordTypeColors);
 
                 // 订阅 SettingsRepository 的变更，仅同步到 Zustand Store
                 const unsubscribeSettingsRepo = settingsRepository.subscribe((settings) => {
                     zustandStore.setState({ settings });
+                    applyRecordTypeColorOverrides(settings.recordTypeColors);
                 });
                 disposables?.add('SettingsRepository.subscribe()', unsubscribeSettingsRepo);
+                disposables?.add('RecordTypeColorRuntime', clearRecordTypeColorOverrides);
                 devLog('[ThinkPlugin] SettingsRepository 订阅已建立（纯同步 settings）');
 
                 // TimerWidget 生命周期管理：通过监听 store 中 settings.floatingTimerEnabled 变化
@@ -121,15 +117,6 @@ const unsubscribeDevConsole = zustandStore.subscribe(
 disposables?.add('AppStore.subscribe(devConsoleStackEnabled)', unsubscribeDevConsole);
 devLog('[ThinkPlugin] DevConsoleStackEnabled 监听已建立');
 
-// 分类颜色：监听设置变更，同步运行时颜色映射
-const unsubscribeCategoryColors = zustandStore.subscribe(
-    (state) => state.settings.categoryColors,
-    (colors) => {
-        updateCategoryColorMap(colors ?? {});
-    }
-);
-disposables?.add('AppStore.subscribe(categoryColors)', unsubscribeCategoryColors);
-devLog('[ThinkPlugin] CategoryColors 监听已建立');
 
 
                 // 3. 创建 UseCases 并注册到 DI 容器（传入 store）

@@ -34,7 +34,7 @@ export interface ModalPort {
     cancelText?: string;
   }): Promise<boolean>;
 
-  openQuickInput(blockId?: string): void;
+  openQuickInput(recordTypeId?: string): void;
 
   openNamePrompt(options: NamePromptOptions): Promise<string | null>;
 
