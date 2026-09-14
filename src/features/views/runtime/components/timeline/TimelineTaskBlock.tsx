@@ -258,6 +258,12 @@ export function TimelineTaskBlock({
       title={`${generateTaskBlockTitle(block)}\n状态: ${lifecycle.label}`}
       style={blockStyle}
       onClick={(event) => {
+        // Pointerup drag may be followed by a synthetic click; the range is already saved.
+        if (Date.now() < suppressClickUntilRef.current) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
         // The whole task block is the primary interaction target. Child controls
         // stop their own clicks so alignment/resize affordances never open the editor.
         blockGesture.onClick?.(event as any);

@@ -84,9 +84,15 @@ export function ViewContent({
   [allItems, keyword, layoutFilters, normalizedViewInstance, viewItems]);
   const excelAvailableFields = useMemo(() => getAllFields(allItems), [allItems]);
 
+  const exportItems = normalizedViewInstance.viewType === 'TimelineView'
+    ? timelineBaseItems
+    : normalizedViewInstance.viewType === 'EnergyView'
+      ? allItems
+      : viewItems;
+
   useEffect(() => {
-    onDataLoaded(viewItems);
-  }, [viewItems, onDataLoaded]);
+    onDataLoaded(exportItems);
+  }, [exportItems, onDataLoaded]);
 
   const ViewComponent = getViewRuntimeComponent(normalizedViewInstance.viewType);
 

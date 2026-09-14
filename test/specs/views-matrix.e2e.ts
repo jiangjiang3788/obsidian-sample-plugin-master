@@ -126,6 +126,18 @@ describe('Think OS 真机 UI：十种普通 View 矩阵', () => {
     expect(await toolbar.getText()).toContain('月');
   });
 
+  it('十种普通 View 都暴露统一的“导出为 Markdown”入口，包括四象限', async () => {
+    await openFile('十视图');
+    for (const [, label] of VIEWS) {
+      const module = await $(`section[aria-label="E2E视图-${label} 视图"]`);
+      await module.waitForExist({ timeout: 10_000 });
+      await module.scrollIntoView();
+      const exportButton = await module.$('button[aria-label="导出为 Markdown"]');
+      await exportButton.waitForExist({ timeout: 10_000 });
+      expect(await exportButton.isDisplayed()).toBe(true);
+    }
+  });
+
   it('块视图的“导出为 Markdown”把真实 Record 写入剪贴板', async () => {
     await openFile('十视图');
     await browser.execute(() => {

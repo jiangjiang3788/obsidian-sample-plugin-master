@@ -50,12 +50,15 @@ describe('Timeline pointer gesture UI', () => {
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     render(null, host);
     host.remove();
   });
 
-  it('previews locally while dragging and commits one full logical range on pointer up', async () => {
+  it('previews locally while dragging, saves directly, and suppresses the synthetic edit click', async () => {
     const onUpdateTimelineRange = jest.fn().mockResolvedValue(undefined);
+    const onOpenRecord = jest.fn();
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1_000);
     const block = taskBlock('task-drag');
 
     await act(async () => render(
@@ -67,6 +70,7 @@ describe('Timeline pointer gesture UI', () => {
         maxHours={24}
         onColumnClick={() => undefined}
         onUpdateTimelineRange={onUpdateTimelineRange}
+        onOpenRecord={onOpenRecord}
       />,
       host,
     ));
@@ -90,5 +94,20 @@ describe('Timeline pointer gesture UI', () => {
       target: { kind: 'task-range', recordId: 'task-drag' },
       range: { start: '2026-08-26T02:00', end: '2026-08-26T02:30' },
     });
+
+    // Browsers may synthesize a click immediately after pointerup even though the user
+    // performed a drag. That click must be consumed instead of reopening QuickInput.
+    await act(async () => {
+      task.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(onOpenRecord).not.toHaveBeenCalled();
+
+    // The suppression is short-lived and Timeline's normal "click = edit" contract
+    // remains intact after the drag gesture has finished.
+    nowSpy.mockReturnValue(1_351);
+    await act(async () => {
+      task.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(onOpenRecord).toHaveBeenCalledTimes(1);
   });
 });

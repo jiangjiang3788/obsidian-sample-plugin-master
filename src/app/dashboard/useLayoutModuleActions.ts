@@ -1,7 +1,8 @@
 import { useCallback } from 'preact/hooks';
 import type { ActionService } from '@core/services/public';
 import type { FilterRule, RecordViewItem, Layout, ViewInstance } from '@core/types/public';
-import { exportItemsToMarkdown, getExportConfigByViewType } from '@core/utils/public';
+import type { GoalDefinition } from '@core/goal/public';
+import { exportViewToMarkdown } from '@core/utils/public';
 import { completeFromView, openCreateFromViewHeader } from '@/app/actions/recordUiActions';
 import { openModuleSettingsWidget } from '@features/settings/layout/ModuleSettingsModal';
 
@@ -13,6 +14,9 @@ export interface UseLayoutModuleActionsParams {
   layoutView: string;
   allViews: ViewInstance[];
   modulesDataCache: { current: Record<string, RecordViewItem[]> };
+  allRecords: RecordViewItem[];
+  goals: GoalDefinition[];
+  dateRange: [Date, Date];
   ui: any;
   useCases: any;
 }
@@ -25,6 +29,9 @@ export function useLayoutModuleActions({
   layoutView,
   allViews,
   modulesDataCache,
+  allRecords,
+  goals,
+  dateRange,
   ui,
   useCases,
 }: UseLayoutModuleActionsParams) {
@@ -36,25 +43,17 @@ export function useLayoutModuleActions({
     }
 
     const viewInstance = allViews.find((v) => v.id === viewId);
-    let exportConfig = viewInstance ? getExportConfigByViewType(viewInstance.viewType) : undefined;
-
-    if (viewInstance && exportConfig) {
-      const dynamicGroupFields = viewInstance.groupFields && viewInstance.groupFields.length > 0
-        ? viewInstance.groupFields
-        : (viewInstance.group ? [viewInstance.group] : undefined);
-
-      if (dynamicGroupFields) {
-        exportConfig = {
-          ...exportConfig,
-          groupFields: dynamicGroupFields,
-        };
-      }
-    }
-
-    const markdownContent = exportItemsToMarkdown(items, exportConfig);
+    const markdownContent = exportViewToMarkdown({
+      items,
+      relatedRecords: allRecords,
+      viewInstance,
+      goals,
+      dateRange,
+      currentView: layoutView,
+    });
     void navigator.clipboard.writeText(markdownContent);
     ui.notice(`"${viewTitle}" 的内容已复制到剪贴板！`);
-  }, [allViews, modulesDataCache, ui]);
+  }, [allRecords, allViews, dateRange, goals, layoutView, modulesDataCache, ui]);
 
   const handleQuickInputAction = useCallback((viewInstance: ViewInstance) => {
     openCreateFromViewHeader({

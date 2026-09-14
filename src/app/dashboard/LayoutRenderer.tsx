@@ -10,6 +10,7 @@ import { useUiPort, useUseCases } from '@/app/AppStoreContext';
 import { useSelector } from '@/app/store/useSelector';
 import {
   selectInputSettings,
+  selectSettings,
   selectTimers,
   selectViewInstances,
 } from '@/app/store/selectors';
@@ -64,6 +65,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
     [allViews]
   );
   const inputSettings = useSelector(selectInputSettings);
+  const settings = useSelector(selectSettings);
   const timers = useSelector(selectTimers);
 
   const allItems = useLayoutItems({ dataStore, layout });
@@ -124,6 +126,9 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
     layoutView,
     allViews,
     modulesDataCache,
+    allRecords,
+    goals: settings.goalSettings?.goals || [],
+    dateRange: dateRangeForView,
     ui,
     useCases,
   });

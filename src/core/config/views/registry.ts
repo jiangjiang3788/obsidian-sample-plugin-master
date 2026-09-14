@@ -18,6 +18,9 @@ import {
   STATISTICS_EXPORT_CONFIG,
   TABLE_EXPORT_CONFIG,
   TIMELINE_EXPORT_CONFIG,
+  PROGRESS_EXPORT_CONFIG,
+  ENERGY_EXPORT_CONFIG,
+  EISENHOWER_EXPORT_CONFIG,
 } from './exportConfigs';
 import type { ExportViewConfig, ViewDefaultConfig } from './types';
 
@@ -104,20 +107,21 @@ export const VIEW_DEFINITIONS = {
     defaultConfig: PROGRESS_VIEW_DEFAULT_CONFIG,
     layout: { freeformWidth: 480, freeformHeight: 360, deferredMinHeight: 360 },
     capabilities: { headerCreate: false, export: true },
-    exportConfig: BLOCK_EXPORT_DEFAULT_CONFIG,
+    exportConfig: PROGRESS_EXPORT_CONFIG,
   },
   EnergyView: {
     label: '精力',
     defaultConfig: ENERGY_VIEW_DEFAULT_CONFIG,
     layout: { freeformWidth: 720, freeformHeight: 620, deferredMinHeight: 440 },
     capabilities: { headerCreate: true, export: true },
-    exportConfig: BLOCK_EXPORT_DEFAULT_CONFIG,
+    exportConfig: ENERGY_EXPORT_CONFIG,
   },
   EisenhowerView: {
     label: '四象限',
     defaultConfig: EISENHOWER_VIEW_DEFAULT_CONFIG,
     layout: { freeformWidth: 760, freeformHeight: 560, deferredMinHeight: 480 },
-    capabilities: { headerCreate: false, export: false },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: EISENHOWER_EXPORT_CONFIG,
   },
 } as const satisfies Record<string, ViewDefinition>;
 

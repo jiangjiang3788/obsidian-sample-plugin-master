@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from 'preact/hooks';
 import type { InputSettings, RecordViewItem, ViewInstance } from '@core/types/public';
 import type { GoalDefinition } from '@core/goal/public';
 import type { MessageRenderPort } from '@core/ports/public';
-import { exportItemsToMarkdown, getExportConfigByViewType, devLog } from '@core/utils/public';
+import { exportViewToMarkdown, getExportConfigByViewType, devLog } from '@core/utils/public';
 import type { CloseStatisticsPopoverHandler, MarkDoneHandler, NoticeHandler, OpenQuickCreateHandler, OpenRecordHandler, OpenRecordOriginHandler, OpenStatisticsPopoverHandler, ResolveResourcePathHandler, TimerController } from '@shared/types/public';
 import { StatisticsViewView } from './StatisticsViewView';
 import {
@@ -22,6 +22,7 @@ import {
 
 interface StatisticsViewProps {
   items: RecordViewItem[];
+  records?: RecordViewItem[];
   resolveResourcePath?: ResolveResourcePathHandler;
   dateRange: [Date, Date];
   module: ViewInstance;
@@ -48,6 +49,7 @@ interface PopoverState {
 
 export function StatisticsView({
   items,
+  records = items,
   resolveResourcePath,
   dateRange,
   module,
@@ -118,8 +120,12 @@ export function StatisticsView({
         onNotice?.('没有内容可导出');
         return;
       }
-      const exportConfig = getExportConfigByViewType('StatisticsView');
-      navigator.clipboard.writeText(exportItemsToMarkdown(blocks, exportConfig));
+      navigator.clipboard.writeText(exportViewToMarkdown({
+        items: blocks,
+        relatedRecords: records,
+        viewInstance: { ...module, title, viewType: 'BlockView' },
+        config: getExportConfigByViewType('BlockView'),
+      }));
       onNotice?.(`"${title}" 的内容已复制到剪贴板！`);
     };
 

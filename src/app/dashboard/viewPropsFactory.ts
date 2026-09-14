@@ -48,7 +48,7 @@ export function buildViewProps({
 
   return {
     items: viewType === 'EnergyView' ? allItems : viewItems,
-    records: (viewType === 'TimelineView' || viewType === 'EnergyView') ? allRecords : undefined,
+    records: (viewType === 'TimelineView' || viewType === 'EnergyView' || viewType === 'StatisticsView') ? allRecords : undefined,
     dateRange,
     module: viewInstance,
     currentView: layoutView,

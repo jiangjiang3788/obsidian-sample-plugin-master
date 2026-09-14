@@ -127,28 +127,35 @@ export interface EventTimelineViewConfig extends ViewTemporalConfig {
   groupFields: string[];
 }
 
-/** 导出字段展示规则。 */
-export interface FieldRenderConfig {
-  /**
-   * 字段展示类型：
-   * - normal: 普通 "标签: 值"
-   * - content: 多行内容字段，按行展开
-   * - emojiOrLink: 纯 emoji 直接展示，否则转为 ![[ ]] 图片链接
-   */
-  type?: 'normal' | 'content' | 'emojiOrLink';
-}
+/** 导出策略：View 只声明结构策略，Record Profile 负责字段语义。 */
+export type ExportStrategy =
+  | 'records'
+  | 'table'
+  | 'timeline'
+  | 'event-timeline'
+  | 'statistics'
+  | 'heatmap'
+  | 'progress'
+  | 'energy'
+  | 'eisenhower';
 
-/** View 导出配置（供 exportUtils 使用）。 */
+/**
+ * View 导出配置。
+ *
+ * 设计约束：
+ * - 不再为每个 View 复制 idTemplate/detailFields/fieldLabels；
+ * - View 只声明“如何组织数据”；
+ * - Record 类型自己的可读字段由 exportUtils 的 Record Profile 统一决定；
+ * - TaskSession 等内部记录作为关联证据，不作为默认独立导出行。
+ */
 export interface ExportViewConfig {
-  /** @deprecated 请使用 groupFields 支持多级分组 */
-  groupField?: string;
-  groupFields?: string[];
-  groupTitlePrefix?: string;
-  useMarkdownHeadingForGroup: boolean;
-  idTemplate: string;
-  detailFields: string[];
-  fieldLabels: Record<string, string>;
-  fieldRender?: Record<string, FieldRenderConfig>;
+  strategy: ExportStrategy;
+  /** 未显式配置 groupFields/group 时才使用的默认分组。 */
+  defaultGroupFields?: string[];
+  /** Timeline 中 TaskSession 的展示粒度。 */
+  taskSessionMode?: 'summary' | 'expanded';
+  /** Timeline 的实际时长是否仅统计当前日期范围内的 Session。 */
+  taskSessionScope?: 'all' | 'range';
 }
 
 export type ViewDefaultConfig =

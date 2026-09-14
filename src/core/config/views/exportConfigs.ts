@@ -1,139 +1,47 @@
 import type { ExportViewConfig } from './types';
 
+/**
+ * View 只声明结构策略，字段语义统一由 Record Export Profile 决定。
+ * 这组配置故意保持很薄，避免新增 View 时复制整套 Markdown 字段配置。
+ */
 export const BLOCK_EXPORT_DEFAULT_CONFIG: ExportViewConfig = {
-  groupFields: ['filename', 'recordType'],
-  groupTitlePrefix: '',
-  useMarkdownHeadingForGroup: true,
-  idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['recordType', 'date', 'rating', 'image', 'content'],
-  fieldLabels: {
-    recordType: '记录类型',
-    date: '日期',
-    rating: '评分',
-    image: '图片',
-    content: '内容',
-    fullData: '完整数据',
-  },
-  fieldRender: {
-    image: { type: 'emojiOrLink' },
-    content: { type: 'content' },
-    fullData: { type: 'content' },
-  },
-};
-
-export const EVENT_TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
-  groupFields: ['date', 'recordType'],
-  groupTitlePrefix: '',
-  useMarkdownHeadingForGroup: true,
-  idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['title', 'date', 'recordType', 'content'],
-  fieldLabels: {
-    title: '标题',
-    date: '日期',
-    recordType: '记录类型',
-    content: '内容',
-    fullData: '完整数据',
-  },
-  fieldRender: {
-    content: { type: 'content' },
-    fullData: { type: 'content' },
-  },
-};
-
-export const EXCEL_EXPORT_CONFIG: ExportViewConfig = {
-  groupFields: ['recordType', 'date'],
-  groupTitlePrefix: '',
-  useMarkdownHeadingForGroup: true,
-  idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['title', 'date', 'recordType', 'content'],
-  fieldLabels: {
-    title: '标题',
-    date: '日期',
-    recordType: '记录类型',
-    content: '内容',
-    fullData: '完整数据',
-  },
-  fieldRender: {
-    content: { type: 'content' },
-    fullData: { type: 'content' },
-  },
-};
-
-export const STATISTICS_EXPORT_CONFIG: ExportViewConfig = {
-  groupFields: ['period', 'recordType'],
-  groupTitlePrefix: '',
-  useMarkdownHeadingForGroup: true,
-  idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['title', 'date', 'recordType', 'period', 'content'],
-  fieldLabels: {
-    title: '标题',
-    date: '日期',
-    recordType: '记录类型',
-    period: '周期',
-    content: '内容',
-    fullData: '完整数据',
-  },
-  fieldRender: {
-    content: { type: 'content' },
-    fullData: { type: 'content' },
-  },
-};
-
-export const HEATMAP_EXPORT_CONFIG: ExportViewConfig = {
-  groupFields: ['date', 'recordType'],
-  groupTitlePrefix: '',
-  useMarkdownHeadingForGroup: true,
-  idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['date', 'recordType', 'rating', 'content'],
-  fieldLabels: {
-    date: '日期',
-    recordType: '记录类型',
-    rating: '评分',
-    content: '内容',
-    fullData: '完整数据',
-  },
-  fieldRender: {
-    content: { type: 'content' },
-    fullData: { type: 'content' },
-  },
-};
-
-export const TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
-  groupFields: ['filename', 'recordType'],
-  groupTitlePrefix: '',
-  useMarkdownHeadingForGroup: true,
-  idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['title', 'startTime', 'endTime', 'duration', 'recordType', 'content'],
-  fieldLabels: {
-    title: '标题',
-    startTime: '开始时间',
-    endTime: '结束时间',
-    duration: '时长',
-    recordType: '记录类型',
-    content: '内容',
-    fullData: '完整数据',
-  },
-  fieldRender: {
-    content: { type: 'content' },
-    fullData: { type: 'content' },
-  },
+  strategy: 'records',
 };
 
 export const TABLE_EXPORT_CONFIG: ExportViewConfig = {
-  groupFields: ['recordType', 'date'],
-  groupTitlePrefix: '',
-  useMarkdownHeadingForGroup: true,
-  idTemplate: 'ID {{index}}/{{filename}}#{{id}}',
-  detailFields: ['title', 'date', 'recordType', 'content'],
-  fieldLabels: {
-    title: '标题',
-    date: '日期',
-    recordType: '记录类型',
-    content: '内容',
-    fullData: '完整数据',
-  },
-  fieldRender: {
-    content: { type: 'content' },
-    fullData: { type: 'content' },
-  },
+  strategy: 'records',
+};
+
+export const EXCEL_EXPORT_CONFIG: ExportViewConfig = {
+  strategy: 'table',
+};
+
+export const TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
+  strategy: 'timeline',
+  taskSessionMode: 'expanded',
+  taskSessionScope: 'range',
+};
+
+export const EVENT_TIMELINE_EXPORT_CONFIG: ExportViewConfig = {
+  strategy: 'event-timeline',
+};
+
+export const STATISTICS_EXPORT_CONFIG: ExportViewConfig = {
+  strategy: 'statistics',
+};
+
+export const HEATMAP_EXPORT_CONFIG: ExportViewConfig = {
+  strategy: 'heatmap',
+};
+
+export const PROGRESS_EXPORT_CONFIG: ExportViewConfig = {
+  strategy: 'progress',
+};
+
+export const ENERGY_EXPORT_CONFIG: ExportViewConfig = {
+  strategy: 'energy',
+};
+
+export const EISENHOWER_EXPORT_CONFIG: ExportViewConfig = {
+  strategy: 'eisenhower',
 };

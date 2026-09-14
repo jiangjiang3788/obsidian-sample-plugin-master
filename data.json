@@ -385,7 +385,7 @@
         "path": "武装大脑/了解世界",
         "status": "active",
         "icon": "🤩",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 10,
         "metrics": [
           {
@@ -401,21 +401,21 @@
         "path": "武装大脑/了解自我",
         "status": "active",
         "icon": "🐈",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 0
       },
       {
         "path": "照顾好自己/仪容仪表",
         "status": "active",
         "icon": "👩‍🦰",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 0
       },
       {
         "path": "工作能力",
         "status": "active",
         "icon": "🖥",
-        "color": "#FB923C",
+        "color": "#fb923c",
         "sortOrder": 8,
         "timePresetPercent": 10
       },
@@ -423,7 +423,7 @@
         "path": "我若安好便是晴天",
         "status": "active",
         "icon": "✨",
-        "color": "#4ADE80",
+        "color": "#4ade80",
         "sortOrder": 3,
         "timePresetPercent": 20
       },
@@ -431,7 +431,7 @@
         "path": "武装大脑",
         "status": "active",
         "icon": "🧠",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 10,
         "timePresetPercent": 2
       },
@@ -439,7 +439,7 @@
         "path": "照顾好自己",
         "status": "active",
         "icon": "💖",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 2,
         "timePresetPercent": 53
       },
@@ -447,7 +447,7 @@
         "path": "爱好能力",
         "status": "active",
         "icon": "💻",
-        "color": "#A78BFA",
+        "color": "#a78bfa",
         "sortOrder": 9,
         "timePresetPercent": 15
       },
@@ -455,70 +455,70 @@
         "path": "我若安好便是晴天/生活",
         "status": "active",
         "icon": "✨",
-        "color": "#4ADE80",
+        "color": "#4ade80",
         "sortOrder": 20
       },
       {
         "path": "照顾好自己/健康",
         "status": "active",
         "icon": "💤",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 120
       },
       {
         "path": "爱好能力/电脑",
         "status": "active",
         "icon": "🖥",
-        "color": "#A78BFA",
+        "color": "#a78bfa",
         "sortOrder": 0
       },
       {
         "path": "武装大脑/垚垚教育",
         "status": "active",
         "icon": "👶",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 20
       },
       {
         "path": "武装大脑/了解世界/婆婆",
         "status": "active",
         "icon": "🧓",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 3
       },
       {
         "path": "武装大脑/了解世界/家庭",
         "status": "active",
         "icon": "👪",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 4
       },
       {
         "path": "武装大脑/时间整理",
         "status": "active",
         "icon": "🧠",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 60
       },
       {
         "path": "武装大脑/了解世界/芦苇",
         "status": "active",
         "icon": "🔆",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 5
       },
       {
         "path": "武装大脑/了解世界/阳阳",
         "status": "active",
         "icon": "👨",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 2
       },
       {
         "path": "我若安好便是晴天/垚垚",
         "status": "active",
         "icon": "👶",
-        "color": "#4ADE80",
+        "color": "#4ade80",
         "sortOrder": 10,
         "weeklyTargetMinutes": 1620
       },
@@ -526,28 +526,28 @@
         "path": "武装大脑/了解自我/自我",
         "status": "active",
         "icon": "🐈",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 0
       },
       {
         "path": "照顾好自己/仪容仪表/剪头发",
         "status": "active",
         "icon": "✂",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 11
       },
       {
         "path": "照顾好自己/仪容仪表/剪指甲",
         "status": "active",
         "icon": "✋",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 12
       },
       {
         "path": "照顾好自己/仪容仪表/卫生",
         "status": "active",
         "icon": "🛁",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 10,
         "weeklyTargetMinutes": 180
       },
@@ -555,140 +555,140 @@
         "path": "工作能力/其他",
         "status": "active",
         "icon": "📋",
-        "color": "#FB923C",
+        "color": "#fb923c",
         "sortOrder": 30
       },
       {
         "path": "工作能力/手续、对账",
         "status": "active",
         "icon": "📋",
-        "color": "#FB923C",
+        "color": "#fb923c",
         "sortOrder": 40
       },
       {
         "path": "工作能力/投标",
         "status": "active",
         "icon": "🎟",
-        "color": "#FB923C",
+        "color": "#fb923c",
         "sortOrder": 20
       },
       {
         "path": "工作能力/老板任务",
         "status": "active",
         "icon": "💥",
-        "color": "#FB923C",
+        "color": "#fb923c",
         "sortOrder": 50
       },
       {
         "path": "工作能力/设计",
         "status": "active",
         "icon": "🖥",
-        "color": "#FB923C",
+        "color": "#fb923c",
         "sortOrder": 10
       },
       {
         "path": "工作能力/通勤",
         "status": "active",
         "icon": "🛵",
-        "color": "#FB923C",
+        "color": "#fb923c",
         "sortOrder": 0
       },
       {
         "path": "我若安好便是晴天/娱乐",
         "status": "active",
         "icon": "📺",
-        "color": "#4ADE80",
+        "color": "#4ade80",
         "sortOrder": 30
       },
       {
         "path": "我若安好便是晴天/家务",
         "status": "active",
         "icon": "🧹",
-        "color": "#4ADE80",
+        "color": "#4ade80",
         "sortOrder": 70
       },
       {
         "path": "我若安好便是晴天/小手机",
         "status": "active",
         "icon": "🍓",
-        "color": "#4ADE80",
+        "color": "#4ade80",
         "sortOrder": 40
       },
       {
         "path": "我若安好便是晴天/开车",
         "status": "active",
         "icon": "🚗",
-        "color": "#4ADE80",
+        "color": "#4ade80",
         "sortOrder": 80
       },
       {
         "path": "我若安好便是晴天/收纳",
         "status": "active",
         "icon": "📦",
-        "color": "#4ADE80",
+        "color": "#4ade80",
         "sortOrder": 90
       },
       {
         "path": "我若安好便是晴天/整理",
         "status": "active",
         "icon": "📦",
-        "color": "#4ADE80",
+        "color": "#4ade80",
         "sortOrder": 60
       },
       {
         "path": "我若安好便是晴天/车车",
         "status": "active",
         "icon": "🚗",
-        "color": "#4ADE80",
+        "color": "#4ade80",
         "sortOrder": 50
       },
       {
         "path": "我若安好便是晴天/高级生活",
         "status": "active",
         "icon": "🔆",
-        "color": "#4ADE80",
+        "color": "#4ade80",
         "sortOrder": 0
       },
       {
         "path": "武装大脑/复盘整理",
         "status": "active",
         "icon": "🧠",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 50
       },
       {
         "path": "武装大脑/思路整理",
         "status": "active",
         "icon": "🧠",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 70
       },
       {
         "path": "武装大脑/整理笔记",
         "status": "active",
         "icon": "🧠",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 40
       },
       {
         "path": "武装大脑/读书",
         "status": "active",
         "icon": "📚",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 30
       },
       {
         "path": "照顾好自己/习惯",
         "status": "active",
         "icon": "🥛",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 90
       },
       {
         "path": "照顾好自己/午餐",
         "status": "active",
         "icon": "🍱",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 50,
         "weeklyTargetMinutes": 480
       },
@@ -696,7 +696,7 @@
         "path": "照顾好自己/喝水",
         "status": "active",
         "icon": "💧",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 70,
         "weeklyTargetMinutes": 30
       },
@@ -704,21 +704,21 @@
         "path": "照顾好自己/姨妈",
         "status": "active",
         "icon": "🩸",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 110
       },
       {
         "path": "照顾好自己/心情",
         "status": "active",
         "icon": "😄",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 100
       },
       {
         "path": "照顾好自己/早餐",
         "status": "active",
         "icon": "🥚",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 40,
         "weeklyTargetMinutes": 240
       },
@@ -726,7 +726,7 @@
         "path": "照顾好自己/晚餐",
         "status": "active",
         "icon": "🥣",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 60,
         "weeklyTargetMinutes": 240
       },
@@ -734,7 +734,7 @@
         "path": "照顾好自己/睡眠",
         "status": "active",
         "icon": "💤",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 10,
         "weeklyTargetMinutes": 3360
       },
@@ -742,7 +742,7 @@
         "path": "照顾好自己/粑粑",
         "status": "active",
         "icon": "💩",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 20,
         "weeklyTargetMinutes": 180
       },
@@ -750,14 +750,14 @@
         "path": "照顾好自己/身体",
         "status": "active",
         "icon": "🔋",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 80
       },
       {
         "path": "照顾好自己/运动",
         "status": "active",
         "icon": "💪",
-        "color": "#60A5FA",
+        "color": "#60a5fa",
         "sortOrder": 30,
         "weeklyTargetMinutes": 180
       },
@@ -765,42 +765,42 @@
         "path": "武装大脑/了解自我/专注",
         "status": "active",
         "icon": "⏰",
-        "color": "#F87171",
+        "color": "#f87171",
         "sortOrder": 6
       },
       {
         "path": "爱好能力/AI",
         "status": "active",
         "icon": "🤖",
-        "color": "#A78BFA",
+        "color": "#a78bfa",
         "sortOrder": 10
       },
       {
         "path": "爱好能力/ob基础",
         "status": "active",
         "icon": "🎚",
-        "color": "#A78BFA",
+        "color": "#a78bfa",
         "sortOrder": 30
       },
       {
         "path": "爱好能力/整理",
         "status": "active",
         "icon": "✒",
-        "color": "#A78BFA",
+        "color": "#a78bfa",
         "sortOrder": 20
       },
       {
         "path": "爱好能力/笔记系统",
         "status": "active",
         "icon": "📕",
-        "color": "#A78BFA",
+        "color": "#a78bfa",
         "sortOrder": 40
       },
       {
         "path": "爱好能力/记录系统",
         "status": "active",
         "icon": "🎴",
-        "color": "#A78BFA",
+        "color": "#a78bfa",
         "sortOrder": 50
       }
     ],
@@ -5191,11 +5191,11 @@
   "floatingTimerEnabled": true,
   "devConsoleStackEnabled": false,
   "recentGoalPaths": [
-    "武装大脑/时间整理",
     "照顾好自己/睡眠",
+    "爱好能力/ob基础",
+    "武装大脑/时间整理",
     "我若安好便是晴天/小手机",
-    "爱好能力/记录系统",
-    "工作能力/设计"
+    "爱好能力/记录系统"
   ],
   "goalTaskDefaultsSeedVersion": 1
 }
