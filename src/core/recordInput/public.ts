@@ -17,6 +17,7 @@ export { preserveRecordInputRecordTypeSwitchState, clearRecordInputGoalContext, 
 export * from './submitResult';
 export * from './refreshCoordinator';
 export * from './mutationErrors';
+export { resolveContinuationAfterCreate, resolveTaskCompletionContinuation } from './followUp/taskCompletionContinuation';
 export * from './feedback';
 export * from './recovery';
 export * from './debug';
@@ -25,5 +26,5 @@ export { buildRecordOutputPlan, buildRecordPersistencePlan } from './snapshot/Ou
 export * from './RecordInputFacade';
 export { RecordInputKernel } from './RecordInputKernel';
 
-export { GoalTemplateResolver, getCreateEligibleGoalPaths } from '../services/GoalTemplateResolver';
+export { GoalTemplateResolver, getCreateAvailableRecordTypes, getCreateEligibleGoalPaths } from '../services/GoalTemplateResolver';
 export type { GoalTemplateResolveInput, GoalTemplateResolveResult, GoalTemplateResolveStatus, GoalTemplateSourceType } from '../services/GoalTemplateResolver';

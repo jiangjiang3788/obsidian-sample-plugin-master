@@ -18,7 +18,7 @@ export function registerQuickInputFeature(
 ): void {
     registry.register({
         id: 'quickinput',
-        description: 'QuickInput commands',
+        description: '快速输入命令',
         bootMode: 'background',
         delayMs: 100,
         boot: () => {

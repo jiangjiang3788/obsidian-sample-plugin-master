@@ -123,7 +123,7 @@ export const MILESTONE_DEFINITION = genericTemplate(MILESTONE_SCHEMA, { id: RECO
 
 export const ENERGY_DEFINITION = define(ENERGY_SCHEMA, {
   id: RECORD_TYPE_IDS.ENERGY, name: '精力', captureMode: 'direct',
-  description: '目标绑定的精力状态记录；不创建 GoalTemplate，使用直接采集协议。',
+  description: '目标绑定的精力状态记录；不创建目标模板，使用直接采集协议。',
   fields: [], targetFile: '01/目标精力.md', appendUnderHeader: '## {{goalPath}}',
 });
 

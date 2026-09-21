@@ -1,0 +1,100 @@
+/* QuickInput post-submit continuation: compact, already-saved, low-friction actions. */
+.modal.think-quick-input-modal .think-quick-input-continuation {
+  display: grid;
+  gap: var(--think-space-3);
+  align-content: start;
+  min-height: 0;
+  padding: var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-surface-subtle);
+}
+
+.modal.think-quick-input-modal .think-quick-input-continuation__summary,
+.modal.think-quick-input-modal .think-quick-input-continuation__actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-quick-input-continuation__summary {
+  flex-wrap: wrap;
+  gap: var(--think-space-3);
+}
+
+.modal.think-quick-input-modal .think-quick-input-continuation__status {
+  flex: 0 0 auto;
+  color: var(--think-text-primary);
+  font-size: var(--think-type-section-size);
+  font-weight: var(--think-type-section-weight);
+}
+
+.modal.think-quick-input-modal .think-quick-input-continuation__context,
+.modal.think-quick-input-modal .think-quick-input-continuation__prompt {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+}
+
+.modal.think-quick-input-modal .think-quick-input-continuation__context {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal.think-quick-input-modal .think-quick-input-continuation__actions {
+  flex-wrap: wrap;
+  gap: var(--think-space-2);
+}
+
+.modal.think-quick-input-modal .think-quick-input-continuation__prompt {
+  flex: 0 0 auto;
+  margin-right: var(--think-space-1);
+}
+
+.modal.think-quick-input-modal .think-quick-input-continuation__options {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: var(--think-space-2);
+  min-width: 0;
+}
+
+.modal.think-quick-input-modal .think-quick-input-continuation__option {
+  appearance: none;
+  min-height: var(--think-control-height-sm);
+  padding: var(--think-space-2) var(--think-space-3);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  font: inherit;
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-medium);
+  line-height: var(--think-line-height-tight);
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    background-color var(--think-duration-fast) var(--think-ease-standard),
+    border-color var(--think-duration-fast) var(--think-ease-standard),
+    color var(--think-duration-fast) var(--think-ease-standard);
+}
+
+.modal.think-quick-input-modal .think-quick-input-continuation__option:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--think-record-type-accent);
+}
+
+.modal.think-quick-input-modal .think-quick-input-continuation__finish {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+@media (max-width: 640px) {
+  .modal.think-quick-input-modal .think-quick-input-continuation__summary,
+  .modal.think-quick-input-modal .think-quick-input-continuation__actions {
+    align-items: flex-start;
+  }
+
+  .modal.think-quick-input-modal .think-quick-input-continuation__context {
+    white-space: normal;
+  }
+}

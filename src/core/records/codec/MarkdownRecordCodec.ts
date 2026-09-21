@@ -431,7 +431,7 @@ export function ensureRecordEnvelope(markdown: string, input: { recordId: string
   const trimmed = markdown.trim();
   const lines = trimmed.split(/\r?\n/);
   if (lines[0]?.trim() !== '<!-- start -->' || lines[lines.length - 1]?.trim() !== '<!-- end -->') {
-    throw new Error('只允许写入 Markdown Record Block。');
+    throw new Error('只允许写入笔记记录块。');
   }
   const body = lines.slice(1, -1).filter(line => !/^\s*(?:记录ID|记录类型)\s*::/.test(line));
   return ['<!-- start -->', `记录ID:: ${input.recordId}`, `记录类型:: ${input.recordType}`, ...body, '<!-- end -->'].join('\n');

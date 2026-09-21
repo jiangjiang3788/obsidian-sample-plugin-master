@@ -101,7 +101,7 @@ export function GoalTimePresetInput({ goal, goals, onRootCommit, onChildCommit, 
   };
 
   const title = isRoot
-    ? `目标 ${formatHumanMinutes(displayedTarget)}/周 · 顶层百分比以一周自然时间 168h 换算 · 平衡弹性 ±10%`
+    ? `目标 ${formatHumanMinutes(displayedTarget)}/周 · 顶层百分比以一周自然时间 168 小时 换算 · 平衡弹性 ±10%`
     : info?.configured
       ? `目标 ${formatHumanMinutes(info.weeklyTargetMinutes)}/周 · 子目标时间可选；父目标余额在列表末尾显示`
       : '子目标可选设置周目标时间；不需要时间预设的目标可以留空。';
@@ -137,7 +137,7 @@ export function GoalTimePresetInput({ goal, goals, onRootCommit, onChildCommit, 
           }
         }}
       />
-      <span className="think-goal-template-matrix__budget-unit" aria-hidden="true">{isRoot ? '%' : 'h/周'}</span>
+      <span className="think-goal-template-matrix__budget-unit" aria-hidden="true">{isRoot ? '%' : '小时/周'}</span>
       {isRoot && displayedTarget !== null ? <span className="think-goal-template-matrix__budget-derived">{formatHumanMinutes(displayedTarget)}/周</span> : null}
       {isRoot && storedPercent !== null ? <span className="sr-only">{formatPercent(storedPercent)}%</span> : null}
     </span>

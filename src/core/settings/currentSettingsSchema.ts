@@ -43,9 +43,9 @@ function hydrateGoalOnlySettings(value: unknown): GoalSettings {
   const raw = isRecord(value) ? value : {};
   const rawGoals = Array.isArray(raw.goals) ? raw.goals : [];
   const goals: GoalDefinition[] = rawGoals.map((entry) => {
-    if (!isRecord(entry)) throw new Error('Invalid Goal row: expected object.');
+    if (!isRecord(entry)) throw new Error('目标数据无效：应为对象。');
     const path = normalizeGoalPath(String(entry.path ?? ''));
-    if (!path) throw new Error('Invalid Goal row: path is required.');
+    if (!path) throw new Error('目标数据无效：缺少路径。');
     return {
       path,
       description: typeof entry.description === 'string' ? entry.description : undefined,
@@ -66,14 +66,14 @@ function hydrateGoalOnlySettings(value: unknown): GoalSettings {
 
   const rawTemplates = Array.isArray(raw.goalTemplates) ? raw.goalTemplates : [];
   const goalTemplates: GoalTemplateStorageRow[] = rawTemplates.map((entry) => {
-    if (!isRecord(entry)) throw new Error('Invalid GoalTemplate row: expected object.');
+    if (!isRecord(entry)) throw new Error('目标模板数据无效：应为对象。');
     const goalPath = normalizeGoalPath(String(entry.goalPath ?? ''));
     const recordTypeId = String(entry.recordTypeId ?? '').trim();
-    if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`GoalTemplate references missing Goal path (${goalPath || '<empty>'}).`);
-    if (!recordTypeId) throw new Error(`GoalTemplate ${goalPath} is missing recordTypeId.`);
+    if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`目标模板引用了不存在的目标路径（${goalPath || '空'}）。`);
+    if (!recordTypeId) throw new Error(`目标模板 ${goalPath} 缺少记录类型标识。`);
     const recordSchema = getRecordSchemaDefinitionById(recordTypeId);
     if (!recordSchema || recordSchema.captureMode !== 'template') {
-      throw new Error(`GoalTemplate ${goalPath} references non-current Record Type (${recordTypeId}). Run the offline 1.5.0 convergence first.`);
+      throw new Error(`目标模板 ${goalPath} 引用了当前版本不支持的记录类型（${recordTypeId}）。请先完成 1.5.0 离线数据收敛。`);
     }
     const keepRecordSubtype = recordSchema.recordType === 'energy';
     const fields = stripGoalTemplateIconFieldDefaults(Array.isArray(entry.fields)
@@ -228,7 +228,7 @@ function persistGoalOnlySettings(settings: ThinkSettings): Record<string, unknow
     const path = normalizeGoalPath(template.goalPath);
     if (!path) throw new Error('Cannot persist GoalTemplate without canonical Goal path.');
     const recordSchema = getRecordSchemaDefinitionById(template.recordTypeId);
-    if (!recordSchema || recordSchema.captureMode !== 'template') throw new Error(`Cannot persist non-current GoalTemplate Record Type: ${template.recordTypeId}`);
+    if (!recordSchema || recordSchema.captureMode !== 'template') throw new Error(`无法保存当前版本不支持的目标模板记录类型：${template.recordTypeId}`);
     const keepRecordSubtype = recordSchema.recordType === 'energy';
     const fields = stripGoalTemplateIconFieldDefaults((template.fields || []).filter((field) => {
       const record = field as unknown as Record<string, unknown>;

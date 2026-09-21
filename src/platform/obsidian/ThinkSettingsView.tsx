@@ -22,7 +22,7 @@ export class ThinkSettingsView extends ItemView {
     }
 
     getDisplayText(): string {
-        return 'Think OS 控制台';
+        return '思考系统控制台';
     }
 
     getIcon(): string {

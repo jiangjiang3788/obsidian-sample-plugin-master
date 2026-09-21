@@ -144,11 +144,11 @@ export class AiChatService {
         const settings = this.getAiSettings();
 
         if (!settings.enabled) {
-            throw new Error('AI 功能未启用，请在设置中开启');
+            throw new Error('智能助手未启用，请在设置中开启');
         }
 
         if (!settings.apiEndpoint || !settings.apiKey || !settings.model) {
-            throw new Error('AI 配置不完整，请检查 API 设置');
+            throw new Error('智能助手配置不完整，请检查接口设置');
         }
 
         // 构建消息列表
@@ -233,7 +233,7 @@ export class AiChatService {
             };
         } catch (e: any) {
             devError('AiChatService: 请求失败', e);
-            throw new Error(`AI 请求失败: ${e.message || e}`);
+            throw new Error(`智能助手请求失败：${e.message || e}`);
         }
     }
 

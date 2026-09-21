@@ -46,7 +46,7 @@ export class RecordIndex {
       for (const record of records) {
         const id = String(record.id || '').trim();
         if (!id) {
-          this.issues.push({ code: 'record_id_missing', path, message: `Record in ${path} has no 记录ID.` });
+          this.issues.push({ code: 'record_id_missing', path, message: `文件 ${path} 中存在缺少记录标识的记录。` });
           continue;
         }
         const source = record.source;
@@ -79,7 +79,7 @@ export class RecordIndex {
         this.issues.push({
           code: 'record_id_duplicate',
           recordId,
-          message: `Duplicate 记录ID ${recordId}: ${locations.map(location => `${location.path}:${location.startLine}`).join(', ')}`,
+          message: `记录标识 ${recordId} 重复：${locations.map(location => `${location.path}:${location.startLine}`).join('、')}`,
         });
       }
     }
@@ -102,7 +102,7 @@ export class RecordIndex {
             code: 'task_series_reference_orphan',
             recordId: task.id,
             path: task.source?.path,
-            message: `Task ${task.id} references missing Task Series ${task.seriesId}.`,
+            message: `任务 ${task.id} 引用了不存在的任务系列 ${task.seriesId}。`,
           });
         } else {
           task.recurrenceInfo = series.recurrenceInfo;
@@ -146,7 +146,7 @@ export class RecordIndex {
             code: 'record_reference_orphan',
             recordId: series.id,
             path: series.source?.path,
-            message: `Active Task Series ${series.id} has no currentTaskId.`,
+            message: `活动任务系列 ${series.id} 缺少当前任务标识。`,
           });
         } else if (series.currentTaskId) {
           const current = asTaskRecord(this.recordsById.get(series.currentTaskId));
@@ -171,7 +171,7 @@ export class RecordIndex {
         this.issues.push({
           code: 'record_reference_orphan',
           recordId: seriesId,
-          message: `Task Series ${seriesId} has ${openTasks.length} open instances; single-active-instance requires at most one.`,
+          message: `任务系列 ${seriesId} 有 ${openTasks.length} 个未完成实例；同一时间最多只能有一个活动实例。`,
         });
       }
     }

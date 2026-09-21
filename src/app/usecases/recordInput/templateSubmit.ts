@@ -45,7 +45,7 @@ export function prepareTemplateSubmit(params: {
       ok: false,
       result: buildValidationErrorResult(params.operation, [
         ...resolved.errors,
-        ...(!resolved.template ? [{ code: 'record_template_missing', message: 'No effective template is available for this record.' }] : []),
+        ...(!resolved.template ? [{ code: 'record_template_missing', message: '当前记录没有可用的有效模板。' }] : []),
       ], resolved.warnings),
     };
   }

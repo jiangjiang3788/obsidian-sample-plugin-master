@@ -167,7 +167,7 @@ export function encodeFieldValueForMarkdown(value: unknown, def?: FieldCodecDefi
     const raw = String(value).trim();
     if (!raw) return '';
     const canonical = normalizeGoalPath(raw);
-    if (!canonical) throw new Error('Invalid Goal path: Goal is not Tag and cannot contain # markers.');
+    if (!canonical) throw new Error('目标路径无效：目标不是标签，不能包含 # 标记。');
     return canonical;
   }
   return String(value).trim();

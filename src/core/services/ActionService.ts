@@ -4,7 +4,7 @@ import { dayjs } from '@core/utils/date';
 import type { RecordViewItem } from '@/core/records/RecordEntity';
 import type { ViewInstance } from '@/core/view/ViewConfig';
 import type { RecordCaptureTemplate, TemplateField } from '@/core/recordInput/CaptureTemplate';
-import { getTemplateRecordTypes } from '@/core/recordTypes/public';
+import { getRecordTypePresentation, getTemplateRecordTypes } from '@/core/recordTypes/public';
 import { DataStore } from '@core/services/DataStore';
 import { InputService } from '@core/services/InputService';
 import type { QuickInputConfig, ISettingsProvider } from '@core/services/types';
@@ -45,14 +45,14 @@ export class ActionService {
         const filters = viewInstance.filters || [];
         const recordTypeFilter = filters.find((f) => f.field === 'recordType' && (f.op === '=' || f.op === 'includes'));
         if (!recordTypeFilter || !recordTypeFilter.value) {
-            this.ui.notice('快捷输入失败：此视图未按 "recordType" 进行筛选。');
+            this.ui.notice('快捷输入失败：此视图未按“记录类型”进行筛选。');
             return null;
         }
 
         const recordType = String(recordTypeFilter.value);
         const targetRecordType = this.findRecordTypeTemplate(recordType);
         if (!targetRecordType) {
-            this.ui.notice(`快捷输入失败：找不到记录类型 为 "${recordType}" 的模板。`);
+            this.ui.notice(`快捷输入失败：找不到记录类型为“${getRecordTypePresentation(recordType).label}”的模板。`);
             return null;
         }
 
@@ -104,7 +104,7 @@ export class ActionService {
     public getQuickInputConfigForTaskEdit(taskId: string): QuickInputConfig | null {
         const item = this.dataStore.queryItems().find(i => i.id === taskId);
         if (!item) {
-            this.ui.notice(`错误：找不到ID为 ${taskId} 的任务。`);
+            this.ui.notice(`错误：找不到标识为 ${taskId} 的任务。`);
             return null;
         }
 
@@ -112,7 +112,7 @@ export class ActionService {
         const targetRecordType = this.findRecordTypeTemplate(recordType);
 
         if (!targetRecordType) {
-            this.ui.notice(`找不到与记录类型 "${recordType}" 匹配的模板，无法编辑。`);
+            this.ui.notice(`找不到与记录类型“${getRecordTypePresentation(recordType).label}”匹配的模板，无法编辑。`);
             return null;
         }
 

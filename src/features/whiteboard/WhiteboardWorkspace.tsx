@@ -307,7 +307,7 @@ export function WhiteboardWorkspace({ records, sourceRecords = records, whiteboa
               data-whiteboard-camera-y={viewportController.camera.y} data-whiteboard-panning={viewportController.panning ? 'true' : 'false'} data-whiteboard-grid={gridVisible ? 'on' : 'off'}
             >
               {selection.marqueeRect && <div class="think-whiteboard-selection-marquee" style={`left:${selection.marqueeRect.left}px;top:${selection.marqueeRect.top}px;width:${selection.marqueeRect.width}px;height:${selection.marqueeRect.height}px;`} aria-hidden="true" />}
-              <div class="think-whiteboard-pan-hint" aria-hidden="true">拖动空白移动 · Ctrl/⌘ + 拖动框选 · Ctrl/⌘ + 滚轮缩放</div>
+              <div class="think-whiteboard-pan-hint" aria-hidden="true">拖动空白移动 · 按住控制键或⌘键拖动框选 · 按住控制键或⌘键滚轮缩放</div>
               {semanticStatus && <div class="think-whiteboard-semantic-status" aria-live="polite">{semanticStatus}</div>}
               {workbench.visibleItems.length === 0 && workbench.visibleGroups.length === 0 && annotation.visibleAnnotations.length === 0 && (
                 <div class="think-whiteboard-empty think-whiteboard-empty--canvas">从左侧拖一条记录到这里，或点击“加入”。</div>

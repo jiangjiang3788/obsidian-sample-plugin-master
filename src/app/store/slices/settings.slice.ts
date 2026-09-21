@@ -66,7 +66,7 @@ export function createSettingsSlice(
             updateAiSettings: async (aiSettings: AiSettings): Promise<void> => {
                 await runSettingsMutation({
                     action: 'settings.updateAiSettings',
-                    fallbackError: 'AI 设置更新失败',
+                    fallbackError: '智能助手设置更新失败',
                     mutate: (draft) => replaceAiSettingsDraft(draft, aiSettings),
                 });
             },

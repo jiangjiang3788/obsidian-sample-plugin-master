@@ -8,7 +8,7 @@ import { ReadonlyViewEditorNotice } from './settingsEditorUi';
 export function BlockViewEditor() {
   return (
     <ReadonlyViewEditorNotice
-      title="块视图（BlockView）"
+      title="块视图"
     />
   );
 }

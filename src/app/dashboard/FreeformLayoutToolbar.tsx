@@ -82,7 +82,7 @@ export function FreeformLayoutToolbar({
         {compactFallback
           ? '当前为窄屏或触控设备，已自动降级为只读列表；桌面宽屏可编辑自由布局。'
           : editing
-            ? '点击卡片选中；方向键移动，Shift+方向键缩放，PageUp 置顶，L 锁定，C 折叠，Esc 取消选择。'
+            ? '点击卡片选中；方向键移动；按住上档键并按方向键缩放；还可用键盘快捷操作置顶、锁定、折叠和取消选择。'
             : '查看模式下不会误拖动；折叠状态按当前布局独立保存。'}
       </span>
     </div>

@@ -69,7 +69,7 @@ describe('AI 接口测速组合链路', () => {
     expect(requestUrl).toBe('https://local.test/v1/chat/completions');
     expect(requestInit?.method).toBe('POST');
     expect(String(requestInit?.body)).toContain('integration-model');
-    expect(notices.some((message) => message.includes('AI 接口测速完成'))).toBe(true);
+    expect(notices.some((message) => message.includes('智能助手接口测速完成'))).toBe(true);
     takeLatest.dispose();
   });
 });

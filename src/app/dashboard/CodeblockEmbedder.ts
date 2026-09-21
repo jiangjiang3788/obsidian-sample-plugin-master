@@ -60,7 +60,7 @@ export class CodeblockEmbedder {
                     }
                 } catch (e) {
                     devWarn('ThinkPlugin: 代码块内容解析失败', e);
-                    el.createDiv({ text: '代码块内容解析失败，请检查语法。应为布局名称或JSON。' });
+                    el.createDiv({ text: '代码块内容解析失败，请检查语法。应为布局名称或结构化配置数据。' });
                     return;
                 }
                 
@@ -69,12 +69,12 @@ export class CodeblockEmbedder {
 
                 if (!layoutName && allLayouts.length > 0) {
                     layoutName = allLayouts[0].name;
-                    this.uiPort.notice(`Think Plugin: 未指定布局，已自动选择第一个布局 "${layoutName}"。`);
+                    this.uiPort.notice(`思考插件：未指定布局，已自动选择第一个布局“${layoutName}”。`);
                 }
 
                 const layout = allLayouts.find((l: Layout) => l.name === layoutName);
                 if (!layout) {
-                    el.createDiv({ text: `Think Plugin: 找不到名称为 "${layoutName}" 的布局。请在插件设置中创建。` });
+                    el.createDiv({ text: `思考插件：找不到名称为“${layoutName}”的布局。请在插件设置中创建。` });
                     return;
                 }
 

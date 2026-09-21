@@ -49,7 +49,7 @@ export function QuickInputImageFieldRenderer({
               event.preventDefault();
             }
           }}
-          placeholder="图片路径、![[图片.png]] 或 URL"
+          placeholder="图片路径、![[图片.png]] 或网络地址"
         />
         <QuickInputImagePreview rawValue={value} getResourcePath={getResourcePath} />
       </div>

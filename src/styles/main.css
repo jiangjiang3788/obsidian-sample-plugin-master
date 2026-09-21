@@ -74,6 +74,7 @@
 @import "./features/overlay-ui.css";
 @import "./features/timer.css";
 @import "./features/quick-input-editor.css";
+@import "./features/quick-input-continuation.css";
 @import "./features/quick-input-editor-controls.css";
 
 @import "./overrides/mui.css";

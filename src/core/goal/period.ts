@@ -90,7 +90,7 @@ export function resolveDerivedPeriod(dateValue?: string | null, granularityValue
     const quarter = Math.floor(date.getMonth() / 3) + 1;
     const start = new Date(year, (quarter - 1) * 3, 1);
     const end = new Date(year, quarter * 3, 0);
-    return { id: `${year}-Q${quarter}`, label: `${year} Q${quarter}`, granularity, startDate: ymd(start), endDate: ymd(end) };
+    return { id: `${year}-Q${quarter}`, label: `${year} 年第 ${quarter} 季度`, granularity, startDate: ymd(start), endDate: ymd(end) };
   }
   const start = new Date(year, 0, 1);
   const end = new Date(year, 11, 31);

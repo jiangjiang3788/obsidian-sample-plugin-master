@@ -29,7 +29,7 @@ export function readExcelKeyboardValue(event: KeyboardEvent): string {
 }
 
 export function getExcelReadonlyTitle(policyReason?: string): string {
-  return policyReason || '该字段不可在 Excel 单元格中直接编辑';
+  return policyReason || '该字段不可在表格单元格中直接编辑';
 }
 
 export function getExcelTypedInputProps(kind: string): Record<string, string | number> {
@@ -51,8 +51,8 @@ export function buildExcelCellTitle(params: {
   const { error, editable, policyReason } = params;
   if (error) return error;
   return editable
-    ? '双击/F2/Enter 编辑；方向键/Tab 移动；可粘贴多行多列；拖动右下角小方块可向同列覆盖；Ctrl/⌘ 点击打开完整编辑'
-    : `${getExcelReadonlyTitle(policyReason)}；Ctrl/⌘ 点击可打开完整编辑`;
+    ? '双击或按 F2、回车键编辑；方向键或制表键移动；可粘贴多行多列；拖动右下角小方块可向同列覆盖；按住控制键或⌘键点击打开完整编辑'
+    : `${getExcelReadonlyTitle(policyReason)}；按住控制键或⌘键点击可打开完整编辑`;
 }
 
 export function buildExcelCellClassName(params: {

@@ -4,6 +4,7 @@
 import { h } from 'preact';
 import type { GoalDefinition } from '@core/goal/public';
 import type { RecordViewItem } from '@core/types/public';
+import { formatFieldValue, getFieldLabel } from '@core/fields/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, ResolveResourcePathHandler, TimerController } from '@shared/types/public';
 import { TableViewCell } from './TableViewCell';
 import { buildTableViewRenderModel } from './TableViewModel';
@@ -33,14 +34,14 @@ export function TableView({ items, rowField, colField, onMarkDone, resolveResour
             <table class="think-table think-data-grid think-data-grid--matrix">
                 <thead>
                     <tr>
-                        <th>{rowField}</th>
-                        {renderModel.sortedCols.map(col => (<th key={col}>{col}</th>))}
+                        <th>{getFieldLabel(rowField)}</th>
+                        {renderModel.sortedCols.map(col => (<th key={col}>{formatFieldValue(colField, col)}</th>))}
                     </tr>
                 </thead>
                 <tbody>
                     {renderModel.sortedRows.map(row => (
                         <tr key={row}>
-                            <td><strong>{row}</strong></td>
+                            <td><strong>{formatFieldValue(rowField, row)}</strong></td>
                             {renderModel.sortedCols.map(col => (
                                 <TableViewCell
                                     key={col}

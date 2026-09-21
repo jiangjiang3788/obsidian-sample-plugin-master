@@ -39,7 +39,7 @@ export function ExcelViewToolbar({
   const isFullMarkdownContent = contentDisplayMode === 'fullMarkdown';
   return (
     <>
-      <div class="excel-view-toolbar" aria-label="Excel 视图工具栏">
+      <div class="excel-view-toolbar" aria-label="表格视图工具栏">
         <span class="excel-view-legend-item is-editable">可编辑 {editableColumnCount}</span>
         <span class="excel-view-legend-separator" aria-hidden="true">|</span>
         <span class="excel-view-legend-item is-readonly">只读 {readonlyColumnCount}</span>

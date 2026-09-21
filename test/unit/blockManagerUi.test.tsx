@@ -25,13 +25,14 @@ describe('已注册记录类型查看器', () => {
     expect(host.textContent).not.toContain('删除记录类型');
   });
 
-  it('展开普通记录类型后显示注册 ID、记录 key 与默认字段信息', async () => {
+  it('展开普通记录类型后只显示中文记录类型名称与默认字段信息', async () => {
     await act(async () => render(<RecordTypeManager />, host));
     const recordType = getEffectiveRecordTypes().find((item) => item.captureMode === 'template' && item.id !== 'core.energy')!;
     const title = [...host.querySelectorAll<HTMLButtonElement>('.think-block-accordion__title')].find((button) => button.textContent?.trim() === recordType.name)!;
     await act(async () => title.click());
-    expect(host.textContent).toContain('注册 ID');
-    expect(host.textContent).toContain(recordType.id);
-    expect(host.textContent).toContain(recordType.recordType);
+    expect(host.textContent).toContain('记录类型');
+    expect(host.textContent).toContain(recordType.name);
+    expect(host.textContent).not.toContain(recordType.id);
+    expect(host.textContent).not.toContain(recordType.recordType);
   });
 });

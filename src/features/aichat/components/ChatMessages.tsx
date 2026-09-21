@@ -27,7 +27,7 @@ export function ChatMessages({ messages, isLoading, emptyHint, enableRetrieval, 
                     {isLoading ? (
                         <div className="think-ai-chat-thinking" role="status">
                             <span className="think-overlay-spinner" aria-hidden="true" />
-                            <span>AI 正在思考…</span>
+                            <span>智能助手正在思考…</span>
                         </div>
                     ) : null}
                 </div>

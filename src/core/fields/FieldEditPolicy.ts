@@ -141,7 +141,7 @@ function inferExtraDefinition(field: string, sampleValue?: unknown): FieldDefini
     category: 'custom',
     source: 'extra',
     cardinality: isMulti ? 'multi' : 'single',
-    description: '从 Markdown 中显式未知 KV 解析出的自定义字段',
+    description: '从笔记文档中未知键值对解析出的自定义字段',
   };
 }
 
@@ -184,7 +184,7 @@ export function getFieldEditPolicy(field: string, sampleValue?: unknown): FieldE
   }
 
   if (definition?.source === 'file') {
-    return readonlyPolicy(field, canonicalField, definition, '文件元信息字段不应通过 Excel 单元格直接编辑');
+    return readonlyPolicy(field, canonicalField, definition, '文件元信息字段不应通过 表格单元格直接编辑');
   }
 
   if (!definition && !canonicalField.startsWith('extra.')) {
@@ -193,7 +193,7 @@ export function getFieldEditPolicy(field: string, sampleValue?: unknown): FieldE
 
   const editorKind = getFieldEditorKind(definition, sampleValue);
   if (editorKind === 'path' || definition?.valueType === 'path' || definition?.inputType === 'path' || definition?.inputType === 'multiPath') {
-    return readonlyPolicy(field, canonicalField, definition, '路径类字段涉及文件定位、分类或目标结构，不能在 Excel 单元格内直接修改');
+    return readonlyPolicy(field, canonicalField, definition, '路径类字段涉及文件定位、分类或目标结构，不能在 表格单元格内直接修改');
   }
 
   if (editorKind === 'readonly' || definition?.valueType === 'file' || definition?.inputType === 'file') {

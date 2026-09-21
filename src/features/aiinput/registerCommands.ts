@@ -54,19 +54,19 @@ export function registerAiInputCommands(plugin: PluginHost): void {
 
     plugin.addCommand({
         id: 'think-ai-natural-input',
-        name: 'AI: 自然语言快速记录',
+        name: '智能助手：自然语言快速记录',
         callback: () => runNaturalInputCommand(false),
     });
 
     plugin.addCommand({
         id: 'think-ai-natural-input-fast',
-        name: 'AI: 自然语言快速记录（快速模式）',
+        name: '智能助手：自然语言快速记录（快速模式）',
         callback: () => runNaturalInputCommand(true),
     });
 
     plugin.addCommand({
         id: 'think-ai-speed-test',
-        name: 'AI: 接口测速',
+        name: '智能助手：接口测速',
         callback: runSpeedTestCommand,
     });
 }

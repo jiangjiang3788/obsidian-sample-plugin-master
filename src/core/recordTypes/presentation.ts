@@ -27,20 +27,40 @@ export interface RecordTypePresentation {
   recordType: UserVisibleRecordType | string;
   label: string;
   order: number;
+  /** Small, stable visual glyph for compact action surfaces such as QuickInput. */
+  icon: string;
   /** CSS semantic token name. Consumers must not hard-code type colors. */
   colorToken: string;
 }
 
 type RecordTypePresentationIdentity = {
   order: number;
+  icon: string;
   colorToken: string;
 };
+
+const RECORD_TYPE_ICONS: Readonly<Record<UserVisibleRecordType, string>> = Object.freeze({
+  task: '✓',
+  energy: '⚡',
+  habit: '♥',
+  event: '◷',
+  feeling: '♡',
+  thought: '✦',
+  review: '≡',
+  plan: '◇',
+  blocker: '!',
+  milestone: '◆',
+});
 
 export const RECORD_TYPE_PRESENTATION_REGISTRY = Object.freeze(
   Object.fromEntries(
     RECORD_TYPE_PRESENTATION_ORDER.map((recordType, index) => [
       recordType,
-      { order: (index + 1) * 10, colorToken: `--think-record-type-${recordType}` },
+      {
+        order: (index + 1) * 10,
+        icon: RECORD_TYPE_ICONS[recordType],
+        colorToken: `--think-record-type-${recordType}`,
+      },
     ]),
   ) as Record<UserVisibleRecordType, RecordTypePresentationIdentity>,
 );
@@ -83,6 +103,7 @@ export function getRecordTypePresentation(value: unknown): RecordTypePresentatio
     recordType,
     label: schema?.name || schema?.displayName || recordType || '记录',
     order: identity?.order ?? Number.MAX_SAFE_INTEGER,
+    icon: identity?.icon || '•',
     colorToken: identity?.colorToken || '--think-record-type-neutral',
   };
 }

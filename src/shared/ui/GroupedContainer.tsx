@@ -162,7 +162,7 @@ export function GroupedContainer(props: GroupedContainerProps) {
                             stopInteractionEvent(e);
                             onGroupTitleClick(path, e as any);
                         }}
-                        title="点击折叠/展开（Ctrl/⌘+点击：全部折叠/展开）"
+                        title="点击折叠/展开（按住控制键或⌘键点击：全部折叠/展开）"
                     >
                         <span class={toggleIconClass}>
                             <ThinkIcon name={isCollapsed ? 'chevron-right' : 'chevron-down'} />

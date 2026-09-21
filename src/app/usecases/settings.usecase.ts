@@ -161,7 +161,7 @@ export class SettingsUseCase {
                 return;
             }
             const normalized = color == null ? null : normalizeRecordTypeColorHex(color);
-            if (color != null && !normalized) throw new Error(`无效的 Record Type 颜色: ${color}`);
+            if (color != null && !normalized) throw new Error(`无效的记录类型颜色: ${color}`);
             await state.updateSettings((draft) => {
                 const next = { ...(draft.recordTypeColors || {}) };
                 if (normalized) next[recordType] = normalized;

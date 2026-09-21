@@ -55,9 +55,11 @@ function flattenTableMatrix(matrix: Record<string, Record<string, RecordViewItem
 }
 
 describe('RecordType x View compatibility matrix', () => {
-  it('BlockView keeps all nine user Record types when grouped by type', () => {
+  it('BlockView keeps all nine user Record types when grouped by type and renders Chinese group labels', () => {
     const model = buildBlockViewRenderModel({ items, effectiveGroupFields: ['recordType'] });
     expect(new Set(flattenGroupItems(model.groupTree).map((item) => item.recordType))).toEqual(new Set(RECORD_TYPES));
+    expect(model.groupTree.map((node) => node.label)).toEqual(['任务', '精力', '打卡', '事件', '思考', '总结', '计划', '阻碍项', '里程碑']);
+    expect(model.groupTree.every((node) => node.label !== node.key)).toBe(true);
   });
 
   it('TableView keeps all nine user Record types in a configured matrix', () => {

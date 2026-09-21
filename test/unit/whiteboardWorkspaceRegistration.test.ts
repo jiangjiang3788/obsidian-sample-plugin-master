@@ -17,7 +17,7 @@ describe('ThinkOS 白板独立工作区注册', () => {
     const editorRegistry = read('src/features/settings/views/editors/registry.tsx');
 
     expect(feature).toContain("id: 'whiteboard'");
-    expect(feature).toContain("addRibbonIcon('panels-top-left', 'ThinkOS 白板'");
+    expect(feature).toContain("addRibbonIcon('panels-top-left', '思考系统白板'");
     expect(feature).toContain("id: 'think-open-whiteboard'");
     expect(platform).toContain("THINK_WHITEBOARD_VIEW_TYPE = 'think-os-whiteboard'");
     expect(platform).toContain('extends ItemView');

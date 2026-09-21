@@ -35,7 +35,7 @@ export async function initializeCore(opts: {
                 // DI diagnostics: guard before any resolve (dev only, opt-in)
                 if (!container.isRegistered(SETTINGS_PERSISTENCE_TOKEN)) {
                     diWarn('SettingsPersistence NOT registered in container used for resolve()');
-                    throw new Error('SettingsPersistence token missing before resolve()');
+                    throw new Error('解析设置持久化服务前缺少必要的服务令牌。');
                 } else {
                     diDebug('SettingsPersistence is registered before resolve()');
                 }

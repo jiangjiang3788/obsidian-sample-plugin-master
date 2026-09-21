@@ -86,7 +86,7 @@ export function buildQuarterStatisticsRenderModel(input: {
         if (!weekStart) return [];
         return [{
           key: weekStart.format('YYYY-MM-DD'),
-          label: `W${weekStart.isoWeek()}`,
+          label: `第${weekStart.isoWeek()}周`,
           data: weekData,
           identifier: (goal: string) => ({
             type: 'week',

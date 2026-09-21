@@ -31,7 +31,7 @@ export function useQuickInputOriginalNavigation({
   );
 
   const originalGestureHint = originalUri && !originalUri.startsWith('#error')
-    ? '桌面端按住 Ctrl/⌘ 点击标题或说明；手机端双击标题或说明，可打开原文'
+    ? '桌面端按住控制键或⌘键点击标题或说明；手机端双击标题或说明，可打开原文'
     : undefined;
 
   const openOriginal = useCallback(() => {

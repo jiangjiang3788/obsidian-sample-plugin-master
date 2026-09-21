@@ -1,3 +1,4 @@
+export { openRecordContinuationOption } from './followUpCreateAction';
 export {
   isModuleHeaderCreateAllowed,
   openCreateFromViewHeader,

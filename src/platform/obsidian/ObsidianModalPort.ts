@@ -9,7 +9,7 @@ import { singleton, inject } from 'tsyringe';
 import type { App } from 'obsidian';
 import { AppToken } from '@core/services/public';
 import { AiChatService, RetrievalService, ChatSessionStore } from '@core/ai/public';
-import type { ModalPort, NamePromptOptions, CheckinManagerOpenArgs } from '@core/ports/public';
+import type { ModalPort, NamePromptOptions, CheckinManagerOpenArgs, QuickInputOpenOptions } from '@core/ports/public';
 import type { NaturalRecordCommand } from '@core/types/public';
 
 import { AiTextPromptModal } from './modals/AiTextPromptModal';
@@ -55,8 +55,15 @@ export class ObsidianModalPort implements ModalPort {
     return modal.openAndGetResult();
   }
 
-  openQuickInput(recordTypeId?: string): void {
-    new QuickInputModal(this.app, recordTypeId || '').open();
+  openQuickInput(recordTypeId?: string, options?: QuickInputOpenOptions): void {
+    new QuickInputModal(
+      this.app,
+      recordTypeId || '',
+      options?.context,
+      undefined,
+      options?.allowRecordTypeSwitch ?? true,
+      { mode: 'create', source: options?.source ?? 'quickinput' },
+    ).open();
   }
 
   openNamePrompt(options: NamePromptOptions): Promise<string | null> {

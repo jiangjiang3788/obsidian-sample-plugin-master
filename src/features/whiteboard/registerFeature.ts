@@ -8,14 +8,14 @@ export function registerWhiteboardFeature(
 ): void {
   registry.register({
     id: 'whiteboard',
-    description: 'ThinkOS standalone whiteboard workspace',
+    description: '独立白板工作区',
     bootMode: 'blocking',
     boot: () => {
       registerThinkWhiteboardView(deps.plugin);
-      deps.plugin.addRibbonIcon('panels-top-left', 'ThinkOS 白板', () => { void openThinkWhiteboardView(deps.plugin); });
+      deps.plugin.addRibbonIcon('panels-top-left', '思考系统白板', () => { void openThinkWhiteboardView(deps.plugin); });
       deps.plugin.addCommand({
         id: 'think-open-whiteboard',
-        name: '打开 ThinkOS 白板',
+        name: '打开思考系统白板',
         callback: () => { void openThinkWhiteboardView(deps.plugin); },
       });
     },

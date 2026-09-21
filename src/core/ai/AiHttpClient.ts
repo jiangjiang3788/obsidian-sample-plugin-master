@@ -181,7 +181,7 @@ export class AiHttpClient {
 
             if (!response.ok) {
                 const text = await response.text().catch(() => '');
-                throw new Error(`AI HTTP ${response.status}: ${text.slice(0, 200)}`);
+                throw new Error(`智能助手接口返回错误 ${response.status}：${text.slice(0, 200)}`);
             }
 
             const payload = await response.json();
@@ -290,7 +290,7 @@ export class AiHttpClient {
                     bodyChars: text.length,
                     bodyPreview: text.slice(0, 200),
                 });
-                throw new Error(`AI HTTP ${response.status}: ${text.slice(0, 200)}`);
+                throw new Error(`智能助手接口返回错误 ${response.status}：${text.slice(0, 200)}`);
             }
 
             const responseJsonStart = nowMs();
@@ -311,7 +311,7 @@ export class AiHttpClient {
             });
 
             if (!content) {
-                throw new Error('AI returned empty content');
+                throw new Error('智能助手返回内容为空');
             }
 
             devLog(`[AiInput][${traceId}][HTTP] chatCompletion 完成，总耗时 ${elapsedMs(totalStart)}`, {

@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { useState } from 'preact/hooks';
-import { getEffectiveRecordTypes, ENERGY_RECORD_TYPE_ID, normalizeRecordTypePresentationKey } from '@core/recordTypes/public';
+import { getEffectiveRecordTypes, ENERGY_RECORD_TYPE_ID, getRecordTypePresentation, normalizeRecordTypePresentationKey } from '@core/recordTypes/public';
 import { ThinkIcon, ThinkIconButton } from '@shared/ui/public';
 import { EnergyRecordTypeSettings } from './EnergyRecordTypeSettings';
 
@@ -53,8 +53,7 @@ export function RecordTypeManager() {
 
               {open && (
                 <div className="think-block-accordion__details think-settings-stack think-settings-stack--tight">
-                  <div className="think-settings-row"><span className="think-settings-row__label">注册 ID</span><code>{recordType.id}</code></div>
-                  <div className="think-settings-row"><span className="think-settings-row__label">记录 key</span><code>{recordType.recordType}</code></div>
+                  <div className="think-settings-row"><span className="think-settings-row__label">记录类型</span><span>{getRecordTypePresentation(recordType.recordType).label}</span></div>
                   <div className="think-settings-row"><span className="think-settings-row__label">目标</span><span>{recordType.capabilities.goalBindable ? '必选系统上下文' : '不绑定目标'}</span></div>
                   {recordType.captureMode === 'template' && (
                     <>

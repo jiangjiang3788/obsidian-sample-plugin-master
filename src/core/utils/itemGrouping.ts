@@ -3,7 +3,7 @@ import type { RecordViewItem } from '@/core/records/RecordEntity';
 import { readField } from '@/core/fields/ViewFieldCatalog';
 import { EMPTY_LABEL } from '@/core/types/constants';
 import { getBasePath } from './pathSemantic';
-import { getCanonicalFieldKey } from '@/core/fields/FieldRegistry';
+import { formatFieldValue, getCanonicalFieldKey } from '@/core/fields/FieldRegistry';
 import { splitGoalPath } from '@/core/goal/path';
 import { createGoalOrderIndex } from '@/core/goal/order';
 import type { GoalDefinition } from '@/core/goal/types';
@@ -131,6 +131,10 @@ function normalizeGroupKeys(value: unknown, defaultLabel: string): string[] {
     return text ? [text] : [defaultLabel];
 }
 
+function formatGroupLabel(field: string, key: string): string {
+    return formatFieldValue(field, key) || key;
+}
+
 export function groupItemsByField(items: RecordViewItem[], groupField: string, defaultLabel: string = '(未分类)'): Record<string, RecordViewItem[]> {
     const grouped: Record<string, RecordViewItem[]> = {};
     
@@ -196,7 +200,7 @@ export function groupItemsByFields(items: RecordViewItem[], fields: string[], co
                 // 最后一层：叶子节点，挂 items
                 return {
                     key,
-                    label: key,
+                    label: formatGroupLabel(field, key),
                     field,
                     items: bucket,
                 } as GroupNode;
@@ -204,7 +208,7 @@ export function groupItemsByFields(items: RecordViewItem[], fields: string[], co
                 // 中间层：子节点继续按下一字段分组
                 return {
                     key,
-                    label: key,
+                    label: formatGroupLabel(field, key),
                     field,
                     children: groupLevel(bucket, level + 1),
                 } as GroupNode;

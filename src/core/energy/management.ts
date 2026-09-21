@@ -96,7 +96,7 @@ function candidateReason(row: EnergyEffectAggregate, focus: EnergyDimensionFocus
   const parts = [`综合平均 ${row.meanDelta > 0 ? '+' : ''}${row.meanDelta}`];
   if (focus === 'brain-low' && row.meanBrainDelta != null) parts.push(`脑力 ${row.meanBrainDelta > 0 ? '+' : ''}${row.meanBrainDelta}`);
   if (focus === 'physical-low' && row.meanPhysicalDelta != null) parts.push(`体力 ${row.meanPhysicalDelta > 0 ? '+' : ''}${row.meanPhysicalDelta}`);
-  parts.push(`N=${row.sampleCount}`);
+  parts.push(`样本数 ${row.sampleCount}`);
   return parts.join(' · ');
 }
 
@@ -141,8 +141,8 @@ function buildGuardrails(items: RecordViewItem[], evidenceRecords: RecordViewIte
     const lateRatio = stop.lateNightRatio || 0;
     if (longRatio >= 0.5 || lateRatio >= 0.4) {
       const details = [
-        `高能后进入/处于工作 N=${stop.followedByWorkCount}`,
-        `≥120min ${Math.round(longRatio * 100)}%`,
+        `高能后进入/处于工作，样本数 ${stop.followedByWorkCount}`,
+        `≥120分钟 ${Math.round(longRatio * 100)}%`,
         `深夜延续 ${Math.round(lateRatio * 100)}%`,
       ];
       rows.push({
@@ -162,7 +162,7 @@ function buildGuardrails(items: RecordViewItem[], evidenceRecords: RecordViewIte
       key: 'long-session',
       level: 'caution',
       title: '长连续工作是当前值得防守的区间',
-      detail: `≥120min 前后综合平均 ${longBucket.meanDelta > 0 ? '+' : ''}${longBucket.meanDelta} · 可配对 N=${longBucket.pairedSessionCount}`,
+      detail: `≥120分钟前后综合平均 ${longBucket.meanDelta > 0 ? '+' : ''}${longBucket.meanDelta} · 可配对样本数 ${longBucket.pairedSessionCount}`,
       sampleCount: longBucket.pairedSessionCount,
       evidence: longBucket.evidence,
     });

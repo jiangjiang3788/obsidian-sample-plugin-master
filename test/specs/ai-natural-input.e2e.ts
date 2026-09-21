@@ -72,7 +72,7 @@ describe('Think OS 真机 AI：自然语言 → 批量确认 → Vault', () => {
 
     const confirm = await $('.think-ai-batch-confirm-modal');
     await confirm.waitForExist({ timeout: 15_000 });
-    expect(await confirm.getText()).toContain('AI 识别结果');
+    expect(await confirm.getText()).toContain('智能识别结果');
     expect(await confirm.getText()).toContain(CONTENT);
 
     const save = await confirm.$('[data-ai-batch-action="save-current"]');
@@ -105,7 +105,7 @@ describe('Think OS 真机 AI：自然语言 → 批量确认 → Vault', () => {
     await browser.waitUntil(async () => {
       const notices = await $$('.notice');
       for (const notice of notices) {
-        if ((await notice.getText()).includes('AI 解析失败')) return true;
+        if ((await notice.getText()).includes('智能助手解析失败')) return true;
       }
       return false;
     }, {

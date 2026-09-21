@@ -38,7 +38,7 @@ function CheckinManagerForm({ app, date, items, onClose, onAddRecord, onDeleteRe
             openEditFromItem({ app, item });
             onClose();
         } catch (error: any) {
-            new Notice(`打开记录失败: ${error?.message || String(error)}`);
+            new Notice(`打开记录失败：${error?.message || String(error)}`);
         }
     };
 
@@ -50,7 +50,7 @@ function CheckinManagerForm({ app, date, items, onClose, onAddRecord, onDeleteRe
             const result = await onDeleteRecord(item);
             if (result !== false) setManagedItems((prev) => prev.filter((candidate) => candidate.id !== item.id));
         } catch (error: any) {
-            new Notice(`删除记录失败: ${error?.message || String(error)}`);
+            new Notice(`删除记录失败：${error?.message || String(error)}`);
         }
     };
 

@@ -74,7 +74,7 @@ export function ModulePanel({
                 onKeyDown={(event) => onHeaderKeyDown(event as unknown as KeyboardEvent)}
                 title={layoutEditing
                     ? '点击选中；拖动左侧手柄移动；点击标题区域折叠或展开'
-                    : '点击标题区域折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开'}
+                    : '点击标题区域折叠/展开；按住控制键或⌘键点击：全部折叠/展开'}
             >
                 <div class="module-header-main">
                     {layoutEditing && (
@@ -141,7 +141,7 @@ export function ModulePanel({
                         {onExport && (
                             <ThinkIconButton
                                 size="sm"
-                                label="导出为 Markdown"
+                                label="导出为笔记文件"
                                 icon={<ThinkIcon name="upload" className="module-header-icon" />}
                                 onClick={(event) => { event.stopPropagation(); onExport(); }}
                             />

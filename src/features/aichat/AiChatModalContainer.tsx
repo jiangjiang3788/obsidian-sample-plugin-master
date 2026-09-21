@@ -173,7 +173,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
                         ...(selectedGoalPath ? { goalPath: selectedGoalPath, goalTemplateId: undefined } : null),
                     },
                 }));
-                if (!items.length) throw new Error('AI 未识别出可创建的任务');
+                if (!items.length) throw new Error('智能助手未识别出可创建的任务');
                 services.openNaturalRecordBatchConfirm({
                     title: `确认任务（${items.length} 条）`,
                     items,
@@ -252,8 +252,8 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
     if (!aiSettings?.enabled) {
         return (
             <div className="think-ai-chat-unavailable">
-                <strong>AI 功能未启用</strong>
-                <span>请在设置中启用 AI 并配置 API 密钥。</span>
+                <strong>智能助手未启用</strong>
+                <span>请在设置中启用智能助手并配置接口密钥。</span>
                 <ThinkButton size="sm" onClick={closeModal}>关闭</ThinkButton>
             </div>
         );
@@ -261,7 +261,7 @@ export function AiChatModalContainer({ closeModal, services }: AiChatModalContai
 
     const emptyHint = {
         title: currentSession ? '开始新的对话' : '选择或创建一个对话',
-        retrievalHint: '已启用上下文检索，AI 将基于你的记录回答问题',
+        retrievalHint: '已启用上下文检索，智能助手将基于你的记录回答问题',
     };
 
     return (

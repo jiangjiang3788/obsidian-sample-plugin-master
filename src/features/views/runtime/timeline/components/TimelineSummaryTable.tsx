@@ -54,11 +54,11 @@ export function TimelineSummaryTable({ summaryData, colorMap, goalOrder, untrack
                 <tr>
                     <th>月份</th>
                     <th>月度总结</th>
-                    <th>W1</th>
-                    <th>W2</th>
-                    <th>W3</th>
-                    <th>W4</th>
-                    <th>W5</th>
+                    <th>第1周</th>
+                    <th>第2周</th>
+                    <th>第3周</th>
+                    <th>第4周</th>
+                    <th>第5周</th>
                 </tr>
             </thead>
             <tbody>

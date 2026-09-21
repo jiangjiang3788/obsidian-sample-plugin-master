@@ -133,7 +133,7 @@ export function applyQuickInputGoalSelection(params: {
   const { formData, fieldSources, option } = params;
   const goal = option.goal || null;
   const goalPath = normalizeGoalPath(goal?.path || option.value);
-  if (!goalPath) throw new Error('QuickInput Goal selection requires a canonical Goal path.');
+  if (!goalPath) throw new Error('快速输入选择目标时需要有效的目标路径。');
   const nextFormData = { ...formData };
   const nextFieldSources: QuickInputFieldSourceMap = { ...fieldSources };
   const assign = (

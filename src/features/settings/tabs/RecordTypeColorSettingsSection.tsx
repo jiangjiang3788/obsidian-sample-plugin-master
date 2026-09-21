@@ -40,7 +40,7 @@ function RecordTypeColorRow({ recordType }: { recordType: UserVisibleRecordType 
         <input
           key={`${recordType}-${effective}`}
           className="think-input think-settings-record-type-color-row__hex"
-          aria-label={`${presentation.label} HEX`}
+          aria-label={`${presentation.label} 十六进制颜色值`}
           defaultValue={effective}
           spellcheck={false}
           onBlur={(event) => void commitText(event.currentTarget as HTMLInputElement)}

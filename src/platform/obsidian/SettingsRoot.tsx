@@ -19,7 +19,7 @@ function TabPanel(props: { children?: any; value: number; index: number; }) {
             role="tabpanel"
             hidden={value !== index}
             id={`settings-tabpanel-${index}`}
-            aria-label={['数据管理', '布局', '通用', 'AI'][index]}
+            aria-label={['数据管理', '布局', '通用', '智能助手'][index]}
         >
             {value === index ? children : null}
         </section>
@@ -32,7 +32,7 @@ const PRIMARY_TABS = [
     { value: '0', label: '数据管理' },
     { value: '1', label: '布局' },
     { value: '2', label: '通用' },
-    { value: '3', label: 'AI' },
+    { value: '3', label: '智能助手' },
 ] as const;
 
 function clampTabIndex(value: unknown): number {
@@ -51,7 +51,7 @@ export function SettingsRoot({ app, variant = 'workspace' }: { app: App; variant
             <div className="think-settings-workspace">
                 <aside className="think-settings-workspace__rail">
                     <SettingsNavigation
-                        label="Think OS 设置"
+                        label="思考系统设置"
                         variant="primary"
                         value={String(tabIndex)}
                         options={PRIMARY_TABS}

@@ -21,7 +21,7 @@ export function registerDashboardFeature(
 ): void {
   registry.register({
     id: 'dashboard',
-    description: 'Dashboard (VaultWatcher + CodeblockEmbedder)',
+    description: '仪表盘',
     bootMode: 'blocking',
     boot: async (ctx) => {
       if (ctx?.dataScanPromise) await ctx.dataScanPromise;

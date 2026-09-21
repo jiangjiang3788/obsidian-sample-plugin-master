@@ -173,7 +173,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
     freeformFallback = false
   ) => {
     const viewInstance = allViewsById.get(viewId);
-    if (!viewInstance) return <div class="think-module">视图 (ID: {viewId}) 未找到</div>;
+    if (!viewInstance) return <div class="think-module">视图（标识：{viewId}）未找到</div>;
 
     const hasLayoutCollapseOverride = typeof freeformProps?.placement.collapsed === 'boolean';
     const isExpanded = hasLayoutCollapseOverride

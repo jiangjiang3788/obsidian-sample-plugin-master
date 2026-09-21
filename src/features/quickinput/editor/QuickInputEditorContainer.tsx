@@ -2,11 +2,12 @@
 import { h } from 'preact';
 import { useEffect, useMemo, useReducer, useRef } from 'preact/hooks';
 
-import { selectSettings, useSelector } from '@/app/public';
+import { selectSettings, useDataStore, useSelector } from '@/app/public';
 import { dayjs } from '@core/utils/public';
+import { getTemplateFieldSemantic } from '@core/fields/public';
 import { getEffectiveRecordTypes, ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public';
 import { normalizeGoalPath, resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@core/goal/public';
-import { getCreateEligibleGoalPaths, initializeRecordInputSession, reduceRecordInputSession } from '@core/recordInput/public';
+import { getCreateAvailableRecordTypes, initializeRecordInputSession, reduceRecordInputSession, resolveRecordGoalPath } from '@core/recordInput/public';
 import { QuickInputEditorView } from './QuickInputEditorView';
 import { resolveQuickInputRecordTypeRuntime, shouldRequireDirectGoalTemplateForQuickInput } from './quickInputRecordTypeModel';
 import { EnergyQuickCapturePanel } from './components/EnergyQuickCapturePanel';
@@ -30,8 +31,16 @@ import {
   splitPathParts,
 } from './QuickInputEditorModel';
 import type { QuickInputEditorProps, QuickInputFieldSourceMap, QuickInputFormData, TimeDirection } from './QuickInputEditorModel';
+import type { RecordViewItem } from '@core/types/public';
 export { finalizeQuickInputFormData } from './QuickInputEditorModel';
 export type { QuickInputEditorProps, QuickInputEditorState } from './QuickInputEditorModel';
+
+function getRecentGoalPresetContent(item: RecordViewItem): string {
+  const content = item.recordType === 'task'
+    ? item.editableText || item.title || item.content
+    : item.editableText || item.content || item.title;
+  return String(content || '').trim();
+}
 
 export function QuickInputEditor({
   getResourcePath,
@@ -49,6 +58,7 @@ export function QuickInputEditor({
   autoFocusContent = false,
 }: QuickInputEditorProps) {
   const fullSettings = useSelector(selectSettings);
+  const dataStore = useDataStore();
   const initialFieldSource = recordInputMode === 'create' ? 'context' : 'edit_backfill';
   const recordInputModeRef = useRef(recordInputMode);
   const [session, dispatchSession] = useReducer(
@@ -92,20 +102,50 @@ export function QuickInputEditor({
   }, [recordInputMode]);
 
   const recordTypes = useMemo(() => {
-    const all = getEffectiveRecordTypes();
-    if (recordInputMode !== 'create') return all;
-    const selectedPath = normalizeGoalPath(selectedGoalPath) || '';
-    return all.filter((recordType) => {
-      if (recordType.captureMode === 'direct') return true;
-      const eligibleGoalPaths = getCreateEligibleGoalPaths(fullSettings, recordType.id);
-      return selectedPath ? eligibleGoalPaths.includes(selectedPath) : eligibleGoalPaths.length > 0;
-    });
+    if (recordInputMode !== 'create') return getEffectiveRecordTypes();
+    return getCreateAvailableRecordTypes(fullSettings, selectedGoalPath);
   }, [fullSettings.goalSettings?.goalTemplates, selectedGoalPath, recordInputMode]);
   const currentRecordType = useMemo(
     () => recordTypes.find((recordType) => recordType.id === currentRecordTypeId) || null,
     [recordTypes, currentRecordTypeId],
   );
   const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID && currentRecordType.captureMode === 'direct';
+  const recentGoalContentByPath = useMemo(() => {
+    if (recordInputMode !== 'create' || isEnergyDirect) return {} as Record<string, string>;
+
+    const recentPaths = (fullSettings.recentGoalPaths || [])
+      .map((path) => normalizeGoalPath(path))
+      .filter((path): path is string => Boolean(path))
+      .slice(0, 5);
+    if (recentPaths.length === 0) return {} as Record<string, string>;
+
+    const recordType = currentRecordType?.recordType
+      || String(currentRecordTypeId || '').replace(/^core\./, '');
+    if (!recordType) return {} as Record<string, string>;
+
+    const wantedPaths = new Set(recentPaths);
+    const contentByPath: Record<string, string> = {};
+    const records = dataStore.queryRecords()
+      .filter((item) => item.recordType === recordType)
+      .sort((left, right) => (right.modified || right.created || 0) - (left.modified || left.created || 0));
+
+    for (const item of records) {
+      const goalPath = resolveRecordGoalPath({ item });
+      if (!goalPath || !wantedPaths.has(goalPath) || contentByPath[goalPath]) continue;
+      const content = getRecentGoalPresetContent(item);
+      if (!content) continue;
+      contentByPath[goalPath] = content;
+      if (Object.keys(contentByPath).length >= wantedPaths.size) break;
+    }
+    return contentByPath;
+  }, [
+    currentRecordType?.recordType,
+    currentRecordTypeId,
+    dataStore,
+    fullSettings.recentGoalPaths,
+    isEnergyDirect,
+    recordInputMode,
+  ]);
   const requireDirectGoalTemplate = shouldRequireDirectGoalTemplateForQuickInput(recordInputMode, isEnergyDirect);
   const selectedGoal = useMemo(() => {
     const goals = fullSettings.goalSettings?.goals || [];
@@ -267,17 +307,57 @@ export function QuickInputEditor({
     dispatchSession({ type: 'switchRecordType', recordTypeId: newRecordTypeId });
   };
 
-  const handleSelectGoal = (option: GoalSelectorOption | null) => {
+  const handleSelectGoal = (
+    option: GoalSelectorOption | null,
+    source: 'hierarchy' | 'recent' = 'hierarchy',
+  ) => {
     if (!option || !option.value) {
       dispatchSession({ type: 'clearGoalContext' });
       return;
     }
+
     const nextSelection = applyQuickInputGoalSelection({ formData, fieldSources, option });
+    let nextFormData = nextSelection.formData;
+    let nextFieldSources = nextSelection.fieldSources;
+
+    // A recent Goal chip is a preset: select the Goal and restore the latest
+    // body recorded under that Goal. Hierarchy clicks remain Goal-only so they
+    // never overwrite content the user is currently editing.
+    if (source === 'recent') {
+      const presetContent = recentGoalContentByPath[nextSelection.goalPath];
+      if (presetContent) {
+        const targetRuntime = resolveQuickInputRecordTypeRuntime({
+          settings: fullSettings,
+          isEnergyDirect,
+          currentRecordTypeId,
+          selectedGoal: option.goal || null,
+          selectedGoalPath: nextSelection.goalPath,
+          requireDirectGoalTemplate,
+        });
+        const targetTemplate = targetRuntime.template || baseDisplayRuntime.template;
+        const bodyFieldKey = String(
+          targetTemplate?.fields?.find((field: any) => getTemplateFieldSemantic(field) === 'body')?.key || '',
+        ).trim();
+        if (bodyFieldKey) {
+          const updated = applyQuickInputFieldUpdate({
+            formData: nextFormData,
+            fieldSources: nextFieldSources,
+            key: bodyFieldKey,
+            value: presetContent,
+            isOptionObject: false,
+            timeDirection,
+          });
+          nextFormData = updated.formData;
+          nextFieldSources = updated.fieldSources;
+        }
+      }
+    }
+
     dispatchSession({
       type: 'selectGoal',
       goalPath: nextSelection.goalPath,
-      formData: nextSelection.formData,
-      fieldSources: nextSelection.fieldSources,
+      formData: nextFormData,
+      fieldSources: nextFieldSources,
     });
   };
 

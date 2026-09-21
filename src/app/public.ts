@@ -53,6 +53,7 @@ export {
   openCreateFromTimeline,
   openCreateFromHeatmap,
   openCreateFromStatistics,
+  openRecordContinuationOption,
   openEditFromItem,
   mergeRecordItemForEdit,
   completeFromView,

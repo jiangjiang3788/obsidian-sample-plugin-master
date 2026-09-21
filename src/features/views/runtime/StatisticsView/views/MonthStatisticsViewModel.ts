@@ -56,7 +56,7 @@ export function buildMonthStatisticsRenderModel(input: {
     return [{
       key: weekStart.format('YYYY-MM-DD'),
       gridColumn: `${index + 1}`,
-      label: `W${weekStart.isoWeek()}`,
+      label: `第${weekStart.isoWeek()}周`,
       data,
       identifier: (goal: string) => ({
         type: 'week',

@@ -164,7 +164,7 @@ export function WhiteboardRecordFilters({
         <div class="think-whiteboard-source-filters__body">
           <div class="think-whiteboard-source-filter-group">
             <div class="think-whiteboard-source-filter-group__label">类型</div>
-            <div class="think-whiteboard-source-filter-types" role="group" aria-label="Record Type 筛选">
+            <div class="think-whiteboard-source-filter-types" role="group" aria-label="记录类型筛选">
               {recordTypeOptions.map((option) => (
                 <span key={option.value} class="think-record-type-marker think-whiteboard-source-filter-type-marker" data-record-type={option.value}>
                   <ThinkCheckbox

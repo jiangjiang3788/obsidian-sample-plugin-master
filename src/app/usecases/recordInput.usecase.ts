@@ -2,7 +2,7 @@ import type { AppStoreApi } from './AppStoreApi';
 import type { EisenhowerQuadrant, TaskLifecycleCommand } from '@core/records/public';
 import { DataStore, InputService, ItemService } from '@core/services/public';
 import { RecordInputKernel } from '@core/recordInput/public';
-import { applyRecordRefreshPlan, buildSuccessResult, buildValidationErrorResult } from '@core/recordInput/public';
+import { applyRecordRefreshPlan, buildSuccessResult, buildValidationErrorResult, resolveContinuationAfterCreate, resolveTaskCompletionContinuation } from '@core/recordInput/public';
 import {
   ENERGY_APPEND_UNDER_HEADER,
   ENERGY_TARGET_FILE,
@@ -55,10 +55,11 @@ export class RecordInputUseCase {
   }
 
   async submitCreateRecord(params: SubmitCreateRecordParams): Promise<RecordSubmitResult> {
-    return new CreateRecordWorkflow(this.getWorkflowRuntime()).submit(params);
+    const result = await new CreateRecordWorkflow(this.getWorkflowRuntime()).submit(params);
+    return this.attachCreateContinuation(result, params.context);
   }
 
-  async submitEnergySnapshot(params: EnergySnapshotInput & { signal?: AbortSignal; linkFinishedSession?: boolean }): Promise<RecordSubmitResult> {
+  async submitEnergySnapshot(params: EnergySnapshotInput & { signal?: AbortSignal; linkFinishedSession?: boolean; context?: Record<string, unknown> }): Promise<RecordSubmitResult> {
     const record = buildEnergySnapshotRecord(params);
     if (!record.goalPath) {
       return buildValidationErrorResult('create', [{
@@ -96,12 +97,12 @@ export class RecordInputUseCase {
       const linkedSession = params.linkFinishedSession === false
         ? null
         : await this.deps.itemService.linkEnergySnapshot(record.recordId);
-      return buildSuccessResult('create', {
+      return this.attachContinuationFromContext(buildSuccessResult('create', {
         affectedPath: path,
         affectedRecordId: record.recordId,
         refresh,
         feedback: { notice: linkedSession ? `已记录精力 ${record.score}，并关联本次工作反馈。` : `已记录精力 ${record.score}` },
-      });
+      }), params.context);
     } catch (error) {
       return mapSubmitError('create', error);
     }
@@ -156,7 +157,7 @@ export class RecordInputUseCase {
   }
 
   async submitCompleteRecord(params: SubmitCompleteRecordParams): Promise<RecordSubmitResult> {
-    return submitFinalizedRecordMutation({
+    const result = await submitFinalizedRecordMutation({
       dataStore: this.deps.dataStore,
       operation: 'complete',
       signal: params.signal,
@@ -177,6 +178,7 @@ export class RecordInputUseCase {
         });
       },
     });
+    return this.attachTaskCompletionContinuation(result);
   }
 
   async submitTaskSession(params: SubmitTaskSessionParams): Promise<RecordSubmitResult> {
@@ -231,6 +233,60 @@ export class RecordInputUseCase {
     });
   }
 
+
+  private attachCreateContinuation(
+    result: RecordSubmitResult,
+    context?: Record<string, unknown>,
+  ): RecordSubmitResult {
+    const chained = this.attachContinuationFromContext(result, context);
+    if (chained.followUp?.continuation) return chained;
+    return this.attachTaskCompletionContinuation(result);
+  }
+
+  private attachContinuationFromContext(
+    result: RecordSubmitResult,
+    context?: Record<string, unknown>,
+  ): RecordSubmitResult {
+    if (result.status !== 'success' && result.status !== 'partial_success') return result;
+    const recordId = String(result.affectedRecordId || '').trim();
+    if (!recordId) return result;
+
+    const continuation = resolveContinuationAfterCreate({
+      record: this.deps.dataStore.getRecordById(recordId),
+      settings: this.store.getState().settings,
+      context,
+    });
+    if (!continuation) return result;
+
+    return {
+      ...result,
+      followUp: {
+        ...(result.followUp || {}),
+        continuation,
+      },
+    };
+  }
+
+  private attachTaskCompletionContinuation(result: RecordSubmitResult): RecordSubmitResult {
+    if (result.status !== 'success' && result.status !== 'partial_success') return result;
+    const recordId = String(result.affectedRecordId || '').trim();
+    if (!recordId) return result;
+
+    const record = this.deps.dataStore.getRecordById(recordId);
+    const continuation = resolveTaskCompletionContinuation({
+      record,
+      settings: this.store.getState().settings,
+    });
+    if (!continuation) return result;
+
+    return {
+      ...result,
+      followUp: {
+        ...(result.followUp || {}),
+        continuation,
+      },
+    };
+  }
 
   private getWorkflowRuntime() {
     return createRecordInputWorkflowRuntime(this.deps, {

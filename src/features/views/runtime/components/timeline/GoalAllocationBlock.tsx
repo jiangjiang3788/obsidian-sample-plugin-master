@@ -185,7 +185,7 @@ export function GoalAllocationBlock({
       {showUnallocated ? (() => (
         <div
           class="timeline-goal-allocation-line is-unallocated"
-          title={`未归属时间\n${rangeActualLabel(currentView)}已记录 ${formatGoalMinutes(summary.unallocatedMinutes)}\n有 TaskSession，但 Task 没有可解析的 Goal。`}
+          title={`未归属时间\n${rangeActualLabel(currentView)}已记录 ${formatGoalMinutes(summary.unallocatedMinutes)}\n存在任务计时记录，但任务没有可解析的目标。`}
         >
           <span class="timeline-goal-allocation-text">
             <span class="timeline-goal-allocation-label">未归属</span>

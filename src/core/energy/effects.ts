@@ -187,11 +187,11 @@ function effectGoalLabel(item: RecordViewItem): string {
 }
 
 function effectDurationBucket(durationMinutes: number): string {
-  if (durationMinutes < 30) return '<30min';
-  if (durationMinutes < 60) return '30–59min';
-  if (durationMinutes < 90) return '60–89min';
-  if (durationMinutes < 120) return '90–119min';
-  return '≥120min';
+  if (durationMinutes < 30) return '<30分钟';
+  if (durationMinutes < 60) return '30–59分钟';
+  if (durationMinutes < 90) return '60–89分钟';
+  if (durationMinutes < 120) return '90–119分钟';
+  return '≥120分钟';
 }
 
 function effectConfidence(beforeGap: number, afterGap: number, options: Required<Pick<BuildEnergyEffectsOptions, 'highBeforeGapMinutes' | 'highAfterGapMinutes'>>): EnergyEffectConfidence {

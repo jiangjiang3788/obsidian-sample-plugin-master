@@ -231,7 +231,7 @@ export function WhiteboardCard({
       data-record-type={record.recordType}
       role="button"
       tabIndex={0}
-      title={`类型：${presentation.typeLabel}；${RECORD_GESTURE_HINT}；拖动卡片可调整位置；Ctrl/⌘/Shift 点击多选；从四边拖出连线；右键可归档或移出`}
+      title={`类型：${presentation.typeLabel}；${RECORD_GESTURE_HINT}；拖动卡片可调整位置；按住控制键、⌘键或换挡键点击多选；从四边拖出连线；右键可归档或移出`}
       onClick={((event: Event) => guardAfterDrag(event, gesture.onClick)) as never}
       onDblClick={((event: Event) => guardAfterDrag(event, gesture.onDblClick)) as never}
       onTouchEnd={((event: Event) => guardAfterDrag(event, gesture.onTouchEnd)) as never}

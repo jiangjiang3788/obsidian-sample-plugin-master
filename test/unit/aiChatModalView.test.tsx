@@ -44,7 +44,7 @@ describe('AI Chat 视图', () => {
     const onSend = jest.fn();
     const p = props();
     await act(async () => render(<ControlledHarness base={p} onSend={onSend} />, host));
-    expect(host.querySelector('[aria-label="AI 对话列表"]')).toBeTruthy();
+    expect(host.querySelector('[aria-label="智能助手对话列表"]')).toBeTruthy();
     expect(host.textContent).toContain('测试会话');
     expect(host.textContent).toContain('你好');
 

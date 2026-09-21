@@ -36,6 +36,8 @@
     "typecheck:test": "tsc -p config/tsconfig.test.json --noEmit",
     "build:debug": "vite build --config config/vite.config.ts --mode development && node scripts/build/fix-sourcemap.mjs",
     "verify:fast": "node scripts/maintenance/verify.mjs --fast",
+    "verify:record-continuation": "node scripts/testing/verify-record-continuation.mjs",
+    "验证:连续记录": "node scripts/testing/verify-record-continuation.mjs",
     "verify": "node scripts/maintenance/verify.mjs",
     "verify:ci": "node scripts/maintenance/verify.mjs --ci",
     "acceptance:fields": "node scripts/validation/field-system-acceptance.mjs",

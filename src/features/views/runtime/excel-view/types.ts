@@ -185,16 +185,16 @@ export function canInlineEditExcelCell(cell: ExcelCellModel, canCommit = true): 
 }
 
 export function getExcelEditorDescriptor(kind: FieldEditorKind): ExcelEditorDescriptor {
-  if (kind === 'textarea') return { tag: 'textarea', hint: 'Enter 保存 · Shift+Enter 换行 · Esc 取消' };
-  if (kind === 'number') return { tag: 'input', type: 'number', hint: '数字编辑器：Enter 保存 · Esc 取消' };
-  if (kind === 'rating') return { tag: 'input', type: 'number', hint: '评分编辑器：输入数字，Enter 保存 · Esc 取消' };
-  if (kind === 'date') return { tag: 'input', type: 'date', hint: '日期编辑器：Enter 保存 · Esc 取消' };
-  if (kind === 'time') return { tag: 'input', type: 'time', hint: '时间编辑器：Enter 保存 · Esc 取消' };
-  if (kind === 'datetime') return { tag: 'input', type: 'datetime-local', hint: '日期时间编辑器：Enter 保存 · Esc 取消' };
-  if (kind === 'boolean') return { tag: 'select', hint: '布尔编辑器：选择 是 / 否，Enter 保存 · Esc 取消' };
-  if (kind === 'select') return { tag: 'select', hint: '选项编辑器：选择后 Enter 保存 · Esc 取消' };
+  if (kind === 'textarea') return { tag: 'textarea', hint: '回车键保存 · 上档键+回车键换行 · 退出键取消' };
+  if (kind === 'number') return { tag: 'input', type: 'number', hint: '数字编辑器：回车键保存 · 退出键取消' };
+  if (kind === 'rating') return { tag: 'input', type: 'number', hint: '评分编辑器：输入数字，回车键保存 · 退出键取消' };
+  if (kind === 'date') return { tag: 'input', type: 'date', hint: '日期编辑器：回车键保存 · 退出键取消' };
+  if (kind === 'time') return { tag: 'input', type: 'time', hint: '时间编辑器：回车键保存 · 退出键取消' };
+  if (kind === 'datetime') return { tag: 'input', type: 'datetime-local', hint: '日期时间编辑器：回车键保存 · 退出键取消' };
+  if (kind === 'boolean') return { tag: 'select', hint: '布尔编辑器：选择“是”或“否”，回车键保存 · 退出键取消' };
+  if (kind === 'select') return { tag: 'select', hint: '选项编辑器：选择后按回车键保存 · 退出键取消' };
   if (kind === 'tags') return { tag: 'input', type: 'text', hint: '标签编辑器：逗号/换行分隔，# 会保留' };
-  return { tag: 'input', type: 'text', hint: 'Enter 保存 · Esc 取消' };
+  return { tag: 'input', type: 'text', hint: '回车键保存 · 退出键取消' };
 }
 
 export interface ExcelColumnToolbarProps {

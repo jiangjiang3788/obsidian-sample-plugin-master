@@ -26,7 +26,7 @@ export class Disposables {
             return;
         }
         if (typeof disposeMaybe !== 'function') {
-            throw new Error('[Disposables] add(name, dispose) requires a dispose function');
+            throw new Error('资源释放器注册失败：必须提供释放函数。');
         }
         this.tasks.push({ name: nameOrDispose, dispose: disposeMaybe });
     }

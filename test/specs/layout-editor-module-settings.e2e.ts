@@ -35,7 +35,7 @@ async function seedLayout(): Promise<void> {
 
 async function openExpandedLayout() {
   await browser.executeObsidianCommand('think-os:think-open-control-center');
-  const layoutTab = await $('//nav[@aria-label="Think OS 设置"]//button[normalize-space()="布局"]');
+  const layoutTab = await $('//nav[@aria-label="思考系统设置"]//button[normalize-space()="布局"]');
   await layoutTab.waitForClickable({ timeout: 10_000 });
   await layoutTab.click();
   const item = await $(`//div[contains(@class,"think-layout-list__item")][.//button[contains(@class,"think-layout-list__item-title") and normalize-space()="${LAYOUT}"]]`);

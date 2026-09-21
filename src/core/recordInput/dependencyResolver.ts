@@ -25,7 +25,7 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
   const goalPath = resolveRecordGoalPath({ context: input.context, item: input.item });
 
   if (!requestedRecordTypeId) {
-    errors.push(issue('record_type_missing', 'Missing recordTypeId for record submission.', 'recordTypeId'));
+    errors.push(issue('record_type_missing', '提交记录时缺少记录类型标识。', 'recordTypeId'));
     return {
       recordTypeId: null,
       template: null,
@@ -37,7 +37,7 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
 
   const recordType = getTemplateRecordTypeById(requestedRecordTypeId);
   if (!recordType) {
-    errors.push(issue('record_type_not_found', 'Selected RecordType no longer exists.', 'recordTypeId'));
+    errors.push(issue('record_type_not_found', '所选记录类型已不存在。', 'recordTypeId'));
     return {
       recordTypeId: requestedRecordTypeId,
       template: null,
@@ -55,7 +55,7 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
   });
 
   if (resolved.status === 'disabled') {
-    errors.push(issue('record_goal_record_type_disabled', 'This RecordType is disabled for the selected Goal.', 'goalPath'));
+    errors.push(issue('record_goal_record_type_disabled', '所选目标已禁用此记录类型。', 'goalPath'));
     return {
       recordTypeId: requestedRecordTypeId,
       template: null,
@@ -66,9 +66,9 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
   }
 
   if (resolved.status === 'goal-required') {
-    errors.push(issue('record_goal_required', 'Select a Goal with a configured template before creating this record.', 'goalPath'));
+    errors.push(issue('record_goal_required', '创建此记录前，请选择一个已配置模板的目标。', 'goalPath'));
   } else if (resolved.status === 'missing-goal-template') {
-    errors.push(issue('record_goal_template_missing', 'The selected Goal has no configured template for this RecordType.', 'goalPath'));
+    errors.push(issue('record_goal_template_missing', '所选目标尚未为此记录类型配置模板。', 'goalPath'));
   }
 
   if (resolved.template) {
@@ -85,7 +85,7 @@ export function resolveRecordDependencies(input: DependencyResolverInput): Resol
     };
   }
 
-  errors.push(issue('record_template_missing', 'No effective Goal + RecordType template is available for this record.', 'recordTypeId'));
+  errors.push(issue('record_template_missing', '当前记录没有可用的“目标 + 记录类型”模板。', 'recordTypeId'));
   return {
     recordTypeId: requestedRecordTypeId,
     template: null,

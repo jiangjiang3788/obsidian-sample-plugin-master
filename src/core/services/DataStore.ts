@@ -190,7 +190,7 @@ export class DataStore {
       const issue: RecordIntegrityIssue = {
         code: 'record_scan_failed',
         path: filePath || undefined,
-        message: `Record scan failed for ${filePath || '<unknown>'}: ${err instanceof Error ? err.message : String(err)}`,
+        message: `记录扫描失败（${filePath || '未知文件'}）：${err instanceof Error ? err.message : String(err)}`,
       };
       if (filePath) this.scannerIssuesByFile.set(filePath, [issue]);
       devError('ThinkPlugin: 扫描文件失败', filePath, err);

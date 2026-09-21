@@ -53,11 +53,11 @@ const LAG_WINDOWS = [
 ];
 
 const SESSION_BUCKETS = [
-  { key: 'lt30', label: '<30min', minMinutes: 0, maxMinutes: 29 },
-  { key: '30-59', label: '30–59min', minMinutes: 30, maxMinutes: 59 },
-  { key: '60-89', label: '60–89min', minMinutes: 60, maxMinutes: 89 },
-  { key: '90-119', label: '90–119min', minMinutes: 90, maxMinutes: 119 },
-  { key: 'ge120', label: '≥120min', minMinutes: 120 },
+  { key: 'lt30', label: '<30分钟', minMinutes: 0, maxMinutes: 29 },
+  { key: '30-59', label: '30–59分钟', minMinutes: 30, maxMinutes: 59 },
+  { key: '60-89', label: '60–89分钟', minMinutes: 60, maxMinutes: 89 },
+  { key: '90-119', label: '90–119分钟', minMinutes: 90, maxMinutes: 119 },
+  { key: 'ge120', label: '≥120分钟', minMinutes: 120 },
 ] as const;
 
 type SessionBucket = typeof SESSION_BUCKETS[number];

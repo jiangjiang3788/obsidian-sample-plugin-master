@@ -35,7 +35,7 @@ describe('AI settings readiness', () => {
 
         expect(getAiApiAccessReadiness(settings)).toMatchObject({
             ready: false,
-            missingFields: ['API 端点', 'API 密钥'],
+            missingFields: ['接口地址', '接口密钥'],
         });
     });
 });

@@ -22,7 +22,7 @@ async function openControlCenter(): Promise<void> {
 }
 
 async function clickPrimary(label: string): Promise<void> {
-  const button = await $(`//nav[@aria-label="Think OS 设置"]//button[normalize-space()="${label}"]`);
+  const button = await $(`//nav[@aria-label="思考系统设置"]//button[normalize-space()="${label}"]`);
   await button.click();
 }
 
@@ -166,7 +166,7 @@ describe('Think OS 真机 UI：P1 设置功能', () => {
     await openControlCenter();
     await clickPrimary('AI');
 
-    const endpoint = await $('//div[contains(@class,"think-settings-row")][.//span[normalize-space()="API 端点"]]//input');
+    const endpoint = await $('//div[contains(@class,"think-settings-row")][.//span[normalize-space()="接口地址"]]//input');
     const model = await $('//div[contains(@class,"think-settings-row")][.//span[normalize-space()="模型"]]//input');
     await endpoint.setValue('https://example.invalid/v1');
     await model.setValue('e2e-model');

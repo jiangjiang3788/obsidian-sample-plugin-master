@@ -32,7 +32,7 @@ function AiTextPromptForm({ onSubmit, onCancel, isLoading }: AiTextPromptFormPro
     return (
         <div className="think-overlay-form think-ai-prompt">
             <ModalHeader
-                left={<div className="think-overlay-title-row"><SmartToyIcon fontSize="small" /><span>AI 快速记录</span></div>}
+                left={<div className="think-overlay-title-row"><SmartToyIcon fontSize="small" /><span>智能快速记录</span></div>}
                 onClose={onCancel}
             />
             <div className="think-overlay-body think-ai-prompt__body">

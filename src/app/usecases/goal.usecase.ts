@@ -184,7 +184,7 @@ export class GoalUseCase {
         if (childTarget > parentTarget + 0.01) {
           if (previous === undefined) delete target.timePresetPercent;
           else target.timePresetPercent = previous;
-          throw new Error(`子目标预设合计已超过新的父目标时间 ${Math.round(parentTarget / 60 * 10) / 10}h/周。`);
+          throw new Error(`子目标预设合计已超过新的父目标时间 ${Math.round(parentTarget / 60 * 10) / 10} 小时/周。`);
         }
         target.updatedAt = nowIso();
         goalSettings.timePresetRevisions = upsertGoalTimePresetRevision(
@@ -223,7 +223,7 @@ export class GoalUseCase {
         if (childSum > parentTarget + 0.01) {
           if (previous === undefined) delete target.weeklyTargetMinutes;
           else target.weeklyTargetMinutes = previous;
-          throw new Error(`子目标预设合计超过父目标 ${Math.round(parentTarget / 60 * 10) / 10}h/周。`);
+          throw new Error(`子目标预设合计超过父目标 ${Math.round(parentTarget / 60 * 10) / 10} 小时/周。`);
         }
         const ownChildren = goalSettings.goals
           .filter((goal) => goal.status !== 'archived' && getParentGoalPath(goal.path) === canonicalPath)

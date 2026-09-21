@@ -2753,16 +2753,16 @@ function f$3(key, role, persistence, valueType, description, options = {}) {
   return { key, role, persistence, valueType, description, ...options };
 }
 const ENVELOPE = [
-  f$3("记录ID", "identity", "target", "record-id", "Stable Record identity; never derived from file path or line.", { required: true, aliases: ["recordId", "id"] }),
-  f$3("记录类型", "identity", "target", "enum", "Business record type discriminator.", { required: true, aliases: ["recordType"] })
+  f$3("记录ID", "identity", "target", "record-id", "稳定的记录标识；不会根据文件路径或行号推导。", { required: true, aliases: ["recordId", "id"] }),
+  f$3("记录类型", "identity", "target", "enum", "业务记录类型标识。", { required: true, aliases: ["recordType"] })
 ];
 const GOAL = [
-  f$3("目标", "canonical-reference", "target", "string", "Canonical human-readable Goal path. The path itself is the Goal identity.", { aliases: ["goalPath"] })
+  f$3("目标", "canonical-reference", "target", "string", "规范且可读的目标路径；路径本身就是目标标识。", { aliases: ["goalPath"] })
 ];
-const DATE$1 = f$3("日期", "business-fact", "target", "date", "Record occurrence/business date.", { aliases: ["date"] });
-const CONTENT = f$3("内容", "business-fact", "target", "string", "Primary human-authored Record content.", { aliases: ["content", "任务内容"] });
-const TAGS = f$3("标签", "business-fact", "target", "tags", "User-authored tags. Omit when empty.", { aliases: ["tags"] });
-const ICON = f$3("图标", "display-snapshot", "target", "string", "Historical display snapshot. R5 decides whether displayStyle can replace this.", { aliases: ["icon"] });
+const DATE$1 = f$3("日期", "business-fact", "target", "date", "记录发生日期或业务日期。", { aliases: ["date"] });
+const CONTENT = f$3("内容", "business-fact", "target", "string", "用户填写的主要记录内容。", { aliases: ["content", "任务内容"] });
+const TAGS = f$3("标签", "business-fact", "target", "tags", "用户填写的标签；为空时省略。", { aliases: ["tags"] });
+const ICON = f$3("图标", "display-snapshot", "target", "string", "历史显示快照；后续规则决定是否可由显示样式替代。", { aliases: ["icon"] });
 const GENERIC_COMMON = [...ENVELOPE, ...GOAL, DATE$1];
 const THOUGHT_SCHEMA = {
   contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
@@ -2796,8 +2796,8 @@ const HABIT_SCHEMA = {
   capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
   recordFields: [
     ...GENERIC_COMMON,
-    f$3("评分", "business-fact", "target", "number", "Habit rating/value.", { aliases: ["rating"] }),
-    f$3("图片", "business-fact", "target", "string", "Canonical image/rating visual value.", { aliases: ["image"] }),
+    f$3("评分", "business-fact", "target", "number", "习惯打卡的评分或数值。", { aliases: ["rating"] }),
+    f$3("图片", "business-fact", "target", "string", "规范的图片或评分展示值。", { aliases: ["image"] }),
     CONTENT
   ]
 };
@@ -2810,7 +2810,7 @@ function periodRecord(recordType, displayName) {
     capabilities: { userVisible: true, goalBindable: true, dated: true, periodAware: true, customFields: true },
     recordFields: [
       ...GENERIC_COMMON,
-      f$3("周期粒度", "business-fact", "target", "enum", "Only persisted period fact. Period ID/label are derived from 日期 + 周期粒度.", { aliases: ["periodGranularity"], allowedValues: ["week", "month", "quarter", "year"] }),
+      f$3("周期粒度", "business-fact", "target", "enum", "唯一持久化的周期事实；周期标识和名称由“日期 + 周期粒度”推导。", { aliases: ["periodGranularity"], allowedValues: ["week", "month", "quarter", "year"] }),
       ICON,
       CONTENT
     ]
@@ -2831,15 +2831,15 @@ function simpleGoalRecord(recordType, displayName) {
 const BLOCKER_SCHEMA = simpleGoalRecord("blocker", "阻碍");
 const MILESTONE_SCHEMA = simpleGoalRecord("milestone", "里程碑");
 const TASK_DEMAND_FIELDS = [
-  f$3("优先级", "domain-fact", "target", "enum", "User-declared Task priority.", { aliases: ["priority"], allowedValues: ["lowest", "low", "medium", "high", "highest"] }),
-  f$3("重要程度", "domain-fact", "target", "enum", "Eisenhower importance classification. Missing means unclassified.", { aliases: ["importance"], allowedValues: ["important", "normal"] }),
-  f$3("紧急程度", "domain-fact", "target", "enum", "Eisenhower urgency classification. Missing means unclassified.", { aliases: ["urgency"], allowedValues: ["urgent", "normal"] }),
-  f$3("预计时长", "domain-fact", "target", "number", "User-declared duration in minutes. It can complete a manual Task time range when endAt is absent; TaskSession remains the source for multi-session timer history.", { aliases: ["expectedDurationMinutes"] }),
-  f$3("精力要求", "domain-fact", "target", "enum", "Declared overall energy demand.", { aliases: ["energyDemand"], allowedValues: ["low", "medium", "high"] }),
-  f$3("脑力要求", "domain-fact", "target", "enum", "Declared cognitive demand.", { aliases: ["brainDemand"], allowedValues: ["low", "medium", "high"] }),
-  f$3("体力要求", "domain-fact", "target", "enum", "Declared physical demand.", { aliases: ["physicalDemand"], allowedValues: ["low", "medium", "high"] }),
-  f$3("可用场景", "domain-fact", "target", "string", "Execution contexts where the Task can actually be done. Empty or any means unrestricted.", { aliases: ["availabilityContexts"] }),
-  f$3("恢复意图", "domain-fact", "omit-default", "boolean", "True when the Task is intentionally recovery-oriented.", { aliases: ["recoveryIntent"], defaultValue: false })
+  f$3("优先级", "domain-fact", "target", "enum", "用户设置的任务优先级。", { aliases: ["priority"], allowedValues: ["lowest", "low", "medium", "high", "highest"] }),
+  f$3("重要程度", "domain-fact", "target", "enum", "艾森豪威尔重要程度分类；缺失表示未分类。", { aliases: ["importance"], allowedValues: ["important", "normal"] }),
+  f$3("紧急程度", "domain-fact", "target", "enum", "艾森豪威尔紧急程度分类；缺失表示未分类。", { aliases: ["urgency"], allowedValues: ["urgent", "normal"] }),
+  f$3("预计时长", "domain-fact", "target", "number", "用户设置的预计时长（分钟）。手工任务时间段缺少结束时间时可用它补全；多段计时历史仍以任务计时记录为准。", { aliases: ["expectedDurationMinutes"] }),
+  f$3("精力要求", "domain-fact", "target", "enum", "设置的综合精力要求。", { aliases: ["energyDemand"], allowedValues: ["low", "medium", "high"] }),
+  f$3("脑力要求", "domain-fact", "target", "enum", "设置的脑力要求。", { aliases: ["brainDemand"], allowedValues: ["low", "medium", "high"] }),
+  f$3("体力要求", "domain-fact", "target", "enum", "设置的体力要求。", { aliases: ["physicalDemand"], allowedValues: ["low", "medium", "high"] }),
+  f$3("可用场景", "domain-fact", "target", "string", "任务实际可执行的场景；为空或“任意”表示不限制。", { aliases: ["availabilityContexts"] }),
+  f$3("恢复意图", "domain-fact", "omit-default", "boolean", "任务明确以恢复精力为目的时启用。", { aliases: ["recoveryIntent"], defaultValue: false })
 ];
 const TASK_SCHEMA = {
   contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
@@ -2849,22 +2849,22 @@ const TASK_SCHEMA = {
   capabilities: { userVisible: true, goalBindable: true, dated: true, statusful: true, customFields: true },
   recordFields: [
     ...ENVELOPE,
-    f$3("状态", "domain-fact", "target", "enum", "Task lifecycle state.", { required: true, aliases: ["status"], allowedValues: ["open", "done", "cancelled", "skipped"] }),
-    f$3("创建于", "domain-fact", "target", "datetime", "Task creation timestamp.", { aliases: ["createdAt"] }),
+    f$3("状态", "domain-fact", "target", "enum", "任务生命周期状态。", { required: true, aliases: ["status"], allowedValues: ["open", "done", "cancelled", "skipped"] }),
+    f$3("创建于", "domain-fact", "target", "datetime", "任务创建时间。", { aliases: ["createdAt"] }),
     ...GOAL,
-    f$3("系列ID", "canonical-reference", "target", "record-id", "Optional TaskSeries reference.", { aliases: ["seriesId"] }),
-    f$3("计划时间", "domain-fact", "target", "datetime", "Scheduled execution timestamp.", { aliases: ["scheduledAt"] }),
-    f$3("开始时间", "domain-fact", "target", "datetime", "Legacy/manual Task range start. New planning writes use scheduledAt; actual execution writes use TaskSession.", { aliases: ["startAt"] }),
-    f$3("结束时间", "domain-fact", "target", "datetime", "Legacy/manual Task range end. Kept for compatibility; actual execution writes use TaskSession.", { aliases: ["endAt"] }),
-    f$3("截止时间", "domain-fact", "target", "datetime", "Due timestamp.", { aliases: ["dueAt"] }),
-    f$3("计划日期", "domain-fact", "target", "date", "Date-only scheduled execution fact used by current records.", { aliases: ["scheduledDate"] }),
-    f$3("开始日期", "domain-fact", "target", "date", "Date-only declared start fact used by current records.", { aliases: ["startDate"] }),
-    f$3("截止日期", "domain-fact", "target", "date", "Date-only due fact used by current records.", { aliases: ["dueDate"] }),
-    f$3("完成于", "domain-fact", "target", "datetime", "Task completion timestamp/date.", { aliases: ["completedAt"] }),
-    f$3("取消于", "domain-fact", "target", "datetime", "Task cancellation timestamp/date.", { aliases: ["cancelledAt"] }),
-    f$3("跳过于", "domain-fact", "target", "datetime", "Recurring occurrence skipped timestamp/date.", { aliases: ["skippedAt"] }),
+    f$3("系列ID", "canonical-reference", "target", "record-id", "可选的任务系列引用。", { aliases: ["seriesId"] }),
+    f$3("计划时间", "domain-fact", "target", "datetime", "计划执行时间。", { aliases: ["scheduledAt"] }),
+    f$3("开始时间", "domain-fact", "target", "datetime", "旧版或手工任务时间段的开始时间。新计划使用计划时间；实际执行使用任务计时记录。", { aliases: ["startAt"] }),
+    f$3("结束时间", "domain-fact", "target", "datetime", "旧版或手工任务时间段的结束时间。为兼容保留；实际执行使用任务计时记录。", { aliases: ["endAt"] }),
+    f$3("截止时间", "domain-fact", "target", "datetime", "截止时间。", { aliases: ["dueAt"] }),
+    f$3("计划日期", "domain-fact", "target", "date", "当前记录使用的仅日期计划执行信息。", { aliases: ["scheduledDate"] }),
+    f$3("开始日期", "domain-fact", "target", "date", "当前记录使用的仅日期开始信息。", { aliases: ["startDate"] }),
+    f$3("截止日期", "domain-fact", "target", "date", "当前记录使用的仅日期截止信息。", { aliases: ["dueDate"] }),
+    f$3("完成于", "domain-fact", "target", "datetime", "任务完成时间或日期。", { aliases: ["completedAt"] }),
+    f$3("取消于", "domain-fact", "target", "datetime", "任务取消时间或日期。", { aliases: ["cancelledAt"] }),
+    f$3("跳过于", "domain-fact", "target", "datetime", "重复任务本次跳过的时间或日期。", { aliases: ["skippedAt"] }),
     ...TASK_DEMAND_FIELDS,
-    f$3("内容", "domain-fact", "target", "string", "Task intent/content.", { aliases: ["content", "任务内容"] })
+    f$3("内容", "domain-fact", "target", "string", "任务意图或内容。", { aliases: ["content", "任务内容"] })
   ]
 };
 const TASK_SERIES_SCHEMA = {
@@ -2875,16 +2875,16 @@ const TASK_SERIES_SCHEMA = {
   capabilities: { userVisible: false, goalBindable: true, dated: true, statusful: true },
   recordFields: [
     ...ENVELOPE,
-    f$3("状态", "domain-fact", "target", "enum", "TaskSeries lifecycle state.", { required: true, aliases: ["status"], allowedValues: ["active", "stopped"] }),
+    f$3("状态", "domain-fact", "target", "enum", "任务系列生命周期状态。", { required: true, aliases: ["status"], allowedValues: ["active", "stopped"] }),
     ...GOAL,
     ...TASK_DEMAND_FIELDS,
-    f$3("重复单位", "domain-fact", "target", "enum", "Structured recurrence unit.", { required: true, aliases: ["recurrenceUnit"], allowedValues: ["day", "week", "month", "quarter", "year"] }),
-    f$3("重复间隔", "domain-fact", "target", "number", "Structured recurrence interval.", { required: true, aliases: ["recurrenceInterval"], defaultValue: 1 }),
-    f$3("重复锚点", "domain-fact", "target", "enum", "Structured recurrence anchor.", { required: true, aliases: ["recurrenceAnchor"], allowedValues: ["scheduled", "start", "due", "completion"], defaultValue: "scheduled" }),
-    f$3("系列开始日期", "domain-fact", "target", "date", "Series anchor/start date.", { aliases: ["seriesStartDate"] }),
-    f$3("当前任务ID", "canonical-reference", "target", "record-id", "Current active occurrence reference.", { aliases: ["currentTaskId"] }),
-    f$3("滚动策略", "domain-fact", "omit-default", "enum", "Rollover policy; carry is currently the sole/default strategy.", { aliases: ["rolloverPolicy"], allowedValues: ["carry"], defaultValue: "carry" }),
-    f$3("内容", "domain-fact", "target", "string", "Long-lived recurring Task definition.", { aliases: ["content"] })
+    f$3("重复单位", "domain-fact", "target", "enum", "结构化重复单位。", { required: true, aliases: ["recurrenceUnit"], allowedValues: ["day", "week", "month", "quarter", "year"] }),
+    f$3("重复间隔", "domain-fact", "target", "number", "结构化重复间隔。", { required: true, aliases: ["recurrenceInterval"], defaultValue: 1 }),
+    f$3("重复锚点", "domain-fact", "target", "enum", "结构化重复锚点。", { required: true, aliases: ["recurrenceAnchor"], allowedValues: ["scheduled", "start", "due", "completion"], defaultValue: "scheduled" }),
+    f$3("系列开始日期", "domain-fact", "target", "date", "系列锚点或开始日期。", { aliases: ["seriesStartDate"] }),
+    f$3("当前任务ID", "canonical-reference", "target", "record-id", "当前活动任务引用。", { aliases: ["currentTaskId"] }),
+    f$3("滚动策略", "domain-fact", "omit-default", "enum", "滚动策略；当前仅支持并默认使用延续策略。", { aliases: ["rolloverPolicy"], allowedValues: ["carry"], defaultValue: "carry" }),
+    f$3("内容", "domain-fact", "target", "string", "长期重复任务定义。", { aliases: ["content"] })
   ]
 };
 const TASK_SESSION_SCHEMA = {
@@ -2895,20 +2895,20 @@ const TASK_SESSION_SCHEMA = {
   capabilities: { userVisible: false, goalBindable: true, dated: true, executionHistory: true },
   recordFields: [
     ...ENVELOPE,
-    f$3("任务ID", "canonical-reference", "target", "record-id", "Executed Task reference.", { required: true, aliases: ["taskId"] }),
-    f$3("系列ID", "canonical-reference", "target", "record-id", "Optional TaskSeries reference.", { aliases: ["seriesId"] }),
+    f$3("任务ID", "canonical-reference", "target", "record-id", "已执行任务的引用。", { required: true, aliases: ["taskId"] }),
+    f$3("系列ID", "canonical-reference", "target", "record-id", "可选的任务系列引用。", { aliases: ["seriesId"] }),
     ...GOAL,
-    f$3("开始于", "domain-fact", "target", "datetime", "Actual session start.", { required: true, aliases: ["sessionStartedAt"] }),
-    f$3("结束于", "domain-fact", "target", "datetime", "Actual session end.", { required: true, aliases: ["sessionEndedAt"] }),
-    f$3("时长", "domain-fact", "target", "number", "Actual session duration in minutes.", { required: true, aliases: ["sessionDurationMinutes"] }),
-    f$3("结果", "domain-fact", "target", "enum", "Session outcome.", { required: true, aliases: ["sessionResult"], allowedValues: ["work-block-ended", "task-completed"] }),
-    f$3("来源", "measurement-provenance", "target", "enum", "Execution capture source.", { required: true, aliases: ["sessionSource"], allowedValues: ["timer", "energy-view", "timeline", "unknown"] }),
-    f$3("建议时长", "domain-fact", "target", "number", "Suggested duration snapshot at execution time.", { aliases: ["suggestedDurationMinutes"] }),
-    f$3("开始精力记录ID", "canonical-reference", "target", "record-id", "Energy snapshot at session start.", { aliases: ["startEnergyRecordId"] }),
-    f$3("结束精力记录ID", "canonical-reference", "target", "record-id", "Energy snapshot linked after session.", { aliases: ["endEnergyRecordId"] }),
-    f$3("精力变化", "domain-fact", "target", "number", "Linked energy delta.", { aliases: ["energyDelta"] }),
-    f$3("脑力变化", "domain-fact", "target", "number", "Linked cognitive-energy delta.", { aliases: ["brainDelta"] }),
-    f$3("体力变化", "domain-fact", "target", "number", "Linked physical-energy delta.", { aliases: ["physicalDelta"] })
+    f$3("开始于", "domain-fact", "target", "datetime", "本次实际执行开始时间。", { required: true, aliases: ["sessionStartedAt"] }),
+    f$3("结束于", "domain-fact", "target", "datetime", "本次实际执行结束时间。", { required: true, aliases: ["sessionEndedAt"] }),
+    f$3("时长", "domain-fact", "target", "number", "本次实际执行时长（分钟）。", { required: true, aliases: ["sessionDurationMinutes"] }),
+    f$3("结果", "domain-fact", "target", "enum", "本次执行结果。", { required: true, aliases: ["sessionResult"], allowedValues: ["work-block-ended", "task-completed"] }),
+    f$3("来源", "measurement-provenance", "target", "enum", "实际执行记录来源。", { required: true, aliases: ["sessionSource"], allowedValues: ["timer", "energy-view", "timeline", "unknown"] }),
+    f$3("建议时长", "domain-fact", "target", "number", "执行时的建议时长快照。", { aliases: ["suggestedDurationMinutes"] }),
+    f$3("开始精力记录ID", "canonical-reference", "target", "record-id", "执行开始时的精力快照。", { aliases: ["startEnergyRecordId"] }),
+    f$3("结束精力记录ID", "canonical-reference", "target", "record-id", "执行结束后关联的精力快照。", { aliases: ["endEnergyRecordId"] }),
+    f$3("精力变化", "domain-fact", "target", "number", "关联的综合精力变化。", { aliases: ["energyDelta"] }),
+    f$3("脑力变化", "domain-fact", "target", "number", "关联的脑力变化。", { aliases: ["brainDelta"] }),
+    f$3("体力变化", "domain-fact", "target", "number", "关联的体力变化。", { aliases: ["physicalDelta"] })
   ]
 };
 const ENERGY_SCHEMA = {
@@ -2919,20 +2919,20 @@ const ENERGY_SCHEMA = {
   capabilities: { userVisible: true, goalBindable: true, dated: true, subtypeAware: true, customFields: true },
   recordFields: [
     ...ENVELOPE,
-    f$3("记录子类型", "domain-fact", "target", "enum", "Energy domain discriminator.", { required: true, aliases: ["recordSubtype"], allowedValues: ["snapshot", "change", "recovery", "depletion", "stop"] }),
+    f$3("记录子类型", "domain-fact", "target", "enum", "精力记录子类型。", { required: true, aliases: ["recordSubtype"], allowedValues: ["snapshot", "change", "recovery", "depletion", "stop"] }),
     ...GOAL,
     DATE$1,
-    f$3("时间", "business-fact", "target", "string", "Energy observation time when known.", { aliases: ["time"] }),
-    f$3("时段", "business-fact", "target", "string", "Energy observation period when exact time is unavailable.", { aliases: ["period"] }),
-    f$3("精力值", "domain-fact", "target", "number", "Canonical 0-100 energy score.", { aliases: ["score"] }),
-    f$3("脑力精力", "domain-fact", "target", "number", "Detailed cognitive energy score.", { aliases: ["brainScore"] }),
-    f$3("体力精力", "domain-fact", "target", "number", "Detailed physical energy score.", { aliases: ["physicalScore"] }),
-    f$3("综合算法", "measurement-provenance", "target", "string", "Aggregation method for detailed scores.", { aliases: ["aggregateMethod"] }),
-    f$3("评分模式", "measurement-provenance", "target", "enum", "How the energy score was captured.", { aliases: ["scoreMode"], allowedValues: ["quick", "detailed", "percent"] }),
-    f$3("记录方式", "measurement-provenance", "target", "enum", "Realtime vs retrospective capture.", { aliases: ["captureMode"], allowedValues: ["realtime", "retrospective"] }),
-    f$3("时间精度", "measurement-provenance", "target", "enum", "Precision of observation time.", { aliases: ["timePrecision"], allowedValues: ["exact", "approximate", "period", "day"] }),
-    f$3("记录时间", "measurement-provenance", "target", "datetime", "Actual capture timestamp when available.", { aliases: ["recordedAt"] }),
-    f$3("来源", "measurement-provenance", "target", "string", "Capture surface/source.", { aliases: ["source"] })
+    f$3("时间", "business-fact", "target", "string", "已知时使用的精力观测时间。", { aliases: ["time"] }),
+    f$3("时段", "business-fact", "target", "string", "无法确定准确时间时使用的精力观测时段。", { aliases: ["period"] }),
+    f$3("精力值", "domain-fact", "target", "number", "规范的 0–100 综合精力分数。", { aliases: ["score"] }),
+    f$3("脑力精力", "domain-fact", "target", "number", "详细脑力分数。", { aliases: ["brainScore"] }),
+    f$3("体力精力", "domain-fact", "target", "number", "详细体力分数。", { aliases: ["physicalScore"] }),
+    f$3("综合算法", "measurement-provenance", "target", "string", "详细分数的综合算法。", { aliases: ["aggregateMethod"] }),
+    f$3("评分模式", "measurement-provenance", "target", "enum", "精力分数的记录方式。", { aliases: ["scoreMode"], allowedValues: ["quick", "detailed", "percent"] }),
+    f$3("记录方式", "measurement-provenance", "target", "enum", "实时记录或回顾补记。", { aliases: ["captureMode"], allowedValues: ["realtime", "retrospective"] }),
+    f$3("时间精度", "measurement-provenance", "target", "enum", "观测时间精度。", { aliases: ["timePrecision"], allowedValues: ["exact", "approximate", "period", "day"] }),
+    f$3("记录时间", "measurement-provenance", "target", "datetime", "可用时记录实际录入时间。", { aliases: ["recordedAt"] }),
+    f$3("来源", "measurement-provenance", "target", "string", "记录入口或来源。", { aliases: ["source"] })
   ]
 };
 const TASK_STATUS_PRESENTATION$1 = {
@@ -3101,7 +3101,7 @@ const ENERGY_DEFINITION = define(ENERGY_SCHEMA, {
   id: RECORD_TYPE_IDS.ENERGY,
   name: "精力",
   captureMode: "direct",
-  description: "目标绑定的精力状态记录；不创建 GoalTemplate，使用直接采集协议。",
+  description: "目标绑定的精力状态记录；不创建目标模板，使用直接采集协议。",
   fields: [],
   targetFile: "01/目标精力.md",
   appendUnderHeader: "## {{goalPath}}"
@@ -3183,11 +3183,27 @@ const RECORD_TYPE_PRESENTATION_ORDER = [
   "blocker",
   "milestone"
 ];
+const RECORD_TYPE_ICONS = Object.freeze({
+  task: "✓",
+  energy: "⚡",
+  habit: "♥",
+  event: "◷",
+  feeling: "♡",
+  thought: "✦",
+  review: "≡",
+  plan: "◇",
+  blocker: "!",
+  milestone: "◆"
+});
 const RECORD_TYPE_PRESENTATION_REGISTRY = Object.freeze(
   Object.fromEntries(
     RECORD_TYPE_PRESENTATION_ORDER.map((recordType, index) => [
       recordType,
-      { order: (index + 1) * 10, colorToken: `--think-record-type-${recordType}` }
+      {
+        order: (index + 1) * 10,
+        icon: RECORD_TYPE_ICONS[recordType],
+        colorToken: `--think-record-type-${recordType}`
+      }
     ])
   )
 );
@@ -3224,6 +3240,7 @@ function getRecordTypePresentation(value) {
     recordType,
     label: schema?.name || schema?.displayName || recordType || "记录",
     order: identity2?.order ?? Number.MAX_SAFE_INTEGER,
+    icon: identity2?.icon || "•",
     colorToken: identity2?.colorToken || "--think-record-type-neutral"
   };
 }
@@ -3690,14 +3707,14 @@ var Dayjs = /* @__PURE__ */ (function() {
     var str = formatStr || FORMAT_DEFAULT;
     var zoneStr = Utils.z(this);
     var $H = this.$H, $m = this.$m, $M = this.$M;
-    var weekdays = locale2.weekdays, months = locale2.months, meridiem = locale2.meridiem;
+    var weekdays = locale2.weekdays, months = locale2.months, meridiem2 = locale2.meridiem;
     var getShort = function getShort2(arr, index, full, length2) {
       return arr && (arr[index] || arr(_this3, str)) || full[index].slice(0, length2);
     };
     var get$H = function get$H2(num) {
       return Utils.s($H % 12 || 12, num, "0");
     };
-    var meridiemFunc = meridiem || function(hour, minute, isLowercase) {
+    var meridiemFunc = meridiem2 || function(hour, minute, isLowercase) {
       var m2 = hour < 12 ? "AM" : "PM";
       return isLowercase ? m2.toLowerCase() : m2;
     };
@@ -3854,6 +3871,67 @@ dayjs.unix = function(timestamp2) {
 dayjs.en = Ls[L$2];
 dayjs.Ls = Ls;
 dayjs.p = {};
+var locale$1 = {
+  name: "zh-cn",
+  weekdays: "星期日_星期一_星期二_星期三_星期四_星期五_星期六".split("_"),
+  weekdaysShort: "周日_周一_周二_周三_周四_周五_周六".split("_"),
+  weekdaysMin: "日_一_二_三_四_五_六".split("_"),
+  months: "一月_二月_三月_四月_五月_六月_七月_八月_九月_十月_十一月_十二月".split("_"),
+  monthsShort: "1月_2月_3月_4月_5月_6月_7月_8月_9月_10月_11月_12月".split("_"),
+  ordinal: function ordinal2(number2, period) {
+    switch (period) {
+      case "W":
+        return number2 + "周";
+      default:
+        return number2 + "日";
+    }
+  },
+  weekStart: 1,
+  yearStart: 4,
+  formats: {
+    LT: "HH:mm",
+    LTS: "HH:mm:ss",
+    L: "YYYY/MM/DD",
+    LL: "YYYY年M月D日",
+    LLL: "YYYY年M月D日Ah点mm分",
+    LLLL: "YYYY年M月D日ddddAh点mm分",
+    l: "YYYY/M/D",
+    ll: "YYYY年M月D日",
+    lll: "YYYY年M月D日 HH:mm",
+    llll: "YYYY年M月D日dddd HH:mm"
+  },
+  relativeTime: {
+    future: "%s内",
+    past: "%s前",
+    s: "几秒",
+    m: "1 分钟",
+    mm: "%d 分钟",
+    h: "1 小时",
+    hh: "%d 小时",
+    d: "1 天",
+    dd: "%d 天",
+    M: "1 个月",
+    MM: "%d 个月",
+    y: "1 年",
+    yy: "%d 年"
+  },
+  meridiem: function meridiem(hour, minute) {
+    var hm = hour * 100 + minute;
+    if (hm < 600) {
+      return "凌晨";
+    } else if (hm < 900) {
+      return "早上";
+    } else if (hm < 1100) {
+      return "上午";
+    } else if (hm < 1300) {
+      return "中午";
+    } else if (hm < 1800) {
+      return "下午";
+    }
+    return "晚上";
+  }
+};
+dayjs.locale(locale$1, null, true);
 const quarterOfYear = (function(o2, c2) {
   var proto2 = c2.prototype;
   proto2.quarter = function(quarter) {
@@ -3970,12 +4048,12 @@ var getLocalePart = function getLocalePart2(name) {
 };
 var meridiemMatch = function meridiemMatch2(input, isLowerCase) {
   var isAfternoon;
-  var _locale = locale, meridiem = _locale.meridiem;
-  if (!meridiem) {
+  var _locale = locale, meridiem2 = _locale.meridiem;
+  if (!meridiem2) {
     isAfternoon = input === (isLowerCase ? "pm" : "PM");
   } else {
     for (var i2 = 1; i2 <= 24; i2 += 1) {
-      if (input.indexOf(meridiem(i2, 0, isLowerCase)) > -1) {
+      if (input.indexOf(meridiem2(i2, 0, isLowerCase)) > -1) {
         isAfternoon = i2 > 12;
         break;
       }
@@ -4013,12 +4091,12 @@ var expressions = {
   D: [match1to2, addInput("day")],
   DD: [match2, addInput("day")],
   Do: [matchWord, function(input) {
-    var _locale2 = locale, ordinal3 = _locale2.ordinal;
+    var _locale2 = locale, ordinal4 = _locale2.ordinal;
     var _input$match = input.match(/\d+/);
     this.day = _input$match[0];
-    if (!ordinal3) return;
+    if (!ordinal4) return;
     for (var i2 = 1; i2 <= 31; i2 += 1) {
-      if (ordinal3(i2).replace(/\[|\]/g, "") === input) {
+      if (ordinal4(i2).replace(/\[|\]/g, "") === input) {
         this.day = i2;
       }
     }
@@ -4249,6 +4327,7 @@ dayjs.extend(customParse);
 dayjs.extend(isoWeek);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isBetween);
+dayjs.locale("zh-cn");
 function normalizeTimelineView(view) {
   switch (view) {
     case "年":
@@ -4365,7 +4444,7 @@ function formatDateForView(d2, v2) {
     case "周": {
       const isoYear = d2.isoWeekYear();
       const isoWeekNum = d2.isoWeek();
-      return `${isoYear}-W${String(isoWeekNum).padStart(2, "0")}`;
+      return `${isoYear}年第${isoWeekNum}周`;
     }
     default:
       return d2.format("YYYY-MM-DD");
@@ -4491,7 +4570,7 @@ function normalizeGoalPath(path) {
 }
 function requireGoalPath(path) {
   const normalized2 = normalizeGoalPath(path);
-  if (!normalized2) throw new Error("Invalid Goal path: Goal paths must be slash-separated text without # markers.");
+  if (!normalized2) throw new Error("目标路径无效：必须使用斜杠分隔，且不能包含 # 标记。");
   return normalized2;
 }
 function splitGoalPath(path) {
@@ -4621,7 +4700,7 @@ function encodeFieldValueForMarkdown(value, def, options = {}) {
     const raw = String(value).trim();
     if (!raw) return "";
     const canonical = normalizeGoalPath(raw);
-    if (!canonical) throw new Error("Invalid Goal path: Goal is not Tag and cannot contain # markers.");
+    if (!canonical) throw new Error("目标路径无效：目标不是标签，不能包含 # 标记。");
     return canonical;
   }
   return String(value).trim();
@@ -5150,7 +5229,7 @@ function parseEnergyProtocolParams(params) {
       }
     };
   }
-  return { ok: false, message: "精力快捷协议 mode 只支持 quick 或 detailed。" };
+  return { ok: false, message: "精力快捷协议的模式只支持“快捷”或“详细”。" };
 }
 function resolveEnergyCaptureGoal(goals, defaultGoalPath) {
   const available = goals.filter((goal) => goal.status !== "archived");
@@ -5277,9 +5356,9 @@ function buildEnergyActionPolicyContext(items, management, today) {
   const preserveCapacityRisk = loadRisk || Boolean(preserveGuardrail);
   let preserveCapacityReason;
   if (dailyTaskMinutes >= 300) {
-    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}min，建议用更短工作块并到点收尾。`;
+    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}分钟，建议用更短工作块并到点收尾。`;
   } else if (loadRisk) {
-    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}min，这一块先设明确停止点，给后续留余量。`;
+    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}分钟，这一块先设明确停止点，给后续留余量。`;
   } else if (preserveGuardrail) {
     preserveCapacityReason = "你的历史里已出现高能后持续过久的迹象，这一块先设明确停止点。";
   }
@@ -5437,10 +5516,10 @@ function reasonFor(candidate, band, duration2) {
   if (candidate.brainLoad) parts.push(`${loadLabel(candidate.brainLoad)}脑力`);
   if (candidate.physicalLoad) parts.push(`${loadLabel(candidate.physicalLoad)}体力`);
   if (candidate.recoveryIntent) parts.push("恢复项");
-  parts.push(`建议 ${duration2}min`);
+  parts.push(`建议 ${duration2}分钟`);
   const effect2 = candidate.historicalEffect;
   if (effect2 && effect2.sampleCount >= PERSONAL_SAMPLE_MINIMUM) {
-    parts.push(`个人历史 ${signed$1(effect2.meanDelta)} · N=${effect2.sampleCount}`);
+    parts.push(`个人历史 ${signed$1(effect2.meanDelta)} · 样本数 ${effect2.sampleCount}`);
   }
   return parts.join(" · ");
 }
@@ -5631,11 +5710,11 @@ function effectGoalLabel(item) {
   return readEffectText(item.goalPath) || "未分目标";
 }
 function effectDurationBucket(durationMinutes2) {
-  if (durationMinutes2 < 30) return "<30min";
-  if (durationMinutes2 < 60) return "30–59min";
-  if (durationMinutes2 < 90) return "60–89min";
-  if (durationMinutes2 < 120) return "90–119min";
-  return "≥120min";
+  if (durationMinutes2 < 30) return "<30分钟";
+  if (durationMinutes2 < 60) return "30–59分钟";
+  if (durationMinutes2 < 90) return "60–89分钟";
+  if (durationMinutes2 < 120) return "90–119分钟";
+  return "≥120分钟";
 }
 function effectConfidence(beforeGap, afterGap, options) {
   return beforeGap <= options.highBeforeGapMinutes && afterGap <= options.highAfterGapMinutes ? "high" : "medium";
@@ -6109,7 +6188,7 @@ function attachEnergyRecommendationLearning(candidates, learning) {
     return historicalEffect ? { ...candidate, historicalEffect } : candidate;
   });
 }
-function ordinal2(value) {
+function ordinal3(value) {
   const match5 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match5) return void 0;
   const stamp = Date.UTC(Number(match5[1]), Number(match5[2]) - 1, Number(match5[3]));
@@ -6125,12 +6204,12 @@ function pct(value) {
   return Math.round(value * 100);
 }
 function buildEnergyDataQuality(items, options) {
-  const start2 = ordinal2(options.startDate);
-  const end2 = ordinal2(options.endDate);
+  const start2 = ordinal3(options.startDate);
+  const end2 = ordinal3(options.endDate);
   const totalDays = start2 == null || end2 == null || end2 < start2 ? 0 : end2 - start2 + 1;
   const snapshots = items.filter(isEnergyItem).map((item) => ({ item, snapshot: readEnergyItemSnapshot(item) })).filter((row) => !!row.snapshot).filter(({ snapshot }) => {
     if (!snapshot.date) return false;
-    const value = ordinal2(snapshot.date);
+    const value = ordinal3(snapshot.date);
     return start2 != null && end2 != null && value != null && value >= start2 && value <= end2;
   });
   const sampledDays = new Set(snapshots.map(({ snapshot }) => snapshot.date).filter(Boolean)).size;
@@ -6190,38 +6269,38 @@ function hasHash(value) {
 }
 function assertGoal(goal) {
   const raw = String(goal.path || "").trim();
-  if (hasHash(raw)) throw new Error(`Invalid Goal path ${raw}: Goal must not contain #.`);
+  if (hasHash(raw)) throw new Error(`目标路径无效（${raw}）：目标路径不能包含 #。`);
   const normalized2 = normalizeGoalPath(raw);
-  if (!normalized2) throw new Error("Invalid Goal: canonical slash path is required.");
-  if (goal.path !== normalized2) throw new Error(`Invalid Goal path: expected ${normalized2}.`);
+  if (!normalized2) throw new Error("目标无效：必须使用规范的斜杠分隔路径。");
+  if (goal.path !== normalized2) throw new Error(`目标路径无效：应为 ${normalized2}。`);
   if (goal.timePresetPercent !== void 0) {
     const percent = Number(goal.timePresetPercent);
     if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
-      throw new Error(`Invalid Goal timePresetPercent for ${normalized2}: expected 0..100.`);
+      throw new Error(`目标 ${normalized2} 的时间预设百分比无效：必须在 0 到 100 之间。`);
     }
   }
   if (goal.weeklyTargetMinutes !== void 0) {
     const minutes = Number(goal.weeklyTargetMinutes);
     if (!Number.isFinite(minutes) || minutes < 0) {
-      throw new Error(`Invalid Goal weeklyTargetMinutes for ${normalized2}: expected >= 0.`);
+      throw new Error(`目标 ${normalized2} 的每周目标分钟数无效：必须大于等于 0。`);
     }
   }
 }
 function assertTemplate(template, goalPaths) {
   const goalPath = normalizeGoalPath(template.goalPath);
-  if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`GoalTemplate references missing Goal (${template.goalPath || "<empty>"}).`);
+  if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`目标模板引用了不存在的目标（${template.goalPath || "空"}）。`);
   for (const key of Object.keys(template.defaultValues || {})) {
-    if (GOAL_CONTEXT_KEYS.has(key)) throw new Error(`GoalTemplate ${goalPath}/${template.recordTypeId} must not persist Goal context defaults (${key}).`);
-    if (GOAL_TEMPLATE_ICON_KEYS.has(key)) throw new Error(`GoalTemplate ${goalPath}/${template.recordTypeId} must not persist Goal identity icon defaults (${key}).`);
+    if (GOAL_CONTEXT_KEYS.has(key)) throw new Error(`目标模板 ${goalPath}/${template.recordTypeId} 不能保存目标上下文默认值（${key}）。`);
+    if (GOAL_TEMPLATE_ICON_KEYS.has(key)) throw new Error(`目标模板 ${goalPath}/${template.recordTypeId} 不能保存目标身份图标默认值（${key}）。`);
   }
   for (const field of template.fields || []) {
     const semantic = String(field.semantic || "").trim();
     const key = String(field.key || field.label || "").trim();
     if (semantic === "goalPath" || GOAL_CONTEXT_KEYS.has(key)) {
-      throw new Error(`GoalTemplate ${goalPath}/${template.recordTypeId} must not persist Goal context field (${key || semantic}).`);
+      throw new Error(`目标模板 ${goalPath}/${template.recordTypeId} 不能保存目标上下文字段（${key || semantic}）。`);
     }
     if ((semantic === "icon" || GOAL_TEMPLATE_ICON_KEYS.has(key)) && String(field.defaultValue ?? "").trim()) {
-      throw new Error(`GoalTemplate ${goalPath}/${template.recordTypeId} must not persist an icon field default.`);
+      throw new Error(`目标模板 ${goalPath}/${template.recordTypeId} 不能保存图标字段默认值。`);
     }
   }
 }
@@ -6229,12 +6308,12 @@ function assertCanonicalGoalSettings(goalSettings) {
   const goals = goalSettings?.goals || [];
   for (const goal of goals) assertGoal(goal);
   const paths = new Set(goals.map((goal) => goal.path));
-  if (paths.size !== goals.length) throw new Error("Duplicate Goal path detected.");
+  if (paths.size !== goals.length) throw new Error("检测到重复的目标路径。");
   const templateKeys = /* @__PURE__ */ new Set();
   for (const template of goalSettings?.goalTemplates || []) {
     assertTemplate(template, paths);
     const key = `${template.goalPath}::${template.recordTypeId}`;
-    if (templateKeys.has(key)) throw new Error(`Duplicate GoalTemplate detected (${key}).`);
+    if (templateKeys.has(key)) throw new Error(`检测到重复的目标模板（${key}）。`);
     templateKeys.add(key);
   }
 }
@@ -6520,7 +6599,7 @@ function resolveDerivedPeriod(dateValue, granularityValue) {
     const quarter = Math.floor(date2.getMonth() / 3) + 1;
     const start22 = new Date(year, (quarter - 1) * 3, 1);
     const end22 = new Date(year, quarter * 3, 0);
-    return { id: `${year}-Q${quarter}`, label: `${year} Q${quarter}`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
+    return { id: `${year}-Q${quarter}`, label: `${year} 年第 ${quarter} 季度`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
   }
   const start2 = new Date(year, 0, 1);
   const end2 = new Date(year, 11, 31);
@@ -6926,7 +7005,7 @@ function round$3(value, digits = 2) {
   const factor = 10 ** digits;
   return Math.round(value * factor) / factor;
 }
-function localDateKey(date2) {
+function localDateKey$1(date2) {
   const y2 = date2.getFullYear();
   const m2 = String(date2.getMonth() + 1).padStart(2, "0");
   const d2 = String(date2.getDate()).padStart(2, "0");
@@ -6984,7 +7063,7 @@ function getGoalTimePresetWeekStartKey(date2 = /* @__PURE__ */ new Date()) {
   const day = dateAtLocalMidnight(date2);
   const dayOfWeek = day.getDay();
   const deltaToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  return localDateKey(addLocalDays(day, deltaToMonday));
+  return localDateKey$1(addLocalDays(day, deltaToMonday));
 }
 function buildGoalTimePresetSnapshot(goals) {
   const out = {};
@@ -7016,7 +7095,7 @@ function upsertGoalTimePresetRevision(revisions, goals, date2 = /* @__PURE__ */ 
   return next2;
 }
 function findEffectiveRevision(date2, revisions) {
-  const key = localDateKey(date2);
+  const key = localDateKey$1(date2);
   let found = null;
   for (const revision of revisions || []) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(revision.effectiveWeekStart)) continue;
@@ -7099,8 +7178,8 @@ function resolveGoalTargetForRange(goalPath, goals, revisions, rangeStart, range
   while (cursor2 <= endDay) {
     const dayStart = cursor2;
     const nextDay = addLocalDays(cursor2, 1);
-    const isFirst = localDateKey(cursor2) === localDateKey(rangeStart);
-    const isLast = localDateKey(cursor2) === localDateKey(rangeEnd);
+    const isFirst = localDateKey$1(cursor2) === localDateKey$1(rangeStart);
+    const isLast = localDateKey$1(cursor2) === localDateKey$1(rangeEnd);
     const startMinute = isFirst ? localClockMinutes(rangeStart) : 0;
     const endMinute = isLast ? localClockMinutes(rangeEnd) + 1 / 6e4 : NATURAL_DAY_MINUTES;
     const segmentMinutes = Math.max(0, Math.min(NATURAL_DAY_MINUTES, endMinute) - Math.max(0, startMinute));
@@ -7305,9 +7384,9 @@ function hydrateGoalOnlySettings(value) {
   const raw = isRecord(value) ? value : {};
   const rawGoals = Array.isArray(raw.goals) ? raw.goals : [];
   const goals = rawGoals.map((entry) => {
-    if (!isRecord(entry)) throw new Error("Invalid Goal row: expected object.");
+    if (!isRecord(entry)) throw new Error("目标数据无效：应为对象。");
     const path = normalizeGoalPath(String(entry.path ?? ""));
-    if (!path) throw new Error("Invalid Goal row: path is required.");
+    if (!path) throw new Error("目标数据无效：缺少路径。");
     return {
       path,
       description: typeof entry.description === "string" ? entry.description : void 0,
@@ -7325,14 +7404,14 @@ function hydrateGoalOnlySettings(value) {
   const goalPaths = new Set(goals.map((goal) => goal.path));
   const rawTemplates = Array.isArray(raw.goalTemplates) ? raw.goalTemplates : [];
   const goalTemplates = rawTemplates.map((entry) => {
-    if (!isRecord(entry)) throw new Error("Invalid GoalTemplate row: expected object.");
+    if (!isRecord(entry)) throw new Error("目标模板数据无效：应为对象。");
     const goalPath = normalizeGoalPath(String(entry.goalPath ?? ""));
     const recordTypeId = String(entry.recordTypeId ?? "").trim();
-    if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`GoalTemplate references missing Goal path (${goalPath || "<empty>"}).`);
-    if (!recordTypeId) throw new Error(`GoalTemplate ${goalPath} is missing recordTypeId.`);
+    if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`目标模板引用了不存在的目标路径（${goalPath || "空"}）。`);
+    if (!recordTypeId) throw new Error(`目标模板 ${goalPath} 缺少记录类型标识。`);
     const recordSchema = getRecordSchemaDefinitionById(recordTypeId);
     if (!recordSchema || recordSchema.captureMode !== "template") {
-      throw new Error(`GoalTemplate ${goalPath} references non-current Record Type (${recordTypeId}). Run the offline 1.5.0 convergence first.`);
+      throw new Error(`目标模板 ${goalPath} 引用了当前版本不支持的记录类型（${recordTypeId}）。请先完成 1.5.0 离线数据收敛。`);
     }
     const keepRecordSubtype = recordSchema.recordType === "energy";
     const fields = stripGoalTemplateIconFieldDefaults(Array.isArray(entry.fields) ? entry.fields.filter((field) => {
@@ -7453,7 +7532,7 @@ function persistGoalOnlySettings(settings) {
     const path = normalizeGoalPath(template.goalPath);
     if (!path) throw new Error("Cannot persist GoalTemplate without canonical Goal path.");
     const recordSchema = getRecordSchemaDefinitionById(template.recordTypeId);
-    if (!recordSchema || recordSchema.captureMode !== "template") throw new Error(`Cannot persist non-current GoalTemplate Record Type: ${template.recordTypeId}`);
+    if (!recordSchema || recordSchema.captureMode !== "template") throw new Error(`无法保存当前版本不支持的目标模板记录类型：${template.recordTypeId}`);
     const keepRecordSubtype = recordSchema.recordType === "energy";
     const fields = stripGoalTemplateIconFieldDefaults((template.fields || []).filter((field) => {
       const record2 = field;
@@ -7552,7 +7631,7 @@ let SettingsRepository = class {
    */
   getSettings() {
     if (!this.currentSettings) {
-      throw new Error("SettingsRepository: 设置未加载，请先调用 load()");
+      throw new Error("设置尚未加载，请先完成加载。");
     }
     return this.currentSettings;
   }
@@ -7591,7 +7670,7 @@ let SettingsRepository = class {
    */
   async update(mutator, meta) {
     if (!this.currentSettings) {
-      throw new Error("SettingsRepository: 设置未加载，请先调用 load()");
+      throw new Error("设置尚未加载，请先完成加载。");
     }
     const before = this.currentSettings;
     const newSettings = produce(this.currentSettings, mutator);
@@ -7981,20 +8060,20 @@ const text$1 = (partial2) => ({
 });
 const FIELD_REGISTRY = {
   // --- 核心字段 ---
-  id: text$1({ key: "id", label: "记录ID", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
+  id: text$1({ key: "id", label: "记录标识", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
   title: text$1({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录的真实标题；为空时保持为空，不承担类型特定兜底。" }),
-  primaryText: text$1({ key: "primaryText", label: "主显示值", category: "core", source: "derived", semantic: "title", description: "按 Record 类型派生的人类主要识别值；只用于展示，不写回标题或 Markdown。" }),
-  content: text$1({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文；任务与其他 Record 统一为用户正文，不包含存储层元数据" }),
+  primaryText: text$1({ key: "primaryText", label: "主显示值", category: "core", source: "derived", semantic: "title", description: "按记录类型派生的主要识别值；只用于展示，不写回标题或笔记文档。" }),
+  content: text$1({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文；任务与其他记录统一为用户正文，不包含存储层元数据" }),
   editableText: text$1({ key: "editableText", label: "可编辑正文", category: "core", source: "item", semantic: "body", inputType: "textarea", hiddenByDefault: true, description: "编辑态正文真源" }),
   rawSource: text$1({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
-  fullData: text$1({ key: "fullData", label: "完整数据", category: "core", source: "derived", semantic: "body", inputType: "textarea", aliases: ["完整数据", "原始数据", "源数据", "完整源文本", "原始源文本", "rawsource", "rawData", "sourceText", "fullData", "originalData"], description: "原始完整 Record Block，仅用于调试/导出，不作为业务语义真源。" }),
+  fullData: text$1({ key: "fullData", label: "完整数据", category: "core", source: "derived", semantic: "body", inputType: "textarea", aliases: ["完整数据", "原始数据", "源数据", "完整源文本", "原始源文本", "rawsource", "rawData", "sourceText", "fullData", "originalData"], description: "原始完整记录块，仅用于调试或导出，不作为业务语义真源。" }),
   // --- 内置核心业务字段 ---
   tags: { key: "tags", label: "标签", valueType: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "tags", cardinality: "multi", hierarchical: true, aliases: ["标签", "tags"], description: "多值层级标签，例如 项目/插件、地点/家", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
-  goalPath: text$1({ key: "goalPath", label: "目标", valueType: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "goalPath", hierarchical: true, aliases: ["目标", "目标路径", "goalPath"], description: "单值 Goal 路径；Goal 是独立实体，不使用 Tag 语义。" }),
+  goalPath: text$1({ key: "goalPath", label: "目标", valueType: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "goalPath", hierarchical: true, aliases: ["目标", "目标路径", "goalPath"], description: "单值目标路径；目标是独立实体，不使用标签语义。" }),
   rootGoal: text$1({ key: "rootGoal", label: "根目标", valueType: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["根目标"] }),
   leafGoal: text$1({ key: "leafGoal", label: "叶目标", valueType: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["叶目标"] }),
-  cycleId: text$1({ key: "cycleId", label: "周期ID", category: "core", source: "item", semantic: "cycleId", inputType: "text", aliases: ["周期ID", "cycleId"] }),
-  "period.id": text$1({ key: "period.id", label: "周期ID", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期ID", "periodId"] }),
+  cycleId: text$1({ key: "cycleId", label: "周期标识", category: "core", source: "item", semantic: "cycleId", inputType: "text", aliases: ["周期ID", "cycleId"] }),
+  "period.id": text$1({ key: "period.id", label: "周期标识", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期ID", "periodId"] }),
   "period.label": text$1({ key: "period.label", label: "周期", category: "core", source: "derived", semantic: "period", inputType: "text", aliases: ["周期", "periodLabel"] }),
   "period.granularity": text$1({ key: "period.granularity", label: "周期粒度", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期粒度", "periodGranularity"] }),
   recordType: text$1({
@@ -8003,7 +8082,8 @@ const FIELD_REGISTRY = {
     category: "core",
     source: "item",
     semantic: "recordType",
-    inputType: "text",
+    inputType: "singleSelect",
+    options: RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.capabilities.userVisible).map((definition) => ({ value: definition.recordType, label: definition.name || definition.displayName || definition.recordType })),
     aliases: ["记录类型", "recordType"],
     formatter: (value) => {
       const raw = String(value ?? "").trim();
@@ -8013,9 +8093,9 @@ const FIELD_REGISTRY = {
       return recordType?.name || recordType?.displayName || raw;
     }
   }),
-  recordSubtype: text$1({ key: "recordSubtype", label: "记录子类型", category: "core", source: "item", semantic: "recordSubtype", inputType: "singleSelect", aliases: ["记录子类型", "recordSubtype"], description: "领域内部子类型；当前由 Energy Record 使用。" }),
-  status: text$1({ key: "status", label: "状态", category: "core", source: "item", semantic: "status", inputType: "singleSelect", aliases: ["状态", "status"], description: "实体显式状态；Task 使用 open/done/cancelled/skipped。" }),
-  cadence: text$1({ key: "cadence", label: "任务周期", category: "core", source: "derived", semantic: "recurrence", inputType: "singleSelect", aliases: ["任务周期", "cadence"], description: "由 Task Series 结构化 recurrence 派生：routine/day/week/month/quarter/year。" }),
+  recordSubtype: text$1({ key: "recordSubtype", label: "记录子类型", category: "core", source: "item", semantic: "recordSubtype", inputType: "singleSelect", aliases: ["记录子类型", "recordSubtype"], description: "领域内部子类型；当前由精力记录使用。" }),
+  status: text$1({ key: "status", label: "状态", category: "core", source: "item", semantic: "status", inputType: "singleSelect", aliases: ["状态", "status"], description: "实体显式状态；任务使用未完成、已完成、已取消、已跳过四种状态。" }),
+  cadence: text$1({ key: "cadence", label: "任务周期", category: "core", source: "derived", semantic: "recurrence", inputType: "singleSelect", aliases: ["任务周期", "cadence"], description: "由任务系列的结构化重复规则派生：日常、每日、每周、每月、每季度、每年。" }),
   date: { key: "date", label: "日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["日期", "date"], description: "记录的主要日期" },
   priority: text$1({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
   importance: text$1({ key: "importance", label: "重要程度", category: "core", source: "item", semantic: "none", inputType: "singleSelect", aliases: ["重要程度", "importance"], options: [
@@ -8027,11 +8107,11 @@ const FIELD_REGISTRY = {
     { value: "normal", label: "不紧急" }
   ] }),
   icon: { key: "icon", label: "图标", valueType: "icon", inputType: "text", category: "core", source: "item", semantic: "icon" },
-  recurrence: text$1({ key: "recurrence", label: "重复规则", category: "core", source: "derived", semantic: "recurrence", description: "Task Series 结构化 recurrence 的只读展示投影。" }),
+  recurrence: text$1({ key: "recurrence", label: "重复规则", category: "core", source: "derived", semantic: "recurrence", description: "任务系列结构化重复规则的只读展示结果。" }),
   period: text$1({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
   startTime: { key: "startTime", label: "开始时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "startTime", aliases: ["时间", "time", "start"] },
   endTime: { key: "endTime", label: "结束时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "endTime", aliases: ["结束", "end"] },
-  expectedDurationMinutes: { key: "expectedDurationMinutes", label: "预计时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["预计时长", "expectedDurationMinutes"], description: "Task 的用户声明时长；可与开始时间组成手工时间段，存在 TaskSession 时仍优先使用 Session 历史。" },
+  expectedDurationMinutes: { key: "expectedDurationMinutes", label: "预计时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["预计时长", "expectedDurationMinutes"], description: "任务的用户声明时长；可与开始时间组成手工时间段，存在任务计时记录时仍优先使用计时历史。" },
   scheduledAt: { key: "scheduledAt", label: "计划时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["计划时间", "scheduledAt"] },
   startAt: { key: "startAt", label: "开始时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["开始时间", "startAt"] },
   endAt: { key: "endAt", label: "结束时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["结束时间", "endAt"] },
@@ -8052,7 +8132,7 @@ const FIELD_REGISTRY = {
     { value: "out", label: "外出" }
   ], description: "任务实际可执行的场景；留空或任意表示不限制。" },
   recoveryIntent: { key: "recoveryIntent", label: "恢复意图", valueType: "boolean", inputType: "boolean", category: "core", source: "item", semantic: "none", aliases: ["恢复意图", "recoveryIntent"], description: "标记散步、休息等主动恢复类任务。" },
-  duration: { key: "duration", label: "时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"], hiddenByDefault: true, description: "通用视图时长投影；Task 声明时长使用 expectedDurationMinutes，多段执行时长来自 TaskSession。" },
+  duration: { key: "duration", label: "时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"], hiddenByDefault: true, description: "通用视图时长结果；任务声明时长使用预计时长字段，多段执行时长来自任务计时记录。" },
   rating: { key: "rating", label: "评分", valueType: "number", inputType: "rating", category: "core", source: "item", semantic: "rating", aliases: ["评分", "rating"] },
   image: { key: "image", label: "图片", valueType: "image", inputType: "image", category: "core", source: "item", semantic: "image", aliases: ["图片", "image"], description: "通用图片字段" },
   // --- 分类派生 ---
@@ -8062,7 +8142,7 @@ const FIELD_REGISTRY = {
   "file.name": text$1({ key: "file.name", label: "文件名", category: "file", source: "file", semantic: "fileName", hiddenByDefault: true }),
   "file.folder": text$1({ key: "file.folder", label: "文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["文件夹"] }),
   folder: text$1({ key: "folder", label: "父文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["父文件夹"] }),
-  header: text$1({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "Markdown 所在章节，只表示文件位置，不参与 Goal 归属" }),
+  header: text$1({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "笔记文档所在章节，只表示文件位置，不参与目标归属" }),
   // --- 时间/统计派生 ---
   startISO: { key: "startISO", label: "开始日期", valueType: "date", category: "core", source: "derived", semantic: "date" },
   endISO: { key: "endISO", label: "结束日期", valueType: "date", category: "core", source: "derived", semantic: "date" },
@@ -8172,7 +8252,7 @@ function getAvailableFields(items) {
           category: "custom",
           source: "extra",
           cardinality: "single",
-          description: "从 Markdown 中显式未知 KV 解析出的自定义字段"
+          description: "从笔记文档中未知键值对解析出的自定义字段"
         });
       }
     });
@@ -8569,7 +8649,7 @@ const FILE_FIELD_GUIDE_KEYS = [
   {
     category: "core",
     label: "插件核心字段",
-    description: "由插件内置维护。标签、目标等可以作为表单输入字段使用，但不会落到 extra。",
+    description: "由插件内置维护。标签、目标等可以作为表单输入字段使用，但不会写入自定义附加字段。",
     fields: CORE_FIELD_GUIDE_KEYS.map((key) => FIELD_REGISTRY[key]).filter(Boolean).map((def) => ({
       key: def.key,
       label: def.label,
@@ -9159,7 +9239,7 @@ function resolveCaptureFieldSchema(field) {
     defaultValue: field.defaultValue,
     min: field.min,
     max: field.max,
-    description: "由 RecordTemplate 定义的用户自定义字段。"
+    description: "由记录模板定义的用户自定义字段。"
   };
 }
 function isSafeMarkdownFieldKey(value) {
@@ -9266,7 +9346,7 @@ class AiConfigCache {
     const ai = settings.aiSettings;
     devLog(`${prefix2} 读取 settings 完成 (${elapsedMs(settingsStart)})`);
     if (!ai) {
-      throw new Error("AI settings missing");
+      throw new Error("智能助手设置缺失");
     }
     const ttlMs = (ai.configCacheTTLSeconds ?? 300) * 1e3;
     const now2 = Date.now();
@@ -9297,7 +9377,7 @@ class AiConfigCache {
     }
     const snapshot = this.snapshot;
     if (!snapshot) {
-      throw new Error("AI config snapshot missing after rebuild");
+      throw new Error("重建后仍缺少智能助手配置快照");
     }
     devLog(`${prefix2} getSnapshot 返回 (${elapsedMs(totalStart)})`, {
       cacheHit,
@@ -9424,7 +9504,7 @@ class AiHttpClient {
       });
       if (!response.ok) {
         const text2 = await response.text().catch(() => "");
-        throw new Error(`AI HTTP ${response.status}: ${text2.slice(0, 200)}`);
+        throw new Error(`智能助手接口返回错误 ${response.status}：${text2.slice(0, 200)}`);
       }
       const payload = await response.json();
       return parseModelIds(payload);
@@ -9520,7 +9600,7 @@ class AiHttpClient {
           bodyChars: text2.length,
           bodyPreview: text2.slice(0, 200)
         });
-        throw new Error(`AI HTTP ${response.status}: ${text2.slice(0, 200)}`);
+        throw new Error(`智能助手接口返回错误 ${response.status}：${text2.slice(0, 200)}`);
       }
       const responseJsonStart = nowMs();
       const json = await response.json();
@@ -9538,7 +9618,7 @@ class AiHttpClient {
         contentChars: typeof content === "string" ? content.length : 0
       });
       if (!content) {
-        throw new Error("AI returned empty content");
+        throw new Error("智能助手返回内容为空");
       }
       devLog(`[AiInput][${traceId}][HTTP] chatCompletion 完成，总耗时 ${elapsedMs(totalStart)}`, {
         contentChars: content.length
@@ -9631,7 +9711,7 @@ function safeJsonParseBatch(raw, traceId) {
       }
     }
     if (traceId) warnSlowParserStep(traceId, "JSON 解析失败路径总耗时", parseStart, 50, { rawLength: raw.length });
-    throw new Error("AI output is not valid JSON. Raw output: " + raw.slice(0, 200));
+    throw new Error("智能助手返回的数据格式无效。原始内容：" + raw.slice(0, 200));
   }
 }
 function compactSnapshotForFastMode(snapshot) {
@@ -9821,7 +9901,7 @@ class AiNaturalLanguageRecordParser {
       timeoutMs: ai?.requestTimeoutMs ?? 3e4
     });
     if (!ai?.enabled) {
-      throw new Error("AI is disabled");
+      throw new Error("智能助手未启用");
     }
     const snapshotStart = nowMs();
     const rawSnapshot = this.cache.getSnapshot(traceId);
@@ -15280,7 +15360,7 @@ class DataStoreFileScanner {
               code: !recordId || !isStableRecordId(recordId) ? "record_id_missing" : "record_block_malformed",
               recordId: recordId || void 0,
               path: filePath,
-              message: !recordId || !isStableRecordId(recordId) ? `Record Block at ${filePath}:${i2 + 1} is missing a valid stable 记录ID.` : `Record Block ${recordId} at ${filePath}:${i2 + 1} does not satisfy Record v2 envelope requirements.`
+              message: !recordId || !isStableRecordId(recordId) ? `文件 ${filePath} 第 ${i2 + 1} 行的记录块缺少有效且稳定的记录标识。` : `文件 ${filePath} 第 ${i2 + 1} 行的记录块 ${recordId} 不符合当前记录格式要求。`
             });
           }
           i2 = endIdx;
@@ -15562,6 +15642,9 @@ function normalizeGroupKeys(value, defaultLabel) {
   const text2 = String(value ?? "").trim();
   return text2 ? [text2] : [defaultLabel];
 }
+function formatGroupLabel(field, key) {
+  return formatFieldValue$1(field, key) || key;
+}
 function groupItemsByField(items, groupField, defaultLabel = "(未分类)") {
   const grouped = {};
   for (const item of items) {
@@ -15598,14 +15681,14 @@ function groupItemsByFields(items, fields, context) {
       if (level === fields.length - 1) {
         return {
           key,
-          label: key,
+          label: formatGroupLabel(field, key),
           field,
           items: bucket
         };
       } else {
         return {
           key,
-          label: key,
+          label: formatGroupLabel(field, key),
           field,
           children: groupLevel(bucket, level + 1)
         };
@@ -15824,7 +15907,7 @@ class RecordIndex {
       for (const record2 of records) {
         const id = String(record2.id || "").trim();
         if (!id) {
-          this.issues.push({ code: "record_id_missing", path, message: `Record in ${path} has no 记录ID.` });
+          this.issues.push({ code: "record_id_missing", path, message: `文件 ${path} 中存在缺少记录标识的记录。` });
           continue;
         }
         const source = record2.source;
@@ -15855,7 +15938,7 @@ class RecordIndex {
         this.issues.push({
           code: "record_id_duplicate",
           recordId,
-          message: `Duplicate 记录ID ${recordId}: ${locations.map((location) => `${location.path}:${location.startLine}`).join(", ")}`
+          message: `记录标识 ${recordId} 重复：${locations.map((location) => `${location.path}:${location.startLine}`).join("、")}`
         });
       }
     }
@@ -15874,7 +15957,7 @@ class RecordIndex {
             code: "task_series_reference_orphan",
             recordId: task.id,
             path: task.source?.path,
-            message: `Task ${task.id} references missing Task Series ${task.seriesId}.`
+            message: `任务 ${task.id} 引用了不存在的任务系列 ${task.seriesId}。`
           });
         } else {
           task.recurrenceInfo = series2.recurrenceInfo;
@@ -15905,7 +15988,7 @@ class RecordIndex {
             code: "record_reference_orphan",
             recordId: series.id,
             path: series.source?.path,
-            message: `Active Task Series ${series.id} has no currentTaskId.`
+            message: `活动任务系列 ${series.id} 缺少当前任务标识。`
           });
         } else if (series.currentTaskId) {
           const current2 = asTaskRecord(this.recordsById.get(series.currentTaskId));
@@ -15927,7 +16010,7 @@ class RecordIndex {
         this.issues.push({
           code: "record_reference_orphan",
           recordId: seriesId,
-          message: `Task Series ${seriesId} has ${openTasks.length} open instances; single-active-instance requires at most one.`
+          message: `任务系列 ${seriesId} 有 ${openTasks.length} 个未完成实例；同一时间最多只能有一个活动实例。`
         });
       }
     }
@@ -16218,7 +16301,7 @@ let DataStore = class {
       const issue2 = {
         code: "record_scan_failed",
         path: filePath || void 0,
-        message: `Record scan failed for ${filePath || "<unknown>"}: ${err instanceof Error ? err.message : String(err)}`
+        message: `记录扫描失败（${filePath || "未知文件"}）：${err instanceof Error ? err.message : String(err)}`
       };
       if (filePath) this.scannerIssuesByFile.set(filePath, [issue2]);
       devError("ThinkPlugin: 扫描文件失败", filePath, err);
@@ -16746,10 +16829,10 @@ let AiChatService = class {
   async chat(request, signal) {
     const settings = this.getAiSettings();
     if (!settings.enabled) {
-      throw new Error("AI 功能未启用，请在设置中开启");
+      throw new Error("智能助手未启用，请在设置中开启");
     }
     if (!settings.apiEndpoint || !settings.apiKey || !settings.model) {
-      throw new Error("AI 配置不完整，请检查 API 设置");
+      throw new Error("智能助手配置不完整，请检查接口设置");
     }
     const messages = [];
     messages.push({
@@ -16817,7 +16900,7 @@ ${contextStr}
       };
     } catch (e2) {
       devError("AiChatService: 请求失败", e2);
-      throw new Error(`AI 请求失败: ${e2.message || e2}`);
+      throw new Error(`智能助手请求失败：${e2.message || e2}`);
     }
   }
   /**
@@ -17255,10 +17338,10 @@ function dateOrdinal$1(date2) {
   return Math.floor(Date.UTC(Number(match5[1]), Number(match5[2]) - 1, Number(match5[3])) / 864e5);
 }
 function absoluteMinute(date2, time2) {
-  const ordinal3 = dateOrdinal$1(date2);
+  const ordinal4 = dateOrdinal$1(date2);
   const minutes = parseTimeMinutes(time2);
-  if (ordinal3 == null || minutes == null) return void 0;
-  return ordinal3 * 1440 + minutes;
+  if (ordinal4 == null || minutes == null) return void 0;
+  return ordinal4 * 1440 + minutes;
 }
 function localSessionParts$1(value) {
   const parsed = new Date(value);
@@ -17416,8 +17499,8 @@ function patternDateOrdinal(value) {
   if (date2.getUTCFullYear() !== year || date2.getUTCMonth() !== month - 1 || date2.getUTCDate() !== day) return void 0;
   return Math.floor(stamp / 864e5);
 }
-function patternDateFromOrdinal(ordinal3) {
-  return new Date(ordinal3 * 864e5).toISOString().slice(0, 10);
+function patternDateFromOrdinal(ordinal4) {
+  return new Date(ordinal4 * 864e5).toISOString().slice(0, 10);
 }
 function patternTimeMinutes(value) {
   const match5 = patternText(value)?.match(/^(\d{1,2}):(\d{2})$/);
@@ -17432,9 +17515,9 @@ function patternFormatTime(absoluteMinute2) {
   return `${String(Math.floor(minuteOfDay / 60)).padStart(2, "0")}:${String(minuteOfDay % 60).padStart(2, "0")}`;
 }
 function patternAbsoluteMinute(date2, time2) {
-  const ordinal3 = patternDateOrdinal(date2);
+  const ordinal4 = patternDateOrdinal(date2);
   const minute = patternTimeMinutes(time2);
-  return ordinal3 == null || minute == null ? void 0 : ordinal3 * 1440 + minute;
+  return ordinal4 == null || minute == null ? void 0 : ordinal4 * 1440 + minute;
 }
 function localSessionParts(value) {
   const parsed = new Date(value);
@@ -17512,11 +17595,11 @@ const LAG_WINDOWS = [
   { key: "24h", label: "+24 小时", lagHours: 24, toleranceMinutes: 180 }
 ];
 const SESSION_BUCKETS = [
-  { key: "lt30", label: "<30min", minMinutes: 0, maxMinutes: 29 },
-  { key: "30-59", label: "30–59min", minMinutes: 30, maxMinutes: 59 },
-  { key: "60-89", label: "60–89min", minMinutes: 60, maxMinutes: 89 },
-  { key: "90-119", label: "90–119min", minMinutes: 90, maxMinutes: 119 },
-  { key: "ge120", label: "≥120min", minMinutes: 120 }
+  { key: "lt30", label: "<30分钟", minMinutes: 0, maxMinutes: 29 },
+  { key: "30-59", label: "30–59分钟", minMinutes: 30, maxMinutes: 59 },
+  { key: "60-89", label: "60–89分钟", minMinutes: 60, maxMinutes: 89 },
+  { key: "90-119", label: "90–119分钟", minMinutes: 90, maxMinutes: 119 },
+  { key: "ge120", label: "≥120分钟", minMinutes: 120 }
 ];
 function readPoints(items) {
   const points = [];
@@ -17762,7 +17845,7 @@ function candidateReason(row, focus) {
   const parts = [`综合平均 ${row.meanDelta > 0 ? "+" : ""}${row.meanDelta}`];
   if (focus === "brain-low" && row.meanBrainDelta != null) parts.push(`脑力 ${row.meanBrainDelta > 0 ? "+" : ""}${row.meanBrainDelta}`);
   if (focus === "physical-low" && row.meanPhysicalDelta != null) parts.push(`体力 ${row.meanPhysicalDelta > 0 ? "+" : ""}${row.meanPhysicalDelta}`);
-  parts.push(`N=${row.sampleCount}`);
+  parts.push(`样本数 ${row.sampleCount}`);
   return parts.join(" · ");
 }
 function selectCandidates(rows, trend, focus, limit, minimumSamples) {
@@ -17795,8 +17878,8 @@ function buildGuardrails(items, evidenceRecords, analysisWindowDays, highThresho
     const lateRatio = stop.lateNightRatio || 0;
     if (longRatio >= 0.5 || lateRatio >= 0.4) {
       const details = [
-        `高能后进入/处于工作 N=${stop.followedByWorkCount}`,
-        `≥120min ${Math.round(longRatio * 100)}%`,
+        `高能后进入/处于工作，样本数 ${stop.followedByWorkCount}`,
+        `≥120分钟 ${Math.round(longRatio * 100)}%`,
         `深夜延续 ${Math.round(lateRatio * 100)}%`
       ];
       rows.push({
@@ -17815,7 +17898,7 @@ function buildGuardrails(items, evidenceRecords, analysisWindowDays, highThresho
       key: "long-session",
       level: "caution",
       title: "长连续工作是当前值得防守的区间",
-      detail: `≥120min 前后综合平均 ${longBucket.meanDelta > 0 ? "+" : ""}${longBucket.meanDelta} · 可配对 N=${longBucket.pairedSessionCount}`,
+      detail: `≥120分钟前后综合平均 ${longBucket.meanDelta > 0 ? "+" : ""}${longBucket.meanDelta} · 可配对样本数 ${longBucket.pairedSessionCount}`,
       sampleCount: longBucket.pairedSessionCount,
       evidence: longBucket.evidence
     });
@@ -17901,9 +17984,9 @@ function readSample(item) {
   if (!isEnergyItem(item)) return null;
   const snapshot = readEnergyItemSnapshot(item);
   if (!snapshot?.date || !snapshot.time) return null;
-  const ordinal3 = dateOrdinal(snapshot.date);
+  const ordinal4 = dateOrdinal(snapshot.date);
   const minuteOfDay = timeMinutes(snapshot.time);
-  if (ordinal3 == null || minuteOfDay == null) return null;
+  if (ordinal4 == null || minuteOfDay == null) return null;
   return {
     itemId: item.id,
     date: snapshot.date,
@@ -17927,8 +18010,8 @@ function buildEnergyPeriod(items, options) {
   const endOrdinal = dateOrdinal(options.endDate);
   if (startOrdinal == null || endOrdinal == null || endOrdinal < startOrdinal) return null;
   const samples = items.map(readSample).filter((sample) => !!sample).filter((sample) => {
-    const ordinal3 = dateOrdinal(sample.date);
-    return ordinal3 != null && ordinal3 >= startOrdinal && ordinal3 <= endOrdinal;
+    const ordinal4 = dateOrdinal(sample.date);
+    return ordinal4 != null && ordinal4 >= startOrdinal && ordinal4 <= endOrdinal;
   }).sort((left2, right2) => left2.date.localeCompare(right2.date) || left2.minuteOfDay - right2.minuteOfDay);
   const byDate = /* @__PURE__ */ new Map();
   for (const sample of samples) {
@@ -17937,8 +18020,8 @@ function buildEnergyPeriod(items, options) {
     byDate.set(sample.date, rows);
   }
   const days = [];
-  for (let ordinal3 = startOrdinal; ordinal3 <= endOrdinal; ordinal3 += 1) {
-    const date2 = dateFromOrdinal(ordinal3);
+  for (let ordinal4 = startOrdinal; ordinal4 <= endOrdinal; ordinal4 += 1) {
+    const date2 = dateFromOrdinal(ordinal4);
     const daySamples = byDate.get(date2) || [];
     days.push({
       date: date2,
@@ -18549,18 +18632,18 @@ function firstErrorCode(result) {
 function getRecordConflictRecoveryAdvice(code) {
   switch (code) {
     case "record_path_missing":
-      return "原文件可能已被移动或删除。请先重新扫描 Vault，再从最新视图重新打开这条记录。";
+      return "原文件可能已被移动或删除。请先重新扫描笔记库，再从最新视图重新打开这条记录。";
     case "record_line_stale":
       return "原记录所在行已变化。请重新扫描或打开原文确认位置，然后从最新记录重新编辑。";
     case "record_block_boundary_invalid":
-      return "块记录的 start/end 边界已损坏。请打开原文修复边界标记后再保存。";
+      return "记录块的开始/结束边界已损坏。请打开原文修复边界标记后再保存。";
     case "record_item_missing":
       return "这条记录可能已被删除或内容变化过大。请重新扫描后确认是否仍然存在。";
     case "record_locator_invalid":
       return "记录定位信息无效。请从列表、时间线或搜索结果中的最新记录重新打开编辑。";
     case "record_conflict":
     default:
-      return "请重新扫描 Vault，并从最新视图重新打开这条记录后再操作。";
+      return "请重新扫描笔记库，并从最新视图重新打开这条记录后再操作。";
   }
 }
 function readRecordSubmitMessage(result, fallback) {
@@ -19561,7 +19644,7 @@ class Disposables {
       return;
     }
     if (typeof disposeMaybe !== "function") {
-      throw new Error("[Disposables] add(name, dispose) requires a dispose function");
+      throw new Error("资源释放器注册失败：必须提供释放函数。");
     }
     this.tasks.push({ name: nameOrDispose, dispose: disposeMaybe });
   }
@@ -19631,7 +19714,7 @@ function resolveRecordBlockRangeById(lines, recordId, expectedStartIndex) {
   if (expected !== null && expected >= 0 && lines[expected]?.trim() === BLOCK_START_MARKER) {
     const endIndex = findBlockEnd(lines, expected);
     if (endIndex === null) {
-      throw createRecordConflictError("record_block_boundary_invalid", "Record Block 边界已损坏，无法安全更新。");
+      throw createRecordConflictError("record_block_boundary_invalid", "记录块边界已损坏，无法安全更新。");
     }
     if (blockRecordId(lines, expected, endIndex) === recordId) return { startIndex: expected, endIndex };
   }
@@ -19645,9 +19728,9 @@ function resolveRecordBlockRangeById(lines, recordId, expectedStartIndex) {
   }
   if (matches.length === 1) return matches[0];
   if (matches.length > 1) {
-    throw createRecordConflictError("record_id_duplicate", `记录ID ${recordId} 在同一文件中重复，拒绝猜测 mutation 目标。`);
+    throw createRecordConflictError("record_id_duplicate", `记录标识 ${recordId} 在同一文件中重复，无法安全判断要修改哪一条记录。`);
   }
-  throw createRecordConflictError("record_item_missing", `找不到记录ID ${recordId} 对应的 Record Block。`);
+  throw createRecordConflictError("record_item_missing", `找不到记录标识 ${recordId} 对应的记录块。`);
 }
 function nonEmpty(value) {
   if (value === void 0 || value === null) return false;
@@ -20325,7 +20408,7 @@ let InputService = class {
     this.throwIfAborted(signal);
     const preview = this.previewTemplateExecution(template, formData, options.recordId, options.context);
     const { outputContent, targetFilePath, header } = preview;
-    if (!targetFilePath) throw new Error("模板未定义目标文件路径 (targetFile)。");
+    if (!targetFilePath) throw new Error("模板未定义目标文件路径。");
     return this.appendDirectRecord(targetFilePath, outputContent, header, options);
   }
   /**
@@ -20334,8 +20417,8 @@ let InputService = class {
    */
   async appendDirectRecord(targetFilePath, outputContent, header = null, options = {}) {
     const signal = options.signal;
-    if (!targetFilePath) throw new Error("Direct Record 未定义目标文件路径。");
-    if (!outputContent.trim()) throw new Error("Direct Record 输出内容为空。");
+    if (!targetFilePath) throw new Error("直接记录未定义目标文件路径。");
+    if (!outputContent.trim()) throw new Error("直接记录输出内容为空。");
     this.throwIfAborted(signal);
     if (header) {
       await appendUnderHeader(this.vault, targetFilePath, header, outputContent, {
@@ -20366,9 +20449,9 @@ ${outputContent}` : outputContent;
     const indexed = this.dataStore.getRecordLocation(item.id);
     const path = item.source?.path || item.file?.path || indexed?.path || "";
     const startLine = item.source?.startLine || item.file?.line || indexed?.startLine || 0;
-    if (!path) throw createRecordConflictError("record_locator_invalid", `无法定位记录ID ${item.id}。`);
+    if (!path) throw createRecordConflictError("record_locator_invalid", `无法定位记录标识 ${item.id}。`);
     const existingContent = await this.vault.readFile(path);
-    if (existingContent == null) throw createRecordConflictError("record_path_missing", `找不到文件: ${path}`);
+    if (existingContent == null) throw createRecordConflictError("record_path_missing", `找不到文件：${path}`);
     this.throwIfAborted(signal);
     const outputPlan = buildRecordOutputPlan({ template, formData, recordId: item.id });
     const nextText = outputPlan.outputContent.trim();
@@ -20390,9 +20473,9 @@ ${outputContent}` : outputContent;
     const indexed = this.dataStore.getRecordLocation(item.id);
     const path = item.source?.path || item.file?.path || indexed?.path || "";
     const startLine = item.source?.startLine || item.file?.line || indexed?.startLine || 0;
-    if (!path) throw createRecordConflictError("record_locator_invalid", `无法定位记录ID ${item.id}。`);
+    if (!path) throw createRecordConflictError("record_locator_invalid", `无法定位记录标识 ${item.id}。`);
     const existingContent = await this.vault.readFile(path);
-    if (existingContent == null) throw createRecordConflictError("record_path_missing", `找不到文件: ${path}`);
+    if (existingContent == null) throw createRecordConflictError("record_path_missing", `找不到文件：${path}`);
     this.throwIfAborted(signal);
     const lines = existingContent.split("\n");
     const range = resolveRecordBlockRangeById(lines, item.id, startLine > 0 ? startLine - 1 : null);
@@ -21006,22 +21089,22 @@ const PATCH_FIELDS = {
   physicalDemand: { label: "体力要求", aliases: ["体力要求", "physicalDemand"] },
   availabilityContexts: { label: "可用场景", aliases: ["可用场景", "availabilityContexts"] },
   recoveryIntent: { label: "恢复意图", aliases: ["恢复意图", "recoveryIntent"] },
-  seriesId: { label: "系列ID", aliases: ["系列ID", "seriesId"] },
+  seriesId: { label: "系列标识", aliases: ["系列ID", "seriesId"] },
   recurrenceUnit: { label: "重复单位", aliases: ["重复单位", "recurrenceUnit"] },
   recurrenceInterval: { label: "重复间隔", aliases: ["重复间隔", "recurrenceInterval"] },
   recurrenceAnchor: { label: "重复锚点", aliases: ["重复锚点", "recurrenceAnchor"] },
   seriesStartDate: { label: "系列开始日期", aliases: ["系列开始日期", "seriesStartDate"] },
-  currentTaskId: { label: "当前任务ID", aliases: ["当前任务ID", "currentTaskId"] },
+  currentTaskId: { label: "当前任务标识", aliases: ["当前任务ID", "currentTaskId"] },
   rolloverPolicy: { label: "滚动策略", aliases: ["滚动策略", "rolloverPolicy"] },
-  taskId: { label: "任务ID", aliases: ["任务ID", "taskId"] },
+  taskId: { label: "任务标识", aliases: ["任务ID", "taskId"] },
   sessionStartedAt: { label: "开始于", aliases: ["开始于", "sessionStartedAt"] },
   sessionEndedAt: { label: "结束于", aliases: ["结束于", "sessionEndedAt"] },
   sessionDurationMinutes: { label: "时长", aliases: ["时长", "sessionDurationMinutes"] },
   sessionResult: { label: "结果", aliases: ["结果", "sessionResult"] },
   sessionSource: { label: "来源", aliases: ["来源", "sessionSource"] },
   suggestedDurationMinutes: { label: "建议时长", aliases: ["建议时长", "suggestedDurationMinutes"] },
-  startEnergyRecordId: { label: "开始精力记录ID", aliases: ["开始精力记录ID", "startEnergyRecordId"] },
-  endEnergyRecordId: { label: "结束精力记录ID", aliases: ["结束精力记录ID", "endEnergyRecordId"] },
+  startEnergyRecordId: { label: "开始精力记录标识", aliases: ["开始精力记录ID", "startEnergyRecordId"] },
+  endEnergyRecordId: { label: "结束精力记录标识", aliases: ["结束精力记录ID", "endEnergyRecordId"] },
   energyDelta: { label: "精力变化", aliases: ["精力变化", "energyDelta"] },
   brainDelta: { label: "脑力变化", aliases: ["脑力变化", "brainDelta"] },
   physicalDelta: { label: "体力变化", aliases: ["体力变化", "physicalDelta"] },
@@ -21170,7 +21253,7 @@ class RecordRepository {
       if (error instanceof RecordTransactionRecoveryError) {
         this.dataStore.reportRecordIntegrityIssue({
           code: "record_transaction_recovery_required",
-          message: `Record transaction rollback was incomplete. Written: ${error.writtenPaths.join(", ")}; recovery failed: ${error.recoveryFailedPaths.join(", ")}.`
+          message: `记录事务回滚未完整完成。已写入：${error.writtenPaths.join("、")}；恢复失败：${error.recoveryFailedPaths.join("、")}。`
         });
       }
       throw error;
@@ -21342,13 +21425,13 @@ let ActionService = class {
     const filters = viewInstance.filters || [];
     const recordTypeFilter = filters.find((f2) => f2.field === "recordType" && (f2.op === "=" || f2.op === "includes"));
     if (!recordTypeFilter || !recordTypeFilter.value) {
-      this.ui.notice('快捷输入失败：此视图未按 "recordType" 进行筛选。');
+      this.ui.notice("快捷输入失败：此视图未按“记录类型”进行筛选。");
       return null;
     }
     const recordType = String(recordTypeFilter.value);
     const targetRecordType = this.findRecordTypeTemplate(recordType);
     if (!targetRecordType) {
-      this.ui.notice(`快捷输入失败：找不到记录类型 为 "${recordType}" 的模板。`);
+      this.ui.notice(`快捷输入失败：找不到记录类型为“${getRecordTypePresentation(recordType).label}”的模板。`);
       return null;
     }
     const context = {
@@ -21389,13 +21472,13 @@ let ActionService = class {
   getQuickInputConfigForTaskEdit(taskId) {
     const item = this.dataStore.queryItems().find((i2) => i2.id === taskId);
     if (!item) {
-      this.ui.notice(`错误：找不到ID为 ${taskId} 的任务。`);
+      this.ui.notice(`错误：找不到标识为 ${taskId} 的任务。`);
       return null;
     }
     const recordType = String(item.recordType || "").trim();
     const targetRecordType = this.findRecordTypeTemplate(recordType);
     if (!targetRecordType) {
-      this.ui.notice(`找不到与记录类型 "${recordType}" 匹配的模板，无法编辑。`);
+      this.ui.notice(`找不到与记录类型“${getRecordTypePresentation(recordType).label}”匹配的模板，无法编辑。`);
       return null;
     }
     const context = {};
@@ -21610,7 +21693,7 @@ const WhiteboardBoardSchema = object({
 }).strict().superRefine((board, ctx) => {
   const groupIds = /* @__PURE__ */ new Set();
   (board.groups ?? []).forEach((group, index) => {
-    if (groupIds.has(group.id)) ctx.addIssue({ code: ZodIssueCode.custom, path: ["groups", index, "id"], message: "工作台 ID 必须唯一" });
+    if (groupIds.has(group.id)) ctx.addIssue({ code: ZodIssueCode.custom, path: ["groups", index, "id"], message: "工作台标识必须唯一" });
     groupIds.add(group.id);
   });
   const groups = board.groups ?? [];
@@ -21648,8 +21731,8 @@ const WhiteboardBoardSchema = object({
   [...board.items, ...board.archivedItems ?? []].forEach((item, index) => {
     const pathRoot = index < board.items.length ? "items" : "archivedItems";
     const pathIndex = index < board.items.length ? index : index - board.items.length;
-    if (projectionIds.has(item.id)) ctx.addIssue({ code: ZodIssueCode.custom, path: [pathRoot, pathIndex, "id"], message: "白板 Projection ID 必须唯一" });
-    if (recordIds.has(item.recordId)) ctx.addIssue({ code: ZodIssueCode.custom, path: [pathRoot, pathIndex, "recordId"], message: "同一 Record 不能同时存在多个白板 Projection" });
+    if (projectionIds.has(item.id)) ctx.addIssue({ code: ZodIssueCode.custom, path: [pathRoot, pathIndex, "id"], message: "白板投影标识必须唯一" });
+    if (recordIds.has(item.recordId)) ctx.addIssue({ code: ZodIssueCode.custom, path: [pathRoot, pathIndex, "recordId"], message: "同一记录不能同时存在多个白板投影" });
     projectionIds.add(item.id);
     recordIds.add(item.recordId);
   });
@@ -21701,7 +21784,7 @@ function restoreWhiteboardArchivedItem(board, itemId) {
   if (index < 0) return null;
   const archived = board.archivedItems[index];
   if (board.items.some((item2) => item2.recordId === archived.recordId || item2.id === archived.id)) {
-    throw new Error("归档记录与当前白板 Projection 冲突，已阻止恢复");
+    throw new Error("归档记录与当前白板投影冲突，已阻止恢复");
   }
   const { archivedAt: _archivedAt, archiveX: _archiveX, archiveY: _archiveY, archiveZIndex: _archiveZIndex, ...projection } = archived;
   const item = WhiteboardItemSchema.parse(projection);
@@ -22037,7 +22120,7 @@ let WhiteboardStore = class {
     return { ...this.status };
   }
   async initialize() {
-    if (this.disposed) throw new Error("WhiteboardStore 已 dispose");
+    if (this.disposed) throw new Error("白板数据已释放");
     if (this.initialized) return;
     if (this.initPromise) return this.initPromise;
     this.setStatus({ state: "loading" });
@@ -22102,12 +22185,12 @@ let WhiteboardStore = class {
     this.notify();
   }
   assertReady() {
-    if (this.disposed) throw new Error("WhiteboardStore 已 dispose");
-    if (this.status.state === "error") throw new Error(`WhiteboardStore 初始化失败：${this.status.message}`);
-    if (!this.initialized || this.status.state !== "ready") throw new Error("WhiteboardStore 尚未完成启动恢复，当前禁止读取或写入");
+    if (this.disposed) throw new Error("白板数据已释放");
+    if (this.status.state === "error") throw new Error(`白板数据初始化失败：${this.status.message}`);
+    if (!this.initialized || this.status.state !== "ready") throw new Error("白板数据尚未完成启动恢复，当前禁止读取或写入");
   }
   assertBoardId(boardId) {
-    if (!boardId.trim()) throw new Error("whiteboardId 必须非空");
+    if (!boardId.trim()) throw new Error("白板标识不能为空");
   }
   getMutableBoard(data, boardId) {
     return data.boards[boardId];
@@ -22142,7 +22225,7 @@ let WhiteboardStore = class {
       const decision = mutate(draft);
       if (!decision.changed) return decision.value;
       const parsed = WhiteboardStoreDataSchema.safeParse(draft);
-      if (!parsed.success) throw new Error(`WhiteboardStore mutation 产生无效数据: ${parsed.error.message}`);
+      if (!parsed.success) throw new Error(`白板数据修改产生无效数据：${parsed.error.message}`);
       const snapshot = cloneStoreData(parsed.data);
       const previous = cloneStoreData(this.data);
       await this.persistSnapshot(snapshot);
@@ -22251,7 +22334,7 @@ let WhiteboardStore = class {
   async addRecord(boardId, recordId, position2, groupId) {
     this.assertReady();
     this.assertBoardId(boardId);
-    if (!recordId.trim()) throw new Error("recordId 必须非空");
+    if (!recordId.trim()) throw new Error("记录标识不能为空");
     return this.enqueueMutation((draft) => {
       const board = this.ensureMutableBoard(draft, boardId);
       const existing = board.items.find((item2) => item2.recordId === recordId);
@@ -22276,7 +22359,7 @@ let WhiteboardStore = class {
     this.assertBoardId(boardId);
     const seenRecordIds = /* @__PURE__ */ new Set();
     const uniquePlacements = placements2.filter((entry) => {
-      if (!entry.recordId.trim()) throw new Error("recordId 必须非空");
+      if (!entry.recordId.trim()) throw new Error("记录标识不能为空");
       if (seenRecordIds.has(entry.recordId)) return false;
       seenRecordIds.add(entry.recordId);
       return true;
@@ -22588,13 +22671,13 @@ let WhiteboardStore = class {
   async addEdge(boardId, fromItemId, toItemId) {
     this.assertReady();
     this.assertBoardId(boardId);
-    if (!fromItemId.trim() || !toItemId.trim()) throw new Error("白板连线必须引用非空 item ID");
-    if (fromItemId === toItemId) throw new Error("白板连线不能连接同一个 item");
+    if (!fromItemId.trim() || !toItemId.trim()) throw new Error("白板连线必须引用有效的项目标识");
+    if (fromItemId === toItemId) throw new Error("白板连线不能连接同一个项目");
     return this.enqueueMutation((draft) => {
       const board = this.getMutableBoard(draft, boardId);
       if (!board) throw new Error("白板不存在，无法创建连线");
       if (!board.items.some((item) => item.id === fromItemId) || !board.items.some((item) => item.id === toItemId)) {
-        throw new Error("白板连线的起点或终点 item 不存在");
+        throw new Error("白板连线的起点或终点项目不存在");
       }
       const duplicate = board.edges.find((edge2) => edge2.fromItemId === fromItemId && edge2.toItemId === toItemId);
       if (duplicate) return unchanged({ ...duplicate });
@@ -24023,7 +24106,7 @@ function createSettingsSlice(settingsRepository) {
       updateAiSettings: async (aiSettings) => {
         await runSettingsMutation({
           action: "settings.updateAiSettings",
-          fallbackError: "AI 设置更新失败",
+          fallbackError: "智能助手设置更新失败",
           mutate: (draft) => replaceAiSettingsDraft(draft, aiSettings)
         });
       },
@@ -24255,7 +24338,7 @@ class SettingsUseCase {
         return;
       }
       const normalized2 = color2 == null ? null : normalizeRecordTypeColorHex(color2);
-      if (color2 != null && !normalized2) throw new Error(`无效的 Record Type 颜色: ${color2}`);
+      if (color2 != null && !normalized2) throw new Error(`无效的记录类型颜色: ${color2}`);
       await state.updateSettings((draft) => {
         const next2 = { ...draft.recordTypeColors || {} };
         if (normalized2) next2[recordType] = normalized2;
@@ -24660,7 +24743,7 @@ function inferExtraDefinition(field, sampleValue) {
     category: "custom",
     source: "extra",
     cardinality: isMulti ? "multi" : "single",
-    description: "从 Markdown 中显式未知 KV 解析出的自定义字段"
+    description: "从笔记文档中未知键值对解析出的自定义字段"
   };
 }
 function getDangerLevel(canonicalField) {
@@ -24692,14 +24775,14 @@ function getFieldEditPolicy(field, sampleValue) {
     return readonlyPolicy(field, canonicalField, definition, "派生字段由其它真源字段计算，不能直接编辑");
   }
   if (definition?.source === "file") {
-    return readonlyPolicy(field, canonicalField, definition, "文件元信息字段不应通过 Excel 单元格直接编辑");
+    return readonlyPolicy(field, canonicalField, definition, "文件元信息字段不应通过 表格单元格直接编辑");
   }
   if (!definition && !canonicalField.startsWith("extra.")) {
     return readonlyPolicy(field, canonicalField, definition, "未知字段暂不开放内联编辑");
   }
   const editorKind = getFieldEditorKind(definition, sampleValue);
   if (editorKind === "path" || definition?.valueType === "path" || definition?.inputType === "path" || definition?.inputType === "multiPath") {
-    return readonlyPolicy(field, canonicalField, definition, "路径类字段涉及文件定位、分类或目标结构，不能在 Excel 单元格内直接修改");
+    return readonlyPolicy(field, canonicalField, definition, "路径类字段涉及文件定位、分类或目标结构，不能在 表格单元格内直接修改");
   }
   if (editorKind === "readonly" || definition?.valueType === "file" || definition?.inputType === "file") {
     return readonlyPolicy(field, canonicalField, definition, "该字段类型暂不支持内联编辑");
@@ -25543,6 +25626,260 @@ async function finalizeRecordSubmitResult(dataStore, result) {
   await applyRecordRefreshPlan(dataStore, result.refresh);
   return result;
 }
+function getCreateEligibleGoalPaths(settings, recordTypeId) {
+  const id = String(recordTypeId || "").trim();
+  if (!id) return [];
+  const seen = /* @__PURE__ */ new Set();
+  const result = [];
+  for (const template of getGoalTemplates(settings.goalSettings)) {
+    if (template.recordTypeId !== id || template.enabled === false) continue;
+    const path = normalizeGoalPath(template.goalPath);
+    if (!path || seen.has(path)) continue;
+    seen.add(path);
+    result.push(path);
+  }
+  return result;
+}
+function getCreateAvailableRecordTypes(settings, goalPath) {
+  const selectedGoalPath = normalizeGoalPath(goalPath) || "";
+  return getEffectiveRecordTypes().filter((recordType) => {
+    if (recordType.captureMode === "direct") return true;
+    const eligibleGoalPaths = getCreateEligibleGoalPaths(settings, recordType.id);
+    return selectedGoalPath ? eligibleGoalPaths.includes(selectedGoalPath) : eligibleGoalPaths.length > 0;
+  });
+}
+function findGoal(goalSettings, goalPath) {
+  const path = String(goalPath || "").trim();
+  if (!path) return null;
+  return (goalSettings?.goals || []).find((goal) => goal.path === path) || null;
+}
+function mergeTemplate(base, patch) {
+  const required2 = new Set(patch.requiredFields || []);
+  const defaultValues = patch.defaultValues || {};
+  const isTaskTemplate2 = String(base.recordTypeId || base.id || "").replace(/^core\./, "") === "task";
+  const fields = [...patch.fields ?? base.fields ?? []].map((field) => {
+    const key = field.key || field.label;
+    const defaultValue2 = defaultValues[key] ?? defaultValues[field.label || ""];
+    const mergedField = {
+      ...field,
+      ...defaultValue2 !== void 0 ? { defaultValue: String(defaultValue2) } : null,
+      ...required2.has(key) || required2.has(field.label || "") ? { required: true } : null
+    };
+    if (isTaskTemplate2 && ["expectedDurationMinutes", "预计时长", "时长", "时长（分钟）"].includes(String(key || ""))) {
+      mergedField.required = false;
+    }
+    return mergedField;
+  });
+  const merged = {
+    ...base,
+    fields,
+    targetFile: patch.targetFile ?? base.targetFile,
+    appendUnderHeader: patch.appendUnderHeader ?? base.appendUnderHeader,
+    periodPolicy: patch.periodPolicy ?? base.periodPolicy
+  };
+  const policy = resolveTemplatePeriodPolicy(merged);
+  if (policy) merged.periodPolicy = policy;
+  else {
+    delete merged.periodPolicy;
+  }
+  return merged;
+}
+function applyGoalIdentityIcon(template, goal) {
+  const fields = applyGoalIconToCaptureFields(template.fields, goal) ?? template.fields;
+  return fields === template.fields ? template : { ...template, fields };
+}
+class GoalTemplateResolver {
+  static resolve(input) {
+    const settings = input.settings;
+    const recordTypeId = String(input.recordTypeId || "").trim();
+    const goal = findGoal(settings.goalSettings, input.goalPath);
+    const baseTemplate = getTemplateRecordTypeById(recordTypeId);
+    if (!baseTemplate) {
+      return {
+        status: "unknown-record-type",
+        template: null,
+        goal,
+        templateId: null,
+        templateSourceType: null,
+        recordTypeId: null,
+        effectiveRecordTypeId: null
+      };
+    }
+    const direct = input.goalPath ? findDirectGoalTemplate(settings.goalSettings, input.goalPath, recordTypeId) : null;
+    if (input.requireDirectGoalTemplate && !input.goalPath) {
+      return {
+        status: "goal-required",
+        template: null,
+        goal,
+        templateId: null,
+        templateSourceType: null,
+        recordTypeId,
+        effectiveRecordTypeId: recordTypeId
+      };
+    }
+    if (direct?.enabled === false) {
+      return {
+        status: "disabled",
+        template: null,
+        goal,
+        templateId: direct.id,
+        templateSourceType: "goal-template",
+        recordTypeId,
+        effectiveRecordTypeId: recordTypeId
+      };
+    }
+    if (direct) {
+      return {
+        status: "available",
+        template: applyGoalIdentityIcon(mergeTemplate(baseTemplate, direct), goal),
+        goal,
+        templateId: direct.id,
+        templateSourceType: "goal-template",
+        recordTypeId,
+        effectiveRecordTypeId: recordTypeId
+      };
+    }
+    if (input.requireDirectGoalTemplate) {
+      return {
+        status: "missing-goal-template",
+        template: null,
+        goal,
+        templateId: null,
+        templateSourceType: null,
+        recordTypeId,
+        effectiveRecordTypeId: recordTypeId
+      };
+    }
+    const policy = resolveTemplatePeriodPolicy(baseTemplate);
+    const baseResolved = { ...baseTemplate };
+    if (policy) baseResolved.periodPolicy = policy;
+    else delete baseResolved.periodPolicy;
+    const template = applyGoalIdentityIcon(baseResolved, goal);
+    return {
+      status: "available",
+      template,
+      goal,
+      templateId: baseTemplate.id,
+      templateSourceType: "record-type",
+      recordTypeId,
+      effectiveRecordTypeId: recordTypeId
+    };
+  }
+}
+function localDateKey(value) {
+  if (value === null || value === void 0 || value === "") return null;
+  const raw = typeof value === "string" ? value.trim() : "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const parsed = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    const match5 = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+    return match5?.[1] || null;
+  }
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+function resolveCompletionDate(record2, now2) {
+  return localDateKey(record2.completedAt) || localDateKey(record2.doneDate) || localDateKey(record2.date) || localDateKey(now2) || "";
+}
+function resolveRecordTypeId(recordType) {
+  const presentationKey = normalizeRecordTypePresentationKey(recordType);
+  if (!presentationKey) return null;
+  return getEffectiveRecordTypes().find((candidate) => normalizeRecordTypePresentationKey(candidate.id) === presentationKey)?.id || null;
+}
+function normalizeCompletedRecordTypeIds(values2) {
+  if (!Array.isArray(values2)) return [];
+  const validIds = new Set(getEffectiveRecordTypes().map((recordType) => recordType.id));
+  const seen = /* @__PURE__ */ new Set();
+  const result = [];
+  for (const value of values2) {
+    const id = String(value || "").trim();
+    if (!id || !validIds.has(id) || seen.has(id)) continue;
+    seen.add(id);
+    result.push(id);
+  }
+  return result;
+}
+function readContinuationContext(context) {
+  const raw = context?.__recordContinuation;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const candidate = raw;
+  const sourceRecordId = String(candidate.sourceRecordId || "").trim();
+  const expectedGoalPath = normalizeGoalPath(candidate.expectedGoalPath) || "";
+  if (!sourceRecordId || !expectedGoalPath || candidate.reason !== "task_completion") return null;
+  return {
+    sourceRecordId,
+    reason: "task_completion",
+    expectedGoalPath,
+    completedRecordTypeIds: normalizeCompletedRecordTypeIds(candidate.completedRecordTypeIds)
+  };
+}
+function buildContinuation(input) {
+  const completed = new Set(normalizeCompletedRecordTypeIds(input.completedRecordTypeIds));
+  const availableRecordTypes = getCreateAvailableRecordTypes(input.settings, input.goalPath).filter((recordType) => !completed.has(recordType.id));
+  if (!availableRecordTypes.length) return null;
+  const continuationContext = {
+    sourceRecordId: input.sourceRecordId,
+    reason: "task_completion",
+    expectedGoalPath: input.goalPath,
+    completedRecordTypeIds: [...completed]
+  };
+  return {
+    kind: "record_continuation",
+    reason: "task_completion",
+    sourceRecordId: input.sourceRecordId,
+    goalPath: input.goalPath,
+    dismissOnOutsideClick: true,
+    options: availableRecordTypes.map((recordType) => ({
+      kind: "create_record",
+      label: recordType.name || recordType.id,
+      recordTypeId: recordType.id,
+      context: {
+        goalPath: input.goalPath,
+        ...input.date ? { date: input.date } : {},
+        __recordContinuation: continuationContext
+      },
+      allowRecordTypeSwitch: false
+    }))
+  };
+}
+function resolveTaskCompletionContinuation(input) {
+  const record2 = input.record;
+  if (!record2 || record2.recordType !== "task" || record2.status !== "done") return null;
+  const goalPath = normalizeGoalPath(record2.goalPath) || "";
+  if (!goalPath) return null;
+  const completedRecordTypeId = resolveRecordTypeId(record2.recordType);
+  if (!completedRecordTypeId) return null;
+  return buildContinuation({
+    settings: input.settings,
+    sourceRecordId: record2.id,
+    goalPath,
+    date: resolveCompletionDate(record2, input.now ?? /* @__PURE__ */ new Date()),
+    completedRecordTypeIds: [completedRecordTypeId]
+  });
+}
+function resolveContinuationAfterCreate(input) {
+  const previous = readContinuationContext(input.context);
+  const record2 = input.record;
+  if (!previous || !record2) return null;
+  const goalPath = normalizeGoalPath(record2.goalPath) || "";
+  if (!goalPath || goalPath !== previous.expectedGoalPath) return null;
+  const completedRecordTypeId = resolveRecordTypeId(record2.recordType);
+  if (!completedRecordTypeId) return null;
+  const completedRecordTypeIds = [
+    ...previous.completedRecordTypeIds,
+    completedRecordTypeId
+  ];
+  const date2 = localDateKey(input.context?.date) || localDateKey(record2.date) || localDateKey(input.now ?? /* @__PURE__ */ new Date());
+  return buildContinuation({
+    settings: input.settings,
+    sourceRecordId: previous.sourceRecordId,
+    goalPath,
+    date: date2,
+    completedRecordTypeIds
+  });
+}
 function isRecordDebugEnabled() {
   if (typeof window === "undefined") return false;
   return Boolean(window.__THINK_RECORD_DEBUG__);
@@ -25757,138 +26094,6 @@ function buildEditableRecordSnapshot(input) {
     persistencePlan
   };
 }
-function getCreateEligibleGoalPaths(settings, recordTypeId) {
-  const id = String(recordTypeId || "").trim();
-  if (!id) return [];
-  const seen = /* @__PURE__ */ new Set();
-  const result = [];
-  for (const template of getGoalTemplates(settings.goalSettings)) {
-    if (template.recordTypeId !== id || template.enabled === false) continue;
-    const path = normalizeGoalPath(template.goalPath);
-    if (!path || seen.has(path)) continue;
-    seen.add(path);
-    result.push(path);
-  }
-  return result;
-}
-function findGoal(goalSettings, goalPath) {
-  const path = String(goalPath || "").trim();
-  if (!path) return null;
-  return (goalSettings?.goals || []).find((goal) => goal.path === path) || null;
-}
-function mergeTemplate(base, patch) {
-  const required2 = new Set(patch.requiredFields || []);
-  const defaultValues = patch.defaultValues || {};
-  const isTaskTemplate2 = String(base.recordTypeId || base.id || "").replace(/^core\./, "") === "task";
-  const fields = [...patch.fields ?? base.fields ?? []].map((field) => {
-    const key = field.key || field.label;
-    const defaultValue2 = defaultValues[key] ?? defaultValues[field.label || ""];
-    const mergedField = {
-      ...field,
-      ...defaultValue2 !== void 0 ? { defaultValue: String(defaultValue2) } : null,
-      ...required2.has(key) || required2.has(field.label || "") ? { required: true } : null
-    };
-    if (isTaskTemplate2 && ["expectedDurationMinutes", "预计时长", "时长", "时长（分钟）"].includes(String(key || ""))) {
-      mergedField.required = false;
-    }
-    return mergedField;
-  });
-  const merged = {
-    ...base,
-    fields,
-    targetFile: patch.targetFile ?? base.targetFile,
-    appendUnderHeader: patch.appendUnderHeader ?? base.appendUnderHeader,
-    periodPolicy: patch.periodPolicy ?? base.periodPolicy
-  };
-  const policy = resolveTemplatePeriodPolicy(merged);
-  if (policy) merged.periodPolicy = policy;
-  else {
-    delete merged.periodPolicy;
-  }
-  return merged;
-}
-function applyGoalIdentityIcon(template, goal) {
-  const fields = applyGoalIconToCaptureFields(template.fields, goal) ?? template.fields;
-  return fields === template.fields ? template : { ...template, fields };
-}
-class GoalTemplateResolver {
-  static resolve(input) {
-    const settings = input.settings;
-    const recordTypeId = String(input.recordTypeId || "").trim();
-    const goal = findGoal(settings.goalSettings, input.goalPath);
-    const baseTemplate = getTemplateRecordTypeById(recordTypeId);
-    if (!baseTemplate) {
-      return {
-        status: "unknown-record-type",
-        template: null,
-        goal,
-        templateId: null,
-        templateSourceType: null,
-        recordTypeId: null,
-        effectiveRecordTypeId: null
-      };
-    }
-    const direct = input.goalPath ? findDirectGoalTemplate(settings.goalSettings, input.goalPath, recordTypeId) : null;
-    if (input.requireDirectGoalTemplate && !input.goalPath) {
-      return {
-        status: "goal-required",
-        template: null,
-        goal,
-        templateId: null,
-        templateSourceType: null,
-        recordTypeId,
-        effectiveRecordTypeId: recordTypeId
-      };
-    }
-    if (direct?.enabled === false) {
-      return {
-        status: "disabled",
-        template: null,
-        goal,
-        templateId: direct.id,
-        templateSourceType: "goal-template",
-        recordTypeId,
-        effectiveRecordTypeId: recordTypeId
-      };
-    }
-    if (direct) {
-      return {
-        status: "available",
-        template: applyGoalIdentityIcon(mergeTemplate(baseTemplate, direct), goal),
-        goal,
-        templateId: direct.id,
-        templateSourceType: "goal-template",
-        recordTypeId,
-        effectiveRecordTypeId: recordTypeId
-      };
-    }
-    if (input.requireDirectGoalTemplate) {
-      return {
-        status: "missing-goal-template",
-        template: null,
-        goal,
-        templateId: null,
-        templateSourceType: null,
-        recordTypeId,
-        effectiveRecordTypeId: recordTypeId
-      };
-    }
-    const policy = resolveTemplatePeriodPolicy(baseTemplate);
-    const baseResolved = { ...baseTemplate };
-    if (policy) baseResolved.periodPolicy = policy;
-    else delete baseResolved.periodPolicy;
-    const template = applyGoalIdentityIcon(baseResolved, goal);
-    return {
-      status: "available",
-      template,
-      goal,
-      templateId: baseTemplate.id,
-      templateSourceType: "record-type",
-      recordTypeId,
-      effectiveRecordTypeId: recordTypeId
-    };
-  }
-}
 function issue$2(code, message, field) {
   return { code, message, field };
 }
@@ -25899,7 +26104,7 @@ function resolveRecordDependencies(input) {
   const requestedRecordTypeId = input.recordTypeId ? String(input.recordTypeId) : null;
   const goalPath = resolveRecordGoalPath({ context: input.context, item: input.item });
   if (!requestedRecordTypeId) {
-    errors.push(issue$2("record_type_missing", "Missing recordTypeId for record submission.", "recordTypeId"));
+    errors.push(issue$2("record_type_missing", "提交记录时缺少记录类型标识。", "recordTypeId"));
     return {
       recordTypeId: null,
       template: null,
@@ -25910,7 +26115,7 @@ function resolveRecordDependencies(input) {
   }
   const recordType = getTemplateRecordTypeById(requestedRecordTypeId);
   if (!recordType) {
-    errors.push(issue$2("record_type_not_found", "Selected RecordType no longer exists.", "recordTypeId"));
+    errors.push(issue$2("record_type_not_found", "所选记录类型已不存在。", "recordTypeId"));
     return {
       recordTypeId: requestedRecordTypeId,
       template: null,
@@ -25926,7 +26131,7 @@ function resolveRecordDependencies(input) {
     requireDirectGoalTemplate: input.requireDirectGoalTemplate === true
   });
   if (resolved.status === "disabled") {
-    errors.push(issue$2("record_goal_record_type_disabled", "This RecordType is disabled for the selected Goal.", "goalPath"));
+    errors.push(issue$2("record_goal_record_type_disabled", "所选目标已禁用此记录类型。", "goalPath"));
     return {
       recordTypeId: requestedRecordTypeId,
       template: null,
@@ -25936,9 +26141,9 @@ function resolveRecordDependencies(input) {
     };
   }
   if (resolved.status === "goal-required") {
-    errors.push(issue$2("record_goal_required", "Select a Goal with a configured template before creating this record.", "goalPath"));
+    errors.push(issue$2("record_goal_required", "创建此记录前，请选择一个已配置模板的目标。", "goalPath"));
   } else if (resolved.status === "missing-goal-template") {
-    errors.push(issue$2("record_goal_template_missing", "The selected Goal has no configured template for this RecordType.", "goalPath"));
+    errors.push(issue$2("record_goal_template_missing", "所选目标尚未为此记录类型配置模板。", "goalPath"));
   }
   if (resolved.template) {
     return {
@@ -25953,7 +26158,7 @@ function resolveRecordDependencies(input) {
       }
     };
   }
-  errors.push(issue$2("record_template_missing", "No effective Goal + RecordType template is available for this record.", "recordTypeId"));
+  errors.push(issue$2("record_template_missing", "当前记录没有可用的“目标 + 记录类型”模板。", "recordTypeId"));
   return {
     recordTypeId: requestedRecordTypeId,
     template: null,
@@ -26565,11 +26770,11 @@ function validateRecordInput(input) {
   const errors = [];
   const warnings = [];
   if (!input.template) {
-    errors.push(issue$1("record_template_missing", "No effective template is available for this record."));
+    errors.push(issue$1("record_template_missing", "当前记录没有可用模板。"));
     return { ok: false, errors, warnings };
   }
   if (!input.template.targetFile || !String(input.template.targetFile).trim()) {
-    errors.push(issue$1("record_target_file_missing", "The selected template does not define a target file.", "targetFile"));
+    errors.push(issue$1("record_target_file_missing", "所选模板没有定义目标文件。", "targetFile"));
   }
   const recordType = getRecordTypeById(input.template.recordTypeId || input.template.id);
   if (recordType?.capabilities.goalBindable) {
@@ -26579,7 +26784,7 @@ function validateRecordInput(input) {
     }
   }
   if ((input.mode === "edit" || input.mode === "delete") && !input.item) {
-    errors.push(issue$1("record_item_missing", "The target record is missing for this operation."));
+    errors.push(issue$1("record_item_missing", "当前操作缺少目标记录。"));
   }
   for (const field of input.template.fields || []) {
     const rawValue = input.formData[field.key] ?? input.formData[field.label || ""];
@@ -26596,21 +26801,21 @@ function validateRecordInput(input) {
     if (field.type === "number") {
       const numericValue = typeof rawValue === "number" ? rawValue : Number(rawValue);
       if (Number.isNaN(numericValue)) {
-        errors.push(issue$1("record_field_invalid_number", "This field expects a numeric value.", field.key));
+        errors.push(issue$1("record_field_invalid_number", "此字段需要填写数字。", field.key));
         continue;
       }
       if (typeof field.min === "number" && numericValue < field.min) {
-        errors.push(issue$1("record_field_min_violation", `This field must be >= ${field.min}.`, field.key));
+        errors.push(issue$1("record_field_min_violation", `此字段必须大于或等于 ${field.min}。`, field.key));
       }
       if (typeof field.max === "number" && numericValue > field.max) {
-        errors.push(issue$1("record_field_max_violation", `This field must be <= ${field.max}.`, field.key));
+        errors.push(issue$1("record_field_max_violation", `此字段必须小于或等于 ${field.max}。`, field.key));
       }
     }
     if (["select", "radio", "rating"].includes(field.type) && Array.isArray(field.options) && field.options.length > 0) {
       const valueToCheck = templateFieldValueToString(rawValue);
       const matched = field.options.some((option) => String(option.value) === valueToCheck || String(option.label) === valueToCheck);
       if (!matched) {
-        warnings.push(issue$1("record_field_option_unmatched", "The current value does not match any configured option.", field.key));
+        warnings.push(issue$1("record_field_option_unmatched", "当前值与已配置的选项都不匹配。", field.key));
       }
     }
   }
@@ -26794,7 +26999,7 @@ function prepareTemplateSubmit(params) {
       ok: false,
       result: buildValidationErrorResult(params.operation, [
         ...resolved.errors,
-        ...!resolved.template ? [{ code: "record_template_missing", message: "No effective template is available for this record." }] : []
+        ...!resolved.template ? [{ code: "record_template_missing", message: "当前记录没有可用的有效模板。" }] : []
       ], resolved.warnings)
     };
   }
@@ -27339,7 +27544,8 @@ class RecordInputUseCase {
     return this.getKernel().prepareEdit(params);
   }
   async submitCreateRecord(params) {
-    return new CreateRecordWorkflow(this.getWorkflowRuntime()).submit(params);
+    const result = await new CreateRecordWorkflow(this.getWorkflowRuntime()).submit(params);
+    return this.attachCreateContinuation(result, params.context);
   }
   async submitEnergySnapshot(params) {
     const record2 = buildEnergySnapshotRecord(params);
@@ -27376,12 +27582,12 @@ class RecordInputUseCase {
       const refresh = buildRefreshPlan([path]);
       await applyRecordRefreshPlan(this.deps.dataStore, refresh);
       const linkedSession = params.linkFinishedSession === false ? null : await this.deps.itemService.linkEnergySnapshot(record2.recordId);
-      return buildSuccessResult("create", {
+      return this.attachContinuationFromContext(buildSuccessResult("create", {
         affectedPath: path,
         affectedRecordId: record2.recordId,
         refresh,
         feedback: { notice: linkedSession ? `已记录精力 ${record2.score}，并关联本次工作反馈。` : `已记录精力 ${record2.score}` }
-      });
+      }), params.context);
     } catch (error) {
       return mapSubmitError("create", error);
     }
@@ -27425,7 +27631,7 @@ class RecordInputUseCase {
     return new DeleteRecordWorkflow(this.getWorkflowRuntime()).submit(params);
   }
   async submitCompleteRecord(params) {
-    return submitFinalizedRecordMutation({
+    const result = await submitFinalizedRecordMutation({
       dataStore: this.deps.dataStore,
       operation: "complete",
       signal: params.signal,
@@ -27446,6 +27652,7 @@ class RecordInputUseCase {
         });
       }
     });
+    return this.attachTaskCompletionContinuation(result);
   }
   async submitTaskSession(params) {
     return submitFinalizedRecordMutation({
@@ -27491,6 +27698,47 @@ class RecordInputUseCase {
         });
       }
     });
+  }
+  attachCreateContinuation(result, context) {
+    const chained = this.attachContinuationFromContext(result, context);
+    if (chained.followUp?.continuation) return chained;
+    return this.attachTaskCompletionContinuation(result);
+  }
+  attachContinuationFromContext(result, context) {
+    if (result.status !== "success" && result.status !== "partial_success") return result;
+    const recordId = String(result.affectedRecordId || "").trim();
+    if (!recordId) return result;
+    const continuation = resolveContinuationAfterCreate({
+      record: this.deps.dataStore.getRecordById(recordId),
+      settings: this.store.getState().settings,
+      context
+    });
+    if (!continuation) return result;
+    return {
+      ...result,
+      followUp: {
+        ...result.followUp || {},
+        continuation
+      }
+    };
+  }
+  attachTaskCompletionContinuation(result) {
+    if (result.status !== "success" && result.status !== "partial_success") return result;
+    const recordId = String(result.affectedRecordId || "").trim();
+    if (!recordId) return result;
+    const record2 = this.deps.dataStore.getRecordById(recordId);
+    const continuation = resolveTaskCompletionContinuation({
+      record: record2,
+      settings: this.store.getState().settings
+    });
+    if (!continuation) return result;
+    return {
+      ...result,
+      followUp: {
+        ...result.followUp || {},
+        continuation
+      }
+    };
   }
   getWorkflowRuntime() {
     return createRecordInputWorkflowRuntime(this.deps, {
@@ -27622,7 +27870,7 @@ class GoalUseCase {
         if (childTarget > parentTarget + 0.01) {
           if (previous === void 0) delete target.timePresetPercent;
           else target.timePresetPercent = previous;
-          throw new Error(`子目标预设合计已超过新的父目标时间 ${Math.round(parentTarget / 60 * 10) / 10}h/周。`);
+          throw new Error(`子目标预设合计已超过新的父目标时间 ${Math.round(parentTarget / 60 * 10) / 10} 小时/周。`);
         }
         target.updatedAt = nowIso();
         goalSettings.timePresetRevisions = upsertGoalTimePresetRevision(
@@ -27658,7 +27906,7 @@ class GoalUseCase {
         if (childSum > parentTarget + 0.01) {
           if (previous === void 0) delete target.weeklyTargetMinutes;
           else target.weeklyTargetMinutes = previous;
-          throw new Error(`子目标预设合计超过父目标 ${Math.round(parentTarget / 60 * 10) / 10}h/周。`);
+          throw new Error(`子目标预设合计超过父目标 ${Math.round(parentTarget / 60 * 10) / 10} 小时/周。`);
         }
         const ownChildren = goalSettings.goals.filter((goal) => goal.status !== "archived" && getParentGoalPath(goal.path) === canonicalPath).reduce((sum, goal) => sum + (getGoalWeeklyTargetMinutes(goal.path, goalSettings.goals) || 0), 0);
         const ownTarget = getGoalWeeklyTargetMinutes(canonicalPath, goalSettings.goals) || 0;
@@ -28275,7 +28523,7 @@ function GroupedContainer(props) {
               stopInteractionEvent(e2);
               onGroupTitleClick(path, e2);
             },
-            title: "点击折叠/展开（Ctrl/⌘+点击：全部折叠/展开）",
+            title: "点击折叠/展开（按住控制键或⌘键点击：全部折叠/展开）",
             children: [
               /* @__PURE__ */ u2("span", { class: toggleIconClass, children: /* @__PURE__ */ u2(ThinkIcon, { name: isCollapsed ? "chevron-right" : "chevron-down" }) }),
               /* @__PURE__ */ u2("span", { class: labelClass, children: [
@@ -44437,8 +44685,8 @@ function ThinkRange({ className, ...props }) {
   return /* @__PURE__ */ u2("input", { ...props, type: "range", className: ["think-range", className].filter(Boolean).join(" ") });
 }
 const RECORD_GESTURE_MULTI_ACTIVATION_MS = 320;
-const RECORD_GESTURE_HINT = "点击编辑；Ctrl/⌘+点击或双击打开原文";
-const RECORD_MODIFIER_ORIGIN_HINT = "点击编辑；Ctrl/⌘+点击打开原文";
+const RECORD_GESTURE_HINT = "点击编辑；按住控制键或⌘键点击，或双击打开原文";
+const RECORD_MODIFIER_ORIGIN_HINT = "点击编辑；按住控制键或⌘键点击打开原文";
 function createRecordGestureHandlers(params) {
   let lastTouchAt = 0;
   let suppressClickUntil = 0;
@@ -45847,6 +46095,13 @@ function registerSettingsPersistence(plugin) {
   });
   diDebug("after register SettingsPersistence, isRegistered =", instance.isRegistered(SETTINGS_PERSISTENCE_TOKEN));
 }
+function openRecordContinuationOption(modalPort, option) {
+  modalPort.openQuickInput(option.recordTypeId, {
+    context: option.context,
+    allowRecordTypeSwitch: option.allowRecordTypeSwitch,
+    source: "quickinput"
+  });
+}
 const CONTENT_FIELD_KEY = "content";
 const FULL_DATA_FIELD_KEY = "fullData";
 function SelectablePill({
@@ -45855,7 +46110,8 @@ function SelectablePill({
   children,
   className,
   disabled = false,
-  title
+  title,
+  recordType
 }) {
   const classes = [
     "think-quick-input-selectable-pill",
@@ -45871,6 +46127,7 @@ function SelectablePill({
       title,
       "aria-pressed": selected,
       className: classes,
+      "data-record-type": recordType || void 0,
       children
     }
   );
@@ -46214,7 +46471,7 @@ function QuickInputImageFieldRenderer({
             event.preventDefault();
           }
         },
-        placeholder: "图片路径、![[图片.png]] 或 URL"
+        placeholder: "图片路径、![[图片.png]] 或网络地址"
       }
     ),
     /* @__PURE__ */ u2(QuickInputImagePreview, { rawValue: value, getResourcePath })
@@ -46866,7 +47123,7 @@ function GoalSelector({ goals, recentGoalPaths = [], selectedGoalPath, onSelect,
         title: option.value.replaceAll("/", " › "),
         onClick: () => {
           setExpandedPath(option.value);
-          if (selectable) onSelect(option);
+          if (selectable) onSelect(option, "hierarchy");
         },
         children: [
           /* @__PURE__ */ u2("span", { className: "think-quick-input-goal-row__main", children: [
@@ -46894,7 +47151,7 @@ function GoalSelector({ goals, recentGoalPaths = [], selectedGoalPath, onSelect,
           title: option.value.replaceAll("/", " › "),
           onClick: () => {
             setExpandedPath(option.value);
-            onSelect(option);
+            onSelect(option, "recent");
           },
           children: [
             /* @__PURE__ */ u2("span", { "aria-hidden": "true", children: resolveGoalIcon(option.goal) }),
@@ -46912,14 +47169,20 @@ function RecordTypeSwitcher({ recordTypes, currentRecordTypeId, onRecordTypeChan
   if (recordTypes.length <= 1) return null;
   return /* @__PURE__ */ u2("div", { className: "think-quick-input-record-type-switcher", role: "tablist", "aria-label": "记录类型", children: recordTypes.map((recordType) => {
     const label = recordType.name || recordType.id;
+    const presentation = getRecordTypePresentation(recordType.id);
+    const presentationKey = normalizeRecordTypePresentationKey(recordType.id);
     return /* @__PURE__ */ u2(
       SelectablePill,
       {
         selected: currentRecordTypeId === recordType.id,
         onClick: () => onRecordTypeChange(recordType.id),
         title: label,
-        className: "think-quick-input-record-type-switcher__item",
-        children: /* @__PURE__ */ u2("span", { className: "think-record-type-marker", "data-record-type": normalizeRecordTypePresentationKey(recordType.id), children: label })
+        recordType: presentationKey,
+        className: "think-quick-input-record-type-switcher__item think-record-type-action",
+        children: [
+          /* @__PURE__ */ u2("span", { className: "think-record-type-action__icon", "aria-hidden": "true", children: presentation.icon }),
+          /* @__PURE__ */ u2("span", { children: label })
+        ]
       },
       recordType.id
     );
@@ -47772,7 +48035,7 @@ function applyQuickInputGoalSelection(params) {
   const { formData, fieldSources, option } = params;
   const goal = option.goal || null;
   const goalPath = normalizeGoalPath(goal?.path || option.value);
-  if (!goalPath) throw new Error("QuickInput Goal selection requires a canonical Goal path.");
+  if (!goalPath) throw new Error("快速输入选择目标时需要有效的目标路径。");
   const nextFormData = { ...formData };
   const nextFieldSources = { ...fieldSources };
   const assign2 = (key, value, source = "goal_context") => {
@@ -48059,6 +48322,10 @@ function EnergyDimensionInput({ label, value, disabled, onChange }) {
     ] })
   ] });
 }
+function getRecentGoalPresetContent(item) {
+  const content = item.recordType === "task" ? item.editableText || item.title || item.content : item.editableText || item.content || item.title;
+  return String(content || "").trim();
+}
 function QuickInputEditor({
   getResourcePath,
   initialRecordTypeId,
@@ -48075,6 +48342,7 @@ function QuickInputEditor({
   autoFocusContent = false
 }) {
   const fullSettings = useSelector(selectSettings);
+  const dataStore = useDataStore();
   const initialFieldSource = recordInputMode === "create" ? "context" : "edit_backfill";
   const recordInputModeRef = A$1(recordInputMode);
   const [session, dispatchSession] = h(
@@ -48113,20 +48381,40 @@ function QuickInputEditor({
     dispatchSession({ type: "setMode", mode: recordInputMode });
   }, [recordInputMode]);
   const recordTypes = T$1(() => {
-    const all = getEffectiveRecordTypes();
-    if (recordInputMode !== "create") return all;
-    const selectedPath = normalizeGoalPath(selectedGoalPath) || "";
-    return all.filter((recordType) => {
-      if (recordType.captureMode === "direct") return true;
-      const eligibleGoalPaths = getCreateEligibleGoalPaths(fullSettings, recordType.id);
-      return selectedPath ? eligibleGoalPaths.includes(selectedPath) : eligibleGoalPaths.length > 0;
-    });
+    if (recordInputMode !== "create") return getEffectiveRecordTypes();
+    return getCreateAvailableRecordTypes(fullSettings, selectedGoalPath);
   }, [fullSettings.goalSettings?.goalTemplates, selectedGoalPath, recordInputMode]);
   const currentRecordType = T$1(
     () => recordTypes.find((recordType) => recordType.id === currentRecordTypeId) || null,
     [recordTypes, currentRecordTypeId]
   );
   const isEnergyDirect = currentRecordType?.id === ENERGY_RECORD_TYPE_ID && currentRecordType.captureMode === "direct";
+  const recentGoalContentByPath = T$1(() => {
+    if (recordInputMode !== "create" || isEnergyDirect) return {};
+    const recentPaths = (fullSettings.recentGoalPaths || []).map((path) => normalizeGoalPath(path)).filter((path) => Boolean(path)).slice(0, 5);
+    if (recentPaths.length === 0) return {};
+    const recordType = currentRecordType?.recordType || String(currentRecordTypeId || "").replace(/^core\./, "");
+    if (!recordType) return {};
+    const wantedPaths = new Set(recentPaths);
+    const contentByPath = {};
+    const records = dataStore.queryRecords().filter((item) => item.recordType === recordType).sort((left2, right2) => (right2.modified || right2.created || 0) - (left2.modified || left2.created || 0));
+    for (const item of records) {
+      const goalPath = resolveRecordGoalPath({ item });
+      if (!goalPath || !wantedPaths.has(goalPath) || contentByPath[goalPath]) continue;
+      const content = getRecentGoalPresetContent(item);
+      if (!content) continue;
+      contentByPath[goalPath] = content;
+      if (Object.keys(contentByPath).length >= wantedPaths.size) break;
+    }
+    return contentByPath;
+  }, [
+    currentRecordType?.recordType,
+    currentRecordTypeId,
+    dataStore,
+    fullSettings.recentGoalPaths,
+    isEnergyDirect,
+    recordInputMode
+  ]);
   const requireDirectGoalTemplate = shouldRequireDirectGoalTemplateForQuickInput(recordInputMode, isEnergyDirect);
   const selectedGoal = T$1(() => {
     const goals = fullSettings.goalSettings?.goals || [];
@@ -48260,17 +48548,48 @@ function QuickInputEditor({
     if (newRecordTypeId === currentRecordTypeId || newRecordTypeId === currentEffectiveRecordTypeIdForTemplates) return;
     dispatchSession({ type: "switchRecordType", recordTypeId: newRecordTypeId });
   };
-  const handleSelectGoal = (option) => {
+  const handleSelectGoal = (option, source = "hierarchy") => {
     if (!option || !option.value) {
       dispatchSession({ type: "clearGoalContext" });
       return;
     }
     const nextSelection = applyQuickInputGoalSelection({ formData, fieldSources, option });
+    let nextFormData = nextSelection.formData;
+    let nextFieldSources = nextSelection.fieldSources;
+    if (source === "recent") {
+      const presetContent = recentGoalContentByPath[nextSelection.goalPath];
+      if (presetContent) {
+        const targetRuntime = resolveQuickInputRecordTypeRuntime({
+          settings: fullSettings,
+          isEnergyDirect,
+          currentRecordTypeId,
+          selectedGoal: option.goal || null,
+          selectedGoalPath: nextSelection.goalPath,
+          requireDirectGoalTemplate
+        });
+        const targetTemplate = targetRuntime.template || baseDisplayRuntime.template;
+        const bodyFieldKey = String(
+          targetTemplate?.fields?.find((field) => getTemplateFieldSemantic(field) === "body")?.key || ""
+        ).trim();
+        if (bodyFieldKey) {
+          const updated = applyQuickInputFieldUpdate({
+            formData: nextFormData,
+            fieldSources: nextFieldSources,
+            key: bodyFieldKey,
+            value: presetContent,
+            isOptionObject: false,
+            timeDirection
+          });
+          nextFormData = updated.formData;
+          nextFieldSources = updated.fieldSources;
+        }
+      }
+    }
     dispatchSession({
       type: "selectGoal",
       goalPath: nextSelection.goalPath,
-      formData: nextSelection.formData,
-      fieldSources: nextSelection.fieldSources
+      formData: nextFormData,
+      fieldSources: nextFieldSources
     });
   };
   if (isEnergyDirect) {
@@ -48499,6 +48818,53 @@ function QuickInputModalHeader({
     ) : null
   ] });
 }
+function QuickInputContinuationPanel({
+  continuation,
+  onSelect,
+  onFinish
+}) {
+  return /* @__PURE__ */ u2("section", { className: "think-quick-input-continuation", "aria-live": "polite", children: [
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-continuation__summary", children: [
+      /* @__PURE__ */ u2("span", { className: "think-quick-input-continuation__status", children: "✅ 已记录" }),
+      continuation.goalPath ? /* @__PURE__ */ u2("span", { className: "think-quick-input-continuation__context", children: [
+        "基于：",
+        continuation.goalPath
+      ] }) : null
+    ] }),
+    /* @__PURE__ */ u2("div", { className: "think-quick-input-continuation__actions", children: [
+      /* @__PURE__ */ u2("span", { className: "think-quick-input-continuation__prompt", children: "继续记录" }),
+      /* @__PURE__ */ u2("div", { className: "think-quick-input-continuation__options", role: "group", "aria-label": "继续记录类型", children: continuation.options.map((option) => {
+        const presentation = getRecordTypePresentation(option.recordTypeId);
+        const recordType = normalizeRecordTypePresentationKey(option.recordTypeId);
+        return /* @__PURE__ */ u2(
+          "button",
+          {
+            type: "button",
+            className: "think-quick-input-continuation__option think-record-type-action",
+            "data-record-type": recordType,
+            title: `继续记录${option.label}`,
+            onClick: () => onSelect(option),
+            children: [
+              /* @__PURE__ */ u2("span", { className: "think-record-type-action__icon", "aria-hidden": "true", children: presentation.icon }),
+              /* @__PURE__ */ u2("span", { children: option.label })
+            ]
+          },
+          option.recordTypeId
+        );
+      }) }),
+      /* @__PURE__ */ u2(
+        ThinkButton,
+        {
+          className: "think-quick-input-continuation__finish",
+          size: "sm",
+          variant: "secondary",
+          onClick: onFinish,
+          children: "完成"
+        }
+      )
+    ] })
+  ] });
+}
 function isMobileLikeEnvironment() {
   return isThinkMobileLikeProfile(detectThinkDeviceProfile());
 }
@@ -48513,7 +48879,7 @@ function useQuickInputOriginalNavigation({
     () => mode === "edit" && editItem ? makeObsUri(editItem, vaultName) : "",
     [mode, editItem, vaultName]
   );
-  const originalGestureHint = originalUri && !originalUri.startsWith("#error") ? "桌面端按住 Ctrl/⌘ 点击标题或说明；手机端双击标题或说明，可打开原文" : void 0;
+  const originalGestureHint = originalUri && !originalUri.startsWith("#error") ? "桌面端按住控制键或⌘键点击标题或说明；手机端双击标题或说明，可打开原文" : void 0;
   const openOriginal = q$1(() => {
     if (!originalUri || originalUri.startsWith("#error")) {
       showNotice("找不到原文位置");
@@ -48604,6 +48970,7 @@ function useQuickInputSubmitController({
   source,
   onSave,
   onSubmitSuccess,
+  onContinuation,
   closeModal,
   useCases,
   getCurrentState,
@@ -48686,6 +49053,8 @@ function useQuickInputSubmitController({
       });
       const feedbackResult = withOperationSuccessNotice(result, operationMode);
       rememberConflict(feedbackResult);
+      const continuation = (feedbackResult.status === "success" || feedbackResult.status === "partial_success") && operationMode === "create" ? feedbackResult.followUp?.continuation : void 0;
+      const actionableContinuation = onContinuation ? continuation : void 0;
       const presentation = buildRecordSubmitFeedbackPresentation(
         feedbackResult,
         getQuickInputFailureMessage(operationMode)
@@ -48695,7 +49064,8 @@ function useQuickInputSubmitController({
       }
       if (presentation.message) {
         const shouldShowOwnSuccessNotice = !(operationMode === "create" && source === "timer" && onSubmitSuccess);
-        if (presentation.tone !== "success" || shouldShowOwnSuccessNotice) {
+        const shouldSuppressForContinuation = presentation.tone === "success" && Boolean(actionableContinuation);
+        if (!shouldSuppressForContinuation && (presentation.tone !== "success" || shouldShowOwnSuccessNotice)) {
           showNotice(presentation.message, presentation.tone);
         }
       }
@@ -48710,7 +49080,10 @@ function useQuickInputSubmitController({
           showNotice(followUpError instanceof Error ? followUpError.message : "记录已创建，但后续操作失败");
         }
       }
-      if (presentation.shouldCloseModal) {
+      if (actionableContinuation && onContinuation) {
+        onContinuation(actionableContinuation);
+      }
+      if (presentation.shouldCloseModal && !actionableContinuation) {
         closeModal();
       }
     } catch (error) {
@@ -48733,6 +49106,7 @@ function useQuickInputSubmitController({
     operationMode,
     onSave,
     onSubmitSuccess,
+    onContinuation,
     rememberConflict,
     resetSubmitGateSoon,
     source,
@@ -48900,6 +49274,23 @@ function TaskLifecycleEditor({ status, recurring, busy = false, onCommand }) {
     ] }) : canReopen ? /* @__PURE__ */ u2(ThinkButton, { type: "button", size: "sm", variant: "secondary", disabled: busy, onClick: () => onCommand("reopen"), children: "↩️ 重新打开" }) : null })
   ] });
 }
+function useQuickInputContinuation(closeCurrentModal, onOutsideClickCloseChange) {
+  const modalPort = useModalPort();
+  const [continuation, setContinuation] = d(null);
+  y(() => {
+    onOutsideClickCloseChange?.(Boolean(continuation?.dismissOnOutsideClick));
+    return () => onOutsideClickCloseChange?.(false);
+  }, [continuation?.dismissOnOutsideClick, onOutsideClickCloseChange]);
+  const continueWithOption = q$1((option) => {
+    closeCurrentModal();
+    openRecordContinuationOption(modalPort, option);
+  }, [closeCurrentModal, modalPort]);
+  return {
+    continuation,
+    showContinuation: setContinuation,
+    continueWithOption
+  };
+}
 function QuickInputModalContent({
   getResourcePath,
   initialRecordTypeId,
@@ -48912,7 +49303,8 @@ function QuickInputModalContent({
   source,
   vaultName,
   onSubmitSuccess,
-  showNotice
+  showNotice,
+  onOutsideClickCloseChange
 }) {
   const useCases = useUseCases();
   const dataStore = useDataStore();
@@ -48934,9 +49326,9 @@ function QuickInputModalContent({
   const [isStoppingSeries, setIsStoppingSeries] = d(false);
   const [isSkippingRecurringTask, setIsSkippingRecurringTask] = d(false);
   const [isChangingTaskLifecycle, setIsChangingTaskLifecycle] = d(false);
+  const { continuation, showContinuation, continueWithOption } = useQuickInputContinuation(closeModal, onOutsideClickCloseChange);
   const [editOperationMode, setEditOperationMode] = d("edit");
-  const initialSeriesRecurrence = normalizeRecurrenceInfo(editItem?.recurrenceInfo) || { unit: "day", interval: 1, anchor: "scheduled" };
-  const [taskSeriesRecurrence, setTaskSeriesRecurrence] = d(initialSeriesRecurrence);
+  const [taskSeriesRecurrence, setTaskSeriesRecurrence] = d(normalizeRecurrenceInfo(editItem?.recurrenceInfo) || { unit: "day", interval: 1, anchor: "scheduled" });
   const [editorResetVersion, setEditorResetVersion] = d(0);
   const operationMode = mode === "create" ? "create" : editOperationMode;
   const editorSessionMode = operationMode;
@@ -49008,6 +49400,7 @@ function QuickInputModalContent({
     source,
     onSave,
     onSubmitSuccess,
+    onContinuation: showContinuation,
     closeModal,
     useCases,
     getCurrentState,
@@ -49055,24 +49448,22 @@ function QuickInputModalContent({
   const handleTaskLifecycleCommand = q$1(async (command) => {
     const itemId = String(editItem?.id || "").trim();
     if (!itemId || isChangingTaskLifecycle) return;
-    const labels = {
-      complete: "确认完成这个任务吗？",
-      cancel: "确认取消这个任务吗？",
-      reopen: "确认重新打开这个任务吗？"
-    };
+    const labels = { complete: "确认完成这个任务吗？", cancel: "确认取消这个任务吗？", reopen: "确认重新打开这个任务吗？" };
     if (labels[command] && !window.confirm(labels[command])) return;
     setIsChangingTaskLifecycle(true);
     try {
       const result = await useCases.taskRuntime.runLifecycle({ taskId: itemId, command, source: "quickinput" });
+      const continuation2 = command === "complete" && (result.status === "success" || result.status === "partial_success") ? result.followUp?.continuation : void 0;
       const presentation = buildRecordSubmitFeedbackPresentation(result, "任务状态修改失败");
-      if (presentation.message) showNotice(presentation.message, presentation.tone);
-      if (result.status === "success") closeModal();
+      if (presentation.message && !(continuation2 && presentation.tone === "success")) showNotice(presentation.message, presentation.tone);
+      if (continuation2) showContinuation(continuation2);
+      else if (result.status === "success" || result.status === "partial_success") closeModal();
     } catch (error) {
       showNotice(error instanceof Error ? error.message : "任务状态修改失败");
     } finally {
       setIsChangingTaskLifecycle(false);
     }
-  }, [closeModal, editItem?.id, isChangingTaskLifecycle, showNotice, useCases]);
+  }, [closeModal, editItem?.id, isChangingTaskLifecycle, showNotice, showContinuation, useCases]);
   const handleEnergyCapture = q$1(async (request) => {
     const now2 = dayjs();
     const isRetrospective = request.captureMode === "retrospective";
@@ -49089,16 +49480,20 @@ function QuickInputModalContent({
       ...common2,
       scoreMode: "detailed",
       brainScore: request.brainScore,
-      physicalScore: request.physicalScore
+      physicalScore: request.physicalScore,
+      context
     }) : await useCases.recordInput.submitEnergySnapshot({
       ...common2,
       scoreMode: "quick",
-      score: request.score
+      score: request.score,
+      context
     });
+    const continuation2 = result.status === "success" || result.status === "partial_success" ? result.followUp?.continuation : void 0;
     const presentation = buildRecordSubmitFeedbackPresentation(result, "精力记录失败");
-    if (presentation.message) showNotice(presentation.message, presentation.tone);
-    if (presentation.shouldCloseModal) closeModal();
-  }, [closeModal, showNotice, useCases]);
+    if (presentation.message && !(continuation2 && presentation.tone === "success")) showNotice(presentation.message, presentation.tone);
+    if (continuation2) showContinuation(continuation2);
+    else if (presentation.shouldCloseModal) closeModal();
+  }, [closeModal, context, showContinuation, showNotice, useCases]);
   const handleRecoveryRescan = q$1(async () => {
     if (!recovery.paths.length || isRescanningRecoveryPaths) return;
     setIsRescanningRecoveryPaths(true);
@@ -49137,7 +49532,14 @@ function QuickInputModalContent({
         onDismiss: clearRecovery
       }
     ),
-    /* @__PURE__ */ u2("div", { class: "think-modal__body", children: [
+    /* @__PURE__ */ u2("div", { class: "think-modal__body", children: continuation ? /* @__PURE__ */ u2(
+      QuickInputContinuationPanel,
+      {
+        continuation,
+        onSelect: continueWithOption,
+        onFinish: closeModal
+      }
+    ) : /* @__PURE__ */ u2(S, { children: [
       /* @__PURE__ */ u2(
         QuickInputEditor,
         {
@@ -49175,8 +49577,8 @@ function QuickInputModalContent({
           stopping: isStoppingSeries
         }
       ) : null
-    ] }),
-    !isEnergyDirect && /* @__PURE__ */ u2(
+    ] }) }),
+    !isEnergyDirect && !continuation && /* @__PURE__ */ u2(
       QuickInputModalFooter,
       {
         operationMode,
@@ -49390,6 +49792,7 @@ class QuickInputModal extends obsidian.Modal {
   services;
   cleanupKeyboardDetection = null;
   cleanupOutsideClickGuard = null;
+  outsideClickCloseEnabled = false;
   getOpenSignature() {
     const context = this.context || {};
     return [
@@ -49432,7 +49835,7 @@ class QuickInputModal extends obsidian.Modal {
   }
   // ✅ 方法一：官方 API（Obsidian ≥ 0.15.0）
   shouldCloseOnClickOutside() {
-    return false;
+    return this.outsideClickCloseEnabled;
   }
   onOpen() {
     const unavailable = this.getCreateAvailabilityFailure();
@@ -49471,7 +49874,10 @@ class QuickInputModal extends obsidian.Modal {
           source: this.options?.source,
           vaultName: getVaultName(this.app),
           onSubmitSuccess: this.options?.onSubmitSuccess,
-          showNotice: showQuickInputNotice
+          showNotice: showQuickInputNotice,
+          onOutsideClickCloseChange: (enabled2) => {
+            this.outsideClickCloseEnabled = enabled2;
+          }
         }
       ),
       this.services
@@ -49479,12 +49885,13 @@ class QuickInputModal extends obsidian.Modal {
     setTimeout(() => {
       const bg = this.modalEl.closest(".modal-container")?.querySelector(".modal-bg");
       if (bg) {
-        const stopOutsideClose = (e2) => {
+        const handleOutsideClick = (e2) => {
           e2.stopPropagation();
           e2.preventDefault();
+          if (this.outsideClickCloseEnabled) this.close();
         };
-        bg.addEventListener("click", stopOutsideClose, true);
-        this.cleanupOutsideClickGuard = () => bg.removeEventListener("click", stopOutsideClose, true);
+        bg.addEventListener("click", handleOutsideClick, true);
+        this.cleanupOutsideClickGuard = () => bg.removeEventListener("click", handleOutsideClick, true);
       }
     }, 0);
   }
@@ -49501,6 +49908,7 @@ class QuickInputModal extends obsidian.Modal {
     } finally {
       this.cleanupOutsideClickGuard = null;
       this.cleanupKeyboardDetection = null;
+      this.outsideClickCloseEnabled = false;
       if (QuickInputModal.activeModal === this) {
         QuickInputModal.activeModal = null;
       }
@@ -49718,7 +50126,7 @@ function buildHeatmapCreateConfig(params) {
 function openCreateFromHeatmap(params) {
   const config2 = buildHeatmapCreateConfig(params);
   if (!config2) {
-    params.notice?.("当前热力图没有可用于新增的记录类型，请先配置 sourceRecordTypeId。");
+    params.notice?.("当前热力图没有可用于新增的记录类型，请先配置来源记录类型。");
     return false;
   }
   return openCreateModal(params.app, config2, "view_quick_create");
@@ -50060,12 +50468,12 @@ async function commitExcelCellFromView(params) {
   const canonicalField = normalizeEditableFieldKey(params.canonicalField || params.field);
   const policy = getFieldEditPolicy(canonicalField, params.oldValue);
   if (!isExcelInlineCommitSupported(canonicalField)) {
-    const message2 = "当前 Excel MVP 只开放安全字段：content/title/date/time/duration/rating/tags 与自定义 extra 字段；路径、文件、派生字段保持只读。";
+    const message2 = "当前表格初版只开放常用安全字段和自定义字段；路径、文件、派生字段保持只读。";
     params.uiPort.notice(message2);
     return { ok: false, message: message2 };
   }
   if (policy.editorKind === "path") {
-    const message2 = "路径类字段不能在 Excel 视图中修改，请通过完整编辑或配置入口处理。";
+    const message2 = "路径类字段不能在表格视图中修改，请通过完整编辑或配置入口处理。";
     params.uiPort.notice(message2);
     return { ok: false, message: message2 };
   }
@@ -50087,7 +50495,7 @@ async function commitExcelCellFromView(params) {
   const recordTypeId = prepared.recordTypeId;
   const templateField = resolveTemplateFieldForExcelCommit(prepared.template?.fields, canonicalField);
   if (templateField && getTemplateFieldInputType(templateField).toLowerCase().includes("path")) {
-    const message2 = "路径类模板字段不能在 Excel 视图中修改。";
+    const message2 = "路径类模板字段不能在表格视图中修改。";
     params.uiPort.notice(message2);
     return { ok: false, message: message2 };
   }
@@ -50182,7 +50590,7 @@ function AiTextPromptForm({ onSubmit, onCancel, isLoading }) {
       {
         left: /* @__PURE__ */ u2("div", { className: "think-overlay-title-row", children: [
           /* @__PURE__ */ u2(SmartToyIcon, { fontSize: "small" }),
-          /* @__PURE__ */ u2("span", { children: "AI 快速记录" })
+          /* @__PURE__ */ u2("span", { children: "智能快速记录" })
         ] }),
         onClose: onCancel
       }
@@ -50457,7 +50865,7 @@ function AiBatchConfirmSidebar({
 }) {
   return /* @__PURE__ */ u2("aside", { className: "think-ai-batch-sidebar", children: [
     /* @__PURE__ */ u2("div", { className: "think-ai-batch-sidebar__header", children: [
-      /* @__PURE__ */ u2("strong", { children: "AI 识别结果" }),
+      /* @__PURE__ */ u2("strong", { children: "智能识别结果" }),
       /* @__PURE__ */ u2("span", { children: [
         records.length,
         " 条 · 已保存 ",
@@ -50499,7 +50907,7 @@ function AiBatchConfirmSidebar({
         "data-ai-batch-action": "save-all",
         onClick: onSaveAll,
         disabled: isBusy || pendingCount === 0,
-        "aria-label": "保存全部 AI 识别记录",
+        "aria-label": "保存全部智能识别记录",
         children: isSavingAll ? "保存中…" : `保存全部 (${pendingCount})`
       }
     ) })
@@ -50517,13 +50925,13 @@ function showAiBatchSaveFailure(result, index) {
     new obsidian.Notice(`第 ${index + 1} 条保存已取消`, 4e3);
     return;
   }
-  new obsidian.Notice(`❌ 第 ${index + 1} 条保存失败: ${presentation.message || "保存失败"}`, 1e4);
+  new obsidian.Notice(`❌ 第 ${index + 1} 条保存失败：${presentation.message || "保存失败"}`, 1e4);
 }
 function showAiBatchUnexpectedSaveError(traceId, scope, error) {
   const label = scope === "single" ? "保存当前记录失败" : "批量保存失败";
   const noticePrefix = scope === "single" ? "❌ 保存失败" : "❌ 批量保存中断";
   devError(`[AiInput][${traceLabel(traceId)}] ${label}`, error);
-  new obsidian.Notice(`${noticePrefix}: ${error instanceof Error ? error.message : String(error)}`, 1e4);
+  new obsidian.Notice(`${noticePrefix}：${error instanceof Error ? error.message : String(error)}`, 1e4);
 }
 function replaceRecordAtIndex(records, index, record2) {
   return records.map((entry, currentIndex) => currentIndex === index ? record2 : entry);
@@ -51742,7 +52150,7 @@ async function initializeCore(opts) {
     async () => {
       if (!instance.isRegistered(SETTINGS_PERSISTENCE_TOKEN)) {
         diWarn("SettingsPersistence NOT registered in container used for resolve()");
-        throw new Error("SettingsPersistence token missing before resolve()");
+        throw new Error("解析设置持久化服务前缺少必要的服务令牌。");
       } else {
         diDebug("SettingsPersistence is registered before resolve()");
       }
@@ -51918,7 +52326,7 @@ function ModulePanel({
         "aria-expanded": !collapsed,
         onClick: onHeaderClick,
         onKeyDown: (event) => onHeaderKeyDown(event),
-        title: layoutEditing ? "点击选中；拖动左侧手柄移动；点击标题区域折叠或展开" : "点击标题区域折叠/展开；Ctrl/⌘ + 点击：全部折叠/展开",
+        title: layoutEditing ? "点击选中；拖动左侧手柄移动；点击标题区域折叠或展开" : "点击标题区域折叠/展开；按住控制键或⌘键点击：全部折叠/展开",
         children: [
           /* @__PURE__ */ u2("div", { class: "module-header-main", children: [
             layoutEditing && /* @__PURE__ */ u2(
@@ -52004,7 +52412,7 @@ function ModulePanel({
                 ThinkIconButton,
                 {
                   size: "sm",
-                  label: "导出为 Markdown",
+                  label: "导出为笔记文件",
                   icon: /* @__PURE__ */ u2(ThinkIcon, { name: "upload", className: "module-header-icon" }),
                   onClick: (event) => {
                     event.stopPropagation();
@@ -55924,7 +56332,7 @@ function BlockViewEditor() {
   return /* @__PURE__ */ u2(
     ReadonlyViewEditorNotice,
     {
-      title: "块视图（BlockView）"
+      title: "块视图"
     }
   );
 }
@@ -55932,7 +56340,7 @@ function ExcelViewEditor() {
   return /* @__PURE__ */ u2(
     ReadonlyViewEditorNotice,
     {
-      title: "数据表格（ExcelView）"
+      title: "数据表格"
     }
   );
 }
@@ -56079,7 +56487,7 @@ function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
       return;
     }
     if (!module2) {
-      ui.notice("无法扫描：缺少视图上下文（module）。");
+      ui.notice("无法扫描：缺少视图上下文（模块）。");
       return;
     }
     const dataSource = module2;
@@ -56106,7 +56514,7 @@ function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
           ConfigFieldRow,
           {
             label: "源记录类型",
-            description: "视图将从此记录类型模板的评分字段中读取 Emoji/图片/颜色映射。",
+            description: "视图将从此记录类型模板的评分字段中读取 表情符号/图片/颜色映射。",
             children: /* @__PURE__ */ u2(
               SimpleSelect,
               {
@@ -56147,8 +56555,8 @@ function ProgressViewEditor({ value, onChange }) {
   const numberPatch = (key, fallback) => (event) => onChange({ mode: "goal", [key]: Number(event.currentTarget.value) || fallback });
   return /* @__PURE__ */ u2(ViewEditorShell, { title: "进度视图", children: /* @__PURE__ */ u2(ConfigSection, { children: [
     /* @__PURE__ */ u2(ConfigFieldRow, { label: "目标数量", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.topN, onInput: numberPatch("topN", 20) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "每条记录 XP", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.basePoints, onInput: numberPatch("basePoints", 1) }) }),
-    /* @__PURE__ */ u2(ConfigFieldRow, { label: "每级 XP", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.levelStep, onInput: numberPatch("levelStep", 20) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "每条记录经验值", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.basePoints, onInput: numberPatch("basePoints", 1) }) }),
+    /* @__PURE__ */ u2(ConfigFieldRow, { label: "每级经验值", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.levelStep, onInput: numberPatch("levelStep", 20) }) }),
     /* @__PURE__ */ u2(ConfigFieldRow, { label: "评分阈值", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.ratingBonusThreshold, onInput: numberPatch("ratingBonusThreshold", 4) }) }),
     /* @__PURE__ */ u2(ConfigFieldRow, { label: "评分额外积分", children: /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: config2.ratingBonusPoints, onInput: numberPatch("ratingBonusPoints", 0) }) }),
     /* @__PURE__ */ u2(ConfigFieldRow, { label: "展开统计", children: /* @__PURE__ */ u2(ThinkCheckbox, { checked: config2.showRecordTypeBreakdown !== false, onChange: (event) => onChange({ mode: "goal", showRecordTypeBreakdown: event.currentTarget.checked }), label: "显示记录类型统计", compact: true }) })
@@ -56166,7 +56574,7 @@ function EnergyViewEditor({ value, onChange }) {
   ] }) });
 }
 function EisenhowerViewEditor() {
-  return /* @__PURE__ */ u2(ReadonlyViewEditorNotice, { title: "四象限（Eisenhower）" });
+  return /* @__PURE__ */ u2(ReadonlyViewEditorNotice, { title: "四象限" });
 }
 const VIEW_EDITORS = {
   TableView: TableViewEditor,
@@ -56198,7 +56606,7 @@ function useSaveHandler(saveAction, options = {}) {
     } catch (error) {
       const errorObj = error instanceof Error ? error : new Error(String(error));
       const message = errorObj.message || "未知错误";
-      options.uiPort?.notice(`❌ ${errorMessage}: ${message}`);
+      options.uiPort?.notice(`❌ ${errorMessage}：${message}`);
       devError(`${errorMessage}:`, errorObj);
       onError?.(errorObj);
     }
@@ -56608,7 +57016,7 @@ const VIEW_DATE_ROLE_OPTIONS = [
   { value: "task-scheduled", label: "计划时间" },
   { value: "task-due", label: "截止时间" },
   { value: "task-completed", label: "完成时间" },
-  { value: "task-actual", label: "实际执行时间（TaskSession）" }
+  { value: "task-actual", label: "实际执行时间（任务计时记录）" }
 ];
 function ViewInstanceEditor({ vi, onWriteStarted }) {
   const dataStore = useDataStore();
@@ -56674,7 +57082,7 @@ function ViewInstanceEditor({ vi, onWriteStarted }) {
           FormField,
           {
             label: "时间依据",
-            help: "控制栏的年/季/月/周/日范围会按这里选择的业务时间筛选当前视图。计划/截止/完成只匹配 Task；实际执行时间匹配 TaskSession。",
+            help: "控制栏的年/季/月/周/日范围会按这里选择的业务时间筛选当前视图。计划/截止/完成只匹配任务；实际执行时间匹配任务计时记录。",
             children: /* @__PURE__ */ u2(
               SimpleSelect,
               {
@@ -57398,7 +57806,7 @@ function FieldPill({ item, fieldKey, resolveResourcePath, onOpenRecordOrigin }) 
       void onOpenRecordOrigin(item);
     }
   } : {};
-  const originTitle = "Ctrl/⌘+点击打开原文";
+  const originTitle = "按住控制键或⌘键点击打开原文";
   if (fieldKey === "tags") {
     return /* @__PURE__ */ u2("span", { ...originProps, title: originTitle, children: /* @__PURE__ */ u2(TagsRenderer, { tags: value }) });
   }
@@ -57708,7 +58116,7 @@ function ProgressBlock({
     return /* @__PURE__ */ u2(
       "div",
       {
-        title: `${goalKey}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`,
+        title: `${goalKey}：${hours.toFixed(1)} 小时（${Math.round(percent)}%）`,
         class: "progress-block-item",
         children: [
           /* @__PURE__ */ u2(
@@ -57885,7 +58293,7 @@ function GoalAllocationBlock({
         class: "timeline-goal-allocation-line is-unallocated",
         title: `未归属时间
 ${rangeActualLabel(currentView)}已记录 ${formatGoalMinutes(summary.unallocatedMinutes)}
-有 TaskSession，但 Task 没有可解析的 Goal。`,
+存在任务计时记录，但任务没有可解析的目标。`,
         children: /* @__PURE__ */ u2("span", { class: "timeline-goal-allocation-text", children: [
           /* @__PURE__ */ u2("span", { class: "timeline-goal-allocation-label", children: "未归属" }),
           /* @__PURE__ */ u2("span", { class: "timeline-goal-allocation-metric", children: formatPercent$1(summary.unallocatedPercentOfNaturalTime) })
@@ -57906,11 +58314,11 @@ function TimelineSummaryTable({ summaryData, colorMap, goalOrder, untrackedLabel
     /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
       /* @__PURE__ */ u2("th", { children: "月份" }),
       /* @__PURE__ */ u2("th", { children: "月度总结" }),
-      /* @__PURE__ */ u2("th", { children: "W1" }),
-      /* @__PURE__ */ u2("th", { children: "W2" }),
-      /* @__PURE__ */ u2("th", { children: "W3" }),
-      /* @__PURE__ */ u2("th", { children: "W4" }),
-      /* @__PURE__ */ u2("th", { children: "W5" })
+      /* @__PURE__ */ u2("th", { children: "第1周" }),
+      /* @__PURE__ */ u2("th", { children: "第2周" }),
+      /* @__PURE__ */ u2("th", { children: "第3周" }),
+      /* @__PURE__ */ u2("th", { children: "第4周" }),
+      /* @__PURE__ */ u2("th", { children: "第5周" })
     ] }) }),
     /* @__PURE__ */ u2("tbody", { children: [
       summaryData.map((monthData) => /* @__PURE__ */ u2("tr", { children: [
@@ -58406,7 +58814,7 @@ function TimelineOverallSummary(props) {
   const { width: width2, goalSummary, currentView, goalHours, totalHours, goalOrder, colorMap, untrackedLabel } = props;
   const containerStyle = { flex: `0 0 ${width2}px` };
   return /* @__PURE__ */ u2("div", { class: "summary-progress-container", style: containerStyle, children: [
-    /* @__PURE__ */ u2("div", { class: "summary-title", title: goalSummary ? "实际时间只统计 TaskSession；悬浮每一行查看目标时间、实际时间和子目标明细。" : void 0, children: "总结" }),
+    /* @__PURE__ */ u2("div", { class: "summary-title", title: goalSummary ? "实际时间只统计任务计时记录；悬浮每一行查看目标时间、实际时间和子目标明细。" : void 0, children: "总结" }),
     /* @__PURE__ */ u2("div", { class: "summary-content", children: goalSummary ? /* @__PURE__ */ u2(GoalAllocationBlock, { summary: goalSummary, currentView, metric: "deviation" }) : totalHours > 0 ? /* @__PURE__ */ u2(ProgressBlock, { goalHours, order: goalOrder, totalHours, colorMap, untrackedLabel }) : null })
   ] });
 }
@@ -59367,7 +59775,7 @@ function generateCellTooltip(date2, items, displayCount = 0, levelCount = 0, was
     latestItem.content ? `💭 最后内容: ${latestItem.content}` : "",
     "",
     "💡 左键：空白日期新增 / 有记录日期查看当天记录并继续新增",
-    items.length === 1 ? "⌨️ Ctrl/⌘+点击：打开该条记录原文" : ""
+    items.length === 1 ? "⌨️ 按住控制键或⌘键点击：打开该条记录原文" : ""
   ].filter(Boolean).join("\n");
 }
 function getVisualValue(items, ratingMapping) {
@@ -59877,12 +60285,12 @@ function HeatmapView({
   const goalPathsToTrack = dataModel.goalPathsToTrack;
   const dataByGoalAndDate = dataModel.dataByGoalAndDate;
   const goalGroupsToDisplay = T$1(() => filterGoalHeatmapGroups(dataModel.goalGroups), [dataModel.goalGroups]);
-  const resolveRecordTypeId = (candidate) => normalizeHeatmapRecordTypeId({
+  const resolveRecordTypeId2 = (candidate) => normalizeHeatmapRecordTypeId({
     candidate,
     inputSettings,
     configuredSourceRecordTypeId: config2.sourceRecordTypeId
   });
-  const heatmapSourceRecordTypeId = resolveRecordTypeId(config2.sourceRecordTypeId);
+  const heatmapSourceRecordTypeId = resolveRecordTypeId2(config2.sourceRecordTypeId);
   const resolveCellRatingMapping = (goalPath, presetContext) => {
     if (presetContext?.ratingOptions?.length) return buildHeatmapRatingMapping(presetContext.ratingOptions);
     return ratingMappingsCache.get(inputSettings, heatmapSourceRecordTypeId || "", goalPath);
@@ -59894,7 +60302,7 @@ function HeatmapView({
     sourceRecordTypeId,
     heatmapSourceRecordTypeId,
     inferredRecordTypeIdByGoal,
-    normalizeRecordTypeId: resolveRecordTypeId
+    normalizeRecordTypeId: resolveRecordTypeId2
   });
   const openQuickCreate = (date2, item, goalPath, presetContext) => {
     if (!onOpenHeatmapCreate) {
@@ -60040,7 +60448,7 @@ function ChartBlock({
       class: containerClasses,
       role: "button",
       tabIndex: 0,
-      title: data.blocks.length === 1 && onOpenRecordOrigin ? `${label} · Ctrl/⌘+点击打开原文` : label,
+      title: data.blocks.length === 1 && onOpenRecordOrigin ? `${label} · 按住控制键或⌘键点击打开原文` : label,
       onClick: openAll,
       onKeyDown: (event) => {
         if (!isKeyboardActivation(event)) return;
@@ -60117,7 +60525,7 @@ function DayStatisticsView({
     ChartBlock,
     {
       data,
-      label: selectedDate.format("YYYY年MM月DD日 dddd"),
+      label: selectedDate.format("YYYY年MM月DD日 ddd"),
       buckets: categories,
       onCellClick,
       cellIdentifier: (goal) => ({ type: "day", date: selectedDate.format("YYYY-MM-DD"), goal }),
@@ -60189,7 +60597,7 @@ function buildMonthStatisticsRenderModel(input) {
     return [{
       key: weekStart.format("YYYY-MM-DD"),
       gridColumn: `${index + 1}`,
-      label: `W${weekStart.isoWeek()}`,
+      label: `第${weekStart.isoWeek()}周`,
       data,
       identifier: (goal) => ({
         type: "week",
@@ -60263,7 +60671,7 @@ function buildQuarterStatisticsRenderModel(input) {
         if (!weekStart) return [];
         return [{
           key: weekStart.format("YYYY-MM-DD"),
-          label: `W${weekStart.isoWeek()}`,
+          label: `第${weekStart.isoWeek()}周`,
           data: weekData,
           identifier: (goal) => ({
             type: "week",
@@ -60289,7 +60697,7 @@ function buildYearStatisticsRenderModel(input) {
     quarters: processedData.quartersData.map((data, index) => ({
       key: `q${index}`,
       gridColumn: `${index * 3 + 1} / ${index * 3 + 4}`,
-      label: `Q${index + 1}`,
+      label: `第${index + 1}季度`,
       data,
       identifier: (goal) => ({ type: "quarter", year, quarter: index + 1, goal })
     })),
@@ -60312,7 +60720,7 @@ function buildYearStatisticsRenderModel(input) {
           const data = processedData.weeksData[weekIndex] || createPeriodData(categories);
           return {
             key: `${week}`,
-            label: `${week}W`,
+            label: `第${week}周`,
             data,
             identifier: (goal) => ({ type: "week", year, week, goal })
           };
@@ -60981,19 +61389,19 @@ function SkillList({ card, runtime }) {
           class: "think-progress-skill think-list-row think-list-row--interactive",
           onClick: () => setOpenKey(open ? null : row.key),
           "aria-expanded": open,
-          title: `${row.title} · ${row.points} XP · ${row.count} 条记录`,
+          title: `${row.title} · ${row.points} 经验值 · ${row.count} 条记录`,
           children: [
             /* @__PURE__ */ u2("span", { class: "think-progress-skill__bullet", "aria-hidden": "true", children: "•" }),
             /* @__PURE__ */ u2("span", { class: "think-progress-skill__title", children: row.title }),
             /* @__PURE__ */ u2("span", { class: "think-progress-skill__level", children: [
-              "Lv.",
+              "等级 ",
               row.levelMeta.level
             ] }),
             /* @__PURE__ */ u2(ExperienceBar, { ratio: row.progressRatio, tone: "skill" }),
             /* @__PURE__ */ u2("span", { class: "think-progress-skill__tail", children: [
               /* @__PURE__ */ u2("span", { class: "think-progress-skill__meta", children: [
                 row.points,
-                " XP · ",
+                " 经验值 · ",
                 row.count,
                 " 条"
               ] }),
@@ -61047,7 +61455,7 @@ function GoalProgressCard(props) {
         ] })
       ] }),
       /* @__PURE__ */ u2("span", { class: "think-progress-section__level", children: [
-        "Lv.",
+        "等级 ",
         levelMeta.level
       ] }),
       /* @__PURE__ */ u2(ExperienceBar, { ratio: card.progressRatio, tone: "goal" }),
@@ -61313,7 +61721,7 @@ function periodLabel(currentView, dateRange) {
   if (currentView === "天") return `${start2.format("YYYY-MM-DD")}`;
   if (currentView === "周") return `${start2.format("MM-DD")} — ${end2.format("MM-DD")}`;
   if (currentView === "月") return start2.format("YYYY-MM");
-  if (currentView === "季") return `${start2.year()} Q${start2.quarter()}`;
+  if (currentView === "季") return `${start2.year()}年第${start2.quarter()}季度`;
   return start2.format("YYYY");
 }
 function periodRenderModel(period, goalItems, label, contextRecords) {
@@ -61354,22 +61762,22 @@ function compactReviewLines(args) {
     const low = [...dayparts].sort((a2, b2) => (a2.meanScore || 0) - (b2.meanScore || 0))[0];
     const gap2 = Math.abs((best.meanScore || 0) - (low.meanScore || 0));
     if (best.key !== low.key && gap2 >= 10) {
-      lines.push({ key: "overall", label: "状态", text: `${best.label}相对较高（${Math.round(best.meanScore || 0)}，N=${best.sampleCount}），${low.label}相对较低（${Math.round(low.meanScore || 0)}，N=${low.sampleCount}）。` });
+      lines.push({ key: "overall", label: "状态", text: `${best.label}相对较高（${Math.round(best.meanScore || 0)}，样本数 ${best.sampleCount}），${low.label}相对较低（${Math.round(low.meanScore || 0)}，样本数 ${low.sampleCount}）。` });
     }
   }
   const recovery = management?.recoveryCandidates?.[0];
   if (recovery) {
     const prefix2 = recovery.evidence === "supported" ? "" : "初步观察：";
-    lines.push({ key: "recovery", label: "恢复", text: `${prefix2}${recovery.label}后偏回升（平均 ${signed(recovery.meanDelta)}，N=${recovery.sampleCount}）。` });
+    lines.push({ key: "recovery", label: "恢复", text: `${prefix2}${recovery.label}后偏回升（平均 ${signed(recovery.meanDelta)}，样本数 ${recovery.sampleCount}）。` });
   }
   const depletion = management?.cautionCandidates?.[0];
   if (depletion) {
     const prefix2 = depletion.evidence === "supported" ? "" : "初步观察：";
-    lines.push({ key: "depletion", label: "消耗", text: `${prefix2}${depletion.label}后偏下降（平均 ${signed(depletion.meanDelta)}，N=${depletion.sampleCount}）。` });
+    lines.push({ key: "depletion", label: "消耗", text: `${prefix2}${depletion.label}后偏下降（平均 ${signed(depletion.meanDelta)}，样本数 ${depletion.sampleCount}）。` });
   }
   const stop = patterns?.stopProxy;
   if (stop && stop.followedByWorkCount >= 3 && stop.evidence !== "insufficient" && (stop.longContinuationRatio || 0) >= 0.5) {
-    lines.push({ key: "attention", label: "注意", text: `高精力后继续工作过久的情况较多（N=${stop.followedByWorkCount}），先定停止点更合适。` });
+    lines.push({ key: "attention", label: "注意", text: `高精力后继续工作过久的情况较多（样本数 ${stop.followedByWorkCount}），先定停止点更合适。` });
   }
   if (lines.length === 0 && periodItems.some(isEnergyItem)) {
     lines.push({ key: "overall", label: "状态", text: "本周期已有记录，但暂时没有达到最小重复样本的稳定模式。" });
@@ -61629,7 +62037,7 @@ function EnergyCalendarMap({ period, selectedKey, onSelect, onOpenRecordOrigin }
                 selected: selectedKey === keyValue,
                 className: "think-energy-daily-dot",
                 style: energyDotStyle(visual),
-                title: `${day.date} · 日均 ${score} · ${day.samples.length} 次 · ${dayCaptureLabel(day)}${day.samples.length === 1 && onOpenRecordOrigin ? " · Ctrl/⌘+点击打开原文" : ""}`,
+                title: `${day.date} · 日均 ${score} · ${day.samples.length} 次 · ${dayCaptureLabel(day)}${day.samples.length === 1 && onOpenRecordOrigin ? " · 按住控制键或⌘键点击打开原文" : ""}`,
                 onClick: (event) => {
                   if (day.samples.length === 1 && hasPlatformModifier(event) && onOpenRecordOrigin) {
                     stopInteractionEvent(event);
@@ -61700,7 +62108,7 @@ function EnergyDayMap({ period, selectedKey, onSelect, onOpenRecordOrigin }) {
             selected: selectedKey === sample.id,
             className: "think-energy-map-dot",
             style: energyDotStyle(visual, { "--think-energy-x": `${sample.minuteOfDay / 1440 * 100}%` }),
-            title: `${sampleTitle(sample)}${onOpenRecordOrigin ? " · Ctrl/⌘+点击打开原文" : ""}`,
+            title: `${sampleTitle(sample)}${onOpenRecordOrigin ? " · 按住控制键或⌘键点击打开原文" : ""}`,
             onClick: (event) => {
               if (hasPlatformModifier(event) && onOpenRecordOrigin) {
                 stopInteractionEvent(event);
@@ -61752,7 +62160,7 @@ function EnergyDateTimeMap({ period, selectedKey, onSelect, onOpenRecordOrigin }
                 selected: selectedKey === sample.id,
                 className: "think-energy-map-dot",
                 style: energyDotStyle(visual, { "--think-energy-y": `${sample.minuteOfDay / 1440 * 100}%` }),
-                title: `${sampleTitle(sample)}${onOpenRecordOrigin ? " · Ctrl/⌘+点击打开原文" : ""}`,
+                title: `${sampleTitle(sample)}${onOpenRecordOrigin ? " · 按住控制键或⌘键点击打开原文" : ""}`,
                 onClick: (event) => {
                   if (hasPlatformModifier(event) && onOpenRecordOrigin) {
                     stopInteractionEvent(event);
@@ -61859,7 +62267,7 @@ function SampleDetail({ selection, management, onBack, onOpenRecord, onOpenRecor
       activity ? /* @__PURE__ */ u2("p", { children: [
         "前后活动 · ",
         activity.title,
-        activity.durationMinutes ? ` · ${activity.durationMinutes}min` : ""
+        activity.durationMinutes ? ` · ${activity.durationMinutes}分钟` : ""
       ] }) : /* @__PURE__ */ u2("p", { children: "附近没有可靠活动" }),
       signals && /* @__PURE__ */ u2("p", { children: [
         "当天 · ",
@@ -61934,7 +62342,7 @@ function taskHover(task) {
     task.recommendationReason || task.title,
     `倒计时 ${durationClock(task.suggestedDurationMinutes)}`,
     "点击开始/继续计时",
-    "Ctrl/⌘+点击打开原文",
+    "按住控制键或⌘键点击打开原文",
     "右键更多"
   ].filter(Boolean).join(" · ");
 }
@@ -62394,11 +62802,11 @@ function TableView({ items, rowField, colField, onMarkDone, resolveResourcePath,
   }
   return /* @__PURE__ */ u2("div", { class: "think-data-grid-scroll", children: /* @__PURE__ */ u2("table", { class: "think-table think-data-grid think-data-grid--matrix", children: [
     /* @__PURE__ */ u2("thead", { children: /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("th", { children: rowField }),
-      renderModel.sortedCols.map((col) => /* @__PURE__ */ u2("th", { children: col }, col))
+      /* @__PURE__ */ u2("th", { children: getFieldLabel(rowField) }),
+      renderModel.sortedCols.map((col) => /* @__PURE__ */ u2("th", { children: formatFieldValue$1(colField, col) }, col))
     ] }) }),
     /* @__PURE__ */ u2("tbody", { children: renderModel.sortedRows.map((row) => /* @__PURE__ */ u2("tr", { children: [
-      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: row }) }),
+      /* @__PURE__ */ u2("td", { children: /* @__PURE__ */ u2("strong", { children: formatFieldValue$1(rowField, row) }) }),
       renderModel.sortedCols.map((col) => /* @__PURE__ */ u2(
         TableViewCell,
         {
@@ -62482,13 +62890,14 @@ function buildExcelCellModel(item, field, valueOverride) {
   const hasOverride = valueOverride !== void 0;
   const value = hasOverride ? valueOverride : sourceValue;
   const policy = getFieldEditPolicy(field, value);
+  const displayValue = policy.canonicalField === "recordType" ? formatFieldValue$1(field, value, item) : formatExcelCellValue(value);
   return {
     item,
     itemId: item.id,
     field,
     canonicalField: policy.canonicalField,
     value,
-    displayValue: formatExcelCellValue(value),
+    displayValue,
     editorValue: formatExcelEditorValue(value, policy.editorKind),
     policy
   };
@@ -62606,23 +63015,23 @@ function canInlineEditExcelCell(cell, canCommit = true) {
   return !!canCommit && cell.policy.editable && cell.policy.commitMode === "inline";
 }
 function getExcelEditorDescriptor(kind) {
-  if (kind === "textarea") return { tag: "textarea", hint: "Enter 保存 · Shift+Enter 换行 · Esc 取消" };
-  if (kind === "number") return { tag: "input", type: "number", hint: "数字编辑器：Enter 保存 · Esc 取消" };
-  if (kind === "rating") return { tag: "input", type: "number", hint: "评分编辑器：输入数字，Enter 保存 · Esc 取消" };
-  if (kind === "date") return { tag: "input", type: "date", hint: "日期编辑器：Enter 保存 · Esc 取消" };
-  if (kind === "time") return { tag: "input", type: "time", hint: "时间编辑器：Enter 保存 · Esc 取消" };
-  if (kind === "datetime") return { tag: "input", type: "datetime-local", hint: "日期时间编辑器：Enter 保存 · Esc 取消" };
-  if (kind === "boolean") return { tag: "select", hint: "布尔编辑器：选择 是 / 否，Enter 保存 · Esc 取消" };
-  if (kind === "select") return { tag: "select", hint: "选项编辑器：选择后 Enter 保存 · Esc 取消" };
+  if (kind === "textarea") return { tag: "textarea", hint: "回车键保存 · 上档键+回车键换行 · 退出键取消" };
+  if (kind === "number") return { tag: "input", type: "number", hint: "数字编辑器：回车键保存 · 退出键取消" };
+  if (kind === "rating") return { tag: "input", type: "number", hint: "评分编辑器：输入数字，回车键保存 · 退出键取消" };
+  if (kind === "date") return { tag: "input", type: "date", hint: "日期编辑器：回车键保存 · 退出键取消" };
+  if (kind === "time") return { tag: "input", type: "time", hint: "时间编辑器：回车键保存 · 退出键取消" };
+  if (kind === "datetime") return { tag: "input", type: "datetime-local", hint: "日期时间编辑器：回车键保存 · 退出键取消" };
+  if (kind === "boolean") return { tag: "select", hint: "布尔编辑器：选择“是”或“否”，回车键保存 · 退出键取消" };
+  if (kind === "select") return { tag: "select", hint: "选项编辑器：选择后按回车键保存 · 退出键取消" };
   if (kind === "tags") return { tag: "input", type: "text", hint: "标签编辑器：逗号/换行分隔，# 会保留" };
-  return { tag: "input", type: "text", hint: "Enter 保存 · Esc 取消" };
+  return { tag: "input", type: "text", hint: "回车键保存 · 退出键取消" };
 }
 function readExcelKeyboardValue(event) {
   const target = event.currentTarget;
   return target.value;
 }
 function getExcelReadonlyTitle(policyReason) {
-  return policyReason || "该字段不可在 Excel 单元格中直接编辑";
+  return policyReason || "该字段不可在表格单元格中直接编辑";
 }
 function getExcelTypedInputProps(kind) {
   if (kind === "number") return { step: "any" };
@@ -62636,7 +63045,7 @@ function isExcelMarkdownInteractiveTarget(target) {
 function buildExcelCellTitle(params) {
   const { error, editable, policyReason } = params;
   if (error) return error;
-  return editable ? "双击/F2/Enter 编辑；方向键/Tab 移动；可粘贴多行多列；拖动右下角小方块可向同列覆盖；Ctrl/⌘ 点击打开完整编辑" : `${getExcelReadonlyTitle(policyReason)}；Ctrl/⌘ 点击可打开完整编辑`;
+  return editable ? "双击或按 F2、回车键编辑；方向键或制表键移动；可粘贴多行多列；拖动右下角小方块可向同列覆盖；按住控制键或⌘键点击打开完整编辑" : `${getExcelReadonlyTitle(policyReason)}；按住控制键或⌘键点击可打开完整编辑`;
 }
 function buildExcelCellClassName(params) {
   const {
@@ -62903,7 +63312,7 @@ function ExcelCell({
       "data-save-state": ui.saveState,
       class: ui.className,
       style: style2,
-      title: onOpenRecordOrigin ? `${ui.title} · Ctrl/⌘+点击打开原文` : ui.title,
+      title: onOpenRecordOrigin ? `${ui.title} · 按住控制键或⌘键点击打开原文` : ui.title,
       tabIndex: 0,
       "aria-readonly": ui.readonly ? "true" : "false",
       "aria-invalid": error ? "true" : "false",
@@ -62957,7 +63366,7 @@ function getExcelColumnBadge(column2, canCommitCells) {
 }
 function getExcelColumnTitle(column2, canCommitCells) {
   if (!canCommitCells) return "当前视图未配置保存处理器，所有字段暂不可编辑";
-  if (!column2.editable) return column2.readonlyReason || "该字段不可在 Excel 单元格内直接编辑";
+  if (!column2.editable) return column2.readonlyReason || "该字段不可在表格单元格内直接编辑";
   if (column2.dangerLevel === "medium") return "可编辑字段，但会影响时间、标签等结构化内容，请谨慎修改";
   return "可编辑字段：双击单元格可编辑；拖动表头右侧边缘可调整列宽";
 }
@@ -63683,7 +64092,7 @@ function ExcelColumnToolbar({
     {
       class: "excel-column-toolbar",
       "data-editable": canEdit ? "true" : "false",
-      "aria-label": "Excel 显示字段编辑",
+      "aria-label": "表格显示字段编辑",
       onClick: () => menu ? closeMenu() : void 0,
       children: [
         /* @__PURE__ */ u2("span", { class: "excel-column-toolbar-title", children: "显示字段" }),
@@ -63747,7 +64156,7 @@ function ExcelViewToolbar({
 }) {
   const isFullMarkdownContent = contentDisplayMode === "fullMarkdown";
   return /* @__PURE__ */ u2(S, { children: [
-    /* @__PURE__ */ u2("div", { class: "excel-view-toolbar", "aria-label": "Excel 视图工具栏", children: [
+    /* @__PURE__ */ u2("div", { class: "excel-view-toolbar", "aria-label": "表格视图工具栏", children: [
       /* @__PURE__ */ u2("span", { class: "excel-view-legend-item is-editable", children: [
         "可编辑 ",
         editableColumnCount
@@ -63811,8 +64220,8 @@ function getNextExcelContentDisplayMode(mode) {
 }
 function buildExcelContentModeButtonTitle(input) {
   if (!input.hasContentColumn) return "当前表格未显示内容字段，请先在字段栏添加 content/内容字段";
-  if (input.excelConfigSaving) return "正在保存 Excel 视图配置";
-  return input.isFullMarkdownContent ? "当前：内容字段显示完整 Markdown；点击切回短文本预览" : "当前：内容字段短文本预览；点击显示完整 Markdown";
+  if (input.excelConfigSaving) return "正在保存表格视图配置";
+  return input.isFullMarkdownContent ? "当前：内容字段显示完整笔记内容；点击切回短文本预览" : "当前：内容字段短文本预览；点击显示完整笔记内容";
 }
 function buildExcelViewRenderModel({
   items,
@@ -64280,7 +64689,7 @@ const openStatisticsPopover = (request) => {
       bodyStyle: { display: "flex", flexDirection: "column", minHeight: 0 },
       onClose: request.onClose,
       headerActions: /* @__PURE__ */ u2("div", { class: "sv-popover-heading", children: [
-        /* @__PURE__ */ u2(Tooltip, { title: "导出为 Markdown", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
+        /* @__PURE__ */ u2(Tooltip, { title: "导出为笔记文件", PopperProps: { disablePortal: true }, children: /* @__PURE__ */ u2(
           AnyIconButton,
           {
             size: "small",
@@ -65210,7 +65619,7 @@ function FreeformLayoutToolbar({
         }
       )
     ] }),
-    /* @__PURE__ */ u2("span", { class: "think-freeform-toolbar-hint", children: compactFallback ? "当前为窄屏或触控设备，已自动降级为只读列表；桌面宽屏可编辑自由布局。" : editing ? "点击卡片选中；方向键移动，Shift+方向键缩放，PageUp 置顶，L 锁定，C 折叠，Esc 取消选择。" : "查看模式下不会误拖动；折叠状态按当前布局独立保存。" })
+    /* @__PURE__ */ u2("span", { class: "think-freeform-toolbar-hint", children: compactFallback ? "当前为窄屏或触控设备，已自动降级为只读列表；桌面宽屏可编辑自由布局。" : editing ? "点击卡片选中；方向键移动；按住上档键并按方向键缩放；还可用键盘快捷操作置顶、锁定、折叠和取消选择。" : "查看模式下不会误拖动；折叠状态按当前布局独立保存。" })
   ] });
 }
 function getLayoutInitialDate(layout) {
@@ -65333,9 +65742,9 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
   const renderViewInstance = (viewId, freeformProps, freeformFallback = false) => {
     const viewInstance = allViewsById.get(viewId);
     if (!viewInstance) return /* @__PURE__ */ u2("div", { class: "think-module", children: [
-      "视图 (ID: ",
+      "视图（标识：",
       viewId,
-      ") 未找到"
+      "）未找到"
     ] });
     const hasLayoutCollapseOverride = typeof freeformProps?.placement.collapsed === "boolean";
     const isExpanded = hasLayoutCollapseOverride ? !freeformProps?.placement.collapsed : !!expandedState[viewId];
@@ -66178,9 +66587,9 @@ class FeatureRegistry {
     this.cleanupFns.length = 0;
   }
   register(feature) {
-    if (!feature?.id) throw new Error("FeatureRegistry.register(): feature.id is required");
+    if (!feature?.id) throw new Error("功能注册失败：缺少功能标识。");
     if (this.features.some((f2) => f2.id === feature.id)) {
-      throw new Error(`FeatureRegistry.register(): duplicate feature id '${feature.id}'`);
+      throw new Error(`功能注册失败：功能标识“${feature.id}”重复。`);
     }
     this.features.push(feature);
   }
@@ -66238,9 +66647,9 @@ class FeatureRegistry {
 }
 function createAbortError() {
   try {
-    return new DOMException("The operation was aborted.", "AbortError");
+    return new DOMException("操作已中止。", "AbortError");
   } catch {
-    const error = new Error("The operation was aborted.");
+    const error = new Error("操作已中止。");
     error.name = "AbortError";
     return error;
   }
@@ -66671,7 +67080,7 @@ function FiltersBar({
   ] });
 }
 function SessionList({ sessions, currentSessionId, onNewSession, onSelectSession, onDeleteSession }) {
-  return /* @__PURE__ */ u2("aside", { className: "think-ai-chat-sessions", "aria-label": "AI 对话列表", children: [
+  return /* @__PURE__ */ u2("aside", { className: "think-ai-chat-sessions", "aria-label": "智能助手对话列表", children: [
     /* @__PURE__ */ u2("div", { className: "think-ai-chat-sessions__header", children: /* @__PURE__ */ u2(ThinkButton, { size: "sm", leadingIcon: /* @__PURE__ */ u2(AddIcon, { fontSize: "small" }), onClick: onNewSession, children: "新建对话" }) }),
     /* @__PURE__ */ u2("div", { className: "think-ai-chat-sessions__list", children: sessions.length === 0 ? /* @__PURE__ */ u2("div", { className: "think-overlay-empty", children: "暂无对话" }) : sessions.map((session) => {
       const selected = currentSessionId === session.id;
@@ -66760,7 +67169,7 @@ function ChatMessages({ messages, isLoading, emptyHint, enableRetrieval, message
       messages.map((msg) => /* @__PURE__ */ u2(MessageBubble, { message: msg }, msg.id)),
       isLoading ? /* @__PURE__ */ u2("div", { className: "think-ai-chat-thinking", role: "status", children: [
         /* @__PURE__ */ u2("span", { className: "think-overlay-spinner", "aria-hidden": "true" }),
-        /* @__PURE__ */ u2("span", { children: "AI 正在思考…" })
+        /* @__PURE__ */ u2("span", { children: "智能助手正在思考…" })
       ] }) : null
     ] }),
     /* @__PURE__ */ u2("div", { ref: messagesEndRef })
@@ -66844,7 +67253,7 @@ function AiChatModalView(props) {
         {
           left: /* @__PURE__ */ u2("div", { className: "think-ai-chat__title", children: [
             /* @__PURE__ */ u2(ChatIcon, { fontSize: "small" }),
-            /* @__PURE__ */ u2("span", { children: currentSessionTitle ?? "AI 助手" })
+            /* @__PURE__ */ u2("span", { children: currentSessionTitle ?? "智能助手" })
           ] }),
           onClose: closeModal
         }
@@ -67026,7 +67435,7 @@ function AiChatModalContainer({ closeModal, services }) {
             ...selectedGoalPath ? { goalPath: selectedGoalPath, goalTemplateId: void 0 } : null
           }
         }));
-        if (!items.length) throw new Error("AI 未识别出可创建的任务");
+        if (!items.length) throw new Error("智能助手未识别出可创建的任务");
         services.openNaturalRecordBatchConfirm({
           title: `确认任务（${items.length} 条）`,
           items,
@@ -67085,14 +67494,14 @@ function AiChatModalContainer({ closeModal, services }) {
   const currentSessionTitle = currentSession?.title ?? null;
   if (!aiSettings?.enabled) {
     return /* @__PURE__ */ u2("div", { className: "think-ai-chat-unavailable", children: [
-      /* @__PURE__ */ u2("strong", { children: "AI 功能未启用" }),
-      /* @__PURE__ */ u2("span", { children: "请在设置中启用 AI 并配置 API 密钥。" }),
+      /* @__PURE__ */ u2("strong", { children: "智能助手未启用" }),
+      /* @__PURE__ */ u2("span", { children: "请在设置中启用智能助手并配置接口密钥。" }),
       /* @__PURE__ */ u2(ThinkButton, { size: "sm", onClick: closeModal, children: "关闭" })
     ] });
   }
   const emptyHint = {
     title: currentSession ? "开始新的对话" : "选择或创建一个对话",
-    retrievalHint: "已启用上下文检索，AI 将基于你的记录回答问题"
+    retrievalHint: "已启用上下文检索，智能助手将基于你的记录回答问题"
   };
   return /* @__PURE__ */ u2(
     AiChatModalView,
@@ -67180,7 +67589,7 @@ function readAiRuntimeConfig(store, traceId) {
 function validateAiRuntimeConfig(ui, traceId, ai, recordTypes) {
   if (!ai?.enabled) {
     devWarn(`[AiInput][${traceId}] 中止: AI 未启用`);
-    ui.notice("AI 快速记录未启用，请在设置中开启", 4e3);
+    ui.notice("智能快速记录未启用，请在设置中开启", 4e3);
     return false;
   }
   if (!ai.apiEndpoint || !ai.apiKey || !ai.model) {
@@ -67189,12 +67598,12 @@ function validateAiRuntimeConfig(ui, traceId, ai, recordTypes) {
       hasApiKey: !!ai.apiKey,
       hasModel: !!ai.model
     });
-    ui.notice("AI 配置不完整，请在设置中配置 API 端点、密钥和模型", 5e3);
+    ui.notice("智能助手配置不完整，请在设置中配置接口地址、密钥和模型", 5e3);
     return false;
   }
   if (recordTypes.length === 0) {
     devWarn(`[AiInput][${traceId}] 中止: 没有可用 Record Type`);
-    ui.notice('没有可用的 记录类型模板，请先在"快速输入"设置中创建', 5e3);
+    ui.notice("没有可用的记录类型模板，请先在“快速输入”设置中创建", 5e3);
     return false;
   }
   return true;
@@ -67255,7 +67664,7 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord, onD
       openEditFromItem({ app, item });
       onClose();
     } catch (error) {
-      new obsidian.Notice(`打开记录失败: ${error?.message || String(error)}`);
+      new obsidian.Notice(`打开记录失败：${error?.message || String(error)}`);
     }
   };
   const handleDeleteRecord = async (event, item) => {
@@ -67266,7 +67675,7 @@ function CheckinManagerForm({ app, date: date2, items, onClose, onAddRecord, onD
       const result = await onDeleteRecord(item);
       if (result !== false) setManagedItems((prev2) => prev2.filter((candidate) => candidate.id !== item.id));
     } catch (error) {
-      new obsidian.Notice(`删除记录失败: ${error?.message || String(error)}`);
+      new obsidian.Notice(`删除记录失败：${error?.message || String(error)}`);
     }
   };
   return /* @__PURE__ */ u2("div", { className: "think-overlay-form think-checkin-modal", children: [
@@ -67387,8 +67796,15 @@ let ObsidianModalPort = class {
     });
     return modal.openAndGetResult();
   }
-  openQuickInput(recordTypeId) {
-    new QuickInputModal(this.app, recordTypeId || "").open();
+  openQuickInput(recordTypeId, options) {
+    new QuickInputModal(
+      this.app,
+      recordTypeId || "",
+      options?.context,
+      void 0,
+      options?.allowRecordTypeSwitch ?? true,
+      { mode: "create", source: options?.source ?? "quickinput" }
+    ).open();
   }
   openNamePrompt(options) {
     const modal = new NamePromptModal(this.app, options);
@@ -67687,7 +68103,7 @@ function RecordTypeColorRow({ recordType }) {
         "input",
         {
           className: "think-input think-settings-record-type-color-row__hex",
-          "aria-label": `${presentation.label} HEX`,
+          "aria-label": `${presentation.label} 十六进制颜色值`,
           defaultValue: effective,
           spellcheck: false,
           onBlur: (event) => void commitText(event.currentTarget),
@@ -67778,7 +68194,7 @@ function AiAdvancedSettingsSection({ settings, onUpdate }) {
         /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings.preloadConfigOnStartup, onChange: (e2) => onUpdate({ preloadConfigOnStartup: e2.currentTarget.checked }), label: "启动时加载配置" }) })
       ] }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "缓存 TTL" }),
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "缓存有效期（秒）" }),
         /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings.configCacheTTLSeconds, onInput: (e2) => onUpdate({ configCacheTTLSeconds: parseInt(e2.currentTarget.value, 10) || 300 }) })
       ] })
     ] }) })
@@ -67799,13 +68215,13 @@ function AiApiConfigSection({
   onFetchModels
 }) {
   const selectedFetchedModel = availableModels.includes(settings.model) ? settings.model : "";
-  return /* @__PURE__ */ u2(ThinkDisclosure, { title: "API 配置", open: true, children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
+  return /* @__PURE__ */ u2(ThinkDisclosure, { title: "接口配置", open: true, children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "API 端点" }),
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "接口地址" }),
       /* @__PURE__ */ u2(ThinkInput, { value: settings.apiEndpoint, placeholder: "https://api.openai.com/v1", onInput: (e2) => onUpdate({ apiEndpoint: e2.currentTarget.value }) })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "API 密钥" }),
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "接口密钥" }),
       /* @__PURE__ */ u2(ThinkInput, { type: "password", value: settings.apiKey, onInput: (e2) => onUpdate({ apiKey: e2.currentTarget.value }) })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
@@ -67826,7 +68242,7 @@ function AiApiConfigSection({
               onClick: onFetchModels,
               loading: modelFetchStatus === "loading",
               "aria-label": "拉取模型列表",
-              title: "从当前 API 端点拉取可用模型",
+              title: "从当前接口地址拉取可用模型",
               children: modelFetchStatus === "loading" ? "拉取中..." : "拉取模型"
             }
           )
@@ -67858,7 +68274,7 @@ function AiApiConfigSection({
       /* @__PURE__ */ u2(ThinkRange, { value: settings.temperature, onInput: (e2) => onUpdate({ temperature: Number(e2.currentTarget.value) }), min: 0, max: 2, step: 0.1 })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "最大 Token" }),
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "最大生成长度（令牌数）" }),
       /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings.maxTokens, onInput: (e2) => onUpdate({ maxTokens: parseInt(e2.currentTarget.value, 10) || 4096 }) })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
@@ -67889,12 +68305,12 @@ function AiScopeSection({ settings, recordTypes, onUpdate: _onUpdate, staleEnabl
   return /* @__PURE__ */ u2(ThinkDisclosure, { title: "记录类型参与范围", children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
     /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: [
       /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onInitAllRecordTypes, children: "全部记录类型" }),
-      staleEnabledRecordTypeIds.length > 0 && onClearStaleRecordTypeIds && /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onClearStaleRecordTypeIds, children: "清理旧记录类型 ID" })
+      staleEnabledRecordTypeIds.length > 0 && onClearStaleRecordTypeIds && /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onClearStaleRecordTypeIds, children: "清理旧记录类型标识" })
     ] }),
     staleEnabledRecordTypeIds.length > 0 && /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: [
-      "AI 范围中有 ",
+      "智能助手范围中有 ",
       staleEnabledRecordTypeIds.length,
-      " 个已失效记录类型 ID。"
+      " 个已失效记录类型标识。"
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-ai-scope-list", children: recordTypes.map((recordType) => /* @__PURE__ */ u2(ThinkCheckbox, { checked: (settings.enabledRecordTypeIds ?? []).length === 0 || (settings.enabledRecordTypeIds ?? []).includes(recordType.id), onChange: () => onToggleRecordType(recordType.id), label: recordType.name, compact: true }, recordType.id)) }),
     recordTypes.length === 0 && /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "暂无记录类型模板。" })
@@ -67925,12 +68341,12 @@ function buildReadiness(missingFields, readyMessage, missingPrefix) {
 }
 function getAiApiAccessReadiness(settings) {
   const missingFields = [];
-  if (!settings.apiEndpoint?.trim()) missingFields.push("API 端点");
-  if (!settings.apiKey?.trim()) missingFields.push("API 密钥");
+  if (!settings.apiEndpoint?.trim()) missingFields.push("接口地址");
+  if (!settings.apiKey?.trim()) missingFields.push("接口密钥");
   return buildReadiness(
     missingFields,
-    "API 访问配置已完整，可以测试连接或拉取模型。",
-    "API 还不能访问：请先填写 "
+    "接口访问配置已完整，可以测试连接或拉取模型。",
+    "接口还不能访问：请先填写 "
   );
 }
 function getAiSettingsReadiness(settings) {
@@ -67939,15 +68355,15 @@ function getAiSettingsReadiness(settings) {
   if (!settings.model?.trim()) missingFields.push("模型名称");
   return buildReadiness(
     missingFields,
-    "AI 配置已具备最小可用条件。",
-    "AI 还不能使用：请先填写 "
+    "智能助手配置已具备最小可用条件。",
+    "智能助手还不能使用：请先填写 "
   );
 }
 function getApiKeyPersistenceMessage(settings) {
   if (settings.persistApiKey) {
-    return "API 密钥会随插件设置明文保存；如果开启 Obsidian Sync 或第三方同步，也可能被同步。";
+    return "接口密钥会随插件设置明文保存；如果开启笔记同步或第三方同步，也可能被同步。";
   }
-  return "API 密钥只保留在当前设置页内存中；保存设置时不会写入插件数据。关闭或重载 Obsidian 后需要重新输入。";
+  return "接口密钥只保留在当前设置页内存中；保存设置时不会写入插件数据。关闭或重载笔记软件后需要重新输入。";
 }
 function getErrorMessage(error) {
   if (error instanceof Error) return error.message;
@@ -67999,13 +68415,13 @@ function AiSettings(_props) {
   };
   const handleSave = async () => {
     setIsSaving(true);
-    setSaveStatusMessage("正在保存 AI 设置...");
+    setSaveStatusMessage("正在保存智能助手设置...");
     setSaveStatusSeverity("info");
     try {
       await useCases.settings.updateAiSettings(localSettings);
       if (isMountedRef.current) {
         setSaveStatusSeverity("success");
-        setSaveStatusMessage("AI 设置已保存。");
+        setSaveStatusMessage("智能助手设置已保存。");
       }
     } catch (error) {
       if (isMountedRef.current) {
@@ -68037,7 +68453,7 @@ function AiSettings(_props) {
     }
     if (isMountedRef.current) {
       setTestStatus("testing");
-      setTestMessage("正在测试 API 并读取模型接口...");
+      setTestMessage("正在测试接口并读取模型列表...");
     }
     try {
       const models = await testTakeLatestRef.current.run(requestModels);
@@ -68103,7 +68519,7 @@ function AiSettings(_props) {
   const hasChanges = JSON.stringify(localSettings) !== JSON.stringify(aiSettings);
   return /* @__PURE__ */ u2("div", { className: "think-settings-page", children: [
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "AI 快速记录" }),
+      /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "智能快速记录" }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: localSettings.enabled, onChange: (e2) => updateLocal({ enabled: e2.currentTarget.checked }), label: "启用" }) })
     ] }),
     localSettings.enabled && !readiness.ready && /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: readiness.message }),
@@ -68206,12 +68622,8 @@ function RecordTypeManager() {
         ] }),
         open && /* @__PURE__ */ u2("div", { className: "think-block-accordion__details think-settings-stack think-settings-stack--tight", children: [
           /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-            /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "注册 ID" }),
-            /* @__PURE__ */ u2("code", { children: recordType.id })
-          ] }),
-          /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-            /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "记录 key" }),
-            /* @__PURE__ */ u2("code", { children: recordType.recordType })
+            /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "记录类型" }),
+            /* @__PURE__ */ u2("span", { children: getRecordTypePresentation(recordType.recordType).label })
           ] }),
           /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
             /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "目标" }),
@@ -68993,7 +69405,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template, useCa
             goalPath
           ] }),
           /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "每个目标 × 记录类型最多只有一个模板。" }),
-          /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "模板只定义这个目标下的录入字段、默认值与保存位置；图标默认值统一继承 Goal.icon。" })
+          /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "模板只定义这个目标下的录入字段、默认值与保存位置；图标默认值统一继承目标图标。" })
         ] }) }),
         mode === "disabled" ? /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: [
           "「",
@@ -69013,7 +69425,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template, useCa
             }
           ) : null,
           /* @__PURE__ */ u2(NativeTextInput, { label: "保存文件", value: draft.targetFile, onInput: (value) => updateDraft({ targetFile: value }), disabled: fieldEditDisabled, placeholder: "例如：01/目标打卡.md" }),
-          /* @__PURE__ */ u2(NativeTextInput, { label: "标题", value: draft.appendUnderHeader, onInput: (value) => updateDraft({ appendUnderHeader: value }), disabled: fieldEditDisabled, placeholder: "## {{goalPath}}" }),
+          /* @__PURE__ */ u2(NativeTextInput, { label: "标题", value: draft.appendUnderHeader, onInput: (value) => updateDraft({ appendUnderHeader: value }), disabled: fieldEditDisabled, placeholder: "例如：## 我的目标" }),
           /* @__PURE__ */ u2(NativeTextInput, { label: "说明", value: draft.description, onInput: (value) => updateDraft({ description: value }), disabled: mode === "disabled", placeholder: "可选" }),
           mode === "override" && diffSummary.length ? /* @__PURE__ */ u2("div", { className: "think-editor-diff-list", children: diffSummary.map((item) => /* @__PURE__ */ u2("span", { className: "think-editor-diff-chip", children: item }, item)) }) : null
         ] }),
@@ -69307,7 +69719,7 @@ function GoalTimePresetInput({ goal, goals, onRootCommit, onChildCommit, onDraft
       onDraftPreview?.(goal.path, null);
     }
   };
-  const title = isRoot ? `目标 ${formatHumanMinutes$1(displayedTarget)}/周 · 顶层百分比以一周自然时间 168h 换算 · 平衡弹性 ±10%` : info?.configured ? `目标 ${formatHumanMinutes$1(info.weeklyTargetMinutes)}/周 · 子目标时间可选；父目标余额在列表末尾显示` : "子目标可选设置周目标时间；不需要时间预设的目标可以留空。";
+  const title = isRoot ? `目标 ${formatHumanMinutes$1(displayedTarget)}/周 · 顶层百分比以一周自然时间 168 小时 换算 · 平衡弹性 ±10%` : info?.configured ? `目标 ${formatHumanMinutes$1(info.weeklyTargetMinutes)}/周 · 子目标时间可选；父目标余额在列表末尾显示` : "子目标可选设置周目标时间；不需要时间预设的目标可以留空。";
   return /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__budget", title, onMouseDown: (event) => event.stopPropagation(), children: [
     /* @__PURE__ */ u2(
       "input",
@@ -69343,7 +69755,7 @@ function GoalTimePresetInput({ goal, goals, onRootCommit, onChildCommit, onDraft
         }
       }
     ),
-    /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__budget-unit", "aria-hidden": "true", children: isRoot ? "%" : "h/周" }),
+    /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__budget-unit", "aria-hidden": "true", children: isRoot ? "%" : "小时/周" }),
     isRoot && displayedTarget !== null ? /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__budget-derived", children: [
       formatHumanMinutes$1(displayedTarget),
       "/周"
@@ -69724,7 +70136,7 @@ function GoalTemplateMatrixTable(props) {
   };
   const hasOvercommit = totals.overcommittedMinutes > 0.01;
   const balanceText = hasOvercommit ? `超出 ${formatHumanMinutes(totals.overcommittedMinutes)}` : `剩余 ${formatHumanMinutes(totals.reserveMinutes)}`;
-  const balanceTitle = hasOvercommit ? `顶层目标已预设 ${formatHumanMinutes(totals.configuredMinutes)}，超过一周自然时间 168h 共 ${formatHumanMinutes(totals.overcommittedMinutes)}。` : `顶层目标已预设 ${formatHumanMinutes(totals.configuredMinutes)}，剩余 ${formatHumanMinutes(totals.reserveMinutes)} 未预设；总计 168h。`;
+  const balanceTitle = hasOvercommit ? `顶层目标已预设 ${formatHumanMinutes(totals.configuredMinutes)}，超过一周自然时间 168 小时 共 ${formatHumanMinutes(totals.overcommittedMinutes)}。` : `顶层目标已预设 ${formatHumanMinutes(totals.configuredMinutes)}，剩余 ${formatHumanMinutes(totals.reserveMinutes)} 未预设；总计 168 小时。`;
   return /* @__PURE__ */ u2(S, { children: [
     /* @__PURE__ */ u2(
       "div",
@@ -69823,7 +70235,7 @@ function GoalTemplateMatrix() {
 同时删除 ${descendants.length} 个子目标。` : "";
     const ok = window.confirm(`删除目标「${cleanDisplayText(path)}」？${suffix}
 
-会删除目标配置和该目标下的模板；不会删除已经写入的 Markdown 记录。`);
+会删除目标配置和该目标下的模板；不会删除已经写入的笔记记录。`);
     if (!ok) return;
     const count = typeof useCases.goal.deleteGoalCascade === "function" ? await useCases.goal.deleteGoalCascade(goal.path) : (await Promise.all(targets.map((target) => useCases.goal.deleteGoal(target.path))), targets.length);
     ui.notice(descendants.length > 0 ? `已删除目标及子目标：${count} 个` : `已删除目标：${cleanDisplayText(path)}`);
@@ -69907,7 +70319,7 @@ function GoalTemplateMatrix() {
               }
             }
           ),
-          /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "输入 Emoji 或短文本；清空后保存即可移除图标。" })
+          /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "输入表情符号或短文本；清空后保存即可移除图标。" })
         ] })
       }
     ),
@@ -70034,8 +70446,8 @@ function GoalMetricSection() {
         } })
       ] }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
-        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "指标 Key" }),
-        /* @__PURE__ */ u2(ThinkInput, { value: metricKey, onInput: (event) => setMetricKey(event.currentTarget.value), placeholder: "task.done" })
+        /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "指标键名" }),
+        /* @__PURE__ */ u2(ThinkInput, { value: metricKey, onInput: (event) => setMetricKey(event.currentTarget.value), placeholder: "例如：完成数量" })
       ] }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "方向" }),
@@ -70097,7 +70509,7 @@ function TabPanel(props) {
       role: "tabpanel",
       hidden: value !== index,
       id: `settings-tabpanel-${index}`,
-      "aria-label": ["数据管理", "布局", "通用", "AI"][index],
+      "aria-label": ["数据管理", "布局", "通用", "智能助手"][index],
       children: value === index ? children : null
     }
   );
@@ -70108,7 +70520,7 @@ const PRIMARY_TABS = [
   { value: "0", label: "数据管理" },
   { value: "1", label: "布局" },
   { value: "2", label: "通用" },
-  { value: "3", label: "AI" }
+  { value: "3", label: "智能助手" }
 ];
 function clampTabIndex(value) {
   const numeric = Number(value);
@@ -70123,7 +70535,7 @@ function SettingsRoot({ app, variant = "workspace" }) {
     /* @__PURE__ */ u2("aside", { className: "think-settings-workspace__rail", children: /* @__PURE__ */ u2(
       SettingsNavigation,
       {
-        label: "Think OS 设置",
+        label: "思考系统设置",
         variant: "primary",
         value: String(tabIndex),
         options: PRIMARY_TABS,
@@ -70152,7 +70564,7 @@ class ThinkSettingsView extends obsidian.ItemView {
     return THINK_SETTINGS_VIEW_TYPE;
   }
   getDisplayText() {
-    return "Think OS 控制台";
+    return "思考系统控制台";
   }
   getIcon() {
     return "layout-dashboard";
@@ -70183,8 +70595,8 @@ async function openThinkSettingsWorkspaceView(plugin) {
 function SettingsLauncher({ onOpenWorkspace }) {
   const deviceProfileAttrs = getThinkDeviceProfileAttributes();
   return /* @__PURE__ */ u2("section", { className: "think-os think-os--settings think-setting-root think-setting-root--launcher", ...deviceProfileAttrs, children: [
-    /* @__PURE__ */ u2("h2", { className: "think-settings-launcher__title", children: "Think OS 控制台" }),
-    /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: onOpenWorkspace, children: "打开 Think OS 控制台" })
+    /* @__PURE__ */ u2("h2", { className: "think-settings-launcher__title", children: "思考系统控制台" }),
+    /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: onOpenWorkspace, children: "打开 思考系统控制台" })
   ] });
 }
 class SettingsTab extends obsidian.PluginSettingTab {
@@ -70209,7 +70621,7 @@ class SettingsTab extends obsidian.PluginSettingTab {
         {
           onOpenWorkspace: () => {
             void openThinkSettingsWorkspaceView(this.plugin).catch((error) => {
-              new obsidian.Notice(`打开 Think OS 控制台失败：${error instanceof Error ? error.message : String(error)}`);
+              new obsidian.Notice(`打开 思考系统控制台失败：${error instanceof Error ? error.message : String(error)}`);
             });
           }
         }
@@ -70483,7 +70895,7 @@ function WhiteboardCard({
       "data-record-type": record2.recordType,
       role: "button",
       tabIndex: 0,
-      title: `类型：${presentation.typeLabel}；${RECORD_GESTURE_HINT}；拖动卡片可调整位置；Ctrl/⌘/Shift 点击多选；从四边拖出连线；右键可归档或移出`,
+      title: `类型：${presentation.typeLabel}；${RECORD_GESTURE_HINT}；拖动卡片可调整位置；按住控制键、⌘键或换挡键点击多选；从四边拖出连线；右键可归档或移出`,
       onClick: ((event) => guardAfterDrag(event, gesture.onClick)),
       onDblClick: ((event) => guardAfterDrag(event, gesture.onDblClick)),
       onTouchEnd: ((event) => guardAfterDrag(event, gesture.onTouchEnd)),
@@ -70935,7 +71347,7 @@ function WhiteboardRecordFilters({
     filtersExpanded && /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filters__body", children: [
       /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-group", children: [
         /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-group__label", children: "类型" }),
-        /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-types", role: "group", "aria-label": "Record Type 筛选", children: recordTypeOptions.map((option) => /* @__PURE__ */ u2("span", { class: "think-record-type-marker think-whiteboard-source-filter-type-marker", "data-record-type": option.value, children: /* @__PURE__ */ u2(
+        /* @__PURE__ */ u2("div", { class: "think-whiteboard-source-filter-types", role: "group", "aria-label": "记录类型筛选", children: recordTypeOptions.map((option) => /* @__PURE__ */ u2("span", { class: "think-record-type-marker think-whiteboard-source-filter-type-marker", "data-record-type": option.value, children: /* @__PURE__ */ u2(
           ThinkCheckbox,
           {
             compact: true,
@@ -71341,7 +71753,7 @@ function WhiteboardRecordSourcePanel({
         }) }),
         removalDropActive && /* @__PURE__ */ u2("div", { class: "think-whiteboard-source__remove-drop-overlay", "aria-hidden": "true", children: [
           /* @__PURE__ */ u2("strong", { children: "← 松开移出白板" }),
-          /* @__PURE__ */ u2("span", { children: "原 Record / Markdown 不会删除" })
+          /* @__PURE__ */ u2("span", { children: "原始记录和笔记文件不会删除" })
         ] })
       ]
     }
@@ -72238,7 +72650,7 @@ function useWhiteboardWorkbenchController({
   const previewItemDrop = q$1((itemId, position2) => setDropTargetGroupId(position2 ? resolveItemTarget(itemId, position2) : null), [resolveItemTarget]);
   const previewSelectionDrop = q$1((position2) => setDropTargetGroupId(position2 ? resolveSelectionTarget(position2) : null), [resolveSelectionTarget]);
   const moveItem = q$1(async (itemId, position2) => {
-    if (!storeReady) throw new Error("WhiteboardStore 尚未完成启动恢复");
+    if (!storeReady) throw new Error("白板数据尚未完成启动恢复");
     const item = items.find((candidate) => candidate.id === itemId);
     if (!item) return false;
     const targetGroupId = resolveItemTarget(itemId, position2);
@@ -72372,7 +72784,7 @@ function getWhiteboardSemanticZoomStyle(state) {
 }
 function getWhiteboardSemanticZoomStatus(state, cardCount, groupCount) {
   if (state.level === "detail") return null;
-  if (state.level === "compact") return `简化视图：${cardCount} 卡片 · ${groupCount} 工作台 · Ctrl/⌘ 框选或点选，拖动可移动；卡片可拖回左栏移出，右键可整理`;
+  if (state.level === "compact") return `简化视图：${cardCount} 卡片 · ${groupCount} 工作台 · 按住控制键或⌘键框选或点选，拖动可移动；卡片可拖回左栏移出，右键可整理`;
   return `概览模式：${cardCount} 卡片 · ${groupCount} 工作台 · 拖动 Locator 可移动；卡片可拖回左栏移出，文字标注也可拖动`;
 }
 function rectFromPoints(x1, y1, x2, y2) {
@@ -72612,7 +73024,7 @@ function useWhiteboardSelectionController({
   const applyPreview = q$1((renderItems) => applyWhiteboardSelectionPreview(renderItems, dragMoves), [dragMoves]);
   const moveSelected = q$1(async (itemId, position2, targetGroupId) => {
     if (!isMultiDrag(itemId)) return null;
-    if (!storeReady) throw new Error("WhiteboardStore 尚未完成启动恢复");
+    if (!storeReady) throw new Error("白板数据尚未完成启动恢复");
     const moves = buildWhiteboardSelectionMoves({ items, selectedItemIds: selectedRef.current, draggedItemId: itemId, draggedPosition: position2 });
     setDragMoves([]);
     try {
@@ -73771,7 +74183,7 @@ function OverviewCardMarker({
         type: "button",
         class: `think-whiteboard-overview-marker__button${selected ? " is-selected" : ""}${findState}${connectionActive ? " is-connection-source" : ""}${connectionTarget ? " is-connection-target" : ""}`,
         "aria-label": `定位卡片：${label}`,
-        title: `${label}；Ctrl/⌘ 点击多选，拖动可移动；悬浮后可直接编辑、打开原文、连线或右键整理；单击定位点回到 100%`,
+        title: `${label}；按住控制键或⌘键点击多选，拖动可移动；悬浮后可直接编辑、打开原文、连线或右键整理；单击定位点回到 100%`,
         "data-record-type": record2?.recordType ?? "missing",
         onPointerDown: pointerDown,
         onContextMenu,
@@ -73795,7 +74207,7 @@ function OverviewCardMarker({
         "data-record-type": record2?.recordType ?? "missing",
         role: "button",
         tabIndex: 0,
-        title: record2 ? `类型：${presentation?.typeLabel ?? ""}；${RECORD_GESTURE_HINT}；拖动可调整位置；Ctrl/⌘ 点击多选；从四边拖出连线；右键可归档或移出` : "原记录当前不可用；拖动仍可调整位置，右键可整理",
+        title: record2 ? `类型：${presentation?.typeLabel ?? ""}；${RECORD_GESTURE_HINT}；拖动可调整位置；按住控制键或⌘键点击多选；从四边拖出连线；右键可归档或移出` : "原记录当前不可用；拖动仍可调整位置，右键可整理",
         onPointerDown: pointerDown,
         onContextMenu,
         onClick: record2 ? ((event) => guardGesture(event, gesture?.onClick)) : void 0,
@@ -73938,7 +74350,7 @@ function WhiteboardSemanticOverviewLayer({
           type: "button",
           class: `think-whiteboard-overview-marker__button${selected ? " is-selected" : ""}${activeFindGroupId === group.id ? " is-find-active" : ""}${dropTargetGroupId === group.id ? " is-drop-target" : ""}`,
           "aria-label": `定位工作台：${group.title}`,
-          title: `工作台：${group.title}；Ctrl/⌘ 点击多选，拖动已选节点可整体移动，右键整理，单击回到 100%`,
+          title: `工作台：${group.title}；按住控制键或⌘键点击多选，拖动已选节点可整体移动，右键整理，单击回到 100%`,
           onPointerDown: ((event) => onNodePointerDown ? onNodePointerDown(event, "group", group.id) : stopPointer(event)),
           onClick: ((event) => focus(event, () => onFocusGroup(group))),
           children: [
@@ -74875,7 +75287,7 @@ function WhiteboardWorkspace({ records, sourceRecords = records, whiteboardStore
                 "data-whiteboard-grid": gridVisible ? "on" : "off",
                 children: [
                   selection.marqueeRect && /* @__PURE__ */ u2("div", { class: "think-whiteboard-selection-marquee", style: `left:${selection.marqueeRect.left}px;top:${selection.marqueeRect.top}px;width:${selection.marqueeRect.width}px;height:${selection.marqueeRect.height}px;`, "aria-hidden": "true" }),
-                  /* @__PURE__ */ u2("div", { class: "think-whiteboard-pan-hint", "aria-hidden": "true", children: "拖动空白移动 · Ctrl/⌘ + 拖动框选 · Ctrl/⌘ + 滚轮缩放" }),
+                  /* @__PURE__ */ u2("div", { class: "think-whiteboard-pan-hint", "aria-hidden": "true", children: "拖动空白移动 · 按住控制键或⌘键拖动框选 · 按住控制键或⌘键滚轮缩放" }),
                   semanticStatus && /* @__PURE__ */ u2("div", { class: "think-whiteboard-semantic-status", "aria-live": "polite", children: semanticStatus }),
                   workbench.visibleItems.length === 0 && workbench.visibleGroups.length === 0 && annotation.visibleAnnotations.length === 0 && /* @__PURE__ */ u2("div", { class: "think-whiteboard-empty think-whiteboard-empty--canvas", children: "从左侧拖一条记录到这里，或点击“加入”。" }),
                   /* @__PURE__ */ u2(
@@ -75064,7 +75476,7 @@ class ThinkWhiteboardView extends obsidian.ItemView {
     return THINK_WHITEBOARD_VIEW_TYPE;
   }
   getDisplayText() {
-    return "ThinkOS 白板";
+    return "思考系统白板";
   }
   getIcon() {
     return "panels-top-left";
@@ -75176,7 +75588,7 @@ function registerEnergyProtocolHandler(plugin, deps) {
   plugin.registerObsidianProtocolHandler(ENERGY_PROTOCOL_ACTION, async (params) => {
     const parsed = parseEnergyProtocolParams(params);
     if (!parsed.ok) {
-      new obsidian.Notice(`Think OS: ${parsed.message}`, 5e3);
+      new obsidian.Notice(`思考系统：${parsed.message}`, 5e3);
       return;
     }
     const settings = deps.getSettings();
@@ -75185,7 +75597,7 @@ function registerEnergyProtocolHandler(plugin, deps) {
       settings.energySettings?.defaultGoalPath
     );
     if (!goal) {
-      new obsidian.Notice("Think OS: 没有可用于精力记录的目标，请先在设置中创建/选择默认精力目标。", 6e3);
+      new obsidian.Notice("思考系统：没有可用于精力记录的目标，请先在设置中创建/选择默认精力目标。", 6e3);
       return;
     }
     const now2 = dayjs();
@@ -75208,11 +75620,11 @@ function registerEnergyProtocolHandler(plugin, deps) {
       physicalScore: parsed.payload.physicalScore
     });
     if (result.status === "success") {
-      new obsidian.Notice(result.feedback?.notice || "Think OS: 精力已记录", 1800);
+      new obsidian.Notice(result.feedback?.notice || "思考系统：精力已记录", 1800);
       return;
     }
     const issue2 = result.errors?.[0]?.message || result.feedback?.notice || "精力记录失败";
-    new obsidian.Notice(`Think OS: ${issue2}`, 5e3);
+    new obsidian.Notice(`思考系统：${issue2}`, 5e3);
   });
 }
 function setupSettings(deps) {
@@ -75220,7 +75632,7 @@ function setupSettings(deps) {
   registerThinkSettingsWorkspaceView(deps.plugin);
   deps.plugin.addCommand({
     id: "think-open-control-center",
-    name: "打开 Think OS 控制台（标签页）",
+    name: "打开思考系统控制台（标签页）",
     callback: () => {
       void openThinkSettingsWorkspaceView(deps.plugin);
     }
@@ -75229,14 +75641,14 @@ function setupSettings(deps) {
 function registerSettingsFeatures(registry2, deps) {
   registry2.register({
     id: "settings",
-    description: "SettingsTab + open-settings command",
+    description: "设置页与打开设置命令",
     bootMode: "background",
     delayMs: 150,
     boot: () => {
       setupSettings({ app: deps.plugin.app, plugin: deps.plugin });
       deps.plugin.addCommand({
         id: "think-open-settings",
-        name: "打开 Think 插件设置",
+        name: "打开思考插件设置",
         callback: () => {
           deps.plugin.app.setting?.open?.();
           deps.plugin.app.setting?.openTabById?.(deps.plugin.manifest.id);
@@ -75289,18 +75701,18 @@ class CodeblockEmbedder {
           }
         } catch (e2) {
           devWarn("ThinkPlugin: 代码块内容解析失败", e2);
-          el.createDiv({ text: "代码块内容解析失败，请检查语法。应为布局名称或JSON。" });
+          el.createDiv({ text: "代码块内容解析失败，请检查语法。应为布局名称或结构化配置数据。" });
           return;
         }
         const settings = this.getSettings();
         const allLayouts = settings.layouts;
         if (!layoutName && allLayouts.length > 0) {
           layoutName = allLayouts[0].name;
-          this.uiPort.notice(`Think Plugin: 未指定布局，已自动选择第一个布局 "${layoutName}"。`);
+          this.uiPort.notice(`思考插件：未指定布局，已自动选择第一个布局“${layoutName}”。`);
         }
         const layout = allLayouts.find((l2) => l2.name === layoutName);
         if (!layout) {
-          el.createDiv({ text: `Think Plugin: 找不到名称为 "${layoutName}" 的布局。请在插件设置中创建。` });
+          el.createDiv({ text: `思考插件：找不到名称为“${layoutName}”的布局。请在插件设置中创建。` });
           return;
         }
         this.mountAndRegister(el, layout);
@@ -75317,7 +75729,7 @@ class CodeblockEmbedder {
 function registerDashboardFeature(registry2, deps) {
   registry2.register({
     id: "dashboard",
-    description: "Dashboard (VaultWatcher + CodeblockEmbedder)",
+    description: "仪表盘",
     bootMode: "blocking",
     boot: async (ctx) => {
       if (ctx?.dataScanPromise) await ctx.dataScanPromise;
@@ -75349,7 +75761,7 @@ function setup$1(deps) {
 function registerQuickInputFeature(registry2, deps) {
   registry2.register({
     id: "quickinput",
-    description: "QuickInput commands",
+    description: "快速输入命令",
     bootMode: "background",
     delayMs: 100,
     boot: () => {
@@ -75358,7 +75770,7 @@ function registerQuickInputFeature(registry2, deps) {
   });
 }
 function buildAiWaitingMessage(options) {
-  const prefix2 = options.mode === "speed-test" ? "AI 接口测速中" : options.fastMode ? "AI 快速解析中" : "AI 正在解析";
+  const prefix2 = options.mode === "speed-test" ? "智能助手接口测速中" : options.fastMode ? "智能助手快速解析中" : "智能助手正在解析";
   const estimate = options.mode === "speed-test" ? "通常 3-12 秒；超过 10 秒说明接口首包偏慢" : options.fastMode ? "预计 10-25 秒；接口慢时会更久" : "预计 15-50 秒；当前主要等待接口首包";
   let line2 = "正在连接模型服务...";
   if (options.seconds >= 45) {
@@ -75480,11 +75892,11 @@ function createNaturalInputCommandRunner({
       logAiInputStep(traceId, "关闭 loading notice 完成", hideNoticeStart, { fastMode });
       if (!batch.items?.length) {
         devWarn(`[AiInput][${traceId}] AI 返回空结果，总耗时 ${elapsedMs(totalStart)}`, { fastMode });
-        ui.notice("AI 未能识别出可记录内容，请换种说法再试", 5e3);
+        ui.notice("智能助手未能识别出可记录内容，请换种说法再试", 5e3);
         return;
       }
       const resultNoticeStart = nowMs();
-      ui.notice(`${fastMode ? "AI 快速模式" : "AI"} 识别出 ${batch.items.length} 条记录`, 2e3);
+      ui.notice(`${fastMode ? "智能快速模式" : "智能助手"}识别出 ${batch.items.length} 条记录`, 2e3);
       logAiInputStep(traceId, "显示识别数量 notice 完成", resultNoticeStart, { fastMode });
       const confirmModalStart = nowMs();
       new AiBatchConfirmModal(
@@ -75510,7 +75922,7 @@ function createNaturalInputCommandRunner({
       loadingNotice.hide();
       logAiInputStep(traceId, "异常清理 loading notice 完成", catchStart, { fastMode });
       devError(`[AiInput][${traceId}] AI 解析失败，总耗时 ${elapsedMs(totalStart)}`, e2);
-      ui.notice(`AI 解析失败：${e2?.message ?? e2}`, 6e3);
+      ui.notice(`智能助手解析失败：${e2?.message ?? e2}`, 6e3);
     }
   };
 }
@@ -75564,7 +75976,7 @@ function createAiSpeedTestCommand({
           model: ai.model
         });
       }
-      ui.notice(`AI 接口测速完成：${duration2.toFixed(0)}ms。${duration2 >= 1e4 ? "接口首包偏慢，建议换模型/接口或使用快速模式。" : "接口状态还可以。"}`, 6e3);
+      ui.notice(`智能助手接口测速完成：${duration2.toFixed(0)}毫秒。${duration2 >= 1e4 ? "接口首次响应偏慢，建议换模型、接口或使用快速模式。" : "接口状态还可以。"}`, 6e3);
     } catch (e2) {
       notice.hide();
       if (e2 instanceof CancelledError) {
@@ -75572,7 +75984,7 @@ function createAiSpeedTestCommand({
         return;
       }
       devError(`[AiInput][${traceId}][SpeedTest] 测速失败，总耗时 ${elapsedMs(totalStart)}`, e2);
-      ui.notice(`AI 接口测速失败：${e2?.message ?? e2}`, 6e3);
+      ui.notice(`智能助手接口测速失败：${e2?.message ?? e2}`, 6e3);
     }
   };
 }
@@ -75599,17 +76011,17 @@ function registerAiInputCommands(plugin) {
   });
   plugin.addCommand({
     id: "think-ai-natural-input",
-    name: "AI: 自然语言快速记录",
+    name: "智能助手：自然语言快速记录",
     callback: () => runNaturalInputCommand(false)
   });
   plugin.addCommand({
     id: "think-ai-natural-input-fast",
-    name: "AI: 自然语言快速记录（快速模式）",
+    name: "智能助手：自然语言快速记录（快速模式）",
     callback: () => runNaturalInputCommand(true)
   });
   plugin.addCommand({
     id: "think-ai-speed-test",
-    name: "AI: 接口测速",
+    name: "智能助手：接口测速",
     callback: runSpeedTestCommand
   });
 }
@@ -75619,7 +76031,7 @@ function setup(deps) {
 function registerAiInputFeature(registry2, deps) {
   registry2.register({
     id: "aiinput",
-    description: "AI Input commands",
+    description: "智能输入命令",
     bootMode: "background",
     delayMs: 120,
     boot: () => {
@@ -75630,16 +76042,16 @@ function registerAiInputFeature(registry2, deps) {
 function registerWhiteboardFeature(registry2, deps) {
   registry2.register({
     id: "whiteboard",
-    description: "ThinkOS standalone whiteboard workspace",
+    description: "独立白板工作区",
     bootMode: "blocking",
     boot: () => {
       registerThinkWhiteboardView(deps.plugin);
-      deps.plugin.addRibbonIcon("panels-top-left", "ThinkOS 白板", () => {
+      deps.plugin.addRibbonIcon("panels-top-left", "思考系统白板", () => {
         void openThinkWhiteboardView(deps.plugin);
       });
       deps.plugin.addCommand({
         id: "think-open-whiteboard",
-        name: "打开 ThinkOS 白板",
+        name: "打开思考系统白板",
         callback: () => {
           void openThinkWhiteboardView(deps.plugin);
         }
@@ -75957,7 +76369,7 @@ class CapabilityRegistry {
   }
   register(key, factory) {
     if (this.strict && this.factories.has(key)) {
-      throw new Error(`[CapabilityRegistry] capability '${key}' already registered`);
+      throw new Error(`能力注册失败：“${key}”已经注册。`);
     }
     this.factories.set(key, factory);
   }
@@ -76104,28 +76516,28 @@ class ThinkPlugin extends obsidian.Plugin {
       name: "重建索引（清空缓存并重新扫描）",
       callback: async () => {
         try {
-          new obsidian.Notice("Think: 正在重建索引...", 3e3);
+          new obsidian.Notice("思考系统：正在重建索引...", 3e3);
           await this.serviceManager.dataStore.clearCacheAndRescan("full");
-          new obsidian.Notice("Think: 索引重建完成", 3e3);
+          new obsidian.Notice("思考系统：索引重建完成", 3e3);
         } catch (e2) {
-          new obsidian.Notice(`Think: 索引重建失败 - ${e2?.message || e2}`, 5e3);
+          new obsidian.Notice(`思考系统：索引重建失败 - ${e2?.message || e2}`, 5e3);
         }
       }
     });
     this.addCommand({
       id: "think-open-ai-chat",
-      name: "打开 AI 助手对话",
+      name: "打开智能助手对话",
       callback: () => {
         this.capabilities.ai.openChat();
       }
     });
     this.addCommand({
       id: "think-timer-start-by-task-id",
-      name: "Timer: 开始/继续计时（输入任务 ID）",
+      name: "计时器：开始/继续计时（输入任务标识）",
       callback: async () => {
         const taskId = await this.modalPort?.openNamePrompt({
           title: "开始/继续计时",
-          placeholder: "请输入任务 RecordViewItem ID（例如：来自 Dashboard 的 item.id）",
+          placeholder: "请输入任务内部标识（例如：来自仪表盘的任务编号）",
           ctaText: "开始"
         });
         if (!taskId) return;
@@ -76134,7 +76546,7 @@ class ThinkPlugin extends obsidian.Plugin {
     });
     this.addCommand({
       id: "think-timer-stop-active",
-      name: "Timer: 停止并写回（当前运行/暂停的第一个计时器）",
+      name: "计时器：停止并写回（当前运行/暂停的第一个计时器）",
       callback: async () => {
         const timers = this.serviceManager.useCases.timer.getTimers();
         const active = timers.find((t3) => t3.status === "running") ?? timers.find((t3) => t3.status === "paused");

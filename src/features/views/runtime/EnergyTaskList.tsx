@@ -60,7 +60,7 @@ function taskHover(task: EnergyTaskListItemVM): string {
     task.recommendationReason || task.title,
     `倒计时 ${durationClock(task.suggestedDurationMinutes)}`,
     '点击开始/继续计时',
-    'Ctrl/⌘+点击打开原文',
+    '按住控制键或⌘键点击打开原文',
     '右键更多',
   ].filter(Boolean).join(' · ');
 }

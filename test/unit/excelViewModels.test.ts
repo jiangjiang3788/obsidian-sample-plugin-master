@@ -36,6 +36,7 @@ import {
   parseExcelClipboardMatrix,
   resolveExcelNavigationPosition,
 } from '@/features/views/runtime/excel-view/ExcelGridModel';
+import { buildExcelCellModel } from '@/features/views/runtime/excel-view/value';
 import {
   buildExcelContentModeButtonTitle,
   buildExcelViewRenderModel,
@@ -120,6 +121,17 @@ const cell = {
     canonicalField: 'title',
   },
 } as any;
+
+describe('Excel record type display', () => {
+  it('shows Chinese record type labels while preserving raw editor values', () => {
+    const record = { id: 'task.demo', recordType: 'task', title: '示例任务' } as any;
+    const recordTypeCell = buildExcelCellModel(record, 'recordType');
+    expect(recordTypeCell.displayValue).toBe('任务');
+    expect(recordTypeCell.editorValue).toBe('task');
+    expect(recordTypeCell.policy.editorKind).toBe('select');
+    expect(recordTypeCell.policy.definition?.options).toEqual(expect.arrayContaining([{ value: 'task', label: '任务' }]));
+  });
+});
 
 describe('ExcelCellModel', () => {
   it('builds cell ui state', () => {

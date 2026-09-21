@@ -37,7 +37,7 @@ export function resolveRecordBlockRangeById(
   if (expected !== null && expected >= 0 && lines[expected]?.trim() === BLOCK_START_MARKER) {
     const endIndex = findBlockEnd(lines, expected);
     if (endIndex === null) {
-      throw createRecordConflictError('record_block_boundary_invalid', 'Record Block 边界已损坏，无法安全更新。');
+      throw createRecordConflictError('record_block_boundary_invalid', '记录块边界已损坏，无法安全更新。');
     }
     if (blockRecordId(lines, expected, endIndex) === recordId) return { startIndex: expected, endIndex };
   }
@@ -53,7 +53,7 @@ export function resolveRecordBlockRangeById(
 
   if (matches.length === 1) return matches[0];
   if (matches.length > 1) {
-    throw createRecordConflictError('record_id_duplicate', `记录ID ${recordId} 在同一文件中重复，拒绝猜测 mutation 目标。`);
+    throw createRecordConflictError('record_id_duplicate', `记录标识 ${recordId} 在同一文件中重复，无法安全判断要修改哪一条记录。`);
   }
-  throw createRecordConflictError('record_item_missing', `找不到记录ID ${recordId} 对应的 Record Block。`);
+  throw createRecordConflictError('record_item_missing', `找不到记录标识 ${recordId} 对应的记录块。`);
 }

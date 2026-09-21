@@ -95,8 +95,8 @@ export function GoalTemplateMatrixTable(props: GoalTemplateMatrixTableProps) {
     ? `超出 ${formatHumanMinutes(totals.overcommittedMinutes)}`
     : `剩余 ${formatHumanMinutes(totals.reserveMinutes)}`;
   const balanceTitle = hasOvercommit
-    ? `顶层目标已预设 ${formatHumanMinutes(totals.configuredMinutes)}，超过一周自然时间 168h 共 ${formatHumanMinutes(totals.overcommittedMinutes)}。`
-    : `顶层目标已预设 ${formatHumanMinutes(totals.configuredMinutes)}，剩余 ${formatHumanMinutes(totals.reserveMinutes)} 未预设；总计 168h。`;
+    ? `顶层目标已预设 ${formatHumanMinutes(totals.configuredMinutes)}，超过一周自然时间 168 小时 共 ${formatHumanMinutes(totals.overcommittedMinutes)}。`
+    : `顶层目标已预设 ${formatHumanMinutes(totals.configuredMinutes)}，剩余 ${formatHumanMinutes(totals.reserveMinutes)} 未预设；总计 168 小时。`;
 
   return (
     <>

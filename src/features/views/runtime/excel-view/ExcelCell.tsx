@@ -132,7 +132,7 @@ export function ExcelCell({
       data-save-state={ui.saveState}
       class={ui.className}
       style={style}
-      title={onOpenRecordOrigin ? `${ui.title} · Ctrl/⌘+点击打开原文` : ui.title}
+      title={onOpenRecordOrigin ? `${ui.title} · 按住控制键或⌘键点击打开原文` : ui.title}
       tabIndex={0}
       aria-readonly={ui.readonly ? 'true' : 'false'}
       aria-invalid={error ? 'true' : 'false'}

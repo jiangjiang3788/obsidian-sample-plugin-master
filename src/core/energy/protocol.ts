@@ -59,7 +59,7 @@ export function parseEnergyProtocolParams(params: Record<string, string>): Energ
     };
   }
 
-  return { ok: false, message: '精力快捷协议 mode 只支持 quick 或 detailed。' };
+  return { ok: false, message: '精力快捷协议的模式只支持“快捷”或“详细”。' };
 }
 
 /** Resolve the default Goal used by context-free captures such as iOS Shortcuts. */

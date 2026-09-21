@@ -73,7 +73,7 @@ export function createAiSpeedTestCommand({
                     model: ai.model,
                 });
             }
-            ui.notice(`AI 接口测速完成：${duration.toFixed(0)}ms。${duration >= 10000 ? '接口首包偏慢，建议换模型/接口或使用快速模式。' : '接口状态还可以。'}`, 6000);
+            ui.notice(`智能助手接口测速完成：${duration.toFixed(0)}毫秒。${duration >= 10000 ? '接口首次响应偏慢，建议换模型、接口或使用快速模式。' : '接口状态还可以。'}`, 6000);
         } catch (e: any) {
             notice.hide();
             if (e instanceof CancelledError) {
@@ -81,7 +81,7 @@ export function createAiSpeedTestCommand({
                 return;
             }
             devError(`[AiInput][${traceId}][SpeedTest] 测速失败，总耗时 ${elapsedMs(totalStart)}`, e);
-            ui.notice(`AI 接口测速失败：${e?.message ?? e}`, 6000);
+            ui.notice(`智能助手接口测速失败：${e?.message ?? e}`, 6000);
         }
     };
 }

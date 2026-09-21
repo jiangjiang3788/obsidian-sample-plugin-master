@@ -23,7 +23,7 @@ export function normalizeGoalPath(path?: string | null): string | null {
 
 export function requireGoalPath(path?: string | null): string {
   const normalized = normalizeGoalPath(path);
-  if (!normalized) throw new Error('Invalid Goal path: Goal paths must be slash-separated text without # markers.');
+  if (!normalized) throw new Error('目标路径无效：必须使用斜杠分隔，且不能包含 # 标记。');
   return normalized;
 }
 

@@ -81,7 +81,7 @@ export function validateAiRuntimeConfig(
 ): ai is AiSettings {
     if (!ai?.enabled) {
         devWarn(`[AiInput][${traceId}] 中止: AI 未启用`);
-        ui.notice('AI 快速记录未启用，请在设置中开启', 4000);
+        ui.notice('智能快速记录未启用，请在设置中开启', 4000);
         return false;
     }
 
@@ -91,13 +91,13 @@ export function validateAiRuntimeConfig(
             hasApiKey: !!ai.apiKey,
             hasModel: !!ai.model,
         });
-        ui.notice('AI 配置不完整，请在设置中配置 API 端点、密钥和模型', 5000);
+        ui.notice('智能助手配置不完整，请在设置中配置接口地址、密钥和模型', 5000);
         return false;
     }
 
     if (recordTypes.length === 0) {
         devWarn(`[AiInput][${traceId}] 中止: 没有可用 Record Type`);
-        ui.notice('没有可用的 记录类型模板，请先在"快速输入"设置中创建', 5000);
+        ui.notice('没有可用的记录类型模板，请先在“快速输入”设置中创建', 5000);
         return false;
     }
 

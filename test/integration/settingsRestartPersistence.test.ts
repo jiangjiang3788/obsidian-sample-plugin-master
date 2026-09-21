@@ -99,7 +99,7 @@ describe('P0 SettingsRepository 落盘与重启恢复', () => {
       },
     });
     const repository = new SettingsRepository(h.persistence);
-    await expect(repository.load()).rejects.toThrow('GoalTemplate references missing Goal path');
+    await expect(repository.load()).rejects.toThrow('目标模板引用了不存在的目标路径');
   });
 
   it('旧式、未声明的 Goal 字段不会被“自动猜迁移”为新 Goal；当前策略只读取当前结构', async () => {

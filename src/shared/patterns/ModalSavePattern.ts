@@ -39,7 +39,7 @@ export function useSaveHandler(
     } catch (error) {
       const errorObj = error instanceof Error ? error : new Error(String(error));
       const message = errorObj.message || '未知错误';
-      options.uiPort?.notice(`❌ ${errorMessage}: ${message}`);
+      options.uiPort?.notice(`❌ ${errorMessage}：${message}`);
       devError(`${errorMessage}:`, errorObj);
       onError?.(errorObj);
     }
@@ -84,11 +84,11 @@ export function useSaveHandlerWithValidation<T>(
     if (validationError) {
       // shared 层不直接依赖 Obsidian UI（Notice）。统一走 UiPort。
       if (options.uiPort) {
-        options.uiPort.notice(`❌ 验证失败: ${validationError}`);
+        options.uiPort.notice(`❌ 验证失败：${validationError}`);
       } else {
         // 在没有 uiPort 的场景（例如纯函数/测试）下，使用原生 alert 兜底。
         // eslint-disable-next-line no-alert
-        alert(`验证失败: ${validationError}`);
+        alert(`验证失败：${validationError}`);
       }
       return;
     }

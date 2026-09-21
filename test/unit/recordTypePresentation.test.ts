@@ -40,6 +40,7 @@ describe('Record Type presentation contract', () => {
   it('gives each user type one semantic color token and internal Task entities inherit Task', () => {
     const presentations = EXPECTED.map(getRecordTypePresentation);
     expect(new Set(presentations.map((item) => item.colorToken)).size).toBe(10);
+    expect(presentations.every((item) => Boolean(item.icon))).toBe(true);
     expect(getRecordTypePresentation('task').label).toBe('任务');
     expect(getRecordTypePresentation('task-session')).toMatchObject({ label: '任务', colorToken: '--think-record-type-task' });
     expect(getRecordTypePresentation('task-series')).toMatchObject({ label: '任务', colorToken: '--think-record-type-task' });

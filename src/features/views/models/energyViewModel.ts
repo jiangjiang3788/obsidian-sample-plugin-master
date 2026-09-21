@@ -94,7 +94,7 @@ function periodLabel(currentView: CurrentView, dateRange: [Date, Date]): string 
   if (currentView === '天') return `${start.format('YYYY-MM-DD')}`;
   if (currentView === '周') return `${start.format('MM-DD')} — ${end.format('MM-DD')}`;
   if (currentView === '月') return start.format('YYYY-MM');
-  if (currentView === '季') return `${start.year()} Q${start.quarter()}`;
+  if (currentView === '季') return `${start.year()}年第${start.quarter()}季度`;
   return start.format('YYYY');
 }
 
@@ -145,24 +145,24 @@ function compactReviewLines(args: {
     const low = [...dayparts].sort((a, b) => (a.meanScore || 0) - (b.meanScore || 0))[0];
     const gap = Math.abs((best.meanScore || 0) - (low.meanScore || 0));
     if (best.key !== low.key && gap >= 10) {
-      lines.push({ key: 'overall', label: '状态', text: `${best.label}相对较高（${Math.round(best.meanScore || 0)}，N=${best.sampleCount}），${low.label}相对较低（${Math.round(low.meanScore || 0)}，N=${low.sampleCount}）。` });
+      lines.push({ key: 'overall', label: '状态', text: `${best.label}相对较高（${Math.round(best.meanScore || 0)}，样本数 ${best.sampleCount}），${low.label}相对较低（${Math.round(low.meanScore || 0)}，样本数 ${low.sampleCount}）。` });
     }
   }
 
   const recovery = management?.recoveryCandidates?.[0];
   if (recovery) {
     const prefix = recovery.evidence === 'supported' ? '' : '初步观察：';
-    lines.push({ key: 'recovery', label: '恢复', text: `${prefix}${recovery.label}后偏回升（平均 ${signed(recovery.meanDelta)}，N=${recovery.sampleCount}）。` });
+    lines.push({ key: 'recovery', label: '恢复', text: `${prefix}${recovery.label}后偏回升（平均 ${signed(recovery.meanDelta)}，样本数 ${recovery.sampleCount}）。` });
   }
   const depletion = management?.cautionCandidates?.[0];
   if (depletion) {
     const prefix = depletion.evidence === 'supported' ? '' : '初步观察：';
-    lines.push({ key: 'depletion', label: '消耗', text: `${prefix}${depletion.label}后偏下降（平均 ${signed(depletion.meanDelta)}，N=${depletion.sampleCount}）。` });
+    lines.push({ key: 'depletion', label: '消耗', text: `${prefix}${depletion.label}后偏下降（平均 ${signed(depletion.meanDelta)}，样本数 ${depletion.sampleCount}）。` });
   }
 
   const stop = patterns?.stopProxy;
   if (stop && stop.followedByWorkCount >= 3 && stop.evidence !== 'insufficient' && (stop.longContinuationRatio || 0) >= 0.5) {
-    lines.push({ key: 'attention', label: '注意', text: `高精力后继续工作过久的情况较多（N=${stop.followedByWorkCount}），先定停止点更合适。` });
+    lines.push({ key: 'attention', label: '注意', text: `高精力后继续工作过久的情况较多（样本数 ${stop.followedByWorkCount}），先定停止点更合适。` });
   }
 
   if (lines.length === 0 && periodItems.some(isEnergyItem)) {

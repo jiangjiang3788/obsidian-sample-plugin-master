@@ -32,7 +32,7 @@ export class AiConfigCache {
         devLog(`${prefix} 读取 settings 完成 (${elapsedMs(settingsStart)})`);
         
         if (!ai) {
-            throw new Error('AI settings missing');
+            throw new Error('智能助手设置缺失');
         }
 
         const ttlMs = (ai.configCacheTTLSeconds ?? 300) * 1000;
@@ -68,7 +68,7 @@ export class AiConfigCache {
 
         const snapshot = this.snapshot;
         if (!snapshot) {
-            throw new Error('AI config snapshot missing after rebuild');
+            throw new Error('重建后仍缺少智能助手配置快照');
         }
         devLog(`${prefix} getSnapshot 返回 (${elapsedMs(totalStart)})`, {
             cacheHit,

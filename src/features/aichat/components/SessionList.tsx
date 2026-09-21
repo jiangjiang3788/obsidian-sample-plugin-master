@@ -13,7 +13,7 @@ export interface SessionListProps {
 
 export function SessionList({ sessions, currentSessionId, onNewSession, onSelectSession, onDeleteSession }: SessionListProps) {
     return (
-        <aside className="think-ai-chat-sessions" aria-label="AI 对话列表">
+        <aside className="think-ai-chat-sessions" aria-label="智能助手对话列表">
             <div className="think-ai-chat-sessions__header">
                 <ThinkButton size="sm" leadingIcon={<AddIcon fontSize="small" />} onClick={onNewSession}>新建对话</ThinkButton>
             </div>

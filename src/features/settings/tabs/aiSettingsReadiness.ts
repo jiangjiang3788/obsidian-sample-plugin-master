@@ -28,13 +28,13 @@ function buildReadiness(missingFields: string[], readyMessage: string, missingPr
  */
 export function getAiApiAccessReadiness(settings: AiSettings): AiSettingsReadiness {
   const missingFields: string[] = [];
-  if (!settings.apiEndpoint?.trim()) missingFields.push('API 端点');
-  if (!settings.apiKey?.trim()) missingFields.push('API 密钥');
+  if (!settings.apiEndpoint?.trim()) missingFields.push('接口地址');
+  if (!settings.apiKey?.trim()) missingFields.push('接口密钥');
 
   return buildReadiness(
     missingFields,
-    'API 访问配置已完整，可以测试连接或拉取模型。',
-    'API 还不能访问：请先填写 ',
+    '接口访问配置已完整，可以测试连接或拉取模型。',
+    '接口还不能访问：请先填写 ',
   );
 }
 
@@ -48,14 +48,14 @@ export function getAiSettingsReadiness(settings: AiSettings): AiSettingsReadines
 
   return buildReadiness(
     missingFields,
-    'AI 配置已具备最小可用条件。',
-    'AI 还不能使用：请先填写 ',
+    '智能助手配置已具备最小可用条件。',
+    '智能助手还不能使用：请先填写 ',
   );
 }
 
 export function getApiKeyPersistenceMessage(settings: AiSettings): string {
   if (settings.persistApiKey) {
-    return 'API 密钥会随插件设置明文保存；如果开启 Obsidian Sync 或第三方同步，也可能被同步。';
+    return '接口密钥会随插件设置明文保存；如果开启笔记同步或第三方同步，也可能被同步。';
   }
-  return 'API 密钥只保留在当前设置页内存中；保存设置时不会写入插件数据。关闭或重载 Obsidian 后需要重新输入。';
+  return '接口密钥只保留在当前设置页内存中；保存设置时不会写入插件数据。关闭或重载笔记软件后需要重新输入。';
 }

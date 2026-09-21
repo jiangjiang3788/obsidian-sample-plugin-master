@@ -14,14 +14,14 @@ export function registerSettingsFeatures(
 ): void {
   registry.register({
     id: 'settings',
-    description: 'SettingsTab + open-settings command',
+    description: '设置页与打开设置命令',
     bootMode: 'background',
     delayMs: 150,
     boot: () => {
       setupSettings({ app: deps.plugin.app, plugin: deps.plugin, dataStore: deps.dataStore });
       deps.plugin.addCommand({
         id: 'think-open-settings',
-        name: '打开 Think 插件设置',
+        name: '打开思考插件设置',
         callback: () => {
           (deps.plugin.app as any).setting?.open?.();
           (deps.plugin.app as any).setting?.openTabById?.(deps.plugin.manifest.id);

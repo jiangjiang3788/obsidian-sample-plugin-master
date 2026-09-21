@@ -5,6 +5,7 @@ export {
   openCreateFromTimeline,
   openCreateFromHeatmap,
   openCreateFromStatistics,
+  openRecordContinuationOption,
 } from './recordCreate';
 export type {
   StatisticsCellIdentifier,

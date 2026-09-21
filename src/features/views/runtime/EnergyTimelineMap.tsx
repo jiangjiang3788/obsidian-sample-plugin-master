@@ -77,7 +77,7 @@ export function EnergyDayMap({ period, selectedKey, onSelect, onOpenRecordOrigin
               selected={selectedKey === sample.id}
               className="think-energy-map-dot"
               style={energyDotStyle(visual, { '--think-energy-x': `${(sample.minuteOfDay / 1440) * 100}%` })}
-              title={`${sampleTitle(sample)}${onOpenRecordOrigin ? ' · Ctrl/⌘+点击打开原文' : ''}`}
+              title={`${sampleTitle(sample)}${onOpenRecordOrigin ? ' · 按住控制键或⌘键点击打开原文' : ''}`}
               onClick={(event) => {
                 if (hasPlatformModifier(event) && onOpenRecordOrigin) {
                   stopInteractionEvent(event);
@@ -130,7 +130,7 @@ export function EnergyDateTimeMap({ period, selectedKey, onSelect, onOpenRecordO
                         selected={selectedKey === sample.id}
                         className="think-energy-map-dot"
                         style={energyDotStyle(visual, { '--think-energy-y': `${(sample.minuteOfDay / 1440) * 100}%` })}
-                        title={`${sampleTitle(sample)}${onOpenRecordOrigin ? ' · Ctrl/⌘+点击打开原文' : ''}`}
+                        title={`${sampleTitle(sample)}${onOpenRecordOrigin ? ' · 按住控制键或⌘键点击打开原文' : ''}`}
                         onClick={(event) => {
                 if (hasPlatformModifier(event) && onOpenRecordOrigin) {
                   stopInteractionEvent(event);

@@ -71,7 +71,7 @@ export class WhiteboardStore {
         return { ...this.status };
     }
     async initialize(): Promise<void> {
-        if (this.disposed) throw new Error('WhiteboardStore 已 dispose');
+        if (this.disposed) throw new Error('白板数据已释放');
         if (this.initialized) return;
         if (this.initPromise) return this.initPromise;
         this.setStatus({ state: 'loading' });
@@ -137,12 +137,12 @@ export class WhiteboardStore {
         this.notify();
     }
     private assertReady(): void {
-        if (this.disposed) throw new Error('WhiteboardStore 已 dispose');
-        if (this.status.state === 'error') throw new Error(`WhiteboardStore 初始化失败：${this.status.message}`);
-        if (!this.initialized || this.status.state !== 'ready') throw new Error('WhiteboardStore 尚未完成启动恢复，当前禁止读取或写入');
+        if (this.disposed) throw new Error('白板数据已释放');
+        if (this.status.state === 'error') throw new Error(`白板数据初始化失败：${this.status.message}`);
+        if (!this.initialized || this.status.state !== 'ready') throw new Error('白板数据尚未完成启动恢复，当前禁止读取或写入');
     }
     private assertBoardId(boardId: string): void {
-        if (!boardId.trim()) throw new Error('whiteboardId 必须非空');
+        if (!boardId.trim()) throw new Error('白板标识不能为空');
     }
     private getMutableBoard(data: WhiteboardStoreData, boardId: string): WhiteboardBoard | undefined {
         return data.boards[boardId];
@@ -170,7 +170,7 @@ export class WhiteboardStore {
             const decision = mutate(draft);
             if (!decision.changed) return decision.value;
             const parsed = WhiteboardStoreDataSchema.safeParse(draft);
-            if (!parsed.success) throw new Error(`WhiteboardStore mutation 产生无效数据: ${parsed.error.message}`);
+            if (!parsed.success) throw new Error(`白板数据修改产生无效数据：${parsed.error.message}`);
             const snapshot = cloneStoreData(parsed.data);
             const previous = cloneStoreData(this.data);
             await this.persistSnapshot(snapshot);
@@ -231,7 +231,7 @@ export class WhiteboardStore {
     async addRecord(boardId: string, recordId: string, position: WhiteboardPosition, groupId?: string | null): Promise<WhiteboardItem> {
         this.assertReady();
         this.assertBoardId(boardId);
-        if (!recordId.trim()) throw new Error('recordId 必须非空');
+        if (!recordId.trim()) throw new Error('记录标识不能为空');
         return this.enqueueMutation((draft) => {
             const board = this.ensureMutableBoard(draft, boardId);
             const existing = board.items.find((item) => item.recordId === recordId);
@@ -256,7 +256,7 @@ export class WhiteboardStore {
         this.assertBoardId(boardId);
         const seenRecordIds = new Set<string>();
         const uniquePlacements = placements.filter((entry) => {
-            if (!entry.recordId.trim()) throw new Error('recordId 必须非空');
+            if (!entry.recordId.trim()) throw new Error('记录标识不能为空');
             if (seenRecordIds.has(entry.recordId)) return false;
             seenRecordIds.add(entry.recordId);
             return true;
@@ -412,13 +412,13 @@ export class WhiteboardStore {
     async addEdge(boardId: string, fromItemId: string, toItemId: string): Promise<WhiteboardEdge> {
         this.assertReady();
         this.assertBoardId(boardId);
-        if (!fromItemId.trim() || !toItemId.trim()) throw new Error('白板连线必须引用非空 item ID');
-        if (fromItemId === toItemId) throw new Error('白板连线不能连接同一个 item');
+        if (!fromItemId.trim() || !toItemId.trim()) throw new Error('白板连线必须引用有效的项目标识');
+        if (fromItemId === toItemId) throw new Error('白板连线不能连接同一个项目');
         return this.enqueueMutation((draft) => {
             const board = this.getMutableBoard(draft, boardId);
             if (!board) throw new Error('白板不存在，无法创建连线');
             if (!board.items.some((item) => item.id === fromItemId) || !board.items.some((item) => item.id === toItemId)) {
-                throw new Error('白板连线的起点或终点 item 不存在');
+                throw new Error('白板连线的起点或终点项目不存在');
             }
             const duplicate = board.edges.find((edge) => edge.fromItemId === fromItemId && edge.toItemId === toItemId);
             if (duplicate) return unchanged({ ...duplicate });

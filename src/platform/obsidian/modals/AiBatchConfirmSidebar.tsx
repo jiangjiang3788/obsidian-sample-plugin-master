@@ -35,7 +35,7 @@ export function AiBatchConfirmSidebar({
   return (
     <aside className="think-ai-batch-sidebar">
       <div className="think-ai-batch-sidebar__header">
-        <strong>AI 识别结果</strong>
+        <strong>智能识别结果</strong>
         <span>{records.length} 条 · 已保存 {savedCount}</span>
       </div>
       <div className="think-ai-batch-sidebar__list">
@@ -70,7 +70,7 @@ export function AiBatchConfirmSidebar({
           data-ai-batch-action="save-all"
           onClick={onSaveAll}
           disabled={isBusy || pendingCount === 0}
-          aria-label="保存全部 AI 识别记录"
+          aria-label="保存全部智能识别记录"
         >{isSavingAll ? '保存中…' : `保存全部 (${pendingCount})`}</ThinkButton>
       </div>
     </aside>

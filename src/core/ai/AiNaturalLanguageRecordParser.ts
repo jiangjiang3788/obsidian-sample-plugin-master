@@ -59,7 +59,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
         });
 
         if (!ai?.enabled) {
-            throw new Error('AI is disabled');
+            throw new Error('智能助手未启用');
         }
 
         const snapshotStart = nowMs();

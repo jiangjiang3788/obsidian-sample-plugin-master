@@ -137,7 +137,7 @@ export function useWhiteboardSelectionController({
   const previewItemDrag = useCallback((itemId: string, position: WhiteboardPosition | null) => { if (!position || !isMultiDrag(itemId)) { setDragMoves([]); return; } setDragMoves(buildWhiteboardSelectionMoves({ items, selectedItemIds: selectedRef.current, draggedItemId: itemId, draggedPosition: position })); }, [isMultiDrag, items]);
   const applyPreview = useCallback((renderItems: readonly WhiteboardItem[]) => applyWhiteboardSelectionPreview(renderItems, dragMoves), [dragMoves]);
   const moveSelected = useCallback(async (itemId: string, position: WhiteboardPosition, targetGroupId?: string): Promise<boolean | null> => {
-    if (!isMultiDrag(itemId)) return null; if (!storeReady) throw new Error('WhiteboardStore 尚未完成启动恢复');
+    if (!isMultiDrag(itemId)) return null; if (!storeReady) throw new Error('白板数据尚未完成启动恢复');
     const moves = buildWhiteboardSelectionMoves({ items, selectedItemIds: selectedRef.current, draggedItemId: itemId, draggedPosition: position }); setDragMoves([]);
     try { return await whiteboardStore.moveItems(boardId, moves, targetGroupId); } catch (error) { onNotice?.(`移动所选卡片失败：${error instanceof Error ? error.message : String(error)}`); throw error; }
   }, [boardId, isMultiDrag, items, onNotice, storeReady, whiteboardStore]);

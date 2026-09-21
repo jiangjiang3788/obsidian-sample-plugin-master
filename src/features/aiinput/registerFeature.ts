@@ -18,7 +18,7 @@ export function registerAiInputFeature(
 ): void {
     registry.register({
         id: 'aiinput',
-        description: 'AI Input commands',
+        description: '智能输入命令',
         bootMode: 'background',
         delayMs: 120,
         boot: () => {

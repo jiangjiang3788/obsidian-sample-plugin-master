@@ -1,16 +1,16 @@
 /* Quick Input: Obsidian modal is the only surface; nested Think structure stays flat. */
 .modal.think-quick-input-modal {
   position: relative !important; inset: auto !important; width: min(780px, calc(100vw - 32px)) !important; max-width: calc(100vw - 32px);
-  height: auto !important; max-height: calc(100dvh - 32px) !important; margin: auto !important; transform: none !important;
-  display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-lg);
+  height: auto !important; min-height: 0 !important; max-height: calc(100dvh - 32px) !important; margin: auto !important; padding: 0 !important; transform: none !important;
+  display: flex; flex-direction: column; align-items: stretch !important; justify-content: flex-start !important; overflow: hidden; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-lg);
   background: var(--think-bg-elevated); color: var(--think-text-primary); box-shadow: var(--think-shadow-md);
   --think-quick-input-mobile-footer-space: 96px;
 }
 .modal.think-quick-input-modal .modal-close-button { display: none; }
-.modal.think-quick-input-modal .modal-content { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden; padding: 0; background: transparent; }
-.modal.think-quick-input-modal .think-modal.think-modal--quick-input { display: flex; flex-direction: column; gap: var(--think-space-2); width: 100%; min-height: 0; max-height: calc(100dvh - 24px); padding: var(--think-space-5); border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-.modal.think-quick-input-modal .think-modal__body { flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 0 var(--think-space-1) 0 0; -webkit-overflow-scrolling: touch; }
-.modal.think-quick-input-modal .think-quick-input-modal-header { display: grid; gap: var(--think-space-2); margin-bottom: var(--think-space-3); }
+.modal.think-quick-input-modal .modal-content { display: flex; flex: 0 0 auto !important; flex-direction: column; align-items: stretch; justify-content: flex-start !important; width: 100%; height: auto !important; min-height: 0 !important; max-height: calc(100dvh - 32px); overflow: hidden; padding: 0 !important; background: transparent; }
+.modal.think-quick-input-modal .think-modal.think-modal--quick-input { display: flex; flex: 0 1 auto; flex-direction: column; align-self: stretch; justify-content: flex-start; gap: var(--think-space-2); width: 100%; height: auto !important; min-height: 0 !important; max-height: calc(100dvh - 24px); margin: 0; padding: var(--think-space-5); border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.modal.think-quick-input-modal .think-modal__body { flex: 0 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 0 var(--think-space-1) 0 0; -webkit-overflow-scrolling: touch; }
+.modal.think-quick-input-modal .think-quick-input-modal-header { display: grid; flex: 0 0 auto; gap: var(--think-space-2); margin-bottom: var(--think-space-3); }
 .modal.think-quick-input-modal .think-quick-input-modal-title { margin: 0; color: var(--think-text-primary); font-size: var(--think-type-page-size); font-weight: var(--think-type-page-weight); line-height: var(--think-line-height-tight); }
 .modal.think-quick-input-modal .think-quick-input-operation-switcher { width: fit-content; }
 .modal.think-quick-input-modal .think-modal__footer--quick-input { position: static; z-index: var(--think-z-raised); bottom: auto; padding: var(--think-space-4) 0 0; border-top: 1px solid var(--think-border-subtle); background: transparent; }

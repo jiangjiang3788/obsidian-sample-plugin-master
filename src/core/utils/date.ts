@@ -78,7 +78,7 @@ export function formatDateForView(d: dayjs.Dayjs, v: string): string {
         case '周': {
             const isoYear = d.isoWeekYear();
             const isoWeekNum = d.isoWeek();
-            return `${isoYear}-W${String(isoWeekNum).padStart(2, '0')}`;
+            return `${isoYear}年第${isoWeekNum}周`;
         }
         default: return d.format('YYYY-MM-DD');
     }

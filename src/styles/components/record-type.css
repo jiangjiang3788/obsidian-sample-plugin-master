@@ -41,3 +41,33 @@
   border-inline-start: 3px solid var(--think-record-type-accent);
 }
 
+
+/* Compact RecordType actions reuse the configured RecordType accent as their fill. */
+.think-os .think-record-type-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--think-space-2);
+  border-color: color-mix(in srgb, var(--think-record-type-accent) 34%, var(--think-border-subtle));
+  background: var(--think-bg-surface-1);
+  background: color-mix(in srgb, var(--think-record-type-accent) 16%, var(--think-bg-elevated));
+  color: var(--think-text-primary);
+}
+
+.think-os .think-record-type-action:hover:not(:disabled),
+.think-os .think-record-type-action:focus-visible:not(:disabled) {
+  border-color: color-mix(in srgb, var(--think-record-type-accent) 58%, var(--think-border-strong));
+  background: color-mix(in srgb, var(--think-record-type-accent) 24%, var(--think-bg-elevated));
+}
+
+.think-os .think-record-type-action__icon {
+  display: inline-flex;
+  width: 1em;
+  height: 1em;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: var(--think-record-type-accent);
+  font-weight: var(--think-font-weight-bold);
+  line-height: 1;
+}

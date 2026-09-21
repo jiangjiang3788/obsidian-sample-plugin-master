@@ -32,7 +32,7 @@ export const openStatisticsPopover: OpenStatisticsPopoverHandler = (request) => 
       onClose={request.onClose}
       headerActions={(
         <div class="sv-popover-heading">
-          <Tooltip title="导出为 Markdown" PopperProps={{ disablePortal: true }}>
+          <Tooltip title="导出为笔记文件" PopperProps={{ disablePortal: true }}>
             <AnyIconButton
               size="small"
               onClick={(e: any) => {

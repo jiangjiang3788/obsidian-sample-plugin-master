@@ -36,7 +36,7 @@ const VIEW_DATE_ROLE_OPTIONS: Array<{ value: ViewDateRole; label: string }> = [
     { value: 'task-scheduled', label: '计划时间' },
     { value: 'task-due', label: '截止时间' },
     { value: 'task-completed', label: '完成时间' },
-    { value: 'task-actual', label: '实际执行时间（TaskSession）' },
+    { value: 'task-actual', label: '实际执行时间（任务计时记录）' },
 ];
 
 // [S5 术语统一] 视图设置编辑器组件 - 通过 useCases.viewInstance 调用
@@ -114,7 +114,7 @@ function ViewInstanceEditor({ vi, onWriteStarted }: { vi: ViewInstance; onWriteS
 
                     <FormField
                         label="时间依据"
-                        help="控制栏的年/季/月/周/日范围会按这里选择的业务时间筛选当前视图。计划/截止/完成只匹配 Task；实际执行时间匹配 TaskSession。"
+                        help="控制栏的年/季/月/周/日范围会按这里选择的业务时间筛选当前视图。计划/截止/完成只匹配任务；实际执行时间匹配任务计时记录。"
                     >
                         <SimpleSelect
                             value={currentDateRole}

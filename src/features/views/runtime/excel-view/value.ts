@@ -1,4 +1,4 @@
-import { getFieldEditPolicy, getFieldLabel, normalizeEditableFieldKey } from '@core/fields/public';
+import { formatFieldValue, getFieldEditPolicy, getFieldLabel, normalizeEditableFieldKey } from '@core/fields/public';
 import { readField, type RecordViewItem } from '@core/types/public';
 import type { ExcelCellModel, ExcelColumnModel, ExcelEditorOption } from './types';
 
@@ -82,13 +82,16 @@ export function buildExcelCellModel(item: RecordViewItem, field: string, valueOv
   const hasOverride = valueOverride !== undefined;
   const value = hasOverride ? valueOverride : sourceValue;
   const policy = getFieldEditPolicy(field, value);
+  const displayValue = policy.canonicalField === 'recordType'
+    ? formatFieldValue(field, value, item)
+    : formatExcelCellValue(value);
   return {
     item,
     itemId: item.id,
     field,
     canonicalField: policy.canonicalField,
     value,
-    displayValue: formatExcelCellValue(value),
+    displayValue,
     editorValue: formatExcelEditorValue(value, policy.editorKind),
     policy,
   };

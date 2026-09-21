@@ -91,7 +91,7 @@ function OverviewCardMarker({
   return (
     <div class={`think-whiteboard-overview-marker think-whiteboard-overview-marker--card${markerMode === 'dot' ? ' is-presentation-dot' : ''}`} style={pointStyle(shiftedPoint)} data-whiteboard-overview-item-id={item.id}>
       <button type="button" class={`think-whiteboard-overview-marker__button${selected ? ' is-selected' : ''}${findState}${connectionActive ? ' is-connection-source' : ''}${connectionTarget ? ' is-connection-target' : ''}`} aria-label={`定位卡片：${label}`}
-        title={`${label}；Ctrl/⌘ 点击多选，拖动可移动；悬浮后可直接编辑、打开原文、连线或右键整理；单击定位点回到 100%`} data-record-type={record?.recordType ?? 'missing'}
+        title={`${label}；按住控制键或⌘键点击多选，拖动可移动；悬浮后可直接编辑、打开原文、连线或右键整理；单击定位点回到 100%`} data-record-type={record?.recordType ?? 'missing'}
         onPointerDown={pointerDown as never}
         onContextMenu={onContextMenu as never}
         onClick={((event: Event) => stopAndRun(event, () => { if (!shouldSuppressFocusClick?.()) onFocusItem(item); })) as never}>
@@ -106,7 +106,7 @@ function OverviewCardMarker({
         data-record-type={record?.recordType ?? 'missing'}
         role="button"
         tabIndex={0}
-        title={record ? `类型：${presentation?.typeLabel ?? ''}；${RECORD_GESTURE_HINT}；拖动可调整位置；Ctrl/⌘ 点击多选；从四边拖出连线；右键可归档或移出` : '原记录当前不可用；拖动仍可调整位置，右键可整理'}
+        title={record ? `类型：${presentation?.typeLabel ?? ''}；${RECORD_GESTURE_HINT}；拖动可调整位置；按住控制键或⌘键点击多选；从四边拖出连线；右键可归档或移出` : '原记录当前不可用；拖动仍可调整位置，右键可整理'}
         onPointerDown={pointerDown as never}
         onContextMenu={onContextMenu as never}
         onClick={record ? ((event: Event) => guardGesture(event, gesture?.onClick)) as never : undefined}
@@ -193,7 +193,7 @@ export function WhiteboardSemanticOverviewLayer({
         const placement = presentation?.groups.get(group.id); const basePoint = placement?.worldPoint ?? getWhiteboardGroupWorldAnchor(group);
         return <div key={group.id} class={`think-whiteboard-overview-marker think-whiteboard-overview-marker--group${placement?.mode === 'dot' ? ' is-presentation-dot' : ''}`} style={pointStyle(moved(basePoint, shift, semanticDragDelta))} data-whiteboard-overview-group-id={group.id}>
           <button type="button" class={`think-whiteboard-overview-marker__button${selected ? ' is-selected' : ''}${activeFindGroupId === group.id ? ' is-find-active' : ''}${dropTargetGroupId === group.id ? ' is-drop-target' : ''}`}
-            aria-label={`定位工作台：${group.title}`} title={`工作台：${group.title}；Ctrl/⌘ 点击多选，拖动已选节点可整体移动，右键整理，单击回到 100%`}
+            aria-label={`定位工作台：${group.title}`} title={`工作台：${group.title}；按住控制键或⌘键点击多选，拖动已选节点可整体移动，右键整理，单击回到 100%`}
             onPointerDown={((event: PointerEvent) => onNodePointerDown ? onNodePointerDown(event, 'group', group.id) : stopPointer(event)) as never}
             onClick={((event: Event) => focus(event, () => onFocusGroup(group))) as never}>
             <span aria-hidden="true">▣</span><span class="think-whiteboard-overview-marker__label">{group.title}</span>

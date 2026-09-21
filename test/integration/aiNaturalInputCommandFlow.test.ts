@@ -82,6 +82,6 @@ describe('AI 自然语言命令编排', () => {
     await runner(true);
 
     expect(mockOpenConfirm).not.toHaveBeenCalled();
-    expect(notice).toHaveBeenCalledWith('AI 解析失败：模拟模型服务不可用', 6000);
+    expect(notice).toHaveBeenCalledWith('智能助手解析失败：模拟模型服务不可用', 6000);
   });
 });

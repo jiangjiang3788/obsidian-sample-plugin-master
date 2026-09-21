@@ -3,9 +3,9 @@ import type { AiHttpResponse, AiHttpTransport } from '@core/ai/public';
 
 function createAbortError(): Error {
     try {
-        return new DOMException('The operation was aborted.', 'AbortError');
+        return new DOMException('操作已中止。', 'AbortError');
     } catch {
-        const error = new Error('The operation was aborted.');
+        const error = new Error('操作已中止。');
         error.name = 'AbortError';
         return error;
     }

@@ -1,5 +1,5 @@
 /** @jsxImportSource preact */
-import { normalizeRecordTypePresentationKey } from '@core/recordTypes/public';
+import { getRecordTypePresentation, normalizeRecordTypePresentationKey } from '@core/recordTypes/public';
 import { SelectablePill } from './SelectablePill';
 
 export interface RecordTypeSwitcherOption { id: string; name?: string }
@@ -15,14 +15,20 @@ export function RecordTypeSwitcher({ recordTypes, currentRecordTypeId, onRecordT
     <div className="think-quick-input-record-type-switcher" role="tablist" aria-label="记录类型">
       {recordTypes.map((recordType) => {
         const label = recordType.name || recordType.id;
+        const presentation = getRecordTypePresentation(recordType.id);
+        const presentationKey = normalizeRecordTypePresentationKey(recordType.id);
         return (
           <SelectablePill
             key={recordType.id}
             selected={currentRecordTypeId === recordType.id}
             onClick={() => onRecordTypeChange(recordType.id)}
             title={label}
-            className="think-quick-input-record-type-switcher__item"
-          ><span className="think-record-type-marker" data-record-type={normalizeRecordTypePresentationKey(recordType.id)}>{label}</span></SelectablePill>
+            recordType={presentationKey}
+            className="think-quick-input-record-type-switcher__item think-record-type-action"
+          >
+            <span className="think-record-type-action__icon" aria-hidden="true">{presentation.icon}</span>
+            <span>{label}</span>
+          </SelectablePill>
         );
       })}
     </div>

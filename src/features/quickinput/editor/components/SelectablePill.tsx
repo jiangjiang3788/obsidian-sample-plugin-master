@@ -8,6 +8,7 @@ export interface SelectablePillProps {
   className?: string;
   disabled?: boolean;
   title?: string;
+  recordType?: string;
 }
 
 export function SelectablePill({
@@ -17,6 +18,7 @@ export function SelectablePill({
   className,
   disabled = false,
   title,
+  recordType,
 }: SelectablePillProps) {
   const classes = [
     'think-quick-input-selectable-pill',
@@ -32,6 +34,7 @@ export function SelectablePill({
       title={title}
       aria-pressed={selected}
       className={classes}
+      data-record-type={recordType || undefined}
     >
       {children}
     </button>

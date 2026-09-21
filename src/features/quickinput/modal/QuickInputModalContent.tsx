@@ -1,17 +1,16 @@
-/** @jsxImportSource preact */
 import { h } from 'preact';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useDataStore, useUseCases } from '@/app/public';
 import type { RecordViewItem, QuickInputSaveData } from '@core/types/public';
 import { getRecordTypeById, ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public';
 import type { QuickInputEnergyCaptureRequest } from '../editor/QuickInputEditorModel';
-import { dayjs } from '@core/utils/public';
-import { buildRecordSubmitFeedbackPresentation } from '@core/utils/public';
+import { buildRecordSubmitFeedbackPresentation, dayjs } from '@core/utils/public';
 import type { RecordInputSource, RecordSubmitResult } from '@core/recordInput/public';
 import { QuickInputEditor, type QuickInputEditorState } from '../editor';
 import { QuickInputConflictRecoveryPanel } from './QuickInputConflictRecoveryPanel';
 import { QuickInputModalFooter } from './QuickInputModalFooter';
 import { QuickInputModalHeader } from './QuickInputModalHeader';
+import { QuickInputContinuationPanel } from './QuickInputContinuationPanel';
 import { isMobileLikeEnvironment } from './quickInputEnvironment';
 import type { QuickInputOperationMode } from './quickInputOperationMode';
 import { useQuickInputOriginalNavigation } from './quickInputOriginalLink';
@@ -21,6 +20,7 @@ import { useQuickInputSubmitController } from './useQuickInputSubmit';
 import { RecurringTaskSeriesEditor } from './RecurringTaskSeriesEditor';
 import { normalizeRecurrenceInfo, normalizeTaskStatus, type RecurrenceInfo, type TaskLifecycleCommand } from '@core/records/public';
 import { TaskLifecycleEditor } from './TaskLifecycleEditor';
+import { useQuickInputContinuation } from './useQuickInputContinuation';
 export interface QuickInputModalContentProps {
   getResourcePath: (path: string) => string;
   initialRecordTypeId: string;
@@ -34,6 +34,7 @@ export interface QuickInputModalContentProps {
   vaultName: string;
   onSubmitSuccess?: (result: RecordSubmitResult, draft: QuickInputSaveData) => void | Promise<void>;
   showNotice: ShowQuickInputNotice;
+  onOutsideClickCloseChange?: (enabled: boolean) => void;
 }
 export function QuickInputModalContent({
   getResourcePath,
@@ -48,6 +49,7 @@ export function QuickInputModalContent({
   vaultName,
   onSubmitSuccess,
   showNotice,
+  onOutsideClickCloseChange,
 }: QuickInputModalContentProps) {
   const useCases = useUseCases();
   const dataStore = useDataStore();
@@ -69,9 +71,9 @@ export function QuickInputModalContent({
   const [isStoppingSeries, setIsStoppingSeries] = useState(false);
   const [isSkippingRecurringTask, setIsSkippingRecurringTask] = useState(false);
   const [isChangingTaskLifecycle, setIsChangingTaskLifecycle] = useState(false);
+  const { continuation, showContinuation, continueWithOption } = useQuickInputContinuation(closeModal, onOutsideClickCloseChange);
   const [editOperationMode, setEditOperationMode] = useState<Extract<QuickInputOperationMode, 'edit' | 'convert' | 'duplicate'>>('edit');
-  const initialSeriesRecurrence: RecurrenceInfo = normalizeRecurrenceInfo(editItem?.recurrenceInfo) || { unit: 'day', interval: 1, anchor: 'scheduled' };
-  const [taskSeriesRecurrence, setTaskSeriesRecurrence] = useState<RecurrenceInfo>(initialSeriesRecurrence);
+  const [taskSeriesRecurrence, setTaskSeriesRecurrence] = useState<RecurrenceInfo>(normalizeRecurrenceInfo(editItem?.recurrenceInfo) || { unit: 'day', interval: 1, anchor: 'scheduled' });
   const [editorResetVersion, setEditorResetVersion] = useState(0);
   const operationMode: QuickInputOperationMode = mode === 'create' ? 'create' : editOperationMode;
   const editorSessionMode = operationMode;
@@ -153,6 +155,7 @@ export function QuickInputModalContent({
     source,
     onSave,
     onSubmitSuccess,
+    onContinuation: showContinuation,
     closeModal,
     useCases,
     getCurrentState,
@@ -200,24 +203,25 @@ export function QuickInputModalContent({
   const handleTaskLifecycleCommand = useCallback(async (command: TaskLifecycleCommand) => {
     const itemId = String(editItem?.id || '').trim();
     if (!itemId || isChangingTaskLifecycle) return;
-    const labels: Partial<Record<TaskLifecycleCommand, string>> = {
-      complete: '确认完成这个任务吗？',
-      cancel: '确认取消这个任务吗？',
-      reopen: '确认重新打开这个任务吗？',
-    };
+    const labels: Partial<Record<TaskLifecycleCommand, string>> = { complete: '确认完成这个任务吗？', cancel: '确认取消这个任务吗？', reopen: '确认重新打开这个任务吗？' };
     if (labels[command] && !window.confirm(labels[command]!)) return;
     setIsChangingTaskLifecycle(true);
     try {
       const result = await useCases.taskRuntime.runLifecycle({ taskId: itemId, command, source: 'quickinput' });
+      const continuation = command === 'complete'
+        && (result.status === 'success' || result.status === 'partial_success')
+        ? result.followUp?.continuation
+        : undefined;
       const presentation = buildRecordSubmitFeedbackPresentation(result, '任务状态修改失败');
-      if (presentation.message) showNotice(presentation.message, presentation.tone);
-      if (result.status === 'success') closeModal();
+      if (presentation.message && !(continuation && presentation.tone === 'success')) showNotice(presentation.message, presentation.tone);
+      if (continuation) showContinuation(continuation);
+      else if (result.status === 'success' || result.status === 'partial_success') closeModal();
     } catch (error: unknown) {
       showNotice(error instanceof Error ? error.message : '任务状态修改失败');
     } finally {
       setIsChangingTaskLifecycle(false);
     }
-  }, [closeModal, editItem?.id, isChangingTaskLifecycle, showNotice, useCases]);
+  }, [closeModal, editItem?.id, isChangingTaskLifecycle, showNotice, showContinuation, useCases]);
   const handleEnergyCapture = useCallback(async (request: QuickInputEnergyCaptureRequest) => {
     const now = dayjs();
     const isRetrospective = request.captureMode === 'retrospective';
@@ -236,16 +240,19 @@ export function QuickInputModalContent({
           scoreMode: 'detailed',
           brainScore: request.brainScore,
           physicalScore: request.physicalScore,
+          context,
         })
       : await useCases.recordInput.submitEnergySnapshot({
           ...common,
           scoreMode: 'quick',
           score: request.score,
+          context,
         });
+    const continuation = (result.status === 'success' || result.status === 'partial_success') ? result.followUp?.continuation : undefined;
     const presentation = buildRecordSubmitFeedbackPresentation(result, '精力记录失败');
-    if (presentation.message) showNotice(presentation.message, presentation.tone);
-    if (presentation.shouldCloseModal) closeModal();
-  }, [closeModal, showNotice, useCases]);
+    if (presentation.message && !(continuation && presentation.tone === 'success')) showNotice(presentation.message, presentation.tone);
+    if (continuation) showContinuation(continuation); else if (presentation.shouldCloseModal) closeModal();
+  }, [closeModal, context, showContinuation, showNotice, useCases]);
   const handleRecoveryRescan = useCallback(async () => {
     if (!recovery.paths.length || isRescanningRecoveryPaths) return;
     setIsRescanningRecoveryPaths(true);
@@ -280,40 +287,50 @@ export function QuickInputModalContent({
         onDismiss={clearRecovery}
       />}
       <div class="think-modal__body">
-        <QuickInputEditor
-          key={`${editorResetVersion}:${editItem?.id ?? 'create'}`}
-          getResourcePath={getResourcePath}
-          initialRecordTypeId={preparedRecord.recordTypeId || initialRecordTypeId}
-          initialFormData={preparedRecord.initialFormData}
-          context={mode === 'edit' ? undefined : context}
-          recordInputMode={editorSessionMode}
-          allowRecordTypeSwitch={operationMode === 'convert' || operationMode === 'duplicate' ? true : (mode === 'edit' ? false : allowRecordTypeSwitch)}
-          onStateChange={handleEditorStateChange}
-          onRequestSubmit={handleSubmit}
-          onEnergyCapture={handleEnergyCapture}
-          isMobileLike={isMobileLike}
-          autoFocusContent={mode === 'create'}
-        />
-        {operationMode === 'edit' && editItem?.recordType === 'task' && normalizeTaskStatus(editItem.status) ? (
-          <TaskLifecycleEditor
-            status={normalizeTaskStatus(editItem.status)!}
-            recurring={Boolean(String(editItem.seriesId || '').trim())}
-            busy={isChangingTaskLifecycle}
-            onCommand={handleTaskLifecycleCommand}
+        {continuation ? (
+          <QuickInputContinuationPanel
+            continuation={continuation}
+            onSelect={continueWithOption}
+            onFinish={closeModal}
           />
-        ) : null}
-        {isRecurringTaskEdit ? (
-          <RecurringTaskSeriesEditor
-            recurrence={taskSeriesRecurrence}
-            onRecurrenceChange={setTaskSeriesRecurrence}
-            onSkipCurrent={handleSkipRecurringTask}
-            onStopSeries={handleStopSeries}
-            skipping={isSkippingRecurringTask}
-            stopping={isStoppingSeries}
-          />
-        ) : null}
+        ) : (
+          <>
+            <QuickInputEditor
+              key={`${editorResetVersion}:${editItem?.id ?? 'create'}`}
+              getResourcePath={getResourcePath}
+              initialRecordTypeId={preparedRecord.recordTypeId || initialRecordTypeId}
+              initialFormData={preparedRecord.initialFormData}
+              context={mode === 'edit' ? undefined : context}
+              recordInputMode={editorSessionMode}
+              allowRecordTypeSwitch={operationMode === 'convert' || operationMode === 'duplicate' ? true : (mode === 'edit' ? false : allowRecordTypeSwitch)}
+              onStateChange={handleEditorStateChange}
+              onRequestSubmit={handleSubmit}
+              onEnergyCapture={handleEnergyCapture}
+              isMobileLike={isMobileLike}
+              autoFocusContent={mode === 'create'}
+            />
+            {operationMode === 'edit' && editItem?.recordType === 'task' && normalizeTaskStatus(editItem.status) ? (
+              <TaskLifecycleEditor
+                status={normalizeTaskStatus(editItem.status)!}
+                recurring={Boolean(String(editItem.seriesId || '').trim())}
+                busy={isChangingTaskLifecycle}
+                onCommand={handleTaskLifecycleCommand}
+              />
+            ) : null}
+            {isRecurringTaskEdit ? (
+              <RecurringTaskSeriesEditor
+                recurrence={taskSeriesRecurrence}
+                onRecurrenceChange={setTaskSeriesRecurrence}
+                onSkipCurrent={handleSkipRecurringTask}
+                onStopSeries={handleStopSeries}
+                skipping={isSkippingRecurringTask}
+                stopping={isStoppingSeries}
+              />
+            ) : null}
+          </>
+        )}
       </div>
-      {!isEnergyDirect && <QuickInputModalFooter
+      {!isEnergyDirect && !continuation && <QuickInputModalFooter
         operationMode={operationMode}
         isBusy={isBusy}
         canSubmit={canSubmit}

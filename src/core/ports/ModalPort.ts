@@ -24,6 +24,12 @@ export interface CheckinManagerOpenArgs {
   onDeleteRecord?: (item: RecordViewItem) => Promise<boolean> | boolean | void;
 }
 
+export interface QuickInputOpenOptions {
+  context?: Record<string, unknown>;
+  allowRecordTypeSwitch?: boolean;
+  source?: 'quickinput' | 'view_quick_create' | 'timer' | 'unknown';
+}
+
 export interface ModalPort {
   openAiTextPrompt(): Promise<string | null>;
 
@@ -34,7 +40,7 @@ export interface ModalPort {
     cancelText?: string;
   }): Promise<boolean>;
 
-  openQuickInput(recordTypeId?: string): void;
+  openQuickInput(recordTypeId?: string, options?: QuickInputOpenOptions): void;
 
   openNamePrompt(options: NamePromptOptions): Promise<string | null>;
 

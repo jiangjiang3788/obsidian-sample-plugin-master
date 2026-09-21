@@ -72,7 +72,7 @@ export function ExcelColumnToolbar({
     <div
       class="excel-column-toolbar"
       data-editable={canEdit ? 'true' : 'false'}
-      aria-label="Excel 显示字段编辑"
+      aria-label="表格显示字段编辑"
       onClick={() => menu ? closeMenu() : undefined}
     >
       <span class="excel-column-toolbar-title">显示字段</span>

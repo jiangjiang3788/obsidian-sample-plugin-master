@@ -30,8 +30,8 @@ interface RecordGestureParams {
  * secondary/origin action, primary clicks stay immediate.
  */
 export const RECORD_GESTURE_MULTI_ACTIVATION_MS = 320;
-export const RECORD_GESTURE_HINT = '点击编辑；Ctrl/⌘+点击或双击打开原文';
-export const RECORD_MODIFIER_ORIGIN_HINT = '点击编辑；Ctrl/⌘+点击打开原文';
+export const RECORD_GESTURE_HINT = '点击编辑；按住控制键或⌘键点击，或双击打开原文';
+export const RECORD_MODIFIER_ORIGIN_HINT = '点击编辑；按住控制键或⌘键点击打开原文';
 
 export function createRecordGestureHandlers(params: RecordGestureParams) {
   let lastTouchAt = 0;

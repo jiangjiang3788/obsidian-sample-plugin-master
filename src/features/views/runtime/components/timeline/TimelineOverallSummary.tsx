@@ -19,7 +19,7 @@ export function TimelineOverallSummary(props: {
   const containerStyle = { flex: `0 0 ${width}px` };
   return (
     <div class="summary-progress-container" style={containerStyle}>
-      <div class="summary-title" title={goalSummary ? '实际时间只统计 TaskSession；悬浮每一行查看目标时间、实际时间和子目标明细。' : undefined}>
+      <div class="summary-title" title={goalSummary ? '实际时间只统计任务计时记录；悬浮每一行查看目标时间、实际时间和子目标明细。' : undefined}>
         总结
       </div>
       <div class="summary-content">

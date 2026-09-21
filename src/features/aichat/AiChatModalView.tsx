@@ -62,7 +62,7 @@ export function AiChatModalView(props: AiChatModalViewProps) {
                     left={
                         <div className="think-ai-chat__title">
                             <ChatIcon fontSize="small" />
-                            <span>{currentSessionTitle ?? 'AI 助手'}</span>
+                            <span>{currentSessionTitle ?? '智能助手'}</span>
                         </div>
                     }
                     onClose={closeModal}

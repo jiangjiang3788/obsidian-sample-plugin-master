@@ -2312,6 +2312,33 @@
 .think-os .think-list-row[data-record-type] {
   border-inline-start: 3px solid var(--think-record-type-accent);
 }
+/* Compact RecordType actions reuse the configured RecordType accent as their fill. */
+.think-os .think-record-type-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--think-space-2);
+  border-color: color-mix(in srgb, var(--think-record-type-accent) 34%, var(--think-border-subtle));
+  background: var(--think-bg-surface-1);
+  background: color-mix(in srgb, var(--think-record-type-accent) 16%, var(--think-bg-elevated));
+  color: var(--think-text-primary);
+}
+.think-os .think-record-type-action:hover:not(:disabled),
+.think-os .think-record-type-action:focus-visible:not(:disabled) {
+  border-color: color-mix(in srgb, var(--think-record-type-accent) 58%, var(--think-border-strong));
+  background: color-mix(in srgb, var(--think-record-type-accent) 24%, var(--think-bg-elevated));
+}
+.think-os .think-record-type-action__icon {
+  display: inline-flex;
+  width: 1em;
+  height: 1em;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: var(--think-record-type-accent);
+  font-weight: var(--think-font-weight-bold);
+  line-height: 1;
+}
 /* CSS V3: governed Settings workspace and page composition. */
 .think-os--settings .think-settings-page {
   width: min(100%, var(--think-content-width-lg));
@@ -8608,6 +8635,94 @@ body.excel-view-is-resizing-column * {
   color: var(--think-text-muted);
   font-size: var(--think-font-size-sm);
 }
+/* QuickInput post-submit continuation: compact, already-saved, low-friction actions. */
+.modal.think-quick-input-modal .think-quick-input-continuation {
+  display: grid;
+  gap: var(--think-space-3);
+  align-content: start;
+  min-height: 0;
+  padding: var(--think-space-4);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  background: var(--think-surface-subtle);
+}
+.modal.think-quick-input-modal .think-quick-input-continuation__summary,
+.modal.think-quick-input-modal .think-quick-input-continuation__actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.modal.think-quick-input-modal .think-quick-input-continuation__summary {
+  flex-wrap: wrap;
+  gap: var(--think-space-3);
+}
+.modal.think-quick-input-modal .think-quick-input-continuation__status {
+  flex: 0 0 auto;
+  color: var(--think-text-primary);
+  font-size: var(--think-type-section-size);
+  font-weight: var(--think-type-section-weight);
+}
+.modal.think-quick-input-modal .think-quick-input-continuation__context,
+.modal.think-quick-input-modal .think-quick-input-continuation__prompt {
+  color: var(--think-text-secondary);
+  font-size: var(--think-font-size-sm);
+}
+.modal.think-quick-input-modal .think-quick-input-continuation__context {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.modal.think-quick-input-modal .think-quick-input-continuation__actions {
+  flex-wrap: wrap;
+  gap: var(--think-space-2);
+}
+.modal.think-quick-input-modal .think-quick-input-continuation__prompt {
+  flex: 0 0 auto;
+  margin-right: var(--think-space-1);
+}
+.modal.think-quick-input-modal .think-quick-input-continuation__options {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: var(--think-space-2);
+  min-width: 0;
+}
+.modal.think-quick-input-modal .think-quick-input-continuation__option {
+  appearance: none;
+  min-height: var(--think-control-height-sm);
+  padding: var(--think-space-2) var(--think-space-3);
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-md);
+  font: inherit;
+  font-size: var(--think-font-size-sm);
+  font-weight: var(--think-font-weight-medium);
+  line-height: var(--think-line-height-tight);
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    background-color var(--think-duration-fast) var(--think-ease-standard),
+    border-color var(--think-duration-fast) var(--think-ease-standard),
+    color var(--think-duration-fast) var(--think-ease-standard);
+}
+.modal.think-quick-input-modal .think-quick-input-continuation__option:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--think-record-type-accent);
+}
+.modal.think-quick-input-modal .think-quick-input-continuation__finish {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+@media (max-width: 640px) {
+  .modal.think-quick-input-modal .think-quick-input-continuation__summary,
+  .modal.think-quick-input-modal .think-quick-input-continuation__actions {
+    align-items: flex-start;
+  }
+
+  .modal.think-quick-input-modal .think-quick-input-continuation__context {
+    white-space: normal;
+  }
+}
 /*
  * QuickInputEditor reusable controls.
  *
@@ -8731,6 +8846,23 @@ body.excel-view-is-resizing-column * {
 .think-quick-input-editor .think-quick-input-selectable-pill:disabled {
   cursor: default;
   opacity: .68;
+}
+.think-quick-input-editor .think-quick-input-selectable-pill.think-record-type-action {
+  border-color: color-mix(in srgb, var(--think-record-type-accent) 34%, var(--think-border-subtle));
+  background: color-mix(in srgb, var(--think-record-type-accent) 16%, var(--think-bg-elevated));
+  color: var(--think-text-primary);
+}
+.think-quick-input-editor .think-quick-input-selectable-pill.think-record-type-action:hover:not(:disabled),
+.think-quick-input-editor .think-quick-input-selectable-pill.think-record-type-action:focus-visible:not(:disabled) {
+  border-color: color-mix(in srgb, var(--think-record-type-accent) 58%, var(--think-border-strong));
+  background: color-mix(in srgb, var(--think-record-type-accent) 24%, var(--think-bg-elevated));
+}
+.think-quick-input-editor .think-quick-input-selectable-pill.think-record-type-action.is-selected,
+.think-quick-input-editor .think-quick-input-selectable-pill.think-record-type-action[aria-pressed="true"] {
+  border-color: var(--think-record-type-accent);
+  background: color-mix(in srgb, var(--think-record-type-accent) 28%, var(--think-bg-elevated));
+  color: var(--think-text-primary);
+  box-shadow: inset 0 0 0 1px var(--think-record-type-accent);
 }
 .think-quick-input-editor .think-quick-input-goal-selector {
   display: grid;
@@ -8922,6 +9054,7 @@ body.excel-view-is-resizing-column * {
   overflow: hidden; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-lg);
   background: var(--think-bg-elevated); color: var(--think-text-primary); box-shadow: var(--think-shadow-md);
 }
+.modal.think-modal-host > .modal-header { display: none; }
 .modal.think-modal-host .modal-content { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; padding: 0; }
 .modal.think-modal-host .modal-close-button { display: none; }
 .modal.think-modal-host--medium { width: min(90vw, 720px); max-width: 720px; }
@@ -8936,16 +9069,16 @@ body.excel-view-is-resizing-column * {
 /* Quick Input: Obsidian modal is the only surface; nested Think structure stays flat. */
 .modal.think-quick-input-modal {
   position: relative !important; inset: auto !important; width: min(780px, calc(100vw - 32px)) !important; max-width: calc(100vw - 32px);
-  height: auto !important; max-height: calc(100dvh - 32px) !important; margin: auto !important; transform: none !important;
-  display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-lg);
+  height: auto !important; min-height: 0 !important; max-height: calc(100dvh - 32px) !important; margin: auto !important; padding: 0 !important; transform: none !important;
+  display: flex; flex-direction: column; align-items: stretch !important; justify-content: flex-start !important; overflow: hidden; border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-lg);
   background: var(--think-bg-elevated); color: var(--think-text-primary); box-shadow: var(--think-shadow-md);
   --think-quick-input-mobile-footer-space: 96px;
 }
 .modal.think-quick-input-modal .modal-close-button { display: none; }
-.modal.think-quick-input-modal .modal-content { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden; padding: 0; background: transparent; }
-.modal.think-quick-input-modal .think-modal.think-modal--quick-input { display: flex; flex-direction: column; gap: var(--think-space-2); width: 100%; min-height: 0; max-height: calc(100dvh - 24px); padding: var(--think-space-5); border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-.modal.think-quick-input-modal .think-modal__body { flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 0 var(--think-space-1) 0 0; -webkit-overflow-scrolling: touch; }
-.modal.think-quick-input-modal .think-quick-input-modal-header { display: grid; gap: var(--think-space-2); margin-bottom: var(--think-space-3); }
+.modal.think-quick-input-modal .modal-content { display: flex; flex: 0 0 auto !important; flex-direction: column; align-items: stretch; justify-content: flex-start !important; width: 100%; height: auto !important; min-height: 0 !important; max-height: calc(100dvh - 32px); overflow: hidden; padding: 0 !important; background: transparent; }
+.modal.think-quick-input-modal .think-modal.think-modal--quick-input { display: flex; flex: 0 1 auto; flex-direction: column; align-self: stretch; justify-content: flex-start; gap: var(--think-space-2); width: 100%; height: auto !important; min-height: 0 !important; max-height: calc(100dvh - 24px); margin: 0; padding: var(--think-space-5); border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.modal.think-quick-input-modal .think-modal__body { flex: 0 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 0 var(--think-space-1) 0 0; -webkit-overflow-scrolling: touch; }
+.modal.think-quick-input-modal .think-quick-input-modal-header { display: grid; flex: 0 0 auto; gap: var(--think-space-2); margin-bottom: var(--think-space-3); }
 .modal.think-quick-input-modal .think-quick-input-modal-title { margin: 0; color: var(--think-text-primary); font-size: var(--think-type-page-size); font-weight: var(--think-type-page-weight); line-height: var(--think-line-height-tight); }
 .modal.think-quick-input-modal .think-quick-input-operation-switcher { width: fit-content; }
 .modal.think-quick-input-modal .think-modal__footer--quick-input { position: static; z-index: var(--think-z-raised); bottom: auto; padding: var(--think-space-4) 0 0; border-top: 1px solid var(--think-border-subtle); background: transparent; }

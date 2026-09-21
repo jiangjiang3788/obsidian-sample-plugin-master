@@ -92,14 +92,14 @@ function SkillList({ card, runtime }: { card: GoalProgressCardModel; runtime: Pr
               class="think-progress-skill think-list-row think-list-row--interactive"
               onClick={() => setOpenKey(open ? null : row.key)}
               aria-expanded={open}
-              title={`${row.title} · ${row.points} XP · ${row.count} 条记录`}
+              title={`${row.title} · ${row.points} 经验值 · ${row.count} 条记录`}
             >
               <span class="think-progress-skill__bullet" aria-hidden="true">•</span>
               <span class="think-progress-skill__title">{row.title}</span>
-              <span class="think-progress-skill__level">Lv.{row.levelMeta.level}</span>
+              <span class="think-progress-skill__level">等级 {row.levelMeta.level}</span>
               <ExperienceBar ratio={row.progressRatio} tone="skill" />
               <span class="think-progress-skill__tail">
-                <span class="think-progress-skill__meta">{row.points} XP · {row.count} 条</span>
+                <span class="think-progress-skill__meta">{row.points} 经验值 · {row.count} 条</span>
                 <span class="think-progress-skill__chevron" aria-hidden="true"><ThinkIcon name={open ? 'chevron-down' : 'chevron-right'} /></span>
               </span>
             </button>
@@ -149,7 +149,7 @@ export function GoalProgressCard(props: GoalProgressCardProps) {
           <span class="think-progress-section__title">{title}</span>
           <span class="think-progress-section__level-title">{levelMeta.icon} {levelMeta.title}</span>
         </span>
-        <span class="think-progress-section__level">Lv.{levelMeta.level}</span>
+        <span class="think-progress-section__level">等级 {levelMeta.level}</span>
         <ExperienceBar ratio={card.progressRatio} tone="goal" />
         <span class="think-progress-section__percent">{ratioPercent(card.progressRatio)}</span>
       </button>

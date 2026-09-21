@@ -126,19 +126,19 @@ describe('Think OS 真机 UI：十种普通 View 矩阵', () => {
     expect(await toolbar.getText()).toContain('月');
   });
 
-  it('十种普通 View 都暴露统一的“导出为 Markdown”入口，包括四象限', async () => {
+  it('十种普通 View 都暴露统一的“导出为笔记文件”入口，包括四象限', async () => {
     await openFile('十视图');
     for (const [, label] of VIEWS) {
       const module = await $(`section[aria-label="E2E视图-${label} 视图"]`);
       await module.waitForExist({ timeout: 10_000 });
       await module.scrollIntoView();
-      const exportButton = await module.$('button[aria-label="导出为 Markdown"]');
+      const exportButton = await module.$('button[aria-label="导出为笔记文件"]');
       await exportButton.waitForExist({ timeout: 10_000 });
       expect(await exportButton.isDisplayed()).toBe(true);
     }
   });
 
-  it('块视图的“导出为 Markdown”把真实 Record 写入剪贴板', async () => {
+  it('块视图的“导出为笔记文件”把真实 Record 写入剪贴板', async () => {
     await openFile('十视图');
     await browser.execute(() => {
       (window as any).__thinkE2EClipboard = '';
@@ -151,7 +151,7 @@ describe('Think OS 真机 UI：十种普通 View 矩阵', () => {
     });
     const module = await $('section[aria-label="E2E视图-块视图 视图"]');
     await module.waitForExist({ timeout: 15_000 });
-    const exportButton = await module.$('button[aria-label="导出为 Markdown"]');
+    const exportButton = await module.$('button[aria-label="导出为笔记文件"]');
     await exportButton.waitForClickable({ timeout: 10_000 });
     await exportButton.click();
     await browser.waitUntil(async () => String(await browser.execute(() => (window as any).__thinkE2EClipboard || '')).includes(EXPORT_CONTENT), {

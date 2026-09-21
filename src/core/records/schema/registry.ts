@@ -86,7 +86,7 @@ export function inspectRecordFieldsAgainstSchema(
   if (!schema) {
     return [{
       code: 'unknown_field', recordType: String(recordType || ''), field: '记录类型', value: recordType,
-      message: `没有 Record Schema Definition: ${String(recordType || '')}`,
+      message: `没有记录结构定义：${String(recordType || '')}`,
     }];
   }
 
@@ -98,20 +98,20 @@ export function inspectRecordFieldsAgainstSchema(
       const value = fields[alias];
       return value !== undefined && value !== null && String(value).trim() !== '';
     });
-    if (!present) issues.push({ code: 'missing_required_field', recordType: schema.recordType, field: field.key, message: `缺少必填 Record 字段: ${field.key}` });
+    if (!present) issues.push({ code: 'missing_required_field', recordType: schema.recordType, field: field.key, message: `缺少必填记录字段：${field.key}` });
   }
 
   for (const [key, value] of Object.entries(fields)) {
     const field = getRecordFieldContract(schema.recordType, key);
     if (!field) {
       if (isSafeCustomRecordFieldKey(schema.recordType, key)) continue;
-      issues.push({ code: 'unknown_field', recordType: schema.recordType, field: key, value, message: `字段不在 ${schema.recordType} 的 Record Schema Definition 中: ${key}` });
+      issues.push({ code: 'unknown_field', recordType: schema.recordType, field: key, value, message: `字段不在 ${schema.recordType} 的记录结构定义中：${key}` });
       continue;
     }
     if (field.persistence === 'derived') {
-      issues.push({ code: 'derived_field_persisted', recordType: schema.recordType, field: key, value, message: `派生字段不属于最终持久 schema: ${key}` });
+      issues.push({ code: 'derived_field_persisted', recordType: schema.recordType, field: key, value, message: `派生字段不属于最终持久化结构：${key}` });
     } else if (field.persistence === 'debug') {
-      issues.push({ code: 'debug_field_persisted', recordType: schema.recordType, field: key, value, message: `调试字段不应作为业务字段持久化: ${key}` });
+      issues.push({ code: 'debug_field_persisted', recordType: schema.recordType, field: key, value, message: `调试字段不应作为业务字段持久化：${key}` });
     }
     if (field.allowedValues?.length && value != null && String(value).trim()) {
       const normalized = String(value).trim();

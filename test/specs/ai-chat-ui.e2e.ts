@@ -23,7 +23,7 @@ describe('Think OS 真机 UI：AI Chat', () => {
     await browser.executeObsidianCommand('think-os:think-open-ai-chat');
     const root = await $('.think-ai-chat');
     await root.waitForExist({ timeout: 10_000 });
-    expect(await $('[aria-label="AI 对话列表"]').isExisting()).toBe(true);
+    expect(await $('[aria-label="智能助手对话列表"]').isExisting()).toBe(true);
 
     const newSession = await $('//button[contains(normalize-space(),"新建对话")]');
     await newSession.click();

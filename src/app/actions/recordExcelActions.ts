@@ -154,13 +154,13 @@ export async function commitExcelCellFromView(params: CommitExcelCellFromViewPar
   const policy = getFieldEditPolicy(canonicalField, params.oldValue);
 
   if (!isExcelInlineCommitSupported(canonicalField)) {
-    const message = '当前 Excel MVP 只开放安全字段：content/title/date/time/duration/rating/tags 与自定义 extra 字段；路径、文件、派生字段保持只读。';
+    const message = '当前表格初版只开放常用安全字段和自定义字段；路径、文件、派生字段保持只读。';
     params.uiPort.notice(message);
     return { ok: false, message };
   }
 
   if (policy.editorKind === 'path') {
-    const message = '路径类字段不能在 Excel 视图中修改，请通过完整编辑或配置入口处理。';
+    const message = '路径类字段不能在表格视图中修改，请通过完整编辑或配置入口处理。';
     params.uiPort.notice(message);
     return { ok: false, message };
   }
@@ -186,7 +186,7 @@ export async function commitExcelCellFromView(params: CommitExcelCellFromViewPar
   const recordTypeId = prepared.recordTypeId;
   const templateField = resolveTemplateFieldForExcelCommit(prepared.template?.fields as TemplateField[] | undefined, canonicalField);
   if (templateField && getTemplateFieldInputType(templateField).toLowerCase().includes('path')) {
-    const message = '路径类模板字段不能在 Excel 视图中修改。';
+    const message = '路径类模板字段不能在表格视图中修改。';
     params.uiPort.notice(message);
     return { ok: false, message };
   }

@@ -61,6 +61,6 @@ export function safeJsonParseBatch(raw: string, traceId?: string): NaturalRecord
         }
 
         if (traceId) warnSlowParserStep(traceId, 'JSON 解析失败路径总耗时', parseStart, 50, { rawLength: raw.length });
-        throw new Error('AI output is not valid JSON. Raw output: ' + raw.slice(0, 200));
+        throw new Error('智能助手返回的数据格式无效。原始内容：' + raw.slice(0, 200));
     }
 }

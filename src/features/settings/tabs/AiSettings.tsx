@@ -81,13 +81,13 @@ export function AiSettings(_props: AiSettingsProps) {
 
     const handleSave = async () => {
         setIsSaving(true);
-        setSaveStatusMessage('正在保存 AI 设置...');
+        setSaveStatusMessage('正在保存智能助手设置...');
         setSaveStatusSeverity('info');
         try {
             await useCases.settings.updateAiSettings(localSettings);
             if (isMountedRef.current) {
                 setSaveStatusSeverity('success');
-                setSaveStatusMessage('AI 设置已保存。');
+                setSaveStatusMessage('智能助手设置已保存。');
             }
         } catch (error: unknown) {
             if (isMountedRef.current) {
@@ -124,7 +124,7 @@ export function AiSettings(_props: AiSettingsProps) {
 
         if (isMountedRef.current) {
             setTestStatus('testing');
-            setTestMessage('正在测试 API 并读取模型接口...');
+            setTestMessage('正在测试接口并读取模型列表...');
         }
 
         try {
@@ -208,7 +208,7 @@ export function AiSettings(_props: AiSettingsProps) {
     return (
         <div className="think-settings-page">
             <div className="think-settings-row">
-                <span className="think-settings-row__label">AI 快速记录</span>
+                <span className="think-settings-row__label">智能快速记录</span>
                 <div className="think-settings-row__body"><ThinkToggle checked={localSettings.enabled} onChange={(e) => updateLocal({ enabled: (e.currentTarget as HTMLInputElement).checked })} label="启用" /></div>
             </div>
             {localSettings.enabled && !readiness.ready && (

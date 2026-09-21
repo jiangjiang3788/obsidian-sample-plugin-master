@@ -40,6 +40,44 @@ export interface RecordSubmitIssue {
   field?: string;
 }
 
+export type RecordContinuationReason = 'task_completion';
+
+/**
+ * Internal orchestration metadata carried from the saved source Record into a
+ * continuation create flow. It is not a persisted Record field and intentionally
+ * contains no Relation semantics: continuation must stay useful even if the
+ * product never persists RecordRelation.
+ */
+export interface RecordContinuationContext {
+  /** Root Record that started this continuation chain. */
+  sourceRecordId: string;
+  reason: RecordContinuationReason;
+  expectedGoalPath: string;
+  /** RecordTypes already created in this chain; they are hidden from the next panel. */
+  completedRecordTypeIds: string[];
+}
+
+export interface RecordContinuationOption {
+  kind: 'create_record';
+  label: string;
+  recordTypeId: string;
+  context: Record<string, unknown> & {
+    __recordContinuation: RecordContinuationContext;
+  };
+  /** The user already chose the next RecordType from the continuation panel. */
+  allowRecordTypeSwitch: false;
+}
+
+export interface RecordContinuationFollowUp {
+  kind: 'record_continuation';
+  reason: RecordContinuationReason;
+  sourceRecordId: string;
+  goalPath: string;
+  options: RecordContinuationOption[];
+  /** Safe because the source Record is already persisted before this state exists. */
+  dismissOnOutsideClick: true;
+}
+
 export interface RecordSubmitResult {
   status: RecordSubmitStatus;
   operation: RecordOperation;
@@ -54,6 +92,7 @@ export interface RecordSubmitResult {
   };
   followUp?: {
     startTimerForRecordId?: string;
+    continuation?: RecordContinuationFollowUp;
   };
   errors?: RecordSubmitIssue[];
   warnings?: RecordSubmitIssue[];

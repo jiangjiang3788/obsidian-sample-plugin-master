@@ -18,7 +18,7 @@ export interface QuickInputEditorViewProps {
   goals: GoalSelectorOption[];
   recentGoalPaths?: string[];
   selectedGoalPath: string | null;
-  onSelectGoal: (goal: GoalSelectorOption | null) => void;
+  onSelectGoal: (goal: GoalSelectorOption | null, source?: 'hierarchy' | 'recent') => void;
   onCreateGoal?: (goalPath: string) => Promise<void> | void;
 
   template: any;

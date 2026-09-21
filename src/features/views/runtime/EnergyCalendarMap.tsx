@@ -77,7 +77,7 @@ export function EnergyCalendarMap({ period, selectedKey, onSelect, onOpenRecordO
                         selected={selectedKey === keyValue}
                         className="think-energy-daily-dot"
                         style={energyDotStyle(visual)}
-                        title={`${day.date} · 日均 ${score} · ${day.samples.length} 次 · ${dayCaptureLabel(day)}${day.samples.length === 1 && onOpenRecordOrigin ? ' · Ctrl/⌘+点击打开原文' : ''}`}
+                        title={`${day.date} · 日均 ${score} · ${day.samples.length} 次 · ${dayCaptureLabel(day)}${day.samples.length === 1 && onOpenRecordOrigin ? ' · 按住控制键或⌘键点击打开原文' : ''}`}
                         onClick={(event) => {
                           if (day.samples.length === 1 && hasPlatformModifier(event) && onOpenRecordOrigin) {
                             stopInteractionEvent(event);

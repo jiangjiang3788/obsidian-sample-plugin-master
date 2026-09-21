@@ -92,7 +92,7 @@ export class SettingsRepository {
      */
     getSettings(): ThinkSettings {
         if (!this.currentSettings) {
-            throw new Error('SettingsRepository: 设置未加载，请先调用 load()');
+            throw new Error('设置尚未加载，请先完成加载。');
         }
         return this.currentSettings;
     }
@@ -137,7 +137,7 @@ export class SettingsRepository {
      */
     async update(mutator: (draft: ThinkSettings) => void, meta?: ActionMeta): Promise<ThinkSettings> {
         if (!this.currentSettings) {
-            throw new Error('SettingsRepository: 设置未加载，请先调用 load()');
+            throw new Error('设置尚未加载，请先完成加载。');
         }
 
         const before = this.currentSettings;

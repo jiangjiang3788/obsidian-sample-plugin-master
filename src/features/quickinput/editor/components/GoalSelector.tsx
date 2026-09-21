@@ -13,7 +13,7 @@ export interface GoalSelectorProps {
   goals: GoalSelectorOption[];
   recentGoalPaths?: string[];
   selectedGoalPath?: string | null;
-  onSelect: (goal: GoalSelectorOption | null) => void;
+  onSelect: (goal: GoalSelectorOption | null, source?: 'hierarchy' | 'recent') => void;
   onCreateGoal?: (goalPath: string) => Promise<void> | void;
   dense?: boolean;
 }
@@ -165,7 +165,7 @@ export function GoalSelector({ goals, recentGoalPaths = [], selectedGoalPath, on
           // Always make the clicked row the active hierarchy path. This keeps
           // the full ancestry highlighted even when the clicked Goal is a leaf.
           setExpandedPath(option.value);
-          if (selectable) onSelect(option);
+          if (selectable) onSelect(option, 'hierarchy');
         }}
       >
         <span className="think-quick-input-goal-row__main">
@@ -194,7 +194,7 @@ export function GoalSelector({ goals, recentGoalPaths = [], selectedGoalPath, on
                 key={`recent:${option.value}`}
                 className="think-quick-input-goal-recent__chip"
                 title={option.value.replaceAll('/', ' › ')}
-                onClick={() => { setExpandedPath(option.value); onSelect(option); }}
+                onClick={() => { setExpandedPath(option.value); onSelect(option, 'recent'); }}
               >
                 <span aria-hidden="true">{resolveGoalIcon(option.goal)}</span>
                 <span>{String(option.label || leafLabel(option.value))}</span>

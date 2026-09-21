@@ -71,7 +71,7 @@ describe('AI 接口测速命令', () => {
       ]),
     }));
     expect(hide).toHaveBeenCalled();
-    expect(notice.mock.calls.some(([message]) => String(message).includes('AI 接口测速完成'))).toBe(true);
+    expect(notice.mock.calls.some(([message]) => String(message).includes('智能助手接口测速完成'))).toBe(true);
   });
 
   it('AI 未启用或配置不完整时不发送网络请求，并给出中文配置提示', async () => {

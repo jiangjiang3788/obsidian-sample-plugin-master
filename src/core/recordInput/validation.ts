@@ -28,12 +28,12 @@ export function validateRecordInput(input: ValidateRecordInputParams): RecordVal
   const warnings: RecordSubmitIssue[] = [];
 
   if (!input.template) {
-    errors.push(issue('record_template_missing', 'No effective template is available for this record.'));
+    errors.push(issue('record_template_missing', '当前记录没有可用模板。'));
     return { ok: false, errors, warnings };
   }
 
   if (!input.template.targetFile || !String(input.template.targetFile).trim()) {
-    errors.push(issue('record_target_file_missing', 'The selected template does not define a target file.', 'targetFile'));
+    errors.push(issue('record_target_file_missing', '所选模板没有定义目标文件。', 'targetFile'));
   }
 
   const recordType = getRecordTypeById(input.template.recordTypeId || input.template.id);
@@ -45,7 +45,7 @@ export function validateRecordInput(input: ValidateRecordInputParams): RecordVal
   }
 
   if ((input.mode === 'edit' || input.mode === 'delete') && !input.item) {
-    errors.push(issue('record_item_missing', 'The target record is missing for this operation.'));
+    errors.push(issue('record_item_missing', '当前操作缺少目标记录。'));
   }
 
   for (const field of input.template.fields || []) {
@@ -70,14 +70,14 @@ export function validateRecordInput(input: ValidateRecordInputParams): RecordVal
     if (field.type === 'number') {
       const numericValue = typeof rawValue === 'number' ? rawValue : Number(rawValue);
       if (Number.isNaN(numericValue)) {
-        errors.push(issue('record_field_invalid_number', 'This field expects a numeric value.', field.key));
+        errors.push(issue('record_field_invalid_number', '此字段需要填写数字。', field.key));
         continue;
       }
       if (typeof field.min === 'number' && numericValue < field.min) {
-        errors.push(issue('record_field_min_violation', `This field must be >= ${field.min}.`, field.key));
+        errors.push(issue('record_field_min_violation', `此字段必须大于或等于 ${field.min}。`, field.key));
       }
       if (typeof field.max === 'number' && numericValue > field.max) {
-        errors.push(issue('record_field_max_violation', `This field must be <= ${field.max}.`, field.key));
+        errors.push(issue('record_field_max_violation', `此字段必须小于或等于 ${field.max}。`, field.key));
       }
     }
 
@@ -85,7 +85,7 @@ export function validateRecordInput(input: ValidateRecordInputParams): RecordVal
       const valueToCheck = templateFieldValueToString(rawValue);
       const matched = field.options.some((option) => String(option.value) === valueToCheck || String(option.label) === valueToCheck);
       if (!matched) {
-        warnings.push(issue('record_field_option_unmatched', 'The current value does not match any configured option.', field.key));
+        warnings.push(issue('record_field_option_unmatched', '当前值与已配置的选项都不匹配。', field.key));
       }
     }
   }

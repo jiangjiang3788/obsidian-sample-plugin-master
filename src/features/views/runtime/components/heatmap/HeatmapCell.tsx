@@ -38,7 +38,7 @@ export function generateCellTooltip(date: string, items?: RecordViewItem[], disp
         latestItem.content ? `💭 最后内容: ${latestItem.content}` : '',
         '',
         '💡 左键：空白日期新增 / 有记录日期查看当天记录并继续新增',
-        items.length === 1 ? '⌨️ Ctrl/⌘+点击：打开该条记录原文' : ''
+        items.length === 1 ? '⌨️ 按住控制键或⌘键点击：打开该条记录原文' : ''
     ].filter(Boolean).join('\n');
 }
 

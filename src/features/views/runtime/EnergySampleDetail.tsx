@@ -85,7 +85,7 @@ function SampleDetail({ selection, management, onBack, onOpenRecord, onOpenRecor
 
       <div class="think-energy-detail__section">
         <strong>当时</strong>
-        {activity ? <p>前后活动 · {activity.title}{activity.durationMinutes ? ` · ${activity.durationMinutes}min` : ''}</p> : <p>附近没有可靠活动</p>}
+        {activity ? <p>前后活动 · {activity.title}{activity.durationMinutes ? ` · ${activity.durationMinutes}分钟` : ''}</p> : <p>附近没有可靠活动</p>}
         {signals && <p>当天 · {signals}</p>}
       </div>
 

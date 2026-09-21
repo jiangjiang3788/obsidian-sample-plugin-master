@@ -33,9 +33,9 @@ describe('AI 设置界面', () => {
 
   it('AI 已启用但缺少端点、密钥、模型时，界面用中文明确提示缺项', async () => {
     await act(async () => render(<AiSettings />, host));
-    expect(host.textContent).toContain('AI 还不能使用');
-    expect(host.textContent).toContain('API 端点');
-    expect(host.textContent).toContain('API 密钥');
+    expect(host.textContent).toContain('智能助手还不能使用');
+    expect(host.textContent).toContain('接口地址');
+    expect(host.textContent).toContain('接口密钥');
     expect(host.textContent).toContain('模型名称');
   });
 
@@ -49,8 +49,8 @@ describe('AI 设置界面', () => {
       input.value = value;
       await act(async () => { input.dispatchEvent(new Event('input', { bubbles: true })); });
     };
-    await setInput(rowInput('API 端点'), 'https://example.test/v1');
-    await setInput(rowInput('API 密钥'), 'test-key');
+    await setInput(rowInput('接口地址'), 'https://example.test/v1');
+    await setInput(rowInput('接口密钥'), 'test-key');
     await setInput(rowInput('模型'), 'test-model');
 
     const save = [...host.querySelectorAll('button')].find((button) => button.textContent?.trim() === '保存设置') as HTMLButtonElement;

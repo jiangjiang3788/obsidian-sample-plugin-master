@@ -67,7 +67,7 @@ export function buildYearStatisticsRenderModel(input: {
     quarters: processedData.quartersData.map((data, index) => ({
       key: `q${index}`,
       gridColumn: `${index * 3 + 1} / ${index * 3 + 4}`,
-      label: `Q${index + 1}`,
+      label: `第${index + 1}季度`,
       data,
       identifier: (goal: string) => ({ type: 'quarter', year, quarter: index + 1, goal }),
     })),
@@ -90,7 +90,7 @@ export function buildYearStatisticsRenderModel(input: {
           const data = processedData.weeksData[weekIndex] || createPeriodData(categories);
           return {
             key: `${week}`,
-            label: `${week}W`,
+            label: `第${week}周`,
             data,
             identifier: (goal: string) => ({ type: 'week', year, week, goal }),
           };

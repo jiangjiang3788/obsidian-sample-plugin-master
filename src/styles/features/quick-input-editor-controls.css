@@ -137,6 +137,26 @@
   opacity: .68;
 }
 
+.think-quick-input-editor .think-quick-input-selectable-pill.think-record-type-action {
+  border-color: color-mix(in srgb, var(--think-record-type-accent) 34%, var(--think-border-subtle));
+  background: color-mix(in srgb, var(--think-record-type-accent) 16%, var(--think-bg-elevated));
+  color: var(--think-text-primary);
+}
+
+.think-quick-input-editor .think-quick-input-selectable-pill.think-record-type-action:hover:not(:disabled),
+.think-quick-input-editor .think-quick-input-selectable-pill.think-record-type-action:focus-visible:not(:disabled) {
+  border-color: color-mix(in srgb, var(--think-record-type-accent) 58%, var(--think-border-strong));
+  background: color-mix(in srgb, var(--think-record-type-accent) 24%, var(--think-bg-elevated));
+}
+
+.think-quick-input-editor .think-quick-input-selectable-pill.think-record-type-action.is-selected,
+.think-quick-input-editor .think-quick-input-selectable-pill.think-record-type-action[aria-pressed="true"] {
+  border-color: var(--think-record-type-accent);
+  background: color-mix(in srgb, var(--think-record-type-accent) 28%, var(--think-bg-elevated));
+  color: var(--think-text-primary);
+  box-shadow: inset 0 0 0 1px var(--think-record-type-accent);
+}
+
 .think-quick-input-editor .think-quick-input-goal-selector {
   display: grid;
   gap: var(--think-space-3);

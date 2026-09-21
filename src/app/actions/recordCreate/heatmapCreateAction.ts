@@ -62,7 +62,7 @@ function buildHeatmapCreateConfig(params: HeatmapCreateParams): QuickInputConfig
 export function openCreateFromHeatmap(params: HeatmapCreateParams): boolean {
   const config = buildHeatmapCreateConfig(params);
   if (!config) {
-    params.notice?.('当前热力图没有可用于新增的记录类型，请先配置 sourceRecordTypeId。');
+    params.notice?.('当前热力图没有可用于新增的记录类型，请先配置来源记录类型。');
     return false;
   }
   return openCreateModal(params.app, config, 'view_quick_create');

@@ -56,10 +56,10 @@ export function buildExcelContentModeButtonTitle(input: {
   isFullMarkdownContent: boolean;
 }): string {
   if (!input.hasContentColumn) return '当前表格未显示内容字段，请先在字段栏添加 content/内容字段';
-  if (input.excelConfigSaving) return '正在保存 Excel 视图配置';
+  if (input.excelConfigSaving) return '正在保存表格视图配置';
   return input.isFullMarkdownContent
-    ? '当前：内容字段显示完整 Markdown；点击切回短文本预览'
-    : '当前：内容字段短文本预览；点击显示完整 Markdown';
+    ? '当前：内容字段显示完整笔记内容；点击切回短文本预览'
+    : '当前：内容字段短文本预览；点击显示完整笔记内容';
 }
 
 export function buildExcelViewRenderModel({

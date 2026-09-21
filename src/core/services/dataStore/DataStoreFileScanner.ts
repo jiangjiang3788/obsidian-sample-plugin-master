@@ -90,8 +90,8 @@ export class DataStoreFileScanner {
               recordId: recordId || undefined,
               path: filePath,
               message: !recordId || !isStableRecordId(recordId)
-                ? `Record Block at ${filePath}:${i + 1} is missing a valid stable 记录ID.`
-                : `Record Block ${recordId} at ${filePath}:${i + 1} does not satisfy Record v2 envelope requirements.`,
+                ? `文件 ${filePath} 第 ${i + 1} 行的记录块缺少有效且稳定的记录标识。`
+                : `文件 ${filePath} 第 ${i + 1} 行的记录块 ${recordId} 不符合当前记录格式要求。`,
             });
           }
           i = endIdx;

@@ -55,7 +55,7 @@ export const WhiteboardBoardSchema = z.object({
 }).strict().superRefine((board, ctx) => {
     const groupIds = new Set<string>();
     (board.groups ?? []).forEach((group, index) => {
-        if (groupIds.has(group.id)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['groups', index, 'id'], message: '工作台 ID 必须唯一' });
+        if (groupIds.has(group.id)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['groups', index, 'id'], message: '工作台标识必须唯一' });
         groupIds.add(group.id);
     });
     const groups = board.groups ?? [];
@@ -93,8 +93,8 @@ export const WhiteboardBoardSchema = z.object({
     [...board.items, ...(board.archivedItems ?? [])].forEach((item, index) => {
         const pathRoot = index < board.items.length ? 'items' : 'archivedItems';
         const pathIndex = index < board.items.length ? index : index - board.items.length;
-        if (projectionIds.has(item.id)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [pathRoot, pathIndex, 'id'], message: '白板 Projection ID 必须唯一' });
-        if (recordIds.has(item.recordId)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [pathRoot, pathIndex, 'recordId'], message: '同一 Record 不能同时存在多个白板 Projection' });
+        if (projectionIds.has(item.id)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [pathRoot, pathIndex, 'id'], message: '白板投影标识必须唯一' });
+        if (recordIds.has(item.recordId)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [pathRoot, pathIndex, 'recordId'], message: '同一记录不能同时存在多个白板投影' });
         projectionIds.add(item.id); recordIds.add(item.recordId);
     });
 });

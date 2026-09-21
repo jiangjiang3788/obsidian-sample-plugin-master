@@ -144,11 +144,11 @@ export default class ThinkPlugin extends Plugin {
             name: '重建索引（清空缓存并重新扫描）',
             callback: async () => {
                 try {
-                    new Notice('Think: 正在重建索引...', 3000);
+                    new Notice('思考系统：正在重建索引...', 3000);
                     await this.serviceManager.dataStore.clearCacheAndRescan('full');
-                    new Notice('Think: 索引重建完成', 3000);
+                    new Notice('思考系统：索引重建完成', 3000);
                 } catch (e: any) {
-                    new Notice(`Think: 索引重建失败 - ${e?.message || e}`, 5000);
+                    new Notice(`思考系统：索引重建失败 - ${e?.message || e}`, 5000);
                 }
             }
         });
@@ -156,7 +156,7 @@ export default class ThinkPlugin extends Plugin {
         // AI 助手对话命令
         this.addCommand({
             id: 'think-open-ai-chat',
-            name: '打开 AI 助手对话',
+            name: '打开智能助手对话',
             callback: () => {
                 // ✅ 通过 capabilities 统一入口触发
                 this.capabilities.ai.openChat();
@@ -166,11 +166,11 @@ export default class ThinkPlugin extends Plugin {
         // Timer commands (via capabilities) - provide a concrete verification入口 for TimerCapability wiring.
         this.addCommand({
             id: 'think-timer-start-by-task-id',
-            name: 'Timer: 开始/继续计时（输入任务 ID）',
+            name: '计时器：开始/继续计时（输入任务标识）',
             callback: async () => {
                 const taskId = await this.modalPort?.openNamePrompt({
                     title: '开始/继续计时',
-                    placeholder: '请输入任务 RecordViewItem ID（例如：来自 Dashboard 的 item.id）',
+                    placeholder: '请输入任务内部标识（例如：来自仪表盘的任务编号）',
                     ctaText: '开始',
                 });
                 if (!taskId) return;
@@ -180,7 +180,7 @@ export default class ThinkPlugin extends Plugin {
 
         this.addCommand({
             id: 'think-timer-stop-active',
-            name: 'Timer: 停止并写回（当前运行/暂停的第一个计时器）',
+            name: '计时器：停止并写回（当前运行/暂停的第一个计时器）',
             callback: async () => {
                 const timers = this.serviceManager.useCases.timer.getTimers();
                 const active = timers.find((t: any) => t.status === 'running') ?? timers.find((t: any) => t.status === 'paused');

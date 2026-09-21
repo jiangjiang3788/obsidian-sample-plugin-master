@@ -17,7 +17,7 @@ export class ThinkWhiteboardView extends ItemView {
   }
 
   getViewType(): string { return THINK_WHITEBOARD_VIEW_TYPE; }
-  getDisplayText(): string { return 'ThinkOS 白板'; }
+  getDisplayText(): string { return '思考系统白板'; }
   getIcon(): string { return 'panels-top-left'; }
 
   async onOpen(): Promise<void> {

@@ -41,6 +41,6 @@ export function getWhiteboardSemanticZoomStatus(
   groupCount: number,
 ): string | null {
   if (state.level === 'detail') return null;
-  if (state.level === 'compact') return `简化视图：${cardCount} 卡片 · ${groupCount} 工作台 · Ctrl/⌘ 框选或点选，拖动可移动；卡片可拖回左栏移出，右键可整理`;
+  if (state.level === 'compact') return `简化视图：${cardCount} 卡片 · ${groupCount} 工作台 · 按住控制键或⌘键框选或点选，拖动可移动；卡片可拖回左栏移出，右键可整理`;
   return `概览模式：${cardCount} 卡片 · ${groupCount} 工作台 · 拖动 Locator 可移动；卡片可拖回左栏移出，文字标注也可拖动`;
 }

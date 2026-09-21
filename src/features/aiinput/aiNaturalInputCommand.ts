@@ -91,12 +91,12 @@ export function createNaturalInputCommandRunner({
 
             if (!batch.items?.length) {
                 devWarn(`[AiInput][${traceId}] AI 返回空结果，总耗时 ${elapsedMs(totalStart)}`, { fastMode });
-                ui.notice('AI 未能识别出可记录内容，请换种说法再试', 5000);
+                ui.notice('智能助手未能识别出可记录内容，请换种说法再试', 5000);
                 return;
             }
 
             const resultNoticeStart = nowMs();
-            ui.notice(`${fastMode ? 'AI 快速模式' : 'AI'} 识别出 ${batch.items.length} 条记录`, 2000);
+            ui.notice(`${fastMode ? '智能快速模式' : '智能助手'}识别出 ${batch.items.length} 条记录`, 2000);
             logAiInputStep(traceId, '显示识别数量 notice 完成', resultNoticeStart, { fastMode });
 
             const confirmModalStart = nowMs();
@@ -124,7 +124,7 @@ export function createNaturalInputCommandRunner({
             loadingNotice.hide();
             logAiInputStep(traceId, '异常清理 loading notice 完成', catchStart, { fastMode });
             devError(`[AiInput][${traceId}] AI 解析失败，总耗时 ${elapsedMs(totalStart)}`, e);
-            ui.notice(`AI 解析失败：${e?.message ?? e}`, 6000);
+            ui.notice(`智能助手解析失败：${e?.message ?? e}`, 6000);
         }
     };
 }

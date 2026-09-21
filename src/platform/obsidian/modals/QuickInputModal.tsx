@@ -43,6 +43,7 @@ export class QuickInputModal extends Modal {
   private services: Services;
   private cleanupKeyboardDetection: (() => void) | null = null;
   private cleanupOutsideClickGuard: (() => void) | null = null;
+  private outsideClickCloseEnabled = false;
 
   constructor(
     app: App,
@@ -107,7 +108,7 @@ export class QuickInputModal extends Modal {
 
   // ✅ 方法一：官方 API（Obsidian ≥ 0.15.0）
   shouldCloseOnClickOutside(): boolean {
-    return false;
+    return this.outsideClickCloseEnabled;
   }
 
   onOpen() {
@@ -149,6 +150,7 @@ export class QuickInputModal extends Modal {
         vaultName={getVaultName(this.app)}
         onSubmitSuccess={this.options?.onSubmitSuccess}
         showNotice={showQuickInputNotice}
+        onOutsideClickCloseChange={(enabled) => { this.outsideClickCloseEnabled = enabled; }}
       />,
       this.services,
     );
@@ -158,12 +160,13 @@ export class QuickInputModal extends Modal {
     setTimeout(() => {
       const bg = this.modalEl.closest('.modal-container')?.querySelector('.modal-bg');
       if (bg) {
-        const stopOutsideClose = (e: Event) => {
+        const handleOutsideClick = (e: Event) => {
           e.stopPropagation();
           e.preventDefault();
+          if (this.outsideClickCloseEnabled) this.close();
         };
-        bg.addEventListener('click', stopOutsideClose, true);
-        this.cleanupOutsideClickGuard = () => bg.removeEventListener('click', stopOutsideClose, true);
+        bg.addEventListener('click', handleOutsideClick, true);
+        this.cleanupOutsideClickGuard = () => bg.removeEventListener('click', handleOutsideClick, true);
       }
     }, 0);
   }
@@ -182,6 +185,7 @@ export class QuickInputModal extends Modal {
     } finally {
       this.cleanupOutsideClickGuard = null;
       this.cleanupKeyboardDetection = null;
+      this.outsideClickCloseEnabled = false;
       if (QuickInputModal.activeModal === this) {
         QuickInputModal.activeModal = null;
       }

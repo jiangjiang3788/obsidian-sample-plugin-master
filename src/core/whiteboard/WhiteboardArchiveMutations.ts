@@ -59,7 +59,7 @@ export function restoreWhiteboardArchivedItem(board: WhiteboardBoard, itemId: st
 
     const archived = board.archivedItems[index];
     if (board.items.some((item) => item.recordId === archived.recordId || item.id === archived.id)) {
-        throw new Error('归档记录与当前白板 Projection 冲突，已阻止恢复');
+        throw new Error('归档记录与当前白板投影冲突，已阻止恢复');
     }
     const { archivedAt: _archivedAt, archiveX: _archiveX, archiveY: _archiveY, archiveZIndex: _archiveZIndex, ...projection } = archived;
     const item = WhiteboardItemSchema.parse(projection);

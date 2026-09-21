@@ -72,7 +72,7 @@ export function setupSettings(deps: SettingsDependencies): void {
   registerThinkSettingsWorkspaceView(deps.plugin);
   deps.plugin.addCommand({
     id: 'think-open-control-center',
-    name: '打开 Think OS 控制台（标签页）',
+    name: '打开思考系统控制台（标签页）',
     callback: () => { void openThinkSettingsWorkspaceView(deps.plugin); },
   });
 }

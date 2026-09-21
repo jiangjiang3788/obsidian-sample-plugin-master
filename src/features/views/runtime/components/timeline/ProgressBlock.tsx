@@ -56,7 +56,7 @@ export function ProgressBlock({
                 return (
                     <div
                         key={goalKey}
-                        title={`${goalKey}: ${hours.toFixed(1)}h (${Math.round(percent)}%)`}
+                        title={`${goalKey}：${hours.toFixed(1)} 小时（${Math.round(percent)}%）`}
                         class="progress-block-item"
                     >
                         <div

@@ -153,7 +153,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template
               <div className="think-settings-title-strong">{goalIcon ? `${goalIcon} ` : ''}{goalLeaf}</div>
               <div className="think-settings-caption" title={goalPath}>完整路径：{goalPath}</div>
               <div className="think-settings-caption">每个目标 × 记录类型最多只有一个模板。</div>
-              <div className="think-settings-caption">模板只定义这个目标下的录入字段、默认值与保存位置；图标默认值统一继承 Goal.icon。</div>
+              <div className="think-settings-caption">模板只定义这个目标下的录入字段、默认值与保存位置；图标默认值统一继承目标图标。</div>
             </div>
           </header>
 
@@ -174,7 +174,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template
               />
             ) : null}
             <NativeTextInput label="保存文件" value={draft.targetFile} onInput={(value) => updateDraft({ targetFile: value })} disabled={fieldEditDisabled} placeholder="例如：01/目标打卡.md" />
-            <NativeTextInput label="标题" value={draft.appendUnderHeader} onInput={(value) => updateDraft({ appendUnderHeader: value })} disabled={fieldEditDisabled} placeholder="## {{goalPath}}" />
+            <NativeTextInput label="标题" value={draft.appendUnderHeader} onInput={(value) => updateDraft({ appendUnderHeader: value })} disabled={fieldEditDisabled} placeholder="例如：## 我的目标" />
             <NativeTextInput label="说明" value={draft.description} onInput={(value) => updateDraft({ description: value })} disabled={mode === 'disabled'} placeholder="可选" />
 
             {mode === 'override' && diffSummary.length ? (

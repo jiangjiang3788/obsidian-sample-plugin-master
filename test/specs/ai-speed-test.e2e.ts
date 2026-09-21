@@ -53,7 +53,7 @@ describe('Think OS 真机：AI 接口测速', () => {
 
   it('真实 Obsidian 命令经过本地 OpenAI 兼容服务完成测速，并向用户显示毫秒结果', async () => {
     await browser.executeObsidianCommand('think-os:think-ai-speed-test');
-    const text = await waitForNoticeText('AI 接口测速完成');
+    const text = await waitForNoticeText('智能助手接口测速完成');
     expect(text).toMatch(/\d+ms/);
     expect(text).toContain('接口状态还可以');
   });

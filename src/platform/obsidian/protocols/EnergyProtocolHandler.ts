@@ -18,7 +18,7 @@ export function registerEnergyProtocolHandler(plugin: Plugin, deps: EnergyProtoc
   plugin.registerObsidianProtocolHandler(ENERGY_PROTOCOL_ACTION, async (params) => {
     const parsed = parseEnergyProtocolParams(params);
     if (!parsed.ok) {
-      new Notice(`Think OS: ${parsed.message}`, 5000);
+      new Notice(`思考系统：${parsed.message}`, 5000);
       return;
     }
 
@@ -28,7 +28,7 @@ export function registerEnergyProtocolHandler(plugin: Plugin, deps: EnergyProtoc
       settings.energySettings?.defaultGoalPath,
     );
     if (!goal) {
-      new Notice('Think OS: 没有可用于精力记录的目标，请先在设置中创建/选择默认精力目标。', 6000);
+      new Notice('思考系统：没有可用于精力记录的目标，请先在设置中创建/选择默认精力目标。', 6000);
       return;
     }
 
@@ -56,10 +56,10 @@ export function registerEnergyProtocolHandler(plugin: Plugin, deps: EnergyProtoc
         });
 
     if (result.status === 'success') {
-      new Notice(result.feedback?.notice || 'Think OS: 精力已记录', 1800);
+      new Notice(result.feedback?.notice || '思考系统：精力已记录', 1800);
       return;
     }
     const issue = result.errors?.[0]?.message || result.feedback?.notice || '精力记录失败';
-    new Notice(`Think OS: ${issue}`, 5000);
+    new Notice(`思考系统：${issue}`, 5000);
   });
 }

@@ -50,7 +50,7 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
 
         // registry.tsx 中 module 是可选的；缺少上下文时禁用扫描。
         if (!module) {
-            ui.notice('无法扫描：缺少视图上下文（module）。');
+            ui.notice('无法扫描：缺少视图上下文（模块）。');
             return;
         }
 
@@ -80,7 +80,7 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
             <ConfigSection title="数据来源">
                 <ConfigFieldRow
                     label="源记录类型"
-                    description="视图将从此记录类型模板的评分字段中读取 Emoji/图片/颜色映射。"
+                    description="视图将从此记录类型模板的评分字段中读取 表情符号/图片/颜色映射。"
                 >
                     <SimpleSelect
                         value={config.sourceRecordTypeId}

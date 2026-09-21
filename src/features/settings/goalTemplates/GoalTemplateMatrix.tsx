@@ -101,7 +101,7 @@ export function GoalTemplateMatrix() {
     const descendants = goals.filter((item) => item.path !== goal.path && getGoalDisplayPath(item).startsWith(`${path}/`));
     const targets = [goal, ...descendants];
     const suffix = descendants.length > 0 ? `\n同时删除 ${descendants.length} 个子目标。` : '';
-    const ok = window.confirm(`删除目标「${cleanDisplayText(path)}」？${suffix}\n\n会删除目标配置和该目标下的模板；不会删除已经写入的 Markdown 记录。`);
+    const ok = window.confirm(`删除目标「${cleanDisplayText(path)}」？${suffix}\n\n会删除目标配置和该目标下的模板；不会删除已经写入的笔记记录。`);
     if (!ok) return;
     const count = typeof (useCases.goal as any).deleteGoalCascade === 'function'
       ? await (useCases.goal as any).deleteGoalCascade(goal.path)
@@ -192,7 +192,7 @@ export function GoalTemplateMatrix() {
               }
             }}
           />
-          <div className="think-settings-caption">输入 Emoji 或短文本；清空后保存即可移除图标。</div>
+          <div className="think-settings-caption">输入表情符号或短文本；清空后保存即可移除图标。</div>
         </div>
       </Modal>
 

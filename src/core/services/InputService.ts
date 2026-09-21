@@ -55,7 +55,7 @@ export class InputService {
     const preview = this.previewTemplateExecution(template, formData, options.recordId, options.context);
     const { outputContent, targetFilePath, header } = preview;
 
-    if (!targetFilePath) throw new Error('模板未定义目标文件路径 (targetFile)。');
+    if (!targetFilePath) throw new Error('模板未定义目标文件路径。');
     return this.appendDirectRecord(targetFilePath, outputContent, header, options);
   }
 
@@ -70,8 +70,8 @@ export class InputService {
     options: RecordWriteOptions = {},
   ): Promise<string> {
     const signal = options.signal;
-    if (!targetFilePath) throw new Error('Direct Record 未定义目标文件路径。');
-    if (!outputContent.trim()) throw new Error('Direct Record 输出内容为空。');
+    if (!targetFilePath) throw new Error('直接记录未定义目标文件路径。');
+    if (!outputContent.trim()) throw new Error('直接记录输出内容为空。');
     this.throwIfAborted(signal);
 
     if (header) {
@@ -115,10 +115,10 @@ export class InputService {
     const indexed = this.dataStore.getRecordLocation(item.id);
     const path = item.source?.path || item.file?.path || indexed?.path || '';
     const startLine = item.source?.startLine || item.file?.line || indexed?.startLine || 0;
-    if (!path) throw createRecordConflictError('record_locator_invalid', `无法定位记录ID ${item.id}。`);
+    if (!path) throw createRecordConflictError('record_locator_invalid', `无法定位记录标识 ${item.id}。`);
 
     const existingContent = await this.vault.readFile(path);
-    if (existingContent == null) throw createRecordConflictError('record_path_missing', `找不到文件: ${path}`);
+    if (existingContent == null) throw createRecordConflictError('record_path_missing', `找不到文件：${path}`);
     this.throwIfAborted(signal);
 
     const outputPlan = buildRecordOutputPlan({ template, formData, recordId: item.id });
@@ -144,10 +144,10 @@ export class InputService {
     const indexed = this.dataStore.getRecordLocation(item.id);
     const path = item.source?.path || item.file?.path || indexed?.path || '';
     const startLine = item.source?.startLine || item.file?.line || indexed?.startLine || 0;
-    if (!path) throw createRecordConflictError('record_locator_invalid', `无法定位记录ID ${item.id}。`);
+    if (!path) throw createRecordConflictError('record_locator_invalid', `无法定位记录标识 ${item.id}。`);
 
     const existingContent = await this.vault.readFile(path);
-    if (existingContent == null) throw createRecordConflictError('record_path_missing', `找不到文件: ${path}`);
+    if (existingContent == null) throw createRecordConflictError('record_path_missing', `找不到文件：${path}`);
     this.throwIfAborted(signal);
 
     const lines = existingContent.split('\n');

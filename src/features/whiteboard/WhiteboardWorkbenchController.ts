@@ -51,7 +51,7 @@ export function useWhiteboardWorkbenchController({
   const previewSelectionDrop = useCallback((position: WhiteboardPosition | null) => setDropTargetGroupId(position ? resolveSelectionTarget(position) : null), [resolveSelectionTarget]);
 
   const moveItem = useCallback(async (itemId: string, position: WhiteboardPosition): Promise<boolean> => {
-    if (!storeReady) throw new Error('WhiteboardStore 尚未完成启动恢复');
+    if (!storeReady) throw new Error('白板数据尚未完成启动恢复');
     const item = items.find((candidate) => candidate.id === itemId); if (!item) return false;
     const targetGroupId = resolveItemTarget(itemId, position); setDropTargetGroupId(null);
     return targetGroupId === (item.groupId ?? null) ? whiteboardStore.moveItem(boardId, itemId, position) : whiteboardStore.moveItem(boardId, itemId, position, targetGroupId);

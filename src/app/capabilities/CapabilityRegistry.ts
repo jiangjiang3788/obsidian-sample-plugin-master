@@ -34,7 +34,7 @@ export class CapabilityRegistry<CapMap extends Record<string, any> = Record<stri
 
     register<K extends keyof CapMap & string, Deps>(key: K, factory: CapabilityFactory<CapMap[K], Deps>): void {
         if (this.strict && this.factories.has(key)) {
-            throw new Error(`[CapabilityRegistry] capability '${key}' already registered`);
+            throw new Error(`能力注册失败：“${key}”已经注册。`);
         }
         this.factories.set(key, factory as CapabilityFactory<any, any>);
     }

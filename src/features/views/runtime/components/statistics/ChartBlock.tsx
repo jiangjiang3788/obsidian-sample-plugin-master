@@ -109,7 +109,7 @@ export function ChartBlock({
             class={containerClasses}
             role="button"
             tabIndex={0}
-            title={data.blocks.length === 1 && onOpenRecordOrigin ? `${label} · Ctrl/⌘+点击打开原文` : label}
+            title={data.blocks.length === 1 && onOpenRecordOrigin ? `${label} · 按住控制键或⌘键点击打开原文` : label}
             onClick={openAll}
             onKeyDown={(event: KeyboardEvent) => {
                 if (!isKeyboardActivation(event)) return;

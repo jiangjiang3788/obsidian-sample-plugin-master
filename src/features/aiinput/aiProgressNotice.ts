@@ -26,10 +26,10 @@ export function buildAiWaitingMessage(options: {
     endpointHost: string;
 }): string {
     const prefix = options.mode === 'speed-test'
-        ? 'AI 接口测速中'
+        ? '智能助手接口测速中'
         : options.fastMode
-            ? 'AI 快速解析中'
-            : 'AI 正在解析';
+            ? '智能助手快速解析中'
+            : '智能助手正在解析';
 
     const estimate = options.mode === 'speed-test'
         ? '通常 3-12 秒；超过 10 秒说明接口首包偏慢'

@@ -14,6 +14,8 @@
 
 ## 版本实施
 
+- `releases/1.7.1/` — 1.7.1 Continue Panel：QuickInput/Continuation 共用记录类型可创建性与固定顺序、Continuation 多类型入口、仅成功态允许外部关闭、QuickInput intrinsic-height 根因修复。
+- `releases/1.7.0/` — 1.7.0 Record Continuation：`PLAN.md` / `IMPLEMENTATION_RESULT.md` / `TEST_REPORT.md`；完成任务后的同 Goal 打卡建议与 QuickInput 连续录入，RecordRelation 作为后续阶段，不与白板耦合。
 - `releases/1.6.0/` — 1.6.0 Presentation Convergence：10 种用户记录类型颜色所有权、Whiteboard/Timeline 交互收敛与发布验证。
 - `releases/1.5.0/` — 1.5.0 Record Domain Convergence 的计划、实施结果与测试报告。
 - `releases/1.4.0/` — 1.4.0 Record Presentation Contract + Whiteboard Visual Cleanup 的计划、实施结果与测试报告。

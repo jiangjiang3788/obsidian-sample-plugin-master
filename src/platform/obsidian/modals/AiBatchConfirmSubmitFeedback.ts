@@ -20,7 +20,7 @@ export function showAiBatchSaveFailure(result: RecordSubmitResult, index: number
     new Notice(`第 ${index + 1} 条保存已取消`, 4000);
     return;
   }
-  new Notice(`❌ 第 ${index + 1} 条保存失败: ${presentation.message || '保存失败'}`, 10000);
+  new Notice(`❌ 第 ${index + 1} 条保存失败：${presentation.message || '保存失败'}`, 10000);
 }
 
 export function showAiBatchUnexpectedSaveError(
@@ -31,5 +31,5 @@ export function showAiBatchUnexpectedSaveError(
   const label = scope === 'single' ? '保存当前记录失败' : '批量保存失败';
   const noticePrefix = scope === 'single' ? '❌ 保存失败' : '❌ 批量保存中断';
   devError(`[AiInput][${traceLabel(traceId)}] ${label}`, error);
-  new Notice(`${noticePrefix}: ${error instanceof Error ? error.message : String(error)}`, 10000);
+  new Notice(`${noticePrefix}：${error instanceof Error ? error.message : String(error)}`, 10000);
 }

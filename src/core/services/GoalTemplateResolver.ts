@@ -2,7 +2,7 @@ import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import type { GoalDefinition, GoalSettings } from '@/core/goal';
 import { applyGoalIconToCaptureFields, findDirectGoalTemplate, getGoalTemplates, normalizeGoalPath, resolveTemplatePeriodPolicy } from '@/core/goal';
-import { getTemplateRecordTypeById } from '@/core/recordTypes/public';
+import { getEffectiveRecordTypes, getTemplateRecordTypeById, type RecordTypeDefinition } from '@/core/recordTypes/public';
 
 export type GoalTemplateSourceType = 'record-type' | 'goal-template' | null;
 export type GoalTemplateResolveStatus = 'available' | 'disabled' | 'goal-required' | 'missing-goal-template' | 'unknown-record-type';
@@ -42,6 +42,30 @@ export function getCreateEligibleGoalPaths(settings: ThinkSettings, recordTypeId
     result.push(path);
   }
   return result;
+
+}
+
+/**
+ * Canonical create-surface RecordType resolver.
+ *
+ * This is the single source used by QuickInput and post-submit Continuation:
+ * - presentation/order comes from the RecordType registry;
+ * - direct capture types remain available without GoalTemplate rows;
+ * - template capture types are available only when an enabled template exists;
+ * - when a Goal is selected, the template must belong to that exact Goal.
+ */
+export function getCreateAvailableRecordTypes(
+  settings: ThinkSettings,
+  goalPath?: string | null,
+): RecordTypeDefinition[] {
+  const selectedGoalPath = normalizeGoalPath(goalPath) || '';
+  return getEffectiveRecordTypes().filter((recordType) => {
+    if (recordType.captureMode === 'direct') return true;
+    const eligibleGoalPaths = getCreateEligibleGoalPaths(settings, recordType.id);
+    return selectedGoalPath
+      ? eligibleGoalPaths.includes(selectedGoalPath)
+      : eligibleGoalPaths.length > 0;
+  });
 }
 
 function findGoal(goalSettings: GoalSettings | undefined, goalPath?: string | null): GoalDefinition | null {

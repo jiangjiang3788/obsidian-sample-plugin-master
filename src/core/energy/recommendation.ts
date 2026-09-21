@@ -165,11 +165,11 @@ function reasonFor(candidate: EnergyActionCandidate, band: EnergyRecommendationB
   if (candidate.brainLoad) parts.push(`${loadLabel(candidate.brainLoad)}脑力`);
   if (candidate.physicalLoad) parts.push(`${loadLabel(candidate.physicalLoad)}体力`);
   if (candidate.recoveryIntent) parts.push('恢复项');
-  parts.push(`建议 ${duration}min`);
+  parts.push(`建议 ${duration}分钟`);
 
   const effect = candidate.historicalEffect;
   if (effect && effect.sampleCount >= PERSONAL_SAMPLE_MINIMUM) {
-    parts.push(`个人历史 ${signed(effect.meanDelta)} · N=${effect.sampleCount}`);
+    parts.push(`个人历史 ${signed(effect.meanDelta)} · 样本数 ${effect.sampleCount}`);
   }
   return parts.join(' · ');
 }

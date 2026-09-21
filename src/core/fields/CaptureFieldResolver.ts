@@ -59,7 +59,7 @@ export function resolveCaptureFieldSchema(field: Partial<TemplateField>): FieldS
     defaultValue: field.defaultValue,
     min: field.min,
     max: field.max,
-    description: '由 RecordTemplate 定义的用户自定义字段。',
+    description: '由记录模板定义的用户自定义字段。',
   };
 }
 

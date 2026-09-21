@@ -90,9 +90,9 @@ export class FeatureRegistry<C> {
   }
 
   register(feature: Feature<C>): void {
-    if (!feature?.id) throw new Error('FeatureRegistry.register(): feature.id is required');
+    if (!feature?.id) throw new Error('功能注册失败：缺少功能标识。');
     if (this.features.some((f) => f.id === feature.id)) {
-      throw new Error(`FeatureRegistry.register(): duplicate feature id '${feature.id}'`);
+      throw new Error(`功能注册失败：功能标识“${feature.id}”重复。`);
     }
     this.features.push(feature);
   }

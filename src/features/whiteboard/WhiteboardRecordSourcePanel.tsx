@@ -243,7 +243,7 @@ export function WhiteboardRecordSourcePanel({
       {removalDropActive && (
         <div class="think-whiteboard-source__remove-drop-overlay" aria-hidden="true">
           <strong>← 松开移出白板</strong>
-          <span>原 Record / Markdown 不会删除</span>
+          <span>原始记录和笔记文件不会删除</span>
         </div>
       )}
     </aside>

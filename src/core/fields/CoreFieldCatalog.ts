@@ -47,7 +47,7 @@ const BUILT_IN_FIELD_GUIDE_GROUPS: BuiltInFieldGuideGroup[] = [
   {
     category: 'core',
     label: '插件核心字段',
-    description: '由插件内置维护。标签、目标等可以作为表单输入字段使用，但不会落到 extra。',
+    description: '由插件内置维护。标签、目标等可以作为表单输入字段使用，但不会写入自定义附加字段。',
     fields: CORE_FIELD_GUIDE_KEYS
       .map(key => FIELD_REGISTRY[key])
       .filter(Boolean)
@@ -75,9 +75,9 @@ const BUILT_IN_FIELD_GUIDE_GROUPS: BuiltInFieldGuideGroup[] = [
 ];
 
 const CORE_INPUT_FIELD_PRESETS: CoreInputFieldPreset[] = [
-  { label: '记录子类型', type: 'singleSelect', target: 'recordSubtype', description: '领域内部子类型；当前由 Energy 使用。' },
+  { label: '记录子类型', type: 'singleSelect', target: 'recordSubtype', description: '领域内部子类型；当前由精力模块使用。' },
   { label: '标签', type: 'multiTag', target: 'tags', description: '多标签字段，可填写多个标签。' },
-  { label: '目标', type: 'hierarchicalSingleSelect', target: 'goalPath', description: '单值目标路径。Goal 是独立实体，不使用标签语义。' },
+  { label: '目标', type: 'hierarchicalSingleSelect', target: 'goalPath', description: '单值目标路径。目标是独立实体，不使用标签语义。' },
   { label: '图片', type: 'image', target: 'image', description: '通用图片字段。' },
   { label: '内容', type: 'textarea', target: 'content', description: '记录正文输入字段。' },
   { label: '标题', type: 'text', target: 'title', description: '记录标题输入字段。' },

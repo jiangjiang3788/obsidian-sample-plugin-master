@@ -36,7 +36,7 @@ export function DayStatisticsView({
         <div class="sv-row">
           <ChartBlock
             data={data}
-            label={selectedDate.format('YYYY年MM月DD日 dddd')}
+            label={selectedDate.format('YYYY年MM月DD日 ddd')}
             buckets={categories}
             onCellClick={onCellClick}
             cellIdentifier={(goal: string) => ({ type: 'day', date: selectedDate.format('YYYY-MM-DD'), goal })}

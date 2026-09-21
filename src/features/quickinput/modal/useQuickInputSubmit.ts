@@ -15,6 +15,7 @@ import {
   type RecordOutputPlan,
   type RecordPersistencePlan,
   type RecordSubmitResult,
+  type RecordContinuationFollowUp,
 } from '@core/recordInput/public';
 import { CancelledError, createTakeLatest } from '@shared/utils/public';
 
@@ -36,6 +37,7 @@ export interface QuickInputSubmitControllerParams {
   source?: Extract<RecordInputSource, 'quickinput' | 'view_quick_create' | 'timer' | 'unknown'>;
   onSave?: (data: QuickInputSaveData) => void;
   onSubmitSuccess?: (result: RecordSubmitResult, draft: QuickInputSaveData) => void | Promise<void>;
+  onContinuation?: (continuation: RecordContinuationFollowUp) => void;
   closeModal: () => void;
   useCases: UseCases;
   getCurrentState: () => QuickInputEditorState;
@@ -85,6 +87,7 @@ export function useQuickInputSubmitController({
   source,
   onSave,
   onSubmitSuccess,
+  onContinuation,
   closeModal,
   useCases,
   getCurrentState,
@@ -180,6 +183,10 @@ export function useQuickInputSubmitController({
 
       const feedbackResult = withOperationSuccessNotice(result, operationMode);
       rememberConflict(feedbackResult);
+      const continuation = (feedbackResult.status === 'success' || feedbackResult.status === 'partial_success') && operationMode === 'create'
+        ? feedbackResult.followUp?.continuation
+        : undefined;
+      const actionableContinuation = onContinuation ? continuation : undefined;
 
       const presentation = buildRecordSubmitFeedbackPresentation(
         feedbackResult,
@@ -192,7 +199,8 @@ export function useQuickInputSubmitController({
 
       if (presentation.message) {
         const shouldShowOwnSuccessNotice = !(operationMode === 'create' && source === 'timer' && onSubmitSuccess);
-        if (presentation.tone !== 'success' || shouldShowOwnSuccessNotice) {
+        const shouldSuppressForContinuation = presentation.tone === 'success' && Boolean(actionableContinuation);
+        if (!shouldSuppressForContinuation && (presentation.tone !== 'success' || shouldShowOwnSuccessNotice)) {
           showNotice(presentation.message, presentation.tone);
         }
       }
@@ -214,7 +222,11 @@ export function useQuickInputSubmitController({
         }
       }
 
-      if (presentation.shouldCloseModal) {
+      if (actionableContinuation && onContinuation) {
+        onContinuation(actionableContinuation);
+      }
+
+      if (presentation.shouldCloseModal && !actionableContinuation) {
         closeModal();
       }
     } catch (error: any) {
@@ -237,6 +249,7 @@ export function useQuickInputSubmitController({
     operationMode,
     onSave,
     onSubmitSuccess,
+    onContinuation,
     rememberConflict,
     resetSubmitGateSoon,
     source,

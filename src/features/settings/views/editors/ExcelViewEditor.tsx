@@ -8,7 +8,7 @@ import { ReadonlyViewEditorNotice } from './settingsEditorUi';
 export function ExcelViewEditor() {
   return (
     <ReadonlyViewEditorNotice
-      title="数据表格（ExcelView）"
+      title="数据表格"
     />
   );
 }

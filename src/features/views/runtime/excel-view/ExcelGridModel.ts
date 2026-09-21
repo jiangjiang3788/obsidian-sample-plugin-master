@@ -30,7 +30,7 @@ export function getExcelColumnBadge(column: ExcelColumnModel, canCommitCells: bo
 
 export function getExcelColumnTitle(column: ExcelColumnModel, canCommitCells: boolean): string {
   if (!canCommitCells) return '当前视图未配置保存处理器，所有字段暂不可编辑';
-  if (!column.editable) return column.readonlyReason || '该字段不可在 Excel 单元格内直接编辑';
+  if (!column.editable) return column.readonlyReason || '该字段不可在表格单元格内直接编辑';
   if (column.dangerLevel === 'medium') return '可编辑字段，但会影响时间、标签等结构化内容，请谨慎修改';
   return '可编辑字段：双击单元格可编辑；拖动表头右侧边缘可调整列宽';
 }

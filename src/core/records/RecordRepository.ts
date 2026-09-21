@@ -49,22 +49,22 @@ const PATCH_FIELDS: Record<string, { label: string; aliases: string[] }> = {
   physicalDemand: { label: '体力要求', aliases: ['体力要求', 'physicalDemand'] },
   availabilityContexts: { label: '可用场景', aliases: ['可用场景', 'availabilityContexts'] },
   recoveryIntent: { label: '恢复意图', aliases: ['恢复意图', 'recoveryIntent'] },
-  seriesId: { label: '系列ID', aliases: ['系列ID', 'seriesId'] },
+  seriesId: { label: '系列标识', aliases: ['系列ID', 'seriesId'] },
   recurrenceUnit: { label: '重复单位', aliases: ['重复单位', 'recurrenceUnit'] },
   recurrenceInterval: { label: '重复间隔', aliases: ['重复间隔', 'recurrenceInterval'] },
   recurrenceAnchor: { label: '重复锚点', aliases: ['重复锚点', 'recurrenceAnchor'] },
   seriesStartDate: { label: '系列开始日期', aliases: ['系列开始日期', 'seriesStartDate'] },
-  currentTaskId: { label: '当前任务ID', aliases: ['当前任务ID', 'currentTaskId'] },
+  currentTaskId: { label: '当前任务标识', aliases: ['当前任务ID', 'currentTaskId'] },
   rolloverPolicy: { label: '滚动策略', aliases: ['滚动策略', 'rolloverPolicy'] },
-  taskId: { label: '任务ID', aliases: ['任务ID', 'taskId'] },
+  taskId: { label: '任务标识', aliases: ['任务ID', 'taskId'] },
   sessionStartedAt: { label: '开始于', aliases: ['开始于', 'sessionStartedAt'] },
   sessionEndedAt: { label: '结束于', aliases: ['结束于', 'sessionEndedAt'] },
   sessionDurationMinutes: { label: '时长', aliases: ['时长', 'sessionDurationMinutes'] },
   sessionResult: { label: '结果', aliases: ['结果', 'sessionResult'] },
   sessionSource: { label: '来源', aliases: ['来源', 'sessionSource'] },
   suggestedDurationMinutes: { label: '建议时长', aliases: ['建议时长', 'suggestedDurationMinutes'] },
-  startEnergyRecordId: { label: '开始精力记录ID', aliases: ['开始精力记录ID', 'startEnergyRecordId'] },
-  endEnergyRecordId: { label: '结束精力记录ID', aliases: ['结束精力记录ID', 'endEnergyRecordId'] },
+  startEnergyRecordId: { label: '开始精力记录标识', aliases: ['开始精力记录ID', 'startEnergyRecordId'] },
+  endEnergyRecordId: { label: '结束精力记录标识', aliases: ['结束精力记录ID', 'endEnergyRecordId'] },
   energyDelta: { label: '精力变化', aliases: ['精力变化', 'energyDelta'] },
   brainDelta: { label: '脑力变化', aliases: ['脑力变化', 'brainDelta'] },
   physicalDelta: { label: '体力变化', aliases: ['体力变化', 'physicalDelta'] },
@@ -235,7 +235,7 @@ export class RecordRepository {
       if (error instanceof RecordTransactionRecoveryError) {
         this.dataStore.reportRecordIntegrityIssue({
           code: 'record_transaction_recovery_required',
-          message: `Record transaction rollback was incomplete. Written: ${error.writtenPaths.join(', ')}; recovery failed: ${error.recoveryFailedPaths.join(', ')}.`,
+          message: `记录事务回滚未完整完成。已写入：${error.writtenPaths.join('、')}；恢复失败：${error.recoveryFailedPaths.join('、')}。`,
         });
       }
       throw error;

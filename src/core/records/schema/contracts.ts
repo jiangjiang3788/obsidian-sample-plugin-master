@@ -12,17 +12,17 @@ function f(
 }
 
 const ENVELOPE = [
-  f('记录ID', 'identity', 'target', 'record-id', 'Stable Record identity; never derived from file path or line.', { required: true, aliases: ['recordId', 'id'] }),
-  f('记录类型', 'identity', 'target', 'enum', 'Business record type discriminator.', { required: true, aliases: ['recordType'] }),
+  f('记录ID', 'identity', 'target', 'record-id', '稳定的记录标识；不会根据文件路径或行号推导。', { required: true, aliases: ['recordId', 'id'] }),
+  f('记录类型', 'identity', 'target', 'enum', '业务记录类型标识。', { required: true, aliases: ['recordType'] }),
 ] as const;
 
 const GOAL = [
-  f('目标', 'canonical-reference', 'target', 'string', 'Canonical human-readable Goal path. The path itself is the Goal identity.', { aliases: ['goalPath'] }),
+  f('目标', 'canonical-reference', 'target', 'string', '规范且可读的目标路径；路径本身就是目标标识。', { aliases: ['goalPath'] }),
 ] as const;
-const DATE = f('日期', 'business-fact', 'target', 'date', 'Record occurrence/business date.', { aliases: ['date'] });
-const CONTENT = f('内容', 'business-fact', 'target', 'string', 'Primary human-authored Record content.', { aliases: ['content', '任务内容'] });
-const TAGS = f('标签', 'business-fact', 'target', 'tags', 'User-authored tags. Omit when empty.', { aliases: ['tags'] });
-const ICON = f('图标', 'display-snapshot', 'target', 'string', 'Historical display snapshot. R5 decides whether displayStyle can replace this.', { aliases: ['icon'] });
+const DATE = f('日期', 'business-fact', 'target', 'date', '记录发生日期或业务日期。', { aliases: ['date'] });
+const CONTENT = f('内容', 'business-fact', 'target', 'string', '用户填写的主要记录内容。', { aliases: ['content', '任务内容'] });
+const TAGS = f('标签', 'business-fact', 'target', 'tags', '用户填写的标签；为空时省略。', { aliases: ['tags'] });
+const ICON = f('图标', 'display-snapshot', 'target', 'string', '历史显示快照；后续规则决定是否可由显示样式替代。', { aliases: ['icon'] });
 
 
 const GENERIC_COMMON = [...ENVELOPE, ...GOAL, DATE] as const;
@@ -62,8 +62,8 @@ export const HABIT_SCHEMA: RecordSchemaContract = {
   capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
   recordFields: [
     ...GENERIC_COMMON,
-    f('评分', 'business-fact', 'target', 'number', 'Habit rating/value.', { aliases: ['rating'] }),
-    f('图片', 'business-fact', 'target', 'string', 'Canonical image/rating visual value.', { aliases: ['image'] }),
+    f('评分', 'business-fact', 'target', 'number', '习惯打卡的评分或数值。', { aliases: ['rating'] }),
+    f('图片', 'business-fact', 'target', 'string', '规范的图片或评分展示值。', { aliases: ['image'] }),
     CONTENT,
   ],
 };
@@ -77,7 +77,7 @@ function periodRecord(recordType: 'plan' | 'review', displayName: string): Recor
     capabilities: { userVisible: true, goalBindable: true, dated: true, periodAware: true, customFields: true },
     recordFields: [
       ...GENERIC_COMMON,
-      f('周期粒度', 'business-fact', 'target', 'enum', 'Only persisted period fact. Period ID/label are derived from 日期 + 周期粒度.', { aliases: ['periodGranularity'], allowedValues: ['week', 'month', 'quarter', 'year'] }),
+      f('周期粒度', 'business-fact', 'target', 'enum', '唯一持久化的周期事实；周期标识和名称由“日期 + 周期粒度”推导。', { aliases: ['periodGranularity'], allowedValues: ['week', 'month', 'quarter', 'year'] }),
       ICON,
       CONTENT,
     ],
@@ -102,15 +102,15 @@ export const BLOCKER_SCHEMA = simpleGoalRecord('blocker', '阻碍');
 export const MILESTONE_SCHEMA = simpleGoalRecord('milestone', '里程碑');
 
 const TASK_DEMAND_FIELDS = [
-  f('优先级', 'domain-fact', 'target', 'enum', 'User-declared Task priority.', { aliases: ['priority'], allowedValues: ['lowest', 'low', 'medium', 'high', 'highest'] }),
-  f('重要程度', 'domain-fact', 'target', 'enum', 'Eisenhower importance classification. Missing means unclassified.', { aliases: ['importance'], allowedValues: ['important', 'normal'] }),
-  f('紧急程度', 'domain-fact', 'target', 'enum', 'Eisenhower urgency classification. Missing means unclassified.', { aliases: ['urgency'], allowedValues: ['urgent', 'normal'] }),
-  f('预计时长', 'domain-fact', 'target', 'number', 'User-declared duration in minutes. It can complete a manual Task time range when endAt is absent; TaskSession remains the source for multi-session timer history.', { aliases: ['expectedDurationMinutes'] }),
-  f('精力要求', 'domain-fact', 'target', 'enum', 'Declared overall energy demand.', { aliases: ['energyDemand'], allowedValues: ['low', 'medium', 'high'] }),
-  f('脑力要求', 'domain-fact', 'target', 'enum', 'Declared cognitive demand.', { aliases: ['brainDemand'], allowedValues: ['low', 'medium', 'high'] }),
-  f('体力要求', 'domain-fact', 'target', 'enum', 'Declared physical demand.', { aliases: ['physicalDemand'], allowedValues: ['low', 'medium', 'high'] }),
-  f('可用场景', 'domain-fact', 'target', 'string', 'Execution contexts where the Task can actually be done. Empty or any means unrestricted.', { aliases: ['availabilityContexts'] }),
-  f('恢复意图', 'domain-fact', 'omit-default', 'boolean', 'True when the Task is intentionally recovery-oriented.', { aliases: ['recoveryIntent'], defaultValue: false }),
+  f('优先级', 'domain-fact', 'target', 'enum', '用户设置的任务优先级。', { aliases: ['priority'], allowedValues: ['lowest', 'low', 'medium', 'high', 'highest'] }),
+  f('重要程度', 'domain-fact', 'target', 'enum', '艾森豪威尔重要程度分类；缺失表示未分类。', { aliases: ['importance'], allowedValues: ['important', 'normal'] }),
+  f('紧急程度', 'domain-fact', 'target', 'enum', '艾森豪威尔紧急程度分类；缺失表示未分类。', { aliases: ['urgency'], allowedValues: ['urgent', 'normal'] }),
+  f('预计时长', 'domain-fact', 'target', 'number', '用户设置的预计时长（分钟）。手工任务时间段缺少结束时间时可用它补全；多段计时历史仍以任务计时记录为准。', { aliases: ['expectedDurationMinutes'] }),
+  f('精力要求', 'domain-fact', 'target', 'enum', '设置的综合精力要求。', { aliases: ['energyDemand'], allowedValues: ['low', 'medium', 'high'] }),
+  f('脑力要求', 'domain-fact', 'target', 'enum', '设置的脑力要求。', { aliases: ['brainDemand'], allowedValues: ['low', 'medium', 'high'] }),
+  f('体力要求', 'domain-fact', 'target', 'enum', '设置的体力要求。', { aliases: ['physicalDemand'], allowedValues: ['low', 'medium', 'high'] }),
+  f('可用场景', 'domain-fact', 'target', 'string', '任务实际可执行的场景；为空或“任意”表示不限制。', { aliases: ['availabilityContexts'] }),
+  f('恢复意图', 'domain-fact', 'omit-default', 'boolean', '任务明确以恢复精力为目的时启用。', { aliases: ['recoveryIntent'], defaultValue: false }),
 ] as const;
 
 
@@ -122,22 +122,22 @@ export const TASK_SCHEMA: RecordSchemaContract = {
   capabilities: { userVisible: true, goalBindable: true, dated: true, statusful: true, customFields: true },
   recordFields: [
     ...ENVELOPE,
-    f('状态', 'domain-fact', 'target', 'enum', 'Task lifecycle state.', { required: true, aliases: ['status'], allowedValues: ['open', 'done', 'cancelled', 'skipped'] }),
-    f('创建于', 'domain-fact', 'target', 'datetime', 'Task creation timestamp.', { aliases: ['createdAt'] }),
+    f('状态', 'domain-fact', 'target', 'enum', '任务生命周期状态。', { required: true, aliases: ['status'], allowedValues: ['open', 'done', 'cancelled', 'skipped'] }),
+    f('创建于', 'domain-fact', 'target', 'datetime', '任务创建时间。', { aliases: ['createdAt'] }),
     ...GOAL,
-    f('系列ID', 'canonical-reference', 'target', 'record-id', 'Optional TaskSeries reference.', { aliases: ['seriesId'] }),
-    f('计划时间', 'domain-fact', 'target', 'datetime', 'Scheduled execution timestamp.', { aliases: ['scheduledAt'] }),
-    f('开始时间', 'domain-fact', 'target', 'datetime', 'Legacy/manual Task range start. New planning writes use scheduledAt; actual execution writes use TaskSession.', { aliases: ['startAt'] }),
-    f('结束时间', 'domain-fact', 'target', 'datetime', 'Legacy/manual Task range end. Kept for compatibility; actual execution writes use TaskSession.', { aliases: ['endAt'] }),
-    f('截止时间', 'domain-fact', 'target', 'datetime', 'Due timestamp.', { aliases: ['dueAt'] }),
-    f('计划日期', 'domain-fact', 'target', 'date', 'Date-only scheduled execution fact used by current records.', { aliases: ['scheduledDate'] }),
-    f('开始日期', 'domain-fact', 'target', 'date', 'Date-only declared start fact used by current records.', { aliases: ['startDate'] }),
-    f('截止日期', 'domain-fact', 'target', 'date', 'Date-only due fact used by current records.', { aliases: ['dueDate'] }),
-    f('完成于', 'domain-fact', 'target', 'datetime', 'Task completion timestamp/date.', { aliases: ['completedAt'] }),
-    f('取消于', 'domain-fact', 'target', 'datetime', 'Task cancellation timestamp/date.', { aliases: ['cancelledAt'] }),
-    f('跳过于', 'domain-fact', 'target', 'datetime', 'Recurring occurrence skipped timestamp/date.', { aliases: ['skippedAt'] }),
+    f('系列ID', 'canonical-reference', 'target', 'record-id', '可选的任务系列引用。', { aliases: ['seriesId'] }),
+    f('计划时间', 'domain-fact', 'target', 'datetime', '计划执行时间。', { aliases: ['scheduledAt'] }),
+    f('开始时间', 'domain-fact', 'target', 'datetime', '旧版或手工任务时间段的开始时间。新计划使用计划时间；实际执行使用任务计时记录。', { aliases: ['startAt'] }),
+    f('结束时间', 'domain-fact', 'target', 'datetime', '旧版或手工任务时间段的结束时间。为兼容保留；实际执行使用任务计时记录。', { aliases: ['endAt'] }),
+    f('截止时间', 'domain-fact', 'target', 'datetime', '截止时间。', { aliases: ['dueAt'] }),
+    f('计划日期', 'domain-fact', 'target', 'date', '当前记录使用的仅日期计划执行信息。', { aliases: ['scheduledDate'] }),
+    f('开始日期', 'domain-fact', 'target', 'date', '当前记录使用的仅日期开始信息。', { aliases: ['startDate'] }),
+    f('截止日期', 'domain-fact', 'target', 'date', '当前记录使用的仅日期截止信息。', { aliases: ['dueDate'] }),
+    f('完成于', 'domain-fact', 'target', 'datetime', '任务完成时间或日期。', { aliases: ['completedAt'] }),
+    f('取消于', 'domain-fact', 'target', 'datetime', '任务取消时间或日期。', { aliases: ['cancelledAt'] }),
+    f('跳过于', 'domain-fact', 'target', 'datetime', '重复任务本次跳过的时间或日期。', { aliases: ['skippedAt'] }),
     ...TASK_DEMAND_FIELDS,
-    f('内容', 'domain-fact', 'target', 'string', 'Task intent/content.', { aliases: ['content', '任务内容'] }),
+    f('内容', 'domain-fact', 'target', 'string', '任务意图或内容。', { aliases: ['content', '任务内容'] }),
   ],
 };
 
@@ -149,16 +149,16 @@ export const TASK_SERIES_SCHEMA: RecordSchemaContract = {
   capabilities: { userVisible: false, goalBindable: true, dated: true, statusful: true },
   recordFields: [
     ...ENVELOPE,
-    f('状态', 'domain-fact', 'target', 'enum', 'TaskSeries lifecycle state.', { required: true, aliases: ['status'], allowedValues: ['active', 'stopped'] }),
+    f('状态', 'domain-fact', 'target', 'enum', '任务系列生命周期状态。', { required: true, aliases: ['status'], allowedValues: ['active', 'stopped'] }),
     ...GOAL,
     ...TASK_DEMAND_FIELDS,
-    f('重复单位', 'domain-fact', 'target', 'enum', 'Structured recurrence unit.', { required: true, aliases: ['recurrenceUnit'], allowedValues: ['day', 'week', 'month', 'quarter', 'year'] }),
-    f('重复间隔', 'domain-fact', 'target', 'number', 'Structured recurrence interval.', { required: true, aliases: ['recurrenceInterval'], defaultValue: 1 }),
-    f('重复锚点', 'domain-fact', 'target', 'enum', 'Structured recurrence anchor.', { required: true, aliases: ['recurrenceAnchor'], allowedValues: ['scheduled', 'start', 'due', 'completion'], defaultValue: 'scheduled' }),
-    f('系列开始日期', 'domain-fact', 'target', 'date', 'Series anchor/start date.', { aliases: ['seriesStartDate'] }),
-    f('当前任务ID', 'canonical-reference', 'target', 'record-id', 'Current active occurrence reference.', { aliases: ['currentTaskId'] }),
-    f('滚动策略', 'domain-fact', 'omit-default', 'enum', 'Rollover policy; carry is currently the sole/default strategy.', { aliases: ['rolloverPolicy'], allowedValues: ['carry'], defaultValue: 'carry' }),
-    f('内容', 'domain-fact', 'target', 'string', 'Long-lived recurring Task definition.', { aliases: ['content'] }),
+    f('重复单位', 'domain-fact', 'target', 'enum', '结构化重复单位。', { required: true, aliases: ['recurrenceUnit'], allowedValues: ['day', 'week', 'month', 'quarter', 'year'] }),
+    f('重复间隔', 'domain-fact', 'target', 'number', '结构化重复间隔。', { required: true, aliases: ['recurrenceInterval'], defaultValue: 1 }),
+    f('重复锚点', 'domain-fact', 'target', 'enum', '结构化重复锚点。', { required: true, aliases: ['recurrenceAnchor'], allowedValues: ['scheduled', 'start', 'due', 'completion'], defaultValue: 'scheduled' }),
+    f('系列开始日期', 'domain-fact', 'target', 'date', '系列锚点或开始日期。', { aliases: ['seriesStartDate'] }),
+    f('当前任务ID', 'canonical-reference', 'target', 'record-id', '当前活动任务引用。', { aliases: ['currentTaskId'] }),
+    f('滚动策略', 'domain-fact', 'omit-default', 'enum', '滚动策略；当前仅支持并默认使用延续策略。', { aliases: ['rolloverPolicy'], allowedValues: ['carry'], defaultValue: 'carry' }),
+    f('内容', 'domain-fact', 'target', 'string', '长期重复任务定义。', { aliases: ['content'] }),
   ],
 };
 
@@ -170,20 +170,20 @@ export const TASK_SESSION_SCHEMA: RecordSchemaContract = {
   capabilities: { userVisible: false, goalBindable: true, dated: true, executionHistory: true },
   recordFields: [
     ...ENVELOPE,
-    f('任务ID', 'canonical-reference', 'target', 'record-id', 'Executed Task reference.', { required: true, aliases: ['taskId'] }),
-    f('系列ID', 'canonical-reference', 'target', 'record-id', 'Optional TaskSeries reference.', { aliases: ['seriesId'] }),
+    f('任务ID', 'canonical-reference', 'target', 'record-id', '已执行任务的引用。', { required: true, aliases: ['taskId'] }),
+    f('系列ID', 'canonical-reference', 'target', 'record-id', '可选的任务系列引用。', { aliases: ['seriesId'] }),
     ...GOAL,
-    f('开始于', 'domain-fact', 'target', 'datetime', 'Actual session start.', { required: true, aliases: ['sessionStartedAt'] }),
-    f('结束于', 'domain-fact', 'target', 'datetime', 'Actual session end.', { required: true, aliases: ['sessionEndedAt'] }),
-    f('时长', 'domain-fact', 'target', 'number', 'Actual session duration in minutes.', { required: true, aliases: ['sessionDurationMinutes'] }),
-    f('结果', 'domain-fact', 'target', 'enum', 'Session outcome.', { required: true, aliases: ['sessionResult'], allowedValues: ['work-block-ended', 'task-completed'] }),
-    f('来源', 'measurement-provenance', 'target', 'enum', 'Execution capture source.', { required: true, aliases: ['sessionSource'], allowedValues: ['timer', 'energy-view', 'timeline', 'unknown'] }),
-    f('建议时长', 'domain-fact', 'target', 'number', 'Suggested duration snapshot at execution time.', { aliases: ['suggestedDurationMinutes'] }),
-    f('开始精力记录ID', 'canonical-reference', 'target', 'record-id', 'Energy snapshot at session start.', { aliases: ['startEnergyRecordId'] }),
-    f('结束精力记录ID', 'canonical-reference', 'target', 'record-id', 'Energy snapshot linked after session.', { aliases: ['endEnergyRecordId'] }),
-    f('精力变化', 'domain-fact', 'target', 'number', 'Linked energy delta.', { aliases: ['energyDelta'] }),
-    f('脑力变化', 'domain-fact', 'target', 'number', 'Linked cognitive-energy delta.', { aliases: ['brainDelta'] }),
-    f('体力变化', 'domain-fact', 'target', 'number', 'Linked physical-energy delta.', { aliases: ['physicalDelta'] }),
+    f('开始于', 'domain-fact', 'target', 'datetime', '本次实际执行开始时间。', { required: true, aliases: ['sessionStartedAt'] }),
+    f('结束于', 'domain-fact', 'target', 'datetime', '本次实际执行结束时间。', { required: true, aliases: ['sessionEndedAt'] }),
+    f('时长', 'domain-fact', 'target', 'number', '本次实际执行时长（分钟）。', { required: true, aliases: ['sessionDurationMinutes'] }),
+    f('结果', 'domain-fact', 'target', 'enum', '本次执行结果。', { required: true, aliases: ['sessionResult'], allowedValues: ['work-block-ended', 'task-completed'] }),
+    f('来源', 'measurement-provenance', 'target', 'enum', '实际执行记录来源。', { required: true, aliases: ['sessionSource'], allowedValues: ['timer', 'energy-view', 'timeline', 'unknown'] }),
+    f('建议时长', 'domain-fact', 'target', 'number', '执行时的建议时长快照。', { aliases: ['suggestedDurationMinutes'] }),
+    f('开始精力记录ID', 'canonical-reference', 'target', 'record-id', '执行开始时的精力快照。', { aliases: ['startEnergyRecordId'] }),
+    f('结束精力记录ID', 'canonical-reference', 'target', 'record-id', '执行结束后关联的精力快照。', { aliases: ['endEnergyRecordId'] }),
+    f('精力变化', 'domain-fact', 'target', 'number', '关联的综合精力变化。', { aliases: ['energyDelta'] }),
+    f('脑力变化', 'domain-fact', 'target', 'number', '关联的脑力变化。', { aliases: ['brainDelta'] }),
+    f('体力变化', 'domain-fact', 'target', 'number', '关联的体力变化。', { aliases: ['physicalDelta'] }),
   ],
 };
 
@@ -195,20 +195,20 @@ export const ENERGY_SCHEMA: RecordSchemaContract = {
   capabilities: { userVisible: true, goalBindable: true, dated: true, subtypeAware: true, customFields: true },
   recordFields: [
     ...ENVELOPE,
-    f('记录子类型', 'domain-fact', 'target', 'enum', 'Energy domain discriminator.', { required: true, aliases: ['recordSubtype'], allowedValues: ['snapshot', 'change', 'recovery', 'depletion', 'stop'] }),
+    f('记录子类型', 'domain-fact', 'target', 'enum', '精力记录子类型。', { required: true, aliases: ['recordSubtype'], allowedValues: ['snapshot', 'change', 'recovery', 'depletion', 'stop'] }),
     ...GOAL,
     DATE,
-    f('时间', 'business-fact', 'target', 'string', 'Energy observation time when known.', { aliases: ['time'] }),
-    f('时段', 'business-fact', 'target', 'string', 'Energy observation period when exact time is unavailable.', { aliases: ['period'] }),
-    f('精力值', 'domain-fact', 'target', 'number', 'Canonical 0-100 energy score.', { aliases: ['score'] }),
-    f('脑力精力', 'domain-fact', 'target', 'number', 'Detailed cognitive energy score.', { aliases: ['brainScore'] }),
-    f('体力精力', 'domain-fact', 'target', 'number', 'Detailed physical energy score.', { aliases: ['physicalScore'] }),
-    f('综合算法', 'measurement-provenance', 'target', 'string', 'Aggregation method for detailed scores.', { aliases: ['aggregateMethod'] }),
-    f('评分模式', 'measurement-provenance', 'target', 'enum', 'How the energy score was captured.', { aliases: ['scoreMode'], allowedValues: ['quick', 'detailed', 'percent'] }),
-    f('记录方式', 'measurement-provenance', 'target', 'enum', 'Realtime vs retrospective capture.', { aliases: ['captureMode'], allowedValues: ['realtime', 'retrospective'] }),
-    f('时间精度', 'measurement-provenance', 'target', 'enum', 'Precision of observation time.', { aliases: ['timePrecision'], allowedValues: ['exact', 'approximate', 'period', 'day'] }),
-    f('记录时间', 'measurement-provenance', 'target', 'datetime', 'Actual capture timestamp when available.', { aliases: ['recordedAt'] }),
-    f('来源', 'measurement-provenance', 'target', 'string', 'Capture surface/source.', { aliases: ['source'] }),
+    f('时间', 'business-fact', 'target', 'string', '已知时使用的精力观测时间。', { aliases: ['time'] }),
+    f('时段', 'business-fact', 'target', 'string', '无法确定准确时间时使用的精力观测时段。', { aliases: ['period'] }),
+    f('精力值', 'domain-fact', 'target', 'number', '规范的 0–100 综合精力分数。', { aliases: ['score'] }),
+    f('脑力精力', 'domain-fact', 'target', 'number', '详细脑力分数。', { aliases: ['brainScore'] }),
+    f('体力精力', 'domain-fact', 'target', 'number', '详细体力分数。', { aliases: ['physicalScore'] }),
+    f('综合算法', 'measurement-provenance', 'target', 'string', '详细分数的综合算法。', { aliases: ['aggregateMethod'] }),
+    f('评分模式', 'measurement-provenance', 'target', 'enum', '精力分数的记录方式。', { aliases: ['scoreMode'], allowedValues: ['quick', 'detailed', 'percent'] }),
+    f('记录方式', 'measurement-provenance', 'target', 'enum', '实时记录或回顾补记。', { aliases: ['captureMode'], allowedValues: ['realtime', 'retrospective'] }),
+    f('时间精度', 'measurement-provenance', 'target', 'enum', '观测时间精度。', { aliases: ['timePrecision'], allowedValues: ['exact', 'approximate', 'period', 'day'] }),
+    f('记录时间', 'measurement-provenance', 'target', 'datetime', '可用时记录实际录入时间。', { aliases: ['recordedAt'] }),
+    f('来源', 'measurement-provenance', 'target', 'string', '记录入口或来源。', { aliases: ['source'] }),
   ],
 };
 

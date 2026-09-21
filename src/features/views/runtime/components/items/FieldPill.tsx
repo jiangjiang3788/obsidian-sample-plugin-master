@@ -44,7 +44,7 @@ export function FieldPill({ item, fieldKey, resolveResourcePath, onOpenRecordOri
             void onOpenRecordOrigin(item);
         },
     } : {};
-    const originTitle = 'Ctrl/⌘+点击打开原文';
+    const originTitle = '按住控制键或⌘键点击打开原文';
     
     // Tags 字段特殊处理
     if (fieldKey === 'tags') {
