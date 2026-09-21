@@ -57,8 +57,8 @@ describe('Think OS 真机 UI：四列 Goal Cascade 与 Quick Input', () => {
     await level2.waitForExist({ timeout: 5_000 });
     await level2.click();
     expect(await level2.getAttribute('aria-selected')).not.toBe('true');
-    const activePath = await $('.think-quick-input-goal-active-path');
-    expect(await activePath.getText()).toContain('二级');
+    expect(await level2.getAttribute('aria-current')).toBe('true');
+    expect(await level2.getAttribute('title')).toContain('二级');
 
     const leaf = await $(`[data-goal-path="${E2E_LEAF_GOAL}"]`);
     await leaf.waitForExist({ timeout: 5_000 });

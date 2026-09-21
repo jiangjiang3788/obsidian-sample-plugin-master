@@ -44,3 +44,57 @@
 }
 .modal.think-quick-input-modal[data-think-platform="ios"] .think-modal__footer--quick-input,
 .modal.think-quick-input-modal[data-think-platform="android"] .think-modal__footer--quick-input { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-space-4)); }
+
+/*
+ * Stable desktop baseline for the active Quick Input editor.
+ *
+ * IMPORTANT: these are design constants, not per-record-type calculations.
+ * They were measured once from the tallest built-in collapsed layout and are
+ * reused unchanged for Task / Energy / Check-in / Event / Feeling / Thought /
+ * Summary / Plan / Blocker / Milestone. Switching RecordType therefore cannot
+ * change the base modal height.
+ *
+ * Only two things may break the fixed baseline:
+ * 1) the user explicitly opens a disclosure such as “更多选项”;
+ * 2) the viewport is physically shorter than the fixed desktop height.
+ * Continuation/result panels intentionally keep their natural compact height.
+ */
+@media (min-width: 769px) and (min-height: 720px) {
+  .modal.think-quick-input-modal
+    .think-modal.think-modal--quick-input.think-modal--quick-input-layout-stable {
+    --think-qif-record-type-zone-height: 60px;
+    --think-qif-goal-zone-height: 280px;
+    --think-qif-fields-zone-height: 330px;
+    --think-qif-modal-fixed-height: 822px;
+
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    height: var(--think-qif-modal-fixed-height) !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 32px);
+  }
+
+  .modal.think-quick-input-modal
+    .think-modal.think-modal--quick-input.think-modal--quick-input-layout-stable
+    > .think-modal__body {
+    flex: 1 1 auto;
+  }
+
+  /* Explicit disclosure is a user-driven layout change, so it may grow past
+   * the fixed collapsed baseline. This is intentionally different from a
+   * RecordType switch, which never changes the base height. */
+  .modal.think-quick-input-modal
+    .think-modal.think-modal--quick-input.think-modal--quick-input-layout-stable:has(.think-qif-advanced-disclosure[open]) {
+    height: auto !important;
+    min-height: var(--think-qif-modal-fixed-height) !important;
+  }
+}
+
+@supports not (height: 100dvh) {
+  @media (min-width: 769px) and (min-height: 720px) {
+    .modal.think-quick-input-modal
+      .think-modal.think-modal--quick-input.think-modal--quick-input-layout-stable {
+      max-height: calc(100vh - 32px);
+    }
+  }
+}

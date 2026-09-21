@@ -121,14 +121,15 @@ describe('GoalSelector inline root-first hierarchy UX', () => {
     expect(selected.getAttribute('aria-current')).toBe('true');
     expect(selected.getAttribute('aria-selected')).toBe('true');
     expect(selected.title).toBe('照顾好自己 › 思考 › 健康');
-    expect(host.querySelector('.think-quick-input-goal-active-path')?.textContent).toBe('照顾好自己 › 思考 › 健康');
+    expect(host.querySelector('.think-quick-input-goal-active-path')).toBeNull();
 
-    // A different branch can expose another “健康”, but the path remains explicit.
+    // A different branch can expose another “健康”; row title and ancestry stay
+    // explicit without adding a second visible path line below the recent chips.
     await act(async () => optionByPath(host, '仪容仪表').click());
     const otherHealth = optionByPath(host, '仪容仪表/健康');
     expect(otherHealth.title).toBe('仪容仪表 › 健康');
     expect(otherHealth.getAttribute('aria-selected')).toBe('false');
-    expect(host.querySelector('.think-quick-input-goal-active-path')?.textContent).toBe('仪容仪表');
+    expect(optionByPath(host, '仪容仪表').getAttribute('aria-current')).toBe('true');
   });
 
   it('selects only a real Goal, never a navigation-only ancestor', async () => {

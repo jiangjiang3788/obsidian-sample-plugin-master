@@ -103,8 +103,16 @@ export function QuickInputEditor({
 
   const recordTypes = useMemo(() => {
     if (recordInputMode !== 'create') return getEffectiveRecordTypes();
-    return getCreateAvailableRecordTypes(fullSettings, selectedGoalPath);
-  }, [fullSettings.goalSettings?.goalTemplates, selectedGoalPath, recordInputMode]);
+    // RecordType navigation is a global create-surface capability, not a
+    // property of the currently selected Goal. Goal compatibility is handled
+    // by goalOptions/template resolution after the user switches type.
+    //
+    // Filtering this list by selectedGoalPath made the switcher shrink after a
+    // Goal selection and, for direct Energy capture, often reduced it to the
+    // single Energy type. That is why entering Energy could strand the user in
+    // a panel with no way to switch back.
+    return getCreateAvailableRecordTypes(fullSettings);
+  }, [fullSettings.goalSettings?.goalTemplates, recordInputMode]);
   const currentRecordType = useMemo(
     () => recordTypes.find((recordType) => recordType.id === currentRecordTypeId) || null,
     [recordTypes, currentRecordTypeId],
@@ -401,8 +409,6 @@ export function QuickInputEditor({
       isMobileLike={isMobileLike}
       showTimeDirectionControl={showTimeDirectionControl}
       currentPeriodLabel={currentPeriod?.label || null}
-      currentGoalPath={currentGoalPath}
-      templateSourceType={displayTemplateSourceType}
       fieldSourceSummary={makeEditorState(formData, timeDirection, fieldSources).fieldSourceSummary}
       autoFocusContent={autoFocusContent}
     />

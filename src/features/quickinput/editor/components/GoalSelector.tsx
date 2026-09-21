@@ -180,8 +180,6 @@ export function GoalSelector({ goals, recentGoalPaths = [], selectedGoalPath, on
     );
   };
 
-  const activePathLabel = activePath ? activePath.split('/').filter(Boolean).join(' › ') : '';
-
   return (
     <div className={`think-quick-input-goal-selector${dense ? ' is-dense' : ''}`}>
       {recentOptions.length ? (
@@ -201,11 +199,6 @@ export function GoalSelector({ goals, recentGoalPaths = [], selectedGoalPath, on
               </button>
             ))}
           </div>
-        </div>
-      ) : null}
-      {activePathLabel ? (
-        <div className="think-quick-input-goal-active-path" title={activePathLabel} aria-live="polite">
-          {activePathLabel}
         </div>
       ) : null}
       <div ref={listRef} className="think-list think-quick-input-goal-list" aria-label="目标层级选择">

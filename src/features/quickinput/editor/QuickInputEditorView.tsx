@@ -32,8 +32,6 @@ export interface QuickInputEditorViewProps {
   onRequestSubmit?: () => void;
   isMobileLike?: boolean;
   showTimeDirectionControl?: boolean;
-  currentGoalPath?: string | null;
-  templateSourceType?: 'record-type' | 'goal-template' | null;
   fieldSourceSummary?: Record<string, number>;
   currentPeriodLabel?: string | null;
   autoFocusContent?: boolean;
@@ -61,8 +59,6 @@ export function QuickInputEditorView({
   onRequestSubmit,
   isMobileLike = false,
   showTimeDirectionControl = false,
-  currentGoalPath = null,
-  templateSourceType = null,
   autoFocusContent = false,
 }: QuickInputEditorViewProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -114,7 +110,7 @@ export function QuickInputEditorView({
       <div ref={rootRef} className={`think-quick-input-editor${dense ? ' is-dense' : ''}`}>
         <div className="think-quick-input-context-grid">
           {allowRecordTypeSwitch && recordTypes.length > 1 && (
-            <QuickInputFormRow label="记录类型">
+            <QuickInputFormRow label="记录类型" className="think-qif-row--record-type">
               <RecordTypeSwitcher
                 recordTypes={recordTypes}
                 currentRecordTypeId={currentRecordTypeId}
@@ -124,7 +120,7 @@ export function QuickInputEditorView({
           )}
 
           {currentRecordTypeId ? (
-            <QuickInputFormRow label="目标">
+            <QuickInputFormRow label="目标" className="think-qif-row--goal">
               <GoalSelector
                 goals={goals}
                 recentGoalPaths={recentGoalPaths}
@@ -143,15 +139,13 @@ export function QuickInputEditorView({
     );
   }
 
-  const shouldShowRecordTypeFallbackHint = Boolean(currentGoalPath)
-    && templateSourceType === 'record-type';
   const isTaskTemplate = String(currentRecordTypeId || template?.recordTypeId || template?.id || '').replace(/^core\./, '') === 'task';
 
   return (
     <div ref={rootRef} className={`think-quick-input-editor${dense ? ' is-dense' : ''}`}>
       <div className="think-quick-input-context-grid">
           {allowRecordTypeSwitch && recordTypes.length > 1 && (
-            <QuickInputFormRow label="记录类型">
+            <QuickInputFormRow label="记录类型" className="think-qif-row--record-type">
               <RecordTypeSwitcher
                 recordTypes={recordTypes}
                 currentRecordTypeId={currentRecordTypeId}
@@ -160,24 +154,24 @@ export function QuickInputEditorView({
             </QuickInputFormRow>
           )}
 
-          <QuickInputFormRow label="目标">
-            <div className="think-quick-input-context-row__stack">
-              <GoalSelector
-                goals={goals}
-                recentGoalPaths={recentGoalPaths}
-                selectedGoalPath={selectedGoalPath}
-                onSelect={onSelectGoal}
-                onCreateGoal={onCreateGoal}
-                dense={dense}
-              />
-              {shouldShowRecordTypeFallbackHint && (
-                <div className="think-quick-input-context-hint">当前记录使用记录类型基础模板。</div>
-              )}
-            </div>
+          <QuickInputFormRow label="目标" className="think-qif-row--goal">
+            <GoalSelector
+              goals={goals}
+              recentGoalPaths={recentGoalPaths}
+              selectedGoalPath={selectedGoalPath}
+              onSelect={onSelectGoal}
+              onCreateGoal={onCreateGoal}
+              dense={dense}
+            />
           </QuickInputFormRow>
       </div>
 
-      {showDivider && !isTaskTemplate && <div className="think-quick-input-context-divider" aria-hidden="true" />}
+      {showDivider && (
+        <div
+          className={`think-quick-input-context-divider${isTaskTemplate ? ' is-layout-placeholder' : ''}`}
+          aria-hidden="true"
+        />
+      )}
 
       <div className="think-quick-input-fields">
         <QuickInputEditorFields

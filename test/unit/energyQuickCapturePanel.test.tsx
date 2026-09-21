@@ -20,7 +20,7 @@ function Harness({ onCapture, defaultGoalPath = '' }: { onCapture: jest.Mock; de
   const [selectedGoalPath, setSelectedGoalPath] = useState<string | null>(null);
   return (
     <EnergyQuickCapturePanel
-      blocks={[{ id: 'core.energy', name: '精力' }]}
+      recordTypes={[{ id: 'core.energy', name: '精力' }]}
       allowRecordTypeSwitch={false}
       currentRecordTypeId="core.energy"
       onRecordTypeChange={jest.fn()}
@@ -79,5 +79,35 @@ describe('EnergyQuickCapturePanel', () => {
     expect(host.textContent).toContain('生活/暂停');
     const score60 = host.querySelector('button[title^="60 ·"]') as HTMLButtonElement;
     expect(score60.disabled).toBe(false);
+  });
+
+  it('keeps the RecordType switcher usable inside direct Energy capture', async () => {
+    const onRecordTypeChange = jest.fn();
+    await act(async () => {
+      render(
+        <EnergyQuickCapturePanel
+          recordTypes={[
+            { id: 'core.task', name: '任务' },
+            { id: 'core.energy', name: '精力' },
+            { id: 'core.habit', name: '打卡' },
+          ]}
+          allowRecordTypeSwitch
+          currentRecordTypeId="core.energy"
+          onRecordTypeChange={onRecordTypeChange}
+          goals={goals}
+          selectedGoalPath="生活/活跃"
+          onSelectGoal={jest.fn()}
+          onCapture={jest.fn()}
+        />,
+        host,
+      );
+    });
+
+    expect(host.textContent).toContain('记录类型');
+    const task = host.querySelector('button[title="任务"]') as HTMLButtonElement;
+    expect(task).toBeTruthy();
+
+    await act(async () => task.click());
+    expect(onRecordTypeChange).toHaveBeenCalledWith('core.task');
   });
 });

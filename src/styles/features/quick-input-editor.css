@@ -66,6 +66,12 @@
   opacity: .72;
 }
 
+/* Task deliberately omits the visible section divider. Outside the stable
+ * desktop Quick Input shell, keep the historical compact spacing unchanged. */
+.think-quick-input-editor .think-quick-input-context-divider.is-layout-placeholder {
+  display: none;
+}
+
 .think-quick-input-editor .think-quick-input-context-hint {
   margin-top: var(--think-space-2);
   padding: 0;
@@ -467,4 +473,86 @@
   margin: 6px 0 10px;
   color: var(--think-text-muted);
   font-size: var(--think-font-size-sm);
+}
+
+/*
+ * Quick Input desktop spatial anchors.
+ *
+ * The editor is deliberately split into two stable visual zones:
+ * 1) Goal selection; 2) the record-type-specific fields below it.
+ * Their contents keep their original order and control semantics. Goal stays
+ * height-stable; fields use a stable collapsed baseline sized to the tallest
+ * built-in collapsed template, then grow naturally when an explicitly opened
+ * disclosure/custom template needs more room.
+ *
+ * Only Goal keeps an internal overflow safety net. Field disclosures are not
+ * trapped in a nested scroller: opening “更多选项” grows the form itself, and
+ * the modal body becomes the single viewport fallback only when the screen is
+ * genuinely too short.
+ */
+@media (min-width: 769px) and (min-height: 720px) {
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-qif-row--record-type
+    .think-qif-row__control {
+    height: var(--think-qif-record-type-zone-height);
+    min-height: var(--think-qif-record-type-zone-height);
+  }
+
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-quick-input-editor:not(.think-quick-input-energy-panel)
+    .think-qif-row--goal
+    .think-quick-input-goal-selector {
+    display: flex;
+    flex-direction: column;
+    height: var(--think-qif-goal-zone-height);
+    min-height: var(--think-qif-goal-zone-height);
+    max-height: var(--think-qif-goal-zone-height);
+    overflow: hidden;
+  }
+
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-quick-input-editor:not(.think-quick-input-energy-panel)
+    .think-qif-row--goal
+    .think-quick-input-goal-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  /* Normal record types share one vertical skeleton. Task keeps its divider
+   * visually absent, but reserves the same 1px divider slot so switching
+   * Task <-> other template types never shifts the fields/footer anchors. */
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-quick-input-editor:not(.think-quick-input-energy-panel)
+    .think-quick-input-context-divider.is-layout-placeholder {
+    display: block;
+    visibility: hidden;
+  }
+
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-quick-input-editor:not(.think-quick-input-energy-panel)
+    > .think-quick-input-fields {
+    box-sizing: border-box;
+    height: var(--think-qif-fields-zone-height);
+    min-height: var(--think-qif-fields-zone-height);
+    overflow: visible;
+  }
+
+  /* Keep the collapsed field stage fixed at the measured maximum. When the
+   * user explicitly opens “更多选项”, release that one zone so the disclosure
+   * participates in the normal document flow instead of creating a nested
+   * scroller. */
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-quick-input-editor:not(.think-quick-input-energy-panel):has(.think-qif-advanced-disclosure[open])
+    > .think-quick-input-fields {
+    height: auto;
+    min-height: var(--think-qif-fields-zone-height);
+  }
 }

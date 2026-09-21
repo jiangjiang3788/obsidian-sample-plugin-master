@@ -8291,6 +8291,11 @@ body.excel-view-is-resizing-column * {
   background: var(--think-border-subtle);
   opacity: .72;
 }
+/* Task deliberately omits the visible section divider. Outside the stable
+ * desktop Quick Input shell, keep the historical compact spacing unchanged. */
+.think-quick-input-editor .think-quick-input-context-divider.is-layout-placeholder {
+  display: none;
+}
 .think-quick-input-editor .think-quick-input-context-hint {
   margin-top: var(--think-space-2);
   padding: 0;
@@ -8635,6 +8640,87 @@ body.excel-view-is-resizing-column * {
   color: var(--think-text-muted);
   font-size: var(--think-font-size-sm);
 }
+/*
+ * Quick Input desktop spatial anchors.
+ *
+ * The editor is deliberately split into two stable visual zones:
+ * 1) Goal selection; 2) the record-type-specific fields below it.
+ * Their contents keep their original order and control semantics. Goal stays
+ * height-stable; fields use a stable collapsed baseline sized to the tallest
+ * built-in collapsed template, then grow naturally when an explicitly opened
+ * disclosure/custom template needs more room.
+ *
+ * Only Goal keeps an internal overflow safety net. Field disclosures are not
+ * trapped in a nested scroller: opening “更多选项” grows the form itself, and
+ * the modal body becomes the single viewport fallback only when the screen is
+ * genuinely too short.
+ */
+@media (min-width: 769px) and (min-height: 720px) {
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-qif-row--record-type
+    .think-qif-row__control {
+    height: var(--think-qif-record-type-zone-height);
+    min-height: var(--think-qif-record-type-zone-height);
+  }
+
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-quick-input-editor:not(.think-quick-input-energy-panel)
+    .think-qif-row--goal
+    .think-quick-input-goal-selector {
+    display: flex;
+    flex-direction: column;
+    height: var(--think-qif-goal-zone-height);
+    min-height: var(--think-qif-goal-zone-height);
+    max-height: var(--think-qif-goal-zone-height);
+    overflow: hidden;
+  }
+
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-quick-input-editor:not(.think-quick-input-energy-panel)
+    .think-qif-row--goal
+    .think-quick-input-goal-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  /* Normal record types share one vertical skeleton. Task keeps its divider
+   * visually absent, but reserves the same 1px divider slot so switching
+   * Task <-> other template types never shifts the fields/footer anchors. */
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-quick-input-editor:not(.think-quick-input-energy-panel)
+    .think-quick-input-context-divider.is-layout-placeholder {
+    display: block;
+    visibility: hidden;
+  }
+
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-quick-input-editor:not(.think-quick-input-energy-panel)
+    > .think-quick-input-fields {
+    box-sizing: border-box;
+    height: var(--think-qif-fields-zone-height);
+    min-height: var(--think-qif-fields-zone-height);
+    overflow: visible;
+  }
+
+  /* Keep the collapsed field stage fixed at the measured maximum. When the
+   * user explicitly opens “更多选项”, release that one zone so the disclosure
+   * participates in the normal document flow instead of creating a nested
+   * scroller. */
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-quick-input-editor:not(.think-quick-input-energy-panel):has(.think-qif-advanced-disclosure[open])
+    > .think-quick-input-fields {
+    height: auto;
+    min-height: var(--think-qif-fields-zone-height);
+  }
+}
 /* QuickInput post-submit continuation: compact, already-saved, low-friction actions. */
 .modal.think-quick-input-modal .think-quick-input-continuation {
   display: grid;
@@ -8887,15 +8973,6 @@ body.excel-view-is-resizing-column * {
 .think-quick-input-editor .think-quick-input-goal-recent__chip:focus-visible {
   background: var(--think-bg-surface-2); border-color: var(--think-border-strong);
 }
-.think-quick-input-editor .think-quick-input-goal-active-path {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--think-text-secondary);
-  font-size: var(--think-font-size-xs);
-  line-height: var(--think-line-height-tight);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .think-quick-input-editor .think-quick-input-goal-selector__create {
   display: grid;
   grid-template-columns: minmax(140px, 1fr) auto;
@@ -9108,10 +9185,66 @@ body.excel-view-is-resizing-column * {
 }
 .modal.think-quick-input-modal[data-think-platform="ios"] .think-modal__footer--quick-input,
 .modal.think-quick-input-modal[data-think-platform="android"] .think-modal__footer--quick-input { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-space-4)); }
+/*
+ * Stable desktop baseline for the active Quick Input editor.
+ *
+ * IMPORTANT: these are design constants, not per-record-type calculations.
+ * They were measured once from the tallest built-in collapsed layout and are
+ * reused unchanged for Task / Energy / Check-in / Event / Feeling / Thought /
+ * Summary / Plan / Blocker / Milestone. Switching RecordType therefore cannot
+ * change the base modal height.
+ *
+ * Only two things may break the fixed baseline:
+ * 1) the user explicitly opens a disclosure such as “更多选项”;
+ * 2) the viewport is physically shorter than the fixed desktop height.
+ * Continuation/result panels intentionally keep their natural compact height.
+ */
+@media (min-width: 769px) and (min-height: 720px) {
+  .modal.think-quick-input-modal
+    .think-modal.think-modal--quick-input.think-modal--quick-input-layout-stable {
+    --think-qif-record-type-zone-height: 60px;
+    --think-qif-goal-zone-height: 280px;
+    --think-qif-fields-zone-height: 330px;
+    --think-qif-modal-fixed-height: 822px;
+
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    height: var(--think-qif-modal-fixed-height) !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 32px);
+  }
+
+  .modal.think-quick-input-modal
+    .think-modal.think-modal--quick-input.think-modal--quick-input-layout-stable
+    > .think-modal__body {
+    flex: 1 1 auto;
+  }
+
+  /* Explicit disclosure is a user-driven layout change, so it may grow past
+   * the fixed collapsed baseline. This is intentionally different from a
+   * RecordType switch, which never changes the base height. */
+  .modal.think-quick-input-modal
+    .think-modal.think-modal--quick-input.think-modal--quick-input-layout-stable:has(.think-qif-advanced-disclosure[open]) {
+    height: auto !important;
+    min-height: var(--think-qif-modal-fixed-height) !important;
+  }
+}
+@supports not (height: 100dvh) {
+  @media (min-width: 769px) and (min-height: 720px) {
+    .modal.think-quick-input-modal
+      .think-modal.think-modal--quick-input.think-modal--quick-input-layout-stable {
+      max-height: calc(100vh - 32px);
+    }
+  }
+}
 /* Energy direct-capture surface. Kept separate from generic QuickInput overrides. */
 .modal.think-quick-input-modal .think-quick-input-energy-panel {
   display: flex;
   flex-direction: column;
+  gap: var(--think-space-6);
+}
+.modal.think-quick-input-modal .think-quick-input-energy-workspace {
+  display: grid;
   gap: var(--think-space-6);
 }
 .modal.think-quick-input-modal .think-quick-input-energy-section {
@@ -9306,4 +9439,18 @@ body.excel-view-is-resizing-column * {
   display: grid;
   gap: var(--think-space-2);
   padding-top: var(--think-space-2);
+}
+/*
+ * Energy is the only direct-capture record type, so it has no Goal + template
+ * field skeleton to fill. The stable modal shell itself reserves the shared
+ * maximum collapsed height; Energy should simply start at the same top anchor
+ * and leave any unused space below the controls. Never vertically center it.
+ */
+@media (min-width: 769px) and (min-height: 720px) {
+  .modal.think-quick-input-modal
+    .think-modal--quick-input-layout-stable
+    .think-quick-input-energy-workspace {
+    min-height: 0;
+    align-content: start;
+  }
 }

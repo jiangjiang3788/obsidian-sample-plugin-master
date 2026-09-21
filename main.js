@@ -47139,7 +47139,6 @@ function GoalSelector({ goals, recentGoalPaths = [], selectedGoalPath, onSelect,
       `${levelIndex}:${option.value}`
     );
   };
-  const activePathLabel = activePath ? activePath.split("/").filter(Boolean).join(" › ") : "";
   return /* @__PURE__ */ u2("div", { className: `think-quick-input-goal-selector${dense ? " is-dense" : ""}`, children: [
     recentOptions.length ? /* @__PURE__ */ u2("div", { className: "think-quick-input-goal-recent", "aria-label": "最近目标", children: [
       /* @__PURE__ */ u2("span", { className: "think-quick-input-goal-recent__label", children: "最近" }),
@@ -47161,7 +47160,6 @@ function GoalSelector({ goals, recentGoalPaths = [], selectedGoalPath, onSelect,
         `recent:${option.value}`
       )) })
     ] }) : null,
-    activePathLabel ? /* @__PURE__ */ u2("div", { className: "think-quick-input-goal-active-path", title: activePathLabel, "aria-live": "polite", children: activePathLabel }) : null,
     /* @__PURE__ */ u2("div", { ref: listRef, className: "think-list think-quick-input-goal-list", "aria-label": "目标层级选择", children: columns.map((level, levelIndex) => /* @__PURE__ */ u2("div", { className: "think-list think-quick-input-goal-level", role: "listbox", "aria-label": `目标第 ${levelIndex + 1} 层`, children: level.map((option) => renderOption(option, levelIndex)) }, `goal-level:${levelIndex}`)) })
   ] });
 }
@@ -47210,8 +47208,6 @@ function QuickInputEditorView({
   onRequestSubmit,
   isMobileLike = false,
   showTimeDirectionControl = false,
-  currentGoalPath = null,
-  templateSourceType = null,
   autoFocusContent = false
 }) {
   const rootRef = A$1(null);
@@ -47256,7 +47252,7 @@ function QuickInputEditorView({
   if (!template) {
     return /* @__PURE__ */ u2("div", { ref: rootRef, className: `think-quick-input-editor${dense ? " is-dense" : ""}`, children: [
       /* @__PURE__ */ u2("div", { className: "think-quick-input-context-grid", children: [
-        allowRecordTypeSwitch && recordTypes.length > 1 && /* @__PURE__ */ u2(QuickInputFormRow, { label: "记录类型", children: /* @__PURE__ */ u2(
+        allowRecordTypeSwitch && recordTypes.length > 1 && /* @__PURE__ */ u2(QuickInputFormRow, { label: "记录类型", className: "think-qif-row--record-type", children: /* @__PURE__ */ u2(
           RecordTypeSwitcher,
           {
             recordTypes,
@@ -47264,7 +47260,7 @@ function QuickInputEditorView({
             onRecordTypeChange
           }
         ) }),
-        currentRecordTypeId ? /* @__PURE__ */ u2(QuickInputFormRow, { label: "目标", children: /* @__PURE__ */ u2(
+        currentRecordTypeId ? /* @__PURE__ */ u2(QuickInputFormRow, { label: "目标", className: "think-qif-row--goal", children: /* @__PURE__ */ u2(
           GoalSelector,
           {
             goals,
@@ -47279,11 +47275,10 @@ function QuickInputEditorView({
       /* @__PURE__ */ u2("div", { className: "think-quick-input-context-hint", children: currentRecordTypeId ? "请选择已配置模板的目标后继续。" : "请选择记录类型后继续。" })
     ] });
   }
-  const shouldShowRecordTypeFallbackHint = Boolean(currentGoalPath) && templateSourceType === "record-type";
   const isTaskTemplate2 = String(currentRecordTypeId || template?.recordTypeId || template?.id || "").replace(/^core\./, "") === "task";
   return /* @__PURE__ */ u2("div", { ref: rootRef, className: `think-quick-input-editor${dense ? " is-dense" : ""}`, children: [
     /* @__PURE__ */ u2("div", { className: "think-quick-input-context-grid", children: [
-      allowRecordTypeSwitch && recordTypes.length > 1 && /* @__PURE__ */ u2(QuickInputFormRow, { label: "记录类型", children: /* @__PURE__ */ u2(
+      allowRecordTypeSwitch && recordTypes.length > 1 && /* @__PURE__ */ u2(QuickInputFormRow, { label: "记录类型", className: "think-qif-row--record-type", children: /* @__PURE__ */ u2(
         RecordTypeSwitcher,
         {
           recordTypes,
@@ -47291,22 +47286,25 @@ function QuickInputEditorView({
           onRecordTypeChange
         }
       ) }),
-      /* @__PURE__ */ u2(QuickInputFormRow, { label: "目标", children: /* @__PURE__ */ u2("div", { className: "think-quick-input-context-row__stack", children: [
-        /* @__PURE__ */ u2(
-          GoalSelector,
-          {
-            goals,
-            recentGoalPaths,
-            selectedGoalPath,
-            onSelect: onSelectGoal,
-            onCreateGoal,
-            dense
-          }
-        ),
-        shouldShowRecordTypeFallbackHint && /* @__PURE__ */ u2("div", { className: "think-quick-input-context-hint", children: "当前记录使用记录类型基础模板。" })
-      ] }) })
+      /* @__PURE__ */ u2(QuickInputFormRow, { label: "目标", className: "think-qif-row--goal", children: /* @__PURE__ */ u2(
+        GoalSelector,
+        {
+          goals,
+          recentGoalPaths,
+          selectedGoalPath,
+          onSelect: onSelectGoal,
+          onCreateGoal,
+          dense
+        }
+      ) })
     ] }),
-    showDivider && !isTaskTemplate2 && /* @__PURE__ */ u2("div", { className: "think-quick-input-context-divider", "aria-hidden": "true" }),
+    showDivider && /* @__PURE__ */ u2(
+      "div",
+      {
+        className: `think-quick-input-context-divider${isTaskTemplate2 ? " is-layout-placeholder" : ""}`,
+        "aria-hidden": "true"
+      }
+    ),
     /* @__PURE__ */ u2("div", { className: "think-quick-input-fields", children: /* @__PURE__ */ u2(
       QuickInputEditorFields,
       {
@@ -48130,158 +48128,157 @@ function EnergyQuickCapturePanel({
   };
   const updateBrainScore = (value) => setBrainScore(normalizeEnergyScore(Number(value)));
   const updatePhysicalScore = (value) => setPhysicalScore(normalizeEnergyScore(Number(value)));
-  return /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-panel", children: [
-    allowRecordTypeSwitch && recordTypes.length > 1 && /* @__PURE__ */ u2("section", { class: "think-quick-input-energy-section", children: [
-      /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-section__title", children: "记录类型" }),
-      /* @__PURE__ */ u2(
-        RecordTypeSwitcher,
-        {
-          recordTypes,
-          currentRecordTypeId,
-          onRecordTypeChange
-        }
-      )
-    ] }),
-    /* @__PURE__ */ u2("section", { class: "think-quick-input-energy-section think-quick-input-energy-target", children: [
-      /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-target__summary", children: [
-        /* @__PURE__ */ u2("div", { children: [
-          /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-section__title", children: "记录到" }),
-          /* @__PURE__ */ u2("div", { class: "think-quick-input-context-hint", children: selectedGoalPath || "未选择目标" })
-        ] }),
-        /* @__PURE__ */ u2(
-          "button",
-          {
-            type: "button",
-            class: "think-quick-input-energy-detail-toggle",
-            onClick: () => setShowTargetEditor((value) => !value),
-            disabled: pendingScore !== null || isSavingDetailed,
-            children: showTargetEditor ? "收起" : "修改目标"
-          }
-        )
-      ] }),
-      showTargetEditor && /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-target__editor", children: /* @__PURE__ */ u2(GoalSelector, { goals, selectedGoalPath, onSelect: onSelectGoal, dense: true }) })
-    ] }),
-    /* @__PURE__ */ u2("section", { class: "think-quick-input-energy-section", children: [
-      /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-section__title", children: "记录时间" }),
-      /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-capture-mode", role: "group", "aria-label": "精力记录时间模式", children: [
-        /* @__PURE__ */ u2(
-          "button",
-          {
-            type: "button",
-            class: `think-quick-input-energy-capture-mode__button${captureMode2 === "realtime" ? " is-active" : ""}`,
-            onClick: () => setCaptureMode("realtime"),
-            disabled: pendingScore !== null || isSavingDetailed,
-            children: "实时"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          "button",
-          {
-            type: "button",
-            class: `think-quick-input-energy-capture-mode__button${captureMode2 === "retrospective" ? " is-active" : ""}`,
-            onClick: () => setCaptureMode("retrospective"),
-            disabled: pendingScore !== null || isSavingDetailed,
-            children: "补录"
-          }
-        )
-      ] }),
-      captureMode2 === "retrospective" && /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-retrospective-time", children: [
-        /* @__PURE__ */ u2("label", { children: [
-          /* @__PURE__ */ u2("span", { children: "发生日期" }),
+  return /* @__PURE__ */ u2("div", { class: "think-quick-input-editor think-quick-input-energy-panel", children: [
+    allowRecordTypeSwitch && recordTypes.length > 1 && /* @__PURE__ */ u2(QuickInputFormRow, { label: "记录类型", className: "think-qif-row--record-type", children: /* @__PURE__ */ u2(
+      RecordTypeSwitcher,
+      {
+        recordTypes,
+        currentRecordTypeId,
+        onRecordTypeChange
+      }
+    ) }),
+    /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-workspace", children: [
+      /* @__PURE__ */ u2("section", { class: "think-quick-input-energy-section think-quick-input-energy-target", children: [
+        /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-target__summary", children: [
+          /* @__PURE__ */ u2("div", { children: [
+            /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-section__title", children: "记录到" }),
+            /* @__PURE__ */ u2("div", { class: "think-quick-input-context-hint", children: selectedGoalPath || "未选择目标" })
+          ] }),
           /* @__PURE__ */ u2(
-            "input",
+            "button",
             {
-              type: "date",
-              value: retrospectiveDate,
-              max: dayjs().format("YYYY-MM-DD"),
+              type: "button",
+              class: "think-quick-input-energy-detail-toggle",
+              onClick: () => setShowTargetEditor((value) => !value),
               disabled: pendingScore !== null || isSavingDetailed,
-              onInput: (event) => setRetrospectiveDate(event.currentTarget.value)
+              children: showTargetEditor ? "收起" : "修改目标"
             }
           )
         ] }),
-        /* @__PURE__ */ u2("label", { children: [
-          /* @__PURE__ */ u2("span", { children: "发生时间" }),
+        showTargetEditor && /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-target__editor", children: /* @__PURE__ */ u2(GoalSelector, { goals, selectedGoalPath, onSelect: onSelectGoal, dense: true }) })
+      ] }),
+      /* @__PURE__ */ u2("section", { class: "think-quick-input-energy-section", children: [
+        /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-section__title", children: "记录时间" }),
+        /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-capture-mode", role: "group", "aria-label": "精力记录时间模式", children: [
           /* @__PURE__ */ u2(
-            "input",
+            "button",
             {
-              type: "time",
-              value: retrospectiveTime,
-              step: "60",
+              type: "button",
+              class: `think-quick-input-energy-capture-mode__button${captureMode2 === "realtime" ? " is-active" : ""}`,
+              onClick: () => setCaptureMode("realtime"),
               disabled: pendingScore !== null || isSavingDetailed,
-              onInput: (event) => setRetrospectiveTime(event.currentTarget.value)
+              children: "实时"
+            }
+          ),
+          /* @__PURE__ */ u2(
+            "button",
+            {
+              type: "button",
+              class: `think-quick-input-energy-capture-mode__button${captureMode2 === "retrospective" ? " is-active" : ""}`,
+              onClick: () => setCaptureMode("retrospective"),
+              disabled: pendingScore !== null || isSavingDetailed,
+              children: "补录"
             }
           )
         ] }),
-        !retrospectiveTime && /* @__PURE__ */ u2("div", { class: "think-quick-input-context-hint", children: "补录必须选择具体时间；不会用“上午/下午”等模糊时段代替。" })
+        captureMode2 === "retrospective" && /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-retrospective-time", children: [
+          /* @__PURE__ */ u2("label", { children: [
+            /* @__PURE__ */ u2("span", { children: "发生日期" }),
+            /* @__PURE__ */ u2(
+              "input",
+              {
+                type: "date",
+                value: retrospectiveDate,
+                max: dayjs().format("YYYY-MM-DD"),
+                disabled: pendingScore !== null || isSavingDetailed,
+                onInput: (event) => setRetrospectiveDate(event.currentTarget.value)
+              }
+            )
+          ] }),
+          /* @__PURE__ */ u2("label", { children: [
+            /* @__PURE__ */ u2("span", { children: "发生时间" }),
+            /* @__PURE__ */ u2(
+              "input",
+              {
+                type: "time",
+                value: retrospectiveTime,
+                step: "60",
+                disabled: pendingScore !== null || isSavingDetailed,
+                onInput: (event) => setRetrospectiveTime(event.currentTarget.value)
+              }
+            )
+          ] }),
+          !retrospectiveTime && /* @__PURE__ */ u2("div", { class: "think-quick-input-context-hint", children: "补录必须选择具体时间；不会用“上午/下午”等模糊时段代替。" })
+        ] })
+      ] }),
+      /* @__PURE__ */ u2("section", { class: "think-quick-input-energy-section", children: [
+        /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-mode-row", children: [
+          /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-section__title", children: isDetailed ? "详细精力" : captureMode2 === "retrospective" ? "补录精力" : "当前精力" }),
+          /* @__PURE__ */ u2(
+            "button",
+            {
+              type: "button",
+              class: "think-quick-input-energy-detail-toggle",
+              onClick: () => setIsDetailed((value) => !value),
+              disabled: pendingScore !== null || isSavingDetailed,
+              children: isDetailed ? "返回快捷" : "详细模式"
+            }
+          )
+        ] }),
+        !isDetailed ? /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-levels", role: "group", "aria-label": "当前精力快捷评分", children: ENERGY_QUICK_LEVELS.map((score) => {
+          const label = ENERGY_QUICK_LEVEL_LABELS[score];
+          const pending = pendingScore === score;
+          return /* @__PURE__ */ u2(
+            SelectablePill,
+            {
+              disabled: !canCapture,
+              onClick: () => void captureQuick(score),
+              title: `${score} · ${label}`,
+              className: "think-quick-input-energy-level",
+              children: [
+                /* @__PURE__ */ u2("span", { class: "think-quick-input-energy-level__score", children: score }),
+                /* @__PURE__ */ u2("span", { class: "think-quick-input-energy-level__label", children: pending ? "记录中…" : label })
+              ]
+            },
+            score
+          );
+        }) }) : /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-detailed", children: [
+          /* @__PURE__ */ u2(
+            EnergyDimensionInput,
+            {
+              label: "脑力",
+              value: brainScore,
+              onChange: updateBrainScore,
+              disabled: !canCapture
+            }
+          ),
+          /* @__PURE__ */ u2(
+            EnergyDimensionInput,
+            {
+              label: "体力",
+              value: physicalScore,
+              onChange: updatePhysicalScore,
+              disabled: !canCapture
+            }
+          ),
+          /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-summary", children: [
+            /* @__PURE__ */ u2("span", { children: "综合精力" }),
+            /* @__PURE__ */ u2("strong", { children: detailedScore }),
+            /* @__PURE__ */ u2("span", { class: "think-quick-input-energy-summary__hint", children: "脑力与体力等权平均，仅用于统一时间线" })
+          ] }),
+          /* @__PURE__ */ u2(
+            "button",
+            {
+              type: "button",
+              class: "think-quick-input-energy-save-detailed",
+              disabled: !canCapture,
+              onClick: () => void captureDetailed(),
+              children: isSavingDetailed ? "记录中…" : "保存详细精力"
+            }
+          )
+        ] }),
+        !selectedGoalPath && /* @__PURE__ */ u2("div", { class: "think-quick-input-context-hint", children: "请先选择一个目标，精力记录不会脱离目标单独保存。" })
       ] })
-    ] }),
-    /* @__PURE__ */ u2("section", { class: "think-quick-input-energy-section", children: [
-      /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-mode-row", children: [
-        /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-section__title", children: isDetailed ? "详细精力" : captureMode2 === "retrospective" ? "补录精力" : "当前精力" }),
-        /* @__PURE__ */ u2(
-          "button",
-          {
-            type: "button",
-            class: "think-quick-input-energy-detail-toggle",
-            onClick: () => setIsDetailed((value) => !value),
-            disabled: pendingScore !== null || isSavingDetailed,
-            children: isDetailed ? "返回快捷" : "详细模式"
-          }
-        )
-      ] }),
-      !isDetailed ? /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-levels", role: "group", "aria-label": "当前精力快捷评分", children: ENERGY_QUICK_LEVELS.map((score) => {
-        const label = ENERGY_QUICK_LEVEL_LABELS[score];
-        const pending = pendingScore === score;
-        return /* @__PURE__ */ u2(
-          SelectablePill,
-          {
-            disabled: !canCapture,
-            onClick: () => void captureQuick(score),
-            title: `${score} · ${label}`,
-            className: "think-quick-input-energy-level",
-            children: [
-              /* @__PURE__ */ u2("span", { class: "think-quick-input-energy-level__score", children: score }),
-              /* @__PURE__ */ u2("span", { class: "think-quick-input-energy-level__label", children: pending ? "记录中…" : label })
-            ]
-          },
-          score
-        );
-      }) }) : /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-detailed", children: [
-        /* @__PURE__ */ u2(
-          EnergyDimensionInput,
-          {
-            label: "脑力",
-            value: brainScore,
-            onChange: updateBrainScore,
-            disabled: !canCapture
-          }
-        ),
-        /* @__PURE__ */ u2(
-          EnergyDimensionInput,
-          {
-            label: "体力",
-            value: physicalScore,
-            onChange: updatePhysicalScore,
-            disabled: !canCapture
-          }
-        ),
-        /* @__PURE__ */ u2("div", { class: "think-quick-input-energy-summary", children: [
-          /* @__PURE__ */ u2("span", { children: "综合精力" }),
-          /* @__PURE__ */ u2("strong", { children: detailedScore }),
-          /* @__PURE__ */ u2("span", { class: "think-quick-input-energy-summary__hint", children: "脑力与体力等权平均，仅用于统一时间线" })
-        ] }),
-        /* @__PURE__ */ u2(
-          "button",
-          {
-            type: "button",
-            class: "think-quick-input-energy-save-detailed",
-            disabled: !canCapture,
-            onClick: () => void captureDetailed(),
-            children: isSavingDetailed ? "记录中…" : "保存详细精力"
-          }
-        )
-      ] }),
-      !selectedGoalPath && /* @__PURE__ */ u2("div", { class: "think-quick-input-context-hint", children: "请先选择一个目标，精力记录不会脱离目标单独保存。" })
     ] })
   ] });
 }
@@ -48382,8 +48379,8 @@ function QuickInputEditor({
   }, [recordInputMode]);
   const recordTypes = T$1(() => {
     if (recordInputMode !== "create") return getEffectiveRecordTypes();
-    return getCreateAvailableRecordTypes(fullSettings, selectedGoalPath);
-  }, [fullSettings.goalSettings?.goalTemplates, selectedGoalPath, recordInputMode]);
+    return getCreateAvailableRecordTypes(fullSettings);
+  }, [fullSettings.goalSettings?.goalTemplates, recordInputMode]);
   const currentRecordType = T$1(
     () => recordTypes.find((recordType) => recordType.id === currentRecordTypeId) || null,
     [recordTypes, currentRecordTypeId]
@@ -48633,8 +48630,6 @@ function QuickInputEditor({
       isMobileLike,
       showTimeDirectionControl,
       currentPeriodLabel: currentPeriod?.label || null,
-      currentGoalPath,
-      templateSourceType: displayTemplateSourceType,
       fieldSourceSummary: makeEditorState(formData, timeDirection, fieldSources).fieldSourceSummary,
       autoFocusContent
     }
@@ -49506,7 +49501,7 @@ function QuickInputModalContent({
       setIsRescanningRecoveryPaths(false);
     }
   }, [dataStore, isRescanningRecoveryPaths, recovery.paths, showNotice]);
-  return /* @__PURE__ */ u2("div", { class: "think-modal think-modal--quick-input", children: [
+  return /* @__PURE__ */ u2("div", { class: `think-modal think-modal--quick-input${continuation ? "" : " think-modal--quick-input-layout-stable"}`, children: [
     /* @__PURE__ */ u2(
       QuickInputModalHeader,
       {

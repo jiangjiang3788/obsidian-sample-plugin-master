@@ -266,7 +266,7 @@ export function QuickInputModalContent({
     }
   }, [dataStore, isRescanningRecoveryPaths, recovery.paths, showNotice]);
   return (
-    <div class="think-modal think-modal--quick-input">
+    <div class={`think-modal think-modal--quick-input${continuation ? '' : ' think-modal--quick-input-layout-stable'}`}>
       <QuickInputModalHeader
         operationMode={operationMode}
         currentRecordTypeName={currentRecordTypeName}

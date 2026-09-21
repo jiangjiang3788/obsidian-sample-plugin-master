@@ -16,6 +16,7 @@ import { resolveQuickInputEnergyDefaultGoal, type QuickInputEnergyCaptureRequest
 import { GoalSelector, type GoalSelectorOption } from './GoalSelector';
 import { RecordTypeSwitcher, type RecordTypeSwitcherOption } from './RecordTypeSwitcher';
 import { SelectablePill } from './SelectablePill';
+import { QuickInputFormRow } from './FormRow';
 
 export interface EnergyQuickCapturePanelProps {
   recordTypes: RecordTypeSwitcherOption[];
@@ -108,157 +109,158 @@ export function EnergyQuickCapturePanel({
   const updatePhysicalScore = (value: string) => setPhysicalScore(normalizeEnergyScore(Number(value)));
 
   return (
-    <div class="think-quick-input-energy-panel">
+    <div class="think-quick-input-editor think-quick-input-energy-panel">
       {allowRecordTypeSwitch && recordTypes.length > 1 && (
-        <section class="think-quick-input-energy-section">
-          <div class="think-quick-input-energy-section__title">记录类型</div>
+        <QuickInputFormRow label="记录类型" className="think-qif-row--record-type">
           <RecordTypeSwitcher
             recordTypes={recordTypes}
             currentRecordTypeId={currentRecordTypeId}
             onRecordTypeChange={onRecordTypeChange}
           />
-        </section>
+        </QuickInputFormRow>
       )}
 
-      <section class="think-quick-input-energy-section think-quick-input-energy-target">
-        <div class="think-quick-input-energy-target__summary">
-          <div>
-            <div class="think-quick-input-energy-section__title">记录到</div>
-            <div class="think-quick-input-context-hint">
-              {selectedGoalPath || '未选择目标'}
-            </div>
-          </div>
-          <button
-            type="button"
-            class="think-quick-input-energy-detail-toggle"
-            onClick={() => setShowTargetEditor((value) => !value)}
-            disabled={pendingScore !== null || isSavingDetailed}
-          >
-            {showTargetEditor ? '收起' : '修改目标'}
-          </button>
-        </div>
-        {showTargetEditor && (
-          <div class="think-quick-input-energy-target__editor">
-            <GoalSelector goals={goals} selectedGoalPath={selectedGoalPath} onSelect={onSelectGoal} dense />
-          </div>
-        )}
-      </section>
-
-      <section class="think-quick-input-energy-section">
-        <div class="think-quick-input-energy-section__title">记录时间</div>
-        <div class="think-quick-input-energy-capture-mode" role="group" aria-label="精力记录时间模式">
-          <button
-            type="button"
-            class={`think-quick-input-energy-capture-mode__button${captureMode === 'realtime' ? ' is-active' : ''}`}
-            onClick={() => setCaptureMode('realtime')}
-            disabled={pendingScore !== null || isSavingDetailed}
-          >
-            实时
-          </button>
-          <button
-            type="button"
-            class={`think-quick-input-energy-capture-mode__button${captureMode === 'retrospective' ? ' is-active' : ''}`}
-            onClick={() => setCaptureMode('retrospective')}
-            disabled={pendingScore !== null || isSavingDetailed}
-          >
-            补录
-          </button>
-        </div>
-        {captureMode === 'retrospective' && (
-          <div class="think-quick-input-energy-retrospective-time">
-            <label>
-              <span>发生日期</span>
-              <input
-                type="date"
-                value={retrospectiveDate}
-                max={dayjs().format('YYYY-MM-DD')}
-                disabled={pendingScore !== null || isSavingDetailed}
-                onInput={(event) => setRetrospectiveDate(event.currentTarget.value)}
-              />
-            </label>
-            <label>
-              <span>发生时间</span>
-              <input
-                type="time"
-                value={retrospectiveTime}
-                step="60"
-                disabled={pendingScore !== null || isSavingDetailed}
-                onInput={(event) => setRetrospectiveTime(event.currentTarget.value)}
-              />
-            </label>
-            {!retrospectiveTime && (
-              <div class="think-quick-input-context-hint">补录必须选择具体时间；不会用“上午/下午”等模糊时段代替。</div>
-            )}
-          </div>
-        )}
-      </section>
-
-      <section class="think-quick-input-energy-section">
-        <div class="think-quick-input-energy-mode-row">
-          <div class="think-quick-input-energy-section__title">{isDetailed ? '详细精力' : captureMode === 'retrospective' ? '补录精力' : '当前精力'}</div>
-          <button
-            type="button"
-            class="think-quick-input-energy-detail-toggle"
-            onClick={() => setIsDetailed((value) => !value)}
-            disabled={pendingScore !== null || isSavingDetailed}
-          >
-            {isDetailed ? '返回快捷' : '详细模式'}
-          </button>
-        </div>
-
-        {!isDetailed ? (
-          <div class="think-quick-input-energy-levels" role="group" aria-label="当前精力快捷评分">
-            {ENERGY_QUICK_LEVELS.map((score) => {
-              const label = ENERGY_QUICK_LEVEL_LABELS[score];
-              const pending = pendingScore === score;
-              return (
-                <SelectablePill
-                  key={score}
-                  disabled={!canCapture}
-                  onClick={() => void captureQuick(score)}
-                  title={`${score} · ${label}`}
-                  className="think-quick-input-energy-level"
-                >
-                  <span class="think-quick-input-energy-level__score">{score}</span>
-                  <span class="think-quick-input-energy-level__label">{pending ? '记录中…' : label}</span>
-                </SelectablePill>
-              );
-            })}
-          </div>
-        ) : (
-          <div class="think-quick-input-energy-detailed">
-            <EnergyDimensionInput
-              label="脑力"
-              value={brainScore}
-              onChange={updateBrainScore}
-              disabled={!canCapture}
-            />
-            <EnergyDimensionInput
-              label="体力"
-              value={physicalScore}
-              onChange={updatePhysicalScore}
-              disabled={!canCapture}
-            />
-            <div class="think-quick-input-energy-summary">
-              <span>综合精力</span>
-              <strong>{detailedScore}</strong>
-              <span class="think-quick-input-energy-summary__hint">脑力与体力等权平均，仅用于统一时间线</span>
+      <div class="think-quick-input-energy-workspace">
+        <section class="think-quick-input-energy-section think-quick-input-energy-target">
+          <div class="think-quick-input-energy-target__summary">
+            <div>
+              <div class="think-quick-input-energy-section__title">记录到</div>
+              <div class="think-quick-input-context-hint">
+                {selectedGoalPath || '未选择目标'}
+              </div>
             </div>
             <button
               type="button"
-              class="think-quick-input-energy-save-detailed"
-              disabled={!canCapture}
-              onClick={() => void captureDetailed()}
+              class="think-quick-input-energy-detail-toggle"
+              onClick={() => setShowTargetEditor((value) => !value)}
+              disabled={pendingScore !== null || isSavingDetailed}
             >
-              {isSavingDetailed ? '记录中…' : '保存详细精力'}
+              {showTargetEditor ? '收起' : '修改目标'}
             </button>
           </div>
-        )}
+          {showTargetEditor && (
+            <div class="think-quick-input-energy-target__editor">
+              <GoalSelector goals={goals} selectedGoalPath={selectedGoalPath} onSelect={onSelectGoal} dense />
+            </div>
+          )}
+        </section>
 
-        {!selectedGoalPath && (
-          <div class="think-quick-input-context-hint">请先选择一个目标，精力记录不会脱离目标单独保存。</div>
-        )}
-      </section>
+        <section class="think-quick-input-energy-section">
+          <div class="think-quick-input-energy-section__title">记录时间</div>
+          <div class="think-quick-input-energy-capture-mode" role="group" aria-label="精力记录时间模式">
+            <button
+              type="button"
+              class={`think-quick-input-energy-capture-mode__button${captureMode === 'realtime' ? ' is-active' : ''}`}
+              onClick={() => setCaptureMode('realtime')}
+              disabled={pendingScore !== null || isSavingDetailed}
+            >
+              实时
+            </button>
+            <button
+              type="button"
+              class={`think-quick-input-energy-capture-mode__button${captureMode === 'retrospective' ? ' is-active' : ''}`}
+              onClick={() => setCaptureMode('retrospective')}
+              disabled={pendingScore !== null || isSavingDetailed}
+            >
+              补录
+            </button>
+          </div>
+          {captureMode === 'retrospective' && (
+            <div class="think-quick-input-energy-retrospective-time">
+              <label>
+                <span>发生日期</span>
+                <input
+                  type="date"
+                  value={retrospectiveDate}
+                  max={dayjs().format('YYYY-MM-DD')}
+                  disabled={pendingScore !== null || isSavingDetailed}
+                  onInput={(event) => setRetrospectiveDate(event.currentTarget.value)}
+                />
+              </label>
+              <label>
+                <span>发生时间</span>
+                <input
+                  type="time"
+                  value={retrospectiveTime}
+                  step="60"
+                  disabled={pendingScore !== null || isSavingDetailed}
+                  onInput={(event) => setRetrospectiveTime(event.currentTarget.value)}
+                />
+              </label>
+              {!retrospectiveTime && (
+                <div class="think-quick-input-context-hint">补录必须选择具体时间；不会用“上午/下午”等模糊时段代替。</div>
+              )}
+            </div>
+          )}
+        </section>
+
+        <section class="think-quick-input-energy-section">
+          <div class="think-quick-input-energy-mode-row">
+            <div class="think-quick-input-energy-section__title">{isDetailed ? '详细精力' : captureMode === 'retrospective' ? '补录精力' : '当前精力'}</div>
+            <button
+              type="button"
+              class="think-quick-input-energy-detail-toggle"
+              onClick={() => setIsDetailed((value) => !value)}
+              disabled={pendingScore !== null || isSavingDetailed}
+            >
+              {isDetailed ? '返回快捷' : '详细模式'}
+            </button>
+          </div>
+
+          {!isDetailed ? (
+            <div class="think-quick-input-energy-levels" role="group" aria-label="当前精力快捷评分">
+              {ENERGY_QUICK_LEVELS.map((score) => {
+                const label = ENERGY_QUICK_LEVEL_LABELS[score];
+                const pending = pendingScore === score;
+                return (
+                  <SelectablePill
+                    key={score}
+                    disabled={!canCapture}
+                    onClick={() => void captureQuick(score)}
+                    title={`${score} · ${label}`}
+                    className="think-quick-input-energy-level"
+                  >
+                    <span class="think-quick-input-energy-level__score">{score}</span>
+                    <span class="think-quick-input-energy-level__label">{pending ? '记录中…' : label}</span>
+                  </SelectablePill>
+                );
+              })}
+            </div>
+          ) : (
+            <div class="think-quick-input-energy-detailed">
+              <EnergyDimensionInput
+                label="脑力"
+                value={brainScore}
+                onChange={updateBrainScore}
+                disabled={!canCapture}
+              />
+              <EnergyDimensionInput
+                label="体力"
+                value={physicalScore}
+                onChange={updatePhysicalScore}
+                disabled={!canCapture}
+              />
+              <div class="think-quick-input-energy-summary">
+                <span>综合精力</span>
+                <strong>{detailedScore}</strong>
+                <span class="think-quick-input-energy-summary__hint">脑力与体力等权平均，仅用于统一时间线</span>
+              </div>
+              <button
+                type="button"
+                class="think-quick-input-energy-save-detailed"
+                disabled={!canCapture}
+                onClick={() => void captureDetailed()}
+              >
+                {isSavingDetailed ? '记录中…' : '保存详细精力'}
+              </button>
+            </div>
+          )}
+
+          {!selectedGoalPath && (
+            <div class="think-quick-input-context-hint">请先选择一个目标，精力记录不会脱离目标单独保存。</div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

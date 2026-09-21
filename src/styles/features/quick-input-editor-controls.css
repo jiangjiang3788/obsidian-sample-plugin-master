@@ -183,16 +183,6 @@
 .think-quick-input-editor .think-quick-input-goal-recent__chip:focus-visible {
   background: var(--think-bg-surface-2); border-color: var(--think-border-strong);
 }
-.think-quick-input-editor .think-quick-input-goal-active-path {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--think-text-secondary);
-  font-size: var(--think-font-size-xs);
-  line-height: var(--think-line-height-tight);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .think-quick-input-editor .think-quick-input-goal-selector__create {
   display: grid;
   grid-template-columns: minmax(140px, 1fr) auto;
