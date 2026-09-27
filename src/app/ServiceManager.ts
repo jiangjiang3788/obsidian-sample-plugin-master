@@ -113,7 +113,7 @@ export class ServiceManager {
     async bootstrap(): Promise<void> {
         const stopMeasure = startMeasure('ServiceManager.bootstrap');
 
-        // 注册 SettingsPersistence（基于 plugin.loadData/saveData）
+        // 注册 Vault-backed SettingsPersistence（Think/data.json）
         this.registerSettingsPersistence();
 
         // 在创建 store 之前，先解析不依赖 STORE_TOKEN 的 bootstrap deps
@@ -157,7 +157,7 @@ export class ServiceManager {
     // ==================================================================================
 
     private registerSettingsPersistence(): void {
-        registerSettingsPersistence(this.plugin);
+        registerSettingsPersistence();
     }
 
     private async initializeCore(): Promise<void> {
@@ -169,7 +169,6 @@ export class ServiceManager {
             bootstrap: {
                 settingsRepository: this.bootstrapResolved.settingsRepository,
                 timerStateService: this.bootstrapResolved.timerStateService,
-                initialSettings: this.bootstrapResolved.initialSettings,
                 inputService: this.bootstrapResolved.inputService,
                 itemService: this.bootstrapResolved.itemService,
                 dataStore: this.bootstrapResolved.dataStore,

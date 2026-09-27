@@ -4,11 +4,9 @@ import { UI_PORT_TOKEN, MODAL_PORT_TOKEN, MESSAGE_RENDER_PORT_TOKEN } from '@cor
 import {
   SettingsRepository,
   TimerStateService,
-  SETTINGS_TOKEN,
   ActionService,
   ItemService,
 } from '@core/services/public';
-import type { ThinkSettings } from '@core/types/public';
 import { ChatSessionStore } from '@core/ai/public';
 import { WhiteboardStore } from '@core/whiteboard/public';
 import { validateServices, type Services } from '@/app/services.types';
@@ -19,7 +17,6 @@ import { DataStore, InputService } from '@core/services/public';
 export type BootstrapResolved = {
   settingsRepository: SettingsRepository;
   timerStateService: TimerStateService;
-  initialSettings: ThinkSettings;
   actionService: ActionService;
   itemService: ItemService;
   inputService: InputService;
@@ -81,7 +78,6 @@ export function resolveBootstrap(container: DependencyContainer = defaultContain
     return {
       settingsRepository: container.resolve(SettingsRepository),
       timerStateService: container.resolve(TimerStateService),
-      initialSettings: container.resolve<ThinkSettings>(SETTINGS_TOKEN),
       actionService: container.resolve(ActionService),
       itemService: container.resolve(ItemService),
       inputService: container.resolve(InputService),

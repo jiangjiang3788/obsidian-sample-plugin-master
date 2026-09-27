@@ -1,6 +1,6 @@
 import type { RecordEntity } from '@/core/records/RecordEntity';
 import { toRecordViewItem } from '@/core/records/RecordEntity';
-import type { IPluginStorage } from '@core/services/StorageService';
+import { THINK_STORAGE_PATHS, type IPluginStorage } from '@core/services/StorageService';
 import type { FileStat } from '@core/ports/FileStatPort';
 import type { RecordIntegrityIssue } from '@/core/records/RecordIndex';
 import { devWarn } from '@core/utils/devLogger';
@@ -11,7 +11,7 @@ import {
   toCachedItem,
 } from '@/core/types/cache';
 
-export const DATASTORE_CACHE_PATH = 'Think/cache.json';
+export const DATASTORE_CACHE_PATH = THINK_STORAGE_PATHS.dataStoreCache;
 export type CachedFileEntry = CacheV1['files'][string];
 
 export class DataStoreCache {

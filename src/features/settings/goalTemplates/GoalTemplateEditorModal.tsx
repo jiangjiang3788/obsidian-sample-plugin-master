@@ -173,7 +173,7 @@ export function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template
                 disabled={mode === 'disabled'}
               />
             ) : null}
-            <NativeTextInput label="保存文件" value={draft.targetFile} onInput={(value) => updateDraft({ targetFile: value })} disabled={fieldEditDisabled} placeholder="例如：01/目标打卡.md" />
+            <NativeTextInput label="保存文件" value={draft.targetFile} onInput={(value) => updateDraft({ targetFile: value })} disabled={fieldEditDisabled} placeholder="例如：01/{{year}}/打卡.md；不写 {{year}} 就不按年分目录" />
             <NativeTextInput label="标题" value={draft.appendUnderHeader} onInput={(value) => updateDraft({ appendUnderHeader: value })} disabled={fieldEditDisabled} placeholder="例如：## 我的目标" />
             <NativeTextInput label="说明" value={draft.description} onInput={(value) => updateDraft({ description: value })} disabled={mode === 'disabled'} placeholder="可选" />
 

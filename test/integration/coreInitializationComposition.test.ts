@@ -38,13 +38,12 @@ describe('P0 initializeCore 核心服务组合', () => {
   it('把 Repository / Store / UseCases 组合到同一个运行时，并由 Disposables 解除设置同步', async () => {
     const saved: ThinkSettings[] = [];
     const persistence: ISettingsPersistence = {
-      loadData: jest.fn(async () => cloneSettings()),
-      saveData: jest.fn(async (settings) => { saved.push(JSON.parse(JSON.stringify(settings))); }),
+      load: jest.fn(async () => cloneSettings()),
+      save: jest.fn(async (settings) => { saved.push(JSON.parse(JSON.stringify(settings))); }),
     };
     container.register(SETTINGS_PERSISTENCE_TOKEN, { useValue: persistence });
 
     const settingsRepository = new SettingsRepository(persistence);
-    const initialSettings = cloneSettings();
     const services: any = {};
     const disposables = new Disposables();
     const timerStateService = {} as any;
@@ -59,7 +58,6 @@ describe('P0 initializeCore 核心服务组合', () => {
       bootstrap: {
         settingsRepository,
         timerStateService,
-        initialSettings,
         inputService,
         itemService,
         dataStore,
@@ -97,8 +95,8 @@ describe('P0 initializeCore 核心服务组合', () => {
   it('缺少 SettingsPersistence 组合根注册时明确失败，而不是得到半初始化运行时', async () => {
     container.reset();
     const persistence: ISettingsPersistence = {
-      loadData: jest.fn(async () => cloneSettings()),
-      saveData: jest.fn(async () => undefined),
+      load: jest.fn(async () => cloneSettings()),
+      save: jest.fn(async () => undefined),
     };
     const settingsRepository = new SettingsRepository(persistence);
 
@@ -108,7 +106,6 @@ describe('P0 initializeCore 核心服务组合', () => {
       bootstrap: {
         settingsRepository,
         timerStateService: {} as any,
-        initialSettings: cloneSettings(),
         inputService: {} as any,
         itemService: {} as any,
         dataStore: {} as any,

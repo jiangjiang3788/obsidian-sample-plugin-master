@@ -9,6 +9,9 @@ import type { TaskSessionCreateInput } from '@/core/types/timer';
 import { asTaskSessionRecord } from '@/core/records/task/taskSession';
 import { TaskSessionMutation } from './TaskSessionMutation';
 import type { ItemMutationOptions } from './types';
+import { resolveRecordTargetPath } from '@/core/recordInput/storagePath';
+import type { ISettingsProvider } from '@/core/services/types';
+import { GoalTemplateResolver } from '../GoalTemplateResolver';
 
 function timestampNow(): string { return new Date().toISOString(); }
 
@@ -96,8 +99,20 @@ export class TaskCompletionMutation {
     private readonly dataStore: DataStore,
     private readonly repository: RecordRepository,
     taskSessions?: TaskSessionMutation,
+    private readonly settingsProvider?: ISettingsProvider,
   ) {
     this.taskSessions = taskSessions ?? new TaskSessionMutation(dataStore, repository);
+  }
+
+  private resolveTaskTargetFileTemplate(goalPath: string, fallbackPath: string): string {
+    if (!this.settingsProvider) return fallbackPath;
+    const resolved = GoalTemplateResolver.resolve({
+      settings: this.settingsProvider.getSettings(),
+      recordTypeId: 'core.task',
+      goalPath,
+      requireDirectGoalTemplate: true,
+    });
+    return String(resolved.template?.targetFile || '').trim() || fallbackPath;
   }
 
   async completeItem(itemId: string, _mutationOptions: ItemMutationOptions = {}): Promise<void> {
@@ -276,6 +291,14 @@ export class TaskCompletionMutation {
     const nextDates = buildNextOccurrenceDates(task, recurrence, at);
     const path = sourcePath(this.dataStore, task);
     if (!path) throw new Error(`record_location_unavailable:${task.id}`);
+    const nextFields = nextTaskFields(task, series, at, nextDates);
+    // Future recurring instances must be routed from the configured target-file
+    // template, not by mutating the current occurrence's already-resolved path.
+    const targetFileTemplate = this.resolveTaskTargetFileTemplate(
+      String(nextFields.goalPath || task.goalPath || ''),
+      path,
+    );
+    const nextPath = resolveRecordTargetPath(targetFileTemplate, 'task', nextFields);
 
     const operations: RecordBatchOperation[] = [
       { kind: 'update', recordId: task.id, patch },
@@ -285,9 +308,9 @@ export class TaskCompletionMutation {
       { kind: 'create', record: {
         recordId: nextId,
         recordType: 'task',
-        targetFilePath: path,
+        targetFilePath: nextPath,
         targetHeader: task.header || null,
-        fields: nextTaskFields(task, series, at, nextDates),
+        fields: nextFields,
       } },
       { kind: 'update', recordId: series.id, patch: { currentTaskId: nextId } },
     );

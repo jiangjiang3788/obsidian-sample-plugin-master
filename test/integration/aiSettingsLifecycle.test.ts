@@ -17,8 +17,8 @@ import { SettingsUseCase } from '@/app/usecases/settings.usecase';
 function harness(saveFailure = false) {
   let persisted: unknown = { groups: [], viewInstances: [], layouts: [], floatingTimerEnabled: true, goalSettings: { goals: [], goalTemplates: [] } };
   const persistence: ISettingsPersistence = {
-    loadData: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
-    saveData: jest.fn(async (settings: ThinkSettings) => {
+    load: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
+    save: jest.fn(async (settings: ThinkSettings) => {
       if (saveFailure) throw new Error('模拟 AI 设置保存失败');
       persisted = toPersistedThinkSettings(settings);
     }),

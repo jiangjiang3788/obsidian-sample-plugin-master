@@ -1,66 +1,21 @@
 import { container } from 'tsyringe';
-import type { PluginHost } from '@core/ports/public';
-import { z } from 'zod';
 
-import { SETTINGS_PERSISTENCE_TOKEN, type ISettingsPersistence } from '@core/services/public';
-import { devWarn } from '@core/utils/public';
-import { toPersistedThinkSettings } from '@core/types/public';
+import {
+    SETTINGS_PERSISTENCE_TOKEN,
+    VaultSettingsPersistence,
+} from '@core/services/public';
 
 import { diDebug } from '@/app/diagnostics/diDiagnostics';
 
-import { isDisposed } from '@/app/runtime/lifecycleState';
-
 /**
- * Step 0: 注册 app 层需要补充的 DI 绑定
- * - SettingsPersistence（封装 plugin.loadData/saveData）
+ * Step 0: register the concrete settings persistence adapter.
+ *
+ * The adapter writes through IPluginStorage, so app/bootstrap no longer knows
+ * about either Obsidian Plugin.loadData/saveData or the physical settings path.
  */
-export function registerSettingsPersistence(plugin: PluginHost): void {
-    // 持久化前对设置做可选脱敏（AI apiKey）。
-    // - 默认不允许落盘：apiKey 通常会进入插件 data/settings，同步服务也可能同步它。
-    // - 只有 aiSettings.persistApiKey=true 时才保留密钥。
-    const persistedSettingsGuard = z
-        .object({
-            aiSettings: z
-                .object({
-                    apiKey: z.string().optional(),
-                    persistApiKey: z.boolean().optional(),
-                })
-                .passthrough()
-                .optional(),
-        })
-        .passthrough();
-
-    const sanitizeForPersistence = (settings: any) => {
-        // 仅用于保存，避免影响内存中的当前设置
-        const cloned = toPersistedThinkSettings(settings);
-        const parsed = persistedSettingsGuard.safeParse(cloned);
-        const out: any = parsed.success ? parsed.data : cloned;
-
-        if (out?.aiSettings && typeof out.aiSettings === 'object') {
-            const persist = out.aiSettings.persistApiKey === true;
-            if (!persist) {
-                if (out.aiSettings.apiKey) {
-                    devWarn('[SettingsPersistence] persistApiKey 未显式开启，apiKey 将被剥离后保存');
-                }
-                out.aiSettings.apiKey = '';
-            }
-        }
-
-        return out;
-    };
-
-    const settingsPersistence: ISettingsPersistence = {
-        async loadData() {
-            return await plugin.loadData();
-        },
-        async saveData(settings) {
-            if (isDisposed()) return;
-            await plugin.saveData(sanitizeForPersistence(settings));
-        },
-    };
-
+export function registerSettingsPersistence(): void {
     container.register(SETTINGS_PERSISTENCE_TOKEN, {
-        useValue: settingsPersistence,
+        useClass: VaultSettingsPersistence,
     });
 
     // DI diagnostics (dev only, opt-in)

@@ -20,7 +20,7 @@ describe('Energy direct record foundation', () => {
     expect(DEFAULT_TEMPLATE_RECORD_TYPES.some((block) => block.id === 'core.energy')).toBe(false);
     expect(ENERGY_RECORD_TYPE.captureMode).toBe('direct');
     expect(ENERGY_RECORD_TYPE.capabilities.goalBindable).toBe(true);
-    expect(ENERGY_RECORD_TYPE.targetFile).toBe('01/目标精力.md');
+    expect(ENERGY_RECORD_TYPE.targetFile).toBe('01/精力.md');
     expect(DEFAULT_RECORD_TYPES.some((recordType) => recordType.id === 'core.energy')).toBe(true);
   });
 

@@ -15,8 +15,7 @@
 
 import { z } from 'zod';
 import { singleton, inject } from 'tsyringe';
-import type { IPluginStorage } from '@/core/services/StorageService';
-import { STORAGE_TOKEN } from '@/core/services/StorageService';
+import { STORAGE_TOKEN, THINK_STORAGE_PATHS, type IPluginStorage } from '@/core/services/StorageService';
 import { generateId } from '../utils/id';
 import { devLog, devWarn, devError } from '../utils/devLogger';
 
@@ -82,7 +81,7 @@ export type ChatStoreData = z.infer<typeof ChatStoreDataSchema>;
 // ============== Constants ==============
 
 const LEGACY_STORAGE_KEY = 'think-ai-chat-sessions';
-const DEFAULT_FILE_PATH = 'Think/chat-sessions.json';
+const DEFAULT_FILE_PATH = THINK_STORAGE_PATHS.chatSessions;
 const CORRUPT_SUFFIX = '.corrupt.json';
 const MAX_SESSIONS = 50; // 最多保留的会话数
 

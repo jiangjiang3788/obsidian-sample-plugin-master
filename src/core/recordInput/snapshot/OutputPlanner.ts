@@ -10,6 +10,7 @@ import { buildCustomCaptureFields, buildGenericRecordDraft } from '@/core/record
 import { getRecordSchemaDefinition } from '@/core/records/schema';
 import { buildTimelineCompletedExecutionPersistence, isTimelineCompletedExecutionContext } from '@/core/records/task/taskExecutionCapture';
 import { buildTaskSessionFields } from '@/core/records/task/taskSession';
+import { resolveRecordTargetPath } from '@/core/recordInput/storagePath';
 
 function normalizeNonEmptyPath(value: string | null | undefined): string | null {
   const trimmed = String(value || '').trim();
@@ -135,6 +136,7 @@ export function buildRecordOutputPlan(input: {
   const recordId = String(input.recordId || '').trim() || createRecordId(recordType);
 
   let outputContent: string;
+  let storageFields: Record<string, unknown> = renderData;
   if (recordType === 'task') {
     const statusOption = readOptionText(renderData['状态'] ?? renderData.status);
     const candidateStatus = String(statusOption.value || statusOption.label || 'open').trim().toLowerCase();
@@ -195,6 +197,7 @@ export function buildRecordOutputPlan(input: {
       'scheduledAt', 'scheduledDate', 'dueAt', 'dueDate',
     ]) delete customTaskFields[key];
     Object.assign(taskFields, customTaskFields);
+    storageFields = taskFields;
     const existingSeriesId = String(taskFields.seriesId || '').trim();
     if (recurrence && existingSeriesId) {
       throw new Error('task_series_recurrence_edit_requires_series_command');
@@ -257,11 +260,14 @@ export function buildRecordOutputPlan(input: {
     }
   } else if (schema?.family === 'generic') {
     const draft = buildGenericRecordDraft(schema.recordType, renderData, input.template.fields);
+    storageFields = draft.fields;
     outputContent = encodeRecordDraft({ recordId, draft });
   } else {
     throw new Error(`record_capture_not_supported:${schema.recordType}:${schema.captureMode}`);
   }
-  const targetFilePath = normalizeNonEmptyPath(renderTemplate(input.template.targetFile, renderData));
+  const targetFilePath = normalizeNonEmptyPath(
+    resolveRecordTargetPath(input.template.targetFile, schema.recordType, storageFields, renderData),
+  );
   const targetHeader = input.template.appendUnderHeader
     ? normalizeNonEmptyPath(renderTemplate(input.template.appendUnderHeader, renderData))
     : null;

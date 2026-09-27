@@ -12,6 +12,7 @@ import type { EisenhowerQuadrant } from '@/core/records/task/taskQuadrant';
 import type { TaskSessionCreateInput } from '@/core/types/timer';
 import type { TimelineEditTarget, TimelineLogicalRange } from '@/core/types/timeline';
 import { RecordRepository } from '@/core/records/RecordRepository';
+import { SettingsProviderToken, type ISettingsProvider } from '@/core/services/types';
 import type {
     GoalTemplateMigrationResult,
     ItemMutationOptions,
@@ -37,12 +38,13 @@ export class ItemService {
     constructor(
         @inject(DataStore) dataStore: DataStore,
         @inject(VAULT_PORT_TOKEN) vault: VaultPort,
+        @inject(SettingsProviderToken) settingsProvider: ISettingsProvider,
     ) {
         const recordRepository = new RecordRepository(vault, dataStore);
         this.taskSessions = new TaskSessionMutation(dataStore, recordRepository);
         this.taskTime = new TaskTimeMutation(recordRepository, this.taskSessions);
         this.taskQuadrant = new TaskQuadrantMutation(recordRepository);
-        this.taskCompletion = new TaskCompletionMutation(dataStore, recordRepository, this.taskSessions);
+        this.taskCompletion = new TaskCompletionMutation(dataStore, recordRepository, this.taskSessions, settingsProvider);
         this.inlineFields = new InlineFieldMutation(recordRepository);
         this.goalTemplateMigration = new GoalTemplateMigrationMutation(recordRepository);
         this.migrationBackup = new MigrationBackupService(dataStore, vault);

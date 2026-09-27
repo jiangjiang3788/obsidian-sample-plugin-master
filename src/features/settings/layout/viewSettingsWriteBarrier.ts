@@ -6,7 +6,7 @@ export interface ViewSettingsWriteBarrier {
 /**
  * Tracks the real SettingsRepository writes triggered by a View settings editor.
  * The Save button uses flush() as a persistence barrier so an immediate app reload
- * cannot race a still-pending plugin.saveData() call.
+ * cannot race a still-pending SettingsRepository persistence write.
  */
 export function createViewSettingsWriteBarrier(): ViewSettingsWriteBarrier {
     let pending: Promise<void> = Promise.resolve();

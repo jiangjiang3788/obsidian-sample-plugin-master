@@ -3,7 +3,7 @@ import { createRecordId } from '@/core/records/RecordId';
 import { encodeRecordBlock } from '@/core/records/codec/MarkdownRecordCodec';
 import { calculateDetailedEnergyScore, normalizeEnergyScore, toEnergyQuickLevel } from './scale';
 
-export const ENERGY_TARGET_FILE = '01/目标精力.md';
+export const ENERGY_TARGET_FILE = '01/精力.md';
 export const ENERGY_APPEND_UNDER_HEADER = '## {{goalPath}}';
 
 function clean(value?: string): string {

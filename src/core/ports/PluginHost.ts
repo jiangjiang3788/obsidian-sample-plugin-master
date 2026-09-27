@@ -17,8 +17,6 @@ export interface PluginHost {
   addSettingTab(tab: unknown): unknown;
   registerView(type: string, creator: (leaf: any) => unknown): unknown;
   registerMarkdownCodeBlockProcessor(language: string, processor: (...args: unknown[]) => unknown): unknown;
-  loadData(): Promise<unknown>;
-  saveData(data: unknown): Promise<unknown>;
   actionService?: any;
   timerService?: any;
   dataStore?: any;

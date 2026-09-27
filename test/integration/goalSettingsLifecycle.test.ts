@@ -28,8 +28,8 @@ function createHarness() {
     goalSettings: { goals: [], goalTemplates: [] },
   };
   const persistence: ISettingsPersistence = {
-    loadData: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
-    saveData: jest.fn(async (settings: ThinkSettings) => {
+    load: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
+    save: jest.fn(async (settings: ThinkSettings) => {
       persisted = toPersistedThinkSettings(settings);
     }),
   };

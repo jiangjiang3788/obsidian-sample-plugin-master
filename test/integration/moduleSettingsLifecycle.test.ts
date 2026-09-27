@@ -44,8 +44,8 @@ describe('模块设置弹窗参数持久化生命周期', () => {
   it('视图类型、折叠、字段、筛选和视图专属参数统一经 ViewInstanceUseCase 写盘并在重启后恢复', async () => {
     let persisted = clone(initialSettings());
     const persistence: ISettingsPersistence = {
-      loadData: jest.fn(async () => clone(persisted)),
-      saveData: jest.fn(async (settings: ThinkSettings) => { persisted = clone(settings); }),
+      load: jest.fn(async () => clone(persisted)),
+      save: jest.fn(async (settings: ThinkSettings) => { persisted = clone(settings); }),
     };
     const { useCase } = await createViewUseCaseHarness(persistence);
 

@@ -52,7 +52,7 @@
   text-align: left;
 }
 .think-os--settings .think-goal-template-matrix__block-header,
-.think-os--settings .think-goal-template-matrix__block-cell { width: 136px; min-width: 136px; }
+.think-os--settings .think-goal-template-matrix__block-cell { width: 96px; min-width: 96px; }
 .think-os--settings .think-goal-template-matrix td { padding: var(--think-space-1); vertical-align: top; }
 .think-os--settings .think-goal-template-matrix__path-cell {
   position: sticky;
@@ -234,30 +234,27 @@
 .think-goal-template-menu__item:disabled { opacity: 0.5; cursor: not-allowed; }
 .think-os--settings .think-goal-template-matrix__preset-cell.is-disabled { width: 100%; height: var(--think-control-height-md); min-height: var(--think-control-height-md); display: flex; align-items: center; padding-inline: var(--think-space-2); border: 1px solid var(--think-border-subtle); border-radius: var(--think-radius-sm); background: var(--think-bg-surface-1); color: var(--think-text-secondary); font: inherit; text-align: left; cursor: pointer; }
 
-/* 1.0.74 Goal weekly time budget: stay on the Goal row; details live in the native tooltip. */
+/* Goal weekly time budget: only the editable value is boxed; the unit stays outside. */
 .think-os--settings .think-goal-template-matrix__budget {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
+  gap: 4px;
+  min-width: 0;
   height: 24px;
-  border: 1px solid var(--think-border-subtle);
-  border-radius: var(--think-radius-sm);
-  background: var(--think-bg-canvas);
   color: var(--think-text-secondary);
   font-size: var(--think-font-size-xs);
   font-weight: var(--think-font-weight-medium);
   font-variant-numeric: tabular-nums;
 }
-.think-os--settings .think-goal-template-matrix__budget:focus-within {
-  border-color: var(--think-accent);
-}
 .think-os--settings .think-goal-template-matrix__budget-input {
-  width: 34px;
-  min-width: 34px;
-  height: 22px;
-  padding: 0 2px 0 4px;
-  border: 0;
-  background: transparent;
+  width: 40px;
+  min-width: 40px;
+  height: 24px;
+  padding: 0 5px;
+  border: 1px solid var(--think-border-subtle);
+  border-radius: var(--think-radius-sm);
+  background: var(--think-bg-canvas);
   box-shadow: none;
   color: var(--think-text-primary);
   font: inherit;
@@ -267,8 +264,16 @@
 }
 .think-os--settings .think-goal-template-matrix__budget-input::-webkit-inner-spin-button,
 .think-os--settings .think-goal-template-matrix__budget-input::-webkit-outer-spin-button { appearance: none; margin: 0; }
-.think-os--settings .think-goal-template-matrix__budget-input:focus { outline: 0; box-shadow: none; }
-.think-os--settings .think-goal-template-matrix__budget-unit { padding-right: 4px; line-height: 1; }
+.think-os--settings .think-goal-template-matrix__budget-input:focus {
+  outline: 0;
+  border-color: var(--think-accent);
+  box-shadow: none;
+}
+.think-os--settings .think-goal-template-matrix__budget-unit {
+  padding: 0;
+  line-height: 24px;
+  white-space: nowrap;
+}
 
 /* Natural-time preset summary: keep the settings surface to one compact line. */
 .think-os--settings .think-goal-template-matrix__time-total {
@@ -281,14 +286,4 @@
   font-size: var(--think-font-size-xs);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-.think-os--settings .think-goal-template-matrix__budget-derived {
-  padding-right: 4px;
-  color: var(--think-text-secondary);
-  line-height: 1;
-  white-space: nowrap;
-}
-.think-os--settings .think-goal-template-matrix__budget-input {
-  width: 42px;
-  min-width: 42px;
 }

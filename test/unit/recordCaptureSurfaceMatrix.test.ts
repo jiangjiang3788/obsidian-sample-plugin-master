@@ -12,7 +12,7 @@ import {
 const EXPECTED_CAPTURE = {
   'core.task': {
     captureMode: 'template',
-    targetFile: '01/目标.md',
+    targetFile: '01/{{year}}/2-0其他.md',
     fields: [
       'core.task.status',
       'core.task.content',
@@ -33,47 +33,47 @@ const EXPECTED_CAPTURE = {
   },
   'core.habit': {
     captureMode: 'template',
-    targetFile: '01/目标打卡.md',
+    targetFile: '01/{{year}}/打卡.md',
     fields: ['core.field.content', 'core.field.date', 'core.habit.rating', 'core.field.icon'],
   },
   'core.plan': {
     captureMode: 'template',
-    targetFile: '01/目标计划.md',
+    targetFile: '01/{{year}}/计划.md',
     fields: ['core.field.content', 'core.field.date', 'core.field.icon'],
   },
   'core.review': {
     captureMode: 'template',
-    targetFile: '01/目标总结.md',
+    targetFile: '01/{{year}}/总结.md',
     fields: ['core.field.content', 'core.field.date', 'core.field.icon'],
   },
   'core.feeling': {
     captureMode: 'template',
-    targetFile: '01/目标感受.md',
+    targetFile: '01/{{year}}/闪念.md',
     fields: ['core.field.content', 'core.field.date', 'core.field.icon'],
   },
   'core.thought': {
     captureMode: 'template',
-    targetFile: '01/目标思考.md',
+    targetFile: '01/{{year}}/闪念.md',
     fields: ['core.field.content', 'core.field.date', 'core.field.icon'],
   },
   'core.event': {
     captureMode: 'template',
-    targetFile: '01/目标事件.md',
+    targetFile: '01/{{year}}/闪念.md',
     fields: ['core.field.content', 'core.field.date', 'core.field.icon'],
   },
   'core.blocker': {
     captureMode: 'template',
-    targetFile: '01/目标阻碍.md',
+    targetFile: '01/{{year}}/阻碍项.md',
     fields: ['core.field.content', 'core.field.date', 'core.field.icon'],
   },
   'core.milestone': {
     captureMode: 'template',
-    targetFile: '01/目标里程碑.md',
+    targetFile: '01/{{year}}/里程碑.md',
     fields: ['core.field.content', 'core.field.date', 'core.field.icon'],
   },
   'core.energy': {
     captureMode: 'direct',
-    targetFile: '01/目标精力.md',
+    targetFile: '01/{{year}}/精力.md',
     fields: [],
   },
 } as const;

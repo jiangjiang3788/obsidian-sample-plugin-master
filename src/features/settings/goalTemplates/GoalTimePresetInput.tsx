@@ -138,7 +138,6 @@ export function GoalTimePresetInput({ goal, goals, onRootCommit, onChildCommit, 
         }}
       />
       <span className="think-goal-template-matrix__budget-unit" aria-hidden="true">{isRoot ? '%' : '小时/周'}</span>
-      {isRoot && displayedTarget !== null ? <span className="think-goal-template-matrix__budget-derived">{formatHumanMinutes(displayedTarget)}/周</span> : null}
       {isRoot && storedPercent !== null ? <span className="sr-only">{formatPercent(storedPercent)}%</span> : null}
     </span>
   );

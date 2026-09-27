@@ -16,8 +16,8 @@ export interface AiSettings {
   /** API 密钥 */
   apiKey: string;
 
-  /** 是否将 apiKey 写入插件设置（settings.json / 插件 data）。
-   *  注意：Obsidian 插件数据通常是明文存储/可同步。
+  /** 是否将 apiKey 写入 Think/data.json。
+   *  注意：该文件是明文 Vault 文件，也可能被同步服务同步。
    */
   persistApiKey: boolean;
   /** 模型名称 */
@@ -60,7 +60,7 @@ export const DEFAULT_AI_SETTINGS: AiSettings = {
   // 安全默认值：不预置任何第三方 endpoint / model / key，避免误请求或泄露。
   apiEndpoint: '',
   apiKey: '',
-  // 默认不把密钥写入插件数据；用户明确打开后才保存。
+  // 默认不把密钥写入 Think/data.json；用户明确打开后才保存。
   persistApiKey: false,
   model: '',
   temperature: 0.7,

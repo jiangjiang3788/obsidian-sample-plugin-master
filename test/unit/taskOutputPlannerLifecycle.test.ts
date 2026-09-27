@@ -9,7 +9,7 @@ const taskTemplate: RecordCaptureTemplate = {
   id: 'core.task',
   recordTypeId: 'core.task',
   name: '任务',
-  targetFile: '01/目标.md',
+  targetFile: '01/{{year}}/2-0其他.md',
   fields: [
     { id: 'status', key: 'status', label: '状态', type: 'singleSelect', semantic: 'status' },
     { id: 'content', key: '任务内容', label: '内容', type: 'text', semantic: 'body' },
@@ -40,6 +40,7 @@ describe('Task OutputPlanner lifecycle invariants', () => {
     expect(plan.outputContent).toContain('结束时间:: 2026-08-14 17:35');
     expect(plan.outputContent).toContain('预计时长:: 50');
     expect(plan.outputContent).toContain('完成于:: 2026-08-14 17:35');
+    expect(plan.targetFilePath).toBe('01/2026/2-0其他.md');
   });
 
   it('ignores stale recurrence defaults for completed capture instead of creating a TaskSeries or throwing', () => {

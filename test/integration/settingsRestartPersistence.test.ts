@@ -15,12 +15,14 @@
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { toPersistedThinkSettings } from '@/core/settings/currentSettingsSchema';
 import { SettingsRepository, type ISettingsPersistence } from '@/core/services/SettingsRepository';
+import { VaultSettingsPersistence } from '@/core/services/SettingsPersistence';
+import { THINK_STORAGE_PATHS, type IPluginStorage } from '@/core/services/StorageService';
 
 function createPersistence(initial: unknown) {
   let persisted: unknown = JSON.parse(JSON.stringify(initial));
   const persistence: ISettingsPersistence = {
-    loadData: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
-    saveData: jest.fn(async (settings: ThinkSettings) => {
+    load: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
+    save: jest.fn(async (settings: ThinkSettings) => {
       persisted = toPersistedThinkSettings(settings);
     }),
   };
@@ -115,5 +117,36 @@ describe('P0 SettingsRepository 落盘与重启恢复', () => {
     const restored = await repository.load();
     expect(restored.goalSettings?.goals).toEqual([]);
     expect((restored.goalSettings as any)?.classifications).toBeUndefined();
+  });
+});
+
+
+describe('P0 Settings Vault 持久化路径', () => {
+  it('只通过统一路径表读写 Think/data.json，并在落盘副本中剥离未授权 API Key', async () => {
+    const writes: Array<{ path: string; data: any }> = [];
+    const storage: IPluginStorage = {
+      readJSON: jest.fn(async () => initialData),
+      writeJSON: jest.fn(async (path, data) => { writes.push({ path, data }); }),
+      remove: jest.fn(async () => undefined),
+    };
+    const persistence = new VaultSettingsPersistence(storage);
+
+    await expect(persistence.load()).resolves.toEqual(initialData);
+    expect(storage.readJSON).toHaveBeenCalledWith(THINK_STORAGE_PATHS.settings);
+    expect(THINK_STORAGE_PATHS.settings).toBe('Think/data.json');
+
+    const repository = new SettingsRepository(persistence);
+    const settings = await repository.load();
+    settings.aiSettings = {
+      ...settings.aiSettings,
+      apiKey: 'secret-key',
+      persistApiKey: false,
+    };
+
+    await repository.save(settings);
+
+    expect(writes).toHaveLength(1);
+    expect(writes[0]?.path).toBe(THINK_STORAGE_PATHS.settings);
+    expect(writes[0]?.data.aiSettings?.apiKey).toBe('');
   });
 });

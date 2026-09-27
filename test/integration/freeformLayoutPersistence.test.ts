@@ -42,8 +42,8 @@ describe('自由布局持久化', () => {
   it('完整 placement 集合只写盘一次，并过滤不属于当前布局的数据', async () => {
     let persisted: any = createSettings();
     const persistence: ISettingsPersistence = {
-      loadData: jest.fn(async () => structuredClone(persisted)),
-      saveData: jest.fn(async (data) => { persisted = structuredClone(data); }),
+      load: jest.fn(async () => structuredClone(persisted)),
+      save: jest.fn(async (data) => { persisted = structuredClone(data); }),
     };
 
     // 使用真实 load() 入口而不是直接 setInitialSettings，确保“首次加载”和“重启恢复”

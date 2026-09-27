@@ -51,7 +51,12 @@ function activeSeries(overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   } as RecordViewItem;
 }
 
-function harness(task: RecordViewItem, series?: RecordViewItem, extraRecords: RecordViewItem[] = []) {
+function harness(
+  task: RecordViewItem,
+  series?: RecordViewItem,
+  extraRecords: RecordViewItem[] = [],
+  taskTargetFile?: string,
+) {
   const records = new Map<string, RecordViewItem>([[task.id, task]]);
   if (series) records.set(series.id, series);
   extraRecords.forEach((record) => records.set(record.id, record));
@@ -74,7 +79,20 @@ function harness(task: RecordViewItem, series?: RecordViewItem, extraRecords: Re
     getRecordLocation: (id: string) => records.has(id) ? { path: 'Tasks.md', startLine: 1, endLine: 10, modified: 1 } : null,
     queryRecords: () => [...records.values()],
   };
-  return { mutation: new TaskCompletionMutation(dataStore as any, repository as any), updates, batches };
+  const settingsProvider = taskTargetFile ? {
+    getSettings: () => ({
+      goalSettings: {
+        goals: [],
+        goalTemplates: [{
+          goalPath: String((series as any)?.goalPath || (task as any).goalPath || ''),
+          recordTypeId: 'core.task',
+          enabled: true,
+          targetFile: taskTargetFile,
+        }],
+      },
+    }),
+  } : undefined;
+  return { mutation: new TaskCompletionMutation(dataStore as any, repository as any, undefined, settingsProvider as any), updates, batches };
 }
 
 describe('TaskCompletionMutation v2', () => {
@@ -114,6 +132,7 @@ describe('TaskCompletionMutation v2', () => {
       kind: 'create',
       record: {
         recordType: 'task-session',
+        targetFilePath: 'Tasks.md',
         fields: {
           taskId,
           goalPath: '工作能力/通勤',
@@ -157,6 +176,22 @@ describe('TaskCompletionMutation v2', () => {
     expect(createNext.record.fields.recoveryIntent).toBe(false);
     expect(advanceSeries).toMatchObject({ kind: 'update', recordId: seriesId });
     expect(advanceSeries.patch.currentTaskId).toBe(createNext.record.recordId);
+  });
+
+  it('renders the next recurring occurrence from the configured {{year}} target-file template', async () => {
+    const task = openTask({
+      seriesId,
+      scheduledDate: '2026-12-31',
+      source: { path: '01/2026/Tasks.md', startLine: 1, endLine: 10, modified: 1 },
+    });
+    const series = activeSeries({ recurrenceInfo: { unit: 'day', interval: 1, anchor: 'scheduled' } });
+    const { mutation, batches } = harness(task, series, [], '01/{{year}}/Tasks.md');
+
+    await mutation.completeItem(taskId);
+
+    const createNext = batches[0].find((operation: any) => operation.kind === 'create' && operation.record.recordType === 'task');
+    expect(createNext.record.fields.scheduledDate).toBe('2027-01-01');
+    expect(createNext.record.targetFilePath).toBe('01/2027/Tasks.md');
   });
 
   it('requires currentTaskId to match instead of guessing the active occurrence', async () => {

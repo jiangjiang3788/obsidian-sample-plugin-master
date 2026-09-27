@@ -110,6 +110,11 @@ export class TaskSessionMutation {
     if (!taskRecord) throw new Error(`task_record_required:${task.id}`);
     const path = taskRecord.source?.path || taskRecord.file?.path || this.dataStore.getRecordLocation(taskRecord.id)?.path || '';
     if (!path) throw new Error(`record_location_unavailable:${task.id}`);
+    const fields = buildTaskSessionFields(taskRecord, input);
+    // TaskSession is an internal execution fact for this Task occurrence. Keep it
+    // physically co-located with the Task instead of applying an implicit date
+    // partition to an already-resolved source path.
+    const targetFilePath = path;
     return {
       recordId,
       operation: {
@@ -117,9 +122,9 @@ export class TaskSessionMutation {
         record: {
           recordId,
           recordType: 'task-session',
-          targetFilePath: path,
+          targetFilePath,
           targetHeader: taskRecord.header || null,
-          fields: buildTaskSessionFields(taskRecord, input),
+          fields,
         },
       },
     };

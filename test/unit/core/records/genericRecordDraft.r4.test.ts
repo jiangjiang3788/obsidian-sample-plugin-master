@@ -80,7 +80,7 @@ describe('R4 generic Record draft + codec', () => {
         { id: 'date', key: '日期', label: '日期', type: 'date' },
         { id: 'content', key: '内容', label: '内容', type: 'textarea' },
       ],
-      targetFile: '01/目标思考.md',
+      targetFile: '01/{{year}}/闪念.md',
       appendUnderHeader: '## {{goalPath}}',
     };
 
@@ -92,6 +92,7 @@ describe('R4 generic Record draft + codec', () => {
 
     expect(plan.outputContent).toContain('记录类型:: thought');
     expect(plan.outputContent).toContain('内容:: 怎么建立支点');
+    expect(plan.targetFilePath).toBe('01/2026/闪念.md');
     expect(plan.outputContent).not.toContain('记录子类型::');
     expect(plan.outputContent).not.toContain('分类::');
   });

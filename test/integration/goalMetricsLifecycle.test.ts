@@ -12,8 +12,8 @@ import { GoalUseCase } from '@/app/usecases/goal.usecase';
 function createHarness() {
   let persisted: unknown = { groups: [], viewInstances: [], layouts: [], floatingTimerEnabled: true, goalSettings: { goals: [], goalTemplates: [] } };
   const persistence: ISettingsPersistence = {
-    loadData: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
-    saveData: jest.fn(async (settings: ThinkSettings) => { persisted = toPersistedThinkSettings(settings); }),
+    load: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
+    save: jest.fn(async (settings: ThinkSettings) => { persisted = toPersistedThinkSettings(settings); }),
   };
   const repository = new SettingsRepository(persistence);
   const makeStore = async () => {

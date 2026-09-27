@@ -2028,19 +2028,44 @@ function singleton() {
   };
 }
 const AppToken = "App";
-const SETTINGS_TOKEN = "ThinkSettings";
 const SettingsProviderToken = "SettingsProvider";
 const VAULT_PORT_TOKEN = "VaultPort";
-var __getOwnPropDesc$g = Object.getOwnPropertyDescriptor;
-var __decorateClass$g = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$g(target, key) : target;
+var __getOwnPropDesc$h = Object.getOwnPropertyDescriptor;
+var __decorateClass$h = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$h(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$f = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$g = (index, decorator) => (target, key) => decorator(target, key, index);
+const THINK_STORAGE_ROOT = "Think";
+const inThinkStorage = (name) => `${THINK_STORAGE_ROOT}/${name}`;
+const THINK_STORAGE_PATHS = Object.freeze({
+  settings: inThinkStorage("data.json"),
+  timerRuntime: inThinkStorage("timer-state.json"),
+  chatSessions: inThinkStorage("chat-sessions.json"),
+  dataStoreCache: inThinkStorage("cache.json"),
+  whiteboards: inThinkStorage("whiteboards.json"),
+  legacyAssociations: inThinkStorage("association-spaces.json"),
+  debugLog: inThinkStorage("debug.log"),
+  backupsRoot: inThinkStorage("Backups")
+});
+const LEGACY_THINK_STORAGE_PATHS = Object.freeze({
+  timerRuntime: "think-plugin-timer-state.json",
+  debugLog: ".think-plugin-debug.log"
+});
 const STORAGE_TOKEN = "PluginStorage";
+async function migrateLegacyThinkStorage(vault) {
+  const legacyDebug = await vault.readFile(LEGACY_THINK_STORAGE_PATHS.debugLog);
+  if (legacyDebug == null) return;
+  const currentDebug = await vault.readFile(THINK_STORAGE_PATHS.debugLog);
+  const merged = currentDebug && legacyDebug ? `${currentDebug.replace(/\s+$/, "")}
+
+${legacyDebug.replace(/^\s+/, "")}` : currentDebug ?? legacyDebug;
+  await vault.writeFile(THINK_STORAGE_PATHS.debugLog, merged);
+  await vault.deleteFile(LEGACY_THINK_STORAGE_PATHS.debugLog);
+}
 let VaultFileStorage = class {
   constructor(vault) {
     this.vault = vault;
@@ -2064,9 +2089,9 @@ let VaultFileStorage = class {
     await this.vault.deleteFile(path);
   }
 };
-VaultFileStorage = __decorateClass$g([
+VaultFileStorage = __decorateClass$h([
   singleton(),
-  __decorateParam$f(0, inject(VAULT_PORT_TOKEN))
+  __decorateParam$g(0, inject(VAULT_PORT_TOKEN))
 ], VaultFileStorage);
 var NOTHING = /* @__PURE__ */ Symbol.for("immer-nothing");
 var DRAFTABLE = /* @__PURE__ */ Symbol.for("immer-draftable");
@@ -3067,7 +3092,7 @@ const TASK_DEFINITION = define(TASK_SCHEMA, {
   recordTypeId: RECORD_TYPE_IDS.TASK,
   description: "目标下的可执行任务。",
   fields: TASK_FIELDS,
-  targetFile: "01/目标.md",
+  targetFile: "01/{{year}}/2-0其他.md",
   appendUnderHeader: "## {{goalPath}}"
 });
 function genericTemplate(contract, input) {
@@ -3083,27 +3108,27 @@ function genericTemplate(contract, input) {
     appendUnderHeader: "## {{goalPath}}"
   });
 }
-const PLAN_DEFINITION = genericTemplate(PLAN_SCHEMA, { id: RECORD_TYPE_IDS.PLAN, name: "计划", description: "目标周期计划。", targetFile: "01/目标计划.md", period: true });
-const REVIEW_DEFINITION = genericTemplate(REVIEW_SCHEMA, { id: RECORD_TYPE_IDS.REVIEW, name: "总结", description: "目标复盘总结。", targetFile: "01/目标总结.md", period: true });
-const THOUGHT_DEFINITION = genericTemplate(THOUGHT_SCHEMA, { id: RECORD_TYPE_IDS.THOUGHT, name: "思考", description: "目标相关思考。", targetFile: "01/目标思考.md" });
-const FEELING_DEFINITION = genericTemplate(FEELING_SCHEMA, { id: RECORD_TYPE_IDS.FEELING, name: "感受", description: "目标相关的主观感受与体验。", targetFile: "01/目标感受.md" });
+const PLAN_DEFINITION = genericTemplate(PLAN_SCHEMA, { id: RECORD_TYPE_IDS.PLAN, name: "计划", description: "目标周期计划。", targetFile: "01/{{year}}/计划.md", period: true });
+const REVIEW_DEFINITION = genericTemplate(REVIEW_SCHEMA, { id: RECORD_TYPE_IDS.REVIEW, name: "总结", description: "目标复盘总结。", targetFile: "01/{{year}}/总结.md", period: true });
+const THOUGHT_DEFINITION = genericTemplate(THOUGHT_SCHEMA, { id: RECORD_TYPE_IDS.THOUGHT, name: "思考", description: "目标相关思考。", targetFile: "01/{{year}}/闪念.md" });
+const FEELING_DEFINITION = genericTemplate(FEELING_SCHEMA, { id: RECORD_TYPE_IDS.FEELING, name: "感受", description: "目标相关的主观感受与体验。", targetFile: "01/{{year}}/闪念.md" });
 const HABIT_DEFINITION = genericTemplate(HABIT_SCHEMA, {
   id: RECORD_TYPE_IDS.HABIT,
   name: "打卡",
   description: "目标习惯或进度打卡。",
-  targetFile: "01/目标打卡.md",
+  targetFile: "01/{{year}}/打卡.md",
   extraFields: [{ id: "core.habit.rating", key: "评分", label: "评分", type: "rating", semantic: "rating" }]
 });
-const EVENT_DEFINITION = genericTemplate(EVENT_SCHEMA, { id: RECORD_TYPE_IDS.EVENT, name: "事件", description: "目标相关事件与外部事实。", targetFile: "01/目标事件.md" });
-const BLOCKER_DEFINITION = genericTemplate(BLOCKER_SCHEMA, { id: RECORD_TYPE_IDS.BLOCKER, name: "阻碍项", description: "目标推进过程中的阻碍和风险。", targetFile: "01/目标阻碍.md" });
-const MILESTONE_DEFINITION = genericTemplate(MILESTONE_SCHEMA, { id: RECORD_TYPE_IDS.MILESTONE, name: "里程碑", description: "目标阶段成果和重要节点。", targetFile: "01/目标里程碑.md" });
+const EVENT_DEFINITION = genericTemplate(EVENT_SCHEMA, { id: RECORD_TYPE_IDS.EVENT, name: "事件", description: "目标相关事件与外部事实。", targetFile: "01/{{year}}/闪念.md" });
+const BLOCKER_DEFINITION = genericTemplate(BLOCKER_SCHEMA, { id: RECORD_TYPE_IDS.BLOCKER, name: "阻碍项", description: "目标推进过程中的阻碍和风险。", targetFile: "01/{{year}}/阻碍项.md" });
+const MILESTONE_DEFINITION = genericTemplate(MILESTONE_SCHEMA, { id: RECORD_TYPE_IDS.MILESTONE, name: "里程碑", description: "目标阶段成果和重要节点。", targetFile: "01/{{year}}/里程碑.md" });
 const ENERGY_DEFINITION = define(ENERGY_SCHEMA, {
   id: RECORD_TYPE_IDS.ENERGY,
   name: "精力",
   captureMode: "direct",
   description: "目标绑定的精力状态记录；不创建目标模板，使用直接采集协议。",
   fields: [],
-  targetFile: "01/目标精力.md",
+  targetFile: "01/{{year}}/精力.md",
   appendUnderHeader: "## {{goalPath}}"
 });
 const TASK_SERIES_DEFINITION = define(TASK_SERIES_SCHEMA, {
@@ -3297,7 +3322,7 @@ const DEFAULT_AI_SETTINGS = {
   // 安全默认值：不预置任何第三方 endpoint / model / key，避免误请求或泄露。
   apiEndpoint: "",
   apiKey: "",
-  // 默认不把密钥写入插件数据；用户明确打开后才保存。
+  // 默认不把密钥写入 Think/data.json；用户明确打开后才保存。
   persistApiKey: false,
   model: "",
   temperature: 0.7,
@@ -5134,7 +5159,7 @@ function encodeRecordDraft(input) {
     fields: input.draft.fields
   });
 }
-const ENERGY_TARGET_FILE = "01/目标精力.md";
+const ENERGY_TARGET_FILE = "01/精力.md";
 const ENERGY_APPEND_UNDER_HEADER = "## {{goalPath}}";
 function clean$1(value) {
   return String(value || "").trim();
@@ -7463,11 +7488,6 @@ function hydrateGoalOnlySettings(value) {
   assertCanonicalGoalSettings(hydrated);
   return hydrated;
 }
-function hasRetiredAssociationViewState(rawValue) {
-  if (!isRecord(rawValue)) return false;
-  const rawViews = Array.isArray(rawValue.viewInstances) ? rawValue.viewInstances : [];
-  return rawViews.some((entry) => isRecord(entry) && String(entry.viewType ?? "") === "AssociationView");
-}
 function sanitizeViewState(raw) {
   const rawViews = Array.isArray(raw.viewInstances) ? raw.viewInstances : [];
   const retiredIds = new Set(
@@ -7578,6 +7598,46 @@ function toPersistedThinkSettings(settings) {
   out.goalSettings = persistGoalOnlySettings(settings);
   return out;
 }
+var __getOwnPropDesc$g = Object.getOwnPropertyDescriptor;
+var __decorateClass$g = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$g(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$f = (index, decorator) => (target, key) => decorator(target, key, index);
+const SETTINGS_PERSISTENCE_TOKEN = "SettingsPersistence";
+function toSafePersistedThinkSettings(settings) {
+  const persisted = toPersistedThinkSettings(settings);
+  const aiSettings = persisted.aiSettings;
+  if (aiSettings && typeof aiSettings === "object" && aiSettings.persistApiKey !== true) {
+    if (aiSettings.apiKey) {
+      devWarn("[SettingsPersistence] persistApiKey 未显式开启，apiKey 将被剥离后保存");
+    }
+    aiSettings.apiKey = "";
+  }
+  return persisted;
+}
+let VaultSettingsPersistence = class {
+  constructor(storage) {
+    this.storage = storage;
+  }
+  storage;
+  async load() {
+    return await this.storage.readJSON(THINK_STORAGE_PATHS.settings);
+  }
+  async save(settings) {
+    await this.storage.writeJSON(
+      THINK_STORAGE_PATHS.settings,
+      toSafePersistedThinkSettings(settings)
+    );
+  }
+};
+VaultSettingsPersistence = __decorateClass$g([
+  singleton(),
+  __decorateParam$f(0, inject(STORAGE_TOKEN))
+], VaultSettingsPersistence);
 var __getOwnPropDesc$f = Object.getOwnPropertyDescriptor;
 var __decorateClass$f = (decorators, target, key, kind) => {
   var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$f(target, key) : target;
@@ -7587,7 +7647,6 @@ var __decorateClass$f = (decorators, target, key, kind) => {
   return result;
 };
 var __decorateParam$e = (index, decorator) => (target, key) => decorator(target, key, index);
-const SETTINGS_PERSISTENCE_TOKEN = "SettingsPersistence";
 let SettingsRepository = class {
   constructor(persistence) {
     this.persistence = persistence;
@@ -7620,8 +7679,11 @@ let SettingsRepository = class {
     if (this.currentSettings) {
       return this.currentSettings;
     }
-    const loaded = await this.persistence.loadData();
+    const loaded = await this.persistence.load();
     const settings = toCurrentThinkSettings(loaded);
+    if (loaded == null) {
+      await this.persistence.save(settings);
+    }
     this.currentSettings = settings;
     this.notify();
     return settings;
@@ -7643,14 +7705,6 @@ let SettingsRepository = class {
     return this.getSettings();
   }
   /**
-   * 设置初始值（用于首次加载或重置）
-   */
-  setInitialSettings(settings) {
-    assertCanonicalGoalSettings(settings.goalSettings);
-    this.currentSettings = settings;
-    this.notify();
-  }
-  /**
    * 保存设置
    * @param settings 新设置
    * @param meta 可选的动作元数据（用于 dev 日志）
@@ -7659,7 +7713,7 @@ let SettingsRepository = class {
     assertCanonicalGoalSettings(settings.goalSettings);
     const before = this.currentSettings;
     this.currentSettings = settings;
-    await this.persistence.saveData(settings);
+    await this.persistence.save(settings);
     logSettingsWrite(meta, before, settings);
   }
   /**
@@ -7677,7 +7731,7 @@ let SettingsRepository = class {
     if (newSettings !== this.currentSettings) {
       assertCanonicalGoalSettings(newSettings.goalSettings);
       this.currentSettings = newSettings;
-      await this.persistence.saveData(newSettings);
+      await this.persistence.save(newSettings);
       this.notify();
       logSettingsWrite(meta, before, newSettings);
     }
@@ -7710,343 +7764,563 @@ RepositorySettingsProvider = __decorateClass$e([
   singleton(),
   __decorateParam$d(0, inject(SettingsRepository))
 ], RepositorySettingsProvider);
-function setupCoreContainer(app, settings) {
+function setupCoreContainer(app) {
   instance.register(AppToken, { useValue: app });
-  instance.register(SETTINGS_TOKEN, { useValue: settings });
   instance.register(STORAGE_TOKEN, { useClass: VaultFileStorage });
   instance.registerSingleton(SettingsRepository);
   instance.registerSingleton(RepositorySettingsProvider);
   instance.register(SettingsProviderToken, { useToken: RepositorySettingsProvider });
 }
-const GOAL_TASK_DEFAULTS_SEED_VERSION = 1;
-const TASK_DEFAULT_KEYS = /* @__PURE__ */ new Set([
-  "brainDemand",
-  "physicalDemand",
-  "importance",
-  "urgency",
-  "priority",
-  "availabilityContexts",
-  "recurrenceUnit"
-]);
-const GOAL_TASK_DEFAULTS_ROWS = [
-  ["照顾好自己/身体", "low", "low", "important", "urgent", "medium", ["any"], "day"],
-  ["了解自我/专注", "high", "low", "important", "normal", "highest", ["work"], "month"],
-  ["照顾好自己/睡眠", "low", "low", "important", "urgent", "medium", ["any"], "day"],
-  ["照顾好自己/早餐", "low", "low", "important", "urgent", "medium", ["any"], "day"],
-  ["照顾好自己/午餐", "low", "low", "important", "urgent", "medium", ["any"], "day"],
-  ["照顾好自己/晚餐", "low", "low", "important", "urgent", "medium", ["any"], "day"],
-  ["照顾好自己/健康", "low", "low", "important", "urgent", "medium", ["any"], "day"],
-  ["照顾好自己/粑粑", "low", "low", "important", "urgent", "medium", ["any"], "day"],
-  ["照顾好自己/运动", "medium", "medium", "important", "urgent", "medium", ["any"], "day"],
-  ["照顾好自己/习惯", "low", "low", "important", "urgent", "medium", ["any"], "day"],
-  ["我若安好便是晴天/生活", "low", "low", "normal", "normal", "high", ["any"], "day"],
-  ["我若安好便是晴天/娱乐", "low", "low", "normal", "normal", "high", ["any"], "day"],
-  ["我若安好便是晴天/车车", "low", "low", "normal", "normal", "high", ["home"], "day"],
-  ["我若安好便是晴天/高级生活", "medium", "low", "important", "normal", "high", ["any"], "day"],
-  ["我若安好便是晴天/小手机", "low", "low", "important", "normal", "high", ["any"], "day"],
-  ["我若安好便是晴天/家务", "low", "high", "normal", "normal", "high", ["home"], "day"],
-  ["我若安好便是晴天/整理", "low", "high", "normal", "normal", "high", ["home"], "day"],
-  ["我若安好便是晴天/收纳", "low", "high", "normal", "normal", "high", ["home"], "day"],
-  ["仪容仪表/剪指甲", "low", "low", "normal", "urgent", "lowest", ["home"], "week"],
-  ["仪容仪表/剪头发", "low", "low", "normal", "urgent", "lowest", ["out"], "week"],
-  ["仪容仪表/卫生", "low", "low", "normal", "urgent", "lowest", ["home"], "week"],
-  ["了解自我/自我", "high", "low", "important", "normal", "highest", ["work"], "month"],
-  ["武装大脑/时间整理", "high", "medium", "important", "normal", "highest", ["any"], "month"],
-  ["我若安好便是晴天/垚垚", "medium", "medium", "important", "normal", "high", ["any"], "day"],
-  ["了解世界/阳阳", "high", "low", "important", "normal", "highest", ["work"], "month"],
-  ["了解世界/婆婆", "high", "low", "important", "normal", "highest", ["work"], "month"],
-  ["了解世界/家庭", "high", "low", "important", "normal", "highest", ["work"], "month"],
-  ["工作能力/老板任务", "medium", "medium", "important", "urgent", "low", ["work"], "none"],
-  ["工作能力/其他", "medium", "medium", "normal", "urgent", "low", ["work"], "none"],
-  ["工作能力/手续、对账", "medium", "medium", "normal", "urgent", "low", ["work"], "none"],
-  ["工作能力/投标", "high", "medium", "important", "urgent", "low", ["work"], "none"],
-  ["工作能力/设计", "high", "medium", "important", "urgent", "low", ["work"], "none"],
-  ["工作能力", "medium", "medium", "normal", "urgent", "low", ["work"], "none"],
-  ["工作能力/通勤", "low", "medium", "normal", "urgent", "low", ["commute"], "none"],
-  ["爱好能力/电脑", "medium", "medium", "important", "normal", "highest", ["any"], "none"],
-  ["爱好能力/ob基础", "medium", "medium", "important", "normal", "highest", ["any"], "none"],
-  ["爱好能力/笔记系统", "medium", "medium", "important", "normal", "highest", ["any"], "none"],
-  ["爱好能力/记录系统", "medium", "medium", "important", "normal", "highest", ["any"], "none"],
-  ["爱好能力/整理", "medium", "medium", "important", "normal", "highest", ["any"], "none"],
-  ["爱好能力/AI", "medium", "medium", "important", "normal", "highest", ["any"], "none"],
-  ["武装大脑/思路整理", "high", "medium", "important", "normal", "highest", ["any"], "month"],
-  ["武装大脑/复盘整理", "high", "medium", "important", "normal", "highest", ["any"], "month"],
-  ["武装大脑/读书", "high", "medium", "important", "normal", "highest", ["any"], "month"],
-  ["武装大脑", "high", "medium", "important", "normal", "highest", ["any"], "month"],
-  ["武装大脑/整理笔记", "high", "medium", "important", "normal", "highest", ["any"], "month"]
-];
-const GOAL_TASK_DEFAULTS_SEED = Object.fromEntries(
-  GOAL_TASK_DEFAULTS_ROWS.map(([goalPath, brainDemand, physicalDemand, importance, urgency, priority, availabilityContexts2, recurrenceUnit]) => [
-    goalPath,
-    { brainDemand, physicalDemand, importance, urgency, priority, availabilityContexts: [...availabilityContexts2], recurrenceUnit }
-  ])
-);
-function applyGoalTaskDefaultsSeed(settings) {
-  const currentVersion = Number(settings.goalTaskDefaultsSeedVersion || 0);
-  if (currentVersion >= GOAL_TASK_DEFAULTS_SEED_VERSION) {
-    return { settings, changed: false, appliedTemplateCount: 0 };
+function toRecordViewItem(record2) {
+  return record2;
+}
+function nowMs() {
+  try {
+    return performance.now();
+  } catch {
+    return Date.now();
   }
-  let appliedTemplateCount = 0;
-  const goalSettings = settings.goalSettings || { goals: [], goalTemplates: [] };
-  const goalTemplates = (goalSettings.goalTemplates || []).map((template) => {
-    if (template.recordTypeId !== "core.task" || template.enabled === false) return template;
-    const seeded = GOAL_TASK_DEFAULTS_SEED[template.goalPath];
-    if (!seeded) return template;
-    const currentDefaults = { ...template.defaultValues || {} };
-    const nextDefaults = { ...currentDefaults };
-    let templateChanged = false;
-    for (const key of TASK_DEFAULT_KEYS) {
-      if (!(key in seeded)) continue;
-      const nextValue = seeded[key];
-      if (JSON.stringify(currentDefaults[key]) === JSON.stringify(nextValue)) continue;
-      nextDefaults[key] = Array.isArray(nextValue) ? [...nextValue] : nextValue;
-      templateChanged = true;
+}
+function durationMs(start2) {
+  return nowMs() - start2;
+}
+function elapsedMs(start2) {
+  return `${durationMs(start2).toFixed(2)}ms`;
+}
+function throttle(fn3, wait = 250) {
+  let last = 0, timer = null;
+  return function(...args) {
+    const now2 = Date.now();
+    if (now2 - last >= wait) {
+      last = now2;
+      fn3.apply(this, args);
+    } else {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        last = Date.now();
+        fn3.apply(this, args);
+      }, wait - (now2 - last));
     }
-    if (!templateChanged) return template;
-    appliedTemplateCount += 1;
-    return { ...template, defaultValues: nextDefaults };
-  });
-  return {
-    settings: {
-      ...settings,
-      goalTaskDefaultsSeedVersion: GOAL_TASK_DEFAULTS_SEED_VERSION,
-      goalSettings: { ...goalSettings, goalTemplates }
-    },
-    changed: true,
-    appliedTemplateCount
   };
 }
-const CODEBLOCK_LANG = "think";
-const EMPTY_LABEL = "无日期";
-const LOCAL_STORAGE_KEYS = {
-  SETTINGS_TABS: "think-settings-active-tab"
-};
-const DEFAULT_NAMES = {
-  NEW_LAYOUT: "新布局"
-};
-const BLOCK_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  view: "BlockView",
-  title: "块视图",
-  collapsed: false,
-  fields: [],
-  group: "recordType"
-};
-const ENERGY_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  windowDays: 7,
-  recentSampleLimit: 5,
-  maxGoals: 3,
-  goalPath: "",
-  showTimeline: true,
-  showContext: true,
-  showEffects: true,
-  analysisWindowDays: 30,
-  showPatterns: true,
-  showManagement: true,
-  currentContext: "any"
-};
-const EISENHOWER_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  showUnclassified: true
-};
-const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  timeField: "date",
-  titleField: "primaryText",
-  contentField: "content",
-  groupByDay: true,
-  showWeekday: true,
-  maxContentLength: 160,
-  fields: ["primaryText", "date"],
-  groupFields: []
-};
-const EXCEL_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  view: "ExcelView",
-  title: "数据表格",
-  collapsed: false,
-  fields: []
-};
-const HEATMAP_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  displayMode: "habit",
-  sourceRecordTypeId: "",
-  goalPaths: [],
-  maxDailyChecks: 10,
-  allowManualEdit: true
-};
-const PROGRESS_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  mode: "goal",
-  metric: "recordCount",
-  statusFilter: ["active", "paused"],
-  basePoints: 1,
-  levelStep: 20,
-  includedRecordTypes: [],
-  ratingBonusThreshold: 4,
-  ratingBonusPoints: 1,
-  showGoalBreakdown: true,
-  showRecordTypeBreakdown: true,
-  topN: 5
-};
-const STATISTICS_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  groupBy: "goal",
-  metric: "recordCount",
-  chartType: "bar",
-  goalPath: "",
-  topN: 10,
-  categories: [],
-  displayMode: "smart",
-  minVisibleHeight: 15,
-  usePeriodField: false
-};
-const TABLE_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  view: "TableView",
-  title: "表格视图",
-  collapsed: false,
-  rowField: "recordType",
-  colField: "date"
-};
-const TIMELINE_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  defaultHourHeight: 50,
-  MAX_HOURS_PER_DAY: 24,
-  UNTRACKED_LABEL: "未记录"
-};
-const BLOCK_EXPORT_DEFAULT_CONFIG = {
-  strategy: "records"
-};
-const TABLE_EXPORT_CONFIG = {
-  strategy: "records"
-};
-const EXCEL_EXPORT_CONFIG = {
-  strategy: "table"
-};
-const TIMELINE_EXPORT_CONFIG = {
-  strategy: "timeline",
-  taskSessionMode: "expanded",
-  taskSessionScope: "range"
-};
-const EVENT_TIMELINE_EXPORT_CONFIG = {
-  strategy: "event-timeline"
-};
-const STATISTICS_EXPORT_CONFIG = {
-  strategy: "statistics"
-};
-const HEATMAP_EXPORT_CONFIG = {
-  strategy: "heatmap"
-};
-const PROGRESS_EXPORT_CONFIG = {
-  strategy: "progress"
-};
-const ENERGY_EXPORT_CONFIG = {
-  strategy: "energy"
-};
-const EISENHOWER_EXPORT_CONFIG = {
-  strategy: "eisenhower"
-};
-const VIEW_DEFINITIONS = {
-  BlockView: {
-    label: "块视图",
-    defaultConfig: BLOCK_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 480, freeformHeight: 340, deferredMinHeight: 420 },
-    capabilities: { headerCreate: false, export: true },
-    exportConfig: BLOCK_EXPORT_DEFAULT_CONFIG
-  },
-  TableView: {
-    label: "表格",
-    defaultConfig: TABLE_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 680, freeformHeight: 420, deferredMinHeight: 420 },
-    capabilities: { headerCreate: false, export: true },
-    exportConfig: TABLE_EXPORT_CONFIG
-  },
-  ExcelView: {
-    label: "数据表格",
-    defaultConfig: EXCEL_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 760, freeformHeight: 460, deferredMinHeight: 420 },
-    capabilities: { headerCreate: false, export: true },
-    exportConfig: EXCEL_EXPORT_CONFIG
-  },
-  TimelineView: {
-    label: "时间轴",
-    defaultConfig: TIMELINE_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 680, freeformHeight: 420, deferredMinHeight: 520 },
-    capabilities: { headerCreate: true, export: true },
-    exportConfig: TIMELINE_EXPORT_CONFIG
-  },
-  StatisticsView: {
-    label: "统计",
-    defaultConfig: STATISTICS_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 440, freeformHeight: 340, deferredMinHeight: 320 },
-    capabilities: { headerCreate: true, export: true },
-    exportConfig: STATISTICS_EXPORT_CONFIG
-  },
-  HeatmapView: {
-    label: "打卡",
-    defaultConfig: HEATMAP_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 520, freeformHeight: 360, deferredMinHeight: 360 },
-    capabilities: { headerCreate: true, export: true },
-    exportConfig: HEATMAP_EXPORT_CONFIG
-  },
-  EventTimelineView: {
-    label: "事件时间线",
-    defaultConfig: EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 680, freeformHeight: 420, deferredMinHeight: 420 },
-    capabilities: { headerCreate: false, export: true },
-    exportConfig: EVENT_TIMELINE_EXPORT_CONFIG
-  },
-  ProgressView: {
-    label: "成长",
-    defaultConfig: PROGRESS_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 480, freeformHeight: 360, deferredMinHeight: 360 },
-    capabilities: { headerCreate: false, export: true },
-    exportConfig: PROGRESS_EXPORT_CONFIG
-  },
-  EnergyView: {
-    label: "精力",
-    defaultConfig: ENERGY_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 720, freeformHeight: 620, deferredMinHeight: 440 },
-    capabilities: { headerCreate: true, export: true },
-    exportConfig: ENERGY_EXPORT_CONFIG
-  },
-  EisenhowerView: {
-    label: "四象限",
-    defaultConfig: EISENHOWER_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 760, freeformHeight: 560, deferredMinHeight: 480 },
-    capabilities: { headerCreate: false, export: true },
-    exportConfig: EISENHOWER_EXPORT_CONFIG
+const METADATA_PORT_TOKEN = "MetadataPort";
+const FILESTAT_PORT_TOKEN = "FileStatPort";
+const CURRENT_CACHE_SCHEMA_VERSION = 17;
+function toCachedItem(it) {
+  return {
+    id: it.id,
+    recordType: it.recordType,
+    status: it.status,
+    filePath: it.file?.path || it.source?.path || "",
+    startLine: it.source?.startLine ?? it.file?.line,
+    endLine: it.source?.endLine ?? it.file?.line,
+    filename: it.filename ?? it.fileName,
+    title: it.title || "",
+    content: it.content || "",
+    rawSource: it.rawSource,
+    tags: [...it.tags || []],
+    goalPath: it.goalPath,
+    recurrenceInfo: it.recurrenceInfo,
+    priority: it.priority,
+    importance: it.importance,
+    urgency: it.urgency,
+    expectedDurationMinutes: it.expectedDurationMinutes,
+    energyDemand: it.energyDemand,
+    brainDemand: it.brainDemand,
+    physicalDemand: it.physicalDemand,
+    availabilityContexts: it.availabilityContexts,
+    recoveryIntent: it.recoveryIntent,
+    createdAt: it.createdAt,
+    createdDate: it.createdDate,
+    scheduledAt: it.scheduledAt,
+    startAt: it.startAt,
+    endAt: it.endAt,
+    dueAt: it.dueAt,
+    scheduledDate: it.scheduledDate,
+    startDate: it.startDate,
+    dueDate: it.dueDate,
+    doneDate: it.doneDate,
+    cancelledDate: it.cancelledDate,
+    completedAt: it.completedAt,
+    cancelledAt: it.cancelledAt,
+    skippedAt: it.skippedAt,
+    startISO: it.startISO,
+    endISO: it.endISO,
+    seriesId: it.seriesId,
+    seriesStartDate: it.seriesStartDate,
+    currentTaskId: it.currentTaskId,
+    rolloverPolicy: it.rolloverPolicy,
+    taskId: it.taskId,
+    sessionStartedAt: it.sessionStartedAt,
+    sessionEndedAt: it.sessionEndedAt,
+    sessionDurationMinutes: it.sessionDurationMinutes,
+    sessionResult: it.sessionResult,
+    sessionSource: it.sessionSource,
+    suggestedDurationMinutes: it.suggestedDurationMinutes,
+    startEnergyRecordId: it.startEnergyRecordId,
+    endEnergyRecordId: it.endEnergyRecordId,
+    energyDelta: it.energyDelta,
+    brainDelta: it.brainDelta,
+    physicalDelta: it.physicalDelta,
+    date: it.date,
+    dateMs: it.dateMs ?? it.startMs ?? it.endMs,
+    created: it.created,
+    modified: it.modified,
+    extra: it.extra || {},
+    titleLower: it.titleLower ?? it.title?.toLowerCase(),
+    contentLower: it.contentLower ?? it.content?.toLowerCase(),
+    tagsLower: it.tagsLower ?? (it.tags || []).map((t3) => t3.toLowerCase())
+  };
+}
+function fromCachedItem(c2) {
+  const folder = c2.filePath.split("/").slice(0, -1).pop() || "";
+  const it = {
+    id: c2.id,
+    recordType: c2.recordType || "thought",
+    status: c2.status,
+    title: c2.title || "",
+    content: c2.content || "",
+    rawSource: c2.rawSource,
+    tags: [...c2.tags || []],
+    goalPath: c2.goalPath,
+    recurrenceInfo: c2.recurrenceInfo,
+    priority: c2.priority,
+    importance: c2.importance,
+    urgency: c2.urgency,
+    expectedDurationMinutes: c2.expectedDurationMinutes,
+    energyDemand: c2.energyDemand,
+    brainDemand: c2.brainDemand,
+    physicalDemand: c2.physicalDemand,
+    availabilityContexts: c2.availabilityContexts,
+    recoveryIntent: c2.recoveryIntent,
+    createdAt: c2.createdAt,
+    createdDate: c2.createdDate,
+    scheduledAt: c2.scheduledAt,
+    startAt: c2.startAt,
+    endAt: c2.endAt,
+    dueAt: c2.dueAt,
+    scheduledDate: c2.scheduledDate,
+    startDate: c2.startDate,
+    dueDate: c2.dueDate,
+    doneDate: c2.doneDate,
+    cancelledDate: c2.cancelledDate,
+    completedAt: c2.completedAt,
+    cancelledAt: c2.cancelledAt,
+    skippedAt: c2.skippedAt,
+    startISO: c2.startISO,
+    endISO: c2.endISO,
+    seriesId: c2.seriesId,
+    seriesStartDate: c2.seriesStartDate,
+    currentTaskId: c2.currentTaskId,
+    rolloverPolicy: c2.rolloverPolicy,
+    taskId: c2.taskId,
+    sessionStartedAt: c2.sessionStartedAt,
+    sessionEndedAt: c2.sessionEndedAt,
+    sessionDurationMinutes: c2.sessionDurationMinutes,
+    sessionResult: c2.sessionResult,
+    sessionSource: c2.sessionSource,
+    suggestedDurationMinutes: c2.suggestedDurationMinutes,
+    startEnergyRecordId: c2.startEnergyRecordId,
+    endEnergyRecordId: c2.endEnergyRecordId,
+    energyDelta: c2.energyDelta,
+    brainDelta: c2.brainDelta,
+    physicalDelta: c2.physicalDelta,
+    date: c2.date,
+    dateMs: c2.dateMs,
+    created: c2.created,
+    modified: c2.modified,
+    filename: c2.filename,
+    fileName: c2.filename,
+    file: { path: c2.filePath, line: c2.startLine, folder },
+    source: {
+      path: c2.filePath,
+      startLine: c2.startLine || 0,
+      endLine: c2.endLine || c2.startLine || 0,
+      modified: c2.modified
+    },
+    extra: c2.extra || {}
+  };
+  it.titleLower = c2.titleLower ?? c2.title?.toLowerCase() ?? "";
+  it.contentLower = c2.contentLower ?? c2.content?.toLowerCase() ?? "";
+  it.tagsLower = c2.tagsLower ?? (c2.tags || []).map((t3) => t3.toLowerCase());
+  return it;
+}
+const DATASTORE_CACHE_PATH = THINK_STORAGE_PATHS.dataStoreCache;
+class DataStoreCache {
+  constructor(storage, isActive) {
+    this.storage = storage;
+    this.isActive = isActive;
   }
-};
-const VIEW_OPTIONS = Object.freeze(
-  Object.keys(VIEW_DEFINITIONS)
-);
-Object.freeze(
-  Object.fromEntries(
-    VIEW_OPTIONS.map((viewType) => [viewType, VIEW_DEFINITIONS[viewType].defaultConfig])
-  )
-);
-function isRegisteredViewName(value) {
-  return Object.prototype.hasOwnProperty.call(VIEW_DEFINITIONS, value);
+  storage;
+  isActive;
+  cache = null;
+  saveTimer = null;
+  dispose() {
+    this.clearSaveTimer();
+    this.cache = null;
+  }
+  get current() {
+    return this.cache;
+  }
+  clearMemory() {
+    this.clearSaveTimer();
+    this.cache = null;
+  }
+  async removePersisted() {
+    await this.storage.remove(DATASTORE_CACHE_PATH);
+  }
+  async load() {
+    let cache = await this.storage.readJSON(DATASTORE_CACHE_PATH);
+    if (!cache || cache.schemaVersion !== CURRENT_CACHE_SCHEMA_VERSION) {
+      cache = this.createEmptyCache();
+    }
+    this.cache = cache;
+    return cache;
+  }
+  ensure() {
+    if (!this.cache) {
+      this.cache = this.createEmptyCache();
+    }
+    return this.cache;
+  }
+  restoreItems(entry) {
+    return entry.items.map(fromCachedItem);
+  }
+  upsertFile(filePath, stat, items, integrityIssues = []) {
+    const cache = this.ensure();
+    cache.files[filePath] = {
+      mtime: stat.mtime,
+      size: stat.size,
+      items: items.map((item) => toCachedItem(toRecordViewItem(item))),
+      integrityIssues: integrityIssues.map((issue2) => ({ ...issue2 }))
+    };
+  }
+  removeFile(filePath) {
+    if (!this.cache || !this.cache.files[filePath]) return false;
+    delete this.cache.files[filePath];
+    return true;
+  }
+  removeMissingFiles(seen) {
+    if (!this.cache) return 0;
+    let removed = 0;
+    for (const cachedPath of Object.keys(this.cache.files)) {
+      if (!seen.has(cachedPath)) {
+        delete this.cache.files[cachedPath];
+        removed++;
+      }
+    }
+    return removed;
+  }
+  scheduleSave(delay = 1500) {
+    if (!this.isActive()) return;
+    this.clearSaveTimer();
+    this.saveTimer = setTimeout(async () => {
+      if (!this.isActive()) return;
+      try {
+        if (this.cache) {
+          await this.storage.writeJSON(DATASTORE_CACHE_PATH, this.cache);
+        }
+      } catch (e2) {
+        devWarn("ThinkPlugin: 写入缓存失败", e2);
+      }
+    }, delay);
+  }
+  clearSaveTimer() {
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+    }
+    this.saveTimer = null;
+  }
+  createEmptyCache() {
+    return { schemaVersion: CURRENT_CACHE_SCHEMA_VERSION, files: {} };
+  }
 }
-function getViewDefinition(viewType) {
-  if (!isRegisteredViewName(viewType)) return void 0;
-  return VIEW_DEFINITIONS[viewType];
+function localCalendarDate(value) {
+  if (!value) return void 0;
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return void 0;
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
-function getViewLabel(viewType) {
-  const fallback = viewType.replace(/View$/, "") || viewType;
-  return getViewDefinition(viewType)?.label ?? fallback;
+function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
+  const contentLines = lines.slice(startIdx + 1, endIdx);
+  const parsed = decodeRecordContentLines(contentLines);
+  if (!parsed.recordId || !isStableRecordId(parsed.recordId)) return null;
+  if (!parsed.recordType) return null;
+  const isTask = parsed.recordType === "task";
+  const isTaskSeries = parsed.recordType === "task-series";
+  const isTaskSession = parsed.recordType === "task-session";
+  if (isTask && !["open", "done", "cancelled", "skipped"].includes(String(parsed.status || ""))) return null;
+  if (isTask && parsed.status === "skipped" && !parsed.seriesId) return null;
+  if (isTaskSeries && !["active", "stopped"].includes(String(parsed.status || ""))) return null;
+  const recurrenceInfo = isTaskSeries ? normalizeRecurrenceInfo({ unit: parsed.recurrenceUnit, interval: parsed.recurrenceInterval, anchor: parsed.recurrenceAnchor }) : null;
+  if (isTaskSeries && !recurrenceInfo) return null;
+  const sessionDuration = normalizeTaskSessionDurationMinutes(parsed.sessionDurationMinutes);
+  if (isTaskSession && (!parsed.taskId || !parsed.sessionStartedAt || !parsed.sessionEndedAt || sessionDuration == null || !parsed.sessionResult || !parsed.sessionSource)) return null;
+  const canonicalDate = isTask ? localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate || localCalendarDate(parsed.createdAt) || localCalendarDate(parsed.completedAt) || localCalendarDate(parsed.endAt) || parsed.date : localCalendarDate(parsed.sessionStartedAt) || parsed.date || localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate;
+  const schema = getRecordSchemaDefinition(parsed.recordType);
+  if (!schema) return null;
+  const item = {
+    id: parsed.recordId,
+    title: parsed.title || "",
+    content: parsed.content,
+    rawSource: lines.slice(startIdx, endIdx + 1).join("\n"),
+    editableText: parsed.content,
+    status: parsed.status,
+    tags: parsed.tags,
+    goalPath: parsed.goalPath,
+    recurrenceInfo: recurrenceInfo || void 0,
+    created: 0,
+    modified: 0,
+    extra: parsed.extra,
+    folder: parentFolder,
+    recordType: schema.recordType,
+    priority: parsed.priority,
+    importance: parsed.importance,
+    urgency: parsed.urgency,
+    createdAt: parsed.createdAt,
+    scheduledAt: parsed.scheduledAt,
+    startAt: parsed.startAt,
+    endAt: parsed.endAt,
+    dueAt: parsed.dueAt,
+    energyDemand: parsed.energyDemand,
+    brainDemand: parsed.brainDemand,
+    physicalDemand: parsed.physicalDemand,
+    availabilityContexts: parsed.availabilityContexts,
+    recoveryIntent: parsed.recoveryIntent,
+    scheduledDate: parsed.scheduledDate,
+    startDate: parsed.startDate,
+    dueDate: parsed.dueDate,
+    completedAt: parsed.completedAt,
+    cancelledAt: parsed.cancelledAt,
+    skippedAt: parsed.skippedAt,
+    seriesId: parsed.seriesId,
+    seriesStartDate: parsed.seriesStartDate,
+    currentTaskId: parsed.currentTaskId,
+    rolloverPolicy: parsed.rolloverPolicy,
+    taskId: parsed.taskId,
+    sessionStartedAt: parsed.sessionStartedAt,
+    sessionEndedAt: parsed.sessionEndedAt,
+    sessionDurationMinutes: sessionDuration ?? void 0,
+    sessionResult: parsed.sessionResult,
+    sessionSource: parsed.sessionSource,
+    suggestedDurationMinutes: parsed.suggestedDurationMinutes,
+    startEnergyRecordId: parsed.startEnergyRecordId,
+    endEnergyRecordId: parsed.endEnergyRecordId,
+    energyDelta: parsed.energyDelta,
+    brainDelta: parsed.brainDelta,
+    physicalDelta: parsed.physicalDelta,
+    ...parsed.recordType === "energy" && parsed.recordSubtype ? { recordSubtype: parsed.recordSubtype } : {},
+    doneDate: parsed.completedAt,
+    cancelledDate: parsed.cancelledAt,
+    date: canonicalDate
+  };
+  if (parsed.icon) item.icon = parsed.icon;
+  if (parsed.rating !== void 0) item.rating = parsed.rating;
+  if (parsed.image) item.image = parsed.image;
+  if (parsed.seriesId) item.extra["系列ID"] = parsed.seriesId;
+  if (parsed.expectedDurationMinutes !== void 0) {
+    item.expectedDurationMinutes = parsed.expectedDurationMinutes;
+  }
+  item.startISO = parsed.sessionStartedAt || (isTask ? parsed.scheduledAt || parsed.scheduledDate || parsed.startAt || parsed.startDate : void 0) || parsed.startAt || parsed.startDate || parsed.scheduledAt || parsed.scheduledDate || parsed.dueAt || parsed.dueDate || parsed.date;
+  item.endISO = parsed.sessionEndedAt || parsed.endAt || parsed.completedAt || parsed.cancelledAt || parsed.dueAt || parsed.dueDate || item.startISO;
+  if (item.startISO) item.startMs = Date.parse(item.startISO);
+  if (item.endISO) item.endMs = Date.parse(item.endISO);
+  if (item.period && item.date) item.periodCount = getPeriodCount(item.period, dayjs(item.date));
+  return item;
 }
-function getViewDefaultConfig(viewType) {
-  return getViewDefinition(viewType)?.defaultConfig;
+function firstDate(...values2) {
+  for (const value of values2) {
+    const normalized2 = String(value || "").trim();
+    if (normalized2) return normalized2;
+  }
+  return void 0;
 }
-function getViewExportConfig(viewType) {
-  return getViewDefinition(viewType)?.exportConfig;
+function getTaskDateFact(task, role = "default") {
+  if (role === "scheduled") {
+    return { value: firstDate(task.scheduledAt, task.scheduledDate), source: "scheduled" };
+  }
+  if (role === "due") {
+    return { value: firstDate(task.dueAt, task.dueDate), source: "due" };
+  }
+  if (role === "completed") {
+    return { value: firstDate(task.completedAt, task.doneDate), source: "done" };
+  }
+  const candidates = [
+    ["scheduled", firstDate(task.scheduledAt, task.scheduledDate)],
+    ["due", firstDate(task.dueAt, task.dueDate)],
+    ["start", firstDate(task.startAt, task.startDate, task.startISO)],
+    ["created", firstDate(task.createdAt, task.createdDate)],
+    ["done", firstDate(task.completedAt, task.doneDate)],
+    ["end", firstDate(task.endAt, task.endISO)]
+  ];
+  for (const [source, value] of candidates) {
+    if (value) return { value, source };
+  }
+  return {};
 }
-function viewHasCapability(viewType, capability) {
-  return getViewDefinition(viewType)?.capabilities[capability] === true;
+function normalizeItemDates(it) {
+  if (it.recordType !== "task") {
+    if (it.date) {
+      it.dateSource = "block";
+      const t3 = Date.parse(it.date);
+      if (!isNaN(t3)) it.dateMs = t3;
+    }
+    return;
+  }
+  const fact = getTaskDateFact(it, "default");
+  if (fact.value) {
+    it.date = fact.value;
+    it.dateSource = fact.source;
+    const t3 = Date.parse(fact.value);
+    if (!isNaN(t3)) it.dateMs = t3;
+  }
+}
+function unique(values2) {
+  return Array.from(new Set(values2.map((value) => String(value ?? "").trim()).filter(Boolean)));
+}
+function normalizeSearchText$1(value) {
+  return String(value ?? "").toLowerCase();
+}
+function normalizeRecordItem(item, context) {
+  const line2 = context.line;
+  item.created = context.created;
+  item.modified = context.modified;
+  item.folder = item.folder || context.parentFolder;
+  item.filename = context.fileName;
+  item.fileName = context.fileName;
+  item.file = {
+    path: context.filePath,
+    line: line2,
+    basename: context.fileName,
+    folder: context.parentFolder
+  };
+  if (context.header) {
+    item.header = context.header;
+  }
+  item.tags = unique([...context.sectionTags || [], ...item.tags || []]);
+  const rawGoalPath = String(item.goalPath || "").trim();
+  const canonicalGoalPath2 = rawGoalPath ? normalizeGoalPath(rawGoalPath) : null;
+  if (rawGoalPath && !canonicalGoalPath2) throw new Error(`invalid_record_goal_path:${item.id}`);
+  item.goalPath = canonicalGoalPath2 || void 0;
+  const goalParts = splitGoalPath(item.goalPath || null);
+  item.rootGoal = goalParts.rootGoal || void 0;
+  item.leafGoal = goalParts.leafGoal || void 0;
+  if (!item.extra) item.extra = {};
+  normalizeItemDates(toRecordViewItem(item));
+  item.fullData = item.rawSource || item.fullData || item.content || "";
+  const indexedItem = item;
+  indexedItem.titleLower = normalizeSearchText$1(item.title);
+  indexedItem.contentLower = normalizeSearchText$1(item.content);
+  indexedItem.fullDataLower = normalizeSearchText$1(item.fullData);
+  indexedItem.tagsLower = (item.tags || []).map((tag) => normalizeSearchText$1(tag));
+  indexedItem.goalPathLower = normalizeSearchText$1(item.goalPath);
+  indexedItem.rootGoalLower = normalizeSearchText$1(item.rootGoal);
+  indexedItem.leafGoalLower = normalizeSearchText$1(item.leafGoal);
+  return item;
+}
+function normalizeFilePathInput(input) {
+  return typeof input === "string" ? input : input && typeof input.path === "string" ? input.path : "";
+}
+function pathBasename(path) {
+  return path.split("/").pop() || path;
+}
+function pathParentName(path) {
+  const parts = path.split("/");
+  if (parts.length <= 1) return "";
+  return parts[parts.length - 2] || "";
+}
+function basenameNoExt(filename) {
+  return filename.toLowerCase().endsWith(".md") ? filename.slice(0, -3) : filename;
+}
+class DataStoreFileScanner {
+  constructor(vault, metadata, fileStat) {
+    this.vault = vault;
+    this.metadata = metadata;
+    this.fileStat = fileStat;
+  }
+  vault;
+  metadata;
+  fileStat;
+  async scan(filePathOrFile) {
+    const filePath = normalizeFilePathInput(filePathOrFile);
+    if (!filePath) {
+      devWarn("ThinkPlugin: scanFile 入参非法（缺少 path）", filePathOrFile);
+      return null;
+    }
+    const content = await this.vault.readFile(filePath);
+    if (content == null) {
+      devWarn("ThinkPlugin: scanFile 文件不存在或不可读", filePath);
+      return null;
+    }
+    const headingsList = await this.metadata.getHeadings(filePath);
+    const stat = await this.fileStat.stat(filePath);
+    if (!stat) {
+      devWarn("ThinkPlugin: scanFile 获取 stat 失败", filePath);
+      return null;
+    }
+    const lines = content.split(/\r?\n/);
+    const parentFolder = pathParentName(filePath);
+    const fileName = basenameNoExt(pathBasename(filePath));
+    const items = [];
+    const integrityIssues = [];
+    let nextHeadingIndex = 0;
+    let currentSectionTags = [];
+    let currentHeader = "";
+    for (let i2 = 0; i2 < lines.length; i2++) {
+      const line2 = lines[i2];
+      if (nextHeadingIndex < headingsList.length && headingsList[nextHeadingIndex].line === i2) {
+        const headingEntry = headingsList[nextHeadingIndex];
+        const headingText = headingEntry.heading;
+        const headingTags = headingText.match(/#([\p{L}\p{N}_\/-]+)/gu) || [];
+        currentSectionTags = headingTags.map((t3) => t3.trim()).filter(Boolean);
+        let cleanText = headingText;
+        for (const tag of headingTags) cleanText = cleanText.replace(tag, "").trim();
+        currentHeader = cleanText || "";
+        nextHeadingIndex++;
+        continue;
+      }
+      if (line2.trim() === "<!-- start -->") {
+        const endIdx = lines.indexOf("<!-- end -->", i2 + 1);
+        if (endIdx !== -1) {
+          const blockItem = parseRecordBlock(filePath, lines, i2, endIdx, parentFolder);
+          if (blockItem) {
+            this.normalizeScannedItem(blockItem, filePath, fileName, parentFolder, stat, i2 + 1, endIdx + 1, currentHeader, currentSectionTags);
+            items.push(blockItem);
+          } else {
+            const blockLines = lines.slice(i2 + 1, endIdx);
+            const idLine = blockLines.find((candidate) => /^\s*(?:记录ID|recordId)\s*[:：]{1,2}/i.test(candidate));
+            const recordId = idLine?.replace(/^\s*(?:记录ID|recordId)\s*[:：]{1,2}\s*/i, "").trim();
+            integrityIssues.push({
+              code: !recordId || !isStableRecordId(recordId) ? "record_id_missing" : "record_block_malformed",
+              recordId: recordId || void 0,
+              path: filePath,
+              message: !recordId || !isStableRecordId(recordId) ? `文件 ${filePath} 第 ${i2 + 1} 行的记录块缺少有效且稳定的记录标识。` : `文件 ${filePath} 第 ${i2 + 1} 行的记录块 ${recordId} 不符合当前记录格式要求。`
+            });
+          }
+          i2 = endIdx;
+          continue;
+        }
+      }
+    }
+    return { filePath, items, stat, integrityIssues };
+  }
+  normalizeScannedItem(item, filePath, fileName, parentFolder, stat, line2, endLine, currentHeader, currentSectionTags) {
+    normalizeRecordItem(item, {
+      filePath,
+      fileName,
+      parentFolder,
+      created: stat.ctime,
+      modified: stat.mtime,
+      line: line2,
+      header: currentHeader || void 0,
+      sectionTags: currentSectionTags
+    });
+    item.source = { path: filePath, startLine: line2, endLine, modified: stat.mtime };
+    if (item.file) item.file.line = line2;
+  }
 }
 const FIELD_CATEGORY_LABELS = {
   core: "核心字段",
@@ -8543,92 +8817,1102 @@ function getAllFields(items) {
 function readField(item, field) {
   return readFieldValue(item, field);
 }
-function isActiveTimerState(timer) {
-  return !!timer && (timer.status === "running" || timer.status === "paused");
-}
-function pickEditableText(item) {
-  if (item.editableText?.trim()) return item.editableText.trim();
-  const extraBody = item.extra?.["正文"];
-  if (typeof extraBody === "string" && extraBody.trim()) return extraBody.trim();
-  return item.content?.trim() || item.title || null;
-}
-function taskDurationForEdit(item) {
-  if (item.recordType !== "task") return item.duration ?? null;
-  if (typeof item.expectedDurationMinutes === "number" && Number.isFinite(item.expectedDurationMinutes) && item.expectedDurationMinutes > 0) {
-    return item.expectedDurationMinutes;
+function coerceForCompare(v2) {
+  if (v2 === null || v2 === void 0) return null;
+  if (typeof v2 === "number") return v2;
+  const s2 = String(v2).trim();
+  const isDateLike = /^\d{4}-\d{1,2}-\d{1,2}/.test(s2) || /^\d{4}\/\d{1,2}\/\d{1,2}/.test(s2);
+  if (isDateLike) {
+    const ts = Date.parse(s2.replace(/\//g, "-"));
+    if (!Number.isNaN(ts)) return ts;
   }
-  const startMs = item.startAt ? new Date(item.startAt).getTime() : Number.NaN;
-  const endMs = item.endAt ? new Date(item.endAt).getTime() : Number.NaN;
-  if (Number.isFinite(startMs) && Number.isFinite(endMs) && endMs > startMs) {
-    return Math.round((endMs - startMs) / 6e4);
+  const n2 = Number(s2);
+  if (!Number.isNaN(n2) && /\d/.test(s2) && !/[^\d.\-+eE]/.test(s2)) return n2;
+  return s2;
+}
+function cmpMixed(a2, b2) {
+  if (a2 == null && b2 == null) return 0;
+  if (a2 == null) return 1;
+  if (b2 == null) return -1;
+  const A2 = coerceForCompare(a2);
+  const B2 = coerceForCompare(b2);
+  if (typeof A2 === "number" && typeof B2 === "number") return A2 - B2;
+  return String(a2).localeCompare(String(b2), "zh");
+}
+function filterByRules(items, rules = []) {
+  if (!rules.length) return items;
+  return items.filter((item) => {
+    if (rules.length === 0) return true;
+    if (rules.length === 1) return matchRule(item, rules[0]);
+    let result = matchRule(item, rules[0]);
+    for (let i2 = 1; i2 < rules.length; i2++) {
+      const currentRule = rules[i2];
+      const previousRule = rules[i2 - 1];
+      const logic = previousRule.logic || "and";
+      if (logic === "and") {
+        result = result && matchRule(item, currentRule);
+      } else if (logic === "or") {
+        result = result || matchRule(item, currentRule);
+      }
+    }
+    return result;
+  });
+}
+function isEmptyValue$1(value) {
+  if (value === null || value === void 0) return true;
+  if (Array.isArray(value)) return value.length === 0;
+  return String(value).trim() === "";
+}
+function normalizeListValue(value) {
+  if (Array.isArray(value)) return value;
+  if (value === null || value === void 0) return [];
+  return String(value).split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+}
+function normalizeBetweenValue(value) {
+  if (Array.isArray(value) && value.length >= 2) return [value[0], value[1]];
+  if (value === null || value === void 0) return null;
+  const text2 = String(value).trim();
+  if (!text2) return null;
+  const parts = text2.split(/\s*(?:~|～|至|到|\.\.|,|，)\s*/).filter(Boolean);
+  if (parts.length < 2) return null;
+  return [parts[0], parts[1]];
+}
+function matchRule(item, rule) {
+  const canonicalField = normalizeFieldKey(rule.field);
+  const itemRecord = asUnknownRecord(item);
+  let v1 = readField(item, canonicalField);
+  let v2 = rule.value;
+  if (rule.op === "empty") return isEmptyValue$1(v1);
+  if (rule.op === "notEmpty") return !isEmptyValue$1(v1);
+  if (canonicalField === "title") {
+    v1 = readString$1(itemRecord, "titleLower") ?? String(v1 ?? "").toLowerCase();
+    v2 = String(v2 ?? "").toLowerCase();
+  } else if (canonicalField === "content") {
+    v1 = readString$1(itemRecord, "contentLower") ?? String(v1 ?? "").toLowerCase();
+    v2 = String(v2 ?? "").toLowerCase();
+  } else if (["goalPath", "rootGoal", "leafGoal"].includes(canonicalField)) {
+    v1 = String(v1 ?? "").toLowerCase();
+    if (rule.op === "in" || rule.op === "notIn") {
+      v2 = normalizeListValue(v2).map((value) => String(value ?? "").toLowerCase());
+    } else {
+      v2 = String(v2 ?? "").toLowerCase();
+    }
+  } else if (canonicalField === "fullData") {
+    v1 = readString$1(itemRecord, "fullDataLower") ?? String(v1 ?? "").toLowerCase();
+    v2 = String(v2 ?? "").toLowerCase();
+  } else if (canonicalField === "tags") {
+    const listLower = readStringArray(itemRecord, "tagsLower").length ? readStringArray(itemRecord, "tagsLower") : Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : [];
+    const needle = String(v2 ?? "").toLowerCase();
+    if (rule.op === "includes" || rule.op === "=") {
+      return listLower.includes(needle);
+    }
+    if (rule.op === "!=") {
+      return !listLower.includes(needle);
+    }
+    if (rule.op === "in" || rule.op === "notIn") {
+      const needles = normalizeListValue(v2).map((x2) => String(x2).toLowerCase());
+      const matched = needles.some((needleValue) => listLower.includes(needleValue));
+      return rule.op === "in" ? matched : !matched;
+    }
+    v1 = listLower.join(",");
+    v2 = needle;
   }
-  return item.duration ?? null;
-}
-function buildParsedRecordSnapshot(item) {
-  const path = item.source?.path ?? item.file?.path ?? null;
-  const line2 = item.source?.startLine ?? (typeof item.file?.line === "number" ? item.file.line : null);
-  const editableText = pickEditableText(item);
-  return {
-    itemId: item.id,
-    entryKind: item.recordType === "task" ? "task" : "block",
-    locator: { path, line: line2 },
-    raw: { sourceText: item.rawSource || item.content || "" },
-    semantic: {
-      title: item.title || null,
-      editableText,
-      content: item.content || null,
-      date: item.date || item.createdDate || null,
-      period: item.period || null,
-      tags: [...item.tags || []],
-      goalPath: item.goalPath || null,
-      startTime: (item.recordType === "task" ? item.scheduledAt || (item.startAt && !item.endAt ? item.startAt : void 0) : item.startTime) || item.startTime || null,
-      endTime: (item.recordType === "task" ? item.endAt : item.endTime) || item.endTime || null,
-      duration: taskDurationForEdit(item)
-    },
-    extra: { ...item.extra || {} }
-  };
-}
-function getEffectiveTemplate(settings, recordTypeId) {
-  const configured = settings.recordTypes || [];
-  const templates = [
-    ...configured,
-    ...DEFAULT_TEMPLATE_RECORD_TYPES.filter((block) => !configured.some((existing) => existing.id === block.id))
-  ];
-  const template = templates.find((block) => block.id === recordTypeId || block.recordTypeId === recordTypeId) ?? null;
-  return {
-    template,
-    templateId: template?.id ?? null,
-    templateSourceType: template ? "record-type" : null
-  };
-}
-function fieldValueTypeForInputType(inputType) {
-  switch (inputType) {
-    case "number":
-    case "rating":
-      return "number";
-    case "boolean":
-      return "boolean";
-    case "date":
-      return "date";
-    case "datetime":
-      return "datetime";
-    case "time":
-      return "time";
-    case "multiSelect":
-    case "multiPath":
-    case "multiTag":
-      return "tags";
-    case "path":
-    case "hierarchicalSingleSelect":
-      return "path";
-    case "image":
-    case "multiImage":
-      return "image";
-    case "file":
-      return "file";
+  switch (rule.op) {
+    case "=":
+      return cmpMixed(v1, v2) === 0;
+    case "!=":
+      return cmpMixed(v1, v2) !== 0;
+    case "includes":
+      return Array.isArray(v1) ? v1.some((x2) => String(x2).includes(String(v2))) : String(v1).includes(String(v2));
+    case "regex":
+      try {
+        return new RegExp(String(v2)).test(String(v1));
+      } catch {
+        return false;
+      }
+    case ">":
+      return cmpMixed(v1, v2) > 0;
+    case "<":
+      return cmpMixed(v1, v2) < 0;
+    case "in": {
+      const values2 = Array.isArray(v2) ? v2 : normalizeListValue(v2);
+      return values2.some((value) => cmpMixed(v1, value) === 0);
+    }
+    case "notIn": {
+      const values2 = Array.isArray(v2) ? v2 : normalizeListValue(v2);
+      return !values2.some((value) => cmpMixed(v1, value) === 0);
+    }
+    case "between": {
+      const range = normalizeBetweenValue(v2);
+      if (!range) return false;
+      const [minValue, maxValue] = range;
+      return cmpMixed(v1, minValue) >= 0 && cmpMixed(v1, maxValue) <= 0;
+    }
     default:
-      return "string";
+      return false;
   }
+}
+function sortItems(items, rules = []) {
+  if (!rules.length) return items;
+  return [...items].sort((a2, b2) => {
+    for (const r2 of rules) {
+      const canonicalField = normalizeFieldKey(r2.field);
+      const av = readField(a2, canonicalField);
+      const bv = readField(b2, canonicalField);
+      if (av == null && bv == null) continue;
+      if (av == null) return r2.dir === "asc" ? 1 : -1;
+      if (bv == null) return r2.dir === "asc" ? -1 : 1;
+      const cmp = cmpMixed(av, bv);
+      if (cmp !== 0) return r2.dir === "asc" ? cmp : -cmp;
+    }
+    return 0;
+  });
+}
+function filterByKeyword(items, kw) {
+  if (!kw.trim()) return items;
+  const s2 = kw.trim().toLowerCase();
+  return items.filter((it) => {
+    const itemRecord = asUnknownRecord(it);
+    const titleLower = readString$1(itemRecord, "titleLower") ?? (it.title || "").toLowerCase();
+    const contentLower = readString$1(itemRecord, "contentLower") ?? (it.content || "").toLowerCase();
+    const fullDataLower = readString$1(itemRecord, "fullDataLower") ?? (it.fullData || it.rawSource || "").toLowerCase();
+    const tagsLower = (it.tags || []).join(" ").toLowerCase();
+    const semanticText = [it.goalPath, it.recordType, it.status].filter(Boolean).join(" ").toLowerCase();
+    return (titleLower + " " + contentLower + " " + fullDataLower + " " + tagsLower + " " + semanticText).includes(s2);
+  });
+}
+function filterByPeriod(items, period) {
+  if (!period) {
+    return items;
+  }
+  return items.filter((item) => {
+    const itemPeriod = readField(item, "period");
+    return itemPeriod == null || itemPeriod === "" || itemPeriod === period;
+  });
+}
+const CODEBLOCK_LANG = "think";
+const EMPTY_LABEL = "无日期";
+const LOCAL_STORAGE_KEYS = {
+  SETTINGS_TABS: "think-settings-active-tab"
+};
+const DEFAULT_NAMES = {
+  NEW_LAYOUT: "新布局"
+};
+function isGoalOrderField(field) {
+  const canonical = getCanonicalFieldKey(String(field || "").trim());
+  return ["goalPath", "rootGoal", "leafGoal"].includes(canonical);
+}
+function isRecordTypeOrderField(field) {
+  const canonical = getCanonicalFieldKey(String(field || "").trim());
+  return canonical === "recordType";
+}
+function normalizeText(value) {
+  if (value === null || value === void 0) return "";
+  return String(value).trim();
+}
+function firstText$1(value) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const candidate = firstText$1(item);
+      if (candidate) return candidate;
+    }
+    return "";
+  }
+  const text2 = normalizeText(value);
+  if (!text2) return "";
+  return text2.split(/[,，\n]/).map((part) => part.trim()).filter(Boolean)[0] || "";
+}
+function normalizeGoalComparable(value) {
+  const text2 = firstText$1(value);
+  if (!text2) return "";
+  return splitGoalPath(text2).goalPath || "";
+}
+function resolveGoalFieldComparable(field, rawValue, context) {
+  getCanonicalFieldKey(String(field || "").trim());
+  return normalizeGoalComparable(rawValue);
+}
+function compareFieldValuesByViewOrder(field, left2, right2, context) {
+  if (isGoalOrderField(field)) {
+    const goalOrder = createGoalOrderIndex(context?.goals || []);
+    const leftGoal = resolveGoalFieldComparable(field, left2);
+    const rightGoal = resolveGoalFieldComparable(field, right2);
+    const byGoal = goalOrder.compareGoalPaths(leftGoal, rightGoal);
+    if (byGoal !== 0) return byGoal;
+    return leftGoal.localeCompare(rightGoal, "zh-CN");
+  }
+  if (isRecordTypeOrderField(field)) {
+    return compareRecordTypeKeys(left2, right2);
+  }
+  return String(left2 ?? "").localeCompare(String(right2 ?? ""), "zh-CN");
+}
+function readOrderedFieldValue(item, field, context) {
+  const canonical = getCanonicalFieldKey(String(field || "").trim());
+  if (isGoalOrderField(canonical)) {
+    return item.goalPath || readField(item, canonical) || readField(item, "goalPath");
+  }
+  return readField(item, canonical);
+}
+function findFirstGoalOrderField(fields = []) {
+  for (const field of fields || []) {
+    if (isGoalOrderField(field)) return getCanonicalFieldKey(field);
+  }
+  return null;
+}
+function orderItemsByDisplayedGoalField(items = [], displayFields = [], context) {
+  const goalField = findFirstGoalOrderField(displayFields);
+  if (!goalField) return items;
+  const originalIndex = /* @__PURE__ */ new Map();
+  items.forEach((item, index) => originalIndex.set(item, index));
+  return [...items].sort((left2, right2) => {
+    const byGoal = compareFieldValuesByViewOrder(
+      goalField,
+      readOrderedFieldValue(left2, goalField),
+      readOrderedFieldValue(right2, goalField),
+      context
+    );
+    if (byGoal !== 0) return byGoal;
+    return (originalIndex.get(left2) ?? 0) - (originalIndex.get(right2) ?? 0);
+  });
+}
+function normalizeGroupKeys(value, defaultLabel) {
+  if (Array.isArray(value)) {
+    const keys = value.map((v2) => String(v2 ?? "").trim()).filter(Boolean);
+    return keys.length ? Array.from(new Set(keys)) : [defaultLabel];
+  }
+  const text2 = String(value ?? "").trim();
+  return text2 ? [text2] : [defaultLabel];
+}
+function formatGroupLabel(field, key) {
+  return formatFieldValue$1(field, key) || key;
+}
+function groupItemsByField(items, groupField, defaultLabel = "(未分类)") {
+  const grouped = {};
+  for (const item of items) {
+    const keys = normalizeGroupKeys(readField(item, groupField), defaultLabel);
+    for (const key of keys) {
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(item);
+    }
+  }
+  return grouped;
+}
+function getSortedGroupKeys(grouped, field, context) {
+  const keys = Object.keys(grouped);
+  if (field && (isGoalOrderField(field) || isRecordTypeOrderField(field))) {
+    return keys.sort((a2, b2) => compareFieldValuesByViewOrder(field, a2, b2, context));
+  }
+  return keys.sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+}
+function groupItemsByFields(items, fields, context) {
+  if (!fields || fields.length === 0) {
+    return [{
+      key: "__all__",
+      label: "__all__",
+      field: "__all__",
+      items
+    }];
+  }
+  const groupLevel = (levelItems, level) => {
+    const field = fields[level];
+    const grouped = groupItemsByField(levelItems, field);
+    const keys = getSortedGroupKeys(grouped, field, context);
+    return keys.map((key) => {
+      const bucket = grouped[key];
+      if (level === fields.length - 1) {
+        return {
+          key,
+          label: formatGroupLabel(field, key),
+          field,
+          items: bucket
+        };
+      } else {
+        return {
+          key,
+          label: formatGroupLabel(field, key),
+          field,
+          children: groupLevel(bucket, level + 1)
+        };
+      }
+    });
+  };
+  return groupLevel(items, 0);
+}
+function buildTableMatrix(items, rowField, colField, context) {
+  const rowVals = /* @__PURE__ */ new Set();
+  const colVals = /* @__PURE__ */ new Set();
+  const matrix = {};
+  items.forEach((item) => {
+    const rows = normalizeGroupKeys(readField(item, rowField), EMPTY_LABEL);
+    const cols = normalizeGroupKeys(readField(item, colField), EMPTY_LABEL);
+    rows.forEach((r2) => {
+      cols.forEach((c2) => {
+        rowVals.add(r2);
+        colVals.add(c2);
+        if (!matrix[r2]) matrix[r2] = {};
+        if (!matrix[r2][c2]) matrix[r2][c2] = [];
+        matrix[r2][c2].push(item);
+      });
+    });
+  });
+  const sortedRows = Array.from(rowVals).sort((a2, b2) => compareFieldValuesByViewOrder(rowField, a2, b2, context));
+  const sortedCols = Array.from(colVals).sort((a2, b2) => compareFieldValuesByViewOrder(colField, a2, b2, context));
+  return { matrix, sortedRows, sortedCols };
+}
+const VIEW_DATE_ROLES = [
+  "default",
+  "task-scheduled",
+  "task-due",
+  "task-completed",
+  "task-actual"
+];
+function normalizeViewDateRole(value) {
+  const normalized2 = String(value || "").trim();
+  return VIEW_DATE_ROLES.includes(normalized2) ? normalized2 : void 0;
+}
+function isClosedTask(item) {
+  if (item.recordType !== "task") return false;
+  return item.status === "done" || item.status === "cancelled" || item.status === "skipped";
+}
+function isOpenTask(item) {
+  return item.recordType === "task" && !isClosedTask(item);
+}
+function itemGranularity(item) {
+  return String(readField(item, "period") || "天");
+}
+function isWithinDayRange(value, range) {
+  if (!value) return false;
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return false;
+  const [start2, end2] = toIsoDateTuple({
+    start: dayjs(range[0]).startOf("day"),
+    end: dayjs(range[1]).endOf("day")
+  });
+  const valueMs = parsed.valueOf();
+  return valueMs >= dayjs(start2).startOf("day").valueOf() && valueMs <= dayjs(end2).endOf("day").valueOf();
+}
+function isWithinMinuteRange(value, range) {
+  if (!value) return false;
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return false;
+  const startMs = dayjs(range[0]).valueOf();
+  const endMs = dayjs(range[1]).valueOf();
+  const valueMs = parsed.valueOf();
+  return valueMs >= startMs && valueMs <= endMs;
+}
+function readDateConstraintValue(item, constraint) {
+  const role = constraint.role || "default";
+  if (role === "task-scheduled") {
+    return item.recordType === "task" ? item.scheduledAt ?? item.scheduledDate : void 0;
+  }
+  if (role === "task-due") {
+    return item.recordType === "task" ? item.dueAt ?? item.dueDate : void 0;
+  }
+  if (role === "task-completed") {
+    return item.recordType === "task" ? item.completedAt ?? item.doneDate : void 0;
+  }
+  if (role === "task-actual") {
+    return item.recordType === "task-session" ? item.sessionStartedAt : void 0;
+  }
+  return readField(item, constraint.field || "date");
+}
+function applyStrictDateConstraint(items, constraint) {
+  const inRange2 = constraint.precision === "minute" ? isWithinMinuteRange : isWithinDayRange;
+  return items.filter((item) => inRange2(readDateConstraintValue(item, constraint), constraint.range));
+}
+function applyOverviewDateConstraint(items, constraint) {
+  const contextDate = dayjs(constraint.range[1]);
+  const field = constraint.field || "date";
+  return items.filter((item) => {
+    if (field === "date" && isOpenTask(item)) return true;
+    const rawDate = readDateConstraintValue(item, constraint);
+    if (!rawDate) return field === "date" ? !isClosedTask(item) : false;
+    const itemDate2 = dayjs(rawDate);
+    if (!itemDate2.isValid()) return field === "date" ? !isClosedTask(item) : false;
+    if (constraint.useFieldGranularity) {
+      switch (itemGranularity(item)) {
+        case "年":
+          return itemDate2.isSame(contextDate, "year");
+        case "季":
+          return itemDate2.isSame(contextDate, "quarter");
+        case "月":
+          return itemDate2.isSame(contextDate, "month");
+        case "周":
+          return isSameIsoWeek(itemDate2, contextDate);
+        default:
+          return isWithinDayRange(rawDate, constraint.range);
+      }
+    }
+    return isWithinDayRange(rawDate, constraint.range);
+  });
+}
+function applyStandardDateConstraint(items, constraint) {
+  const field = constraint.field || "date";
+  if (field !== "date") return applyStrictDateConstraint(items, { ...constraint });
+  let result = items;
+  const period = constraint.periodValue ?? (constraint.useFieldGranularity ? constraint.granularity : void 0);
+  if (period != null && String(period).trim()) result = filterByPeriod(result, String(period));
+  return result.filter((item) => {
+    if (isOpenTask(item)) return true;
+    const rawDate = readDateConstraintValue(item, constraint);
+    if (!rawDate) return !isClosedTask(item);
+    const parsed = dayjs(rawDate);
+    if (!parsed.isValid()) return !isClosedTask(item);
+    return isWithinDayRange(rawDate, constraint.range);
+  });
+}
+function applyDateConstraint(items, constraint) {
+  if (!constraint) return items;
+  const explicitRole = (constraint.role || "default") !== "default";
+  const mode = explicitRole ? "strict" : constraint.mode || (constraint.field && constraint.field !== "date" ? "strict" : "standard");
+  if (mode === "overview") return applyOverviewDateConstraint(items, constraint);
+  if (mode === "strict") return applyStrictDateConstraint(items, constraint);
+  return applyStandardDateConstraint(items, constraint);
+}
+const dateConstraintCache = /* @__PURE__ */ new WeakMap();
+const MAX_DATE_CACHE_ENTRIES_PER_SNAPSHOT = 48;
+function buildDateConstraintCacheKey(constraint) {
+  const [start2, end2] = constraint.range;
+  return JSON.stringify({
+    start: start2?.getTime?.() ?? Number(start2),
+    end: end2?.getTime?.() ?? Number(end2),
+    field: constraint.field || "date",
+    mode: constraint.mode || "",
+    granularity: constraint.granularity || "",
+    useFieldGranularity: !!constraint.useFieldGranularity,
+    periodValue: constraint.periodValue == null ? "" : String(constraint.periodValue),
+    precision: constraint.precision || "day",
+    role: constraint.role || "default"
+  });
+}
+function applyDateConstraintCached(items, constraint) {
+  if (!constraint) return items;
+  let byConstraint = dateConstraintCache.get(items);
+  if (!byConstraint) {
+    byConstraint = /* @__PURE__ */ new Map();
+    dateConstraintCache.set(items, byConstraint);
+  }
+  const key = buildDateConstraintCacheKey(constraint);
+  const cached2 = byConstraint.get(key);
+  if (cached2) return cached2;
+  const filtered = applyDateConstraint(items, constraint);
+  byConstraint.set(key, filtered);
+  if (byConstraint.size > MAX_DATE_CACHE_ENTRIES_PER_SNAPSHOT) {
+    const oldestKey = byConstraint.keys().next().value;
+    if (oldestKey) byConstraint.delete(oldestKey);
+  }
+  return filtered;
+}
+function executeRecordQuery(items, spec = {}) {
+  let result = applyDateConstraintCached(items, spec.date);
+  for (const group of spec.filterGroups || []) {
+    if (group.length) result = filterByRules(result, [...group]);
+  }
+  if (spec.keyword) result = filterByKeyword(result, spec.keyword);
+  if (spec.sort?.length) result = sortItems(result, [...spec.sort]);
+  const groupFields = (spec.groupBy || []).filter(Boolean);
+  const groupTree = groupFields.length ? groupItemsByFields(result, [...groupFields], spec.groupContext) : null;
+  return { items: result, groupTree };
+}
+function queryRecordItems(items, spec = {}) {
+  return executeRecordQuery(items, spec).items;
+}
+function asTaskRecord(record2) {
+  if (!record2 || record2.recordType !== "task") return null;
+  const candidate = record2;
+  const status = String(candidate.status || "");
+  if (!["open", "done", "cancelled", "skipped"].includes(status)) return null;
+  return record2;
+}
+function asTaskSeriesRecord(record2) {
+  if (!record2 || record2.recordType !== "task-series") return null;
+  const candidate = record2;
+  if (!candidate.recurrenceInfo) return null;
+  const status = String(candidate.status || "");
+  if (status !== "active" && status !== "stopped") return null;
+  return record2;
+}
+class RecordIndex {
+  recordsById = /* @__PURE__ */ new Map();
+  locationsById = /* @__PURE__ */ new Map();
+  issues = [];
+  clear() {
+    this.recordsById.clear();
+    this.locationsById.clear();
+    this.issues = [];
+  }
+  rebuild(fileIndex) {
+    this.clear();
+    const all = [];
+    for (const [path, records] of fileIndex.entries()) {
+      for (const record2 of records) {
+        const id = String(record2.id || "").trim();
+        if (!id) {
+          this.issues.push({ code: "record_id_missing", path, message: `文件 ${path} 中存在缺少记录标识的记录。` });
+          continue;
+        }
+        const source = record2.source;
+        const line2 = source?.startLine ?? record2.file?.line ?? 0;
+        const location = {
+          recordId: id,
+          path,
+          startLine: line2,
+          endLine: source?.endLine ?? line2,
+          modified: source?.modified ?? record2.modified ?? 0
+        };
+        const locations = this.locationsById.get(id) || [];
+        locations.push(location);
+        this.locationsById.set(id, locations);
+        all.push(record2);
+      }
+    }
+    const unique2 = [];
+    for (const record2 of all) {
+      const locations = this.locationsById.get(record2.id) || [];
+      if (locations.length !== 1) continue;
+      if (this.recordsById.has(record2.id)) continue;
+      this.recordsById.set(record2.id, record2);
+      unique2.push(record2);
+    }
+    for (const [recordId, locations] of this.locationsById.entries()) {
+      if (locations.length > 1) {
+        this.issues.push({
+          code: "record_id_duplicate",
+          recordId,
+          message: `记录标识 ${recordId} 重复：${locations.map((location) => `${location.path}:${location.startLine}`).join("、")}`
+        });
+      }
+    }
+    const openTasksBySeries = /* @__PURE__ */ new Map();
+    for (const record2 of unique2) {
+      const task = asTaskRecord(record2);
+      if (task?.seriesId && task.status === "open") {
+        const group = openTasksBySeries.get(task.seriesId) || [];
+        group.push(task);
+        openTasksBySeries.set(task.seriesId, group);
+      }
+      if (task?.seriesId) {
+        const series2 = asTaskSeriesRecord(this.recordsById.get(task.seriesId));
+        if (!series2) {
+          this.issues.push({
+            code: "task_series_reference_orphan",
+            recordId: task.id,
+            path: task.source?.path,
+            message: `任务 ${task.id} 引用了不存在的任务系列 ${task.seriesId}。`
+          });
+        } else {
+          task.recurrenceInfo = series2.recurrenceInfo;
+        }
+      }
+      const session = record2.recordType === "task-session" ? record2 : null;
+      if (session) {
+        const sessionTask = session.taskId ? asTaskRecord(this.recordsById.get(session.taskId)) : null;
+        const sessionSeries = session.seriesId ? asTaskSeriesRecord(this.recordsById.get(session.seriesId)) : null;
+        const taskInvalid = !sessionTask;
+        const seriesInvalid = Boolean(session.seriesId) && !sessionSeries;
+        const relationMismatch = Boolean(sessionTask && session.seriesId && sessionTask.seriesId !== session.seriesId);
+        const energyRefs = [session.startEnergyRecordId, session.endEnergyRecordId].filter(Boolean);
+        const invalidEnergyRef = energyRefs.find((recordId) => this.recordsById.get(recordId)?.recordType !== "energy");
+        if (taskInvalid || seriesInvalid || relationMismatch || invalidEnergyRef) {
+          this.issues.push({
+            code: "task_session_reference_orphan",
+            recordId: session.id,
+            path: session.source?.path,
+            message: taskInvalid ? `Task Session ${session.id} references missing Task ${session.taskId || ""}.` : seriesInvalid ? `Task Session ${session.id} references missing Task Series ${session.seriesId || ""}.` : relationMismatch ? `Task Session ${session.id} series reference does not match Task ${session.taskId}.` : `Task Session ${session.id} references missing Energy Record ${invalidEnergyRef || ""}.`
+          });
+        }
+      }
+      const series = asTaskSeriesRecord(record2);
+      if (series) {
+        if (series.status === "active" && !series.currentTaskId) {
+          this.issues.push({
+            code: "record_reference_orphan",
+            recordId: series.id,
+            path: series.source?.path,
+            message: `活动任务系列 ${series.id} 缺少当前任务标识。`
+          });
+        } else if (series.currentTaskId) {
+          const current2 = asTaskRecord(this.recordsById.get(series.currentTaskId));
+          const relationInvalid = !current2 || current2.seriesId !== series.id;
+          const activePointerInvalid = series.status === "active" && current2?.status !== "open";
+          if (relationInvalid || activePointerInvalid) {
+            this.issues.push({
+              code: "record_reference_orphan",
+              recordId: series.id,
+              path: series.source?.path,
+              message: relationInvalid ? `Task Series ${series.id} currentTaskId ${series.currentTaskId} is missing or points outside the series.` : `Active Task Series ${series.id} currentTaskId ${series.currentTaskId} is not open.`
+            });
+          }
+        }
+      }
+    }
+    for (const [seriesId, openTasks] of openTasksBySeries.entries()) {
+      if (openTasks.length > 1) {
+        this.issues.push({
+          code: "record_reference_orphan",
+          recordId: seriesId,
+          message: `任务系列 ${seriesId} 有 ${openTasks.length} 个未完成实例；同一时间最多只能有一个活动实例。`
+        });
+      }
+    }
+    return unique2;
+  }
+  getById(recordId) {
+    return this.recordsById.get(recordId) || null;
+  }
+  getLocation(recordId) {
+    const locations = this.locationsById.get(recordId) || [];
+    return locations.length === 1 ? locations[0] : null;
+  }
+  getLocations(recordId) {
+    return [...this.locationsById.get(recordId) || []];
+  }
+  getIssues() {
+    return this.issues.map((issue2) => ({ ...issue2 }));
+  }
+}
+class DataStoreIndex {
+  records = [];
+  fileIndex = /* @__PURE__ */ new Map();
+  queryCache = /* @__PURE__ */ new Map();
+  dataVersion = 0;
+  recordIndex = new RecordIndex();
+  dispose() {
+    this.clear();
+  }
+  clear() {
+    this.records = [];
+    this.fileIndex.clear();
+    this.queryCache.clear();
+    this.recordIndex.clear();
+  }
+  clearQueryCache() {
+    this.queryCache.clear();
+  }
+  hydrateFileItems(filePath, records, opts = {}) {
+    this.fileIndex.set(filePath, records);
+    if (opts.rebuild !== false) this.rebuildIdentityIndex();
+  }
+  stageFileItems(filePath, records) {
+    this.fileIndex.set(filePath, records);
+  }
+  rebuild(opts = {}) {
+    this.rebuildIdentityIndex();
+    if (opts.bumpVersion !== false) this.bumpVersion();
+  }
+  replaceFileItems(filePath, records, opts = {}) {
+    this.fileIndex.set(filePath, records);
+    this.rebuildIdentityIndex();
+    if (opts.bumpVersion !== false) this.bumpVersion();
+  }
+  removeFileItems(filePath, opts = {}) {
+    const hadItems = this.fileIndex.delete(filePath);
+    if (hadItems) this.rebuildIdentityIndex();
+    if (opts.bumpVersion !== false) this.bumpVersion();
+    return hadItems;
+  }
+  getById(recordId) {
+    return this.recordIndex.getById(recordId);
+  }
+  getLocation(recordId) {
+    return this.recordIndex.getLocation(recordId);
+  }
+  getLocations(recordId) {
+    return this.recordIndex.getLocations(recordId);
+  }
+  getIntegrityIssues() {
+    return this.recordIndex.getIssues();
+  }
+  /** Canonical entity access for domain/repository code. No view projection is implied. */
+  getRecordEntities() {
+    return [...this.records];
+  }
+  /**
+   * All valid Record v2 entities projected for existing query/view consumers.
+   * Internal task-series/task-session records are included.
+   */
+  queryRecords(filters = [], sortRules = []) {
+    const key = `records:${this.makeQueryKey(filters, sortRules)}`;
+    const cached2 = this.queryCache.get(key);
+    if (cached2) return cached2;
+    const projected = this.records.map(toRecordViewItem);
+    const result = queryRecordItems(projected, { filterGroups: [filters], sort: sortRules });
+    this.queryCache.set(key, result);
+    return result;
+  }
+  /** User-visible records only. Internal Series/Session entities stay behind the application boundary. */
+  queryItems(filters = [], sortRules = []) {
+    const key = this.makeQueryKey(filters, sortRules);
+    const cached2 = this.queryCache.get(key);
+    if (cached2) return cached2;
+    const userVisibleItems = this.records.filter((record2) => record2.recordType !== "task-series" && record2.recordType !== "task-session").map(toRecordViewItem);
+    const result = queryRecordItems(userVisibleItems, { filterGroups: [filters], sort: sortRules });
+    this.queryCache.set(key, result);
+    return result;
+  }
+  bumpVersion() {
+    this.dataVersion++;
+    this.queryCache.clear();
+  }
+  rebuildIdentityIndex() {
+    this.records = this.recordIndex.rebuild(this.fileIndex);
+    this.queryCache.clear();
+  }
+  makeQueryKey(filters = [], sortRules = []) {
+    return JSON.stringify({ f: filters, s: sortRules, v: this.dataVersion });
+  }
+}
+async function buildWarmStartPlan(paths, cache, fileStat) {
+  const seen = /* @__PURE__ */ new Set();
+  const unchangedEntries = [];
+  const changedFiles = [];
+  for (const path of paths) {
+    seen.add(path);
+    const st = await fileStat.stat(path);
+    if (!st) {
+      continue;
+    }
+    const cached2 = cache.files[path];
+    if (cached2 && cached2.mtime === st.mtime && cached2.size === st.size) {
+      unchangedEntries.push({ path, cached: cached2 });
+    } else {
+      changedFiles.push(path);
+    }
+  }
+  return { seen, unchangedEntries, changedFiles };
+}
+var __getOwnPropDesc$d = Object.getOwnPropertyDescriptor;
+var __decorateClass$d = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$d(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$c = (index, decorator) => (target, key) => decorator(target, key, index);
+let DataStore = class {
+  constructor(vault, metadata, fileStat, storage) {
+    this.vault = vault;
+    this.metadata = metadata;
+    this.fileStat = fileStat;
+    this.storage = storage;
+    this.cacheStore = new DataStoreCache(this.storage, () => this._assertNotDisposed());
+    this.fileScanner = new DataStoreFileScanner(this.vault, this.metadata, this.fileStat);
+  }
+  vault;
+  metadata;
+  fileStat;
+  storage;
+  index = new DataStoreIndex();
+  cacheStore;
+  fileScanner;
+  scannerIssuesByFile = /* @__PURE__ */ new Map();
+  runtimeIntegrityIssues = [];
+  changeListeners = /* @__PURE__ */ new Set();
+  _perf = { start: 0, end: 0, scannedFiles: 0, scannedItems: 0 };
+  _disposed = false;
+  /**
+   * Lifecycle: release timers/listeners to avoid writing after unload.
+   */
+  dispose() {
+    this._disposed = true;
+    this.cacheStore.dispose();
+    this.index.dispose();
+    this.scannerIssuesByFile.clear();
+    this.runtimeIntegrityIssues.length = 0;
+    this.changeListeners.clear();
+  }
+  _assertNotDisposed() {
+    return !this._disposed;
+  }
+  /* ---------------- 启动扫描 ---------------- */
+  // 兼容保留（可能被其他位置直接调用）
+  async scanAll() {
+    if (!this._assertNotDisposed()) return;
+    this.index.clear();
+    this.scannerIssuesByFile.clear();
+    this.runtimeIntegrityIssues.length = 0;
+    const paths = this.vault.listMarkdownFilePaths();
+    for (const path of paths) {
+      if (!this._assertNotDisposed()) break;
+      const scanned = await this.scanFile(path, { bumpVersion: false, deferIndexRebuild: true, deferCacheSave: true });
+      this._perf.scannedFiles += 1;
+      this._perf.scannedItems += scanned.length;
+    }
+    this.index.rebuild();
+    this.cacheStore.scheduleSave();
+  }
+  // [主流程] 初始扫描（代理到暖启动）
+  async initialScan() {
+    if (!this._assertNotDisposed()) return;
+    return this.warmStart();
+  }
+  /**
+   * 手动恢复：清空缓存并重新扫描。
+   *
+   * 用途：
+   * - 修复缓存文件写入异常导致的“items=0”
+   * - 版本迁移时用户本地残留旧 cache
+   *
+   * 说明：不会触碰用户笔记内容，只重建 Think/cache.json。
+   */
+  async clearCacheAndRescan(mode = "warm") {
+    this.index.clear();
+    this.cacheStore.clearMemory();
+    try {
+      await this.cacheStore.removePersisted();
+    } catch (e2) {
+      devWarn("ThinkPlugin: 删除缓存文件失败（可忽略）", e2);
+    }
+    if (mode === "full") {
+      await this.scanAll();
+    } else {
+      await this.warmStart();
+    }
+    this.notifyChange();
+  }
+  // [主流程] 暖启动：加载缓存 → 目录 stat → 仅扫描变更 → 合并内存 → 防抖保存
+  async warmStart() {
+    if (!this._assertNotDisposed()) return;
+    this._perf = { start: Date.now(), end: 0, scannedFiles: 0, scannedItems: 0 };
+    const cache = await this.cacheStore.load();
+    const paths = this.vault.listMarkdownFilePaths();
+    const plan = await buildWarmStartPlan(paths, cache, this.fileStat);
+    this.index.clear();
+    this.scannerIssuesByFile.clear();
+    this.runtimeIntegrityIssues.length = 0;
+    for (const { path, cached: cached2 } of plan.unchangedEntries) {
+      this.index.stageFileItems(path, this.cacheStore.restoreItems(cached2));
+      this.scannerIssuesByFile.set(path, (cached2.integrityIssues || []).map((issue2) => ({ ...issue2, code: issue2.code })));
+    }
+    for (const pth of plan.changedFiles) {
+      const scanned = await this.scanFile(pth, { bumpVersion: false, deferIndexRebuild: true, deferCacheSave: true });
+      this._perf.scannedFiles += 1;
+      this._perf.scannedItems += scanned.length;
+    }
+    this.cacheStore.removeMissingFiles(plan.seen);
+    this.index.rebuild();
+    this._perf.end = Date.now();
+    this.cacheStore.scheduleSave();
+    this.notifyChange();
+  }
+  /* ---------------- 单文件扫描 ---------------- */
+  /**
+   * Phase2 迁移辅助：按路径扫描文件。
+   * 目的：让 core 其它服务（如 ItemService）不需要依赖 Obsidian 的 TFile 类型。
+   */
+  async scanFileByPath(filePath, opts = {}) {
+    if (!this._assertNotDisposed()) return [];
+    return await this.scanFile(filePath, opts);
+  }
+  /**
+   * 扫描单个文件。
+   *
+   * Phase2 之后 core 不能 import 'obsidian'，但外层（feature / platform）
+   * 仍可能传入 TFile。
+   *
+   * 为了避免“升级后类型/运行时断裂”，这里接受两类入参：
+   * - string: file path
+   * - { path: string }: 结构化对象（兼容 TFile）
+   */
+  async scanFile(filePathOrFile, opts = {}) {
+    if (!this._assertNotDisposed()) return [];
+    try {
+      const scanned = await this.fileScanner.scan(filePathOrFile);
+      if (!scanned) {
+        const filePath = typeof filePathOrFile === "string" ? filePathOrFile : filePathOrFile?.path || "";
+        const error = new Error(`record_scan_unavailable:${filePath || "<unknown>"}`);
+        const issue2 = {
+          code: "record_scan_failed",
+          path: filePath || void 0,
+          message: error.message
+        };
+        if (filePath) this.scannerIssuesByFile.set(filePath, [issue2]);
+        if (opts.throwOnError) throw error;
+        return [];
+      }
+      this.scannerIssuesByFile.set(scanned.filePath, scanned.integrityIssues);
+      if (opts.deferIndexRebuild) this.index.stageFileItems(scanned.filePath, scanned.items);
+      else this.index.replaceFileItems(scanned.filePath, scanned.items, { bumpVersion: opts.bumpVersion });
+      this.cacheStore.upsertFile(scanned.filePath, scanned.stat, scanned.items, scanned.integrityIssues);
+      if (!opts.deferCacheSave) this.cacheStore.scheduleSave();
+      return scanned.items;
+    } catch (err) {
+      const filePath = typeof filePathOrFile === "string" ? filePathOrFile : filePathOrFile?.path || "";
+      const issue2 = {
+        code: "record_scan_failed",
+        path: filePath || void 0,
+        message: `记录扫描失败（${filePath || "未知文件"}）：${err instanceof Error ? err.message : String(err)}`
+      };
+      if (filePath) this.scannerIssuesByFile.set(filePath, [issue2]);
+      devError("ThinkPlugin: 扫描文件失败", filePath, err);
+      if (opts.throwOnError) throw err;
+      return [];
+    }
+  }
+  removeFileItems(filePath) {
+    this.scannerIssuesByFile.delete(filePath);
+    this.index.removeFileItems(filePath);
+    if (this.cacheStore.removeFile(filePath)) {
+      this.cacheStore.scheduleSave();
+    }
+  }
+  /* ---------------- 查询 ---------------- */
+  queryRecords(filters = [], sortRules = []) {
+    return this.index.queryRecords(filters, sortRules);
+  }
+  queryItems(filters = [], sortRules = []) {
+    return this.index.queryItems(filters, sortRules);
+  }
+  /** Canonical entity lookup for repository/domain code; getRecordById is the consumer projection. */
+  getRecordEntityById(recordId) {
+    return this.index.getById(recordId);
+  }
+  getRecordById(recordId) {
+    const record2 = this.index.getById(recordId);
+    return record2 ? toRecordViewItem(record2) : null;
+  }
+  getRecordLocation(recordId) {
+    return this.index.getLocation(recordId);
+  }
+  getRecordLocations(recordId) {
+    return this.index.getLocations(recordId);
+  }
+  getRecordIntegrityIssues() {
+    return [
+      ...Array.from(this.scannerIssuesByFile.values()).flat(),
+      ...this.index.getIntegrityIssues(),
+      ...this.runtimeIntegrityIssues.map((issue2) => ({ ...issue2 }))
+    ];
+  }
+  reportRecordIntegrityIssue(issue2) {
+    this.runtimeIntegrityIssues.push({ ...issue2 });
+  }
+  clearRuntimeIntegrityIssues() {
+    this.runtimeIntegrityIssues.length = 0;
+  }
+  /* ---------------- 变更通知 ---------------- */
+  _emitChange() {
+    this.changeListeners.forEach((fn3) => {
+      try {
+        fn3();
+      } catch (e2) {
+        devError("ThinkPlugin: 数据变化通知错误", e2);
+      }
+    });
+  }
+  _emitThrottled = throttle(() => this._emitChange(), 250);
+  subscribe(listener) {
+    if (this._assertNotDisposed()) this.changeListeners.add(listener);
+  }
+  unsubscribe(listener) {
+    this.changeListeners.delete(listener);
+  }
+  notifyChange() {
+    if (this._assertNotDisposed()) this._emitThrottled();
+  }
+};
+DataStore = __decorateClass$d([
+  singleton(),
+  __decorateParam$c(0, inject(VAULT_PORT_TOKEN)),
+  __decorateParam$c(1, inject(METADATA_PORT_TOKEN)),
+  __decorateParam$c(2, inject(FILESTAT_PORT_TOKEN)),
+  __decorateParam$c(3, inject(STORAGE_TOKEN))
+], DataStore);
+class RecordConflictError extends Error {
+  constructor(conflictCode, message) {
+    super(message);
+    this.conflictCode = conflictCode;
+  }
+  conflictCode;
+  name = "RecordConflictError";
+}
+function createRecordConflictError(code, message) {
+  return new RecordConflictError(code, message);
+}
+function isRecordConflictError(error) {
+  return error instanceof RecordConflictError || error?.name === "RecordConflictError";
+}
+const BLOCK_START_MARKER = "<!-- start -->";
+const BLOCK_END_MARKER = "<!-- end -->";
+const RECORD_ID_RE = /^\s*(?:记录ID|recordId)\s*[:：]{1,2}\s*(\S+)\s*$/i;
+function findBlockEnd(lines, startIndex) {
+  for (let index = startIndex + 1; index < lines.length; index += 1) {
+    if (lines[index].trim() === BLOCK_END_MARKER) return index;
+  }
+  return null;
+}
+function blockRecordId(lines, startIndex, endIndex) {
+  for (let index = startIndex + 1; index < endIndex; index += 1) {
+    const match5 = lines[index].match(RECORD_ID_RE);
+    if (match5) return match5[1].trim();
+  }
+  return null;
+}
+function resolveRecordBlockRangeById(lines, recordId, expectedStartIndex) {
+  const expected = typeof expectedStartIndex === "number" ? expectedStartIndex : null;
+  if (expected !== null && expected >= 0 && lines[expected]?.trim() === BLOCK_START_MARKER) {
+    const endIndex = findBlockEnd(lines, expected);
+    if (endIndex === null) {
+      throw createRecordConflictError("record_block_boundary_invalid", "记录块边界已损坏，无法安全更新。");
+    }
+    if (blockRecordId(lines, expected, endIndex) === recordId) return { startIndex: expected, endIndex };
+  }
+  const matches = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    if (lines[index].trim() !== BLOCK_START_MARKER) continue;
+    const endIndex = findBlockEnd(lines, index);
+    if (endIndex === null) continue;
+    if (blockRecordId(lines, index, endIndex) === recordId) matches.push({ startIndex: index, endIndex });
+    index = endIndex;
+  }
+  if (matches.length === 1) return matches[0];
+  if (matches.length > 1) {
+    throw createRecordConflictError("record_id_duplicate", `记录标识 ${recordId} 在同一文件中重复，无法安全判断要修改哪一条记录。`);
+  }
+  throw createRecordConflictError("record_item_missing", `找不到记录标识 ${recordId} 对应的记录块。`);
+}
+function formatTemplateValue(value) {
+  return formatFieldValueForTemplate(value);
+}
+function renderTemplate(templateString, data) {
+  return templateString.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_2, placeholder) => {
+    const key = placeholder.trim();
+    let result = "";
+    try {
+      if (key === "block") {
+        result = data.block?.name || "";
+      } else if (key === "theme") {
+        result = data.theme?.path || "";
+      } else if (key === "icon") {
+        result = data.theme?.icon || "";
+      } else if (key.startsWith("moment:")) {
+        const format = key.substring(7);
+        result = dayjs().format(format);
+      } else {
+        const keys = key.split(".");
+        const rootKey = keys[0];
+        if (!(rootKey in data)) {
+          return "";
+        }
+        let value = data[rootKey];
+        if (keys.length > 1) {
+          for (let i2 = 1; i2 < keys.length; i2++) {
+            if (value && typeof value === "object" && keys[i2] in value) {
+              value = value[keys[i2]];
+            } else {
+              value = "";
+              break;
+            }
+          }
+        }
+        result = formatTemplateValue(value);
+      }
+      return result;
+    } catch (e2) {
+      devError(`[ThinkPlugin] 解析模板变量 {{${key}}} 时发生错误:`, e2);
+      return `(解析错误: ${key})`;
+    }
+  });
 }
 const CORE_FIELD_GUIDE_KEYS = [
   "title",
@@ -9192,6 +10476,35 @@ function normalizeTemplateRenderData(template, formData) {
   }
   return normalizedData;
 }
+function fieldValueTypeForInputType(inputType) {
+  switch (inputType) {
+    case "number":
+    case "rating":
+      return "number";
+    case "boolean":
+      return "boolean";
+    case "date":
+      return "date";
+    case "datetime":
+      return "datetime";
+    case "time":
+      return "time";
+    case "multiSelect":
+    case "multiPath":
+    case "multiTag":
+      return "tags";
+    case "path":
+    case "hierarchicalSingleSelect":
+      return "path";
+    case "image":
+    case "multiImage":
+      return "image";
+    case "file":
+      return "file";
+    default:
+      return "string";
+  }
+}
 function findSystemField(field) {
   for (const token2 of [field.key, field.label, ...field.aliases || []]) {
     const def = getFieldDefinition(String(token2 || "").trim());
@@ -9246,6 +10559,2203 @@ function isSafeMarkdownFieldKey(value) {
   const key = String(value ?? "").trim();
   return Boolean(key && key.length <= 64 && !/[\r\n:：]/.test(key));
 }
+function nonEmpty(value) {
+  if (value === void 0 || value === null) return false;
+  if (Array.isArray(value)) return value.some(nonEmpty);
+  if (typeof value === "string") return value.trim().length > 0;
+  return true;
+}
+function optionParts(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const row = value;
+    return { value: row.value ?? row.id ?? row.label, label: row.label ?? row.value ?? row.id };
+  }
+  return { value, label: value };
+}
+function first(renderData, keys) {
+  for (const key of keys) {
+    const value = renderData[key];
+    if (nonEmpty(value)) return value;
+  }
+  return void 0;
+}
+function normalizeFieldValue(field, raw) {
+  if (!nonEmpty(raw)) return void 0;
+  const option = optionParts(raw);
+  const scalar2 = option.value;
+  if (field.valueType === "number") {
+    const value = typeof scalar2 === "number" ? scalar2 : Number(String(scalar2 ?? "").trim());
+    return Number.isFinite(value) ? value : void 0;
+  }
+  if (field.valueType === "boolean") {
+    if (typeof scalar2 === "boolean") return scalar2;
+    const text22 = String(scalar2 ?? "").trim().toLowerCase();
+    if (["true", "1", "yes"].includes(text22)) return true;
+    if (["false", "0", "no"].includes(text22)) return false;
+    return void 0;
+  }
+  if (field.valueType === "tags") {
+    if (Array.isArray(raw)) return raw.map((value) => String(optionParts(value).value ?? "").trim()).filter(Boolean);
+    return String(scalar2 ?? "").split(/[,，\n]/).map((value) => value.trim()).filter(Boolean);
+  }
+  const text2 = String(scalar2 ?? "").trim();
+  if (!text2) return void 0;
+  if (field.allowedValues?.length && !field.allowedValues.includes(text2)) return void 0;
+  return text2;
+}
+function normalizeCustomValue(field, raw) {
+  if (!nonEmpty(raw)) return void 0;
+  const schema = resolveCaptureFieldSchema(field);
+  const isMulti = schema.cardinality === "multi";
+  if (isMulti) {
+    const values2 = Array.isArray(raw) ? raw : String(raw).split(/[,，\n]/);
+    if (schema.valueType === "image") {
+      return values2.map((value) => normalizeImageValue(value)?.src).filter((value) => Boolean(value));
+    }
+    return values2.map((value) => String(optionParts(value).value ?? "").trim()).filter(Boolean);
+  }
+  const option = optionParts(raw);
+  const scalar2 = option.value;
+  switch (schema.valueType) {
+    case "number": {
+      const value = typeof scalar2 === "number" ? scalar2 : Number(String(scalar2 ?? "").trim());
+      return Number.isFinite(value) ? value : void 0;
+    }
+    case "boolean": {
+      if (typeof scalar2 === "boolean") return scalar2;
+      const text2 = String(scalar2 ?? "").trim().toLowerCase();
+      if (["true", "1", "yes"].includes(text2)) return true;
+      if (["false", "0", "no"].includes(text2)) return false;
+      return void 0;
+    }
+    case "image":
+      return normalizeImageValue(raw)?.src;
+    default: {
+      const text2 = String(scalar2 ?? "").trim();
+      return text2 || void 0;
+    }
+  }
+}
+function candidateForField(recordType, field, renderData) {
+  switch (field.key) {
+    case "目标": {
+      const explicit = first(renderData, ["目标", "goalPath"]);
+      if (nonEmpty(explicit)) return explicit;
+      return void 0;
+    }
+    case "日期":
+      return first(renderData, ["日期", "date"]);
+    case "内容":
+      return first(renderData, ["内容", "content", "任务内容"]);
+    case "图标":
+      return first(renderData, ["图标", "icon"]);
+    case "标签":
+      return first(renderData, ["标签", "tags"]);
+    case "记录子类型":
+      return first(renderData, ["记录子类型", "recordSubtype"]);
+    case "周期粒度": {
+      const explicit = first(renderData, ["周期粒度", "periodGranularity"]);
+      if (nonEmpty(explicit)) return explicit;
+      const period = renderData.period;
+      return period && typeof period === "object" && !Array.isArray(period) ? period.granularity : void 0;
+    }
+    case "评分": {
+      const raw = first(renderData, ["评分", "rating"]);
+      const option = optionParts(raw);
+      return option.label;
+    }
+    case "图片": {
+      const explicit = first(renderData, ["图片", "image"]);
+      if (nonEmpty(explicit)) return explicit;
+      const rating = first(renderData, ["评分", "rating"]);
+      return optionParts(rating).value;
+    }
+    default:
+      return first(renderData, [field.key, ...field.aliases || []]);
+  }
+}
+function contractForCaptureField(recordType, field) {
+  for (const token2 of [field.key, field.label, ...field.aliases || []]) {
+    const contract = getRecordFieldContract(recordType, token2);
+    if (contract) return contract;
+  }
+  const semantic = getTemplateFieldSemantic(field);
+  const keyBySemantic = {
+    body: "内容",
+    tags: "标签",
+    goalPath: "目标",
+    date: "日期",
+    recordSubtype: "记录子类型",
+    rating: "评分",
+    image: "图片",
+    icon: "图标",
+    period: "周期粒度"
+  };
+  const key = keyBySemantic[semantic];
+  return key ? getRecordFieldContract(recordType, key) : null;
+}
+function targetContract(recordType, contract) {
+  if (contract.persistence === "target" || contract.persistence === "omit-default") return contract;
+  return null;
+}
+function putCanonical(fields, recordType, contract, renderData) {
+  if (!contract || contract.role === "identity") return;
+  const value = normalizeFieldValue(contract, candidateForField(recordType, contract, renderData));
+  if (!nonEmpty(value)) return;
+  if (contract.persistence === "omit-default" && contract.defaultValue !== void 0 && value === contract.defaultValue) return;
+  fields[contract.key] = value;
+}
+function buildCustomCaptureFields(recordType, renderData, captureFields = []) {
+  const schema = requireRecordSchemaDefinition(recordType);
+  if (!schema.capabilities.customFields) return {};
+  const fields = {};
+  for (const field of captureFields) {
+    if (contractForCaptureField(recordType, field)) continue;
+    const resolved = resolveCaptureFieldSchema(field);
+    const markdownKey = String(resolved.storage?.markdownKey || field.label || field.key || resolved.label || "").trim();
+    if (!isSafeMarkdownFieldKey(markdownKey) || ["记录ID", "记录版本", "记录类型"].includes(markdownKey)) continue;
+    const value = normalizeCustomValue(field, first(renderData, [field.key, field.label]));
+    if (nonEmpty(value)) fields[markdownKey] = value;
+  }
+  return fields;
+}
+function buildGenericRecordDraft(recordType, renderData, captureFields) {
+  const schema = requireRecordSchemaDefinition(recordType);
+  if (schema.family !== "generic") throw new Error(`record_draft_not_generic:${recordType}`);
+  const fields = {};
+  putCanonical(fields, recordType, getRecordFieldContract(recordType, "目标"), renderData);
+  putCanonical(fields, recordType, getRecordFieldContract(recordType, "周期粒度"), renderData);
+  for (const captureField of captureFields) {
+    const rawContract = contractForCaptureField(recordType, captureField);
+    const contract = rawContract ? targetContract(recordType, rawContract) : null;
+    if (contract) {
+      putCanonical(fields, recordType, contract, renderData);
+      if (recordType === "habit" && contract.key === "评分") {
+        putCanonical(fields, recordType, getRecordFieldContract(recordType, "图片"), renderData);
+      }
+      continue;
+    }
+    const custom = buildCustomCaptureFields(recordType, renderData, [captureField]);
+    for (const [key, value] of Object.entries(custom)) fields[key] = value;
+  }
+  return { recordType, fields };
+}
+function readRecord$1(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+function readString(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const option = value;
+    return String(option.value ?? option.label ?? "").trim();
+  }
+  return String(value ?? "").trim();
+}
+function readCompletedExecutionContext(context) {
+  const ui = readRecord$1(context?.__recordUiContext);
+  if (ui.captureMode !== "completed_execution") return null;
+  if (ui.kind === "timeline_create") {
+    return { kind: "timeline_create", captureMode: "completed_execution", source: "timeline" };
+  }
+  if (ui.kind === "quickinput_create") {
+    return { kind: "quickinput_create", captureMode: "completed_execution", source: "unknown" };
+  }
+  return null;
+}
+function isTimelineCompletedExecutionContext(context) {
+  return readCompletedExecutionContext(context)?.kind === "timeline_create";
+}
+function normalizeDateTime$2(value) {
+  const raw = readString(value).replace(" ", "T");
+  if (!raw) return null;
+  const ms = Date.parse(raw);
+  if (!Number.isFinite(ms)) return null;
+  return { iso: new Date(ms).toISOString(), ms };
+}
+function durationMinutes(startedMs, endedMs) {
+  return Math.round((endedMs - startedMs) / 6e4 * 100) / 100;
+}
+function buildTimelineCompletedExecutionSessionInput(input) {
+  const captureContext = readCompletedExecutionContext(input.context);
+  if (!captureContext) return null;
+  if (captureContext.kind !== "timeline_create" && readString(input.taskFields.status).toLowerCase() !== "done") return null;
+  const started = normalizeDateTime$2(input.taskFields.startAt);
+  const ended = normalizeDateTime$2(input.taskFields.endAt);
+  if (!started || !ended || ended.ms <= started.ms) return null;
+  const duration2 = durationMinutes(started.ms, ended.ms);
+  if (!Number.isFinite(duration2) || duration2 <= 0) return null;
+  return {
+    startedAt: started.iso,
+    endedAt: ended.iso,
+    durationMinutes: duration2,
+    result: "task-completed",
+    source: captureContext.source
+  };
+}
+function buildTimelineCompletedExecutionPersistence(input) {
+  const session = buildTimelineCompletedExecutionSessionInput(input);
+  if (!session) return { taskFields: { ...input.taskFields }, session: null };
+  const taskFields = { ...input.taskFields };
+  if (isTimelineCompletedExecutionContext(input.context)) taskFields.status = "done";
+  delete taskFields.startAt;
+  delete taskFields.endAt;
+  delete taskFields.expectedDurationMinutes;
+  taskFields.completedAt = readString(taskFields.completedAt) || session.endedAt;
+  return { taskFields, session };
+}
+function unwrapScalar(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const row = value;
+    return row.value ?? row.id ?? row.label ?? "";
+  }
+  return value;
+}
+function readYear(value) {
+  const scalar2 = unwrapScalar(value);
+  if (scalar2 instanceof Date && Number.isFinite(scalar2.getTime())) return scalar2.getFullYear();
+  const text2 = String(scalar2 ?? "").trim();
+  if (!text2) return null;
+  const direct = text2.match(/^(\d{4})(?:[-/.]|$)/);
+  if (direct) {
+    const year = Number(direct[1]);
+    if (year >= 1 && year <= 9999) return year;
+  }
+  const normalized2 = text2.includes(" ") && !text2.includes("T") ? text2.replace(" ", "T") : text2;
+  const parsed = new Date(normalized2);
+  return Number.isFinite(parsed.getTime()) ? parsed.getFullYear() : null;
+}
+function firstField(fields, keys) {
+  for (const key of keys) {
+    const value = fields[key];
+    if (value !== void 0 && value !== null && String(unwrapScalar(value) ?? "").trim()) return value;
+  }
+  return void 0;
+}
+function dateCandidatesFor(recordType, fields) {
+  if (recordType === "task") {
+    const status = String(firstField(fields, ["status", "状态"]) ?? "").trim().toLowerCase();
+    if (status === "done") {
+      return [
+        firstField(fields, ["completedAt", "完成于"]),
+        firstField(fields, ["endAt", "结束时间"]),
+        firstField(fields, ["startAt", "开始时间"]),
+        firstField(fields, ["scheduledAt", "计划时间", "scheduledDate", "计划日期"]),
+        firstField(fields, ["dueAt", "截止时间", "dueDate", "截止日期"]),
+        firstField(fields, ["createdAt", "创建于"])
+      ];
+    }
+    if (status === "cancelled") {
+      return [
+        firstField(fields, ["cancelledAt", "取消于"]),
+        firstField(fields, ["scheduledAt", "计划时间", "scheduledDate", "计划日期"]),
+        firstField(fields, ["dueAt", "截止时间", "dueDate", "截止日期"]),
+        firstField(fields, ["createdAt", "创建于"])
+      ];
+    }
+    if (status === "skipped") {
+      return [
+        firstField(fields, ["skippedAt", "跳过于"]),
+        firstField(fields, ["scheduledAt", "计划时间", "scheduledDate", "计划日期"]),
+        firstField(fields, ["dueAt", "截止时间", "dueDate", "截止日期"]),
+        firstField(fields, ["createdAt", "创建于"])
+      ];
+    }
+    return [
+      firstField(fields, ["scheduledAt", "计划时间", "scheduledDate", "计划日期"]),
+      firstField(fields, ["startAt", "开始时间", "startDate", "开始日期"]),
+      firstField(fields, ["dueAt", "截止时间", "dueDate", "截止日期"]),
+      firstField(fields, ["createdAt", "创建于"])
+    ];
+  }
+  if (recordType === "task-session") {
+    return [
+      firstField(fields, ["sessionEndedAt", "结束于"]),
+      firstField(fields, ["sessionStartedAt", "开始于"])
+    ];
+  }
+  if (recordType === "task-series") {
+    return [firstField(fields, ["seriesStartDate", "系列开始日期"])];
+  }
+  if (recordType === "energy") {
+    return [
+      firstField(fields, ["日期", "date"]),
+      firstField(fields, ["记录时间", "recordedAt"])
+    ];
+  }
+  return [firstField(fields, ["日期", "date"])];
+}
+function resolveRecordStorageYear(recordType, fields, fallbackDate = /* @__PURE__ */ new Date()) {
+  for (const candidate of dateCandidatesFor(recordType, fields)) {
+    const year = readYear(candidate);
+    if (year != null) return year;
+  }
+  return fallbackDate.getFullYear();
+}
+function normalizeRecordTargetPath(targetFilePath) {
+  return String(targetFilePath || "").trim().replace(/\\/g, "/").replace(/\/{2,}/g, "/").replace(/^\/+|\/+$/g, "");
+}
+function buildRecordTargetTemplateData(recordType, fields, renderData = fields, fallbackDate = /* @__PURE__ */ new Date()) {
+  const rawGoalPath = String(
+    fields.goalPath ?? fields["目标"] ?? renderData.goalPath ?? renderData["目标"] ?? ""
+  ).trim();
+  const goalParts = rawGoalPath.split("/").map((part) => part.trim()).filter(Boolean);
+  const goal = goalParts.length ? {
+    title: goalParts[goalParts.length - 1],
+    path: rawGoalPath,
+    root: goalParts[0],
+    leaf: goalParts[goalParts.length - 1]
+  } : { title: "", path: "", root: "", leaf: "" };
+  return {
+    ...fields,
+    ...renderData,
+    goal,
+    goalPath: rawGoalPath,
+    rootGoal: goal.root,
+    leafGoal: goal.leaf,
+    recordType,
+    year: resolveRecordStorageYear(recordType, fields, fallbackDate)
+  };
+}
+function resolveRecordTargetPath(targetFileTemplate, recordType, fields, renderData = fields, fallbackDate = /* @__PURE__ */ new Date()) {
+  const templateData = buildRecordTargetTemplateData(recordType, fields, renderData, fallbackDate);
+  return normalizeRecordTargetPath(renderTemplate(targetFileTemplate, templateData));
+}
+function normalizeNonEmptyPath(value) {
+  const trimmed = String(value || "").trim();
+  return trimmed || null;
+}
+function readScalarOption(value) {
+  const option = readOptionText$1(value);
+  return String(option.value || option.label || value || "").trim();
+}
+function normalizeLocalDateTime(value) {
+  const text2 = readScalarOption(value);
+  if (!text2) return void 0;
+  const normalized2 = text2.replace(" ", "T");
+  const parsed = new Date(normalized2);
+  return Number.isFinite(parsed.getTime()) ? normalized2 : void 0;
+}
+function localDatePart(value) {
+  if (!value) return void 0;
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return void 0;
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+function durationMinutesBetween(start2, end2) {
+  if (!start2 || !end2) return void 0;
+  const startMs = new Date(start2).getTime();
+  const endMs = new Date(end2).getTime();
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs < startMs) return void 0;
+  return Math.max(1, Math.round((endMs - startMs) / 6e4));
+}
+function readStructuredTaskRecurrence(renderData) {
+  const rawUnit = readScalarOption(renderData["重复"] ?? renderData["重复单位"] ?? renderData.recurrenceUnit).toLowerCase();
+  if (!rawUnit || rawUnit === "none") return null;
+  if (!["day", "week", "month", "quarter", "year"].includes(rawUnit)) throw new Error(`task_recurrence_unit_invalid:${rawUnit}`);
+  const interval = Number(renderData["重复间隔"] ?? renderData.recurrenceInterval ?? 1);
+  if (!Number.isInteger(interval) || interval < 1) throw new Error(`task_recurrence_interval_invalid:${interval}`);
+  const rawAnchor = readScalarOption(renderData["重复锚点"] ?? renderData.recurrenceAnchor ?? "scheduled").toLowerCase();
+  if (!["scheduled", "start", "due", "completion"].includes(rawAnchor)) throw new Error(`task_recurrence_anchor_invalid:${rawAnchor}`);
+  return { unit: rawUnit, interval, anchor: rawAnchor };
+}
+function buildRenderData(template, formData) {
+  const normalizedData = normalizeTemplateRenderData(template, formData);
+  const rawGoalPath = String(normalizedData.goalPath ?? normalizedData["目标"] ?? "").trim();
+  const goalPath = rawGoalPath ? requireGoalPath(rawGoalPath) : "";
+  const goalParts = goalPath ? goalPath.split("/").filter(Boolean) : [];
+  const recordType = String(normalizedData.recordType ?? normalizedData["记录类型"] ?? template.recordTypeId ?? template.id ?? "").trim();
+  const recordDate = String(normalizedData["日期"] ?? normalizedData.date ?? "").trim();
+  const periodPolicy = resolveTemplatePeriodPolicy(template);
+  const derivedPeriod = periodPolicy ? resolveDerivedPeriod(recordDate || void 0, periodPolicy.granularity) : null;
+  const cycleId = derivedPeriod ? String(normalizedData.cycleId ?? normalizedData["周期ID"] ?? derivedPeriod.id ?? "").trim() : "";
+  const cycleTitle = derivedPeriod ? String(normalizedData.period ?? normalizedData["周期"] ?? derivedPeriod.label ?? "").trim() : "";
+  return {
+    ...normalizedData,
+    goal: {
+      title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
+      path: goalPath,
+      root: goalParts[0] || "",
+      leaf: goalParts.length ? goalParts[goalParts.length - 1] : ""
+    },
+    goalPath,
+    rootGoal: goalParts[0] || "",
+    leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : "",
+    recordType,
+    period: derivedPeriod ? { ...derivedPeriod, id: cycleId || derivedPeriod.id, label: cycleTitle || derivedPeriod.label } : null,
+    cycle: derivedPeriod ? { ...derivedPeriod, id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label } : null,
+    cycleId: derivedPeriod ? cycleId || derivedPeriod.id : "",
+    cycleTitle: derivedPeriod ? cycleTitle || derivedPeriod.label : "",
+    periodId: derivedPeriod ? cycleId || derivedPeriod.id : "",
+    periodLabel: derivedPeriod ? cycleTitle || derivedPeriod.label : "",
+    "周期粒度": derivedPeriod ? derivedPeriod.granularity : "",
+    "周期ID": derivedPeriod ? cycleId || derivedPeriod.id : "",
+    "周期": derivedPeriod ? cycleTitle || derivedPeriod.label : ""
+  };
+}
+function buildRecordOutputPlan(input) {
+  if (!input.template) {
+    return {
+      recordId: null,
+      recordType: null,
+      targetFilePath: null,
+      targetHeader: null,
+      outputContent: "",
+      renderData: {}
+    };
+  }
+  const renderData = buildRenderData(input.template, input.formData);
+  const explicitRecordTypeId = String(input.template.recordTypeId || "").trim();
+  const systemRecordTypeId = String(input.template.id || "").trim().startsWith("core.") ? String(input.template.id || "").trim() : "";
+  const trustedRecordType = (explicitRecordTypeId || systemRecordTypeId).replace(/^core\./, "");
+  const hintedRecordType = String(renderData.recordType || input.template.id || "").trim().replace(/^core\./, "");
+  const recordType = trustedRecordType || hintedRecordType;
+  if (!recordType) throw new Error("每条记录都必须有记录类型。");
+  const schema = getRecordSchemaDefinition(recordType);
+  if (!schema) throw new Error(`unknown_record_schema:${recordType}`);
+  const recordId = String(input.recordId || "").trim() || createRecordId(recordType);
+  let outputContent;
+  let storageFields = renderData;
+  if (recordType === "task") {
+    const statusOption = readOptionText$1(renderData["状态"] ?? renderData.status);
+    const candidateStatus = String(statusOption.value || statusOption.label || "open").trim().toLowerCase();
+    const status = isTimelineCompletedExecutionContext(input.context) ? "done" : ["open", "done", "cancelled", "skipped"].includes(candidateStatus) ? candidateStatus : "open";
+    const requestedRecurrence = readStructuredTaskRecurrence(renderData);
+    const recurrence = status === "done" ? null : requestedRecurrence;
+    if (!recurrence && status === "skipped") throw new Error("task_status_skipped_requires_series");
+    if (recurrence && status !== "open") throw new Error("task_series_initial_instance_must_be_open");
+    const scheduledAt = normalizeLocalDateTime(
+      renderData["计划时间"] ?? renderData.scheduledAt ?? renderData["计划日期"] ?? renderData.scheduledDate
+    );
+    const dueAt = normalizeLocalDateTime(
+      renderData["截止时间"] ?? renderData.dueAt ?? renderData["截止日期"] ?? renderData.dueDate
+    );
+    const startAt = normalizeLocalDateTime(renderData["实际开始"] ?? renderData["开始时间"] ?? renderData["开始/预计时间"] ?? renderData.startAt);
+    const endAt = normalizeLocalDateTime(renderData["实际结束"] ?? renderData["结束时间"] ?? renderData.endAt);
+    const declaredDuration = renderData["预计时长（分钟）"] ?? renderData["时长（分钟）"] ?? renderData["时长"] ?? renderData["预计时长"] ?? renderData.expectedDurationMinutes;
+    const capturedAt = (/* @__PURE__ */ new Date()).toISOString();
+    const taskFields = {
+      status,
+      content: renderData["任务内容"] ?? renderData["内容"] ?? renderData.content,
+      goalPath: renderData.goalPath,
+      priority: renderData["优先级"] ?? renderData.priority,
+      importance: renderData["重要程度"] ?? renderData.importance,
+      urgency: renderData["紧急程度"] ?? renderData.urgency,
+      energyDemand: renderData["精力要求"] ?? renderData.energyDemand,
+      brainDemand: renderData["脑力要求"] ?? renderData.brainDemand,
+      physicalDemand: renderData["体力要求"] ?? renderData.physicalDemand,
+      availabilityContexts: renderData["可用场景"] ?? renderData.availabilityContexts,
+      recoveryIntent: renderData["恢复意图"] ?? renderData.recoveryIntent,
+      scheduledAt,
+      dueAt,
+      startAt,
+      endAt,
+      expectedDurationMinutes: declaredDuration || durationMinutesBetween(startAt, endAt),
+      createdAt: renderData["创建于"] ?? renderData.createdAt ?? capturedAt,
+      // A completed Task with an explicit endAt is historical execution data.
+      // Use that end as the completion fact unless the user supplied completedAt;
+      // falling back to capture time is only appropriate when no execution end exists.
+      completedAt: status === "done" ? renderData["完成于"] ?? renderData.completedAt ?? endAt ?? capturedAt : void 0,
+      cancelledAt: status === "cancelled" ? renderData["取消于"] ?? renderData.cancelledAt : void 0,
+      skippedAt: status === "skipped" ? renderData["跳过于"] ?? renderData.skippedAt : void 0,
+      seriesId: renderData.seriesId ?? renderData["系列ID"]
+    };
+    const customTaskFields = buildCustomCaptureFields("task", renderData, input.template.fields);
+    for (const key of [
+      "重复",
+      "重复单位",
+      "重复间隔",
+      "重复锚点",
+      "recurrenceUnit",
+      "recurrenceInterval",
+      "recurrenceAnchor",
+      "计划时间",
+      "计划日期",
+      "截止时间",
+      "截止日期",
+      "scheduledAt",
+      "scheduledDate",
+      "dueAt",
+      "dueDate"
+    ]) delete customTaskFields[key];
+    Object.assign(taskFields, customTaskFields);
+    storageFields = taskFields;
+    const existingSeriesId = String(taskFields.seriesId || "").trim();
+    if (recurrence && existingSeriesId) {
+      throw new Error("task_series_recurrence_edit_requires_series_command");
+    }
+    if (recurrence && !existingSeriesId) {
+      const seriesId = createRecordId("task-series");
+      taskFields.seriesId = seriesId;
+      const seriesStartDate = String(
+        localDatePart(String(taskFields.scheduledAt || "")) || localDatePart(String(taskFields.startAt || "")) || localDatePart(String(taskFields.dueAt || "")) || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)
+      );
+      const seriesBlock = encodeRecordBlock({
+        recordId: seriesId,
+        recordType: "task-series",
+        fields: {
+          status: "active",
+          content: taskFields.content,
+          goalPath: taskFields.goalPath,
+          priority: taskFields.priority,
+          importance: taskFields.importance,
+          urgency: taskFields.urgency,
+          expectedDurationMinutes: taskFields.expectedDurationMinutes,
+          energyDemand: taskFields.energyDemand,
+          brainDemand: taskFields.brainDemand,
+          physicalDemand: taskFields.physicalDemand,
+          availabilityContexts: taskFields.availabilityContexts,
+          recoveryIntent: taskFields.recoveryIntent,
+          recurrenceUnit: recurrence.unit,
+          recurrenceInterval: recurrence.interval,
+          recurrenceAnchor: recurrence.anchor,
+          seriesStartDate,
+          currentTaskId: recordId
+        }
+      });
+      const taskBlock = encodeRecordBlock({ recordId, recordType: "task", fields: taskFields });
+      outputContent = `${seriesBlock}
+
+${taskBlock}`;
+    } else {
+      const timelineExecution = buildTimelineCompletedExecutionPersistence({
+        context: input.context,
+        taskFields
+      });
+      const taskBlock = encodeRecordBlock({ recordId, recordType: "task", fields: timelineExecution.taskFields });
+      if (!timelineExecution.session) {
+        outputContent = taskBlock;
+      } else {
+        const sessionId = createRecordId("task-session");
+        const sessionBlock = encodeRecordBlock({
+          recordId: sessionId,
+          recordType: "task-session",
+          fields: buildTaskSessionFields({
+            id: recordId,
+            seriesId: existingSeriesId || void 0,
+            goalPath: String(taskFields.goalPath || "").trim() || void 0
+          }, timelineExecution.session)
+        });
+        outputContent = `${taskBlock}
+
+${sessionBlock}`;
+      }
+    }
+  } else if (schema?.family === "generic") {
+    const draft = buildGenericRecordDraft(schema.recordType, renderData, input.template.fields);
+    storageFields = draft.fields;
+    outputContent = encodeRecordDraft({ recordId, draft });
+  } else {
+    throw new Error(`record_capture_not_supported:${schema.recordType}:${schema.captureMode}`);
+  }
+  const targetFilePath = normalizeNonEmptyPath(
+    resolveRecordTargetPath(input.template.targetFile, schema.recordType, storageFields, renderData)
+  );
+  const targetHeader = input.template.appendUnderHeader ? normalizeNonEmptyPath(renderTemplate(input.template.appendUnderHeader, renderData)) : null;
+  return {
+    recordId,
+    recordType,
+    targetFilePath,
+    targetHeader,
+    outputContent,
+    renderData
+  };
+}
+function buildRecordPersistencePlan(input) {
+  const originalPath = normalizeNonEmptyPath(input.originalPath);
+  const targetPath = normalizeNonEmptyPath(input.outputPlan.targetFilePath);
+  if (input.mode === "create") {
+    return {
+      originalPath: null,
+      pathChanged: false,
+      writeMode: "create"
+    };
+  }
+  const pathChanged = !!originalPath && !!targetPath && originalPath !== targetPath;
+  return {
+    originalPath,
+    pathChanged,
+    writeMode: pathChanged ? "move_and_replace" : "update_in_place"
+  };
+}
+const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+const RECORD_START = "<!-- start -->";
+const RECORD_END = "<!-- end -->";
+function checkAbort(options) {
+  if (options.throwIfAborted) {
+    options.throwIfAborted(options.signal);
+    return;
+  }
+  if (options.signal?.aborted) {
+    const error = new Error("AbortError");
+    error.name = "AbortError";
+    throw error;
+  }
+}
+function readRecordMetadata(markdown) {
+  const result = /* @__PURE__ */ new Map();
+  for (const line2 of String(markdown || "").split(/\r?\n/)) {
+    const match5 = line2.match(/^\s*([^:\n]+?)\s*::\s*(.*)$/);
+    if (!match5) continue;
+    result.set(match5[1].trim(), match5[2].trim());
+  }
+  return result;
+}
+function parseMarkdownTime(raw) {
+  const value = String(raw || "").trim();
+  if (!value) return null;
+  const dateOnly2 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (dateOnly2) {
+    const [, year, month, day] = dateOnly2;
+    return Date.UTC(Number(year), Number(month) - 1, Number(day));
+  }
+  const simpleDateTime = value.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if (simpleDateTime) {
+    const [, year, month, day, hour, minute, second = "0"] = simpleDateTime;
+    return Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
+  }
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+function readUlidTime(recordId) {
+  const raw = String(recordId || "").split(".").pop()?.toUpperCase() || "";
+  if (raw.length < 10) return 0;
+  let value = 0;
+  for (const char2 of raw.slice(0, 10)) {
+    const digit = CROCKFORD.indexOf(char2);
+    if (digit < 0) return 0;
+    value = value * 32 + digit;
+  }
+  return value;
+}
+function resolveRecordSortLabels(recordType) {
+  if (recordType === "task-session") return ["结束于", "开始于"];
+  if (recordType === "task") {
+    return ["完成于", "取消于", "跳过于", "结束时间", "开始时间", "计划时间", "计划日期", "开始日期", "截止时间", "截止日期", "创建于"];
+  }
+  if (recordType === "task-series") return ["系列开始日期"];
+  if (recordType === "energy") return ["日期", "时间"];
+  return ["日期"];
+}
+function resolveRecordMarkdownSortKey(markdown) {
+  const metadata = readRecordMetadata(markdown);
+  const recordId = metadata.get("记录ID");
+  const recordType = metadata.get("记录类型") || "";
+  if (!recordId || !recordType) return null;
+  const fallback = readUlidTime(recordId);
+  let primary = null;
+  for (const label of resolveRecordSortLabels(recordType)) {
+    primary = parseMarkdownTime(metadata.get(label));
+    if (primary != null) break;
+  }
+  return { primary: primary ?? fallback, fallback };
+}
+function compareSortKey(left2, right2) {
+  if (left2.primary !== right2.primary) return left2.primary - right2.primary;
+  return left2.fallback - right2.fallback;
+}
+function findRecordBlockEnd(lines, startIndex, limit) {
+  for (let index = startIndex; index < limit; index += 1) {
+    if (lines[index].trim() === RECORD_END) return index;
+  }
+  return -1;
+}
+function ensureBlankLineBefore(lines, index) {
+  if (index > 0 && lines[index - 1]?.trim() !== "") {
+    lines.splice(index, 0, "");
+    return index + 1;
+  }
+  return index;
+}
+function insertPayload(lines, index, payload) {
+  let insertAt = ensureBlankLineBefore(lines, index);
+  const payloadLines = payload.replace(/\r\n/g, "\n").split("\n");
+  lines.splice(insertAt, 0, ...payloadLines);
+  insertAt += payloadLines.length;
+  if (insertAt < lines.length && lines[insertAt]?.trim() !== "") lines.splice(insertAt, 0, "");
+}
+function appendUnderHeaderText(text2, header, payload) {
+  const esc2 = header.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`^${esc2}\\s*$`);
+  const lines = String(text2 || "").split("\n");
+  let headerLineIndex = lines.findIndex((line2) => regex.test(line2));
+  if (headerLineIndex === -1) {
+    if (lines.length && lines[lines.length - 1].trim() !== "") lines.push("");
+    lines.push(header, "");
+    headerLineIndex = lines.length - 2;
+  }
+  let sectionEndIndex = lines.length;
+  const headerLevel = header.match(/^(#+)\s/)?.[1].length || 0;
+  for (let index = headerLineIndex + 1; index < lines.length; index += 1) {
+    const match5 = lines[index].match(/^(#+)\s/);
+    if (match5 && match5[1].length <= headerLevel) {
+      sectionEndIndex = index;
+      break;
+    }
+  }
+  const incomingKey = resolveRecordMarkdownSortKey(payload);
+  if (!incomingKey) {
+    insertPayload(lines, sectionEndIndex, payload);
+    return lines.join("\n");
+  }
+  let insertionIndex = sectionEndIndex;
+  let lastRecordEnd = -1;
+  for (let index = headerLineIndex + 1; index < sectionEndIndex; index += 1) {
+    if (lines[index].trim() !== RECORD_START) continue;
+    const endIndex = findRecordBlockEnd(lines, index, sectionEndIndex);
+    if (endIndex < 0) break;
+    const currentBlock = lines.slice(index, endIndex + 1).join("\n");
+    const currentKey = resolveRecordMarkdownSortKey(currentBlock);
+    if (currentKey && compareSortKey(incomingKey, currentKey) > 0) {
+      insertionIndex = index;
+      break;
+    }
+    lastRecordEnd = endIndex;
+    index = endIndex;
+  }
+  if (insertionIndex === sectionEndIndex && lastRecordEnd >= 0) insertionIndex = lastRecordEnd + 1;
+  insertPayload(lines, insertionIndex, payload);
+  return lines.join("\n");
+}
+async function appendUnderHeader(vault, filePath, header, payload, options = {}) {
+  const text2 = await vault.readFile(filePath) ?? "";
+  checkAbort(options);
+  const next2 = appendUnderHeaderText(text2, header, payload);
+  checkAbort(options);
+  await vault.writeFile(filePath, next2);
+}
+var __getOwnPropDesc$c = Object.getOwnPropertyDescriptor;
+var __decorateClass$c = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$c(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$b = (index, decorator) => (target, key) => decorator(target, key, index);
+let InputService = class {
+  constructor(vault, dataStore) {
+    this.vault = vault;
+    this.dataStore = dataStore;
+  }
+  vault;
+  dataStore;
+  previewTemplateExecution(template, formData, recordId, context) {
+    if (!template) throw new Error("传入了无效的模板对象。");
+    const outputPlan = buildRecordOutputPlan({ template, formData, recordId, context });
+    return {
+      recordId: outputPlan.recordId,
+      renderData: outputPlan.renderData,
+      outputContent: outputPlan.outputContent,
+      targetFilePath: outputPlan.targetFilePath || "",
+      header: outputPlan.targetHeader
+    };
+  }
+  async executeTemplate(template, formData, options = {}) {
+    const signal = options.signal;
+    this.throwIfAborted(signal);
+    const preview = this.previewTemplateExecution(template, formData, options.recordId, options.context);
+    const { outputContent, targetFilePath, header } = preview;
+    if (!targetFilePath) throw new Error("模板未定义目标文件路径。");
+    return this.appendDirectRecord(targetFilePath, outputContent, header, options);
+  }
+  /**
+   * Direct Record 共用落盘入口。
+   * 不解析模板，只负责把已经生成好的稳定 Markdown 写到指定文件/目标标题下。
+   */
+  async appendDirectRecord(targetFilePath, outputContent, header = null, options = {}) {
+    const signal = options.signal;
+    if (!targetFilePath) throw new Error("直接记录未定义目标文件路径。");
+    if (!outputContent.trim()) throw new Error("直接记录输出内容为空。");
+    this.throwIfAborted(signal);
+    if (header) {
+      await appendUnderHeader(this.vault, targetFilePath, header, outputContent, {
+        signal,
+        throwIfAborted: (currentSignal) => this.throwIfAborted(currentSignal)
+      });
+      return targetFilePath;
+    }
+    const existingContent = await this.vault.readFile(targetFilePath);
+    this.throwIfAborted(signal);
+    const newContent = existingContent ? `${existingContent.trim()}
+
+${outputContent}` : outputContent;
+    await this.vault.writeFile(targetFilePath, newContent);
+    return targetFilePath;
+  }
+  /**
+   * 计划第 6.5 步：安全迁移保存。
+   * 只负责“先写新位置”，删除旧记录由 usecase 在确认写入成功后再执行。
+   */
+  async createRecordAtPlannedLocation(template, formData, options = {}) {
+    return this.executeTemplate(template, formData, options);
+  }
+  async updateExistingRecord(item, template, formData, options = {}) {
+    const signal = options.signal;
+    const autoRefresh = options.autoRefresh !== false;
+    this.throwIfAborted(signal);
+    const indexed = this.dataStore.getRecordLocation(item.id);
+    const path = item.source?.path || item.file?.path || indexed?.path || "";
+    const startLine = item.source?.startLine || item.file?.line || indexed?.startLine || 0;
+    if (!path) throw createRecordConflictError("record_locator_invalid", `无法定位记录标识 ${item.id}。`);
+    const existingContent = await this.vault.readFile(path);
+    if (existingContent == null) throw createRecordConflictError("record_path_missing", `找不到文件：${path}`);
+    this.throwIfAborted(signal);
+    const outputPlan = buildRecordOutputPlan({ template, formData, recordId: item.id });
+    const nextText = outputPlan.outputContent.trim();
+    if (!nextText) throw new Error("编辑后的输出内容为空，已取消保存。");
+    const lines = existingContent.split("\n");
+    const range = resolveRecordBlockRangeById(lines, item.id, startLine > 0 ? startLine - 1 : null);
+    lines.splice(range.startIndex, range.endIndex - range.startIndex + 1, ...nextText.split(/\r?\n/));
+    await this.vault.writeFile(path, lines.join("\n"));
+    if (autoRefresh) {
+      await this.dataStore.scanFileByPath(path);
+      this.dataStore.notifyChange();
+    }
+    return path;
+  }
+  async deleteExistingRecord(item, options = {}) {
+    const signal = options.signal;
+    const autoRefresh = options.autoRefresh !== false;
+    this.throwIfAborted(signal);
+    const indexed = this.dataStore.getRecordLocation(item.id);
+    const path = item.source?.path || item.file?.path || indexed?.path || "";
+    const startLine = item.source?.startLine || item.file?.line || indexed?.startLine || 0;
+    if (!path) throw createRecordConflictError("record_locator_invalid", `无法定位记录标识 ${item.id}。`);
+    const existingContent = await this.vault.readFile(path);
+    if (existingContent == null) throw createRecordConflictError("record_path_missing", `找不到文件：${path}`);
+    this.throwIfAborted(signal);
+    const lines = existingContent.split("\n");
+    const range = resolveRecordBlockRangeById(lines, item.id, startLine > 0 ? startLine - 1 : null);
+    lines.splice(range.startIndex, range.endIndex - range.startIndex + 1);
+    await this.vault.writeFile(path, lines.join("\n"));
+    if (autoRefresh) {
+      await this.dataStore.scanFileByPath(path);
+      this.dataStore.notifyChange();
+    }
+    return path;
+  }
+  throwIfAborted(signal) {
+    if (signal?.aborted) {
+      const error = new Error("AbortError");
+      error.name = "AbortError";
+      throw error;
+    }
+  }
+};
+InputService = __decorateClass$c([
+  singleton(),
+  __decorateParam$b(0, inject(VAULT_PORT_TOKEN)),
+  __decorateParam$b(1, inject(DataStore))
+], InputService);
+class GoalTemplateMigrationMutation {
+  constructor(repository) {
+    this.repository = repository;
+  }
+  repository;
+  /** Goal/Template migration now patches the Record Block by stable Record ID. */
+  async upsertItemGoalTemplateMigrationFields(itemId, fields, _mutationOptions = {}) {
+    const before = await this.repository.getById(itemId);
+    if (!before) throw new Error(`record_not_found:${itemId}`);
+    const path = before.source?.path || before.file?.path || "";
+    if (!path) throw new Error(`record_location_unavailable:${itemId}`);
+    const updated = await this.repository.update(itemId, fields);
+    return {
+      path,
+      beforeText: before.rawSource || "",
+      afterText: updated.rawSource || "",
+      shape: "block-metadata"
+    };
+  }
+}
+class InlineFieldMutation {
+  constructor(repository) {
+    this.repository = repository;
+  }
+  repository;
+  /**
+   * Foundation v2 write-back: field edits are Record patches addressed by stable Record ID.
+   * The public method name is retained for callers, but only canonical Record fields are emitted.
+   */
+  async upsertItemInlineFields(itemId, fields, _mutationOptions = {}) {
+    const before = await this.repository.getById(itemId);
+    if (!before) throw new Error(`record_not_found:${itemId}`);
+    const path = before.source?.path || before.file?.path || "";
+    if (!path) throw new Error(`record_location_unavailable:${itemId}`);
+    const updated = await this.repository.update(itemId, fields);
+    return {
+      path,
+      beforeLine: before.rawSource || "",
+      afterLine: updated.rawSource || ""
+    };
+  }
+}
+class MigrationBackupService {
+  constructor(dataStore, vault) {
+    this.dataStore = dataStore;
+    this.vault = vault;
+  }
+  dataStore;
+  vault;
+  /**
+   * 目标迁移前备份。
+   * - 备份当前 settings 到 JSON
+   * - 备份 DataStore 中已索引到的 Markdown 文件
+   * - 不修改原始记录；用于用户侧“一键迁移前备份”
+   */
+  async createMigrationBackup(backupRoot, settings) {
+    const root = String(backupRoot || "").replace(/^\/+|\/+$/g, "") || `${THINK_STORAGE_PATHS.backupsRoot}/goal-migration-${Date.now()}`;
+    const settingsPath = `${root}/data-settings.json`;
+    const items = this.dataStore.queryItems();
+    const markdownPaths = Array.from(new Set(
+      items.map((item) => item.source?.path || item.file?.path || "").filter((path) => !!path)
+    )).sort((left2, right2) => left2.localeCompare(right2));
+    await this.vault.writeFile(settingsPath, JSON.stringify(settings, null, 2));
+    await this.vault.writeFile(`${root}/markdown-paths.json`, JSON.stringify(markdownPaths, null, 2));
+    const failedPaths = [];
+    let markdownFileCount = 0;
+    for (const path of markdownPaths) {
+      try {
+        const content = await this.vault.readFile(path);
+        if (content == null) {
+          failedPaths.push(path);
+          continue;
+        }
+        await this.vault.writeFile(`${root}/markdown/${path}`, content);
+        markdownFileCount += 1;
+      } catch (_error) {
+        failedPaths.push(path);
+      }
+    }
+    await this.vault.writeFile(`${root}/manifest.json`, JSON.stringify({
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      settingsPath,
+      markdownFileCount,
+      failedPaths
+    }, null, 2));
+    return { backupRoot: root, settingsPath, markdownFileCount, failedPaths };
+  }
+}
+const ENERGY_FEEDBACK_WINDOW_MINUTES = 120;
+function energyOccurrenceMs(item) {
+  const snapshot = readEnergyItemSnapshot(item);
+  if (!snapshot?.date || !snapshot.time) return null;
+  const value = Date.parse(`${snapshot.date}T${snapshot.time.length === 5 ? `${snapshot.time}:00` : snapshot.time}`);
+  return Number.isFinite(value) ? value : null;
+}
+class TaskSessionMutation {
+  constructor(dataStore, repository) {
+    this.dataStore = dataStore;
+    this.repository = repository;
+  }
+  dataStore;
+  repository;
+  async createSession(taskId, input) {
+    const task = await this.requireTask(taskId);
+    const prepared = this.prepareCreateOperation(task, input);
+    await this.repository.batch([prepared.operation]);
+    const created = await this.repository.getById(prepared.recordId);
+    if (!created || created.recordType !== "task-session") {
+      throw new Error(`task_session_create_scan_failed:${prepared.recordId}`);
+    }
+    return created;
+  }
+  /**
+   * Update one TaskSession from a complete logical range.
+   *
+   * The public domain capability keeps the stable `updateSessionTime` name required by
+   * TaskSession consumers, while callers pass start/end as the single source of truth.
+   */
+  async updateSessionTime(sessionId, range) {
+    const session = asTaskSessionRecord(await this.repository.getById(sessionId));
+    if (!session) throw new Error(`task_session_required:${sessionId}`);
+    if (!range.end) throw new Error("task_session_range_end_required");
+    const startedMs = Date.parse(range.start);
+    const endedMs = Date.parse(range.end);
+    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs <= startedMs) {
+      throw new Error("task_session_time_order_invalid");
+    }
+    const durationMinutes2 = Math.round((endedMs - startedMs) / 6e4 * 100) / 100;
+    await this.repository.update(session.id, {
+      sessionStartedAt: new Date(startedMs).toISOString(),
+      sessionEndedAt: new Date(endedMs).toISOString(),
+      sessionDurationMinutes: durationMinutes2
+    });
+    const updated = await this.repository.getById(session.id);
+    if (!updated) throw new Error(`task_session_update_scan_failed:${session.id}`);
+    return updated;
+  }
+  /**
+   * Bind a newly persisted Energy snapshot to the nearest eligible finished Session.
+   * Goal is intentionally not part of the match: Energy is a person-level state.
+   */
+  async linkEnergySnapshot(energyRecordId) {
+    const energy = this.dataStore.getRecordById(energyRecordId);
+    const after = energy ? readEnergyItemSnapshot(energy) : null;
+    const afterMs = energy ? energyOccurrenceMs(energy) : null;
+    if (!energy || !after || afterMs == null) return null;
+    const candidates = this.dataStore.queryRecords().map((item) => asTaskSessionRecord(item)).filter((session) => !!session).filter((session) => !!session.startEnergyRecordId && !session.endEnergyRecordId).map((session) => {
+      const endedMs = Date.parse(session.sessionEndedAt);
+      return { session, endedMs, gapMinutes: (afterMs - endedMs) / 6e4 };
+    }).filter(({ endedMs, gapMinutes }) => Number.isFinite(endedMs) && gapMinutes >= 0 && gapMinutes <= ENERGY_FEEDBACK_WINDOW_MINUTES).sort((left2, right2) => left2.gapMinutes - right2.gapMinutes);
+    const chosen = candidates[0]?.session;
+    if (!chosen?.startEnergyRecordId) return null;
+    const beforeItem = this.dataStore.getRecordById(chosen.startEnergyRecordId);
+    const before = beforeItem ? readEnergyItemSnapshot(beforeItem) : null;
+    if (!before) return null;
+    const patch = {
+      endEnergyRecordId: energyRecordId,
+      energyDelta: after.score - before.score,
+      brainDelta: before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : void 0,
+      physicalDelta: before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : void 0
+    };
+    await this.repository.update(chosen.id, patch);
+    return this.dataStore.getRecordById(chosen.id);
+  }
+  prepareCreateOperation(task, input, recordId = createRecordId("task-session")) {
+    const taskRecord = asTaskRecord(task);
+    if (!taskRecord) throw new Error(`task_record_required:${task.id}`);
+    const path = taskRecord.source?.path || taskRecord.file?.path || this.dataStore.getRecordLocation(taskRecord.id)?.path || "";
+    if (!path) throw new Error(`record_location_unavailable:${task.id}`);
+    const fields = buildTaskSessionFields(taskRecord, input);
+    const targetFilePath = path;
+    return {
+      recordId,
+      operation: {
+        kind: "create",
+        record: {
+          recordId,
+          recordType: "task-session",
+          targetFilePath,
+          targetHeader: taskRecord.header || null,
+          fields
+        }
+      }
+    };
+  }
+  async requireTask(taskId) {
+    const task = asTaskRecord(await this.repository.getById(taskId));
+    if (!task) throw new Error(`task_record_required:${taskId}`);
+    return task;
+  }
+}
+function getCreateEligibleGoalPaths(settings, recordTypeId) {
+  const id = String(recordTypeId || "").trim();
+  if (!id) return [];
+  const seen = /* @__PURE__ */ new Set();
+  const result = [];
+  for (const template of getGoalTemplates(settings.goalSettings)) {
+    if (template.recordTypeId !== id || template.enabled === false) continue;
+    const path = normalizeGoalPath(template.goalPath);
+    if (!path || seen.has(path)) continue;
+    seen.add(path);
+    result.push(path);
+  }
+  return result;
+}
+function getCreateAvailableRecordTypes(settings, goalPath) {
+  const selectedGoalPath = normalizeGoalPath(goalPath) || "";
+  return getEffectiveRecordTypes().filter((recordType) => {
+    if (recordType.captureMode === "direct") return true;
+    const eligibleGoalPaths = getCreateEligibleGoalPaths(settings, recordType.id);
+    return selectedGoalPath ? eligibleGoalPaths.includes(selectedGoalPath) : eligibleGoalPaths.length > 0;
+  });
+}
+function findGoal(goalSettings, goalPath) {
+  const path = String(goalPath || "").trim();
+  if (!path) return null;
+  return (goalSettings?.goals || []).find((goal) => goal.path === path) || null;
+}
+function mergeTemplate(base, patch) {
+  const required2 = new Set(patch.requiredFields || []);
+  const defaultValues = patch.defaultValues || {};
+  const isTaskTemplate2 = String(base.recordTypeId || base.id || "").replace(/^core\./, "") === "task";
+  const fields = [...patch.fields ?? base.fields ?? []].map((field) => {
+    const key = field.key || field.label;
+    const defaultValue2 = defaultValues[key] ?? defaultValues[field.label || ""];
+    const mergedField = {
+      ...field,
+      ...defaultValue2 !== void 0 ? { defaultValue: String(defaultValue2) } : null,
+      ...required2.has(key) || required2.has(field.label || "") ? { required: true } : null
+    };
+    if (isTaskTemplate2 && ["expectedDurationMinutes", "预计时长", "时长", "时长（分钟）"].includes(String(key || ""))) {
+      mergedField.required = false;
+    }
+    return mergedField;
+  });
+  const merged = {
+    ...base,
+    fields,
+    targetFile: patch.targetFile ?? base.targetFile,
+    appendUnderHeader: patch.appendUnderHeader ?? base.appendUnderHeader,
+    periodPolicy: patch.periodPolicy ?? base.periodPolicy
+  };
+  const policy = resolveTemplatePeriodPolicy(merged);
+  if (policy) merged.periodPolicy = policy;
+  else {
+    delete merged.periodPolicy;
+  }
+  return merged;
+}
+function applyGoalIdentityIcon(template, goal) {
+  const fields = applyGoalIconToCaptureFields(template.fields, goal) ?? template.fields;
+  return fields === template.fields ? template : { ...template, fields };
+}
+class GoalTemplateResolver {
+  static resolve(input) {
+    const settings = input.settings;
+    const recordTypeId = String(input.recordTypeId || "").trim();
+    const goal = findGoal(settings.goalSettings, input.goalPath);
+    const baseTemplate = getTemplateRecordTypeById(recordTypeId);
+    if (!baseTemplate) {
+      return {
+        status: "unknown-record-type",
+        template: null,
+        goal,
+        templateId: null,
+        templateSourceType: null,
+        recordTypeId: null,
+        effectiveRecordTypeId: null
+      };
+    }
+    const direct = input.goalPath ? findDirectGoalTemplate(settings.goalSettings, input.goalPath, recordTypeId) : null;
+    if (input.requireDirectGoalTemplate && !input.goalPath) {
+      return {
+        status: "goal-required",
+        template: null,
+        goal,
+        templateId: null,
+        templateSourceType: null,
+        recordTypeId,
+        effectiveRecordTypeId: recordTypeId
+      };
+    }
+    if (direct?.enabled === false) {
+      return {
+        status: "disabled",
+        template: null,
+        goal,
+        templateId: direct.id,
+        templateSourceType: "goal-template",
+        recordTypeId,
+        effectiveRecordTypeId: recordTypeId
+      };
+    }
+    if (direct) {
+      return {
+        status: "available",
+        template: applyGoalIdentityIcon(mergeTemplate(baseTemplate, direct), goal),
+        goal,
+        templateId: direct.id,
+        templateSourceType: "goal-template",
+        recordTypeId,
+        effectiveRecordTypeId: recordTypeId
+      };
+    }
+    if (input.requireDirectGoalTemplate) {
+      return {
+        status: "missing-goal-template",
+        template: null,
+        goal,
+        templateId: null,
+        templateSourceType: null,
+        recordTypeId,
+        effectiveRecordTypeId: recordTypeId
+      };
+    }
+    const policy = resolveTemplatePeriodPolicy(baseTemplate);
+    const baseResolved = { ...baseTemplate };
+    if (policy) baseResolved.periodPolicy = policy;
+    else delete baseResolved.periodPolicy;
+    const template = applyGoalIdentityIcon(baseResolved, goal);
+    return {
+      status: "available",
+      template,
+      goal,
+      templateId: baseTemplate.id,
+      templateSourceType: "record-type",
+      recordTypeId,
+      effectiveRecordTypeId: recordTypeId
+    };
+  }
+}
+function timestampNow() {
+  return (/* @__PURE__ */ new Date()).toISOString();
+}
+function buildLegacyActualRangeCompletionSession(dataStore, task) {
+  const startedAt = String(task.startAt || "").trim();
+  const endedAt = String(task.endAt || "").trim();
+  if (!startedAt || !endedAt) return null;
+  const startedMs = Date.parse(startedAt);
+  const endedMs = Date.parse(endedAt);
+  if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs <= startedMs) return null;
+  const alreadyHasSession = dataStore.queryRecords().some((record2) => asTaskSessionRecord(record2)?.taskId === task.id);
+  if (alreadyHasSession) return null;
+  const durationMinutes2 = Math.round((endedMs - startedMs) / 6e4 * 100) / 100;
+  if (!Number.isFinite(durationMinutes2) || durationMinutes2 <= 0) return null;
+  return {
+    startedAt: new Date(startedMs).toISOString(),
+    endedAt: new Date(endedMs).toISOString(),
+    durationMinutes: durationMinutes2,
+    result: "task-completed",
+    source: "unknown"
+  };
+}
+function sourcePath(dataStore, item) {
+  return item.source?.path || item.file?.path || dataStore.getRecordLocation(item.id)?.path || "";
+}
+function nextTaskFields(task, series, completedAt, nextDates) {
+  return {
+    status: "open",
+    // Series owns future-instance defaults. Historical/current Task metadata is never used
+    // as the authority for future occurrences after a Series update.
+    content: series.content || task.content,
+    goalPath: series.goalPath,
+    createdAt: completedAt,
+    priority: series.priority,
+    importance: series.importance,
+    urgency: series.urgency,
+    expectedDurationMinutes: series.expectedDurationMinutes,
+    energyDemand: series.energyDemand,
+    brainDemand: series.brainDemand,
+    physicalDemand: series.physicalDemand,
+    availabilityContexts: series.availabilityContexts,
+    recoveryIntent: series.recoveryIntent,
+    scheduledAt: nextDates.scheduledAt,
+    startAt: nextDates.startAt,
+    dueAt: nextDates.dueAt,
+    scheduledDate: nextDates.scheduledDate,
+    startDate: nextDates.startDate,
+    dueDate: nextDates.dueDate,
+    seriesId: series.id
+  };
+}
+class TaskCompletionMutation {
+  constructor(dataStore, repository, taskSessions, settingsProvider) {
+    this.dataStore = dataStore;
+    this.repository = repository;
+    this.settingsProvider = settingsProvider;
+    this.taskSessions = taskSessions ?? new TaskSessionMutation(dataStore, repository);
+  }
+  dataStore;
+  repository;
+  settingsProvider;
+  taskSessions;
+  resolveTaskTargetFileTemplate(goalPath, fallbackPath) {
+    if (!this.settingsProvider) return fallbackPath;
+    const resolved = GoalTemplateResolver.resolve({
+      settings: this.settingsProvider.getSettings(),
+      recordTypeId: "core.task",
+      goalPath,
+      requireDirectGoalTemplate: true
+    });
+    return String(resolved.template?.targetFile || "").trim() || fallbackPath;
+  }
+  async completeItem(itemId, _mutationOptions = {}) {
+    await this.transition(itemId, "complete");
+  }
+  async completeItemWithSession(itemId, session, _mutationOptions = {}) {
+    if (session.result !== "task-completed") throw new Error("task_session_complete_result_required");
+    await this.transition(itemId, "complete", session);
+  }
+  async cancelItem(itemId) {
+    await this.transition(itemId, "cancel");
+  }
+  async cancelItemWithSession(itemId, session) {
+    if (session.result !== "work-block-ended") throw new Error("task_session_cancel_result_required");
+    await this.transition(itemId, "cancel", session);
+  }
+  async skipItem(itemId) {
+    await this.transition(itemId, "skip");
+  }
+  async skipItemWithSession(itemId, session) {
+    if (session.result !== "work-block-ended") throw new Error("task_session_skip_result_required");
+    await this.transition(itemId, "skip", session);
+  }
+  async reopenItem(itemId) {
+    await this.transition(itemId, "reopen");
+  }
+  async updateSeries(seriesId, update, options = {}) {
+    const series = asTaskSeriesRecord(await this.repository.getById(seriesId));
+    if (!series) throw new Error(`task_series_invalid:${seriesId}`);
+    const seriesPatch = {};
+    if (Object.prototype.hasOwnProperty.call(update, "content") && !String(update.content || "").trim()) {
+      throw new Error(`task_series_content_required:${seriesId}`);
+    }
+    if (update.recurrence) {
+      const recurrence = normalizeRecurrenceInfo({
+        ...series.recurrenceInfo,
+        ...update.recurrence
+      });
+      if (!recurrence) throw new Error(`task_series_recurrence_invalid:${seriesId}`);
+      seriesPatch.recurrenceUnit = recurrence.unit;
+      seriesPatch.recurrenceInterval = recurrence.interval;
+      seriesPatch.recurrenceAnchor = recurrence.anchor;
+    }
+    const sharedFields = [
+      ["content", "content"],
+      ["goalPath", "goalPath"],
+      ["priority", "priority"],
+      ["importance", "importance"],
+      ["urgency", "urgency"],
+      ["expectedDurationMinutes", "expectedDurationMinutes"],
+      ["energyDemand", "energyDemand"],
+      ["brainDemand", "brainDemand"],
+      ["physicalDemand", "physicalDemand"],
+      ["availabilityContexts", "availabilityContexts"],
+      ["recoveryIntent", "recoveryIntent"]
+    ];
+    for (const [sourceKey, patchKey] of sharedFields) {
+      if (Object.prototype.hasOwnProperty.call(update, sourceKey)) seriesPatch[patchKey] = update[sourceKey];
+    }
+    const operations = [];
+    if (Object.keys(seriesPatch).length) operations.push({ kind: "update", recordId: series.id, patch: seriesPatch });
+    if (options.includeCurrent && series.currentTaskId) {
+      const current2 = asTaskRecord(await this.repository.getById(series.currentTaskId));
+      if (!current2 || current2.seriesId !== series.id) throw new Error(`task_series_current_conflict:${series.id}`);
+      if (getTaskStatus(current2) !== "open") throw new Error(`task_series_current_not_open:${series.id}`);
+      const currentPatch = {};
+      for (const [sourceKey, patchKey] of sharedFields) {
+        if (Object.prototype.hasOwnProperty.call(update, sourceKey)) currentPatch[patchKey] = update[sourceKey];
+      }
+      if (Object.keys(currentPatch).length) operations.push({ kind: "update", recordId: current2.id, patch: currentPatch });
+    }
+    if (operations.length) await this.repository.batch(operations);
+  }
+  async repairSeriesCurrentTask(seriesId) {
+    const series = asTaskSeriesRecord(await this.repository.getById(seriesId));
+    if (!series) throw new Error(`task_series_invalid:${seriesId}`);
+    if (series.status !== "active") throw new Error(`task_series_repair_requires_active:${seriesId}`);
+    const pointed = series.currentTaskId ? asTaskRecord(await this.repository.getById(series.currentTaskId)) : null;
+    if (pointed && pointed.seriesId === series.id && getTaskStatus(pointed) === "open") return "already-valid";
+    const candidates = this.dataStore.queryRecords().filter((item) => item.recordType === "task" && item.seriesId === series.id && getTaskStatus(item) === "open");
+    if (candidates.length !== 1) {
+      throw new Error(`task_series_repair_ambiguous:${seriesId}:${candidates.length}`);
+    }
+    await this.repository.update(series.id, { currentTaskId: candidates[0].id });
+    return "repaired";
+  }
+  async stopSeries(seriesId, options = {}) {
+    const series = asTaskSeriesRecord(await this.repository.getById(seriesId));
+    if (!series) throw new Error(`task_series_invalid:${seriesId}`);
+    if (series.status !== "active") return;
+    const operations = [{ kind: "update", recordId: series.id, patch: { status: "stopped" } }];
+    if (options.cancelCurrent && series.currentTaskId) {
+      const current2 = asTaskRecord(await this.repository.getById(series.currentTaskId));
+      if (current2 && getTaskStatus(current2) === "open") {
+        operations.push({ kind: "update", recordId: current2.id, patch: { status: "cancelled", cancelledAt: timestampNow() } });
+      }
+    }
+    await this.repository.batch(operations);
+  }
+  async transition(itemId, command, sessionInput) {
+    const task = await this.requireTask(itemId);
+    const status = getTaskStatus(task);
+    if (!status) throw new Error(`task_status_invalid:${itemId}`);
+    const recurring = Boolean(task.seriesId);
+    if (!canTransitionTaskStatus(status, command, { recurring })) {
+      throw new Error(`task_transition_invalid:${status}:${command}`);
+    }
+    const legacyActualSession = !sessionInput && command === "complete" ? buildLegacyActualRangeCompletionSession(this.dataStore, task) : null;
+    const effectiveSessionInput = sessionInput ?? legacyActualSession ?? void 0;
+    const at = effectiveSessionInput?.endedAt || timestampNow();
+    if (command === "reopen") {
+      if (task.seriesId) {
+        const series2 = asTaskSeriesRecord(await this.repository.getById(task.seriesId));
+        if (!series2 || series2.currentTaskId !== task.id) throw new Error("task_reopen_recurring_conflict");
+      }
+      await this.repository.update(task.id, { status: "open", completedAt: null, cancelledAt: null, skippedAt: null });
+      return;
+    }
+    const patch = { status: nextTaskStatus(command) };
+    const sessionOperation = effectiveSessionInput ? this.taskSessions.prepareCreateOperation(task, effectiveSessionInput).operation : null;
+    if (command === "complete") patch.completedAt = at;
+    if (legacyActualSession) {
+      patch.startAt = null;
+      patch.endAt = null;
+    }
+    if (command === "cancel") patch.cancelledAt = at;
+    if (command === "skip") patch.skippedAt = at;
+    if (!task.seriesId || command === "cancel") {
+      if (sessionOperation) await this.repository.batch([{ kind: "update", recordId: task.id, patch }, sessionOperation]);
+      else await this.repository.update(task.id, patch);
+      return;
+    }
+    const series = asTaskSeriesRecord(await this.repository.getById(task.seriesId));
+    if (!series) throw new Error(`task_series_missing:${task.seriesId}`);
+    if (series.currentTaskId !== task.id) throw new Error(`task_series_current_conflict:${series.id}`);
+    if (series.status === "stopped") {
+      if (sessionOperation) await this.repository.batch([{ kind: "update", recordId: task.id, patch }, sessionOperation]);
+      else await this.repository.update(task.id, patch);
+      return;
+    }
+    const recurrence = normalizeRecurrenceInfo(series.recurrenceInfo);
+    if (!recurrence) throw new Error(`task_series_recurrence_invalid:${series.id}`);
+    const nextId = createRecordId("task");
+    const nextDates = buildNextOccurrenceDates(task, recurrence, at);
+    const path = sourcePath(this.dataStore, task);
+    if (!path) throw new Error(`record_location_unavailable:${task.id}`);
+    const nextFields = nextTaskFields(task, series, at, nextDates);
+    const targetFileTemplate = this.resolveTaskTargetFileTemplate(
+      String(nextFields.goalPath || task.goalPath || ""),
+      path
+    );
+    const nextPath = resolveRecordTargetPath(targetFileTemplate, "task", nextFields);
+    const operations = [
+      { kind: "update", recordId: task.id, patch }
+    ];
+    if (sessionOperation) operations.push(sessionOperation);
+    operations.push(
+      { kind: "create", record: {
+        recordId: nextId,
+        recordType: "task",
+        targetFilePath: nextPath,
+        targetHeader: task.header || null,
+        fields: nextFields
+      } },
+      { kind: "update", recordId: series.id, patch: { currentTaskId: nextId } }
+    );
+    await this.repository.batch(operations);
+  }
+  async requireTask(itemId) {
+    const task = asTaskRecord(await this.repository.getById(itemId));
+    if (!task) throw new Error(`task_record_required:${itemId}`);
+    return task;
+  }
+}
+function normalizedDateTime$1(value) {
+  const raw = String(value || "").trim();
+  return /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(raw) ? raw.replace(" ", "T") : raw;
+}
+function timeMs$1(value) {
+  if (!value) return null;
+  const ms = Date.parse(normalizedDateTime$1(value));
+  return Number.isFinite(ms) ? ms : null;
+}
+function localDateTime(ms) {
+  const date2 = new Date(ms);
+  const year = date2.getFullYear();
+  const month = String(date2.getMonth() + 1).padStart(2, "0");
+  const day = String(date2.getDate()).padStart(2, "0");
+  const hour = String(date2.getHours()).padStart(2, "0");
+  const minute = String(date2.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+function requireRange(range) {
+  const startedMs = timeMs$1(range.start);
+  const endedMs = timeMs$1(range.end);
+  if (startedMs == null || endedMs == null || endedMs <= startedMs) {
+    throw new Error("timeline_range_time_order_invalid");
+  }
+  return { startedMs, endedMs };
+}
+class TaskTimeMutation {
+  constructor(repository, taskSessions) {
+    this.repository = repository;
+    this.taskSessions = taskSessions;
+  }
+  repository;
+  taskSessions;
+  async updateTimelineRange(target, range) {
+    const record2 = await this.repository.getById(target.recordId);
+    if (!record2) throw new Error(`timeline_target_not_found:${target.recordId}`);
+    if (target.kind === "task-session") {
+      if (!asTaskSessionRecord(record2)) throw new Error(`task_session_required:${target.recordId}`);
+      return this.taskSessions.updateSessionTime(target.recordId, range);
+    }
+    const task = asTaskRecord(record2);
+    if (!task) throw new Error(`task_record_required:${target.recordId}`);
+    if (target.kind === "task-plan") {
+      if (!task.scheduledAt) throw new Error(`task_plan_time_required:${target.recordId}`);
+      const startedMs = timeMs$1(range.start);
+      if (startedMs == null) throw new Error("task_plan_time_invalid");
+      if (!range.end) {
+        await this.repository.update(task.id, { scheduledAt: localDateTime(startedMs) });
+      } else {
+        const { endedMs } = requireRange(range);
+        const durationMinutes2 = Math.round((endedMs - startedMs) / 6e4 * 100) / 100;
+        await this.repository.update(task.id, {
+          scheduledAt: localDateTime(startedMs),
+          expectedDurationMinutes: durationMinutes2
+        });
+      }
+      return this.requireUpdated(task.id);
+    }
+    if (target.kind === "task-point") {
+      if (!task.startAt) throw new Error(`task_start_time_required:${target.recordId}`);
+      const startedMs = timeMs$1(range.start);
+      if (startedMs == null) throw new Error("task_time_invalid");
+      await this.repository.update(task.id, { startAt: localDateTime(startedMs) });
+      return this.requireUpdated(task.id);
+    }
+    if (target.kind === "task-range") {
+      if (!task.startAt) throw new Error(`task_start_time_required:${target.recordId}`);
+      const { startedMs, endedMs } = requireRange(range);
+      await this.repository.update(task.id, {
+        startAt: localDateTime(startedMs),
+        endAt: localDateTime(endedMs)
+      });
+      return this.requireUpdated(task.id);
+    }
+    const exhaustive = target.kind;
+    throw new Error(`timeline_target_kind_unsupported:${exhaustive}`);
+  }
+  async requireUpdated(recordId) {
+    const updated = await this.repository.getById(recordId);
+    if (!updated) throw new Error(`timeline_time_update_scan_failed:${recordId}`);
+    return updated;
+  }
+}
+const TASK_QUADRANT_PRESENTATION = {
+  q1: { quadrant: "q1", emoji: "🔥", label: "紧急且重要", shortLabel: "紧急重要" },
+  q2: { quadrant: "q2", emoji: "🎯", label: "重要但不紧急", shortLabel: "重要不紧急" },
+  q3: { quadrant: "q3", emoji: "⚡", label: "紧急但不重要", shortLabel: "紧急不重要" },
+  q4: { quadrant: "q4", emoji: "🌿", label: "不紧急且不重要", shortLabel: "不紧急不重要" },
+  unclassified: { quadrant: "unclassified", emoji: "📥", label: "未分类", shortLabel: "未分类" }
+};
+function normalizeTaskImportance(value) {
+  const normalized2 = String(value ?? "").trim().toLowerCase();
+  return normalized2 === "important" || normalized2 === "normal" ? normalized2 : null;
+}
+function normalizeTaskUrgency(value) {
+  const normalized2 = String(value ?? "").trim().toLowerCase();
+  return normalized2 === "urgent" || normalized2 === "normal" ? normalized2 : null;
+}
+function deriveEisenhowerQuadrant(task) {
+  if (!task || task.recordType !== "task") return "unclassified";
+  const importance = normalizeTaskImportance(task.importance);
+  const urgency = normalizeTaskUrgency(task.urgency);
+  if (!importance || !urgency) return "unclassified";
+  if (importance === "important" && urgency === "urgent") return "q1";
+  if (importance === "important" && urgency === "normal") return "q2";
+  if (importance === "normal" && urgency === "urgent") return "q3";
+  return "q4";
+}
+function taskClassificationForQuadrant(quadrant) {
+  switch (quadrant) {
+    case "q1":
+      return { importance: "important", urgency: "urgent" };
+    case "q2":
+      return { importance: "important", urgency: "normal" };
+    case "q3":
+      return { importance: "normal", urgency: "urgent" };
+    case "q4":
+      return { importance: "normal", urgency: "normal" };
+    default:
+      return { importance: null, urgency: null };
+  }
+}
+class TaskQuadrantMutation {
+  constructor(repository) {
+    this.repository = repository;
+  }
+  repository;
+  async move(taskId, quadrant) {
+    const task = asTaskRecord(await this.repository.getById(taskId));
+    if (!task) throw new Error(`task_record_required:${taskId}`);
+    const classification = taskClassificationForQuadrant(quadrant);
+    await this.repository.update(taskId, classification);
+  }
+}
+class RecordTransactionRecoveryError extends Error {
+  constructor(originalError, writtenPaths, recoveryFailedPaths) {
+    super(`record_transaction_recovery_required:${recoveryFailedPaths.join(",")}`, { cause: originalError });
+    this.originalError = originalError;
+    this.writtenPaths = writtenPaths;
+    this.recoveryFailedPaths = recoveryFailedPaths;
+    this.name = "RecordTransactionRecoveryError";
+  }
+  originalError;
+  writtenPaths;
+  recoveryFailedPaths;
+  code = "record_transaction_recovery_required";
+}
+class RecordMutationTransaction {
+  constructor(vault) {
+    this.vault = vault;
+  }
+  vault;
+  async commit(writes) {
+    const unique2 = /* @__PURE__ */ new Map();
+    for (const write2 of writes) unique2.set(write2.path, write2);
+    const ordered = [...unique2.values()];
+    for (const write2 of ordered) {
+      const current2 = await this.vault.readFile(write2.path);
+      if ((current2 ?? "") !== write2.before) {
+        throw new Error(`record_write_conflict:${write2.path}`);
+      }
+    }
+    const written = [];
+    try {
+      for (const write2 of ordered) {
+        await this.vault.writeFile(write2.path, write2.after);
+        written.push(write2);
+      }
+      return { writtenPaths: written.map((write2) => write2.path) };
+    } catch (error) {
+      const recoveryFailedPaths = [];
+      for (const write2 of written.reverse()) {
+        try {
+          await this.vault.writeFile(write2.path, write2.before);
+        } catch {
+          recoveryFailedPaths.push(write2.path);
+        }
+      }
+      if (recoveryFailedPaths.length > 0) {
+        throw new RecordTransactionRecoveryError(
+          error,
+          written.map((write2) => write2.path),
+          recoveryFailedPaths
+        );
+      }
+      throw error;
+    }
+  }
+}
+const PATCH_FIELDS = {
+  status: { label: "状态", aliases: ["状态", "status"] },
+  content: { label: "内容", aliases: ["内容", "content"] },
+  goalPath: { label: "目标", aliases: ["目标", "goalPath"] },
+  createdAt: { label: "创建于", aliases: ["创建于", "createdAt"] },
+  scheduledAt: { label: "计划时间", aliases: ["计划时间", "scheduledAt"] },
+  startAt: { label: "开始时间", aliases: ["开始时间", "startAt"] },
+  endAt: { label: "结束时间", aliases: ["结束时间", "endAt"] },
+  dueAt: { label: "截止时间", aliases: ["截止时间", "dueAt"] },
+  scheduledDate: { label: "计划日期", aliases: ["计划日期", "scheduledDate"] },
+  startDate: { label: "开始日期", aliases: ["开始日期", "startDate"] },
+  dueDate: { label: "截止日期", aliases: ["截止日期", "dueDate"] },
+  completedAt: { label: "完成于", aliases: ["完成于", "completedAt"] },
+  cancelledAt: { label: "取消于", aliases: ["取消于", "cancelledAt"] },
+  skippedAt: { label: "跳过于", aliases: ["跳过于", "skippedAt"] },
+  priority: { label: "优先级", aliases: ["优先级", "priority"] },
+  importance: { label: "重要程度", aliases: ["重要程度", "importance"] },
+  urgency: { label: "紧急程度", aliases: ["紧急程度", "urgency"] },
+  expectedDurationMinutes: { label: "预计时长", aliases: ["预计时长", "expectedDurationMinutes"] },
+  energyDemand: { label: "精力要求", aliases: ["精力要求", "energyDemand"] },
+  brainDemand: { label: "脑力要求", aliases: ["脑力要求", "brainDemand"] },
+  physicalDemand: { label: "体力要求", aliases: ["体力要求", "physicalDemand"] },
+  availabilityContexts: { label: "可用场景", aliases: ["可用场景", "availabilityContexts"] },
+  recoveryIntent: { label: "恢复意图", aliases: ["恢复意图", "recoveryIntent"] },
+  seriesId: { label: "系列标识", aliases: ["系列ID", "seriesId"] },
+  recurrenceUnit: { label: "重复单位", aliases: ["重复单位", "recurrenceUnit"] },
+  recurrenceInterval: { label: "重复间隔", aliases: ["重复间隔", "recurrenceInterval"] },
+  recurrenceAnchor: { label: "重复锚点", aliases: ["重复锚点", "recurrenceAnchor"] },
+  seriesStartDate: { label: "系列开始日期", aliases: ["系列开始日期", "seriesStartDate"] },
+  currentTaskId: { label: "当前任务标识", aliases: ["当前任务ID", "currentTaskId"] },
+  rolloverPolicy: { label: "滚动策略", aliases: ["滚动策略", "rolloverPolicy"] },
+  taskId: { label: "任务标识", aliases: ["任务ID", "taskId"] },
+  sessionStartedAt: { label: "开始于", aliases: ["开始于", "sessionStartedAt"] },
+  sessionEndedAt: { label: "结束于", aliases: ["结束于", "sessionEndedAt"] },
+  sessionDurationMinutes: { label: "时长", aliases: ["时长", "sessionDurationMinutes"] },
+  sessionResult: { label: "结果", aliases: ["结果", "sessionResult"] },
+  sessionSource: { label: "来源", aliases: ["来源", "sessionSource"] },
+  suggestedDurationMinutes: { label: "建议时长", aliases: ["建议时长", "suggestedDurationMinutes"] },
+  startEnergyRecordId: { label: "开始精力记录标识", aliases: ["开始精力记录ID", "startEnergyRecordId"] },
+  endEnergyRecordId: { label: "结束精力记录标识", aliases: ["结束精力记录ID", "endEnergyRecordId"] },
+  energyDelta: { label: "精力变化", aliases: ["精力变化", "energyDelta"] },
+  brainDelta: { label: "脑力变化", aliases: ["脑力变化", "brainDelta"] },
+  physicalDelta: { label: "体力变化", aliases: ["体力变化", "physicalDelta"] },
+  startTime: { label: "时间", aliases: ["时间", "startTime"] },
+  endTime: { label: "结束", aliases: ["结束", "endTime"] },
+  duration: { label: "时长", aliases: ["时长", "duration"] }
+};
+function escapeRegex$1(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function scalar(value) {
+  if (value == null) return "";
+  if (Array.isArray(value)) return value.map((v2) => String(v2).trim()).filter(Boolean).join(", ");
+  if (typeof value === "object") return "";
+  return String(value).trim();
+}
+function resolvePatchField(rawKey) {
+  const normalized2 = rawKey.trim();
+  const byCanonical = PATCH_FIELDS[normalized2];
+  if (byCanonical) return byCanonical;
+  for (const definition of Object.values(PATCH_FIELDS)) {
+    if (definition.aliases.some((alias) => alias.toLowerCase() === normalized2.toLowerCase())) return definition;
+  }
+  return { label: normalized2, aliases: [normalized2] };
+}
+function patchRecordBlockMarkdown(markdown, patch) {
+  const lines = markdown.split(/\r?\n/);
+  const protectedKeys = /* @__PURE__ */ new Set(["记录id", "recordid", "id", "记录类型", "coreblock"]);
+  for (const [rawKey, value] of Object.entries(patch)) {
+    const key = rawKey.trim();
+    if (!key || protectedKeys.has(key.toLowerCase())) continue;
+    const definition = resolvePatchField(key);
+    const isTaskRecord2 = lines.some((line2) => /^\s*(?:记录类型|recordType)\s*::\s*task\s*$/i.test(line2));
+    const taskDateTimeLabels = /* @__PURE__ */ new Set(["创建于", "计划时间", "开始时间", "结束时间", "截止时间", "完成于", "取消于", "跳过于"]);
+    const rawEncoded = scalar(value);
+    const encoded = isTaskRecord2 && taskDateTimeLabels.has(definition.label) ? formatRecordDateTimeForMarkdown(rawEncoded) : rawEncoded;
+    const contentIndex = lines.findIndex((line2, i2) => i2 > 0 && /^\s*(?:内容|content)\s*::/i.test(line2));
+    const metadataEnd = contentIndex >= 0 ? contentIndex : lines.length - 1;
+    if (definition.label === "内容") {
+      if (contentIndex >= 0) lines.splice(contentIndex, lines.length - 1 - contentIndex);
+      if (encoded) {
+        const bodyLines = encoded.replace(/\r\n/g, "\n").split("\n");
+        lines.splice(lines.length - 1, 0, `内容:: ${bodyLines.shift() || ""}`, ...bodyLines);
+      }
+      continue;
+    }
+    const aliases2 = definition.aliases.map((alias) => escapeRegex$1(alias)).join("|");
+    const re = new RegExp(`^\\s*(?:${aliases2})\\s*::`, "i");
+    const index = lines.findIndex((line2, i2) => i2 > 0 && i2 < metadataEnd && re.test(line2));
+    if (!encoded) {
+      if (index >= 0) lines.splice(index, 1);
+      continue;
+    }
+    const nextLine = `${definition.label}:: ${encoded.replace(/\r?\n/g, "\\n")}`;
+    if (index >= 0) lines[index] = nextLine;
+    else lines.splice(metadataEnd, 0, nextLine);
+  }
+  return lines.join("\n");
+}
+function appendRecordText(before, markdown, header) {
+  if (header) return appendUnderHeaderText(before, header, markdown);
+  return before.trim() ? `${before.trim()}
+
+${markdown}` : markdown;
+}
+class RecordRepository {
+  constructor(vault, dataStore) {
+    this.vault = vault;
+    this.dataStore = dataStore;
+    this.transaction = new RecordMutationTransaction(vault);
+  }
+  vault;
+  dataStore;
+  transaction;
+  async getById(recordId) {
+    return this.dataStore.getRecordEntityById(recordId);
+  }
+  async create(record2) {
+    const recordId = record2.recordId || createRecordId(record2.recordType);
+    await this.batch([{ kind: "create", record: { ...record2, recordId } }]);
+    const created = this.dataStore.getRecordEntityById(recordId);
+    if (!created) throw new Error(`record_create_scan_failed:${recordId}`);
+    return created;
+  }
+  async update(recordId, patch) {
+    await this.batch([{ kind: "update", recordId, patch }]);
+    const updated = this.dataStore.getRecordEntityById(recordId);
+    if (!updated) throw new Error(`record_update_scan_failed:${recordId}`);
+    return updated;
+  }
+  async delete(recordId) {
+    await this.batch([{ kind: "delete", recordId }]);
+  }
+  async batch(operations) {
+    const beforeByPath = /* @__PURE__ */ new Map();
+    const afterByPath = /* @__PURE__ */ new Map();
+    const createdRecordIds = [];
+    const createdIdsInBatch = /* @__PURE__ */ new Set();
+    const loadPath = async (path) => {
+      if (!beforeByPath.has(path)) {
+        const before = await this.vault.readFile(path) ?? "";
+        beforeByPath.set(path, before);
+        afterByPath.set(path, before);
+      }
+      return afterByPath.get(path) ?? "";
+    };
+    for (const operation of operations) {
+      if (operation.kind === "create") {
+        const recordId = operation.record.recordId || createRecordId(operation.record.recordType);
+        if (createdIdsInBatch.has(recordId) || this.dataStore.getRecordLocations(recordId).length > 0) {
+          throw new Error(`record_id_duplicate_create:${recordId}`);
+        }
+        createdIdsInBatch.add(recordId);
+        const markdown = encodeRecordBlock({
+          recordId,
+          recordType: operation.record.recordType,
+          fields: operation.record.fields
+        });
+        const current22 = await loadPath(operation.record.targetFilePath);
+        afterByPath.set(
+          operation.record.targetFilePath,
+          appendRecordText(current22, markdown, operation.record.targetHeader)
+        );
+        createdRecordIds.push(recordId);
+        continue;
+      }
+      const location = this.dataStore.getRecordLocation(operation.recordId);
+      if (!location) throw new Error(`record_location_unavailable:${operation.recordId}`);
+      const current2 = await loadPath(location.path);
+      const lines = current2.split(/\r?\n/);
+      const range = resolveRecordBlockRangeById(lines, operation.recordId, location.startLine - 1);
+      if (operation.kind === "delete") {
+        lines.splice(range.startIndex, range.endIndex - range.startIndex + 1);
+      } else {
+        const currentBlock = lines.slice(range.startIndex, range.endIndex + 1).join("\n");
+        const nextBlock = patchRecordBlockMarkdown(currentBlock, operation.patch);
+        lines.splice(range.startIndex, range.endIndex - range.startIndex + 1, ...nextBlock.split("\n"));
+      }
+      afterByPath.set(location.path, lines.join("\n"));
+    }
+    const writes = [...afterByPath.entries()].map(([path, after]) => ({ path, before: beforeByPath.get(path) ?? "", after })).filter((write2) => write2.before !== write2.after);
+    let committed;
+    try {
+      committed = await this.transaction.commit(writes);
+    } catch (error) {
+      if (error instanceof RecordTransactionRecoveryError) {
+        this.dataStore.reportRecordIntegrityIssue({
+          code: "record_transaction_recovery_required",
+          message: `记录事务回滚未完整完成。已写入：${error.writtenPaths.join("、")}；恢复失败：${error.recoveryFailedPaths.join("、")}。`
+        });
+      }
+      throw error;
+    }
+    const rescanFailures = [];
+    for (const path of committed.writtenPaths) {
+      try {
+        await this.dataStore.scanFileByPath(path, { bumpVersion: false, throwOnError: true });
+      } catch (error) {
+        rescanFailures.push({ path, error });
+      }
+    }
+    if (committed.writtenPaths.length) this.dataStore.notifyChange();
+    if (rescanFailures.length > 0) {
+      throw new Error(`record_post_commit_rescan_failed:${rescanFailures.map((entry) => entry.path).join(",")}`);
+    }
+    return { writtenPaths: committed.writtenPaths, createdRecordIds };
+  }
+}
+var __getOwnPropDesc$b = Object.getOwnPropertyDescriptor;
+var __decorateClass$b = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$b(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$a = (index, decorator) => (target, key) => decorator(target, key, index);
+let ItemService = class {
+  taskCompletion;
+  taskSessions;
+  taskTime;
+  taskQuadrant;
+  inlineFields;
+  goalTemplateMigration;
+  migrationBackup;
+  constructor(dataStore, vault, settingsProvider) {
+    const recordRepository = new RecordRepository(vault, dataStore);
+    this.taskSessions = new TaskSessionMutation(dataStore, recordRepository);
+    this.taskTime = new TaskTimeMutation(recordRepository, this.taskSessions);
+    this.taskQuadrant = new TaskQuadrantMutation(recordRepository);
+    this.taskCompletion = new TaskCompletionMutation(dataStore, recordRepository, this.taskSessions, settingsProvider);
+    this.inlineFields = new InlineFieldMutation(recordRepository);
+    this.goalTemplateMigration = new GoalTemplateMigrationMutation(recordRepository);
+    this.migrationBackup = new MigrationBackupService(dataStore, vault);
+  }
+  completeItem(itemId, mutationOptions = {}) {
+    return this.taskCompletion.completeItem(itemId, mutationOptions);
+  }
+  createTaskSession(taskId, session) {
+    return this.taskSessions.createSession(taskId, session);
+  }
+  linkEnergySnapshot(energyRecordId) {
+    return this.taskSessions.linkEnergySnapshot(energyRecordId);
+  }
+  completeItemWithSession(itemId, session, mutationOptions = {}) {
+    return this.taskCompletion.completeItemWithSession(itemId, session, mutationOptions);
+  }
+  cancelItem(itemId) {
+    return this.taskCompletion.cancelItem(itemId);
+  }
+  cancelItemWithSession(itemId, session) {
+    return this.taskCompletion.cancelItemWithSession(itemId, session);
+  }
+  skipItem(itemId) {
+    return this.taskCompletion.skipItem(itemId);
+  }
+  skipItemWithSession(itemId, session) {
+    return this.taskCompletion.skipItemWithSession(itemId, session);
+  }
+  reopenItem(itemId) {
+    return this.taskCompletion.reopenItem(itemId);
+  }
+  stopTaskSeries(seriesId, options = {}) {
+    return this.taskCompletion.stopSeries(seriesId, options);
+  }
+  repairTaskSeriesCurrentTask(seriesId) {
+    return this.taskCompletion.repairSeriesCurrentTask(seriesId);
+  }
+  updateTaskSeries(seriesId, update, options = {}) {
+    return this.taskCompletion.updateSeries(seriesId, update, options);
+  }
+  updateTaskQuadrant(itemId, quadrant) {
+    return this.taskQuadrant.move(itemId, quadrant);
+  }
+  async updateTimelineRange(target, range, _mutationOptions = {}) {
+    await this.taskTime.updateTimelineRange(target, range);
+  }
+  upsertItemInlineFields(itemId, fields, mutationOptions = {}) {
+    return this.inlineFields.upsertItemInlineFields(itemId, fields, mutationOptions);
+  }
+  upsertItemGoalTemplateMigrationFields(itemId, fields, mutationOptions = {}) {
+    return this.goalTemplateMigration.upsertItemGoalTemplateMigrationFields(itemId, fields, mutationOptions);
+  }
+  createMigrationBackup(backupRoot, settings) {
+    return this.migrationBackup.createMigrationBackup(backupRoot, settings);
+  }
+};
+ItemService = __decorateClass$b([
+  singleton(),
+  __decorateParam$a(0, inject(DataStore)),
+  __decorateParam$a(1, inject(VAULT_PORT_TOKEN)),
+  __decorateParam$a(2, inject(SettingsProviderToken))
+], ItemService);
+function normalizeTagToken(value) {
+  return String(value ?? "").trim();
+}
+function parseTagsInput(value) {
+  const result = [];
+  const seen = /* @__PURE__ */ new Set();
+  const push = (token2) => {
+    const normalized2 = normalizeTagToken(token2);
+    if (!normalized2 || seen.has(normalized2)) return;
+    seen.add(normalized2);
+    result.push(normalized2);
+  };
+  const visit = (input) => {
+    if (input === void 0 || input === null) return;
+    if (Array.isArray(input)) {
+      input.forEach(visit);
+      return;
+    }
+    if (typeof input === "string") {
+      input.split(/[\s,，]+/u).map((part) => part.trim()).filter(Boolean).forEach(push);
+      return;
+    }
+    push(input);
+  };
+  visit(value);
+  return result;
+}
+function formatTagsForField(value) {
+  const tags2 = parseTagsInput(value);
+  return tags2.length ? tags2.map((tag) => tag.startsWith("#") ? tag : `#${tag}`).join(", ") : void 0;
+}
+const UI_PORT_TOKEN = "UiPort";
+var __getOwnPropDesc$a = Object.getOwnPropertyDescriptor;
+var __decorateClass$a = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$a(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$9 = (index, decorator) => (target, key) => decorator(target, key, index);
+let ActionService = class {
+  constructor(ui, dataStore, settingsProvider, inputService) {
+    this.ui = ui;
+    this.dataStore = dataStore;
+    this.settingsProvider = settingsProvider;
+    this.inputService = inputService;
+  }
+  ui;
+  dataStore;
+  settingsProvider;
+  inputService;
+  getRuntimeRecordTypes() {
+    return getTemplateRecordTypes();
+  }
+  findRecordTypeTemplate(recordType) {
+    const normalized2 = String(recordType || "").trim().replace(/^core\./i, "");
+    if (!normalized2) return void 0;
+    return this.getRuntimeRecordTypes().find(
+      (recordType2) => String(recordType2.recordTypeId || recordType2.id || "").trim().replace(/^core\./i, "") === normalized2
+    );
+  }
+  getQuickInputConfigForView(viewInstance, dateContext, periodContext) {
+    if (viewInstance.viewType === "StatisticsView") {
+      return this.getQuickInputConfigForStatisticsView(viewInstance, dateContext, periodContext);
+    }
+    const filters = viewInstance.filters || [];
+    const recordTypeFilter = filters.find((f2) => f2.field === "recordType" && (f2.op === "=" || f2.op === "includes"));
+    if (!recordTypeFilter || !recordTypeFilter.value) {
+      this.ui.notice("快捷输入失败：此视图未按“记录类型”进行筛选。");
+      return null;
+    }
+    const recordType = String(recordTypeFilter.value);
+    const targetRecordType = this.findRecordTypeTemplate(recordType);
+    if (!targetRecordType) {
+      this.ui.notice(`快捷输入失败：找不到记录类型为“${getRecordTypePresentation(recordType).label}”的模板。`);
+      return null;
+    }
+    const context = {
+      "日期": dateContext.format("YYYY-MM-DD"),
+      "周期": periodContext
+    };
+    const equalityFilters = filters.filter((f2) => f2.op === "=");
+    for (const filter of equalityFilters) {
+      if (filter.field === "recordType") continue;
+      for (const templateField of targetRecordType.fields) {
+        if (filter.field === templateField.key || filter.field === templateField.label) {
+          context[templateField.key] = filter.value;
+          break;
+        }
+      }
+    }
+    return {
+      recordTypeId: targetRecordType.id,
+      context
+    };
+  }
+  buildFieldContextValue(field, item) {
+    const direct = readField(item, field.key) ?? readField(item, field.label);
+    if (field.type === "rating") {
+      const score = item.rating ?? item.extra?.["评分"] ?? item.extra?.["rating"];
+      const visual = item.image ?? item.extra?.["图片"] ?? item.extra?.image;
+      if (field.options?.length) {
+        const scoreStr = score !== void 0 && score !== null ? String(score) : "";
+        const matched = field.options.find(
+          (opt) => scoreStr && String(opt.label || "") === scoreStr && (!visual || String(opt.value || "") === String(visual)) || scoreStr && String(opt.label || "") === scoreStr || visual && String(opt.value || "") === String(visual)
+        );
+        if (matched) return { value: matched.value, label: matched.label || matched.value };
+      }
+      if (score !== void 0 && score !== null) return { value: visual || "", label: String(score) };
+    }
+    return direct;
+  }
+  getQuickInputConfigForTaskEdit(taskId) {
+    const item = this.dataStore.queryItems().find((i2) => i2.id === taskId);
+    if (!item) {
+      this.ui.notice(`错误：找不到标识为 ${taskId} 的任务。`);
+      return null;
+    }
+    const recordType = String(item.recordType || "").trim();
+    const targetRecordType = this.findRecordTypeTemplate(recordType);
+    if (!targetRecordType) {
+      this.ui.notice(`找不到与记录类型“${getRecordTypePresentation(recordType).label}”匹配的模板，无法编辑。`);
+      return null;
+    }
+    const context = {};
+    for (const field of targetRecordType.fields) {
+      const value = this.buildFieldContextValue(field, item);
+      if (value !== void 0 && value !== null) {
+        context[field.key] = value;
+      }
+    }
+    if (!context.title && !context["标题"]) {
+      context[targetRecordType.fields.find((f2) => f2.label === "标题")?.key || "标题"] = item.title;
+    }
+    const tagsField = targetRecordType.fields.find((f2) => f2.label === "标签" || f2.key === "tags");
+    if (tagsField && !context[tagsField.key]) {
+      context[tagsField.key] = formatTagsForField(item.tags);
+    }
+    return {
+      recordTypeId: targetRecordType.id,
+      context
+    };
+  }
+  getQuickInputConfigForStatisticsView(_viewInstance, _dateContext, _periodContext, _goalPath) {
+    this.ui.notice("快捷输入失败：统计视图需要明确记录类型。");
+    return null;
+  }
+  getQuickInputConfigForNewTimer() {
+    const recordTypes = this.getRuntimeRecordTypes();
+    const taskRecordType = recordTypes.find((recordType) => String(recordType.recordTypeId || recordType.id).replace(/^core\./i, "") === "task");
+    if (!taskRecordType) {
+      this.ui.notice("快捷输入失败：任务记录类型未注册。");
+      return null;
+    }
+    return {
+      recordTypeId: taskRecordType.id
+    };
+  }
+};
+ActionService = __decorateClass$a([
+  singleton(),
+  __decorateParam$9(0, inject(UI_PORT_TOKEN)),
+  __decorateParam$9(1, inject(DataStore)),
+  __decorateParam$9(2, inject(SettingsProviderToken)),
+  __decorateParam$9(3, inject(InputService))
+], ActionService);
+var __getOwnPropDesc$9 = Object.getOwnPropertyDescriptor;
+var __decorateClass$9 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$9(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$8 = (index, decorator) => (target, key) => decorator(target, key, index);
+const TIMER_RUNTIME_SCHEMA_VERSION = 3;
+function isTimerRuntimeState(entry) {
+  if (!entry || typeof entry !== "object") return false;
+  const timer = entry;
+  return typeof timer.id === "string" && timer.id.length > 0 && typeof timer.taskId === "string" && timer.taskId.length > 0 && typeof timer.startedAt === "number" && Number.isFinite(timer.startedAt) && typeof timer.startTime === "number" && Number.isFinite(timer.startTime) && typeof timer.elapsedSeconds === "number" && Number.isFinite(timer.elapsedSeconds) && (timer.status === "running" || timer.status === "paused") && (timer.source === "timer" || timer.source === "energy-view");
+}
+function parseRuntimeState(content) {
+  if (!content) return null;
+  try {
+    const parsed = JSON.parse(content);
+    if (!parsed || parsed.schemaVersion !== TIMER_RUNTIME_SCHEMA_VERSION || !Array.isArray(parsed.timers)) return null;
+    return {
+      schemaVersion: TIMER_RUNTIME_SCHEMA_VERSION,
+      timers: parsed.timers.filter(isTimerRuntimeState)
+    };
+  } catch {
+    return null;
+  }
+}
+let TimerStateService = class {
+  constructor(vault) {
+    this.vault = vault;
+  }
+  vault;
+  async loadStateFromFile() {
+    try {
+      const current2 = parseRuntimeState(await this.vault.readFile(THINK_STORAGE_PATHS.timerRuntime));
+      if (current2) {
+        await this.vault.deleteFile(LEGACY_THINK_STORAGE_PATHS.timerRuntime);
+        return current2.timers;
+      }
+      const legacy = parseRuntimeState(await this.vault.readFile(LEGACY_THINK_STORAGE_PATHS.timerRuntime));
+      if (!legacy) return [];
+      await this.writeRuntimeState(legacy.timers);
+      await this.vault.deleteFile(LEGACY_THINK_STORAGE_PATHS.timerRuntime);
+      return legacy.timers;
+    } catch (error) {
+      devWarn("Think Plugin: Failed to load timer runtime state from file.", error);
+      return [];
+    }
+  }
+  async saveStateToFile(timers) {
+    try {
+      await this.writeRuntimeState(timers);
+      await this.vault.deleteFile(LEGACY_THINK_STORAGE_PATHS.timerRuntime);
+    } catch (error) {
+      devWarn("Think Plugin: Failed to save timer runtime state to file.", error);
+    }
+  }
+  async writeRuntimeState(timers) {
+    const payload = {
+      schemaVersion: TIMER_RUNTIME_SCHEMA_VERSION,
+      timers: timers.filter(isTimerRuntimeState)
+    };
+    await this.vault.writeFile(THINK_STORAGE_PATHS.timerRuntime, JSON.stringify(payload, null, 2));
+  }
+};
+TimerStateService = __decorateClass$9([
+  singleton(),
+  __decorateParam$8(0, inject(VAULT_PORT_TOKEN))
+], TimerStateService);
+function getEffectiveTemplate(settings, recordTypeId) {
+  const configured = settings.recordTypes || [];
+  const templates = [
+    ...configured,
+    ...DEFAULT_TEMPLATE_RECORD_TYPES.filter((block) => !configured.some((existing) => existing.id === block.id))
+  ];
+  const template = templates.find((block) => block.id === recordTypeId || block.recordTypeId === recordTypeId) ?? null;
+  return {
+    template,
+    templateId: template?.id ?? null,
+    templateSourceType: template ? "record-type" : null
+  };
+}
 function isAiVisibleField(field) {
   return !isSystemRecordContextField(field?.key, field?.label, field?.semantic || field?.semanticType);
 }
@@ -9297,35 +12807,6 @@ function buildAiConfigSnapshot(input, ai, goalSettings) {
     };
   });
   return { recordTypes, goals, goalPresets };
-}
-function nowMs() {
-  try {
-    return performance.now();
-  } catch {
-    return Date.now();
-  }
-}
-function durationMs(start2) {
-  return nowMs() - start2;
-}
-function elapsedMs(start2) {
-  return `${durationMs(start2).toFixed(2)}ms`;
-}
-function throttle(fn3, wait = 250) {
-  let last = 0, timer = null;
-  return function(...args) {
-    const now2 = Date.now();
-    if (now2 - last >= wait) {
-      last = now2;
-      fn3.apply(this, args);
-    } else {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        last = Date.now();
-        fn3.apply(this, args);
-      }, wait - (now2 - last));
-    }
-  };
 }
 class AiConfigCache {
   constructor(settingsProvider) {
@@ -10199,7 +13680,7 @@ function shallowClone(o2) {
   return o2;
 }
 const propertyKeyTypes = /* @__PURE__ */ new Set(["string", "number", "symbol"]);
-function escapeRegex$1(str) {
+function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 function clone(inst, def, params) {
@@ -10980,7 +14461,7 @@ const $ZodCheckUpperCase = /* @__PURE__ */ $constructor("$ZodCheckUpperCase", (i
 });
 const $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst, def) => {
   $ZodCheck.init(inst, def);
-  const escapedRegex = escapeRegex$1(def.includes);
+  const escapedRegex = escapeRegex(def.includes);
   const pattern = new RegExp(typeof def.position === "number" ? `^.{${def.position}}${escapedRegex}` : escapedRegex);
   def.pattern = pattern;
   inst._zod.onattach.push((inst2) => {
@@ -11004,7 +14485,7 @@ const $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (ins
 });
 const $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (inst, def) => {
   $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`^${escapeRegex$1(def.prefix)}.*`);
+  const pattern = new RegExp(`^${escapeRegex(def.prefix)}.*`);
   def.pattern ?? (def.pattern = pattern);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
@@ -11027,7 +14508,7 @@ const $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", 
 });
 const $ZodCheckEndsWith = /* @__PURE__ */ $constructor("$ZodCheckEndsWith", (inst, def) => {
   $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`.*${escapeRegex$1(def.suffix)}$`);
+  const pattern = new RegExp(`.*${escapeRegex(def.suffix)}$`);
   def.pattern ?? (def.pattern = pattern);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
@@ -12179,7 +15660,7 @@ const $ZodEnum = /* @__PURE__ */ $constructor("$ZodEnum", (inst, def) => {
   const values2 = getEnumValues(def.entries);
   const valuesSet = new Set(values2);
   inst._zod.values = valuesSet;
-  inst._zod.pattern = new RegExp(`^(${values2.filter((k2) => propertyKeyTypes.has(typeof k2)).map((o2) => typeof o2 === "string" ? escapeRegex$1(o2) : o2.toString()).join("|")})$`);
+  inst._zod.pattern = new RegExp(`^(${values2.filter((k2) => propertyKeyTypes.has(typeof k2)).map((o2) => typeof o2 === "string" ? escapeRegex(o2) : o2.toString()).join("|")})$`);
   inst._zod.parse = (payload, _ctx) => {
     const input = payload.value;
     if (valuesSet.has(input)) {
@@ -12201,7 +15682,7 @@ const $ZodLiteral = /* @__PURE__ */ $constructor("$ZodLiteral", (inst, def) => {
   }
   const values2 = new Set(def.values);
   inst._zod.values = values2;
-  inst._zod.pattern = new RegExp(`^(${def.values.map((o2) => typeof o2 === "string" ? escapeRegex$1(o2) : o2 ? escapeRegex$1(o2.toString()) : String(o2)).join("|")})$`);
+  inst._zod.pattern = new RegExp(`^(${def.values.map((o2) => typeof o2 === "string" ? escapeRegex(o2) : o2 ? escapeRegex(o2.toString()) : String(o2)).join("|")})$`);
   inst._zod.parse = (payload, _ctx) => {
     const input = payload.value;
     if (values2.has(input)) {
@@ -14595,15 +18076,15 @@ const ZodIssueCode = {
 function generateId(prefix2 = "id") {
   return `${prefix2}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
 }
-var __getOwnPropDesc$d = Object.getOwnPropertyDescriptor;
-var __decorateClass$d = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$d(target, key) : target;
+var __getOwnPropDesc$8 = Object.getOwnPropertyDescriptor;
+var __decorateClass$8 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$8(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$c = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$7 = (index, decorator) => (target, key) => decorator(target, key, index);
 const MessageContentTypeSchema = _enum(["markdown", "plain", "html"]);
 const ChatMessageSchema = object({
   id: string(),
@@ -14644,7 +18125,7 @@ const ChatStoreDataSchema = object({
   sessions: array(ChatSessionSchema)
 });
 const LEGACY_STORAGE_KEY = "think-ai-chat-sessions";
-const DEFAULT_FILE_PATH = "Think/chat-sessions.json";
+const DEFAULT_FILE_PATH = THINK_STORAGE_PATHS.chatSessions;
 const CORRUPT_SUFFIX = ".corrupt.json";
 const MAX_SESSIONS = 50;
 let ChatSessionStore = class {
@@ -14859,1525 +18340,10 @@ let ChatSessionStore = class {
     return session?.messages ?? [];
   }
 };
-ChatSessionStore = __decorateClass$d([
+ChatSessionStore = __decorateClass$8([
   singleton(),
-  __decorateParam$c(0, inject(STORAGE_TOKEN))
+  __decorateParam$7(0, inject(STORAGE_TOKEN))
 ], ChatSessionStore);
-function toRecordViewItem(record2) {
-  return record2;
-}
-const METADATA_PORT_TOKEN = "MetadataPort";
-const FILESTAT_PORT_TOKEN = "FileStatPort";
-const CURRENT_CACHE_SCHEMA_VERSION = 17;
-function toCachedItem(it) {
-  return {
-    id: it.id,
-    recordType: it.recordType,
-    status: it.status,
-    filePath: it.file?.path || it.source?.path || "",
-    startLine: it.source?.startLine ?? it.file?.line,
-    endLine: it.source?.endLine ?? it.file?.line,
-    filename: it.filename ?? it.fileName,
-    title: it.title || "",
-    content: it.content || "",
-    rawSource: it.rawSource,
-    tags: [...it.tags || []],
-    goalPath: it.goalPath,
-    recurrenceInfo: it.recurrenceInfo,
-    priority: it.priority,
-    importance: it.importance,
-    urgency: it.urgency,
-    expectedDurationMinutes: it.expectedDurationMinutes,
-    energyDemand: it.energyDemand,
-    brainDemand: it.brainDemand,
-    physicalDemand: it.physicalDemand,
-    availabilityContexts: it.availabilityContexts,
-    recoveryIntent: it.recoveryIntent,
-    createdAt: it.createdAt,
-    createdDate: it.createdDate,
-    scheduledAt: it.scheduledAt,
-    startAt: it.startAt,
-    endAt: it.endAt,
-    dueAt: it.dueAt,
-    scheduledDate: it.scheduledDate,
-    startDate: it.startDate,
-    dueDate: it.dueDate,
-    doneDate: it.doneDate,
-    cancelledDate: it.cancelledDate,
-    completedAt: it.completedAt,
-    cancelledAt: it.cancelledAt,
-    skippedAt: it.skippedAt,
-    startISO: it.startISO,
-    endISO: it.endISO,
-    seriesId: it.seriesId,
-    seriesStartDate: it.seriesStartDate,
-    currentTaskId: it.currentTaskId,
-    rolloverPolicy: it.rolloverPolicy,
-    taskId: it.taskId,
-    sessionStartedAt: it.sessionStartedAt,
-    sessionEndedAt: it.sessionEndedAt,
-    sessionDurationMinutes: it.sessionDurationMinutes,
-    sessionResult: it.sessionResult,
-    sessionSource: it.sessionSource,
-    suggestedDurationMinutes: it.suggestedDurationMinutes,
-    startEnergyRecordId: it.startEnergyRecordId,
-    endEnergyRecordId: it.endEnergyRecordId,
-    energyDelta: it.energyDelta,
-    brainDelta: it.brainDelta,
-    physicalDelta: it.physicalDelta,
-    date: it.date,
-    dateMs: it.dateMs ?? it.startMs ?? it.endMs,
-    created: it.created,
-    modified: it.modified,
-    extra: it.extra || {},
-    titleLower: it.titleLower ?? it.title?.toLowerCase(),
-    contentLower: it.contentLower ?? it.content?.toLowerCase(),
-    tagsLower: it.tagsLower ?? (it.tags || []).map((t3) => t3.toLowerCase())
-  };
-}
-function fromCachedItem(c2) {
-  const folder = c2.filePath.split("/").slice(0, -1).pop() || "";
-  const it = {
-    id: c2.id,
-    recordType: c2.recordType || "thought",
-    status: c2.status,
-    title: c2.title || "",
-    content: c2.content || "",
-    rawSource: c2.rawSource,
-    tags: [...c2.tags || []],
-    goalPath: c2.goalPath,
-    recurrenceInfo: c2.recurrenceInfo,
-    priority: c2.priority,
-    importance: c2.importance,
-    urgency: c2.urgency,
-    expectedDurationMinutes: c2.expectedDurationMinutes,
-    energyDemand: c2.energyDemand,
-    brainDemand: c2.brainDemand,
-    physicalDemand: c2.physicalDemand,
-    availabilityContexts: c2.availabilityContexts,
-    recoveryIntent: c2.recoveryIntent,
-    createdAt: c2.createdAt,
-    createdDate: c2.createdDate,
-    scheduledAt: c2.scheduledAt,
-    startAt: c2.startAt,
-    endAt: c2.endAt,
-    dueAt: c2.dueAt,
-    scheduledDate: c2.scheduledDate,
-    startDate: c2.startDate,
-    dueDate: c2.dueDate,
-    doneDate: c2.doneDate,
-    cancelledDate: c2.cancelledDate,
-    completedAt: c2.completedAt,
-    cancelledAt: c2.cancelledAt,
-    skippedAt: c2.skippedAt,
-    startISO: c2.startISO,
-    endISO: c2.endISO,
-    seriesId: c2.seriesId,
-    seriesStartDate: c2.seriesStartDate,
-    currentTaskId: c2.currentTaskId,
-    rolloverPolicy: c2.rolloverPolicy,
-    taskId: c2.taskId,
-    sessionStartedAt: c2.sessionStartedAt,
-    sessionEndedAt: c2.sessionEndedAt,
-    sessionDurationMinutes: c2.sessionDurationMinutes,
-    sessionResult: c2.sessionResult,
-    sessionSource: c2.sessionSource,
-    suggestedDurationMinutes: c2.suggestedDurationMinutes,
-    startEnergyRecordId: c2.startEnergyRecordId,
-    endEnergyRecordId: c2.endEnergyRecordId,
-    energyDelta: c2.energyDelta,
-    brainDelta: c2.brainDelta,
-    physicalDelta: c2.physicalDelta,
-    date: c2.date,
-    dateMs: c2.dateMs,
-    created: c2.created,
-    modified: c2.modified,
-    filename: c2.filename,
-    fileName: c2.filename,
-    file: { path: c2.filePath, line: c2.startLine, folder },
-    source: {
-      path: c2.filePath,
-      startLine: c2.startLine || 0,
-      endLine: c2.endLine || c2.startLine || 0,
-      modified: c2.modified
-    },
-    extra: c2.extra || {}
-  };
-  it.titleLower = c2.titleLower ?? c2.title?.toLowerCase() ?? "";
-  it.contentLower = c2.contentLower ?? c2.content?.toLowerCase() ?? "";
-  it.tagsLower = c2.tagsLower ?? (c2.tags || []).map((t3) => t3.toLowerCase());
-  return it;
-}
-const DATASTORE_CACHE_PATH = "Think/cache.json";
-class DataStoreCache {
-  constructor(storage, isActive) {
-    this.storage = storage;
-    this.isActive = isActive;
-  }
-  storage;
-  isActive;
-  cache = null;
-  saveTimer = null;
-  dispose() {
-    this.clearSaveTimer();
-    this.cache = null;
-  }
-  get current() {
-    return this.cache;
-  }
-  clearMemory() {
-    this.clearSaveTimer();
-    this.cache = null;
-  }
-  async removePersisted() {
-    await this.storage.remove(DATASTORE_CACHE_PATH);
-  }
-  async load() {
-    let cache = await this.storage.readJSON(DATASTORE_CACHE_PATH);
-    if (!cache || cache.schemaVersion !== CURRENT_CACHE_SCHEMA_VERSION) {
-      cache = this.createEmptyCache();
-    }
-    this.cache = cache;
-    return cache;
-  }
-  ensure() {
-    if (!this.cache) {
-      this.cache = this.createEmptyCache();
-    }
-    return this.cache;
-  }
-  restoreItems(entry) {
-    return entry.items.map(fromCachedItem);
-  }
-  upsertFile(filePath, stat, items, integrityIssues = []) {
-    const cache = this.ensure();
-    cache.files[filePath] = {
-      mtime: stat.mtime,
-      size: stat.size,
-      items: items.map((item) => toCachedItem(toRecordViewItem(item))),
-      integrityIssues: integrityIssues.map((issue2) => ({ ...issue2 }))
-    };
-  }
-  removeFile(filePath) {
-    if (!this.cache || !this.cache.files[filePath]) return false;
-    delete this.cache.files[filePath];
-    return true;
-  }
-  removeMissingFiles(seen) {
-    if (!this.cache) return 0;
-    let removed = 0;
-    for (const cachedPath of Object.keys(this.cache.files)) {
-      if (!seen.has(cachedPath)) {
-        delete this.cache.files[cachedPath];
-        removed++;
-      }
-    }
-    return removed;
-  }
-  scheduleSave(delay = 1500) {
-    if (!this.isActive()) return;
-    this.clearSaveTimer();
-    this.saveTimer = setTimeout(async () => {
-      if (!this.isActive()) return;
-      try {
-        if (this.cache) {
-          await this.storage.writeJSON(DATASTORE_CACHE_PATH, this.cache);
-        }
-      } catch (e2) {
-        devWarn("ThinkPlugin: 写入缓存失败", e2);
-      }
-    }, delay);
-  }
-  clearSaveTimer() {
-    if (this.saveTimer) {
-      clearTimeout(this.saveTimer);
-    }
-    this.saveTimer = null;
-  }
-  createEmptyCache() {
-    return { schemaVersion: CURRENT_CACHE_SCHEMA_VERSION, files: {} };
-  }
-}
-function localCalendarDate(value) {
-  if (!value) return void 0;
-  const parsed = new Date(value);
-  if (!Number.isFinite(parsed.getTime())) return void 0;
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
-  const contentLines = lines.slice(startIdx + 1, endIdx);
-  const parsed = decodeRecordContentLines(contentLines);
-  if (!parsed.recordId || !isStableRecordId(parsed.recordId)) return null;
-  if (!parsed.recordType) return null;
-  const isTask = parsed.recordType === "task";
-  const isTaskSeries = parsed.recordType === "task-series";
-  const isTaskSession = parsed.recordType === "task-session";
-  if (isTask && !["open", "done", "cancelled", "skipped"].includes(String(parsed.status || ""))) return null;
-  if (isTask && parsed.status === "skipped" && !parsed.seriesId) return null;
-  if (isTaskSeries && !["active", "stopped"].includes(String(parsed.status || ""))) return null;
-  const recurrenceInfo = isTaskSeries ? normalizeRecurrenceInfo({ unit: parsed.recurrenceUnit, interval: parsed.recurrenceInterval, anchor: parsed.recurrenceAnchor }) : null;
-  if (isTaskSeries && !recurrenceInfo) return null;
-  const sessionDuration = normalizeTaskSessionDurationMinutes(parsed.sessionDurationMinutes);
-  if (isTaskSession && (!parsed.taskId || !parsed.sessionStartedAt || !parsed.sessionEndedAt || sessionDuration == null || !parsed.sessionResult || !parsed.sessionSource)) return null;
-  const canonicalDate = isTask ? localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate || localCalendarDate(parsed.createdAt) || localCalendarDate(parsed.completedAt) || localCalendarDate(parsed.endAt) || parsed.date : localCalendarDate(parsed.sessionStartedAt) || parsed.date || localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate;
-  const schema = getRecordSchemaDefinition(parsed.recordType);
-  if (!schema) return null;
-  const item = {
-    id: parsed.recordId,
-    title: parsed.title || "",
-    content: parsed.content,
-    rawSource: lines.slice(startIdx, endIdx + 1).join("\n"),
-    editableText: parsed.content,
-    status: parsed.status,
-    tags: parsed.tags,
-    goalPath: parsed.goalPath,
-    recurrenceInfo: recurrenceInfo || void 0,
-    created: 0,
-    modified: 0,
-    extra: parsed.extra,
-    folder: parentFolder,
-    recordType: schema.recordType,
-    priority: parsed.priority,
-    importance: parsed.importance,
-    urgency: parsed.urgency,
-    createdAt: parsed.createdAt,
-    scheduledAt: parsed.scheduledAt,
-    startAt: parsed.startAt,
-    endAt: parsed.endAt,
-    dueAt: parsed.dueAt,
-    energyDemand: parsed.energyDemand,
-    brainDemand: parsed.brainDemand,
-    physicalDemand: parsed.physicalDemand,
-    availabilityContexts: parsed.availabilityContexts,
-    recoveryIntent: parsed.recoveryIntent,
-    scheduledDate: parsed.scheduledDate,
-    startDate: parsed.startDate,
-    dueDate: parsed.dueDate,
-    completedAt: parsed.completedAt,
-    cancelledAt: parsed.cancelledAt,
-    skippedAt: parsed.skippedAt,
-    seriesId: parsed.seriesId,
-    seriesStartDate: parsed.seriesStartDate,
-    currentTaskId: parsed.currentTaskId,
-    rolloverPolicy: parsed.rolloverPolicy,
-    taskId: parsed.taskId,
-    sessionStartedAt: parsed.sessionStartedAt,
-    sessionEndedAt: parsed.sessionEndedAt,
-    sessionDurationMinutes: sessionDuration ?? void 0,
-    sessionResult: parsed.sessionResult,
-    sessionSource: parsed.sessionSource,
-    suggestedDurationMinutes: parsed.suggestedDurationMinutes,
-    startEnergyRecordId: parsed.startEnergyRecordId,
-    endEnergyRecordId: parsed.endEnergyRecordId,
-    energyDelta: parsed.energyDelta,
-    brainDelta: parsed.brainDelta,
-    physicalDelta: parsed.physicalDelta,
-    ...parsed.recordType === "energy" && parsed.recordSubtype ? { recordSubtype: parsed.recordSubtype } : {},
-    doneDate: parsed.completedAt,
-    cancelledDate: parsed.cancelledAt,
-    date: canonicalDate
-  };
-  if (parsed.icon) item.icon = parsed.icon;
-  if (parsed.rating !== void 0) item.rating = parsed.rating;
-  if (parsed.image) item.image = parsed.image;
-  if (parsed.seriesId) item.extra["系列ID"] = parsed.seriesId;
-  if (parsed.expectedDurationMinutes !== void 0) {
-    item.expectedDurationMinutes = parsed.expectedDurationMinutes;
-  }
-  item.startISO = parsed.sessionStartedAt || (isTask ? parsed.scheduledAt || parsed.scheduledDate || parsed.startAt || parsed.startDate : void 0) || parsed.startAt || parsed.startDate || parsed.scheduledAt || parsed.scheduledDate || parsed.dueAt || parsed.dueDate || parsed.date;
-  item.endISO = parsed.sessionEndedAt || parsed.endAt || parsed.completedAt || parsed.cancelledAt || parsed.dueAt || parsed.dueDate || item.startISO;
-  if (item.startISO) item.startMs = Date.parse(item.startISO);
-  if (item.endISO) item.endMs = Date.parse(item.endISO);
-  if (item.period && item.date) item.periodCount = getPeriodCount(item.period, dayjs(item.date));
-  return item;
-}
-function firstDate(...values2) {
-  for (const value of values2) {
-    const normalized2 = String(value || "").trim();
-    if (normalized2) return normalized2;
-  }
-  return void 0;
-}
-function getTaskDateFact(task, role = "default") {
-  if (role === "scheduled") {
-    return { value: firstDate(task.scheduledAt, task.scheduledDate), source: "scheduled" };
-  }
-  if (role === "due") {
-    return { value: firstDate(task.dueAt, task.dueDate), source: "due" };
-  }
-  if (role === "completed") {
-    return { value: firstDate(task.completedAt, task.doneDate), source: "done" };
-  }
-  const candidates = [
-    ["scheduled", firstDate(task.scheduledAt, task.scheduledDate)],
-    ["due", firstDate(task.dueAt, task.dueDate)],
-    ["start", firstDate(task.startAt, task.startDate, task.startISO)],
-    ["created", firstDate(task.createdAt, task.createdDate)],
-    ["done", firstDate(task.completedAt, task.doneDate)],
-    ["end", firstDate(task.endAt, task.endISO)]
-  ];
-  for (const [source, value] of candidates) {
-    if (value) return { value, source };
-  }
-  return {};
-}
-function normalizeItemDates(it) {
-  if (it.recordType !== "task") {
-    if (it.date) {
-      it.dateSource = "block";
-      const t3 = Date.parse(it.date);
-      if (!isNaN(t3)) it.dateMs = t3;
-    }
-    return;
-  }
-  const fact = getTaskDateFact(it, "default");
-  if (fact.value) {
-    it.date = fact.value;
-    it.dateSource = fact.source;
-    const t3 = Date.parse(fact.value);
-    if (!isNaN(t3)) it.dateMs = t3;
-  }
-}
-function unique(values2) {
-  return Array.from(new Set(values2.map((value) => String(value ?? "").trim()).filter(Boolean)));
-}
-function normalizeSearchText$1(value) {
-  return String(value ?? "").toLowerCase();
-}
-function normalizeRecordItem(item, context) {
-  const line2 = context.line;
-  item.created = context.created;
-  item.modified = context.modified;
-  item.folder = item.folder || context.parentFolder;
-  item.filename = context.fileName;
-  item.fileName = context.fileName;
-  item.file = {
-    path: context.filePath,
-    line: line2,
-    basename: context.fileName,
-    folder: context.parentFolder
-  };
-  if (context.header) {
-    item.header = context.header;
-  }
-  item.tags = unique([...context.sectionTags || [], ...item.tags || []]);
-  const rawGoalPath = String(item.goalPath || "").trim();
-  const canonicalGoalPath2 = rawGoalPath ? normalizeGoalPath(rawGoalPath) : null;
-  if (rawGoalPath && !canonicalGoalPath2) throw new Error(`invalid_record_goal_path:${item.id}`);
-  item.goalPath = canonicalGoalPath2 || void 0;
-  const goalParts = splitGoalPath(item.goalPath || null);
-  item.rootGoal = goalParts.rootGoal || void 0;
-  item.leafGoal = goalParts.leafGoal || void 0;
-  if (!item.extra) item.extra = {};
-  normalizeItemDates(toRecordViewItem(item));
-  item.fullData = item.rawSource || item.fullData || item.content || "";
-  const indexedItem = item;
-  indexedItem.titleLower = normalizeSearchText$1(item.title);
-  indexedItem.contentLower = normalizeSearchText$1(item.content);
-  indexedItem.fullDataLower = normalizeSearchText$1(item.fullData);
-  indexedItem.tagsLower = (item.tags || []).map((tag) => normalizeSearchText$1(tag));
-  indexedItem.goalPathLower = normalizeSearchText$1(item.goalPath);
-  indexedItem.rootGoalLower = normalizeSearchText$1(item.rootGoal);
-  indexedItem.leafGoalLower = normalizeSearchText$1(item.leafGoal);
-  return item;
-}
-function normalizeFilePathInput(input) {
-  return typeof input === "string" ? input : input && typeof input.path === "string" ? input.path : "";
-}
-function pathBasename(path) {
-  return path.split("/").pop() || path;
-}
-function pathParentName(path) {
-  const parts = path.split("/");
-  if (parts.length <= 1) return "";
-  return parts[parts.length - 2] || "";
-}
-function basenameNoExt(filename) {
-  return filename.toLowerCase().endsWith(".md") ? filename.slice(0, -3) : filename;
-}
-class DataStoreFileScanner {
-  constructor(vault, metadata, fileStat) {
-    this.vault = vault;
-    this.metadata = metadata;
-    this.fileStat = fileStat;
-  }
-  vault;
-  metadata;
-  fileStat;
-  async scan(filePathOrFile) {
-    const filePath = normalizeFilePathInput(filePathOrFile);
-    if (!filePath) {
-      devWarn("ThinkPlugin: scanFile 入参非法（缺少 path）", filePathOrFile);
-      return null;
-    }
-    const content = await this.vault.readFile(filePath);
-    if (content == null) {
-      devWarn("ThinkPlugin: scanFile 文件不存在或不可读", filePath);
-      return null;
-    }
-    const headingsList = await this.metadata.getHeadings(filePath);
-    const stat = await this.fileStat.stat(filePath);
-    if (!stat) {
-      devWarn("ThinkPlugin: scanFile 获取 stat 失败", filePath);
-      return null;
-    }
-    const lines = content.split(/\r?\n/);
-    const parentFolder = pathParentName(filePath);
-    const fileName = basenameNoExt(pathBasename(filePath));
-    const items = [];
-    const integrityIssues = [];
-    let nextHeadingIndex = 0;
-    let currentSectionTags = [];
-    let currentHeader = "";
-    for (let i2 = 0; i2 < lines.length; i2++) {
-      const line2 = lines[i2];
-      if (nextHeadingIndex < headingsList.length && headingsList[nextHeadingIndex].line === i2) {
-        const headingEntry = headingsList[nextHeadingIndex];
-        const headingText = headingEntry.heading;
-        const headingTags = headingText.match(/#([\p{L}\p{N}_\/-]+)/gu) || [];
-        currentSectionTags = headingTags.map((t3) => t3.trim()).filter(Boolean);
-        let cleanText = headingText;
-        for (const tag of headingTags) cleanText = cleanText.replace(tag, "").trim();
-        currentHeader = cleanText || "";
-        nextHeadingIndex++;
-        continue;
-      }
-      if (line2.trim() === "<!-- start -->") {
-        const endIdx = lines.indexOf("<!-- end -->", i2 + 1);
-        if (endIdx !== -1) {
-          const blockItem = parseRecordBlock(filePath, lines, i2, endIdx, parentFolder);
-          if (blockItem) {
-            this.normalizeScannedItem(blockItem, filePath, fileName, parentFolder, stat, i2 + 1, endIdx + 1, currentHeader, currentSectionTags);
-            items.push(blockItem);
-          } else {
-            const blockLines = lines.slice(i2 + 1, endIdx);
-            const idLine = blockLines.find((candidate) => /^\s*(?:记录ID|recordId)\s*[:：]{1,2}/i.test(candidate));
-            const recordId = idLine?.replace(/^\s*(?:记录ID|recordId)\s*[:：]{1,2}\s*/i, "").trim();
-            integrityIssues.push({
-              code: !recordId || !isStableRecordId(recordId) ? "record_id_missing" : "record_block_malformed",
-              recordId: recordId || void 0,
-              path: filePath,
-              message: !recordId || !isStableRecordId(recordId) ? `文件 ${filePath} 第 ${i2 + 1} 行的记录块缺少有效且稳定的记录标识。` : `文件 ${filePath} 第 ${i2 + 1} 行的记录块 ${recordId} 不符合当前记录格式要求。`
-            });
-          }
-          i2 = endIdx;
-          continue;
-        }
-      }
-    }
-    return { filePath, items, stat, integrityIssues };
-  }
-  normalizeScannedItem(item, filePath, fileName, parentFolder, stat, line2, endLine, currentHeader, currentSectionTags) {
-    normalizeRecordItem(item, {
-      filePath,
-      fileName,
-      parentFolder,
-      created: stat.ctime,
-      modified: stat.mtime,
-      line: line2,
-      header: currentHeader || void 0,
-      sectionTags: currentSectionTags
-    });
-    item.source = { path: filePath, startLine: line2, endLine, modified: stat.mtime };
-    if (item.file) item.file.line = line2;
-  }
-}
-function coerceForCompare(v2) {
-  if (v2 === null || v2 === void 0) return null;
-  if (typeof v2 === "number") return v2;
-  const s2 = String(v2).trim();
-  const isDateLike = /^\d{4}-\d{1,2}-\d{1,2}/.test(s2) || /^\d{4}\/\d{1,2}\/\d{1,2}/.test(s2);
-  if (isDateLike) {
-    const ts = Date.parse(s2.replace(/\//g, "-"));
-    if (!Number.isNaN(ts)) return ts;
-  }
-  const n2 = Number(s2);
-  if (!Number.isNaN(n2) && /\d/.test(s2) && !/[^\d.\-+eE]/.test(s2)) return n2;
-  return s2;
-}
-function cmpMixed(a2, b2) {
-  if (a2 == null && b2 == null) return 0;
-  if (a2 == null) return 1;
-  if (b2 == null) return -1;
-  const A2 = coerceForCompare(a2);
-  const B2 = coerceForCompare(b2);
-  if (typeof A2 === "number" && typeof B2 === "number") return A2 - B2;
-  return String(a2).localeCompare(String(b2), "zh");
-}
-function filterByRules(items, rules = []) {
-  if (!rules.length) return items;
-  return items.filter((item) => {
-    if (rules.length === 0) return true;
-    if (rules.length === 1) return matchRule(item, rules[0]);
-    let result = matchRule(item, rules[0]);
-    for (let i2 = 1; i2 < rules.length; i2++) {
-      const currentRule = rules[i2];
-      const previousRule = rules[i2 - 1];
-      const logic = previousRule.logic || "and";
-      if (logic === "and") {
-        result = result && matchRule(item, currentRule);
-      } else if (logic === "or") {
-        result = result || matchRule(item, currentRule);
-      }
-    }
-    return result;
-  });
-}
-function isEmptyValue$1(value) {
-  if (value === null || value === void 0) return true;
-  if (Array.isArray(value)) return value.length === 0;
-  return String(value).trim() === "";
-}
-function normalizeListValue(value) {
-  if (Array.isArray(value)) return value;
-  if (value === null || value === void 0) return [];
-  return String(value).split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
-}
-function normalizeBetweenValue(value) {
-  if (Array.isArray(value) && value.length >= 2) return [value[0], value[1]];
-  if (value === null || value === void 0) return null;
-  const text2 = String(value).trim();
-  if (!text2) return null;
-  const parts = text2.split(/\s*(?:~|～|至|到|\.\.|,|，)\s*/).filter(Boolean);
-  if (parts.length < 2) return null;
-  return [parts[0], parts[1]];
-}
-function matchRule(item, rule) {
-  const canonicalField = normalizeFieldKey(rule.field);
-  const itemRecord = asUnknownRecord(item);
-  let v1 = readField(item, canonicalField);
-  let v2 = rule.value;
-  if (rule.op === "empty") return isEmptyValue$1(v1);
-  if (rule.op === "notEmpty") return !isEmptyValue$1(v1);
-  if (canonicalField === "title") {
-    v1 = readString$1(itemRecord, "titleLower") ?? String(v1 ?? "").toLowerCase();
-    v2 = String(v2 ?? "").toLowerCase();
-  } else if (canonicalField === "content") {
-    v1 = readString$1(itemRecord, "contentLower") ?? String(v1 ?? "").toLowerCase();
-    v2 = String(v2 ?? "").toLowerCase();
-  } else if (["goalPath", "rootGoal", "leafGoal"].includes(canonicalField)) {
-    v1 = String(v1 ?? "").toLowerCase();
-    if (rule.op === "in" || rule.op === "notIn") {
-      v2 = normalizeListValue(v2).map((value) => String(value ?? "").toLowerCase());
-    } else {
-      v2 = String(v2 ?? "").toLowerCase();
-    }
-  } else if (canonicalField === "fullData") {
-    v1 = readString$1(itemRecord, "fullDataLower") ?? String(v1 ?? "").toLowerCase();
-    v2 = String(v2 ?? "").toLowerCase();
-  } else if (canonicalField === "tags") {
-    const listLower = readStringArray(itemRecord, "tagsLower").length ? readStringArray(itemRecord, "tagsLower") : Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : [];
-    const needle = String(v2 ?? "").toLowerCase();
-    if (rule.op === "includes" || rule.op === "=") {
-      return listLower.includes(needle);
-    }
-    if (rule.op === "!=") {
-      return !listLower.includes(needle);
-    }
-    if (rule.op === "in" || rule.op === "notIn") {
-      const needles = normalizeListValue(v2).map((x2) => String(x2).toLowerCase());
-      const matched = needles.some((needleValue) => listLower.includes(needleValue));
-      return rule.op === "in" ? matched : !matched;
-    }
-    v1 = listLower.join(",");
-    v2 = needle;
-  }
-  switch (rule.op) {
-    case "=":
-      return cmpMixed(v1, v2) === 0;
-    case "!=":
-      return cmpMixed(v1, v2) !== 0;
-    case "includes":
-      return Array.isArray(v1) ? v1.some((x2) => String(x2).includes(String(v2))) : String(v1).includes(String(v2));
-    case "regex":
-      try {
-        return new RegExp(String(v2)).test(String(v1));
-      } catch {
-        return false;
-      }
-    case ">":
-      return cmpMixed(v1, v2) > 0;
-    case "<":
-      return cmpMixed(v1, v2) < 0;
-    case "in": {
-      const values2 = Array.isArray(v2) ? v2 : normalizeListValue(v2);
-      return values2.some((value) => cmpMixed(v1, value) === 0);
-    }
-    case "notIn": {
-      const values2 = Array.isArray(v2) ? v2 : normalizeListValue(v2);
-      return !values2.some((value) => cmpMixed(v1, value) === 0);
-    }
-    case "between": {
-      const range = normalizeBetweenValue(v2);
-      if (!range) return false;
-      const [minValue, maxValue] = range;
-      return cmpMixed(v1, minValue) >= 0 && cmpMixed(v1, maxValue) <= 0;
-    }
-    default:
-      return false;
-  }
-}
-function sortItems(items, rules = []) {
-  if (!rules.length) return items;
-  return [...items].sort((a2, b2) => {
-    for (const r2 of rules) {
-      const canonicalField = normalizeFieldKey(r2.field);
-      const av = readField(a2, canonicalField);
-      const bv = readField(b2, canonicalField);
-      if (av == null && bv == null) continue;
-      if (av == null) return r2.dir === "asc" ? 1 : -1;
-      if (bv == null) return r2.dir === "asc" ? -1 : 1;
-      const cmp = cmpMixed(av, bv);
-      if (cmp !== 0) return r2.dir === "asc" ? cmp : -cmp;
-    }
-    return 0;
-  });
-}
-function filterByKeyword(items, kw) {
-  if (!kw.trim()) return items;
-  const s2 = kw.trim().toLowerCase();
-  return items.filter((it) => {
-    const itemRecord = asUnknownRecord(it);
-    const titleLower = readString$1(itemRecord, "titleLower") ?? (it.title || "").toLowerCase();
-    const contentLower = readString$1(itemRecord, "contentLower") ?? (it.content || "").toLowerCase();
-    const fullDataLower = readString$1(itemRecord, "fullDataLower") ?? (it.fullData || it.rawSource || "").toLowerCase();
-    const tagsLower = (it.tags || []).join(" ").toLowerCase();
-    const semanticText = [it.goalPath, it.recordType, it.status].filter(Boolean).join(" ").toLowerCase();
-    return (titleLower + " " + contentLower + " " + fullDataLower + " " + tagsLower + " " + semanticText).includes(s2);
-  });
-}
-function filterByPeriod(items, period) {
-  if (!period) {
-    return items;
-  }
-  return items.filter((item) => {
-    const itemPeriod = readField(item, "period");
-    return itemPeriod == null || itemPeriod === "" || itemPeriod === period;
-  });
-}
-function isGoalOrderField(field) {
-  const canonical = getCanonicalFieldKey(String(field || "").trim());
-  return ["goalPath", "rootGoal", "leafGoal"].includes(canonical);
-}
-function isRecordTypeOrderField(field) {
-  const canonical = getCanonicalFieldKey(String(field || "").trim());
-  return canonical === "recordType";
-}
-function normalizeText(value) {
-  if (value === null || value === void 0) return "";
-  return String(value).trim();
-}
-function firstText$1(value) {
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const candidate = firstText$1(item);
-      if (candidate) return candidate;
-    }
-    return "";
-  }
-  const text2 = normalizeText(value);
-  if (!text2) return "";
-  return text2.split(/[,，\n]/).map((part) => part.trim()).filter(Boolean)[0] || "";
-}
-function normalizeGoalComparable(value) {
-  const text2 = firstText$1(value);
-  if (!text2) return "";
-  return splitGoalPath(text2).goalPath || "";
-}
-function resolveGoalFieldComparable(field, rawValue, context) {
-  getCanonicalFieldKey(String(field || "").trim());
-  return normalizeGoalComparable(rawValue);
-}
-function compareFieldValuesByViewOrder(field, left2, right2, context) {
-  if (isGoalOrderField(field)) {
-    const goalOrder = createGoalOrderIndex(context?.goals || []);
-    const leftGoal = resolveGoalFieldComparable(field, left2);
-    const rightGoal = resolveGoalFieldComparable(field, right2);
-    const byGoal = goalOrder.compareGoalPaths(leftGoal, rightGoal);
-    if (byGoal !== 0) return byGoal;
-    return leftGoal.localeCompare(rightGoal, "zh-CN");
-  }
-  if (isRecordTypeOrderField(field)) {
-    return compareRecordTypeKeys(left2, right2);
-  }
-  return String(left2 ?? "").localeCompare(String(right2 ?? ""), "zh-CN");
-}
-function readOrderedFieldValue(item, field, context) {
-  const canonical = getCanonicalFieldKey(String(field || "").trim());
-  if (isGoalOrderField(canonical)) {
-    return item.goalPath || readField(item, canonical) || readField(item, "goalPath");
-  }
-  return readField(item, canonical);
-}
-function findFirstGoalOrderField(fields = []) {
-  for (const field of fields || []) {
-    if (isGoalOrderField(field)) return getCanonicalFieldKey(field);
-  }
-  return null;
-}
-function orderItemsByDisplayedGoalField(items = [], displayFields = [], context) {
-  const goalField = findFirstGoalOrderField(displayFields);
-  if (!goalField) return items;
-  const originalIndex = /* @__PURE__ */ new Map();
-  items.forEach((item, index) => originalIndex.set(item, index));
-  return [...items].sort((left2, right2) => {
-    const byGoal = compareFieldValuesByViewOrder(
-      goalField,
-      readOrderedFieldValue(left2, goalField),
-      readOrderedFieldValue(right2, goalField),
-      context
-    );
-    if (byGoal !== 0) return byGoal;
-    return (originalIndex.get(left2) ?? 0) - (originalIndex.get(right2) ?? 0);
-  });
-}
-function normalizeGroupKeys(value, defaultLabel) {
-  if (Array.isArray(value)) {
-    const keys = value.map((v2) => String(v2 ?? "").trim()).filter(Boolean);
-    return keys.length ? Array.from(new Set(keys)) : [defaultLabel];
-  }
-  const text2 = String(value ?? "").trim();
-  return text2 ? [text2] : [defaultLabel];
-}
-function formatGroupLabel(field, key) {
-  return formatFieldValue$1(field, key) || key;
-}
-function groupItemsByField(items, groupField, defaultLabel = "(未分类)") {
-  const grouped = {};
-  for (const item of items) {
-    const keys = normalizeGroupKeys(readField(item, groupField), defaultLabel);
-    for (const key of keys) {
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(item);
-    }
-  }
-  return grouped;
-}
-function getSortedGroupKeys(grouped, field, context) {
-  const keys = Object.keys(grouped);
-  if (field && (isGoalOrderField(field) || isRecordTypeOrderField(field))) {
-    return keys.sort((a2, b2) => compareFieldValuesByViewOrder(field, a2, b2, context));
-  }
-  return keys.sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
-}
-function groupItemsByFields(items, fields, context) {
-  if (!fields || fields.length === 0) {
-    return [{
-      key: "__all__",
-      label: "__all__",
-      field: "__all__",
-      items
-    }];
-  }
-  const groupLevel = (levelItems, level) => {
-    const field = fields[level];
-    const grouped = groupItemsByField(levelItems, field);
-    const keys = getSortedGroupKeys(grouped, field, context);
-    return keys.map((key) => {
-      const bucket = grouped[key];
-      if (level === fields.length - 1) {
-        return {
-          key,
-          label: formatGroupLabel(field, key),
-          field,
-          items: bucket
-        };
-      } else {
-        return {
-          key,
-          label: formatGroupLabel(field, key),
-          field,
-          children: groupLevel(bucket, level + 1)
-        };
-      }
-    });
-  };
-  return groupLevel(items, 0);
-}
-function buildTableMatrix(items, rowField, colField, context) {
-  const rowVals = /* @__PURE__ */ new Set();
-  const colVals = /* @__PURE__ */ new Set();
-  const matrix = {};
-  items.forEach((item) => {
-    const rows = normalizeGroupKeys(readField(item, rowField), EMPTY_LABEL);
-    const cols = normalizeGroupKeys(readField(item, colField), EMPTY_LABEL);
-    rows.forEach((r2) => {
-      cols.forEach((c2) => {
-        rowVals.add(r2);
-        colVals.add(c2);
-        if (!matrix[r2]) matrix[r2] = {};
-        if (!matrix[r2][c2]) matrix[r2][c2] = [];
-        matrix[r2][c2].push(item);
-      });
-    });
-  });
-  const sortedRows = Array.from(rowVals).sort((a2, b2) => compareFieldValuesByViewOrder(rowField, a2, b2, context));
-  const sortedCols = Array.from(colVals).sort((a2, b2) => compareFieldValuesByViewOrder(colField, a2, b2, context));
-  return { matrix, sortedRows, sortedCols };
-}
-const VIEW_DATE_ROLES = [
-  "default",
-  "task-scheduled",
-  "task-due",
-  "task-completed",
-  "task-actual"
-];
-function normalizeViewDateRole(value) {
-  const normalized2 = String(value || "").trim();
-  return VIEW_DATE_ROLES.includes(normalized2) ? normalized2 : void 0;
-}
-function isClosedTask(item) {
-  if (item.recordType !== "task") return false;
-  return item.status === "done" || item.status === "cancelled" || item.status === "skipped";
-}
-function isOpenTask(item) {
-  return item.recordType === "task" && !isClosedTask(item);
-}
-function itemGranularity(item) {
-  return String(readField(item, "period") || "天");
-}
-function isWithinDayRange(value, range) {
-  if (!value) return false;
-  const parsed = dayjs(value);
-  if (!parsed.isValid()) return false;
-  const [start2, end2] = toIsoDateTuple({
-    start: dayjs(range[0]).startOf("day"),
-    end: dayjs(range[1]).endOf("day")
-  });
-  const valueMs = parsed.valueOf();
-  return valueMs >= dayjs(start2).startOf("day").valueOf() && valueMs <= dayjs(end2).endOf("day").valueOf();
-}
-function isWithinMinuteRange(value, range) {
-  if (!value) return false;
-  const parsed = dayjs(value);
-  if (!parsed.isValid()) return false;
-  const startMs = dayjs(range[0]).valueOf();
-  const endMs = dayjs(range[1]).valueOf();
-  const valueMs = parsed.valueOf();
-  return valueMs >= startMs && valueMs <= endMs;
-}
-function readDateConstraintValue(item, constraint) {
-  const role = constraint.role || "default";
-  if (role === "task-scheduled") {
-    return item.recordType === "task" ? item.scheduledAt ?? item.scheduledDate : void 0;
-  }
-  if (role === "task-due") {
-    return item.recordType === "task" ? item.dueAt ?? item.dueDate : void 0;
-  }
-  if (role === "task-completed") {
-    return item.recordType === "task" ? item.completedAt ?? item.doneDate : void 0;
-  }
-  if (role === "task-actual") {
-    return item.recordType === "task-session" ? item.sessionStartedAt : void 0;
-  }
-  return readField(item, constraint.field || "date");
-}
-function applyStrictDateConstraint(items, constraint) {
-  const inRange2 = constraint.precision === "minute" ? isWithinMinuteRange : isWithinDayRange;
-  return items.filter((item) => inRange2(readDateConstraintValue(item, constraint), constraint.range));
-}
-function applyOverviewDateConstraint(items, constraint) {
-  const contextDate = dayjs(constraint.range[1]);
-  const field = constraint.field || "date";
-  return items.filter((item) => {
-    if (field === "date" && isOpenTask(item)) return true;
-    const rawDate = readDateConstraintValue(item, constraint);
-    if (!rawDate) return field === "date" ? !isClosedTask(item) : false;
-    const itemDate2 = dayjs(rawDate);
-    if (!itemDate2.isValid()) return field === "date" ? !isClosedTask(item) : false;
-    if (constraint.useFieldGranularity) {
-      switch (itemGranularity(item)) {
-        case "年":
-          return itemDate2.isSame(contextDate, "year");
-        case "季":
-          return itemDate2.isSame(contextDate, "quarter");
-        case "月":
-          return itemDate2.isSame(contextDate, "month");
-        case "周":
-          return isSameIsoWeek(itemDate2, contextDate);
-        default:
-          return isWithinDayRange(rawDate, constraint.range);
-      }
-    }
-    return isWithinDayRange(rawDate, constraint.range);
-  });
-}
-function applyStandardDateConstraint(items, constraint) {
-  const field = constraint.field || "date";
-  if (field !== "date") return applyStrictDateConstraint(items, { ...constraint });
-  let result = items;
-  const period = constraint.periodValue ?? (constraint.useFieldGranularity ? constraint.granularity : void 0);
-  if (period != null && String(period).trim()) result = filterByPeriod(result, String(period));
-  return result.filter((item) => {
-    if (isOpenTask(item)) return true;
-    const rawDate = readDateConstraintValue(item, constraint);
-    if (!rawDate) return !isClosedTask(item);
-    const parsed = dayjs(rawDate);
-    if (!parsed.isValid()) return !isClosedTask(item);
-    return isWithinDayRange(rawDate, constraint.range);
-  });
-}
-function applyDateConstraint(items, constraint) {
-  if (!constraint) return items;
-  const explicitRole = (constraint.role || "default") !== "default";
-  const mode = explicitRole ? "strict" : constraint.mode || (constraint.field && constraint.field !== "date" ? "strict" : "standard");
-  if (mode === "overview") return applyOverviewDateConstraint(items, constraint);
-  if (mode === "strict") return applyStrictDateConstraint(items, constraint);
-  return applyStandardDateConstraint(items, constraint);
-}
-const dateConstraintCache = /* @__PURE__ */ new WeakMap();
-const MAX_DATE_CACHE_ENTRIES_PER_SNAPSHOT = 48;
-function buildDateConstraintCacheKey(constraint) {
-  const [start2, end2] = constraint.range;
-  return JSON.stringify({
-    start: start2?.getTime?.() ?? Number(start2),
-    end: end2?.getTime?.() ?? Number(end2),
-    field: constraint.field || "date",
-    mode: constraint.mode || "",
-    granularity: constraint.granularity || "",
-    useFieldGranularity: !!constraint.useFieldGranularity,
-    periodValue: constraint.periodValue == null ? "" : String(constraint.periodValue),
-    precision: constraint.precision || "day",
-    role: constraint.role || "default"
-  });
-}
-function applyDateConstraintCached(items, constraint) {
-  if (!constraint) return items;
-  let byConstraint = dateConstraintCache.get(items);
-  if (!byConstraint) {
-    byConstraint = /* @__PURE__ */ new Map();
-    dateConstraintCache.set(items, byConstraint);
-  }
-  const key = buildDateConstraintCacheKey(constraint);
-  const cached2 = byConstraint.get(key);
-  if (cached2) return cached2;
-  const filtered = applyDateConstraint(items, constraint);
-  byConstraint.set(key, filtered);
-  if (byConstraint.size > MAX_DATE_CACHE_ENTRIES_PER_SNAPSHOT) {
-    const oldestKey = byConstraint.keys().next().value;
-    if (oldestKey) byConstraint.delete(oldestKey);
-  }
-  return filtered;
-}
-function executeRecordQuery(items, spec = {}) {
-  let result = applyDateConstraintCached(items, spec.date);
-  for (const group of spec.filterGroups || []) {
-    if (group.length) result = filterByRules(result, [...group]);
-  }
-  if (spec.keyword) result = filterByKeyword(result, spec.keyword);
-  if (spec.sort?.length) result = sortItems(result, [...spec.sort]);
-  const groupFields = (spec.groupBy || []).filter(Boolean);
-  const groupTree = groupFields.length ? groupItemsByFields(result, [...groupFields], spec.groupContext) : null;
-  return { items: result, groupTree };
-}
-function queryRecordItems(items, spec = {}) {
-  return executeRecordQuery(items, spec).items;
-}
-function asTaskRecord(record2) {
-  if (!record2 || record2.recordType !== "task") return null;
-  const candidate = record2;
-  const status = String(candidate.status || "");
-  if (!["open", "done", "cancelled", "skipped"].includes(status)) return null;
-  return record2;
-}
-function asTaskSeriesRecord(record2) {
-  if (!record2 || record2.recordType !== "task-series") return null;
-  const candidate = record2;
-  if (!candidate.recurrenceInfo) return null;
-  const status = String(candidate.status || "");
-  if (status !== "active" && status !== "stopped") return null;
-  return record2;
-}
-class RecordIndex {
-  recordsById = /* @__PURE__ */ new Map();
-  locationsById = /* @__PURE__ */ new Map();
-  issues = [];
-  clear() {
-    this.recordsById.clear();
-    this.locationsById.clear();
-    this.issues = [];
-  }
-  rebuild(fileIndex) {
-    this.clear();
-    const all = [];
-    for (const [path, records] of fileIndex.entries()) {
-      for (const record2 of records) {
-        const id = String(record2.id || "").trim();
-        if (!id) {
-          this.issues.push({ code: "record_id_missing", path, message: `文件 ${path} 中存在缺少记录标识的记录。` });
-          continue;
-        }
-        const source = record2.source;
-        const line2 = source?.startLine ?? record2.file?.line ?? 0;
-        const location = {
-          recordId: id,
-          path,
-          startLine: line2,
-          endLine: source?.endLine ?? line2,
-          modified: source?.modified ?? record2.modified ?? 0
-        };
-        const locations = this.locationsById.get(id) || [];
-        locations.push(location);
-        this.locationsById.set(id, locations);
-        all.push(record2);
-      }
-    }
-    const unique2 = [];
-    for (const record2 of all) {
-      const locations = this.locationsById.get(record2.id) || [];
-      if (locations.length !== 1) continue;
-      if (this.recordsById.has(record2.id)) continue;
-      this.recordsById.set(record2.id, record2);
-      unique2.push(record2);
-    }
-    for (const [recordId, locations] of this.locationsById.entries()) {
-      if (locations.length > 1) {
-        this.issues.push({
-          code: "record_id_duplicate",
-          recordId,
-          message: `记录标识 ${recordId} 重复：${locations.map((location) => `${location.path}:${location.startLine}`).join("、")}`
-        });
-      }
-    }
-    const openTasksBySeries = /* @__PURE__ */ new Map();
-    for (const record2 of unique2) {
-      const task = asTaskRecord(record2);
-      if (task?.seriesId && task.status === "open") {
-        const group = openTasksBySeries.get(task.seriesId) || [];
-        group.push(task);
-        openTasksBySeries.set(task.seriesId, group);
-      }
-      if (task?.seriesId) {
-        const series2 = asTaskSeriesRecord(this.recordsById.get(task.seriesId));
-        if (!series2) {
-          this.issues.push({
-            code: "task_series_reference_orphan",
-            recordId: task.id,
-            path: task.source?.path,
-            message: `任务 ${task.id} 引用了不存在的任务系列 ${task.seriesId}。`
-          });
-        } else {
-          task.recurrenceInfo = series2.recurrenceInfo;
-        }
-      }
-      const session = record2.recordType === "task-session" ? record2 : null;
-      if (session) {
-        const sessionTask = session.taskId ? asTaskRecord(this.recordsById.get(session.taskId)) : null;
-        const sessionSeries = session.seriesId ? asTaskSeriesRecord(this.recordsById.get(session.seriesId)) : null;
-        const taskInvalid = !sessionTask;
-        const seriesInvalid = Boolean(session.seriesId) && !sessionSeries;
-        const relationMismatch = Boolean(sessionTask && session.seriesId && sessionTask.seriesId !== session.seriesId);
-        const energyRefs = [session.startEnergyRecordId, session.endEnergyRecordId].filter(Boolean);
-        const invalidEnergyRef = energyRefs.find((recordId) => this.recordsById.get(recordId)?.recordType !== "energy");
-        if (taskInvalid || seriesInvalid || relationMismatch || invalidEnergyRef) {
-          this.issues.push({
-            code: "task_session_reference_orphan",
-            recordId: session.id,
-            path: session.source?.path,
-            message: taskInvalid ? `Task Session ${session.id} references missing Task ${session.taskId || ""}.` : seriesInvalid ? `Task Session ${session.id} references missing Task Series ${session.seriesId || ""}.` : relationMismatch ? `Task Session ${session.id} series reference does not match Task ${session.taskId}.` : `Task Session ${session.id} references missing Energy Record ${invalidEnergyRef || ""}.`
-          });
-        }
-      }
-      const series = asTaskSeriesRecord(record2);
-      if (series) {
-        if (series.status === "active" && !series.currentTaskId) {
-          this.issues.push({
-            code: "record_reference_orphan",
-            recordId: series.id,
-            path: series.source?.path,
-            message: `活动任务系列 ${series.id} 缺少当前任务标识。`
-          });
-        } else if (series.currentTaskId) {
-          const current2 = asTaskRecord(this.recordsById.get(series.currentTaskId));
-          const relationInvalid = !current2 || current2.seriesId !== series.id;
-          const activePointerInvalid = series.status === "active" && current2?.status !== "open";
-          if (relationInvalid || activePointerInvalid) {
-            this.issues.push({
-              code: "record_reference_orphan",
-              recordId: series.id,
-              path: series.source?.path,
-              message: relationInvalid ? `Task Series ${series.id} currentTaskId ${series.currentTaskId} is missing or points outside the series.` : `Active Task Series ${series.id} currentTaskId ${series.currentTaskId} is not open.`
-            });
-          }
-        }
-      }
-    }
-    for (const [seriesId, openTasks] of openTasksBySeries.entries()) {
-      if (openTasks.length > 1) {
-        this.issues.push({
-          code: "record_reference_orphan",
-          recordId: seriesId,
-          message: `任务系列 ${seriesId} 有 ${openTasks.length} 个未完成实例；同一时间最多只能有一个活动实例。`
-        });
-      }
-    }
-    return unique2;
-  }
-  getById(recordId) {
-    return this.recordsById.get(recordId) || null;
-  }
-  getLocation(recordId) {
-    const locations = this.locationsById.get(recordId) || [];
-    return locations.length === 1 ? locations[0] : null;
-  }
-  getLocations(recordId) {
-    return [...this.locationsById.get(recordId) || []];
-  }
-  getIssues() {
-    return this.issues.map((issue2) => ({ ...issue2 }));
-  }
-}
-class DataStoreIndex {
-  records = [];
-  fileIndex = /* @__PURE__ */ new Map();
-  queryCache = /* @__PURE__ */ new Map();
-  dataVersion = 0;
-  recordIndex = new RecordIndex();
-  dispose() {
-    this.clear();
-  }
-  clear() {
-    this.records = [];
-    this.fileIndex.clear();
-    this.queryCache.clear();
-    this.recordIndex.clear();
-  }
-  clearQueryCache() {
-    this.queryCache.clear();
-  }
-  hydrateFileItems(filePath, records, opts = {}) {
-    this.fileIndex.set(filePath, records);
-    if (opts.rebuild !== false) this.rebuildIdentityIndex();
-  }
-  stageFileItems(filePath, records) {
-    this.fileIndex.set(filePath, records);
-  }
-  rebuild(opts = {}) {
-    this.rebuildIdentityIndex();
-    if (opts.bumpVersion !== false) this.bumpVersion();
-  }
-  replaceFileItems(filePath, records, opts = {}) {
-    this.fileIndex.set(filePath, records);
-    this.rebuildIdentityIndex();
-    if (opts.bumpVersion !== false) this.bumpVersion();
-  }
-  removeFileItems(filePath, opts = {}) {
-    const hadItems = this.fileIndex.delete(filePath);
-    if (hadItems) this.rebuildIdentityIndex();
-    if (opts.bumpVersion !== false) this.bumpVersion();
-    return hadItems;
-  }
-  getById(recordId) {
-    return this.recordIndex.getById(recordId);
-  }
-  getLocation(recordId) {
-    return this.recordIndex.getLocation(recordId);
-  }
-  getLocations(recordId) {
-    return this.recordIndex.getLocations(recordId);
-  }
-  getIntegrityIssues() {
-    return this.recordIndex.getIssues();
-  }
-  /** Canonical entity access for domain/repository code. No view projection is implied. */
-  getRecordEntities() {
-    return [...this.records];
-  }
-  /**
-   * All valid Record v2 entities projected for existing query/view consumers.
-   * Internal task-series/task-session records are included.
-   */
-  queryRecords(filters = [], sortRules = []) {
-    const key = `records:${this.makeQueryKey(filters, sortRules)}`;
-    const cached2 = this.queryCache.get(key);
-    if (cached2) return cached2;
-    const projected = this.records.map(toRecordViewItem);
-    const result = queryRecordItems(projected, { filterGroups: [filters], sort: sortRules });
-    this.queryCache.set(key, result);
-    return result;
-  }
-  /** User-visible records only. Internal Series/Session entities stay behind the application boundary. */
-  queryItems(filters = [], sortRules = []) {
-    const key = this.makeQueryKey(filters, sortRules);
-    const cached2 = this.queryCache.get(key);
-    if (cached2) return cached2;
-    const userVisibleItems = this.records.filter((record2) => record2.recordType !== "task-series" && record2.recordType !== "task-session").map(toRecordViewItem);
-    const result = queryRecordItems(userVisibleItems, { filterGroups: [filters], sort: sortRules });
-    this.queryCache.set(key, result);
-    return result;
-  }
-  bumpVersion() {
-    this.dataVersion++;
-    this.queryCache.clear();
-  }
-  rebuildIdentityIndex() {
-    this.records = this.recordIndex.rebuild(this.fileIndex);
-    this.queryCache.clear();
-  }
-  makeQueryKey(filters = [], sortRules = []) {
-    return JSON.stringify({ f: filters, s: sortRules, v: this.dataVersion });
-  }
-}
-async function buildWarmStartPlan(paths, cache, fileStat) {
-  const seen = /* @__PURE__ */ new Set();
-  const unchangedEntries = [];
-  const changedFiles = [];
-  for (const path of paths) {
-    seen.add(path);
-    const st = await fileStat.stat(path);
-    if (!st) {
-      continue;
-    }
-    const cached2 = cache.files[path];
-    if (cached2 && cached2.mtime === st.mtime && cached2.size === st.size) {
-      unchangedEntries.push({ path, cached: cached2 });
-    } else {
-      changedFiles.push(path);
-    }
-  }
-  return { seen, unchangedEntries, changedFiles };
-}
-var __getOwnPropDesc$c = Object.getOwnPropertyDescriptor;
-var __decorateClass$c = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$c(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-var __decorateParam$b = (index, decorator) => (target, key) => decorator(target, key, index);
-let DataStore = class {
-  constructor(vault, metadata, fileStat, storage) {
-    this.vault = vault;
-    this.metadata = metadata;
-    this.fileStat = fileStat;
-    this.storage = storage;
-    this.cacheStore = new DataStoreCache(this.storage, () => this._assertNotDisposed());
-    this.fileScanner = new DataStoreFileScanner(this.vault, this.metadata, this.fileStat);
-  }
-  vault;
-  metadata;
-  fileStat;
-  storage;
-  index = new DataStoreIndex();
-  cacheStore;
-  fileScanner;
-  scannerIssuesByFile = /* @__PURE__ */ new Map();
-  runtimeIntegrityIssues = [];
-  changeListeners = /* @__PURE__ */ new Set();
-  _perf = { start: 0, end: 0, scannedFiles: 0, scannedItems: 0 };
-  _disposed = false;
-  /**
-   * Lifecycle: release timers/listeners to avoid writing after unload.
-   */
-  dispose() {
-    this._disposed = true;
-    this.cacheStore.dispose();
-    this.index.dispose();
-    this.scannerIssuesByFile.clear();
-    this.runtimeIntegrityIssues.length = 0;
-    this.changeListeners.clear();
-  }
-  _assertNotDisposed() {
-    return !this._disposed;
-  }
-  /* ---------------- 启动扫描 ---------------- */
-  // 兼容保留（可能被其他位置直接调用）
-  async scanAll() {
-    if (!this._assertNotDisposed()) return;
-    this.index.clear();
-    this.scannerIssuesByFile.clear();
-    this.runtimeIntegrityIssues.length = 0;
-    const paths = this.vault.listMarkdownFilePaths();
-    for (const path of paths) {
-      if (!this._assertNotDisposed()) break;
-      const scanned = await this.scanFile(path, { bumpVersion: false, deferIndexRebuild: true, deferCacheSave: true });
-      this._perf.scannedFiles += 1;
-      this._perf.scannedItems += scanned.length;
-    }
-    this.index.rebuild();
-    this.cacheStore.scheduleSave();
-  }
-  // [主流程] 初始扫描（代理到暖启动）
-  async initialScan() {
-    if (!this._assertNotDisposed()) return;
-    return this.warmStart();
-  }
-  /**
-   * 手动恢复：清空缓存并重新扫描。
-   *
-   * 用途：
-   * - 修复缓存文件写入异常导致的“items=0”
-   * - 版本迁移时用户本地残留旧 cache
-   *
-   * 说明：不会触碰用户笔记内容，只重建 Think/cache.json。
-   */
-  async clearCacheAndRescan(mode = "warm") {
-    this.index.clear();
-    this.cacheStore.clearMemory();
-    try {
-      await this.cacheStore.removePersisted();
-    } catch (e2) {
-      devWarn("ThinkPlugin: 删除缓存文件失败（可忽略）", e2);
-    }
-    if (mode === "full") {
-      await this.scanAll();
-    } else {
-      await this.warmStart();
-    }
-    this.notifyChange();
-  }
-  // [主流程] 暖启动：加载缓存 → 目录 stat → 仅扫描变更 → 合并内存 → 防抖保存
-  async warmStart() {
-    if (!this._assertNotDisposed()) return;
-    this._perf = { start: Date.now(), end: 0, scannedFiles: 0, scannedItems: 0 };
-    const cache = await this.cacheStore.load();
-    const paths = this.vault.listMarkdownFilePaths();
-    const plan = await buildWarmStartPlan(paths, cache, this.fileStat);
-    this.index.clear();
-    this.scannerIssuesByFile.clear();
-    this.runtimeIntegrityIssues.length = 0;
-    for (const { path, cached: cached2 } of plan.unchangedEntries) {
-      this.index.stageFileItems(path, this.cacheStore.restoreItems(cached2));
-      this.scannerIssuesByFile.set(path, (cached2.integrityIssues || []).map((issue2) => ({ ...issue2, code: issue2.code })));
-    }
-    for (const pth of plan.changedFiles) {
-      const scanned = await this.scanFile(pth, { bumpVersion: false, deferIndexRebuild: true, deferCacheSave: true });
-      this._perf.scannedFiles += 1;
-      this._perf.scannedItems += scanned.length;
-    }
-    this.cacheStore.removeMissingFiles(plan.seen);
-    this.index.rebuild();
-    this._perf.end = Date.now();
-    this.cacheStore.scheduleSave();
-    this.notifyChange();
-  }
-  /* ---------------- 单文件扫描 ---------------- */
-  /**
-   * Phase2 迁移辅助：按路径扫描文件。
-   * 目的：让 core 其它服务（如 ItemService）不需要依赖 Obsidian 的 TFile 类型。
-   */
-  async scanFileByPath(filePath, opts = {}) {
-    if (!this._assertNotDisposed()) return [];
-    return await this.scanFile(filePath, opts);
-  }
-  /**
-   * 扫描单个文件。
-   *
-   * Phase2 之后 core 不能 import 'obsidian'，但外层（feature / platform）
-   * 仍可能传入 TFile。
-   *
-   * 为了避免“升级后类型/运行时断裂”，这里接受两类入参：
-   * - string: file path
-   * - { path: string }: 结构化对象（兼容 TFile）
-   */
-  async scanFile(filePathOrFile, opts = {}) {
-    if (!this._assertNotDisposed()) return [];
-    try {
-      const scanned = await this.fileScanner.scan(filePathOrFile);
-      if (!scanned) {
-        const filePath = typeof filePathOrFile === "string" ? filePathOrFile : filePathOrFile?.path || "";
-        const error = new Error(`record_scan_unavailable:${filePath || "<unknown>"}`);
-        const issue2 = {
-          code: "record_scan_failed",
-          path: filePath || void 0,
-          message: error.message
-        };
-        if (filePath) this.scannerIssuesByFile.set(filePath, [issue2]);
-        if (opts.throwOnError) throw error;
-        return [];
-      }
-      this.scannerIssuesByFile.set(scanned.filePath, scanned.integrityIssues);
-      if (opts.deferIndexRebuild) this.index.stageFileItems(scanned.filePath, scanned.items);
-      else this.index.replaceFileItems(scanned.filePath, scanned.items, { bumpVersion: opts.bumpVersion });
-      this.cacheStore.upsertFile(scanned.filePath, scanned.stat, scanned.items, scanned.integrityIssues);
-      if (!opts.deferCacheSave) this.cacheStore.scheduleSave();
-      return scanned.items;
-    } catch (err) {
-      const filePath = typeof filePathOrFile === "string" ? filePathOrFile : filePathOrFile?.path || "";
-      const issue2 = {
-        code: "record_scan_failed",
-        path: filePath || void 0,
-        message: `记录扫描失败（${filePath || "未知文件"}）：${err instanceof Error ? err.message : String(err)}`
-      };
-      if (filePath) this.scannerIssuesByFile.set(filePath, [issue2]);
-      devError("ThinkPlugin: 扫描文件失败", filePath, err);
-      if (opts.throwOnError) throw err;
-      return [];
-    }
-  }
-  removeFileItems(filePath) {
-    this.scannerIssuesByFile.delete(filePath);
-    this.index.removeFileItems(filePath);
-    if (this.cacheStore.removeFile(filePath)) {
-      this.cacheStore.scheduleSave();
-    }
-  }
-  /* ---------------- 查询 ---------------- */
-  queryRecords(filters = [], sortRules = []) {
-    return this.index.queryRecords(filters, sortRules);
-  }
-  queryItems(filters = [], sortRules = []) {
-    return this.index.queryItems(filters, sortRules);
-  }
-  /** Canonical entity lookup for repository/domain code; getRecordById is the consumer projection. */
-  getRecordEntityById(recordId) {
-    return this.index.getById(recordId);
-  }
-  getRecordById(recordId) {
-    const record2 = this.index.getById(recordId);
-    return record2 ? toRecordViewItem(record2) : null;
-  }
-  getRecordLocation(recordId) {
-    return this.index.getLocation(recordId);
-  }
-  getRecordLocations(recordId) {
-    return this.index.getLocations(recordId);
-  }
-  getRecordIntegrityIssues() {
-    return [
-      ...Array.from(this.scannerIssuesByFile.values()).flat(),
-      ...this.index.getIntegrityIssues(),
-      ...this.runtimeIntegrityIssues.map((issue2) => ({ ...issue2 }))
-    ];
-  }
-  reportRecordIntegrityIssue(issue2) {
-    this.runtimeIntegrityIssues.push({ ...issue2 });
-  }
-  clearRuntimeIntegrityIssues() {
-    this.runtimeIntegrityIssues.length = 0;
-  }
-  /* ---------------- 变更通知 ---------------- */
-  _emitChange() {
-    this.changeListeners.forEach((fn3) => {
-      try {
-        fn3();
-      } catch (e2) {
-        devError("ThinkPlugin: 数据变化通知错误", e2);
-      }
-    });
-  }
-  _emitThrottled = throttle(() => this._emitChange(), 250);
-  subscribe(listener) {
-    if (this._assertNotDisposed()) this.changeListeners.add(listener);
-  }
-  unsubscribe(listener) {
-    this.changeListeners.delete(listener);
-  }
-  notifyChange() {
-    if (this._assertNotDisposed()) this._emitThrottled();
-  }
-};
-DataStore = __decorateClass$c([
-  singleton(),
-  __decorateParam$b(0, inject(VAULT_PORT_TOKEN)),
-  __decorateParam$b(1, inject(METADATA_PORT_TOKEN)),
-  __decorateParam$b(2, inject(FILESTAT_PORT_TOKEN)),
-  __decorateParam$b(3, inject(STORAGE_TOKEN))
-], DataStore);
 const HIDDEN_EXTRA_ALIAS_SET = /* @__PURE__ */ new Set(["正文", "内容", "任务内容", "记录内容", "editableText"]);
 function normalizeRetrievalText(value) {
   if (value == null) return "";
@@ -16628,15 +18594,15 @@ function searchResultToItem(sr, indexedItemsById) {
     extra: {}
   };
 }
-var __getOwnPropDesc$b = Object.getOwnPropertyDescriptor;
-var __decorateClass$b = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$b(target, key) : target;
+var __getOwnPropDesc$7 = Object.getOwnPropertyDescriptor;
+var __decorateClass$7 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$7(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$a = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$6 = (index, decorator) => (target, key) => decorator(target, key, index);
 let RetrievalService = class {
   constructor(dataStore) {
     this.dataStore = dataStore;
@@ -16744,19 +18710,19 @@ let RetrievalService = class {
     return result;
   }
 };
-RetrievalService = __decorateClass$b([
+RetrievalService = __decorateClass$7([
   singleton(),
-  __decorateParam$a(0, inject(DataStore))
+  __decorateParam$6(0, inject(DataStore))
 ], RetrievalService);
-var __getOwnPropDesc$a = Object.getOwnPropertyDescriptor;
-var __decorateClass$a = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$a(target, key) : target;
+var __getOwnPropDesc$6 = Object.getOwnPropertyDescriptor;
+var __decorateClass$6 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$6(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$9 = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$5 = (index, decorator) => (target, key) => decorator(target, key, index);
 const SYSTEM_PROMPT = `你是一个个人工作记录助手，帮助用户查询和分析他们的工作记录、任务和笔记。
 
 你的职责：
@@ -16925,12 +18891,11 @@ ${contextStr}
     });
   }
 };
-AiChatService = __decorateClass$a([
+AiChatService = __decorateClass$6([
   singleton(),
-  __decorateParam$9(0, inject(SettingsProviderToken)),
-  __decorateParam$9(1, inject(RetrievalService))
+  __decorateParam$5(0, inject(SettingsProviderToken)),
+  __decorateParam$5(1, inject(RetrievalService))
 ], AiChatService);
-const UI_PORT_TOKEN = "UiPort";
 const MODAL_PORT_TOKEN = "ModalPort";
 const EVENTS_PORT_TOKEN = "EventsPort";
 const MESSAGE_RENDER_PORT_TOKEN = /* @__PURE__ */ Symbol("MessageRenderPort");
@@ -17059,6 +19024,230 @@ function arrayMove$1(array2, from2, to) {
   const [moved2] = next2.splice(from2, 1);
   next2.splice(to, 0, moved2);
   return next2;
+}
+const BLOCK_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  view: "BlockView",
+  title: "块视图",
+  collapsed: false,
+  fields: [],
+  group: "recordType"
+};
+const ENERGY_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  windowDays: 7,
+  recentSampleLimit: 5,
+  maxGoals: 3,
+  goalPath: "",
+  showTimeline: true,
+  showContext: true,
+  showEffects: true,
+  analysisWindowDays: 30,
+  showPatterns: true,
+  showManagement: true,
+  currentContext: "any"
+};
+const EISENHOWER_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  showUnclassified: true
+};
+const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  timeField: "date",
+  titleField: "primaryText",
+  contentField: "content",
+  groupByDay: true,
+  showWeekday: true,
+  maxContentLength: 160,
+  fields: ["primaryText", "date"],
+  groupFields: []
+};
+const EXCEL_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  view: "ExcelView",
+  title: "数据表格",
+  collapsed: false,
+  fields: []
+};
+const HEATMAP_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  displayMode: "habit",
+  sourceRecordTypeId: "",
+  goalPaths: [],
+  maxDailyChecks: 10,
+  allowManualEdit: true
+};
+const PROGRESS_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  mode: "goal",
+  metric: "recordCount",
+  statusFilter: ["active", "paused"],
+  basePoints: 1,
+  levelStep: 20,
+  includedRecordTypes: [],
+  ratingBonusThreshold: 4,
+  ratingBonusPoints: 1,
+  showGoalBreakdown: true,
+  showRecordTypeBreakdown: true,
+  topN: 5
+};
+const STATISTICS_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  groupBy: "goal",
+  metric: "recordCount",
+  chartType: "bar",
+  goalPath: "",
+  topN: 10,
+  categories: [],
+  displayMode: "smart",
+  minVisibleHeight: 15,
+  usePeriodField: false
+};
+const TABLE_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  view: "TableView",
+  title: "表格视图",
+  collapsed: false,
+  rowField: "recordType",
+  colField: "date"
+};
+const TIMELINE_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  defaultHourHeight: 50,
+  MAX_HOURS_PER_DAY: 24,
+  UNTRACKED_LABEL: "未记录"
+};
+const BLOCK_EXPORT_DEFAULT_CONFIG = {
+  strategy: "records"
+};
+const TABLE_EXPORT_CONFIG = {
+  strategy: "records"
+};
+const EXCEL_EXPORT_CONFIG = {
+  strategy: "table"
+};
+const TIMELINE_EXPORT_CONFIG = {
+  strategy: "timeline",
+  taskSessionMode: "expanded",
+  taskSessionScope: "range"
+};
+const EVENT_TIMELINE_EXPORT_CONFIG = {
+  strategy: "event-timeline"
+};
+const STATISTICS_EXPORT_CONFIG = {
+  strategy: "statistics"
+};
+const HEATMAP_EXPORT_CONFIG = {
+  strategy: "heatmap"
+};
+const PROGRESS_EXPORT_CONFIG = {
+  strategy: "progress"
+};
+const ENERGY_EXPORT_CONFIG = {
+  strategy: "energy"
+};
+const EISENHOWER_EXPORT_CONFIG = {
+  strategy: "eisenhower"
+};
+const VIEW_DEFINITIONS = {
+  BlockView: {
+    label: "块视图",
+    defaultConfig: BLOCK_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 480, freeformHeight: 340, deferredMinHeight: 420 },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: BLOCK_EXPORT_DEFAULT_CONFIG
+  },
+  TableView: {
+    label: "表格",
+    defaultConfig: TABLE_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 680, freeformHeight: 420, deferredMinHeight: 420 },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: TABLE_EXPORT_CONFIG
+  },
+  ExcelView: {
+    label: "数据表格",
+    defaultConfig: EXCEL_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 760, freeformHeight: 460, deferredMinHeight: 420 },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: EXCEL_EXPORT_CONFIG
+  },
+  TimelineView: {
+    label: "时间轴",
+    defaultConfig: TIMELINE_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 680, freeformHeight: 420, deferredMinHeight: 520 },
+    capabilities: { headerCreate: true, export: true },
+    exportConfig: TIMELINE_EXPORT_CONFIG
+  },
+  StatisticsView: {
+    label: "统计",
+    defaultConfig: STATISTICS_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 440, freeformHeight: 340, deferredMinHeight: 320 },
+    capabilities: { headerCreate: true, export: true },
+    exportConfig: STATISTICS_EXPORT_CONFIG
+  },
+  HeatmapView: {
+    label: "打卡",
+    defaultConfig: HEATMAP_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 520, freeformHeight: 360, deferredMinHeight: 360 },
+    capabilities: { headerCreate: true, export: true },
+    exportConfig: HEATMAP_EXPORT_CONFIG
+  },
+  EventTimelineView: {
+    label: "事件时间线",
+    defaultConfig: EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 680, freeformHeight: 420, deferredMinHeight: 420 },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: EVENT_TIMELINE_EXPORT_CONFIG
+  },
+  ProgressView: {
+    label: "成长",
+    defaultConfig: PROGRESS_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 480, freeformHeight: 360, deferredMinHeight: 360 },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: PROGRESS_EXPORT_CONFIG
+  },
+  EnergyView: {
+    label: "精力",
+    defaultConfig: ENERGY_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 720, freeformHeight: 620, deferredMinHeight: 440 },
+    capabilities: { headerCreate: true, export: true },
+    exportConfig: ENERGY_EXPORT_CONFIG
+  },
+  EisenhowerView: {
+    label: "四象限",
+    defaultConfig: EISENHOWER_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 760, freeformHeight: 560, deferredMinHeight: 480 },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: EISENHOWER_EXPORT_CONFIG
+  }
+};
+const VIEW_OPTIONS = Object.freeze(
+  Object.keys(VIEW_DEFINITIONS)
+);
+Object.freeze(
+  Object.fromEntries(
+    VIEW_OPTIONS.map((viewType) => [viewType, VIEW_DEFINITIONS[viewType].defaultConfig])
+  )
+);
+function isRegisteredViewName(value) {
+  return Object.prototype.hasOwnProperty.call(VIEW_DEFINITIONS, value);
+}
+function getViewDefinition(viewType) {
+  if (!isRegisteredViewName(viewType)) return void 0;
+  return VIEW_DEFINITIONS[viewType];
+}
+function getViewLabel(viewType) {
+  const fallback = viewType.replace(/View$/, "") || viewType;
+  return getViewDefinition(viewType)?.label ?? fallback;
+}
+function getViewDefaultConfig(viewType) {
+  return getViewDefinition(viewType)?.defaultConfig;
+}
+function getViewExportConfig(viewType) {
+  return getViewDefinition(viewType)?.exportConfig;
+}
+function viewHasCapability(viewType, capability) {
+  return getViewDefinition(viewType)?.capabilities[capability] === true;
 }
 const TECHNICAL_FIELDS = /* @__PURE__ */ new Set([
   "id",
@@ -18213,45 +20402,6 @@ function exportMarkdownTable(ctx) {
   for (const item of items) lines.push(`| ${uniqueColumns.map((field) => tableCell(item, field, ctx)).join(" | ")} |`);
   return lines.join("\n").trim();
 }
-const TASK_QUADRANT_PRESENTATION = {
-  q1: { quadrant: "q1", emoji: "🔥", label: "紧急且重要", shortLabel: "紧急重要" },
-  q2: { quadrant: "q2", emoji: "🎯", label: "重要但不紧急", shortLabel: "重要不紧急" },
-  q3: { quadrant: "q3", emoji: "⚡", label: "紧急但不重要", shortLabel: "紧急不重要" },
-  q4: { quadrant: "q4", emoji: "🌿", label: "不紧急且不重要", shortLabel: "不紧急不重要" },
-  unclassified: { quadrant: "unclassified", emoji: "📥", label: "未分类", shortLabel: "未分类" }
-};
-function normalizeTaskImportance(value) {
-  const normalized2 = String(value ?? "").trim().toLowerCase();
-  return normalized2 === "important" || normalized2 === "normal" ? normalized2 : null;
-}
-function normalizeTaskUrgency(value) {
-  const normalized2 = String(value ?? "").trim().toLowerCase();
-  return normalized2 === "urgent" || normalized2 === "normal" ? normalized2 : null;
-}
-function deriveEisenhowerQuadrant(task) {
-  if (!task || task.recordType !== "task") return "unclassified";
-  const importance = normalizeTaskImportance(task.importance);
-  const urgency = normalizeTaskUrgency(task.urgency);
-  if (!importance || !urgency) return "unclassified";
-  if (importance === "important" && urgency === "urgent") return "q1";
-  if (importance === "important" && urgency === "normal") return "q2";
-  if (importance === "normal" && urgency === "urgent") return "q3";
-  return "q4";
-}
-function taskClassificationForQuadrant(quadrant) {
-  switch (quadrant) {
-    case "q1":
-      return { importance: "important", urgency: "urgent" };
-    case "q2":
-      return { importance: "important", urgency: "normal" };
-    case "q3":
-      return { importance: "normal", urgency: "urgent" };
-    case "q4":
-      return { importance: "normal", urgency: "normal" };
-    default:
-      return { importance: null, urgency: null };
-  }
-}
 function statisticMetricMatch(item, metric) {
   if (metric === "taskCount") return item.recordType === "task";
   if (metric === "doneTaskCount") return item.recordType === "task" && getTaskStatus(item) === "done";
@@ -18900,49 +21050,6 @@ function applyTaskTimePolicy(input) {
 function isItemDone(item) {
   return isTaskRecord(item) && isTaskCompleted(item);
 }
-function formatTemplateValue(value) {
-  return formatFieldValueForTemplate(value);
-}
-function renderTemplate(templateString, data) {
-  return templateString.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_2, placeholder) => {
-    const key = placeholder.trim();
-    let result = "";
-    try {
-      if (key === "block") {
-        result = data.block?.name || "";
-      } else if (key === "theme") {
-        result = data.theme?.path || "";
-      } else if (key === "icon") {
-        result = data.theme?.icon || "";
-      } else if (key.startsWith("moment:")) {
-        const format = key.substring(7);
-        result = dayjs().format(format);
-      } else {
-        const keys = key.split(".");
-        const rootKey = keys[0];
-        if (!(rootKey in data)) {
-          return "";
-        }
-        let value = data[rootKey];
-        if (keys.length > 1) {
-          for (let i2 = 1; i2 < keys.length; i2++) {
-            if (value && typeof value === "object" && keys[i2] in value) {
-              value = value[keys[i2]];
-            } else {
-              value = "";
-              break;
-            }
-          }
-        }
-        result = formatTemplateValue(value);
-      }
-      return result;
-    } catch (e2) {
-      devError(`[ThinkPlugin] 解析模板变量 {{${key}}} 时发生错误:`, e2);
-      return `(解析错误: ${key})`;
-    }
-  });
-}
 function getTimelineGoalKey(task) {
   return normalizeGoalPath(String(task.goalPath || "").trim()) || UNASSIGNED_GOAL_KEY;
 }
@@ -19121,20 +21228,20 @@ const TIMELINE_MIN_RANGE_MINUTES = 5;
 function normalizedStep(snapMinutes = TIMELINE_SNAP_MINUTES) {
   return Math.max(1, Math.round(snapMinutes));
 }
-function normalizeDateTime$2(value) {
+function normalizeDateTime$1(value) {
   const raw = String(value || "").trim();
   return /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(raw) ? raw.replace(" ", "T") : raw;
 }
 function dateTimeMs(value) {
   if (!value) return null;
-  const ms = Date.parse(normalizeDateTime$2(value));
+  const ms = Date.parse(normalizeDateTime$1(value));
   return Number.isFinite(ms) ? ms : null;
 }
 function formatLocalDateTime(value) {
   return value.format("YYYY-MM-DDTHH:mm");
 }
 function shiftDateTime(value, minutes) {
-  const parsed = dayjs(normalizeDateTime$2(value));
+  const parsed = dayjs(normalizeDateTime$1(value));
   if (!parsed.isValid()) return null;
   return formatLocalDateTime(parsed.add(minutes, "minute"));
 }
@@ -19187,14 +21294,14 @@ function resizeTimelineLogicalRange(range, boundary, day, minute, maxHours = 24,
 function projectTimelineLogicalRangeToDay(range, day) {
   const dayStart = dayjs(day).startOf("day");
   const dayEnd = dayStart.add(1, "day");
-  const start2 = dayjs(normalizeDateTime$2(range.start));
+  const start2 = dayjs(normalizeDateTime$1(range.start));
   if (!start2.isValid()) return null;
   if (!range.end) {
     if (!start2.isSame(dayStart, "day")) return null;
     const minute = start2.diff(dayStart, "minute", true);
     return { blockStartMinute: minute, blockEndMinute: minute, durationMinutes: 0 };
   }
-  const end2 = dayjs(normalizeDateTime$2(range.end));
+  const end2 = dayjs(normalizeDateTime$1(range.end));
   if (!end2.isValid() || !end2.isAfter(start2)) return null;
   if (!end2.isAfter(dayStart) || !start2.isBefore(dayEnd)) return null;
   const visibleStart = start2.isAfter(dayStart) ? start2 : dayStart;
@@ -19679,1900 +21786,6 @@ function markDisposed() {
 function isDisposed() {
   return disposed;
 }
-class RecordConflictError extends Error {
-  constructor(conflictCode, message) {
-    super(message);
-    this.conflictCode = conflictCode;
-  }
-  conflictCode;
-  name = "RecordConflictError";
-}
-function createRecordConflictError(code, message) {
-  return new RecordConflictError(code, message);
-}
-function isRecordConflictError(error) {
-  return error instanceof RecordConflictError || error?.name === "RecordConflictError";
-}
-const BLOCK_START_MARKER = "<!-- start -->";
-const BLOCK_END_MARKER = "<!-- end -->";
-const RECORD_ID_RE = /^\s*(?:记录ID|recordId)\s*[:：]{1,2}\s*(\S+)\s*$/i;
-function findBlockEnd(lines, startIndex) {
-  for (let index = startIndex + 1; index < lines.length; index += 1) {
-    if (lines[index].trim() === BLOCK_END_MARKER) return index;
-  }
-  return null;
-}
-function blockRecordId(lines, startIndex, endIndex) {
-  for (let index = startIndex + 1; index < endIndex; index += 1) {
-    const match5 = lines[index].match(RECORD_ID_RE);
-    if (match5) return match5[1].trim();
-  }
-  return null;
-}
-function resolveRecordBlockRangeById(lines, recordId, expectedStartIndex) {
-  const expected = typeof expectedStartIndex === "number" ? expectedStartIndex : null;
-  if (expected !== null && expected >= 0 && lines[expected]?.trim() === BLOCK_START_MARKER) {
-    const endIndex = findBlockEnd(lines, expected);
-    if (endIndex === null) {
-      throw createRecordConflictError("record_block_boundary_invalid", "记录块边界已损坏，无法安全更新。");
-    }
-    if (blockRecordId(lines, expected, endIndex) === recordId) return { startIndex: expected, endIndex };
-  }
-  const matches = [];
-  for (let index = 0; index < lines.length; index += 1) {
-    if (lines[index].trim() !== BLOCK_START_MARKER) continue;
-    const endIndex = findBlockEnd(lines, index);
-    if (endIndex === null) continue;
-    if (blockRecordId(lines, index, endIndex) === recordId) matches.push({ startIndex: index, endIndex });
-    index = endIndex;
-  }
-  if (matches.length === 1) return matches[0];
-  if (matches.length > 1) {
-    throw createRecordConflictError("record_id_duplicate", `记录标识 ${recordId} 在同一文件中重复，无法安全判断要修改哪一条记录。`);
-  }
-  throw createRecordConflictError("record_item_missing", `找不到记录标识 ${recordId} 对应的记录块。`);
-}
-function nonEmpty(value) {
-  if (value === void 0 || value === null) return false;
-  if (Array.isArray(value)) return value.some(nonEmpty);
-  if (typeof value === "string") return value.trim().length > 0;
-  return true;
-}
-function optionParts(value) {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    const row = value;
-    return { value: row.value ?? row.id ?? row.label, label: row.label ?? row.value ?? row.id };
-  }
-  return { value, label: value };
-}
-function first(renderData, keys) {
-  for (const key of keys) {
-    const value = renderData[key];
-    if (nonEmpty(value)) return value;
-  }
-  return void 0;
-}
-function normalizeFieldValue(field, raw) {
-  if (!nonEmpty(raw)) return void 0;
-  const option = optionParts(raw);
-  const scalar2 = option.value;
-  if (field.valueType === "number") {
-    const value = typeof scalar2 === "number" ? scalar2 : Number(String(scalar2 ?? "").trim());
-    return Number.isFinite(value) ? value : void 0;
-  }
-  if (field.valueType === "boolean") {
-    if (typeof scalar2 === "boolean") return scalar2;
-    const text22 = String(scalar2 ?? "").trim().toLowerCase();
-    if (["true", "1", "yes"].includes(text22)) return true;
-    if (["false", "0", "no"].includes(text22)) return false;
-    return void 0;
-  }
-  if (field.valueType === "tags") {
-    if (Array.isArray(raw)) return raw.map((value) => String(optionParts(value).value ?? "").trim()).filter(Boolean);
-    return String(scalar2 ?? "").split(/[,，\n]/).map((value) => value.trim()).filter(Boolean);
-  }
-  const text2 = String(scalar2 ?? "").trim();
-  if (!text2) return void 0;
-  if (field.allowedValues?.length && !field.allowedValues.includes(text2)) return void 0;
-  return text2;
-}
-function normalizeCustomValue(field, raw) {
-  if (!nonEmpty(raw)) return void 0;
-  const schema = resolveCaptureFieldSchema(field);
-  const isMulti = schema.cardinality === "multi";
-  if (isMulti) {
-    const values2 = Array.isArray(raw) ? raw : String(raw).split(/[,，\n]/);
-    if (schema.valueType === "image") {
-      return values2.map((value) => normalizeImageValue(value)?.src).filter((value) => Boolean(value));
-    }
-    return values2.map((value) => String(optionParts(value).value ?? "").trim()).filter(Boolean);
-  }
-  const option = optionParts(raw);
-  const scalar2 = option.value;
-  switch (schema.valueType) {
-    case "number": {
-      const value = typeof scalar2 === "number" ? scalar2 : Number(String(scalar2 ?? "").trim());
-      return Number.isFinite(value) ? value : void 0;
-    }
-    case "boolean": {
-      if (typeof scalar2 === "boolean") return scalar2;
-      const text2 = String(scalar2 ?? "").trim().toLowerCase();
-      if (["true", "1", "yes"].includes(text2)) return true;
-      if (["false", "0", "no"].includes(text2)) return false;
-      return void 0;
-    }
-    case "image":
-      return normalizeImageValue(raw)?.src;
-    default: {
-      const text2 = String(scalar2 ?? "").trim();
-      return text2 || void 0;
-    }
-  }
-}
-function candidateForField(recordType, field, renderData) {
-  switch (field.key) {
-    case "目标": {
-      const explicit = first(renderData, ["目标", "goalPath"]);
-      if (nonEmpty(explicit)) return explicit;
-      return void 0;
-    }
-    case "日期":
-      return first(renderData, ["日期", "date"]);
-    case "内容":
-      return first(renderData, ["内容", "content", "任务内容"]);
-    case "图标":
-      return first(renderData, ["图标", "icon"]);
-    case "标签":
-      return first(renderData, ["标签", "tags"]);
-    case "记录子类型":
-      return first(renderData, ["记录子类型", "recordSubtype"]);
-    case "周期粒度": {
-      const explicit = first(renderData, ["周期粒度", "periodGranularity"]);
-      if (nonEmpty(explicit)) return explicit;
-      const period = renderData.period;
-      return period && typeof period === "object" && !Array.isArray(period) ? period.granularity : void 0;
-    }
-    case "评分": {
-      const raw = first(renderData, ["评分", "rating"]);
-      const option = optionParts(raw);
-      return option.label;
-    }
-    case "图片": {
-      const explicit = first(renderData, ["图片", "image"]);
-      if (nonEmpty(explicit)) return explicit;
-      const rating = first(renderData, ["评分", "rating"]);
-      return optionParts(rating).value;
-    }
-    default:
-      return first(renderData, [field.key, ...field.aliases || []]);
-  }
-}
-function contractForCaptureField(recordType, field) {
-  for (const token2 of [field.key, field.label, ...field.aliases || []]) {
-    const contract = getRecordFieldContract(recordType, token2);
-    if (contract) return contract;
-  }
-  const semantic = getTemplateFieldSemantic(field);
-  const keyBySemantic = {
-    body: "内容",
-    tags: "标签",
-    goalPath: "目标",
-    date: "日期",
-    recordSubtype: "记录子类型",
-    rating: "评分",
-    image: "图片",
-    icon: "图标",
-    period: "周期粒度"
-  };
-  const key = keyBySemantic[semantic];
-  return key ? getRecordFieldContract(recordType, key) : null;
-}
-function targetContract(recordType, contract) {
-  if (contract.persistence === "target" || contract.persistence === "omit-default") return contract;
-  return null;
-}
-function putCanonical(fields, recordType, contract, renderData) {
-  if (!contract || contract.role === "identity") return;
-  const value = normalizeFieldValue(contract, candidateForField(recordType, contract, renderData));
-  if (!nonEmpty(value)) return;
-  if (contract.persistence === "omit-default" && contract.defaultValue !== void 0 && value === contract.defaultValue) return;
-  fields[contract.key] = value;
-}
-function buildCustomCaptureFields(recordType, renderData, captureFields = []) {
-  const schema = requireRecordSchemaDefinition(recordType);
-  if (!schema.capabilities.customFields) return {};
-  const fields = {};
-  for (const field of captureFields) {
-    if (contractForCaptureField(recordType, field)) continue;
-    const resolved = resolveCaptureFieldSchema(field);
-    const markdownKey = String(resolved.storage?.markdownKey || field.label || field.key || resolved.label || "").trim();
-    if (!isSafeMarkdownFieldKey(markdownKey) || ["记录ID", "记录版本", "记录类型"].includes(markdownKey)) continue;
-    const value = normalizeCustomValue(field, first(renderData, [field.key, field.label]));
-    if (nonEmpty(value)) fields[markdownKey] = value;
-  }
-  return fields;
-}
-function buildGenericRecordDraft(recordType, renderData, captureFields) {
-  const schema = requireRecordSchemaDefinition(recordType);
-  if (schema.family !== "generic") throw new Error(`record_draft_not_generic:${recordType}`);
-  const fields = {};
-  putCanonical(fields, recordType, getRecordFieldContract(recordType, "目标"), renderData);
-  putCanonical(fields, recordType, getRecordFieldContract(recordType, "周期粒度"), renderData);
-  for (const captureField of captureFields) {
-    const rawContract = contractForCaptureField(recordType, captureField);
-    const contract = rawContract ? targetContract(recordType, rawContract) : null;
-    if (contract) {
-      putCanonical(fields, recordType, contract, renderData);
-      if (recordType === "habit" && contract.key === "评分") {
-        putCanonical(fields, recordType, getRecordFieldContract(recordType, "图片"), renderData);
-      }
-      continue;
-    }
-    const custom = buildCustomCaptureFields(recordType, renderData, [captureField]);
-    for (const [key, value] of Object.entries(custom)) fields[key] = value;
-  }
-  return { recordType, fields };
-}
-function readRecord$1(value) {
-  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
-}
-function readString(value) {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    const option = value;
-    return String(option.value ?? option.label ?? "").trim();
-  }
-  return String(value ?? "").trim();
-}
-function readCompletedExecutionContext(context) {
-  const ui = readRecord$1(context?.__recordUiContext);
-  if (ui.captureMode !== "completed_execution") return null;
-  if (ui.kind === "timeline_create") {
-    return { kind: "timeline_create", captureMode: "completed_execution", source: "timeline" };
-  }
-  if (ui.kind === "quickinput_create") {
-    return { kind: "quickinput_create", captureMode: "completed_execution", source: "unknown" };
-  }
-  return null;
-}
-function isTimelineCompletedExecutionContext(context) {
-  return readCompletedExecutionContext(context)?.kind === "timeline_create";
-}
-function normalizeDateTime$1(value) {
-  const raw = readString(value).replace(" ", "T");
-  if (!raw) return null;
-  const ms = Date.parse(raw);
-  if (!Number.isFinite(ms)) return null;
-  return { iso: new Date(ms).toISOString(), ms };
-}
-function durationMinutes(startedMs, endedMs) {
-  return Math.round((endedMs - startedMs) / 6e4 * 100) / 100;
-}
-function buildTimelineCompletedExecutionSessionInput(input) {
-  const captureContext = readCompletedExecutionContext(input.context);
-  if (!captureContext) return null;
-  if (captureContext.kind !== "timeline_create" && readString(input.taskFields.status).toLowerCase() !== "done") return null;
-  const started = normalizeDateTime$1(input.taskFields.startAt);
-  const ended = normalizeDateTime$1(input.taskFields.endAt);
-  if (!started || !ended || ended.ms <= started.ms) return null;
-  const duration2 = durationMinutes(started.ms, ended.ms);
-  if (!Number.isFinite(duration2) || duration2 <= 0) return null;
-  return {
-    startedAt: started.iso,
-    endedAt: ended.iso,
-    durationMinutes: duration2,
-    result: "task-completed",
-    source: captureContext.source
-  };
-}
-function buildTimelineCompletedExecutionPersistence(input) {
-  const session = buildTimelineCompletedExecutionSessionInput(input);
-  if (!session) return { taskFields: { ...input.taskFields }, session: null };
-  const taskFields = { ...input.taskFields };
-  if (isTimelineCompletedExecutionContext(input.context)) taskFields.status = "done";
-  delete taskFields.startAt;
-  delete taskFields.endAt;
-  delete taskFields.expectedDurationMinutes;
-  taskFields.completedAt = readString(taskFields.completedAt) || session.endedAt;
-  return { taskFields, session };
-}
-function normalizeNonEmptyPath(value) {
-  const trimmed = String(value || "").trim();
-  return trimmed || null;
-}
-function readScalarOption(value) {
-  const option = readOptionText$1(value);
-  return String(option.value || option.label || value || "").trim();
-}
-function normalizeLocalDateTime(value) {
-  const text2 = readScalarOption(value);
-  if (!text2) return void 0;
-  const normalized2 = text2.replace(" ", "T");
-  const parsed = new Date(normalized2);
-  return Number.isFinite(parsed.getTime()) ? normalized2 : void 0;
-}
-function localDatePart(value) {
-  if (!value) return void 0;
-  const parsed = new Date(value);
-  if (!Number.isFinite(parsed.getTime())) return void 0;
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-function durationMinutesBetween(start2, end2) {
-  if (!start2 || !end2) return void 0;
-  const startMs = new Date(start2).getTime();
-  const endMs = new Date(end2).getTime();
-  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs < startMs) return void 0;
-  return Math.max(1, Math.round((endMs - startMs) / 6e4));
-}
-function readStructuredTaskRecurrence(renderData) {
-  const rawUnit = readScalarOption(renderData["重复"] ?? renderData["重复单位"] ?? renderData.recurrenceUnit).toLowerCase();
-  if (!rawUnit || rawUnit === "none") return null;
-  if (!["day", "week", "month", "quarter", "year"].includes(rawUnit)) throw new Error(`task_recurrence_unit_invalid:${rawUnit}`);
-  const interval = Number(renderData["重复间隔"] ?? renderData.recurrenceInterval ?? 1);
-  if (!Number.isInteger(interval) || interval < 1) throw new Error(`task_recurrence_interval_invalid:${interval}`);
-  const rawAnchor = readScalarOption(renderData["重复锚点"] ?? renderData.recurrenceAnchor ?? "scheduled").toLowerCase();
-  if (!["scheduled", "start", "due", "completion"].includes(rawAnchor)) throw new Error(`task_recurrence_anchor_invalid:${rawAnchor}`);
-  return { unit: rawUnit, interval, anchor: rawAnchor };
-}
-function buildRenderData(template, formData) {
-  const normalizedData = normalizeTemplateRenderData(template, formData);
-  const rawGoalPath = String(normalizedData.goalPath ?? normalizedData["目标"] ?? "").trim();
-  const goalPath = rawGoalPath ? requireGoalPath(rawGoalPath) : "";
-  const goalParts = goalPath ? goalPath.split("/").filter(Boolean) : [];
-  const recordType = String(normalizedData.recordType ?? normalizedData["记录类型"] ?? template.recordTypeId ?? template.id ?? "").trim();
-  const recordDate = String(normalizedData["日期"] ?? normalizedData.date ?? "").trim();
-  const periodPolicy = resolveTemplatePeriodPolicy(template);
-  const derivedPeriod = periodPolicy ? resolveDerivedPeriod(recordDate || void 0, periodPolicy.granularity) : null;
-  const cycleId = derivedPeriod ? String(normalizedData.cycleId ?? normalizedData["周期ID"] ?? derivedPeriod.id ?? "").trim() : "";
-  const cycleTitle = derivedPeriod ? String(normalizedData.period ?? normalizedData["周期"] ?? derivedPeriod.label ?? "").trim() : "";
-  return {
-    ...normalizedData,
-    goal: {
-      title: goalParts.length ? goalParts[goalParts.length - 1] : goalPath,
-      path: goalPath,
-      root: goalParts[0] || "",
-      leaf: goalParts.length ? goalParts[goalParts.length - 1] : ""
-    },
-    goalPath,
-    rootGoal: goalParts[0] || "",
-    leafGoal: goalParts.length ? goalParts[goalParts.length - 1] : "",
-    recordType,
-    period: derivedPeriod ? { ...derivedPeriod, id: cycleId || derivedPeriod.id, label: cycleTitle || derivedPeriod.label } : null,
-    cycle: derivedPeriod ? { ...derivedPeriod, id: cycleId || derivedPeriod.id, title: cycleTitle || derivedPeriod.label } : null,
-    cycleId: derivedPeriod ? cycleId || derivedPeriod.id : "",
-    cycleTitle: derivedPeriod ? cycleTitle || derivedPeriod.label : "",
-    periodId: derivedPeriod ? cycleId || derivedPeriod.id : "",
-    periodLabel: derivedPeriod ? cycleTitle || derivedPeriod.label : "",
-    "周期粒度": derivedPeriod ? derivedPeriod.granularity : "",
-    "周期ID": derivedPeriod ? cycleId || derivedPeriod.id : "",
-    "周期": derivedPeriod ? cycleTitle || derivedPeriod.label : ""
-  };
-}
-function buildRecordOutputPlan(input) {
-  if (!input.template) {
-    return {
-      recordId: null,
-      recordType: null,
-      targetFilePath: null,
-      targetHeader: null,
-      outputContent: "",
-      renderData: {}
-    };
-  }
-  const renderData = buildRenderData(input.template, input.formData);
-  const explicitRecordTypeId = String(input.template.recordTypeId || "").trim();
-  const systemRecordTypeId = String(input.template.id || "").trim().startsWith("core.") ? String(input.template.id || "").trim() : "";
-  const trustedRecordType = (explicitRecordTypeId || systemRecordTypeId).replace(/^core\./, "");
-  const hintedRecordType = String(renderData.recordType || input.template.id || "").trim().replace(/^core\./, "");
-  const recordType = trustedRecordType || hintedRecordType;
-  if (!recordType) throw new Error("每条记录都必须有记录类型。");
-  const schema = getRecordSchemaDefinition(recordType);
-  if (!schema) throw new Error(`unknown_record_schema:${recordType}`);
-  const recordId = String(input.recordId || "").trim() || createRecordId(recordType);
-  let outputContent;
-  if (recordType === "task") {
-    const statusOption = readOptionText$1(renderData["状态"] ?? renderData.status);
-    const candidateStatus = String(statusOption.value || statusOption.label || "open").trim().toLowerCase();
-    const status = isTimelineCompletedExecutionContext(input.context) ? "done" : ["open", "done", "cancelled", "skipped"].includes(candidateStatus) ? candidateStatus : "open";
-    const requestedRecurrence = readStructuredTaskRecurrence(renderData);
-    const recurrence = status === "done" ? null : requestedRecurrence;
-    if (!recurrence && status === "skipped") throw new Error("task_status_skipped_requires_series");
-    if (recurrence && status !== "open") throw new Error("task_series_initial_instance_must_be_open");
-    const scheduledAt = normalizeLocalDateTime(
-      renderData["计划时间"] ?? renderData.scheduledAt ?? renderData["计划日期"] ?? renderData.scheduledDate
-    );
-    const dueAt = normalizeLocalDateTime(
-      renderData["截止时间"] ?? renderData.dueAt ?? renderData["截止日期"] ?? renderData.dueDate
-    );
-    const startAt = normalizeLocalDateTime(renderData["实际开始"] ?? renderData["开始时间"] ?? renderData["开始/预计时间"] ?? renderData.startAt);
-    const endAt = normalizeLocalDateTime(renderData["实际结束"] ?? renderData["结束时间"] ?? renderData.endAt);
-    const declaredDuration = renderData["预计时长（分钟）"] ?? renderData["时长（分钟）"] ?? renderData["时长"] ?? renderData["预计时长"] ?? renderData.expectedDurationMinutes;
-    const capturedAt = (/* @__PURE__ */ new Date()).toISOString();
-    const taskFields = {
-      status,
-      content: renderData["任务内容"] ?? renderData["内容"] ?? renderData.content,
-      goalPath: renderData.goalPath,
-      priority: renderData["优先级"] ?? renderData.priority,
-      importance: renderData["重要程度"] ?? renderData.importance,
-      urgency: renderData["紧急程度"] ?? renderData.urgency,
-      energyDemand: renderData["精力要求"] ?? renderData.energyDemand,
-      brainDemand: renderData["脑力要求"] ?? renderData.brainDemand,
-      physicalDemand: renderData["体力要求"] ?? renderData.physicalDemand,
-      availabilityContexts: renderData["可用场景"] ?? renderData.availabilityContexts,
-      recoveryIntent: renderData["恢复意图"] ?? renderData.recoveryIntent,
-      scheduledAt,
-      dueAt,
-      startAt,
-      endAt,
-      expectedDurationMinutes: declaredDuration || durationMinutesBetween(startAt, endAt),
-      createdAt: renderData["创建于"] ?? renderData.createdAt ?? capturedAt,
-      // A completed Task with an explicit endAt is historical execution data.
-      // Use that end as the completion fact unless the user supplied completedAt;
-      // falling back to capture time is only appropriate when no execution end exists.
-      completedAt: status === "done" ? renderData["完成于"] ?? renderData.completedAt ?? endAt ?? capturedAt : void 0,
-      cancelledAt: status === "cancelled" ? renderData["取消于"] ?? renderData.cancelledAt : void 0,
-      skippedAt: status === "skipped" ? renderData["跳过于"] ?? renderData.skippedAt : void 0,
-      seriesId: renderData.seriesId ?? renderData["系列ID"]
-    };
-    const customTaskFields = buildCustomCaptureFields("task", renderData, input.template.fields);
-    for (const key of [
-      "重复",
-      "重复单位",
-      "重复间隔",
-      "重复锚点",
-      "recurrenceUnit",
-      "recurrenceInterval",
-      "recurrenceAnchor",
-      "计划时间",
-      "计划日期",
-      "截止时间",
-      "截止日期",
-      "scheduledAt",
-      "scheduledDate",
-      "dueAt",
-      "dueDate"
-    ]) delete customTaskFields[key];
-    Object.assign(taskFields, customTaskFields);
-    const existingSeriesId = String(taskFields.seriesId || "").trim();
-    if (recurrence && existingSeriesId) {
-      throw new Error("task_series_recurrence_edit_requires_series_command");
-    }
-    if (recurrence && !existingSeriesId) {
-      const seriesId = createRecordId("task-series");
-      taskFields.seriesId = seriesId;
-      const seriesStartDate = String(
-        localDatePart(String(taskFields.scheduledAt || "")) || localDatePart(String(taskFields.startAt || "")) || localDatePart(String(taskFields.dueAt || "")) || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)
-      );
-      const seriesBlock = encodeRecordBlock({
-        recordId: seriesId,
-        recordType: "task-series",
-        fields: {
-          status: "active",
-          content: taskFields.content,
-          goalPath: taskFields.goalPath,
-          priority: taskFields.priority,
-          importance: taskFields.importance,
-          urgency: taskFields.urgency,
-          expectedDurationMinutes: taskFields.expectedDurationMinutes,
-          energyDemand: taskFields.energyDemand,
-          brainDemand: taskFields.brainDemand,
-          physicalDemand: taskFields.physicalDemand,
-          availabilityContexts: taskFields.availabilityContexts,
-          recoveryIntent: taskFields.recoveryIntent,
-          recurrenceUnit: recurrence.unit,
-          recurrenceInterval: recurrence.interval,
-          recurrenceAnchor: recurrence.anchor,
-          seriesStartDate,
-          currentTaskId: recordId
-        }
-      });
-      const taskBlock = encodeRecordBlock({ recordId, recordType: "task", fields: taskFields });
-      outputContent = `${seriesBlock}
-
-${taskBlock}`;
-    } else {
-      const timelineExecution = buildTimelineCompletedExecutionPersistence({
-        context: input.context,
-        taskFields
-      });
-      const taskBlock = encodeRecordBlock({ recordId, recordType: "task", fields: timelineExecution.taskFields });
-      if (!timelineExecution.session) {
-        outputContent = taskBlock;
-      } else {
-        const sessionId = createRecordId("task-session");
-        const sessionBlock = encodeRecordBlock({
-          recordId: sessionId,
-          recordType: "task-session",
-          fields: buildTaskSessionFields({
-            id: recordId,
-            seriesId: existingSeriesId || void 0,
-            goalPath: String(taskFields.goalPath || "").trim() || void 0
-          }, timelineExecution.session)
-        });
-        outputContent = `${taskBlock}
-
-${sessionBlock}`;
-      }
-    }
-  } else if (schema?.family === "generic") {
-    const draft = buildGenericRecordDraft(schema.recordType, renderData, input.template.fields);
-    outputContent = encodeRecordDraft({ recordId, draft });
-  } else {
-    throw new Error(`record_capture_not_supported:${schema.recordType}:${schema.captureMode}`);
-  }
-  const targetFilePath = normalizeNonEmptyPath(renderTemplate(input.template.targetFile, renderData));
-  const targetHeader = input.template.appendUnderHeader ? normalizeNonEmptyPath(renderTemplate(input.template.appendUnderHeader, renderData)) : null;
-  return {
-    recordId,
-    recordType,
-    targetFilePath,
-    targetHeader,
-    outputContent,
-    renderData
-  };
-}
-function buildRecordPersistencePlan(input) {
-  const originalPath = normalizeNonEmptyPath(input.originalPath);
-  const targetPath = normalizeNonEmptyPath(input.outputPlan.targetFilePath);
-  if (input.mode === "create") {
-    return {
-      originalPath: null,
-      pathChanged: false,
-      writeMode: "create"
-    };
-  }
-  const pathChanged = !!originalPath && !!targetPath && originalPath !== targetPath;
-  return {
-    originalPath,
-    pathChanged,
-    writeMode: pathChanged ? "move_and_replace" : "update_in_place"
-  };
-}
-const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-const RECORD_START = "<!-- start -->";
-const RECORD_END = "<!-- end -->";
-function checkAbort(options) {
-  if (options.throwIfAborted) {
-    options.throwIfAborted(options.signal);
-    return;
-  }
-  if (options.signal?.aborted) {
-    const error = new Error("AbortError");
-    error.name = "AbortError";
-    throw error;
-  }
-}
-function readRecordMetadata(markdown) {
-  const result = /* @__PURE__ */ new Map();
-  for (const line2 of String(markdown || "").split(/\r?\n/)) {
-    const match5 = line2.match(/^\s*([^:\n]+?)\s*::\s*(.*)$/);
-    if (!match5) continue;
-    result.set(match5[1].trim(), match5[2].trim());
-  }
-  return result;
-}
-function parseMarkdownTime(raw) {
-  const value = String(raw || "").trim();
-  if (!value) return null;
-  const dateOnly2 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (dateOnly2) {
-    const [, year, month, day] = dateOnly2;
-    return Date.UTC(Number(year), Number(month) - 1, Number(day));
-  }
-  const simpleDateTime = value.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/);
-  if (simpleDateTime) {
-    const [, year, month, day, hour, minute, second = "0"] = simpleDateTime;
-    return Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
-  }
-  const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-function readUlidTime(recordId) {
-  const raw = String(recordId || "").split(".").pop()?.toUpperCase() || "";
-  if (raw.length < 10) return 0;
-  let value = 0;
-  for (const char2 of raw.slice(0, 10)) {
-    const digit = CROCKFORD.indexOf(char2);
-    if (digit < 0) return 0;
-    value = value * 32 + digit;
-  }
-  return value;
-}
-function resolveRecordSortLabels(recordType) {
-  if (recordType === "task-session") return ["结束于", "开始于"];
-  if (recordType === "task") {
-    return ["完成于", "取消于", "跳过于", "结束时间", "开始时间", "计划时间", "计划日期", "开始日期", "截止时间", "截止日期", "创建于"];
-  }
-  if (recordType === "task-series") return ["系列开始日期"];
-  if (recordType === "energy") return ["日期", "时间"];
-  return ["日期"];
-}
-function resolveRecordMarkdownSortKey(markdown) {
-  const metadata = readRecordMetadata(markdown);
-  const recordId = metadata.get("记录ID");
-  const recordType = metadata.get("记录类型") || "";
-  if (!recordId || !recordType) return null;
-  const fallback = readUlidTime(recordId);
-  let primary = null;
-  for (const label of resolveRecordSortLabels(recordType)) {
-    primary = parseMarkdownTime(metadata.get(label));
-    if (primary != null) break;
-  }
-  return { primary: primary ?? fallback, fallback };
-}
-function compareSortKey(left2, right2) {
-  if (left2.primary !== right2.primary) return left2.primary - right2.primary;
-  return left2.fallback - right2.fallback;
-}
-function findRecordBlockEnd(lines, startIndex, limit) {
-  for (let index = startIndex; index < limit; index += 1) {
-    if (lines[index].trim() === RECORD_END) return index;
-  }
-  return -1;
-}
-function ensureBlankLineBefore(lines, index) {
-  if (index > 0 && lines[index - 1]?.trim() !== "") {
-    lines.splice(index, 0, "");
-    return index + 1;
-  }
-  return index;
-}
-function insertPayload(lines, index, payload) {
-  let insertAt = ensureBlankLineBefore(lines, index);
-  const payloadLines = payload.replace(/\r\n/g, "\n").split("\n");
-  lines.splice(insertAt, 0, ...payloadLines);
-  insertAt += payloadLines.length;
-  if (insertAt < lines.length && lines[insertAt]?.trim() !== "") lines.splice(insertAt, 0, "");
-}
-function appendUnderHeaderText(text2, header, payload) {
-  const esc2 = header.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(`^${esc2}\\s*$`);
-  const lines = String(text2 || "").split("\n");
-  let headerLineIndex = lines.findIndex((line2) => regex.test(line2));
-  if (headerLineIndex === -1) {
-    if (lines.length && lines[lines.length - 1].trim() !== "") lines.push("");
-    lines.push(header, "");
-    headerLineIndex = lines.length - 2;
-  }
-  let sectionEndIndex = lines.length;
-  const headerLevel = header.match(/^(#+)\s/)?.[1].length || 0;
-  for (let index = headerLineIndex + 1; index < lines.length; index += 1) {
-    const match5 = lines[index].match(/^(#+)\s/);
-    if (match5 && match5[1].length <= headerLevel) {
-      sectionEndIndex = index;
-      break;
-    }
-  }
-  const incomingKey = resolveRecordMarkdownSortKey(payload);
-  if (!incomingKey) {
-    insertPayload(lines, sectionEndIndex, payload);
-    return lines.join("\n");
-  }
-  let insertionIndex = sectionEndIndex;
-  let lastRecordEnd = -1;
-  for (let index = headerLineIndex + 1; index < sectionEndIndex; index += 1) {
-    if (lines[index].trim() !== RECORD_START) continue;
-    const endIndex = findRecordBlockEnd(lines, index, sectionEndIndex);
-    if (endIndex < 0) break;
-    const currentBlock = lines.slice(index, endIndex + 1).join("\n");
-    const currentKey = resolveRecordMarkdownSortKey(currentBlock);
-    if (currentKey && compareSortKey(incomingKey, currentKey) > 0) {
-      insertionIndex = index;
-      break;
-    }
-    lastRecordEnd = endIndex;
-    index = endIndex;
-  }
-  if (insertionIndex === sectionEndIndex && lastRecordEnd >= 0) insertionIndex = lastRecordEnd + 1;
-  insertPayload(lines, insertionIndex, payload);
-  return lines.join("\n");
-}
-async function appendUnderHeader(vault, filePath, header, payload, options = {}) {
-  const text2 = await vault.readFile(filePath) ?? "";
-  checkAbort(options);
-  const next2 = appendUnderHeaderText(text2, header, payload);
-  checkAbort(options);
-  await vault.writeFile(filePath, next2);
-}
-var __getOwnPropDesc$9 = Object.getOwnPropertyDescriptor;
-var __decorateClass$9 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$9(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-var __decorateParam$8 = (index, decorator) => (target, key) => decorator(target, key, index);
-let InputService = class {
-  constructor(vault, dataStore) {
-    this.vault = vault;
-    this.dataStore = dataStore;
-  }
-  vault;
-  dataStore;
-  previewTemplateExecution(template, formData, recordId, context) {
-    if (!template) throw new Error("传入了无效的模板对象。");
-    const outputPlan = buildRecordOutputPlan({ template, formData, recordId, context });
-    return {
-      recordId: outputPlan.recordId,
-      renderData: outputPlan.renderData,
-      outputContent: outputPlan.outputContent,
-      targetFilePath: outputPlan.targetFilePath || "",
-      header: outputPlan.targetHeader
-    };
-  }
-  async executeTemplate(template, formData, options = {}) {
-    const signal = options.signal;
-    this.throwIfAborted(signal);
-    const preview = this.previewTemplateExecution(template, formData, options.recordId, options.context);
-    const { outputContent, targetFilePath, header } = preview;
-    if (!targetFilePath) throw new Error("模板未定义目标文件路径。");
-    return this.appendDirectRecord(targetFilePath, outputContent, header, options);
-  }
-  /**
-   * Direct Record 共用落盘入口。
-   * 不解析模板，只负责把已经生成好的稳定 Markdown 写到指定文件/目标标题下。
-   */
-  async appendDirectRecord(targetFilePath, outputContent, header = null, options = {}) {
-    const signal = options.signal;
-    if (!targetFilePath) throw new Error("直接记录未定义目标文件路径。");
-    if (!outputContent.trim()) throw new Error("直接记录输出内容为空。");
-    this.throwIfAborted(signal);
-    if (header) {
-      await appendUnderHeader(this.vault, targetFilePath, header, outputContent, {
-        signal,
-        throwIfAborted: (currentSignal) => this.throwIfAborted(currentSignal)
-      });
-      return targetFilePath;
-    }
-    const existingContent = await this.vault.readFile(targetFilePath);
-    this.throwIfAborted(signal);
-    const newContent = existingContent ? `${existingContent.trim()}
-
-${outputContent}` : outputContent;
-    await this.vault.writeFile(targetFilePath, newContent);
-    return targetFilePath;
-  }
-  /**
-   * 计划第 6.5 步：安全迁移保存。
-   * 只负责“先写新位置”，删除旧记录由 usecase 在确认写入成功后再执行。
-   */
-  async createRecordAtPlannedLocation(template, formData, options = {}) {
-    return this.executeTemplate(template, formData, options);
-  }
-  async updateExistingRecord(item, template, formData, options = {}) {
-    const signal = options.signal;
-    const autoRefresh = options.autoRefresh !== false;
-    this.throwIfAborted(signal);
-    const indexed = this.dataStore.getRecordLocation(item.id);
-    const path = item.source?.path || item.file?.path || indexed?.path || "";
-    const startLine = item.source?.startLine || item.file?.line || indexed?.startLine || 0;
-    if (!path) throw createRecordConflictError("record_locator_invalid", `无法定位记录标识 ${item.id}。`);
-    const existingContent = await this.vault.readFile(path);
-    if (existingContent == null) throw createRecordConflictError("record_path_missing", `找不到文件：${path}`);
-    this.throwIfAborted(signal);
-    const outputPlan = buildRecordOutputPlan({ template, formData, recordId: item.id });
-    const nextText = outputPlan.outputContent.trim();
-    if (!nextText) throw new Error("编辑后的输出内容为空，已取消保存。");
-    const lines = existingContent.split("\n");
-    const range = resolveRecordBlockRangeById(lines, item.id, startLine > 0 ? startLine - 1 : null);
-    lines.splice(range.startIndex, range.endIndex - range.startIndex + 1, ...nextText.split(/\r?\n/));
-    await this.vault.writeFile(path, lines.join("\n"));
-    if (autoRefresh) {
-      await this.dataStore.scanFileByPath(path);
-      this.dataStore.notifyChange();
-    }
-    return path;
-  }
-  async deleteExistingRecord(item, options = {}) {
-    const signal = options.signal;
-    const autoRefresh = options.autoRefresh !== false;
-    this.throwIfAborted(signal);
-    const indexed = this.dataStore.getRecordLocation(item.id);
-    const path = item.source?.path || item.file?.path || indexed?.path || "";
-    const startLine = item.source?.startLine || item.file?.line || indexed?.startLine || 0;
-    if (!path) throw createRecordConflictError("record_locator_invalid", `无法定位记录标识 ${item.id}。`);
-    const existingContent = await this.vault.readFile(path);
-    if (existingContent == null) throw createRecordConflictError("record_path_missing", `找不到文件：${path}`);
-    this.throwIfAborted(signal);
-    const lines = existingContent.split("\n");
-    const range = resolveRecordBlockRangeById(lines, item.id, startLine > 0 ? startLine - 1 : null);
-    lines.splice(range.startIndex, range.endIndex - range.startIndex + 1);
-    await this.vault.writeFile(path, lines.join("\n"));
-    if (autoRefresh) {
-      await this.dataStore.scanFileByPath(path);
-      this.dataStore.notifyChange();
-    }
-    return path;
-  }
-  throwIfAborted(signal) {
-    if (signal?.aborted) {
-      const error = new Error("AbortError");
-      error.name = "AbortError";
-      throw error;
-    }
-  }
-};
-InputService = __decorateClass$9([
-  singleton(),
-  __decorateParam$8(0, inject(VAULT_PORT_TOKEN)),
-  __decorateParam$8(1, inject(DataStore))
-], InputService);
-class GoalTemplateMigrationMutation {
-  constructor(repository) {
-    this.repository = repository;
-  }
-  repository;
-  /** Goal/Template migration now patches the Record Block by stable Record ID. */
-  async upsertItemGoalTemplateMigrationFields(itemId, fields, _mutationOptions = {}) {
-    const before = await this.repository.getById(itemId);
-    if (!before) throw new Error(`record_not_found:${itemId}`);
-    const path = before.source?.path || before.file?.path || "";
-    if (!path) throw new Error(`record_location_unavailable:${itemId}`);
-    const updated = await this.repository.update(itemId, fields);
-    return {
-      path,
-      beforeText: before.rawSource || "",
-      afterText: updated.rawSource || "",
-      shape: "block-metadata"
-    };
-  }
-}
-class InlineFieldMutation {
-  constructor(repository) {
-    this.repository = repository;
-  }
-  repository;
-  /**
-   * Foundation v2 write-back: field edits are Record patches addressed by stable Record ID.
-   * The public method name is retained for callers, but only canonical Record fields are emitted.
-   */
-  async upsertItemInlineFields(itemId, fields, _mutationOptions = {}) {
-    const before = await this.repository.getById(itemId);
-    if (!before) throw new Error(`record_not_found:${itemId}`);
-    const path = before.source?.path || before.file?.path || "";
-    if (!path) throw new Error(`record_location_unavailable:${itemId}`);
-    const updated = await this.repository.update(itemId, fields);
-    return {
-      path,
-      beforeLine: before.rawSource || "",
-      afterLine: updated.rawSource || ""
-    };
-  }
-}
-class MigrationBackupService {
-  constructor(dataStore, vault) {
-    this.dataStore = dataStore;
-    this.vault = vault;
-  }
-  dataStore;
-  vault;
-  /**
-   * 目标迁移前备份。
-   * - 备份当前 settings 到 JSON
-   * - 备份 DataStore 中已索引到的 Markdown 文件
-   * - 不修改原始记录；用于用户侧“一键迁移前备份”
-   */
-  async createMigrationBackup(backupRoot, settings) {
-    const root = String(backupRoot || "").replace(/^\/+|\/+$/g, "") || `ThinkOS/Backups/goal-migration-${Date.now()}`;
-    const settingsPath = `${root}/data-settings.json`;
-    const items = this.dataStore.queryItems();
-    const markdownPaths = Array.from(new Set(
-      items.map((item) => item.source?.path || item.file?.path || "").filter((path) => !!path)
-    )).sort((left2, right2) => left2.localeCompare(right2));
-    await this.vault.writeFile(settingsPath, JSON.stringify(settings, null, 2));
-    await this.vault.writeFile(`${root}/markdown-paths.json`, JSON.stringify(markdownPaths, null, 2));
-    const failedPaths = [];
-    let markdownFileCount = 0;
-    for (const path of markdownPaths) {
-      try {
-        const content = await this.vault.readFile(path);
-        if (content == null) {
-          failedPaths.push(path);
-          continue;
-        }
-        await this.vault.writeFile(`${root}/markdown/${path}`, content);
-        markdownFileCount += 1;
-      } catch (_error) {
-        failedPaths.push(path);
-      }
-    }
-    await this.vault.writeFile(`${root}/manifest.json`, JSON.stringify({
-      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-      settingsPath,
-      markdownFileCount,
-      failedPaths
-    }, null, 2));
-    return { backupRoot: root, settingsPath, markdownFileCount, failedPaths };
-  }
-}
-const ENERGY_FEEDBACK_WINDOW_MINUTES = 120;
-function energyOccurrenceMs(item) {
-  const snapshot = readEnergyItemSnapshot(item);
-  if (!snapshot?.date || !snapshot.time) return null;
-  const value = Date.parse(`${snapshot.date}T${snapshot.time.length === 5 ? `${snapshot.time}:00` : snapshot.time}`);
-  return Number.isFinite(value) ? value : null;
-}
-class TaskSessionMutation {
-  constructor(dataStore, repository) {
-    this.dataStore = dataStore;
-    this.repository = repository;
-  }
-  dataStore;
-  repository;
-  async createSession(taskId, input) {
-    const task = await this.requireTask(taskId);
-    const prepared = this.prepareCreateOperation(task, input);
-    await this.repository.batch([prepared.operation]);
-    const created = await this.repository.getById(prepared.recordId);
-    if (!created || created.recordType !== "task-session") {
-      throw new Error(`task_session_create_scan_failed:${prepared.recordId}`);
-    }
-    return created;
-  }
-  /**
-   * Update one TaskSession from a complete logical range.
-   *
-   * The public domain capability keeps the stable `updateSessionTime` name required by
-   * TaskSession consumers, while callers pass start/end as the single source of truth.
-   */
-  async updateSessionTime(sessionId, range) {
-    const session = asTaskSessionRecord(await this.repository.getById(sessionId));
-    if (!session) throw new Error(`task_session_required:${sessionId}`);
-    if (!range.end) throw new Error("task_session_range_end_required");
-    const startedMs = Date.parse(range.start);
-    const endedMs = Date.parse(range.end);
-    if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs <= startedMs) {
-      throw new Error("task_session_time_order_invalid");
-    }
-    const durationMinutes2 = Math.round((endedMs - startedMs) / 6e4 * 100) / 100;
-    await this.repository.update(session.id, {
-      sessionStartedAt: new Date(startedMs).toISOString(),
-      sessionEndedAt: new Date(endedMs).toISOString(),
-      sessionDurationMinutes: durationMinutes2
-    });
-    const updated = await this.repository.getById(session.id);
-    if (!updated) throw new Error(`task_session_update_scan_failed:${session.id}`);
-    return updated;
-  }
-  /**
-   * Bind a newly persisted Energy snapshot to the nearest eligible finished Session.
-   * Goal is intentionally not part of the match: Energy is a person-level state.
-   */
-  async linkEnergySnapshot(energyRecordId) {
-    const energy = this.dataStore.getRecordById(energyRecordId);
-    const after = energy ? readEnergyItemSnapshot(energy) : null;
-    const afterMs = energy ? energyOccurrenceMs(energy) : null;
-    if (!energy || !after || afterMs == null) return null;
-    const candidates = this.dataStore.queryRecords().map((item) => asTaskSessionRecord(item)).filter((session) => !!session).filter((session) => !!session.startEnergyRecordId && !session.endEnergyRecordId).map((session) => {
-      const endedMs = Date.parse(session.sessionEndedAt);
-      return { session, endedMs, gapMinutes: (afterMs - endedMs) / 6e4 };
-    }).filter(({ endedMs, gapMinutes }) => Number.isFinite(endedMs) && gapMinutes >= 0 && gapMinutes <= ENERGY_FEEDBACK_WINDOW_MINUTES).sort((left2, right2) => left2.gapMinutes - right2.gapMinutes);
-    const chosen = candidates[0]?.session;
-    if (!chosen?.startEnergyRecordId) return null;
-    const beforeItem = this.dataStore.getRecordById(chosen.startEnergyRecordId);
-    const before = beforeItem ? readEnergyItemSnapshot(beforeItem) : null;
-    if (!before) return null;
-    const patch = {
-      endEnergyRecordId: energyRecordId,
-      energyDelta: after.score - before.score,
-      brainDelta: before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : void 0,
-      physicalDelta: before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : void 0
-    };
-    await this.repository.update(chosen.id, patch);
-    return this.dataStore.getRecordById(chosen.id);
-  }
-  prepareCreateOperation(task, input, recordId = createRecordId("task-session")) {
-    const taskRecord = asTaskRecord(task);
-    if (!taskRecord) throw new Error(`task_record_required:${task.id}`);
-    const path = taskRecord.source?.path || taskRecord.file?.path || this.dataStore.getRecordLocation(taskRecord.id)?.path || "";
-    if (!path) throw new Error(`record_location_unavailable:${task.id}`);
-    return {
-      recordId,
-      operation: {
-        kind: "create",
-        record: {
-          recordId,
-          recordType: "task-session",
-          targetFilePath: path,
-          targetHeader: taskRecord.header || null,
-          fields: buildTaskSessionFields(taskRecord, input)
-        }
-      }
-    };
-  }
-  async requireTask(taskId) {
-    const task = asTaskRecord(await this.repository.getById(taskId));
-    if (!task) throw new Error(`task_record_required:${taskId}`);
-    return task;
-  }
-}
-function timestampNow() {
-  return (/* @__PURE__ */ new Date()).toISOString();
-}
-function buildLegacyActualRangeCompletionSession(dataStore, task) {
-  const startedAt = String(task.startAt || "").trim();
-  const endedAt = String(task.endAt || "").trim();
-  if (!startedAt || !endedAt) return null;
-  const startedMs = Date.parse(startedAt);
-  const endedMs = Date.parse(endedAt);
-  if (!Number.isFinite(startedMs) || !Number.isFinite(endedMs) || endedMs <= startedMs) return null;
-  const alreadyHasSession = dataStore.queryRecords().some((record2) => asTaskSessionRecord(record2)?.taskId === task.id);
-  if (alreadyHasSession) return null;
-  const durationMinutes2 = Math.round((endedMs - startedMs) / 6e4 * 100) / 100;
-  if (!Number.isFinite(durationMinutes2) || durationMinutes2 <= 0) return null;
-  return {
-    startedAt: new Date(startedMs).toISOString(),
-    endedAt: new Date(endedMs).toISOString(),
-    durationMinutes: durationMinutes2,
-    result: "task-completed",
-    source: "unknown"
-  };
-}
-function sourcePath(dataStore, item) {
-  return item.source?.path || item.file?.path || dataStore.getRecordLocation(item.id)?.path || "";
-}
-function nextTaskFields(task, series, completedAt, nextDates) {
-  return {
-    status: "open",
-    // Series owns future-instance defaults. Historical/current Task metadata is never used
-    // as the authority for future occurrences after a Series update.
-    content: series.content || task.content,
-    goalPath: series.goalPath,
-    createdAt: completedAt,
-    priority: series.priority,
-    importance: series.importance,
-    urgency: series.urgency,
-    expectedDurationMinutes: series.expectedDurationMinutes,
-    energyDemand: series.energyDemand,
-    brainDemand: series.brainDemand,
-    physicalDemand: series.physicalDemand,
-    availabilityContexts: series.availabilityContexts,
-    recoveryIntent: series.recoveryIntent,
-    scheduledAt: nextDates.scheduledAt,
-    startAt: nextDates.startAt,
-    dueAt: nextDates.dueAt,
-    scheduledDate: nextDates.scheduledDate,
-    startDate: nextDates.startDate,
-    dueDate: nextDates.dueDate,
-    seriesId: series.id
-  };
-}
-class TaskCompletionMutation {
-  constructor(dataStore, repository, taskSessions) {
-    this.dataStore = dataStore;
-    this.repository = repository;
-    this.taskSessions = taskSessions ?? new TaskSessionMutation(dataStore, repository);
-  }
-  dataStore;
-  repository;
-  taskSessions;
-  async completeItem(itemId, _mutationOptions = {}) {
-    await this.transition(itemId, "complete");
-  }
-  async completeItemWithSession(itemId, session, _mutationOptions = {}) {
-    if (session.result !== "task-completed") throw new Error("task_session_complete_result_required");
-    await this.transition(itemId, "complete", session);
-  }
-  async cancelItem(itemId) {
-    await this.transition(itemId, "cancel");
-  }
-  async cancelItemWithSession(itemId, session) {
-    if (session.result !== "work-block-ended") throw new Error("task_session_cancel_result_required");
-    await this.transition(itemId, "cancel", session);
-  }
-  async skipItem(itemId) {
-    await this.transition(itemId, "skip");
-  }
-  async skipItemWithSession(itemId, session) {
-    if (session.result !== "work-block-ended") throw new Error("task_session_skip_result_required");
-    await this.transition(itemId, "skip", session);
-  }
-  async reopenItem(itemId) {
-    await this.transition(itemId, "reopen");
-  }
-  async updateSeries(seriesId, update, options = {}) {
-    const series = asTaskSeriesRecord(await this.repository.getById(seriesId));
-    if (!series) throw new Error(`task_series_invalid:${seriesId}`);
-    const seriesPatch = {};
-    if (Object.prototype.hasOwnProperty.call(update, "content") && !String(update.content || "").trim()) {
-      throw new Error(`task_series_content_required:${seriesId}`);
-    }
-    if (update.recurrence) {
-      const recurrence = normalizeRecurrenceInfo({
-        ...series.recurrenceInfo,
-        ...update.recurrence
-      });
-      if (!recurrence) throw new Error(`task_series_recurrence_invalid:${seriesId}`);
-      seriesPatch.recurrenceUnit = recurrence.unit;
-      seriesPatch.recurrenceInterval = recurrence.interval;
-      seriesPatch.recurrenceAnchor = recurrence.anchor;
-    }
-    const sharedFields = [
-      ["content", "content"],
-      ["goalPath", "goalPath"],
-      ["priority", "priority"],
-      ["importance", "importance"],
-      ["urgency", "urgency"],
-      ["expectedDurationMinutes", "expectedDurationMinutes"],
-      ["energyDemand", "energyDemand"],
-      ["brainDemand", "brainDemand"],
-      ["physicalDemand", "physicalDemand"],
-      ["availabilityContexts", "availabilityContexts"],
-      ["recoveryIntent", "recoveryIntent"]
-    ];
-    for (const [sourceKey, patchKey] of sharedFields) {
-      if (Object.prototype.hasOwnProperty.call(update, sourceKey)) seriesPatch[patchKey] = update[sourceKey];
-    }
-    const operations = [];
-    if (Object.keys(seriesPatch).length) operations.push({ kind: "update", recordId: series.id, patch: seriesPatch });
-    if (options.includeCurrent && series.currentTaskId) {
-      const current2 = asTaskRecord(await this.repository.getById(series.currentTaskId));
-      if (!current2 || current2.seriesId !== series.id) throw new Error(`task_series_current_conflict:${series.id}`);
-      if (getTaskStatus(current2) !== "open") throw new Error(`task_series_current_not_open:${series.id}`);
-      const currentPatch = {};
-      for (const [sourceKey, patchKey] of sharedFields) {
-        if (Object.prototype.hasOwnProperty.call(update, sourceKey)) currentPatch[patchKey] = update[sourceKey];
-      }
-      if (Object.keys(currentPatch).length) operations.push({ kind: "update", recordId: current2.id, patch: currentPatch });
-    }
-    if (operations.length) await this.repository.batch(operations);
-  }
-  async repairSeriesCurrentTask(seriesId) {
-    const series = asTaskSeriesRecord(await this.repository.getById(seriesId));
-    if (!series) throw new Error(`task_series_invalid:${seriesId}`);
-    if (series.status !== "active") throw new Error(`task_series_repair_requires_active:${seriesId}`);
-    const pointed = series.currentTaskId ? asTaskRecord(await this.repository.getById(series.currentTaskId)) : null;
-    if (pointed && pointed.seriesId === series.id && getTaskStatus(pointed) === "open") return "already-valid";
-    const candidates = this.dataStore.queryRecords().filter((item) => item.recordType === "task" && item.seriesId === series.id && getTaskStatus(item) === "open");
-    if (candidates.length !== 1) {
-      throw new Error(`task_series_repair_ambiguous:${seriesId}:${candidates.length}`);
-    }
-    await this.repository.update(series.id, { currentTaskId: candidates[0].id });
-    return "repaired";
-  }
-  async stopSeries(seriesId, options = {}) {
-    const series = asTaskSeriesRecord(await this.repository.getById(seriesId));
-    if (!series) throw new Error(`task_series_invalid:${seriesId}`);
-    if (series.status !== "active") return;
-    const operations = [{ kind: "update", recordId: series.id, patch: { status: "stopped" } }];
-    if (options.cancelCurrent && series.currentTaskId) {
-      const current2 = asTaskRecord(await this.repository.getById(series.currentTaskId));
-      if (current2 && getTaskStatus(current2) === "open") {
-        operations.push({ kind: "update", recordId: current2.id, patch: { status: "cancelled", cancelledAt: timestampNow() } });
-      }
-    }
-    await this.repository.batch(operations);
-  }
-  async transition(itemId, command, sessionInput) {
-    const task = await this.requireTask(itemId);
-    const status = getTaskStatus(task);
-    if (!status) throw new Error(`task_status_invalid:${itemId}`);
-    const recurring = Boolean(task.seriesId);
-    if (!canTransitionTaskStatus(status, command, { recurring })) {
-      throw new Error(`task_transition_invalid:${status}:${command}`);
-    }
-    const legacyActualSession = !sessionInput && command === "complete" ? buildLegacyActualRangeCompletionSession(this.dataStore, task) : null;
-    const effectiveSessionInput = sessionInput ?? legacyActualSession ?? void 0;
-    const at = effectiveSessionInput?.endedAt || timestampNow();
-    if (command === "reopen") {
-      if (task.seriesId) {
-        const series2 = asTaskSeriesRecord(await this.repository.getById(task.seriesId));
-        if (!series2 || series2.currentTaskId !== task.id) throw new Error("task_reopen_recurring_conflict");
-      }
-      await this.repository.update(task.id, { status: "open", completedAt: null, cancelledAt: null, skippedAt: null });
-      return;
-    }
-    const patch = { status: nextTaskStatus(command) };
-    const sessionOperation = effectiveSessionInput ? this.taskSessions.prepareCreateOperation(task, effectiveSessionInput).operation : null;
-    if (command === "complete") patch.completedAt = at;
-    if (legacyActualSession) {
-      patch.startAt = null;
-      patch.endAt = null;
-    }
-    if (command === "cancel") patch.cancelledAt = at;
-    if (command === "skip") patch.skippedAt = at;
-    if (!task.seriesId || command === "cancel") {
-      if (sessionOperation) await this.repository.batch([{ kind: "update", recordId: task.id, patch }, sessionOperation]);
-      else await this.repository.update(task.id, patch);
-      return;
-    }
-    const series = asTaskSeriesRecord(await this.repository.getById(task.seriesId));
-    if (!series) throw new Error(`task_series_missing:${task.seriesId}`);
-    if (series.currentTaskId !== task.id) throw new Error(`task_series_current_conflict:${series.id}`);
-    if (series.status === "stopped") {
-      if (sessionOperation) await this.repository.batch([{ kind: "update", recordId: task.id, patch }, sessionOperation]);
-      else await this.repository.update(task.id, patch);
-      return;
-    }
-    const recurrence = normalizeRecurrenceInfo(series.recurrenceInfo);
-    if (!recurrence) throw new Error(`task_series_recurrence_invalid:${series.id}`);
-    const nextId = createRecordId("task");
-    const nextDates = buildNextOccurrenceDates(task, recurrence, at);
-    const path = sourcePath(this.dataStore, task);
-    if (!path) throw new Error(`record_location_unavailable:${task.id}`);
-    const operations = [
-      { kind: "update", recordId: task.id, patch }
-    ];
-    if (sessionOperation) operations.push(sessionOperation);
-    operations.push(
-      { kind: "create", record: {
-        recordId: nextId,
-        recordType: "task",
-        targetFilePath: path,
-        targetHeader: task.header || null,
-        fields: nextTaskFields(task, series, at, nextDates)
-      } },
-      { kind: "update", recordId: series.id, patch: { currentTaskId: nextId } }
-    );
-    await this.repository.batch(operations);
-  }
-  async requireTask(itemId) {
-    const task = asTaskRecord(await this.repository.getById(itemId));
-    if (!task) throw new Error(`task_record_required:${itemId}`);
-    return task;
-  }
-}
-function normalizedDateTime$1(value) {
-  const raw = String(value || "").trim();
-  return /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(raw) ? raw.replace(" ", "T") : raw;
-}
-function timeMs$1(value) {
-  if (!value) return null;
-  const ms = Date.parse(normalizedDateTime$1(value));
-  return Number.isFinite(ms) ? ms : null;
-}
-function localDateTime(ms) {
-  const date2 = new Date(ms);
-  const year = date2.getFullYear();
-  const month = String(date2.getMonth() + 1).padStart(2, "0");
-  const day = String(date2.getDate()).padStart(2, "0");
-  const hour = String(date2.getHours()).padStart(2, "0");
-  const minute = String(date2.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hour}:${minute}`;
-}
-function requireRange(range) {
-  const startedMs = timeMs$1(range.start);
-  const endedMs = timeMs$1(range.end);
-  if (startedMs == null || endedMs == null || endedMs <= startedMs) {
-    throw new Error("timeline_range_time_order_invalid");
-  }
-  return { startedMs, endedMs };
-}
-class TaskTimeMutation {
-  constructor(repository, taskSessions) {
-    this.repository = repository;
-    this.taskSessions = taskSessions;
-  }
-  repository;
-  taskSessions;
-  async updateTimelineRange(target, range) {
-    const record2 = await this.repository.getById(target.recordId);
-    if (!record2) throw new Error(`timeline_target_not_found:${target.recordId}`);
-    if (target.kind === "task-session") {
-      if (!asTaskSessionRecord(record2)) throw new Error(`task_session_required:${target.recordId}`);
-      return this.taskSessions.updateSessionTime(target.recordId, range);
-    }
-    const task = asTaskRecord(record2);
-    if (!task) throw new Error(`task_record_required:${target.recordId}`);
-    if (target.kind === "task-plan") {
-      if (!task.scheduledAt) throw new Error(`task_plan_time_required:${target.recordId}`);
-      const startedMs = timeMs$1(range.start);
-      if (startedMs == null) throw new Error("task_plan_time_invalid");
-      if (!range.end) {
-        await this.repository.update(task.id, { scheduledAt: localDateTime(startedMs) });
-      } else {
-        const { endedMs } = requireRange(range);
-        const durationMinutes2 = Math.round((endedMs - startedMs) / 6e4 * 100) / 100;
-        await this.repository.update(task.id, {
-          scheduledAt: localDateTime(startedMs),
-          expectedDurationMinutes: durationMinutes2
-        });
-      }
-      return this.requireUpdated(task.id);
-    }
-    if (target.kind === "task-point") {
-      if (!task.startAt) throw new Error(`task_start_time_required:${target.recordId}`);
-      const startedMs = timeMs$1(range.start);
-      if (startedMs == null) throw new Error("task_time_invalid");
-      await this.repository.update(task.id, { startAt: localDateTime(startedMs) });
-      return this.requireUpdated(task.id);
-    }
-    if (target.kind === "task-range") {
-      if (!task.startAt) throw new Error(`task_start_time_required:${target.recordId}`);
-      const { startedMs, endedMs } = requireRange(range);
-      await this.repository.update(task.id, {
-        startAt: localDateTime(startedMs),
-        endAt: localDateTime(endedMs)
-      });
-      return this.requireUpdated(task.id);
-    }
-    const exhaustive = target.kind;
-    throw new Error(`timeline_target_kind_unsupported:${exhaustive}`);
-  }
-  async requireUpdated(recordId) {
-    const updated = await this.repository.getById(recordId);
-    if (!updated) throw new Error(`timeline_time_update_scan_failed:${recordId}`);
-    return updated;
-  }
-}
-class TaskQuadrantMutation {
-  constructor(repository) {
-    this.repository = repository;
-  }
-  repository;
-  async move(taskId, quadrant) {
-    const task = asTaskRecord(await this.repository.getById(taskId));
-    if (!task) throw new Error(`task_record_required:${taskId}`);
-    const classification = taskClassificationForQuadrant(quadrant);
-    await this.repository.update(taskId, classification);
-  }
-}
-class RecordTransactionRecoveryError extends Error {
-  constructor(originalError, writtenPaths, recoveryFailedPaths) {
-    super(`record_transaction_recovery_required:${recoveryFailedPaths.join(",")}`, { cause: originalError });
-    this.originalError = originalError;
-    this.writtenPaths = writtenPaths;
-    this.recoveryFailedPaths = recoveryFailedPaths;
-    this.name = "RecordTransactionRecoveryError";
-  }
-  originalError;
-  writtenPaths;
-  recoveryFailedPaths;
-  code = "record_transaction_recovery_required";
-}
-class RecordMutationTransaction {
-  constructor(vault) {
-    this.vault = vault;
-  }
-  vault;
-  async commit(writes) {
-    const unique2 = /* @__PURE__ */ new Map();
-    for (const write2 of writes) unique2.set(write2.path, write2);
-    const ordered = [...unique2.values()];
-    for (const write2 of ordered) {
-      const current2 = await this.vault.readFile(write2.path);
-      if ((current2 ?? "") !== write2.before) {
-        throw new Error(`record_write_conflict:${write2.path}`);
-      }
-    }
-    const written = [];
-    try {
-      for (const write2 of ordered) {
-        await this.vault.writeFile(write2.path, write2.after);
-        written.push(write2);
-      }
-      return { writtenPaths: written.map((write2) => write2.path) };
-    } catch (error) {
-      const recoveryFailedPaths = [];
-      for (const write2 of written.reverse()) {
-        try {
-          await this.vault.writeFile(write2.path, write2.before);
-        } catch {
-          recoveryFailedPaths.push(write2.path);
-        }
-      }
-      if (recoveryFailedPaths.length > 0) {
-        throw new RecordTransactionRecoveryError(
-          error,
-          written.map((write2) => write2.path),
-          recoveryFailedPaths
-        );
-      }
-      throw error;
-    }
-  }
-}
-const PATCH_FIELDS = {
-  status: { label: "状态", aliases: ["状态", "status"] },
-  content: { label: "内容", aliases: ["内容", "content"] },
-  goalPath: { label: "目标", aliases: ["目标", "goalPath"] },
-  createdAt: { label: "创建于", aliases: ["创建于", "createdAt"] },
-  scheduledAt: { label: "计划时间", aliases: ["计划时间", "scheduledAt"] },
-  startAt: { label: "开始时间", aliases: ["开始时间", "startAt"] },
-  endAt: { label: "结束时间", aliases: ["结束时间", "endAt"] },
-  dueAt: { label: "截止时间", aliases: ["截止时间", "dueAt"] },
-  scheduledDate: { label: "计划日期", aliases: ["计划日期", "scheduledDate"] },
-  startDate: { label: "开始日期", aliases: ["开始日期", "startDate"] },
-  dueDate: { label: "截止日期", aliases: ["截止日期", "dueDate"] },
-  completedAt: { label: "完成于", aliases: ["完成于", "completedAt"] },
-  cancelledAt: { label: "取消于", aliases: ["取消于", "cancelledAt"] },
-  skippedAt: { label: "跳过于", aliases: ["跳过于", "skippedAt"] },
-  priority: { label: "优先级", aliases: ["优先级", "priority"] },
-  importance: { label: "重要程度", aliases: ["重要程度", "importance"] },
-  urgency: { label: "紧急程度", aliases: ["紧急程度", "urgency"] },
-  expectedDurationMinutes: { label: "预计时长", aliases: ["预计时长", "expectedDurationMinutes"] },
-  energyDemand: { label: "精力要求", aliases: ["精力要求", "energyDemand"] },
-  brainDemand: { label: "脑力要求", aliases: ["脑力要求", "brainDemand"] },
-  physicalDemand: { label: "体力要求", aliases: ["体力要求", "physicalDemand"] },
-  availabilityContexts: { label: "可用场景", aliases: ["可用场景", "availabilityContexts"] },
-  recoveryIntent: { label: "恢复意图", aliases: ["恢复意图", "recoveryIntent"] },
-  seriesId: { label: "系列标识", aliases: ["系列ID", "seriesId"] },
-  recurrenceUnit: { label: "重复单位", aliases: ["重复单位", "recurrenceUnit"] },
-  recurrenceInterval: { label: "重复间隔", aliases: ["重复间隔", "recurrenceInterval"] },
-  recurrenceAnchor: { label: "重复锚点", aliases: ["重复锚点", "recurrenceAnchor"] },
-  seriesStartDate: { label: "系列开始日期", aliases: ["系列开始日期", "seriesStartDate"] },
-  currentTaskId: { label: "当前任务标识", aliases: ["当前任务ID", "currentTaskId"] },
-  rolloverPolicy: { label: "滚动策略", aliases: ["滚动策略", "rolloverPolicy"] },
-  taskId: { label: "任务标识", aliases: ["任务ID", "taskId"] },
-  sessionStartedAt: { label: "开始于", aliases: ["开始于", "sessionStartedAt"] },
-  sessionEndedAt: { label: "结束于", aliases: ["结束于", "sessionEndedAt"] },
-  sessionDurationMinutes: { label: "时长", aliases: ["时长", "sessionDurationMinutes"] },
-  sessionResult: { label: "结果", aliases: ["结果", "sessionResult"] },
-  sessionSource: { label: "来源", aliases: ["来源", "sessionSource"] },
-  suggestedDurationMinutes: { label: "建议时长", aliases: ["建议时长", "suggestedDurationMinutes"] },
-  startEnergyRecordId: { label: "开始精力记录标识", aliases: ["开始精力记录ID", "startEnergyRecordId"] },
-  endEnergyRecordId: { label: "结束精力记录标识", aliases: ["结束精力记录ID", "endEnergyRecordId"] },
-  energyDelta: { label: "精力变化", aliases: ["精力变化", "energyDelta"] },
-  brainDelta: { label: "脑力变化", aliases: ["脑力变化", "brainDelta"] },
-  physicalDelta: { label: "体力变化", aliases: ["体力变化", "physicalDelta"] },
-  startTime: { label: "时间", aliases: ["时间", "startTime"] },
-  endTime: { label: "结束", aliases: ["结束", "endTime"] },
-  duration: { label: "时长", aliases: ["时长", "duration"] }
-};
-function escapeRegex(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-function scalar(value) {
-  if (value == null) return "";
-  if (Array.isArray(value)) return value.map((v2) => String(v2).trim()).filter(Boolean).join(", ");
-  if (typeof value === "object") return "";
-  return String(value).trim();
-}
-function resolvePatchField(rawKey) {
-  const normalized2 = rawKey.trim();
-  const byCanonical = PATCH_FIELDS[normalized2];
-  if (byCanonical) return byCanonical;
-  for (const definition of Object.values(PATCH_FIELDS)) {
-    if (definition.aliases.some((alias) => alias.toLowerCase() === normalized2.toLowerCase())) return definition;
-  }
-  return { label: normalized2, aliases: [normalized2] };
-}
-function patchRecordBlockMarkdown(markdown, patch) {
-  const lines = markdown.split(/\r?\n/);
-  const protectedKeys = /* @__PURE__ */ new Set(["记录id", "recordid", "id", "记录类型", "coreblock"]);
-  for (const [rawKey, value] of Object.entries(patch)) {
-    const key = rawKey.trim();
-    if (!key || protectedKeys.has(key.toLowerCase())) continue;
-    const definition = resolvePatchField(key);
-    const isTaskRecord2 = lines.some((line2) => /^\s*(?:记录类型|recordType)\s*::\s*task\s*$/i.test(line2));
-    const taskDateTimeLabels = /* @__PURE__ */ new Set(["创建于", "计划时间", "开始时间", "结束时间", "截止时间", "完成于", "取消于", "跳过于"]);
-    const rawEncoded = scalar(value);
-    const encoded = isTaskRecord2 && taskDateTimeLabels.has(definition.label) ? formatRecordDateTimeForMarkdown(rawEncoded) : rawEncoded;
-    const contentIndex = lines.findIndex((line2, i2) => i2 > 0 && /^\s*(?:内容|content)\s*::/i.test(line2));
-    const metadataEnd = contentIndex >= 0 ? contentIndex : lines.length - 1;
-    if (definition.label === "内容") {
-      if (contentIndex >= 0) lines.splice(contentIndex, lines.length - 1 - contentIndex);
-      if (encoded) {
-        const bodyLines = encoded.replace(/\r\n/g, "\n").split("\n");
-        lines.splice(lines.length - 1, 0, `内容:: ${bodyLines.shift() || ""}`, ...bodyLines);
-      }
-      continue;
-    }
-    const aliases2 = definition.aliases.map((alias) => escapeRegex(alias)).join("|");
-    const re = new RegExp(`^\\s*(?:${aliases2})\\s*::`, "i");
-    const index = lines.findIndex((line2, i2) => i2 > 0 && i2 < metadataEnd && re.test(line2));
-    if (!encoded) {
-      if (index >= 0) lines.splice(index, 1);
-      continue;
-    }
-    const nextLine = `${definition.label}:: ${encoded.replace(/\r?\n/g, "\\n")}`;
-    if (index >= 0) lines[index] = nextLine;
-    else lines.splice(metadataEnd, 0, nextLine);
-  }
-  return lines.join("\n");
-}
-function appendRecordText(before, markdown, header) {
-  if (header) return appendUnderHeaderText(before, header, markdown);
-  return before.trim() ? `${before.trim()}
-
-${markdown}` : markdown;
-}
-class RecordRepository {
-  constructor(vault, dataStore) {
-    this.vault = vault;
-    this.dataStore = dataStore;
-    this.transaction = new RecordMutationTransaction(vault);
-  }
-  vault;
-  dataStore;
-  transaction;
-  async getById(recordId) {
-    return this.dataStore.getRecordEntityById(recordId);
-  }
-  async create(record2) {
-    const recordId = record2.recordId || createRecordId(record2.recordType);
-    await this.batch([{ kind: "create", record: { ...record2, recordId } }]);
-    const created = this.dataStore.getRecordEntityById(recordId);
-    if (!created) throw new Error(`record_create_scan_failed:${recordId}`);
-    return created;
-  }
-  async update(recordId, patch) {
-    await this.batch([{ kind: "update", recordId, patch }]);
-    const updated = this.dataStore.getRecordEntityById(recordId);
-    if (!updated) throw new Error(`record_update_scan_failed:${recordId}`);
-    return updated;
-  }
-  async delete(recordId) {
-    await this.batch([{ kind: "delete", recordId }]);
-  }
-  async batch(operations) {
-    const beforeByPath = /* @__PURE__ */ new Map();
-    const afterByPath = /* @__PURE__ */ new Map();
-    const createdRecordIds = [];
-    const createdIdsInBatch = /* @__PURE__ */ new Set();
-    const loadPath = async (path) => {
-      if (!beforeByPath.has(path)) {
-        const before = await this.vault.readFile(path) ?? "";
-        beforeByPath.set(path, before);
-        afterByPath.set(path, before);
-      }
-      return afterByPath.get(path) ?? "";
-    };
-    for (const operation of operations) {
-      if (operation.kind === "create") {
-        const recordId = operation.record.recordId || createRecordId(operation.record.recordType);
-        if (createdIdsInBatch.has(recordId) || this.dataStore.getRecordLocations(recordId).length > 0) {
-          throw new Error(`record_id_duplicate_create:${recordId}`);
-        }
-        createdIdsInBatch.add(recordId);
-        const markdown = encodeRecordBlock({
-          recordId,
-          recordType: operation.record.recordType,
-          fields: operation.record.fields
-        });
-        const current22 = await loadPath(operation.record.targetFilePath);
-        afterByPath.set(
-          operation.record.targetFilePath,
-          appendRecordText(current22, markdown, operation.record.targetHeader)
-        );
-        createdRecordIds.push(recordId);
-        continue;
-      }
-      const location = this.dataStore.getRecordLocation(operation.recordId);
-      if (!location) throw new Error(`record_location_unavailable:${operation.recordId}`);
-      const current2 = await loadPath(location.path);
-      const lines = current2.split(/\r?\n/);
-      const range = resolveRecordBlockRangeById(lines, operation.recordId, location.startLine - 1);
-      if (operation.kind === "delete") {
-        lines.splice(range.startIndex, range.endIndex - range.startIndex + 1);
-      } else {
-        const currentBlock = lines.slice(range.startIndex, range.endIndex + 1).join("\n");
-        const nextBlock = patchRecordBlockMarkdown(currentBlock, operation.patch);
-        lines.splice(range.startIndex, range.endIndex - range.startIndex + 1, ...nextBlock.split("\n"));
-      }
-      afterByPath.set(location.path, lines.join("\n"));
-    }
-    const writes = [...afterByPath.entries()].map(([path, after]) => ({ path, before: beforeByPath.get(path) ?? "", after })).filter((write2) => write2.before !== write2.after);
-    let committed;
-    try {
-      committed = await this.transaction.commit(writes);
-    } catch (error) {
-      if (error instanceof RecordTransactionRecoveryError) {
-        this.dataStore.reportRecordIntegrityIssue({
-          code: "record_transaction_recovery_required",
-          message: `记录事务回滚未完整完成。已写入：${error.writtenPaths.join("、")}；恢复失败：${error.recoveryFailedPaths.join("、")}。`
-        });
-      }
-      throw error;
-    }
-    const rescanFailures = [];
-    for (const path of committed.writtenPaths) {
-      try {
-        await this.dataStore.scanFileByPath(path, { bumpVersion: false, throwOnError: true });
-      } catch (error) {
-        rescanFailures.push({ path, error });
-      }
-    }
-    if (committed.writtenPaths.length) this.dataStore.notifyChange();
-    if (rescanFailures.length > 0) {
-      throw new Error(`record_post_commit_rescan_failed:${rescanFailures.map((entry) => entry.path).join(",")}`);
-    }
-    return { writtenPaths: committed.writtenPaths, createdRecordIds };
-  }
-}
-var __getOwnPropDesc$8 = Object.getOwnPropertyDescriptor;
-var __decorateClass$8 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$8(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-var __decorateParam$7 = (index, decorator) => (target, key) => decorator(target, key, index);
-let ItemService = class {
-  taskCompletion;
-  taskSessions;
-  taskTime;
-  taskQuadrant;
-  inlineFields;
-  goalTemplateMigration;
-  migrationBackup;
-  constructor(dataStore, vault) {
-    const recordRepository = new RecordRepository(vault, dataStore);
-    this.taskSessions = new TaskSessionMutation(dataStore, recordRepository);
-    this.taskTime = new TaskTimeMutation(recordRepository, this.taskSessions);
-    this.taskQuadrant = new TaskQuadrantMutation(recordRepository);
-    this.taskCompletion = new TaskCompletionMutation(dataStore, recordRepository, this.taskSessions);
-    this.inlineFields = new InlineFieldMutation(recordRepository);
-    this.goalTemplateMigration = new GoalTemplateMigrationMutation(recordRepository);
-    this.migrationBackup = new MigrationBackupService(dataStore, vault);
-  }
-  completeItem(itemId, mutationOptions = {}) {
-    return this.taskCompletion.completeItem(itemId, mutationOptions);
-  }
-  createTaskSession(taskId, session) {
-    return this.taskSessions.createSession(taskId, session);
-  }
-  linkEnergySnapshot(energyRecordId) {
-    return this.taskSessions.linkEnergySnapshot(energyRecordId);
-  }
-  completeItemWithSession(itemId, session, mutationOptions = {}) {
-    return this.taskCompletion.completeItemWithSession(itemId, session, mutationOptions);
-  }
-  cancelItem(itemId) {
-    return this.taskCompletion.cancelItem(itemId);
-  }
-  cancelItemWithSession(itemId, session) {
-    return this.taskCompletion.cancelItemWithSession(itemId, session);
-  }
-  skipItem(itemId) {
-    return this.taskCompletion.skipItem(itemId);
-  }
-  skipItemWithSession(itemId, session) {
-    return this.taskCompletion.skipItemWithSession(itemId, session);
-  }
-  reopenItem(itemId) {
-    return this.taskCompletion.reopenItem(itemId);
-  }
-  stopTaskSeries(seriesId, options = {}) {
-    return this.taskCompletion.stopSeries(seriesId, options);
-  }
-  repairTaskSeriesCurrentTask(seriesId) {
-    return this.taskCompletion.repairSeriesCurrentTask(seriesId);
-  }
-  updateTaskSeries(seriesId, update, options = {}) {
-    return this.taskCompletion.updateSeries(seriesId, update, options);
-  }
-  updateTaskQuadrant(itemId, quadrant) {
-    return this.taskQuadrant.move(itemId, quadrant);
-  }
-  async updateTimelineRange(target, range, _mutationOptions = {}) {
-    await this.taskTime.updateTimelineRange(target, range);
-  }
-  upsertItemInlineFields(itemId, fields, mutationOptions = {}) {
-    return this.inlineFields.upsertItemInlineFields(itemId, fields, mutationOptions);
-  }
-  upsertItemGoalTemplateMigrationFields(itemId, fields, mutationOptions = {}) {
-    return this.goalTemplateMigration.upsertItemGoalTemplateMigrationFields(itemId, fields, mutationOptions);
-  }
-  createMigrationBackup(backupRoot, settings) {
-    return this.migrationBackup.createMigrationBackup(backupRoot, settings);
-  }
-};
-ItemService = __decorateClass$8([
-  singleton(),
-  __decorateParam$7(0, inject(DataStore)),
-  __decorateParam$7(1, inject(VAULT_PORT_TOKEN))
-], ItemService);
-function normalizeTagToken(value) {
-  return String(value ?? "").trim();
-}
-function parseTagsInput(value) {
-  const result = [];
-  const seen = /* @__PURE__ */ new Set();
-  const push = (token2) => {
-    const normalized2 = normalizeTagToken(token2);
-    if (!normalized2 || seen.has(normalized2)) return;
-    seen.add(normalized2);
-    result.push(normalized2);
-  };
-  const visit = (input) => {
-    if (input === void 0 || input === null) return;
-    if (Array.isArray(input)) {
-      input.forEach(visit);
-      return;
-    }
-    if (typeof input === "string") {
-      input.split(/[\s,，]+/u).map((part) => part.trim()).filter(Boolean).forEach(push);
-      return;
-    }
-    push(input);
-  };
-  visit(value);
-  return result;
-}
-function formatTagsForField(value) {
-  const tags2 = parseTagsInput(value);
-  return tags2.length ? tags2.map((tag) => tag.startsWith("#") ? tag : `#${tag}`).join(", ") : void 0;
-}
-var __getOwnPropDesc$7 = Object.getOwnPropertyDescriptor;
-var __decorateClass$7 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$7(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-var __decorateParam$6 = (index, decorator) => (target, key) => decorator(target, key, index);
-let ActionService = class {
-  constructor(ui, dataStore, settingsProvider, inputService) {
-    this.ui = ui;
-    this.dataStore = dataStore;
-    this.settingsProvider = settingsProvider;
-    this.inputService = inputService;
-  }
-  ui;
-  dataStore;
-  settingsProvider;
-  inputService;
-  getRuntimeRecordTypes() {
-    return getTemplateRecordTypes();
-  }
-  findRecordTypeTemplate(recordType) {
-    const normalized2 = String(recordType || "").trim().replace(/^core\./i, "");
-    if (!normalized2) return void 0;
-    return this.getRuntimeRecordTypes().find(
-      (recordType2) => String(recordType2.recordTypeId || recordType2.id || "").trim().replace(/^core\./i, "") === normalized2
-    );
-  }
-  getQuickInputConfigForView(viewInstance, dateContext, periodContext) {
-    if (viewInstance.viewType === "StatisticsView") {
-      return this.getQuickInputConfigForStatisticsView(viewInstance, dateContext, periodContext);
-    }
-    const filters = viewInstance.filters || [];
-    const recordTypeFilter = filters.find((f2) => f2.field === "recordType" && (f2.op === "=" || f2.op === "includes"));
-    if (!recordTypeFilter || !recordTypeFilter.value) {
-      this.ui.notice("快捷输入失败：此视图未按“记录类型”进行筛选。");
-      return null;
-    }
-    const recordType = String(recordTypeFilter.value);
-    const targetRecordType = this.findRecordTypeTemplate(recordType);
-    if (!targetRecordType) {
-      this.ui.notice(`快捷输入失败：找不到记录类型为“${getRecordTypePresentation(recordType).label}”的模板。`);
-      return null;
-    }
-    const context = {
-      "日期": dateContext.format("YYYY-MM-DD"),
-      "周期": periodContext
-    };
-    const equalityFilters = filters.filter((f2) => f2.op === "=");
-    for (const filter of equalityFilters) {
-      if (filter.field === "recordType") continue;
-      for (const templateField of targetRecordType.fields) {
-        if (filter.field === templateField.key || filter.field === templateField.label) {
-          context[templateField.key] = filter.value;
-          break;
-        }
-      }
-    }
-    return {
-      recordTypeId: targetRecordType.id,
-      context
-    };
-  }
-  buildFieldContextValue(field, item) {
-    const direct = readField(item, field.key) ?? readField(item, field.label);
-    if (field.type === "rating") {
-      const score = item.rating ?? item.extra?.["评分"] ?? item.extra?.["rating"];
-      const visual = item.image ?? item.extra?.["图片"] ?? item.extra?.image;
-      if (field.options?.length) {
-        const scoreStr = score !== void 0 && score !== null ? String(score) : "";
-        const matched = field.options.find(
-          (opt) => scoreStr && String(opt.label || "") === scoreStr && (!visual || String(opt.value || "") === String(visual)) || scoreStr && String(opt.label || "") === scoreStr || visual && String(opt.value || "") === String(visual)
-        );
-        if (matched) return { value: matched.value, label: matched.label || matched.value };
-      }
-      if (score !== void 0 && score !== null) return { value: visual || "", label: String(score) };
-    }
-    return direct;
-  }
-  getQuickInputConfigForTaskEdit(taskId) {
-    const item = this.dataStore.queryItems().find((i2) => i2.id === taskId);
-    if (!item) {
-      this.ui.notice(`错误：找不到标识为 ${taskId} 的任务。`);
-      return null;
-    }
-    const recordType = String(item.recordType || "").trim();
-    const targetRecordType = this.findRecordTypeTemplate(recordType);
-    if (!targetRecordType) {
-      this.ui.notice(`找不到与记录类型“${getRecordTypePresentation(recordType).label}”匹配的模板，无法编辑。`);
-      return null;
-    }
-    const context = {};
-    for (const field of targetRecordType.fields) {
-      const value = this.buildFieldContextValue(field, item);
-      if (value !== void 0 && value !== null) {
-        context[field.key] = value;
-      }
-    }
-    if (!context.title && !context["标题"]) {
-      context[targetRecordType.fields.find((f2) => f2.label === "标题")?.key || "标题"] = item.title;
-    }
-    const tagsField = targetRecordType.fields.find((f2) => f2.label === "标签" || f2.key === "tags");
-    if (tagsField && !context[tagsField.key]) {
-      context[tagsField.key] = formatTagsForField(item.tags);
-    }
-    return {
-      recordTypeId: targetRecordType.id,
-      context
-    };
-  }
-  getQuickInputConfigForStatisticsView(_viewInstance, _dateContext, _periodContext, _goalPath) {
-    this.ui.notice("快捷输入失败：统计视图需要明确记录类型。");
-    return null;
-  }
-  getQuickInputConfigForNewTimer() {
-    const recordTypes = this.getRuntimeRecordTypes();
-    const taskRecordType = recordTypes.find((recordType) => String(recordType.recordTypeId || recordType.id).replace(/^core\./i, "") === "task");
-    if (!taskRecordType) {
-      this.ui.notice("快捷输入失败：任务记录类型未注册。");
-      return null;
-    }
-    return {
-      recordTypeId: taskRecordType.id
-    };
-  }
-};
-ActionService = __decorateClass$7([
-  singleton(),
-  __decorateParam$6(0, inject(UI_PORT_TOKEN)),
-  __decorateParam$6(1, inject(DataStore)),
-  __decorateParam$6(2, inject(SettingsProviderToken)),
-  __decorateParam$6(3, inject(InputService))
-], ActionService);
-var __getOwnPropDesc$6 = Object.getOwnPropertyDescriptor;
-var __decorateClass$6 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$6(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-var __decorateParam$5 = (index, decorator) => (target, key) => decorator(target, key, index);
-const TIMER_STATE_PATH = "think-plugin-timer-state.json";
-const TIMER_RUNTIME_SCHEMA_VERSION = 3;
-function isTimerRuntimeState(entry) {
-  if (!entry || typeof entry !== "object") return false;
-  const timer = entry;
-  return typeof timer.id === "string" && timer.id.length > 0 && typeof timer.taskId === "string" && timer.taskId.length > 0 && typeof timer.startedAt === "number" && Number.isFinite(timer.startedAt) && typeof timer.startTime === "number" && Number.isFinite(timer.startTime) && typeof timer.elapsedSeconds === "number" && Number.isFinite(timer.elapsedSeconds) && (timer.status === "running" || timer.status === "paused") && (timer.source === "timer" || timer.source === "energy-view");
-}
-let TimerStateService = class {
-  constructor(vault) {
-    this.vault = vault;
-  }
-  vault;
-  async loadStateFromFile() {
-    try {
-      const content = await this.vault.readFile(TIMER_STATE_PATH);
-      if (!content) return [];
-      const parsed = JSON.parse(content);
-      if (!parsed || parsed.schemaVersion !== TIMER_RUNTIME_SCHEMA_VERSION || !Array.isArray(parsed.timers)) return [];
-      return parsed.timers.filter(isTimerRuntimeState);
-    } catch (error) {
-      devWarn("Think Plugin: Failed to load timer runtime state from file.", error);
-      return [];
-    }
-  }
-  async saveStateToFile(timers) {
-    try {
-      const runtimeTimers = timers.filter(isTimerRuntimeState);
-      const payload = {
-        schemaVersion: TIMER_RUNTIME_SCHEMA_VERSION,
-        timers: runtimeTimers
-      };
-      await this.vault.writeFile(TIMER_STATE_PATH, JSON.stringify(payload, null, 2));
-    } catch (error) {
-      devWarn("Think Plugin: Failed to save timer runtime state to file.", error);
-    }
-  }
-};
-TimerStateService = __decorateClass$6([
-  singleton(),
-  __decorateParam$5(0, inject(VAULT_PORT_TOKEN))
-], TimerStateService);
 const WHITEBOARD_WORKBENCH_MAX_DEPTH = 4;
 function getWhiteboardGroupById(groups) {
   return new Map(groups.map((group) => [group.id, group]));
@@ -22068,8 +22281,8 @@ var __decorateClass$5 = (decorators, target, key, kind) => {
   return result;
 };
 var __decorateParam$4 = (index, decorator) => (target, key) => decorator(target, key, index);
-const DEFAULT_WHITEBOARD_STORE_PATH = "Think/whiteboards.json";
-const LEGACY_ASSOCIATION_STORE_PATH = "Think/association-spaces.json";
+const DEFAULT_WHITEBOARD_STORE_PATH = THINK_STORAGE_PATHS.whiteboards;
+const LEGACY_ASSOCIATION_STORE_PATH = THINK_STORAGE_PATHS.legacyAssociations;
 const DEFAULT_WHITEBOARD_ID = "whiteboard-default";
 const DEFAULT_WHITEBOARD_TITLE = "白板";
 function emptyWhiteboardStoreData() {
@@ -23594,6 +23807,51 @@ const subscribeWithSelectorImpl = (fn3) => (set2, get, api) => {
   return initialState;
 };
 const subscribeWithSelector = subscribeWithSelectorImpl;
+function isActiveTimerState(timer) {
+  return !!timer && (timer.status === "running" || timer.status === "paused");
+}
+function pickEditableText(item) {
+  if (item.editableText?.trim()) return item.editableText.trim();
+  const extraBody = item.extra?.["正文"];
+  if (typeof extraBody === "string" && extraBody.trim()) return extraBody.trim();
+  return item.content?.trim() || item.title || null;
+}
+function taskDurationForEdit(item) {
+  if (item.recordType !== "task") return item.duration ?? null;
+  if (typeof item.expectedDurationMinutes === "number" && Number.isFinite(item.expectedDurationMinutes) && item.expectedDurationMinutes > 0) {
+    return item.expectedDurationMinutes;
+  }
+  const startMs = item.startAt ? new Date(item.startAt).getTime() : Number.NaN;
+  const endMs = item.endAt ? new Date(item.endAt).getTime() : Number.NaN;
+  if (Number.isFinite(startMs) && Number.isFinite(endMs) && endMs > startMs) {
+    return Math.round((endMs - startMs) / 6e4);
+  }
+  return item.duration ?? null;
+}
+function buildParsedRecordSnapshot(item) {
+  const path = item.source?.path ?? item.file?.path ?? null;
+  const line2 = item.source?.startLine ?? (typeof item.file?.line === "number" ? item.file.line : null);
+  const editableText = pickEditableText(item);
+  return {
+    itemId: item.id,
+    entryKind: item.recordType === "task" ? "task" : "block",
+    locator: { path, line: line2 },
+    raw: { sourceText: item.rawSource || item.content || "" },
+    semantic: {
+      title: item.title || null,
+      editableText,
+      content: item.content || null,
+      date: item.date || item.createdDate || null,
+      period: item.period || null,
+      tags: [...item.tags || []],
+      goalPath: item.goalPath || null,
+      startTime: (item.recordType === "task" ? item.scheduledAt || (item.startAt && !item.endAt ? item.startAt : void 0) : item.startTime) || item.startTime || null,
+      endTime: (item.recordType === "task" ? item.endAt : item.endTime) || item.endTime || null,
+      duration: taskDurationForEdit(item)
+    },
+    extra: { ...item.extra || {} }
+  };
+}
 function getStoreMutationErrorMessage(error, fallback) {
   if (error instanceof Error && error.message) return error.message;
   if (typeof error === "object" && error !== null && "message" in error) {
@@ -25626,146 +25884,6 @@ async function finalizeRecordSubmitResult(dataStore, result) {
   await applyRecordRefreshPlan(dataStore, result.refresh);
   return result;
 }
-function getCreateEligibleGoalPaths(settings, recordTypeId) {
-  const id = String(recordTypeId || "").trim();
-  if (!id) return [];
-  const seen = /* @__PURE__ */ new Set();
-  const result = [];
-  for (const template of getGoalTemplates(settings.goalSettings)) {
-    if (template.recordTypeId !== id || template.enabled === false) continue;
-    const path = normalizeGoalPath(template.goalPath);
-    if (!path || seen.has(path)) continue;
-    seen.add(path);
-    result.push(path);
-  }
-  return result;
-}
-function getCreateAvailableRecordTypes(settings, goalPath) {
-  const selectedGoalPath = normalizeGoalPath(goalPath) || "";
-  return getEffectiveRecordTypes().filter((recordType) => {
-    if (recordType.captureMode === "direct") return true;
-    const eligibleGoalPaths = getCreateEligibleGoalPaths(settings, recordType.id);
-    return selectedGoalPath ? eligibleGoalPaths.includes(selectedGoalPath) : eligibleGoalPaths.length > 0;
-  });
-}
-function findGoal(goalSettings, goalPath) {
-  const path = String(goalPath || "").trim();
-  if (!path) return null;
-  return (goalSettings?.goals || []).find((goal) => goal.path === path) || null;
-}
-function mergeTemplate(base, patch) {
-  const required2 = new Set(patch.requiredFields || []);
-  const defaultValues = patch.defaultValues || {};
-  const isTaskTemplate2 = String(base.recordTypeId || base.id || "").replace(/^core\./, "") === "task";
-  const fields = [...patch.fields ?? base.fields ?? []].map((field) => {
-    const key = field.key || field.label;
-    const defaultValue2 = defaultValues[key] ?? defaultValues[field.label || ""];
-    const mergedField = {
-      ...field,
-      ...defaultValue2 !== void 0 ? { defaultValue: String(defaultValue2) } : null,
-      ...required2.has(key) || required2.has(field.label || "") ? { required: true } : null
-    };
-    if (isTaskTemplate2 && ["expectedDurationMinutes", "预计时长", "时长", "时长（分钟）"].includes(String(key || ""))) {
-      mergedField.required = false;
-    }
-    return mergedField;
-  });
-  const merged = {
-    ...base,
-    fields,
-    targetFile: patch.targetFile ?? base.targetFile,
-    appendUnderHeader: patch.appendUnderHeader ?? base.appendUnderHeader,
-    periodPolicy: patch.periodPolicy ?? base.periodPolicy
-  };
-  const policy = resolveTemplatePeriodPolicy(merged);
-  if (policy) merged.periodPolicy = policy;
-  else {
-    delete merged.periodPolicy;
-  }
-  return merged;
-}
-function applyGoalIdentityIcon(template, goal) {
-  const fields = applyGoalIconToCaptureFields(template.fields, goal) ?? template.fields;
-  return fields === template.fields ? template : { ...template, fields };
-}
-class GoalTemplateResolver {
-  static resolve(input) {
-    const settings = input.settings;
-    const recordTypeId = String(input.recordTypeId || "").trim();
-    const goal = findGoal(settings.goalSettings, input.goalPath);
-    const baseTemplate = getTemplateRecordTypeById(recordTypeId);
-    if (!baseTemplate) {
-      return {
-        status: "unknown-record-type",
-        template: null,
-        goal,
-        templateId: null,
-        templateSourceType: null,
-        recordTypeId: null,
-        effectiveRecordTypeId: null
-      };
-    }
-    const direct = input.goalPath ? findDirectGoalTemplate(settings.goalSettings, input.goalPath, recordTypeId) : null;
-    if (input.requireDirectGoalTemplate && !input.goalPath) {
-      return {
-        status: "goal-required",
-        template: null,
-        goal,
-        templateId: null,
-        templateSourceType: null,
-        recordTypeId,
-        effectiveRecordTypeId: recordTypeId
-      };
-    }
-    if (direct?.enabled === false) {
-      return {
-        status: "disabled",
-        template: null,
-        goal,
-        templateId: direct.id,
-        templateSourceType: "goal-template",
-        recordTypeId,
-        effectiveRecordTypeId: recordTypeId
-      };
-    }
-    if (direct) {
-      return {
-        status: "available",
-        template: applyGoalIdentityIcon(mergeTemplate(baseTemplate, direct), goal),
-        goal,
-        templateId: direct.id,
-        templateSourceType: "goal-template",
-        recordTypeId,
-        effectiveRecordTypeId: recordTypeId
-      };
-    }
-    if (input.requireDirectGoalTemplate) {
-      return {
-        status: "missing-goal-template",
-        template: null,
-        goal,
-        templateId: null,
-        templateSourceType: null,
-        recordTypeId,
-        effectiveRecordTypeId: recordTypeId
-      };
-    }
-    const policy = resolveTemplatePeriodPolicy(baseTemplate);
-    const baseResolved = { ...baseTemplate };
-    if (policy) baseResolved.periodPolicy = policy;
-    else delete baseResolved.periodPolicy;
-    const template = applyGoalIdentityIcon(baseResolved, goal);
-    return {
-      status: "available",
-      template,
-      goal,
-      templateId: baseTemplate.id,
-      templateSourceType: "record-type",
-      recordTypeId,
-      effectiveRecordTypeId: recordTypeId
-    };
-  }
-}
 function localDateKey(value) {
   if (value === null || value === void 0 || value === "") return null;
   const raw = typeof value === "string" ? value.trim() : "";
@@ -27572,9 +27690,13 @@ class RecordInputUseCase {
     }
     const header = ENERGY_APPEND_UNDER_HEADER.replace("{{goalPath}}", record2.goalPath);
     const markdown = buildEnergySnapshotMarkdown(record2);
+    const targetFilePath = resolveRecordTargetPath(ENERGY_TARGET_FILE, "energy", {
+      date: record2.date,
+      recordedAt: record2.recordedAt
+    });
     try {
       const path = await this.deps.inputService.appendDirectRecord(
-        ENERGY_TARGET_FILE,
+        targetFilePath,
         markdown,
         header,
         { signal: params.signal }
@@ -28200,7 +28322,6 @@ function resolveBootstrap(container = instance) {
     return {
       settingsRepository: container.resolve(SettingsRepository),
       timerStateService: container.resolve(TimerStateService),
-      initialSettings: container.resolve(SETTINGS_TOKEN),
       actionService: container.resolve(ActionService),
       itemService: container.resolve(ItemService),
       inputService: container.resolve(InputService),
@@ -46059,39 +46180,9 @@ function diWarn(...args) {
   if (!isDiDebugEnabled()) return;
   devWarn("[DI]", ...args);
 }
-function registerSettingsPersistence(plugin) {
-  const persistedSettingsGuard = object({
-    aiSettings: object({
-      apiKey: string().optional(),
-      persistApiKey: boolean().optional()
-    }).passthrough().optional()
-  }).passthrough();
-  const sanitizeForPersistence = (settings) => {
-    const cloned = toPersistedThinkSettings(settings);
-    const parsed = persistedSettingsGuard.safeParse(cloned);
-    const out = parsed.success ? parsed.data : cloned;
-    if (out?.aiSettings && typeof out.aiSettings === "object") {
-      const persist = out.aiSettings.persistApiKey === true;
-      if (!persist) {
-        if (out.aiSettings.apiKey) {
-          devWarn("[SettingsPersistence] persistApiKey 未显式开启，apiKey 将被剥离后保存");
-        }
-        out.aiSettings.apiKey = "";
-      }
-    }
-    return out;
-  };
-  const settingsPersistence = {
-    async loadData() {
-      return await plugin.loadData();
-    },
-    async saveData(settings) {
-      if (isDisposed()) return;
-      await plugin.saveData(sanitizeForPersistence(settings));
-    }
-  };
+function registerSettingsPersistence() {
   instance.register(SETTINGS_PERSISTENCE_TOKEN, {
-    useValue: settingsPersistence
+    useClass: VaultSettingsPersistence
   });
   diDebug("after register SettingsPersistence, isRegistered =", instance.isRegistered(SETTINGS_PERSISTENCE_TOKEN));
 }
@@ -52150,9 +52241,8 @@ async function initializeCore(opts) {
         diDebug("SettingsPersistence is registered before resolve()");
       }
       services.settingsRepository = bootstrap.settingsRepository;
-      const diInitialSettings = bootstrap.initialSettings;
-      services.settingsRepository.setInitialSettings(diInitialSettings);
-      diDebug("SettingsRepository.setInitialSettings() called");
+      await services.settingsRepository.load();
+      diDebug("SettingsRepository.load() completed");
       services.timerStateService = bootstrap.timerStateService;
       const settingsRepository = services.settingsRepository;
       const zustandStore = createAppStore(settingsRepository);
@@ -69419,7 +69509,7 @@ function GoalTemplateEditorModal({ isOpen, onClose, goal, block, template, useCa
               disabled: mode === "disabled"
             }
           ) : null,
-          /* @__PURE__ */ u2(NativeTextInput, { label: "保存文件", value: draft.targetFile, onInput: (value) => updateDraft({ targetFile: value }), disabled: fieldEditDisabled, placeholder: "例如：01/目标打卡.md" }),
+          /* @__PURE__ */ u2(NativeTextInput, { label: "保存文件", value: draft.targetFile, onInput: (value) => updateDraft({ targetFile: value }), disabled: fieldEditDisabled, placeholder: "例如：01/{{year}}/打卡.md；不写 {{year}} 就不按年分目录" }),
           /* @__PURE__ */ u2(NativeTextInput, { label: "标题", value: draft.appendUnderHeader, onInput: (value) => updateDraft({ appendUnderHeader: value }), disabled: fieldEditDisabled, placeholder: "例如：## 我的目标" }),
           /* @__PURE__ */ u2(NativeTextInput, { label: "说明", value: draft.description, onInput: (value) => updateDraft({ description: value }), disabled: mode === "disabled", placeholder: "可选" }),
           mode === "override" && diffSummary.length ? /* @__PURE__ */ u2("div", { className: "think-editor-diff-list", children: diffSummary.map((item) => /* @__PURE__ */ u2("span", { className: "think-editor-diff-chip", children: item }, item)) }) : null
@@ -69751,10 +69841,6 @@ function GoalTimePresetInput({ goal, goals, onRootCommit, onChildCommit, onDraft
       }
     ),
     /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__budget-unit", "aria-hidden": "true", children: isRoot ? "%" : "小时/周" }),
-    isRoot && displayedTarget !== null ? /* @__PURE__ */ u2("span", { className: "think-goal-template-matrix__budget-derived", children: [
-      formatHumanMinutes$1(displayedTarget),
-      "/周"
-    ] }) : null,
     isRoot && storedPercent !== null ? /* @__PURE__ */ u2("span", { className: "sr-only", children: [
       formatPercent(storedPercent),
       "%"
@@ -76225,7 +76311,7 @@ class ServiceManager {
   // 2. 启动步骤封装（只拆文件，不改行为）
   // ==================================================================================
   registerSettingsPersistence() {
-    registerSettingsPersistence(this.plugin);
+    registerSettingsPersistence();
   }
   async initializeCore() {
     if (!this.bootstrapResolved) throw new Error("bootstrapResolved 未初始化");
@@ -76236,7 +76322,6 @@ class ServiceManager {
       bootstrap: {
         settingsRepository: this.bootstrapResolved.settingsRepository,
         timerStateService: this.bootstrapResolved.timerStateService,
-        initialSettings: this.bootstrapResolved.initialSettings,
         inputService: this.bootstrapResolved.inputService,
         itemService: this.bootstrapResolved.itemService,
         dataStore: this.bootstrapResolved.dataStore
@@ -76450,9 +76535,9 @@ class ThinkPlugin extends obsidian.Plugin {
   modalPort;
   /**
    * [主流程] 插件启动入口
-   * 1. 加载设置
-   * 2. 注册 DI 容器
-   * 3. 创建 ServiceManager 并启动
+   * 1. 注册 DI / 平台适配器
+   * 2. 创建 ServiceManager 并加载 SettingsRepository
+   * 3. 构建运行时能力
    * 4. 注册命令
    */
   async onload() {
@@ -76462,11 +76547,8 @@ class ThinkPlugin extends obsidian.Plugin {
     await safeAsync(
       async () => {
         setDefaultAiHttpTransportFactory(() => new ObsidianAiHttpTransport());
-        devLog("[ThinkPlugin][BOOT] before loadSettings");
-        const settings = await this.loadSettings();
-        devLog("[ThinkPlugin][BOOT] after loadSettings", settings);
         devLog("[ThinkPlugin][BOOT] before setupCoreContainer");
-        setupCoreContainer(this.app, settings);
+        setupCoreContainer(this.app);
         devLog("[ThinkPlugin][BOOT] before platform registrations");
         instance.register(VAULT_PORT_TOKEN, { useClass: ObsidianVaultPort });
         instance.register(UI_PORT_TOKEN, { useClass: ObsidianUiPort });
@@ -76475,10 +76557,12 @@ class ThinkPlugin extends obsidian.Plugin {
         instance.register(MESSAGE_RENDER_PORT_TOKEN, { useValue: new ObsidianMessageRenderPort(this.app) });
         instance.register(METADATA_PORT_TOKEN, { useClass: ObsidianMetadataPort });
         instance.register(FILESTAT_PORT_TOKEN, { useClass: ObsidianFileStatPort });
+        await migrateLegacyThinkStorage(instance.resolve(VAULT_PORT_TOKEN));
         devLog("[ThinkPlugin][BOOT] before ServiceManager constructor");
         this.serviceManager = new ServiceManager(this);
         devLog("[ThinkPlugin][BOOT] before ServiceManager.bootstrap");
         await this.serviceManager.bootstrap();
+        const settings = this.serviceManager.settingsRepository.getSettings();
         devLog("[ThinkPlugin][BOOT] after ServiceManager.bootstrap");
         const capabilityRegistry = createDefaultCapabilityRegistry();
         const runtime = buildRuntime(instance);
@@ -76558,31 +76642,10 @@ class ThinkPlugin extends obsidian.Plugin {
     resetDefaultAiHttpTransportFactory();
     if (!this.serviceManager) instance.clearInstances();
   }
-  async loadSettings() {
-    const raw = await this.loadData();
-    const needsViewStateCleanup = hasRetiredAssociationViewState(raw);
-    const current2 = toCurrentThinkSettings(raw);
-    const seeded = applyGoalTaskDefaultsSeed(current2);
-    if (seeded.changed || needsViewStateCleanup) {
-      await this.saveData(this.sanitizeSettingsForPersistence(seeded.settings));
-      if (seeded.changed) {
-        devLog(`[ThinkPlugin][BOOT] Goal Task defaults seeded into ${seeded.appliedTemplateCount} direct Task templates`);
-      }
-      if (needsViewStateCleanup) devLog("[ThinkPlugin][BOOT] 已清理旧 AssociationView 测试设置引用");
-    }
-    return seeded.settings;
-  }
-  sanitizeSettingsForPersistence(settings) {
-    const cloned = toPersistedThinkSettings(settings);
-    const aiSettings = cloned.aiSettings;
-    if (aiSettings && typeof aiSettings === "object" && aiSettings.persistApiKey !== true) {
-      aiSettings.apiKey = "";
-    }
-    return cloned;
-  }
   async saveSettings() {
     if (isDisposed()) return;
-    await this.saveData(this.sanitizeSettingsForPersistence(this.serviceManager.settingsRepository.getSettings()));
+    const settings = this.serviceManager.settingsRepository.getSettings();
+    await this.serviceManager.settingsRepository.save(settings);
   }
   // 提供服务访问方法（P0-1: 已移除 appStore getter）
   get dataStore() {

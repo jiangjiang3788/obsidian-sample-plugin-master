@@ -1,15 +1,14 @@
 import "reflect-metadata";
 
-import { ensureReflectMetadata, applyGoalTaskDefaultsSeed } from '@core/bootstrap/public';
+import { ensureReflectMetadata } from '@core/bootstrap/public';
 
 // 立即执行环境检查
 ensureReflectMetadata();
 
 import { container } from 'tsyringe';
 import { Plugin, Notice } from 'obsidian';
-import { DataStore } from '@core/services/public';
+import { DataStore, migrateLegacyThinkStorage } from '@core/services/public';
 import { InputService } from '@core/services/public';
-import { hasRetiredAssociationViewState, toCurrentThinkSettings, toPersistedThinkSettings, type ThinkSettings } from '@core/types/public';
 import type { UseCases } from '@/app/public';
 import { setupCoreContainer } from '@core/bootstrap/public';
 import { setDefaultAiHttpTransportFactory, resetDefaultAiHttpTransportFactory } from '@core/ai/public';
@@ -59,9 +58,9 @@ export default class ThinkPlugin extends Plugin {
 
     /**
      * [主流程] 插件启动入口
-     * 1. 加载设置
-     * 2. 注册 DI 容器
-     * 3. 创建 ServiceManager 并启动
+     * 1. 注册 DI / 平台适配器
+     * 2. 创建 ServiceManager 并加载 SettingsRepository
+     * 3. 构建运行时能力
      * 4. 注册命令
      */
     async onload(): Promise<void> {
@@ -72,15 +71,10 @@ export default class ThinkPlugin extends Plugin {
 
         await safeAsync(
             async () => {
-                // 1. 加载设置
+                // 1. 配置 DI 容器 & 平台适配器。Settings 由 SettingsRepository 在 bootstrap 中统一加载。
                 setDefaultAiHttpTransportFactory(() => new ObsidianAiHttpTransport());
-                devLog('[ThinkPlugin][BOOT] before loadSettings');
-                const settings = await this.loadSettings();
-
-                // 2. 配置 DI 容器 & 基础服务
-                devLog('[ThinkPlugin][BOOT] after loadSettings', settings);
                 devLog('[ThinkPlugin][BOOT] before setupCoreContainer');
-                setupCoreContainer(this.app, settings);
+                setupCoreContainer(this.app);
 
                 // Phase2: platform 成为唯一 Obsidian API 入口（第一步）
                 // - 为 core/storage 注入 VaultPort 的平台实现
@@ -94,6 +88,11 @@ export default class ThinkPlugin extends Plugin {
                 container.register(METADATA_PORT_TOKEN, { useClass: ObsidianMetadataPort });
                 container.register(FILESTAT_PORT_TOKEN, { useClass: ObsidianFileStatPort });
 
+                // Keep plugin-owned runtime/diagnostic files out of the Vault root.
+                // The migration is idempotent and only creates Think/debug.log when
+                // the legacy root log actually exists.
+                await migrateLegacyThinkStorage(container.resolve(VAULT_PORT_TOKEN));
+
                 // 2.1 capabilities 组合根（Phase1: 可注入体系）
                 // - 先创建 registry，让后续 feature 可以在这里追加 register(...)
 
@@ -102,8 +101,11 @@ export default class ThinkPlugin extends Plugin {
                 this.serviceManager = new ServiceManager(this);
                 devLog('[ThinkPlugin][BOOT] before ServiceManager.bootstrap');
                 await this.serviceManager.bootstrap(); // 新的启动方法
+                // SettingsRepository 是唯一 settings source of truth。
+                const settings = this.serviceManager.settingsRepository.getSettings();
+
                 // 2.1 capabilities 组合根（Phase1: 可注入体系）
-                // - 在 ServiceManager.bootstrap() 之后创建，确保 timerService/useCases 已就绪
+                // - 在 ServiceManager.bootstrap() 之后创建，确保 timerService/useCases/settings 已就绪
                 devLog('[ThinkPlugin][BOOT] after ServiceManager.bootstrap');
                 const capabilityRegistry = createDefaultCapabilityRegistry();
                 const runtime = buildRuntime(container);
@@ -200,37 +202,11 @@ export default class ThinkPlugin extends Plugin {
         if (!this.serviceManager) container.clearInstances();
     }
 
-    private async loadSettings(): Promise<ThinkSettings> {
-        const raw = await this.loadData();
-        const needsViewStateCleanup = hasRetiredAssociationViewState(raw);
-        const current = toCurrentThinkSettings(raw);
-        const seeded = applyGoalTaskDefaultsSeed(current);
-        if (seeded.changed || needsViewStateCleanup) {
-            // Persist current-only settings. In 1.1.0 this also removes the retired AssociationView test shell
-            // from viewInstances/layout references before the normal View runtime is constructed.
-            await this.saveData(this.sanitizeSettingsForPersistence(seeded.settings));
-            if (seeded.changed) {
-                devLog(`[ThinkPlugin][BOOT] Goal Task defaults seeded into ${seeded.appliedTemplateCount} direct Task templates`);
-            }
-            if (needsViewStateCleanup) devLog('[ThinkPlugin][BOOT] 已清理旧 AssociationView 测试设置引用');
-        }
-        return seeded.settings;
-    }
-
-
-    private sanitizeSettingsForPersistence(settings: ThinkSettings): ThinkSettings {
-        const cloned = toPersistedThinkSettings(settings) as unknown as ThinkSettings;
-        const aiSettings = (cloned as any).aiSettings;
-        if (aiSettings && typeof aiSettings === 'object' && aiSettings.persistApiKey !== true) {
-            aiSettings.apiKey = '';
-        }
-        return cloned;
-    }
-
     async saveSettings() {
         if (isDisposed()) return;
-        // P0-1: 使用 SettingsRepository 替代 appStore
-        await this.saveData(this.sanitizeSettingsForPersistence(this.serviceManager.settingsRepository.getSettings()));
+        // SettingsRepository 是唯一持久化写入口。
+        const settings = this.serviceManager.settingsRepository.getSettings();
+        await this.serviceManager.settingsRepository.save(settings);
     }
 
     // 提供服务访问方法（P0-1: 已移除 appStore getter）

@@ -102,7 +102,7 @@ describe('integration: every user capture type persists and parses back', () => 
       source: 'test',
     });
 
-    const parsed = parseWholeBlock('01/目标精力.md', markdown);
+    const parsed = parseWholeBlock('01/2026/精力.md', markdown);
     expect(parsed).not.toBeNull();
     expect(parsed?.recordType).toBe('energy');
     expect(parsed?.goalPath).toBe('测试/完整回归');

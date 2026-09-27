@@ -27,21 +27,13 @@ import { toCurrentThinkSettings } from '@/core/settings/currentSettingsSchema';
 import { assertCanonicalGoalSettings } from '@/core/goal';
 import type { ActionMeta } from '@/core/types/actionMeta';
 import { logSettingsWrite } from '@/core/utils/devLogger';
+import { SETTINGS_PERSISTENCE_TOKEN, type ISettingsPersistence } from './SettingsPersistence';
 
-// ============== 类型定义 ==============
-
-/**
- * 设置持久化接口
- * 抽象 Obsidian Plugin 的 loadData/saveData
- */
-export interface ISettingsPersistence {
-    loadData(): Promise<unknown>;
-    saveData(settings: ThinkSettings): Promise<void>;
-}
-
-export const SETTINGS_PERSISTENCE_TOKEN = 'SettingsPersistence';
+export { SETTINGS_PERSISTENCE_TOKEN } from './SettingsPersistence';
+export type { ISettingsPersistence } from './SettingsPersistence';
 
 // ============== SettingsRepository ==============
+
 
 @singleton()
 export class SettingsRepository {
@@ -80,8 +72,15 @@ export class SettingsRepository {
             return this.currentSettings;
         }
 
-        const loaded = await this.persistence.loadData();
+        const loaded = await this.persistence.load();
         const settings = toCurrentThinkSettings(loaded);
+
+        // 当前项目按 single-user/current-only 运行：不做旧 data.json 迁移。
+        // 首次运行没有 Think/data.json 时直接创建当前结构。
+        if (loaded == null) {
+            await this.persistence.save(settings);
+        }
+
         this.currentSettings = settings;
         this.notify();
         return settings;
@@ -106,15 +105,6 @@ export class SettingsRepository {
     }
 
     /**
-     * 设置初始值（用于首次加载或重置）
-     */
-    setInitialSettings(settings: ThinkSettings): void {
-        assertCanonicalGoalSettings(settings.goalSettings);
-        this.currentSettings = settings;
-        this.notify();
-    }
-
-    /**
      * 保存设置
      * @param settings 新设置
      * @param meta 可选的动作元数据（用于 dev 日志）
@@ -123,7 +113,7 @@ export class SettingsRepository {
         assertCanonicalGoalSettings(settings.goalSettings);
         const before = this.currentSettings;
         this.currentSettings = settings;
-        await this.persistence.saveData(settings);
+        await this.persistence.save(settings);
         
         // S1: Dev-only 日志
         logSettingsWrite(meta, before, settings);
@@ -150,7 +140,7 @@ export class SettingsRepository {
         if (newSettings !== this.currentSettings) {
             assertCanonicalGoalSettings(newSettings.goalSettings);
             this.currentSettings = newSettings;
-            await this.persistence.saveData(newSettings);
+            await this.persistence.save(newSettings);
             this.notify();
             
             // S1: Dev-only 日志

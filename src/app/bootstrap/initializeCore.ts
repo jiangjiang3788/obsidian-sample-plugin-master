@@ -6,7 +6,6 @@ import { devError, devLog } from '@core/utils/public';
 
 import { diDebug, diWarn } from '@/app/diagnostics/diDiagnostics';
 
-import type { ThinkSettings } from '@core/types/public';
 import { safeAsync } from '@shared/utils/public';
 import { startMeasure } from '@shared/utils/public';
 
@@ -23,7 +22,7 @@ export async function initializeCore(opts: {
     plugin: PluginHost;
     services: ServiceManagerServices;
     disposables?: Disposables;
-    bootstrap: Pick<BootstrapResolved, 'settingsRepository' | 'timerStateService' | 'initialSettings' | 'inputService' | 'itemService' | 'dataStore'>;
+    bootstrap: Pick<BootstrapResolved, 'settingsRepository' | 'timerStateService' | 'inputService' | 'itemService' | 'dataStore'>;
 }): Promise<void> {
     const { plugin, services, disposables, bootstrap } = opts;
     const stopMeasure = startMeasure('ServiceManager.initializeCore');
@@ -43,10 +42,9 @@ export async function initializeCore(opts: {
                 // 1. 使用上层传入的依赖（避免在此处散落 resolve）
                 services.settingsRepository = bootstrap.settingsRepository;
 
-                // 初始化 SettingsRepository 的设置（由上层 resolve 并下发）
-                const diInitialSettings: ThinkSettings = bootstrap.initialSettings;
-                services.settingsRepository.setInitialSettings(diInitialSettings);
-                diDebug('SettingsRepository.setInitialSettings() called');
+                // SettingsRepository 是 settings 唯一初始化入口：从 Think/data.json 加载并规范化。
+                await services.settingsRepository.load();
+                diDebug('SettingsRepository.load() completed');
 
                 services.timerStateService = bootstrap.timerStateService;
 

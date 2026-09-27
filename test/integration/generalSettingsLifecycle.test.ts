@@ -13,8 +13,8 @@ import { SettingsUseCase } from '@/app/usecases/settings.usecase';
 function createHarness(saveFailure = false) {
   let persisted: unknown = { groups: [], viewInstances: [], layouts: [], floatingTimerEnabled: true, categoryColors: { 工作: '#112233' }, recordTypeColors: { task: '#ABC', unknown: '#ffffff', thought: 'bad' }, goalSettings: { goals: [], goalTemplates: [] } };
   const persistence: ISettingsPersistence = {
-    loadData: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
-    saveData: jest.fn(async (settings: ThinkSettings) => {
+    load: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
+    save: jest.fn(async (settings: ThinkSettings) => {
       if (saveFailure) throw new Error('模拟设置写盘失败');
       persisted = toPersistedThinkSettings(settings);
     }),

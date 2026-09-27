@@ -1,7 +1,7 @@
 /** ThinkOS 白板的唯一状态/持久化 owner；只保存 canonical Record ID 与白板空间状态。 */
 import { inject, singleton } from 'tsyringe';
 import type { IPluginStorage } from '../services/StorageService';
-import { STORAGE_TOKEN } from '../services/StorageService';
+import { STORAGE_TOKEN, THINK_STORAGE_PATHS } from '../services/StorageService';
 import { generateId } from '../utils/id';
 import { devError, devLog, devWarn } from '../utils/devLogger';
 import { WhiteboardBoardSchema, WhiteboardEdgeSchema, WhiteboardItemSchema, WhiteboardGroupSchema, WhiteboardStoreDataSchema, type WhiteboardAnnotation, type WhiteboardBoard, type WhiteboardEdge, type WhiteboardItem, type WhiteboardGroup, type WhiteboardGroupPosition, type WhiteboardPosition, type WhiteboardStoreData } from './WhiteboardSchema';
@@ -9,8 +9,8 @@ import { archiveWhiteboardItems, moveWhiteboardArchivedItems, restoreWhiteboardA
 import { createWhiteboardAnnotation, moveWhiteboardAnnotation, removeWhiteboardAnnotation, updateWhiteboardAnnotation, type WhiteboardAnnotationKind } from './WhiteboardAnnotationMutations';
 import { assertWhiteboardGroupParent, dissolveWhiteboardGroupTree, moveWhiteboardGroupTree } from './WhiteboardWorkbenchMutations';
 import { moveWhiteboardNodes, translateWhiteboardNodes } from './WhiteboardSelectionMutations'; import { normalizeWhiteboardRecordReferences } from './WhiteboardRecordReferenceMutations';
-export const DEFAULT_WHITEBOARD_STORE_PATH = 'Think/whiteboards.json';
-export const LEGACY_ASSOCIATION_STORE_PATH = 'Think/association-spaces.json'; export const DEFAULT_WHITEBOARD_ID = 'whiteboard-default';
+export const DEFAULT_WHITEBOARD_STORE_PATH = THINK_STORAGE_PATHS.whiteboards;
+export const LEGACY_ASSOCIATION_STORE_PATH = THINK_STORAGE_PATHS.legacyAssociations; export const DEFAULT_WHITEBOARD_ID = 'whiteboard-default';
 export const DEFAULT_WHITEBOARD_TITLE = '白板';
 export interface WhiteboardRecordPlacement {
     recordId: string;

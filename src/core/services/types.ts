@@ -7,9 +7,6 @@ import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 // - 这里将类型降级为 unknown，避免 core import 'obsidian'
 export const AppToken: InjectionToken<unknown> = "App";
 
-// [核心修改] 为 ThinkSettings 对象创建一个注入令牌
-export const SETTINGS_TOKEN: InjectionToken<ThinkSettings> = "ThinkSettings";
-
 // [新增] 设置提供者接口，用于解耦 Core 和 App
 export interface ISettingsProvider {
     getSettings(): ThinkSettings;

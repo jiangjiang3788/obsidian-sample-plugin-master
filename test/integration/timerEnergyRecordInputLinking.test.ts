@@ -9,7 +9,7 @@ import { RecordInputUseCase } from '@/app/usecases/recordInput.usecase';
 function makeUseCase() {
   const linkEnergySnapshot = jest.fn(async () => null);
   const inputService = {
-    appendDirectRecord: jest.fn(async () => '01/目标精力.md'),
+    appendDirectRecord: jest.fn(async (path: string) => path),
   };
   const dataStore = {
     scanFileByPath: jest.fn(async () => []),
@@ -19,7 +19,7 @@ function makeUseCase() {
   const useCase = new RecordInputUseCase({} as never, {
     inputService, itemService, dataStore,
   } as never);
-  return { useCase, linkEnergySnapshot };
+  return { useCase, linkEnergySnapshot, inputService };
 }
 
 const base = {
@@ -42,6 +42,7 @@ describe('Timer Energy snapshot linking boundary', () => {
     });
 
     expect(result.status).toBe('success');
+    expect(result.affectedPath).toBe('01/精力.md');
     expect(linkEnergySnapshot).not.toHaveBeenCalled();
   });
 

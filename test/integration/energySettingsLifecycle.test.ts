@@ -22,8 +22,8 @@ function createHarness(saveFailure = false) {
     energySettings: { defaultGoalPath: '' },
   };
   const persistence: ISettingsPersistence = {
-    loadData: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
-    saveData: jest.fn(async (settings: ThinkSettings) => {
+    load: jest.fn(async () => JSON.parse(JSON.stringify(persisted))),
+    save: jest.fn(async (settings: ThinkSettings) => {
       if (saveFailure) throw new Error('模拟精力设置写盘失败');
       persisted = toPersistedThinkSettings(settings);
     }),

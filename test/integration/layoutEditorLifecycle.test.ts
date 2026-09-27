@@ -39,8 +39,8 @@ function baseSettings(): ThinkSettings {
 async function createHarness(failSave = false) {
   let persisted = clone(baseSettings());
   const persistence: ISettingsPersistence = {
-    loadData: jest.fn(async () => clone(persisted)),
-    saveData: jest.fn(async (settings: ThinkSettings) => {
+    load: jest.fn(async () => clone(persisted)),
+    save: jest.fn(async (settings: ThinkSettings) => {
       if (failSave) throw new Error('模拟布局设置写盘失败');
       persisted = clone(settings);
     }),

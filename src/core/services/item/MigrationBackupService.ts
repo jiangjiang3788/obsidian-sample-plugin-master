@@ -1,5 +1,6 @@
 import type { VaultPort } from '@core/ports/VaultPort';
 import type { DataStore } from '../DataStore';
+import { THINK_STORAGE_PATHS } from '../StorageService';
 import type { MigrationBackupResult } from './types';
 
 export class MigrationBackupService {
@@ -15,7 +16,7 @@ export class MigrationBackupService {
      * - 不修改原始记录；用于用户侧“一键迁移前备份”
      */
     async createMigrationBackup(backupRoot: string, settings: unknown): Promise<MigrationBackupResult> {
-        const root = String(backupRoot || '').replace(/^\/+|\/+$/g, '') || `ThinkOS/Backups/goal-migration-${Date.now()}`;
+        const root = String(backupRoot || '').replace(/^\/+|\/+$/g, '') || `${THINK_STORAGE_PATHS.backupsRoot}/goal-migration-${Date.now()}`;
         const settingsPath = `${root}/data-settings.json`;
         const items = this.dataStore.queryItems();
         const markdownPaths = Array.from(new Set(items

@@ -74,7 +74,7 @@ describe('GoalTemplateResolver Goal-only', () => {
     settings.goalSettings!.goalTemplates.push({ goalPath: '产品化/目标中心', recordTypeId: 'core.task', enabled: true, targetFile: '01/父目标.md' } as never);
     const result = GoalTemplateResolver.resolve({ settings, recordTypeId: 'core.task', goalPath: '产品化/目标中心/插件' });
     expect(result.templateSourceType).toBe('record-type');
-    expect(result.template?.targetFile).toBe('01/目标.md');
+    expect(result.template?.targetFile).toBe('01/{{year}}/2-0其他.md');
   });
   it('treats an explicit disabled Goal x RecordType as unavailable instead of falling back', () => {
     const settings = baseSettings();

@@ -1,8 +1,15 @@
 import type { AppStoreApi } from './AppStoreApi';
 import type { EisenhowerQuadrant, TaskLifecycleCommand } from '@core/records/public';
 import { DataStore, InputService, ItemService } from '@core/services/public';
-import { RecordInputKernel } from '@core/recordInput/public';
-import { applyRecordRefreshPlan, buildSuccessResult, buildValidationErrorResult, resolveContinuationAfterCreate, resolveTaskCompletionContinuation } from '@core/recordInput/public';
+import {
+  RecordInputKernel,
+  applyRecordRefreshPlan,
+  buildSuccessResult,
+  buildValidationErrorResult,
+  resolveContinuationAfterCreate,
+  resolveRecordTargetPath,
+  resolveTaskCompletionContinuation,
+} from '@core/recordInput/public';
 import {
   ENERGY_APPEND_UNDER_HEADER,
   ENERGY_TARGET_FILE,
@@ -85,9 +92,13 @@ export class RecordInputUseCase {
 
     const header = ENERGY_APPEND_UNDER_HEADER.replace('{{goalPath}}', record.goalPath);
     const markdown = buildEnergySnapshotMarkdown(record);
+    const targetFilePath = resolveRecordTargetPath(ENERGY_TARGET_FILE, 'energy', {
+      date: record.date,
+      recordedAt: record.recordedAt,
+    });
     try {
       const path = await this.deps.inputService.appendDirectRecord(
-        ENERGY_TARGET_FILE,
+        targetFilePath,
         markdown,
         header,
         { signal: params.signal },
