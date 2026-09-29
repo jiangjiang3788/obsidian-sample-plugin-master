@@ -1,6 +1,6 @@
 {
   "name": "think-os",
-  "version": "1.6.0",
+  "version": "1.17.0",
   "scripts": {
     "dev": "vite --config config/vite.config.ts",
     "cleanup:layout": "node scripts/maintenance/cleanup-legacy-layout.mjs",
@@ -46,6 +46,9 @@
     "package:release": "node scripts/build/package-release.mjs",
     "release:check": "node scripts/gates/checks/version-sync-gate.mjs && node scripts/gates/checks/release-boundary-gate.mjs && node scripts/gates/checks/bundle-budget-gate.mjs && npm run bundle:report",
     "build:release": "vite build --config config/vite.config.ts --mode release && node -e \"require('fs').rmSync('main.js.map',{force:true})\" && npm run package:release && npm run release:check",
+    "build:release:direct": "vite build --config config/vite.config.ts --mode release && node -e \"require('fs').rmSync('main.js.map',{force:true})\" && npm run package:release",
+    "发布": "node scripts/build/publish-release.mjs",
+    "关闭GitHub自动运行": "node scripts/build/publish-release.mjs --disable-actions-only",
     "bundle:report": "node scripts/audit/bundle-size-report.mjs",
     "css:audit": "node scripts/audit/css-audit.mjs --output reports/css/css-audit-current.json",
     "css:audit:baseline": "node scripts/gates/checks/css-boundary-gate.mjs --write-baseline",
