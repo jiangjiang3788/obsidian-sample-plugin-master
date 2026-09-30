@@ -1,10 +1,13 @@
 /** @jsxImportSource preact */
+import { TimeRulerGrid } from '@shared/ui/public';
 import { h } from 'preact';
 import type { JSX } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import type { TaskBlock } from '@core/types/public';
 import {
   buildTimelineDragSelection,
+  buildTimelineScale,
+  type TimelineScale,
   timelineMinuteFromOffset,
   timelineOffsetFromMinute,
   timelineVisibleEndMinute,
@@ -17,6 +20,7 @@ interface DayColumnBodyProps {
   day: string;
   blocks: TaskBlock[];
   hourHeight: number;
+  scale?: TimelineScale;
   colorMap: Record<string, string>;
   maxHours: number;
   onColumnClick: (day: string, e: MouseEvent | TouchEvent | PointerEvent, selectedRange?: { startMinute: number; endMinute: number } | null) => void;
@@ -41,6 +45,7 @@ export function DayColumnBody({
   day,
   blocks,
   hourHeight,
+  scale,
   colorMap,
   maxHours,
   onColumnClick,
@@ -142,9 +147,7 @@ export function DayColumnBody({
       class="day-column-body"
       style={{
         height: `${timelineOffsetFromMinute(timelineVisibleEndMinute(maxHours), hourHeight)}px`,
-        '--timeline-hour-height': `${hourHeight}px`,
-        '--timeline-quarter-hour-height': `${hourHeight / 4}px`,
-        '--timeline-five-minute-height': `${hourHeight / 12}px`,
+
       } as JSX.CSSProperties}
       onClick={(event) => handleBodyClick(event as any)}
       onPointerDown={(event) => handleBodyPointerDown(event as any)}
@@ -153,6 +156,11 @@ export function DayColumnBody({
       onPointerCancel={(event) => handleBodyPointerCancel(event as any)}
       onTouchEnd={(event) => handleBodyTouchEnd(event as any)}
     >
+      <TimeRulerGrid
+        ticks={(scale ?? buildTimelineScale({ hourHeight, maxHours })).ticks}
+        height={timelineOffsetFromMinute(timelineVisibleEndMinute(maxHours), hourHeight)}
+        variant="grid"
+      />
       {dragSelection ? (
         <div
           class="timeline-range-selection"

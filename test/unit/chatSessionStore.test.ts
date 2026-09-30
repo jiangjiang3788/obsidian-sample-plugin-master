@@ -39,12 +39,13 @@ describe('ChatSessionStore', () => {
     expect(store.getSession(session.id)).toBeUndefined();
   });
 
-  it('损坏 JSON 会备份为 corrupt 文件并安全回到空会话，而不是让整个 Store 初始化失败', async () => {
+  it('损坏数据保留原件并备份，初始化和后续写入必须失败', async () => {
     const bad = { version: 99, sessions: 'broken' };
     const h = memoryStorage({ 'Think/chat-sessions.json': bad });
     const store = new ChatSessionStore(h.storage);
-    await expect(store.initialize()).resolves.toBeUndefined();
-    expect(store.listSessions()).toEqual([]);
+    await expect(store.initialize()).rejects.toThrow('结构无效');
+    await expect(store.createSession('不能覆盖')).rejects.toThrow('结构无效');
+    expect(h.files.get('Think/chat-sessions.json')).toEqual(bad);
     expect(h.files.get('Think/chat-sessions.corrupt.json')).toEqual(bad);
   });
 });

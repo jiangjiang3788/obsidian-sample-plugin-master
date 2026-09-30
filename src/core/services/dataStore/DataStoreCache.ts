@@ -1,3 +1,4 @@
+import { JsonStorageError } from '@/core/storage/DurableJsonStore';
 import type { RecordEntity } from '@/core/records/RecordEntity';
 import { toRecordViewItem } from '@/core/records/RecordEntity';
 import { THINK_STORAGE_PATHS, type IPluginStorage } from '@core/services/StorageService';
@@ -42,7 +43,16 @@ export class DataStoreCache {
   }
 
   async load(): Promise<CacheV1> {
-    let cache = await this.storage.readJSON<CacheV1>(DATASTORE_CACHE_PATH);
+    let cache: CacheV1 | null;
+    try {
+      cache = await this.storage.readJSON<CacheV1>(DATASTORE_CACHE_PATH);
+    } catch (error) {
+      // Only this derived cache is disposable. Permission/IO errors remain errors.
+      if (!(error instanceof JsonStorageError) || error.code !== 'invalid_json') throw error;
+      devWarn('ThinkPlugin: 索引缓存损坏，将从原始 Markdown 重建；未删除用户记录。');
+      await this.storage.remove(DATASTORE_CACHE_PATH);
+      cache = null;
+    }
     if (!cache || cache.schemaVersion !== CURRENT_CACHE_SCHEMA_VERSION) {
       cache = this.createEmptyCache();
     }

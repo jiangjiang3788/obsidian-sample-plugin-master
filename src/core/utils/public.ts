@@ -40,3 +40,6 @@ export * from './timelineRange';
 export * from './timing';
 export * from './unknownRecord';
 export * from '../recordInput/recovery';
+
+export { buildTimelineScale, TIMELINE_TICK_STYLE, TIMELINE_SCALE_POLICY } from './timelineScale';
+export type { TimelineScale, TimelineScaleTick, TimelineTickLevel, TimelineDensityMode } from './timelineScale';

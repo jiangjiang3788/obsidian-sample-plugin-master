@@ -23,6 +23,14 @@ import type { VaultPort } from '@core/ports/public';
 export class ObsidianVaultPort implements VaultPort {
   constructor(@inject(AppToken) private app: App) {}
 
+  whenReady(): Promise<void> {
+    return new Promise((resolve) => {
+      const workspace = this.app.workspace;
+      if (typeof workspace?.onLayoutReady === 'function') workspace.onLayoutReady(resolve);
+      else resolve();
+    });
+  }
+
   listMarkdownFilePaths(): string[] {
     return this.app.vault.getMarkdownFiles().map((f) => f.path);
   }
@@ -34,7 +42,7 @@ export class ObsidianVaultPort implements VaultPort {
       return await this.app.vault.read(af);
     }
     if (af instanceof TFolder) {
-      return null;
+      throw new Error(`路径冲突：${path} 是文件夹，不能作为缺失文件处理。`);
     }
 
     // During Obsidian startup the Vault file tree can lag behind the underlying adapter.
@@ -89,6 +97,10 @@ export class ObsidianVaultPort implements VaultPort {
     const af = this.app.vault.getAbstractFileByPath(path);
     if (af instanceof TFile) {
       await this.app.vault.delete(af);
+      return;
+    }
+    if (!(af instanceof TFolder) && await this.app.vault.adapter.exists(path)) {
+      await this.app.vault.adapter.remove(path);
     }
   }
 

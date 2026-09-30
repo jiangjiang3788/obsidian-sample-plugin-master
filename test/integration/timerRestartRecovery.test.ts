@@ -48,16 +48,17 @@ describe('P0 Timer 运行态重启恢复', () => {
     ];
 
     await first.saveStateToFile(timers);
-    expect(h.files.has('think-plugin-timer-state.json')).toBe(true);
+    expect(h.files.has('Think/timer-state.json')).toBe(true);
 
     const restarted = new TimerStateService(h.vault);
     await expect(restarted.loadStateFromFile()).resolves.toEqual(timers);
   });
 
-  it('运行态文件损坏时返回空状态，不把损坏 JSON 传播到启动流程', async () => {
+  it('运行态文件损坏时显式报错并保留原件', async () => {
     const h = createVault();
-    h.files.set('think-plugin-timer-state.json', '{ definitely not json');
+    h.files.set('Think/timer-state.json', '{ definitely not json');
     const restarted = new TimerStateService(h.vault);
-    await expect(restarted.loadStateFromFile()).resolves.toEqual([]);
+    await expect(restarted.loadStateFromFile()).rejects.toThrow('invalid_json');
+    expect(h.files.get('Think/timer-state.json')).toBe('{ definitely not json');
   });
 });

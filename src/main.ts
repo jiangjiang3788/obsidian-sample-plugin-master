@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { assertSettingsLocationSafe } from '@/platform/obsidian/settingsLocationGuard';
 
 import { ensureReflectMetadata } from '@core/bootstrap/public';
 
@@ -71,6 +72,9 @@ export default class ThinkPlugin extends Plugin {
 
         await safeAsync(
             async () => {
+                const pluginDirectory = this.manifest.dir || `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
+                await assertSettingsLocationSafe(this.app, pluginDirectory);
+
                 // 1. 配置 DI 容器 & 平台适配器。Settings 由 SettingsRepository 在 bootstrap 中统一加载。
                 setDefaultAiHttpTransportFactory(() => new ObsidianAiHttpTransport());
                 devLog('[ThinkPlugin][BOOT] before setupCoreContainer');

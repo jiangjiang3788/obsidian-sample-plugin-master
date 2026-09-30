@@ -35,33 +35,6 @@
   pointer-events: none;
 }
 
-.time-axis-hour {
-  position: relative;
-  box-sizing: border-box;
-  height: var(--timeline-hour-height, 60px);
-  padding-inline-end: var(--think-space-2);
-  border-bottom: 1px dashed var(--think-viz-guide-strong);
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(var(--timeline-quarter-hour-height, 15px) - 1px),
-      color-mix(in srgb, var(--think-viz-guide-strong) 92%, transparent) calc(var(--timeline-quarter-hour-height, 15px) - 1px),
-      color-mix(in srgb, var(--think-viz-guide-strong) 92%, transparent) var(--timeline-quarter-hour-height, 15px)
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(var(--timeline-five-minute-height, 5px) - 1px),
-      color-mix(in srgb, var(--think-viz-guide-strong) 70%, transparent) calc(var(--timeline-five-minute-height, 5px) - 1px),
-      color-mix(in srgb, var(--think-viz-guide-strong) 70%, transparent) var(--timeline-five-minute-height, 5px)
-    );
-  color: var(--think-text-subtle);
-  font-size: var(--think-viz-font-axis);
-  font-variant-numeric: tabular-nums;
-  line-height: var(--think-line-height-tight);
-  text-align: end;
-}
 
 .day-column-header,
 .day-column-body {
@@ -77,28 +50,7 @@
   position: relative;
   cursor: crosshair;
   user-select: none;
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(var(--timeline-hour-height, 60px) - 1px),
-      var(--think-viz-guide-strong) calc(var(--timeline-hour-height, 60px) - 1px),
-      var(--think-viz-guide-strong) var(--timeline-hour-height, 60px)
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(var(--timeline-quarter-hour-height, 15px) - 1px),
-      color-mix(in srgb, var(--think-viz-guide-strong) 86%, transparent) calc(var(--timeline-quarter-hour-height, 15px) - 1px),
-      color-mix(in srgb, var(--think-viz-guide-strong) 86%, transparent) var(--timeline-quarter-hour-height, 15px)
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(var(--timeline-five-minute-height, 5px) - 1px),
-      color-mix(in srgb, var(--think-viz-guide-strong) 64%, transparent) calc(var(--timeline-five-minute-height, 5px) - 1px),
-      color-mix(in srgb, var(--think-viz-guide-strong) 64%, transparent) var(--timeline-five-minute-height, 5px)
-    );
+
 }
 
 .timeline-range-selection {
@@ -444,3 +396,87 @@
   pointer-events: none;
   white-space: nowrap;
 }
+
+/* Timeline A-baseline: perceptual hierarchy, not graph paper.
+ *
+ * - neutral tones preserve color for the records themselves;
+ * - whole/half/quarter lines form the canvas hierarchy;
+ * - 5-minute precision stays on the ruler and never crosses the data canvas;
+ * - ruler tick length is an additional visual variable, so the hierarchy is
+ *   recognizable even when stroke widths collapse to similar device pixels.
+ */
+.think-time-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--think-text-primary, var(--text-normal));
+}
+
+.think-time-grid__tick {
+  position: absolute;
+  inset-inline: 0;
+  box-sizing: border-box;
+  --timeline-ruler-length: 16px;
+  --timeline-tick-color: color-mix(
+    in srgb,
+    var(--think-text-primary, var(--text-normal)) var(--timeline-tick-strength, 12%),
+    var(--think-bg-canvas, var(--background-primary))
+  );
+}
+
+/* Distinct neutral tones + weights. The values are intentionally non-linear. */
+.think-time-grid__tick--hour {
+  --timeline-ruler-length: 38px;
+  --timeline-tick-color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 38%, var(--think-bg-canvas, var(--background-primary)));
+}
+.think-time-grid__tick--half {
+  --timeline-ruler-length: 27px;
+  --timeline-tick-color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 23%, var(--think-bg-canvas, var(--background-primary)));
+}
+.think-time-grid__tick--quarter {
+  --timeline-ruler-length: 17px;
+  --timeline-tick-color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 12%, var(--think-bg-canvas, var(--background-primary)));
+}
+.think-time-grid__tick--five {
+  --timeline-ruler-length: 8px;
+  --timeline-tick-color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 7%, var(--think-bg-canvas, var(--background-primary)));
+}
+
+/* Data canvas: only structural lines. 5-minute ticks are removed by the
+ * renderer as well, so there is no hidden full-width precision grid. */
+.think-time-grid--grid .think-time-grid__tick {
+  border-top: var(--timeline-tick-width, 1px) solid var(--timeline-tick-color);
+}
+
+/* Ruler: no full-width lines. Each level becomes a graduated short tick that
+ * terminates before the clock label. */
+.think-time-grid--ruler {
+  --timeline-axis-label-gutter: 47px;
+}
+.think-time-grid--ruler .think-time-grid__tick {
+  border-top: 0;
+}
+.think-time-grid--ruler .think-time-grid__tick::before {
+  content: '';
+  position: absolute;
+  inset-inline-end: var(--timeline-axis-label-gutter);
+  top: 0;
+  width: min(var(--timeline-ruler-length), calc(100% - var(--timeline-axis-label-gutter) - 3px));
+  border-top: var(--timeline-tick-width, 1px) solid var(--timeline-tick-color);
+  box-sizing: border-box;
+}
+
+.think-time-grid__label {
+  position: absolute;
+  inset-inline-end: 4px;
+  transform: translateY(-50%);
+  background: var(--think-bg-canvas, var(--background-primary));
+  padding: 0 2px;
+  color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 66%, var(--think-bg-canvas, var(--background-primary)));
+  font-size: var(--think-viz-font-axis, 12px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.think-time-grid__label.is-first { transform: none; }
+.think-time-grid__label.is-last { transform: translateY(-100%); }

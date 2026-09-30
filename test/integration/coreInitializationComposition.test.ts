@@ -100,7 +100,7 @@ describe('P0 initializeCore 核心服务组合', () => {
     };
     const settingsRepository = new SettingsRepository(persistence);
 
-    await initializeCore({
+    await expect(initializeCore({
       plugin: { app: {} } as any,
       services: {},
       bootstrap: {
@@ -110,7 +110,7 @@ describe('P0 initializeCore 核心服务组合', () => {
         itemService: {} as any,
         dataStore: {} as any,
       },
-    });
+    })).rejects.toThrow('必要的服务令牌');
 
     expect(container.isRegistered(STORE_TOKEN)).toBe(false);
     expect(container.isRegistered(USECASES_TOKEN)).toBe(false);

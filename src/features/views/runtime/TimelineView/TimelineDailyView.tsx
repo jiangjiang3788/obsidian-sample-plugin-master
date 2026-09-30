@@ -1,5 +1,7 @@
 /** @jsxImportSource preact */
-import type { JSX } from 'preact';
+import { useRef } from 'preact/hooks';
+import { buildTimelineScale } from '@core/utils/public';
+import { useTimelineDensityMode } from '@shared/ui/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, UpdateTimelineRangeHandler } from '@shared/types/public';
 import type { GoalTimeAllocationSummary } from '@core/goal/public';
 import { DayColumnHeader, DayColumnBody, TimelineOverallSummary, TimelineTimeAxis } from '../components/timeline';
@@ -52,12 +54,21 @@ export function TimelineDailyView({
   onNotice,
   onColumnClick,
 }: TimelineDailyViewProps) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const densityMode = useTimelineDensityMode(hostRef);
+  const scale = buildTimelineScale({ hourHeight, maxHours, densityMode });
   const dayColumns = buildTimelineDayColumns(dailyViewData);
   const timeAxisRows = buildTimelineTimeAxisRows(maxHours, hourHeight);
   return (
     <div
       class="timeline-view-wrapper think-viz-surface"
-      style={{ '--timeline-hour-height': `${hourHeight}px`, '--timeline-quarter-hour-height': `${hourHeight / 4}px`, '--timeline-five-minute-height': `${hourHeight / 12}px` } as JSX.CSSProperties}
+      ref={hostRef}
+      data-timeline-tick-step={scale.tickStepMinutes}
+      data-timeline-label-step={scale.labelStepMinutes}
+      data-timeline-grid-step={scale.gridStepMinutes}
+      data-timeline-density={densityMode}
+      data-timeline-hour-height={Math.round(hourHeight * 100) / 100}
+      data-timeline-tick-gap={Math.round(scale.tickPixelGap * 100) / 100}
       {...zoomHandlers}
     >
       <div class="timeline-sticky-header">
@@ -89,6 +100,7 @@ export function TimelineDailyView({
       <div class="timeline-scrollable-body">
         <TimelineTimeAxis
           rows={timeAxisRows}
+          scale={scale}
           width={timeAxisWidth}
           hourHeight={hourHeight}
           maxHours={maxHours}
@@ -102,6 +114,7 @@ export function TimelineDailyView({
             onOpenRecordOrigin={onOpenRecordOrigin}
             day={day}
             blocks={blocks}
+            scale={scale}
             hourHeight={hourHeight}
             colorMap={colorMap}
             maxHours={maxHours}

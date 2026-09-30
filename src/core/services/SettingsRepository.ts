@@ -1,152 +1,65 @@
-// src/core/services/SettingsRepository.ts
-/**
- * SettingsRepository - 设置持久化仓库
- * Role: Repository (数据访问层)
- * 
- * 【S1 可观测性】
- * - 所有写入操作支持可选 ActionMeta 参数
- * - 在 dev 环境输出 [SETTINGS_WRITE] 日志
- * - 包含 actionName + source + diff
- * 
- * Do:
- * - 封装设置的读写 IO 操作
- * - 使用 immer/produce 进行不可变更新
- * - 提供统一的设置访问接口
- * - 在 dev 环境记录写入日志
- * 
- * Don't:
- * - 管理 UI 状态
- * - 处理业务逻辑
- * - 在 production 环境输出日志
- */
-
 import { singleton, inject } from 'tsyringe';
 import { produce } from 'immer';
 import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { toCurrentThinkSettings } from '@/core/settings/currentSettingsSchema';
 import { assertCanonicalGoalSettings } from '@/core/goal';
 import type { ActionMeta } from '@/core/types/actionMeta';
-import { logSettingsWrite } from '@/core/utils/devLogger';
+import { logSettingsWrite, devWarn } from '@/core/utils/devLogger';
+import { DurableSnapshot } from '@/core/storage/DurableSnapshot';
 import { SETTINGS_PERSISTENCE_TOKEN, type ISettingsPersistence } from './SettingsPersistence';
 
 export { SETTINGS_PERSISTENCE_TOKEN } from './SettingsPersistence';
 export type { ISettingsPersistence } from './SettingsPersistence';
 
-// ============== SettingsRepository ==============
-
-
 @singleton()
 export class SettingsRepository {
-    private currentSettings: ThinkSettings | null = null;
-    private listeners: Set<(settings: ThinkSettings) => void> = new Set();
+  private readonly state: DurableSnapshot<ThinkSettings>;
+  private readonly listeners = new Set<(settings: ThinkSettings) => void>();
 
-    constructor(
-        @inject(SETTINGS_PERSISTENCE_TOKEN) private persistence: ISettingsPersistence
-    ) {}
-
-    /**
-     * 订阅设置变化
-     * @param listener 变化时调用的回调
-     * @returns 取消订阅函数
-     */
-    subscribe(listener: (settings: ThinkSettings) => void): () => void {
-        this.listeners.add(listener);
-        return () => this.listeners.delete(listener);
-    }
-
-    /**
-     * 通知所有订阅者
-     */
-    private notify(): void {
-        if (this.currentSettings) {
-            this.listeners.forEach(listener => listener(this.currentSettings!));
-        }
-    }
-
-    /**
-     * 加载设置
-     * @returns 当前设置（如果未加载过会从持久化层读取）
-     */
-    async load(): Promise<ThinkSettings> {
-        if (this.currentSettings) {
-            return this.currentSettings;
-        }
-
-        const loaded = await this.persistence.load();
-        const settings = toCurrentThinkSettings(loaded);
-
-        // 当前项目按 single-user/current-only 运行：不做旧 data.json 迁移。
-        // 首次运行没有 Think/data.json 时直接创建当前结构。
-        if (loaded == null) {
-            await this.persistence.save(settings);
-        }
-
-        this.currentSettings = settings;
-        this.notify();
-        return settings;
-    }
-
-    /**
-     * 获取当前设置（同步，必须先调用 load）
-     */
-    getSettings(): ThinkSettings {
-        if (!this.currentSettings) {
-            throw new Error('设置尚未加载，请先完成加载。');
-        }
-        return this.currentSettings;
-    }
-
-    /**
-     * 获取当前设置快照（getSettings 的别名，符合 S2 规范）
-     * @returns 当前设置的不可变快照
-     */
-    getSnapshot(): ThinkSettings {
-        return this.getSettings();
-    }
-
-    /**
-     * 保存设置
-     * @param settings 新设置
-     * @param meta 可选的动作元数据（用于 dev 日志）
-     */
-    async save(settings: ThinkSettings, meta?: ActionMeta): Promise<void> {
+  constructor(@inject(SETTINGS_PERSISTENCE_TOKEN) persistence: ISettingsPersistence) {
+    this.state = new DurableSnapshot({
+      load: async () => {
+        const loaded = await persistence.load();
+        // Loading is read-only, even on a genuinely new installation. Defaults are
+        // persisted only by an explicit user mutation, never by startup or a cache miss.
+        return toCurrentThinkSettings(loaded);
+      },
+      save: async (settings) => {
         assertCanonicalGoalSettings(settings.goalSettings);
-        const before = this.currentSettings;
-        this.currentSettings = settings;
-        await this.persistence.save(settings);
-        
-        // S1: Dev-only 日志
-        logSettingsWrite(meta, before, settings);
-    }
-
-    /**
-     * 使用 immer 更新设置
-     * @param mutator 修改函数，接收 draft 参数进行修改
-     * @param meta 可选的动作元数据（用于 dev 日志）
-     * @returns 更新后的设置
-     */
-    async update(mutator: (draft: ThinkSettings) => void, meta?: ActionMeta): Promise<ThinkSettings> {
-        if (!this.currentSettings) {
-            throw new Error('设置尚未加载，请先完成加载。');
+        await persistence.save(settings);
+      },
+      committed: (_before, settings) => {
+        for (const listener of this.listeners) {
+          try { listener(settings); }
+          catch (error) { devWarn('[SettingsRepository] 订阅者异常；已保存状态不回滚。', error); }
         }
+      },
+    });
+  }
 
-        const before = this.currentSettings;
-        
-        // 使用 immer 进行不可变更新
-        const newSettings = produce(this.currentSettings, mutator);
-        
-        // 只有真正发生变化时才保存并通知。Goal invariant 在真正写盘前强制检查，
-        // 防止任何 UI/usecase 绕过 canonical Goal 边界。
-        if (newSettings !== this.currentSettings) {
-            assertCanonicalGoalSettings(newSettings.goalSettings);
-            this.currentSettings = newSettings;
-            await this.persistence.save(newSettings);
-            this.notify();
-            
-            // S1: Dev-only 日志
-            logSettingsWrite(meta, before, newSettings);
-        }
+  subscribe(listener: (settings: ThinkSettings) => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
 
-        return newSettings;
-    }
+  load(): Promise<ThinkSettings> { return this.state.load(); }
+  getSettings(): ThinkSettings { return this.state.get(); }
+  getSnapshot(): ThinkSettings { return this.state.get(); }
+
+  async save(settings: ThinkSettings, meta?: ActionMeta): Promise<void> {
+    const before = this.state.get();
+    const snapshot = JSON.parse(JSON.stringify(settings)) as ThinkSettings;
+    await this.state.replace(snapshot);
+    logSettingsWrite(meta, before, snapshot);
+  }
+
+  async update(mutator: (draft: ThinkSettings) => void, meta?: ActionMeta): Promise<ThinkSettings> {
+    let before: ThinkSettings | undefined;
+    const result = await this.state.update((current) => {
+      before = current;
+      return produce(current, mutator);
+    });
+    if (before !== result) logSettingsWrite(meta, before, result);
+    return result;
+  }
 }

@@ -6,6 +6,7 @@
  */
 
 import { singleton, inject } from 'tsyringe';
+import { DurableJsonStore } from '@/core/storage/DurableJsonStore';
 import type { TimerState } from '@core/types/timer';
 import type { VaultPort } from '@core/ports/VaultPort';
 import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
@@ -40,13 +41,11 @@ function parseRuntimeState(content: string | null): PersistedTimerRuntimeState |
   if (!content) return null;
   try {
     const parsed = JSON.parse(content) as Partial<PersistedTimerRuntimeState>;
-    // Breaking cutover: legacy arrays and pre-segmented runtime envelopes are discarded.
+    // Unsupported envelopes are reported by the caller, never treated as empty data.
     // Persistent TaskSession history is never stored here.
     if (!parsed || parsed.schemaVersion !== TIMER_RUNTIME_SCHEMA_VERSION || !Array.isArray(parsed.timers)) return null;
-    return {
-      schemaVersion: TIMER_RUNTIME_SCHEMA_VERSION,
-      timers: parsed.timers.filter(isTimerRuntimeState),
-    };
+    if (!parsed.timers.every(isTimerRuntimeState)) return null;
+    return { schemaVersion: TIMER_RUNTIME_SCHEMA_VERSION, timers: parsed.timers };
   } catch {
     return null;
   }
@@ -54,28 +53,35 @@ function parseRuntimeState(content: string | null): PersistedTimerRuntimeState |
 
 @singleton()
 export class TimerStateService {
-  constructor(@inject(VAULT_PORT_TOKEN) private vault: VaultPort) {}
+  private readonly json: DurableJsonStore;
+  constructor(@inject(VAULT_PORT_TOKEN) private vault: VaultPort) {
+    this.json = new DurableJsonStore(vault, new Set([THINK_STORAGE_PATHS.timerRuntime]));
+  }
 
   async loadStateFromFile(): Promise<TimerState[]> {
     try {
-      const current = parseRuntimeState(await this.vault.readFile(THINK_STORAGE_PATHS.timerRuntime));
+      const raw = await this.json.readJSON<unknown>(THINK_STORAGE_PATHS.timerRuntime);
+      const current = raw === null ? null : parseRuntimeState(JSON.stringify(raw));
+      if (raw !== null && !current) throw new Error('计时器状态结构不受支持，请保留原文件后检查；不会作为空状态加载。');
       if (current) {
-        await this.vault.deleteFile(LEGACY_THINK_STORAGE_PATHS.timerRuntime);
+        await this.cleanupLegacyFile();
         return current.timers;
       }
 
       // One-time compatibility migration: older builds wrote this runtime-only
       // file into the Vault root. Move valid state into Think/ and remove the
       // obsolete root file so future timer activity never pollutes the root.
-      const legacy = parseRuntimeState(await this.vault.readFile(LEGACY_THINK_STORAGE_PATHS.timerRuntime));
+      const legacyText = await this.vault.readFile(LEGACY_THINK_STORAGE_PATHS.timerRuntime);
+      const legacy = parseRuntimeState(legacyText);
+      if (legacyText !== null && !legacy) throw new Error('旧计时器状态无效，保留原文件并阻止空状态覆盖。');
       if (!legacy) return [];
 
       await this.writeRuntimeState(legacy.timers);
-      await this.vault.deleteFile(LEGACY_THINK_STORAGE_PATHS.timerRuntime);
+      await this.cleanupLegacyFile();
       return legacy.timers;
     } catch (error) {
       devWarn('Think Plugin: Failed to load timer runtime state from file.', error);
-      return [];
+      throw error;
     }
   }
 
@@ -84,17 +90,24 @@ export class TimerStateService {
       await this.writeRuntimeState(timers);
       // Best-effort cleanup for users who upgrade while a legacy root file is
       // still present. deleteFile is a no-op when the file does not exist.
-      await this.vault.deleteFile(LEGACY_THINK_STORAGE_PATHS.timerRuntime);
+      await this.cleanupLegacyFile();
     } catch (error) {
       devWarn('Think Plugin: Failed to save timer runtime state to file.', error);
+      throw error;
     }
   }
 
+  private async cleanupLegacyFile(): Promise<void> {
+    try { await this.vault.deleteFile(LEGACY_THINK_STORAGE_PATHS.timerRuntime); }
+    catch (error) { devWarn('计时器主文件已验证，旧文件清理失败；保留旧文件供核对。', error); }
+  }
+
   private async writeRuntimeState(timers: TimerState[]): Promise<void> {
+    if (!timers.every(isTimerRuntimeState)) throw new Error('计时器状态无效，拒绝丢弃条目后保存。');
     const payload: PersistedTimerRuntimeState = {
       schemaVersion: TIMER_RUNTIME_SCHEMA_VERSION,
-      timers: timers.filter(isTimerRuntimeState),
+      timers,
     };
-    await this.vault.writeFile(THINK_STORAGE_PATHS.timerRuntime, JSON.stringify(payload, null, 2));
+    await this.json.writeJSON(THINK_STORAGE_PATHS.timerRuntime, payload);
   }
 }

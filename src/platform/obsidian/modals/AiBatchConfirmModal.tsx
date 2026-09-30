@@ -2,7 +2,8 @@
 import { h } from 'preact';
 import type { App } from 'obsidian';
 import { Modal } from 'obsidian';
-import { useMemo } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
+import { AiBatchTimelinePreview } from './AiBatchTimelinePreview';
 
 import {
   type Services,
@@ -104,6 +105,7 @@ function AiBatchConfirmForm({
   closeModal: () => void;
   onComplete?: () => void;
 }) {
+  const [previewMode, setPreviewMode] = useState<'form' | 'timeline'>(initialItems.length >= 3 ? 'timeline' : 'form');
   const fullSettings = useSelector(selectSettings);
   const settings = buildRecordTypeInputSettings();
   const goalSettings = fullSettings.goalSettings;
@@ -122,6 +124,7 @@ function AiBatchConfirmForm({
 
   const {
     records,
+    previewRecords,
     currentIndex,
     currentRecord,
     summary,
@@ -165,7 +168,18 @@ function AiBatchConfirmForm({
           record={currentRecord}
           onClose={() => { if (!isBusy) closeModal(); }}
         />
+        <div className="think-ai-batch__preview-switch" aria-label="确认视图">
+          <button type="button" aria-pressed={previewMode === 'form'} onClick={() => setPreviewMode('form')}>表单编辑</button>
+          <button type="button" aria-pressed={previewMode === 'timeline'} onClick={() => setPreviewMode('timeline')}>时间轴预览</button>
+        </div>
+        {previewMode === 'timeline' && <AiBatchTimelinePreview
+          records={previewRecords}
+          currentIndex={currentIndex}
+          disabled={isBusy}
+          onSelect={(index) => { setCurrentIndex(index); setPreviewMode('form'); }}
+        />}
         <div
+          hidden={previewMode !== 'form'}
           className={`think-overlay-body think-ai-batch__editor${isBusy ? ' is-busy' : ''}${currentRecord.saved || currentRecord.skipped ? ' is-locked' : ''}`}
           aria-busy={isBusy || undefined}
           aria-disabled={currentRecord.saved || currentRecord.skipped || undefined}

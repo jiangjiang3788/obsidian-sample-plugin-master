@@ -21,10 +21,12 @@ import type { InjectionToken } from 'tsyringe';
  * - 平台层负责：确保目录、处理 TFile/TFolder 语义、抛出路径冲突错误
  */
 export interface VaultPort {
+  /** Wait until the platform's Markdown enumeration is complete. No-op in pure test hosts. */
+  whenReady?(): Promise<void>;
   /**
    * 读取文件内容。
    * - 文件不存在 -> null
-   * - 路径存在但不是文件 -> null
+   * - 路径存在但不是文件 -> 抛出路径冲突错误
    */
   readFile(path: string): Promise<string | null>;
 

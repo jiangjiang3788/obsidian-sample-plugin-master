@@ -1,7 +1,7 @@
 // src/core/services/StorageService.ts
 import { singleton, inject } from 'tsyringe';
 import type { InjectionToken } from 'tsyringe';
-import { devWarn } from '@core/utils/devLogger';
+import { DurableJsonStore } from '@/core/storage/DurableJsonStore';
 import type { VaultPort } from '@core/ports/VaultPort';
 import { VAULT_PORT_TOKEN } from '@core/ports/VaultPort';
 
@@ -75,25 +75,18 @@ export async function migrateLegacyThinkStorage(vault: VaultPort): Promise<void>
  */
 @singleton()
 export class VaultFileStorage implements IPluginStorage {
-  constructor(@inject(VAULT_PORT_TOKEN) private vault: VaultPort) {}
+  private readonly json: DurableJsonStore;
 
-  async readJSON<T = any>(path: string): Promise<T | null> {
-    const text = await this.vault.readFile(path);
-    if (text == null) return null;
-    try {
-      return JSON.parse(text) as T;
-    } catch (e) {
-      devWarn(`ThinkPlugin: 读取 JSON 失败 (${path})`, e);
-      return null;
-    }
+  constructor(@inject(VAULT_PORT_TOKEN) vault: VaultPort) {
+    this.json = new DurableJsonStore(vault, new Set([
+      THINK_STORAGE_PATHS.settings,
+      THINK_STORAGE_PATHS.chatSessions,
+      THINK_STORAGE_PATHS.whiteboards,
+      THINK_STORAGE_PATHS.legacyAssociations,
+    ]));
   }
 
-  async writeJSON(path: string, data: any): Promise<void> {
-    const json = JSON.stringify(data, null, 2);
-    await this.vault.writeFile(path, json);
-  }
-
-  async remove(path: string): Promise<void> {
-    await this.vault.deleteFile(path);
-  }
+  readJSON<T = any>(path: string): Promise<T | null> { return this.json.readJSON<T>(path); }
+  writeJSON(path: string, data: any): Promise<void> { return this.json.writeJSON(path, data); }
+  remove(path: string): Promise<void> { return this.json.remove(path); }
 }

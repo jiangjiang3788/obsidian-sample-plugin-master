@@ -128,3 +128,30 @@
   .think-ai-chat-session__delete { opacity: 1; }
   .think-ai-chat-composer { grid-template-columns: 1fr; }
 }
+
+.think-ai-batch__preview-switch { display: flex; gap: var(--think-space-2); padding: var(--think-space-2) var(--think-space-4); }
+.think-ai-batch__preview-switch [aria-pressed="true"] { border-color: var(--think-accent); font-weight: 600; }
+.think-ai-batch__editor[hidden] { display: none !important; }
+.think-ai-timeline { flex: 1; min-height: 0; overflow: auto; padding: var(--think-space-3); }
+.think-ai-timeline__toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: var(--think-space-2); }
+.think-ai-timeline__toolbar label { display: flex; align-items: center; gap: var(--think-space-2); }
+.think-ai-timeline__hint { color: var(--think-text-secondary); font-size: var(--think-font-size-xs); }
+.think-ai-timeline__viewport { height: clamp(200px, 45vh, 520px); overflow: auto; border: 1px solid var(--think-border-subtle); }
+.think-ai-timeline__columns { display: flex; width: max-content; min-width: 100%; padding-bottom: 5px; }
+.think-ai-timeline__axis-column { flex: 0 0 90px; position: sticky; left: 0; z-index: 2; background: var(--think-bg-canvas); }
+.think-ai-timeline__day { flex: 1 0 240px; min-width: 240px; }
+.think-ai-timeline__day-header { height: 28px; box-sizing: border-box; text-align: center; font-variant-numeric: tabular-nums; }
+.think-ai-timeline__axis, .think-ai-timeline__day-body { position: relative; }
+.think-ai-timeline__day-body { border-inline-start: 1px solid var(--think-border-subtle); }
+.think-ai-timeline__block {
+  position: absolute; box-sizing: border-box; min-height: 0; margin: 0; padding: 0 4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left;
+  border: 1px solid var(--think-accent); border-radius: 2px; box-shadow: none;
+  background: color-mix(in srgb, var(--think-accent) 20%, var(--think-bg-canvas));
+  color: var(--think-text-primary); font-size: var(--think-font-size-xs); line-height: 16px;
+}
+.think-ai-timeline__block.is-plan { border-style: dashed; background: color-mix(in srgb, var(--think-accent) 8%, var(--think-bg-canvas)); }
+.think-ai-timeline__block.is-selected { outline: 2px solid var(--think-accent); outline-offset: -2px; }
+.think-ai-timeline__details section { display: grid; gap: var(--think-space-2); margin-top: var(--think-space-4); }
+.think-ai-timeline__details button { height: auto; min-height: 44px; display: grid; gap: 3px; text-align: left; white-space: normal; padding: 7px; }
+.think-ai-timeline__details small { color: var(--think-text-secondary); }

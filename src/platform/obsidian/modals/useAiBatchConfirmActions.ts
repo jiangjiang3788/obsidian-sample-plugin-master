@@ -51,6 +51,7 @@ export function useAiBatchConfirmActions({
   onComplete,
 }: UseAiBatchConfirmActionsInput) {
   const [viewState, setViewState] = useState<AiBatchConfirmViewState>({ records: initialRecords, currentIndex: 0 });
+  const [, setPreviewRevision] = useState(0);
   const recordsRef = useRef<AiBatchConfirmRecordItem[]>(initialRecords);
   const currentIndexRef = useRef(0);
   const draftStateByRecordIdRef = useRef<Map<string, QuickInputEditorState>>(new Map());
@@ -118,8 +119,14 @@ export function useAiBatchConfirmActions({
   };
 
   const handleEditorStateChange = (recordId: string, state: QuickInputEditorState) => {
-    // Ref-only by design: feeding draft state back into initialRecordTypeId/context would reset the editor.
+    const record = recordsRef.current.find((entry) => entry.id === recordId);
+    if (!record || record.saved || record.skipped || pendingActionRef.current) return;
+    const previous = draftStateByRecordIdRef.current.get(recordId);
+    if (previous && JSON.stringify(previous) === JSON.stringify(state)) return;
+    // Publish a projection revision, never feed the edited draft back into the
+    // mounted editor's initial props/context (that would reset ongoing edits).
     draftStateByRecordIdRef.current.set(recordId, state);
+    setPreviewRevision((revision) => revision + 1);
   };
 
   const handleSaveCurrent = async () => {
@@ -130,7 +137,7 @@ export function useAiBatchConfirmActions({
       recordId: current?.id || null,
       blockedByPendingAction: pendingActionRef.current,
     });
-    if (!current || !beginPendingAction('current', `正在保存第 ${indexToSave + 1} 条…`)) return;
+    if (!current || current.saved || current.skipped || !beginPendingAction('current', `正在保存第 ${indexToSave + 1} 条…`)) return;
 
     const abortController = new AbortController();
     activeAbortControllerRef.current = abortController;
@@ -299,6 +306,7 @@ export function useAiBatchConfirmActions({
 
   return {
     records,
+    previewRecords: records.map(materializeRecord),
     currentIndex,
     currentRecord,
     summary,

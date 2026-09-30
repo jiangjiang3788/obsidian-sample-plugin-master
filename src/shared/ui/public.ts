@@ -36,3 +36,8 @@ export * from './markdown/MarkdownContent';
 export * from './events/obsidianEventBoundary';
 
 export * from './overlay/OverlayRuntime';
+
+export { TimeRulerGrid } from './timeline/TimeRulerGrid';
+export { useTimelineDensityMode, resolveTimelineDensityMode, TIMELINE_COMPACT_WIDTH_PX } from './timeline/useTimelineDensityMode';
+export type { TimelineUiDensityMode } from './timeline/useTimelineDensityMode';
+export { useCoarseTimelineDensity } from './timeline/useCoarseTimelineDensity';

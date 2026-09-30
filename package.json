@@ -181,7 +181,15 @@
     "test:timeline:pointer-ui": "node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.unit.config.js --runInBand --runTestsByPath test/unit/timelineTaskDragUi.test.tsx",
     "test:1.6-core:unit": "npm --silent run test:1.5-core:unit && node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.unit.config.js --runInBand --runTestsByPath test/unit/recordTypeColorRuntime.test.ts test/unit/viewInteractionContract.test.ts test/unit/timelineTaskDragUi.test.tsx",
     "test:1.6-core:integration": "npm --silent run test:1.5-core:integration && node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.integration.config.js --runInBand --runTestsByPath test/integration/generalSettingsLifecycle.test.ts",
-    "test:1.6-core": "npm --silent run typecheck:src && npm --silent run gate && npm --silent run test:1.6-core:unit && npm --silent run test:1.6-core:integration"
+    "test:1.6-core": "npm --silent run typecheck:src && npm --silent run gate && npm --silent run test:1.6-core:unit && npm --silent run test:1.6-core:integration",
+    "verify:restart-timeline": "node scripts/testing/verify-restart-timeline.mjs",
+    "诊断:数据": "node scripts/diagnostics/inspect-data.cjs",
+    "test:timeline-scale": "node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.unit.config.js --runInBand --runTestsByPath test/unit/timelineScaleDensity.test.ts test/unit/aiBatchTimelinePreview.test.tsx",
+    "测试:时间轴刻度": "node ./node_modules/jest/bin/jest.js --config ./test/configs/jest.unit.config.js --runInBand --runTestsByPath test/unit/timelineScaleDensity.test.ts test/unit/aiBatchTimelinePreview.test.tsx",
+    "verify:timeline-scale": "npm --silent run typecheck:src && npm --silent run test:timeline-scale && npm --silent run build",
+    "验证:时间轴刻度": "npm --silent run typecheck:src && npm --silent run test:timeline-scale && npm --silent run build",
+    "verify:timeline-scale:e2e": "npm run build:debug && npx wdio run ./test/configs/wdio.conf.mts --spec ./test/specs/restart-timeline-preview.e2e.ts",
+    "验证:时间轴刻度:真机": "npm run build:debug && npx wdio run ./test/configs/wdio.conf.mts --spec ./test/specs/restart-timeline-preview.e2e.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

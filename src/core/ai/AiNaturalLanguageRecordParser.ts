@@ -15,6 +15,7 @@ import {
     buildAiFastUserPrompt,
     buildAiSystemPrompt,
     buildAiUserPrompt,
+    formatAiLocalNow,
 } from './AiParserPrompts';
 import { normalizeParsedBatch } from './AiParserNormalize';
 
@@ -75,7 +76,7 @@ export class AiNaturalLanguageRecordParser implements INaturalLanguageRecordPars
         warnSlowParserStep(traceId, '获取 AI 配置 snapshot', snapshotStart, 50);
 
         const nowIsoStart = nowMs();
-        const nowIso = input.now.toISOString();
+        const nowIso = formatAiLocalNow(input.now);
         logParserStep(traceId, '格式化当前时间完成', nowIsoStart);
 
         const customPrompt = ai.customPrompt?.trim() || '';

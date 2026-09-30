@@ -10,6 +10,7 @@ import { buildCustomCaptureFields, buildGenericRecordDraft } from '@/core/record
 import { getRecordSchemaDefinition } from '@/core/records/schema';
 import { buildTimelineCompletedExecutionPersistence, isTimelineCompletedExecutionContext } from '@/core/records/task/taskExecutionCapture';
 import { buildTaskSessionFields } from '@/core/records/task/taskSession';
+import { normalizeTaskStatus } from '@/core/records/task/taskStatus';
 import { resolveRecordTargetPath } from '@/core/recordInput/storagePath';
 
 function normalizeNonEmptyPath(value: string | null | undefined): string | null {
@@ -138,14 +139,17 @@ export function buildRecordOutputPlan(input: {
   let outputContent: string;
   let storageFields: Record<string, unknown> = renderData;
   if (recordType === 'task') {
-    const statusOption = readOptionText(renderData['状态'] ?? renderData.status);
+    const statusOption = readOptionText(renderData.status ?? renderData['状态']);
     const candidateStatus = String(statusOption.value || statusOption.label || 'open').trim().toLowerCase();
     // A Timeline completed-execution invocation is authoritative. Force lifecycle
     // completion before recurrence/output branching so a stale template status cannot
     // create an open Task or accidentally arm a recurring series.
     const status = isTimelineCompletedExecutionContext(input.context)
       ? 'done'
-      : (['open', 'done', 'cancelled', 'skipped'].includes(candidateStatus) ? candidateStatus : 'open');
+      : normalizeTaskStatus(candidateStatus);
+    // Invalid explicit status is not evidence that a Task is open. Reject it
+    // instead of silently turning an AI completion into an unfinished record.
+    if (!status) throw new Error(`task_status_invalid:${candidateStatus}`);
     const requestedRecurrence = readStructuredTaskRecurrence(renderData);
     // Completed capture is an execution fact. A stale template/Goal recurrence
     // default must never turn that historical Task into the initial instance of

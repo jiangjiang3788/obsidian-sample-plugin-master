@@ -60,6 +60,7 @@ export class DataStore {
 
   // 兼容保留（可能被其他位置直接调用）
   async scanAll() {
+    await this.vault.whenReady?.();
     if (!this._assertNotDisposed()) return;
     this.index.clear();
     this.scannerIssuesByFile.clear();
@@ -111,6 +112,7 @@ export class DataStore {
 
   // [主流程] 暖启动：加载缓存 → 目录 stat → 仅扫描变更 → 合并内存 → 防抖保存
   async warmStart(): Promise<void> {
+    await this.vault.whenReady?.();
     if (!this._assertNotDisposed()) return;
     this._perf = { start: Date.now(), end: 0, scannedFiles: 0, scannedItems: 0 };
 

@@ -165,7 +165,7 @@ export function buildRecordDraftContext(...parts: Array<Record<string, unknown> 
 export function normalizeRecordInputFieldValueForTemplate(field: TemplateField, value: unknown): unknown {
   if (value === undefined || value === null || value === '') return value;
 
-  const isSelectable = ['select', 'radio', 'rating'].includes(field.type);
+  const isSelectable = ['select', 'singleSelect', 'radio', 'rating'].includes(field.type);
   if (!isSelectable) return value;
 
   if (isOptionLikeValue(value) && 'value' in value && 'label' in value) {

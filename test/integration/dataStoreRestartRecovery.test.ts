@@ -87,6 +87,21 @@ describe('P0 DataStore 暖启动、重启与损坏数据隔离', () => {
     jest.useRealTimers();
   });
 
+  it('文件树尚未就绪时不枚举文件，暖启动等待就绪后读取实际记录', async () => {
+    const h = createHarness();
+    let ready!: () => void;
+    h.vault.whenReady = () => new Promise<void>((resolve) => { ready = resolve; });
+    const store = createStore(h);
+    const pending = store.warmStart();
+    await Promise.resolve();
+    expect(h.vault.listMarkdownFilePaths).not.toHaveBeenCalled();
+    h.put('late.md', recordMarkdown('稍后可用的文件'), 100);
+    ready();
+    await pending;
+    expect(store.getRecordById(RECORD_ID)?.content).toBe('稍后可用的文件');
+    store.dispose();
+  });
+
   it('第一次扫描写入缓存；插件重启后未变化文件直接从缓存恢复，变化文件才重新读取', async () => {
     const h = createHarness();
     h.put('records.md', recordMarkdown('第一版'), 100);

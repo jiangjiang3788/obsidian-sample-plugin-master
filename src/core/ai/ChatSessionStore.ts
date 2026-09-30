@@ -14,6 +14,7 @@
  */
 
 import { z } from 'zod';
+import { SerialTaskQueue } from '@/core/storage/SerialTaskQueue';
 import { singleton, inject } from 'tsyringe';
 import { STORAGE_TOKEN, THINK_STORAGE_PATHS, type IPluginStorage } from '@/core/services/StorageService';
 import { generateId } from '../utils/id';
@@ -94,6 +95,7 @@ export class ChatSessionStore {
     private initialized: boolean = false;
     private initPromise: Promise<void> | null = null;
     private disposed: boolean = false;
+    private readonly mutationQueue = new SerialTaskQueue();
 
     constructor(
         @inject(STORAGE_TOKEN) private storage: IPluginStorage,
@@ -111,9 +113,9 @@ export class ChatSessionStore {
         if (this.initialized) return;
         if (this.initPromise) return this.initPromise;
 
-        this.initPromise = this._doInitialize();
-        await this.initPromise;
-        this.initialized = true;
+        const operation = this._doInitialize().then(() => { this.initialized = true; });
+        this.initPromise = operation;
+        try { await operation; } finally { this.initPromise = null; }
     }
 
     private async _doInitialize(): Promise<void> {
@@ -130,8 +132,8 @@ export class ChatSessionStore {
         const legacyData = this.loadFromLocalStorage();
         if (legacyData && legacyData.sessions.length > 0) {
             devLog(`ChatSessionStore: 从 localStorage 迁移 ${legacyData.sessions.length} 个会话`);
+            await this.storage.writeJSON(this.filePath, legacyData);
             this.data = legacyData;
-            await this.saveToFile();
             
             // 清理 localStorage
             try {
@@ -153,7 +155,7 @@ export class ChatSessionStore {
         if (this.disposed) return null;
         try {
             const raw = await this.storage.readJSON<unknown>(this.filePath);
-            if (!raw) return null;
+            if (raw === null) return null;
 
             const result = ChatStoreDataSchema.safeParse(raw);
             if (result.success) {
@@ -163,10 +165,10 @@ export class ChatSessionStore {
             // 校验失败，备份损坏数据
             devWarn('ChatSessionStore: 文件数据校验失败，备份损坏文件', result.error);
             await this.backupCorruptData(raw);
-            return null;
+            throw new Error('聊天记录结构无效，已阻止空数据覆盖原文件。');
         } catch (e) {
             devWarn('ChatSessionStore: 加载文件失败', e);
-            return null;
+            throw e;
         }
     }
 
@@ -197,15 +199,6 @@ export class ChatSessionStore {
             devLog(`ChatSessionStore: 损坏数据已备份到 ${corruptPath}`);
         } catch (e) {
             devError('ChatSessionStore: 备份损坏数据失败', e);
-        }
-    }
-
-    private async saveToFile(): Promise<void> {
-        if (this.disposed) return;
-        try {
-            await this.storage.writeJSON(this.filePath, this.data);
-        } catch (e) {
-            devError('ChatSessionStore: 保存失败', e);
         }
     }
 
@@ -250,100 +243,71 @@ export class ChatSessionStore {
         return this.data.sessions.find(s => s.id === id);
     }
 
-    /** 创建新会话 */
+    /** Commit mutations in one queue. A rejected write leaves the published data unchanged. */
+    private commit<T>(mutate: (draft: ChatStoreData) => T): Promise<T> {
+        return this.mutationQueue.run(async () => {
+            if (this.disposed) throw new Error('ChatSessionStore: 已释放，禁止写入');
+            await this.initialize();
+            if (this.disposed) throw new Error('ChatSessionStore: 已释放，禁止写入');
+            const draft = JSON.parse(JSON.stringify(this.data)) as ChatStoreData;
+            const result = mutate(draft);
+            await this.storage.writeJSON(this.filePath, draft);
+            if (this.disposed) return result;
+            this.data = draft;
+            this.notify();
+            return result;
+        });
+    }
+
     async createSession(title?: string, filters?: SessionFilters): Promise<ChatSession> {
-        const now = Date.now();
-        const session: ChatSession = {
-            id: generateId(),
-            title: title || `对话 ${new Date().toLocaleString('zh-CN')}`,
-            created: now,
-            modified: now,
-            filters,
-            messages: [],
-        };
-        
-        this.data.sessions.unshift(session);
-        
-        // 限制会话数量
-        if (this.data.sessions.length > MAX_SESSIONS) {
-            this.data.sessions = this.data.sessions.slice(0, MAX_SESSIONS);
-        }
-        
-        await this.saveToFile();
-        this.notify();
-        return session;
+        return this.commit((draft) => {
+            const now = Date.now();
+            const session: ChatSession = { id: generateId(), title: title || `对话 ${new Date().toLocaleString('zh-CN')}`,
+                created: now, modified: now, filters, messages: [] };
+            draft.sessions.unshift(session);
+            if (draft.sessions.length > MAX_SESSIONS) draft.sessions = draft.sessions.slice(0, MAX_SESSIONS);
+            return session;
+        });
     }
 
-    /** 添加消息到会话 */
-    async appendMessage(
-        sessionId: string,
-        role: ChatMessage['role'],
-        content: string,
-        meta?: ChatMessage['meta'],
-        contentType?: MessageContentType
-    ): Promise<ChatMessage | null> {
-        const session = this.data.sessions.find(s => s.id === sessionId);
-        if (!session) {
-            devWarn('ChatSessionStore: 会话不存在', sessionId);
-            return null;
-        }
-
-        // 根据 role 设置默认 contentType
-        // user -> plain, assistant/system -> markdown
-        const resolvedContentType = contentType ?? (role === 'user' ? 'plain' : 'markdown');
-
-        const message: ChatMessage = {
-            id: generateId(),
-            role,
-            content,
-            contentType: resolvedContentType,
-            created: Date.now(),
-            meta,
-        };
-
-        session.messages.push(message);
-        session.modified = Date.now();
-
-        // 自动更新标题（如果是第一条用户消息）
-        if (role === 'user' && session.messages.filter(m => m.role === 'user').length === 1) {
-            session.title = content.slice(0, 30) + (content.length > 30 ? '...' : '');
-        }
-
-        await this.saveToFile();
-        this.notify();
-        return message;
+    async appendMessage(sessionId: string, role: ChatMessage['role'], content: string,
+        meta?: ChatMessage['meta'], contentType?: MessageContentType): Promise<ChatMessage | null> {
+        return this.commit((draft) => {
+            const session = draft.sessions.find((entry) => entry.id === sessionId);
+            if (!session) return null;
+            const message: ChatMessage = { id: generateId(), role, content,
+                contentType: contentType ?? (role === 'user' ? 'plain' : 'markdown'), created: Date.now(), meta };
+            session.messages.push(message);
+            session.modified = Date.now();
+            if (role === 'user' && session.messages.filter((entry) => entry.role === 'user').length === 1) {
+                session.title = content.slice(0, 30) + (content.length > 30 ? '...' : '');
+            }
+            return message;
+        });
     }
 
-    /** 更新会话 */
     async updateSession(id: string, updates: Partial<Pick<ChatSession, 'title' | 'filters'>>): Promise<boolean> {
-        const session = this.data.sessions.find(s => s.id === id);
-        if (!session) return false;
-
-        if (updates.title !== undefined) session.title = updates.title;
-        if (updates.filters !== undefined) session.filters = updates.filters;
-        session.modified = Date.now();
-
-        await this.saveToFile();
-        this.notify();
-        return true;
+        return this.commit((draft) => {
+            const session = draft.sessions.find((entry) => entry.id === id);
+            if (!session) return false;
+            if (updates.title !== undefined) session.title = updates.title;
+            if (updates.filters !== undefined) session.filters = updates.filters;
+            session.modified = Date.now();
+            return true;
+        });
     }
 
-    /** 删除会话 */
     async deleteSession(id: string): Promise<boolean> {
-        const idx = this.data.sessions.findIndex(s => s.id === id);
-        if (idx === -1) return false;
-
-        this.data.sessions.splice(idx, 1);
-        await this.saveToFile();
-        this.notify();
-        return true;
+        return this.commit((draft) => {
+            const index = draft.sessions.findIndex((entry) => entry.id === id);
+            if (index < 0) return false;
+            draft.sessions.splice(index, 1);
+            return true;
+        });
     }
 
-    /** 清空所有会话 */
     async clearAllSessions(): Promise<void> {
-        this.data.sessions = [];
-        await this.saveToFile();
-        this.notify();
+        await this.commit((draft) => { draft.sessions = []; });
     }
 
     /** 获取会话消息 */

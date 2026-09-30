@@ -3,7 +3,7 @@ import type { RecordCaptureTemplate, InputSettings, NaturalRecordCommand } from 
 import type { GoalDefinition, GoalSettings, GoalTemplate } from '@core/goal/public';
 import type { RecordSubmitResult, SubmitCreateRecordParams } from '@core/recordInput/public';
 import { getEffectiveTemplate } from '@core/utils/public';
-import { buildBatchCreateRecordSubmitResult, buildRecordDraftContext, normalizeRecordInputFormDataForTemplate } from '@core/recordInput/public';
+import { buildBatchCreateRecordSubmitResult, buildCreateRecordSubmitParamsFromEditorState, buildRecordDraftContext, normalizeRecordInputFormDataForTemplate } from '@core/recordInput/public';
 import { findGoalTemplate, normalizeGoalPath, splitGoalPath } from '@core/goal/public';
 
 export interface AiBatchConfirmRecordItem {
@@ -172,13 +172,12 @@ export function buildAiBatchConfirmCreateSubmitParams(
   record: AiBatchConfirmRecordItem,
   signal?: AbortSignal,
 ): SubmitCreateRecordParams {
-  return {
-    recordTypeId: record.recordTypeId,
-    formData: record.formData,
+  return buildCreateRecordSubmitParamsFromEditorState({
+    state: { recordTypeId: record.recordTypeId, formData: record.formData },
     context: buildAiBatchConfirmRecordContext(record),
     signal,
     source: 'ai_batch',
-  };
+  });
 }
 
 export function buildAiBatchConfirmBatchSummary(results: RecordSubmitResult[]): RecordSubmitResult {

@@ -1,11 +1,13 @@
 /** @jsxImportSource preact */
 import type { TargetedMouseEvent } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
-import { timelineOffsetFromMinute } from '@core/utils/public';
+import { timelineOffsetFromMinute, buildTimelineScale, type TimelineScale } from '@core/utils/public';
+import { TimeRulerGrid } from '@shared/ui/public';
 import type { TimelineTimeAxisRowModel } from '../../TimelineView/TimelineDailyViewModel';
 
 interface TimelineTimeAxisProps {
   rows: TimelineTimeAxisRowModel[];
+  scale?: TimelineScale;
   width: number;
   hourHeight: number;
   maxHours: number;
@@ -14,13 +16,14 @@ interface TimelineTimeAxisProps {
 }
 
 export function TimelineTimeAxis({
-  rows,
+  scale,
   width,
   hourHeight,
   maxHours,
   maxHourHeight,
   onZoomToMax,
 }: TimelineTimeAxisProps) {
+  const grid = scale ?? buildTimelineScale({ hourHeight, maxHours });
   const currentTimeAnchorRef = useRef<HTMLDivElement | null>(null);
   const pendingCurrentTimeFocusRef = useRef(false);
   const effectiveMaxHourHeight = maxHourHeight ?? hourHeight;
@@ -58,7 +61,7 @@ export function TimelineTimeAxis({
   return (
     <div
       class="time-axis"
-      style={`flex:0 0 ${width}px;`}
+      style={`flex:0 0 ${width}px;height:${grid.height}px;`}
       title="双击：最大缩放并定位到当前时间"
       onDblClick={handleDoubleClick}
     >
@@ -68,11 +71,7 @@ export function TimelineTimeAxis({
         aria-hidden="true"
         style={`top:${timelineOffsetFromMinute(currentMinute, hourHeight)}px;`}
       />
-      {rows.map((row) => (
-        <div key={row.hour} class="time-axis-hour" style={`height:${row.height};`}>
-          {row.label}
-        </div>
-      ))}
+      <TimeRulerGrid ticks={grid.ticks} height={grid.height} labels variant="ruler" />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import type { GoalSettings } from '@/core/goal';
 import { getGoalTemplates, isSystemRecordContextField } from '@/core/goal';
 import { getEffectiveTemplate } from '@/core/utils/inputTemplateUtils';
 import { resolveCaptureFieldSchema } from '@/core/fields/CaptureFieldResolver';
+import { AI_TASK_EXECUTION_FIELDS } from './AiTaskCapture';
 
 export interface AiRecordTypeConfigField {
   key: string;
@@ -59,6 +60,12 @@ function normalizeField(field: TemplateField): AiRecordTypeConfigField {
   };
 }
 
+function withTaskExecutionFields(recordTypeId: string, fields: AiRecordTypeConfigField[]): AiRecordTypeConfigField[] {
+  if (recordTypeId !== 'core.task') return fields;
+  const keys = new Set(fields.map((field) => field.key));
+  return [...fields, ...AI_TASK_EXECUTION_FIELDS.filter((field) => !keys.has(field.key))];
+}
+
 export function buildAiConfigSnapshot(
   input: InputSettings | undefined,
   ai: AiSettings,
@@ -79,7 +86,7 @@ export function buildAiConfigSnapshot(
       return {
         id: recordType.id,
         name: recordType.name,
-        fields: sourceFields.filter(isAiVisibleField).map(normalizeField),
+        fields: withTaskExecutionFields(recordType.recordTypeId || recordType.id, sourceFields.filter(isAiVisibleField).map(normalizeField)),
       };
     });
 
@@ -109,7 +116,7 @@ export function buildAiConfigSnapshot(
         goalPath: preset.goalPath,
         recordTypeId: preset.recordTypeId,
         periodPolicy: preset.periodPolicy,
-        fields,
+        fields: withTaskExecutionFields(preset.recordTypeId, fields),
       };
     });
 

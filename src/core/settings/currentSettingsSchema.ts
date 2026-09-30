@@ -173,6 +173,19 @@ function sanitizeViewState(raw: Record<string, unknown>): Pick<ThinkSettings, 'v
 
 /** Current-only settings loader. Existing local data must already be Goal-only. */
 export function toCurrentThinkSettings(rawValue: unknown): ThinkSettings {
+  if (rawValue != null) {
+    if (!isRecord(rawValue)) throw new Error('settings_invalid_root: 设置文件必须是对象，不能作为空设置加载。');
+    const goal = rawValue.goalSettings;
+    if (!isRecord(goal) || !Array.isArray(goal.goals) || !Array.isArray(goal.goalTemplates)) {
+      throw new Error('settings_unsupported_shape: 缺少当前目标结构；请保留原文件后显式转换，不会自动清空。');
+    }
+    for (const key of ['groups', 'viewInstances', 'layouts']) {
+      if (rawValue[key] !== undefined && !Array.isArray(rawValue[key])) throw new Error(`settings_invalid_shape:${key}`);
+    }
+    if (goal.timePresetRevisions !== undefined && !Array.isArray(goal.timePresetRevisions)) {
+      throw new Error('settings_invalid_shape:timePresetRevisions');
+    }
+  }
   const raw = isRecord(rawValue) ? rawValue : {};
   const partial = raw as Partial<ThinkSettings>;
   const sanitizedViews = sanitizeViewState(raw);

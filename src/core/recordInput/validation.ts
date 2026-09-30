@@ -1,6 +1,7 @@
 import type { RecordSubmitIssue, RecordValidationResult, ValidateRecordInputParams } from '@/core/types/recordInput';
 import { templateFieldValueToString } from '@/core/fields/FieldBehavior';
 import { getRecordTypeById } from '@/core/recordTypes/public';
+import { normalizeTaskStatus } from '@/core/records/task/taskStatus';
 
 function issue(code: string, message: string, field?: string): RecordSubmitIssue {
   return { code, message, field };
@@ -41,6 +42,13 @@ export function validateRecordInput(input: ValidateRecordInputParams): RecordVal
     const goalPath = input.formData.goalPath ?? input.formData['目标'];
     if (!hasRequiredValue(goalPath)) {
       errors.push(issue('record_goal_required', '请选择目标。', '目标'));
+    }
+  }
+
+  if (recordType?.recordType === 'task') {
+    const rawStatus = input.formData.status ?? input.formData['状态'];
+    if (hasRequiredValue(rawStatus) && !normalizeTaskStatus(templateFieldValueToString(rawStatus))) {
+      errors.push(issue('task_status_invalid', '任务状态无法识别，请重新选择未完成或已完成。', 'status'));
     }
   }
 

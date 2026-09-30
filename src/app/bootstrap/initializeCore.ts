@@ -2,11 +2,10 @@ import { container } from 'tsyringe';
 import type { PluginHost } from '@core/ports/public';
 
 import { SETTINGS_PERSISTENCE_TOKEN } from '@core/services/public';
-import { devError, devLog } from '@core/utils/public';
+import { devLog } from '@core/utils/public';
 
 import { diDebug, diWarn } from '@/app/diagnostics/diDiagnostics';
 
-import { safeAsync } from '@shared/utils/public';
 import { startMeasure } from '@shared/utils/public';
 
 import { createAppStore, STORE_TOKEN } from '@/app/store/useAppStore';
@@ -27,9 +26,7 @@ export async function initializeCore(opts: {
     const { plugin, services, disposables, bootstrap } = opts;
     const stopMeasure = startMeasure('ServiceManager.initializeCore');
 
-    await (
-        safeAsync(
-            async () => {
+    await (async () => {
                 // 1. 解析核心服务
                 // DI diagnostics: guard before any resolve (dev only, opt-in)
                 if (!container.isRegistered(SETTINGS_PERSISTENCE_TOKEN)) {
@@ -129,9 +126,5 @@ devLog('[ThinkPlugin] DevConsoleStackEnabled 监听已建立');
 
                 const duration = stopMeasure();
                 devLog(`[ThinkPlugin] 核心服务初始化完成 (${duration.toFixed(2)}ms)`);
-            },
-            'ServiceManager.initializeCore',
-            { showNotice: false }
-        )
-    );
+    })();
 }

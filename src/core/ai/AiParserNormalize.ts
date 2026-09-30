@@ -1,5 +1,6 @@
 import type { NaturalRecordBatch, NaturalRecordCommand } from '@/core/types/ai-schema';
-import { isSystemRecordContextField } from '@/core/goal';
+import { isSystemRecordContextField } from '../goal/contextFields';
+import { normalizeAiTaskCaptureFields } from './AiTaskCapture';
 import { asUnknownRecord, isUnknownRecord, readTrimmedString } from '../utils/unknownRecord';
 import type { UnknownRecord } from '../utils/unknownRecord';
 import type { AiParserSnapshot, AiSnapshotRecordType, AiSnapshotGoal, AiSnapshotPreset } from './AiParserSnapshot';
@@ -42,18 +43,22 @@ function findGoalByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): Ai
 
 function findPresetByTarget(snapshot: AiParserSnapshot, target: UnknownRecord): AiSnapshotPreset | null {
   const presets = snapshot.goalPresets ?? [];
-  const explicitId = targetString(target, 'goalTemplateId') || targetString(target, 'templateId');
-  if (explicitId) {
-    const exact = presets.find((preset) => preset.id === explicitId || preset.goalTemplateId === explicitId);
-    if (exact) return exact;
-  }
   const goalPath = targetString(target, 'goalPath');
-  const recordTypeId = targetString(target, 'recordTypeId');
-  return presets.find((preset) => {
-    const goalMatches = !goalPath || preset.goalPath === goalPath;
-    const recordTypeMatches = !recordTypeId || preset.recordTypeId === recordTypeId;
-    return goalMatches && recordTypeMatches;
-  }) || null;
+  const rawTypeId = targetString(target, 'recordTypeId');
+  const recordTypeId = findRecordTypeByTarget(snapshot, target)?.id || rawTypeId;
+  const explicitId = targetString(target, 'goalTemplateId') || targetString(target, 'templateId');
+  const matchesContext = (preset: AiSnapshotPreset) =>
+    (!goalPath || preset.goalPath === goalPath)
+    && (!recordTypeId || preset.recordTypeId === recordTypeId);
+  if (explicitId) {
+    const exact = presets.filter((preset) => preset.id === explicitId || preset.goalTemplateId === explicitId);
+    return exact.length === 1 && matchesContext(exact[0]) ? exact[0] : null;
+  }
+  // Missing or ambiguous context must remain unresolved for user confirmation.
+  // Array order is not evidence of which Goal the user intended.
+  if (!goalPath && !recordTypeId) return null;
+  const candidates = presets.filter(matchesContext);
+  return candidates.length === 1 ? candidates[0] : null;
 }
 
 export function normalizeParsedBatch(
@@ -77,11 +82,15 @@ export function normalizeParsedBatch(
 
     const recordType = findRecordTypeByTarget(snapshot, target);
     if (recordType) {
-      target.recordTypeId = target.recordTypeId || recordType.id || '';
+      target.recordTypeId = recordType.id || target.recordTypeId || '';
     }
 
     const goal = findGoalByTarget(snapshot, target);
     if (goal) target.goalPath = target.goalPath || goal.path;
+
+    if (target.recordTypeId === 'core.task') {
+      parsedItem.fieldValues = normalizeAiTaskCaptureFields(parsedItem.fieldValues);
+    }
 
   });
   return batch;

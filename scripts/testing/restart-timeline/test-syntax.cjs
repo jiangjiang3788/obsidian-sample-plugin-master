@@ -1,0 +1,4 @@
+const fs=require('node:fs'),path=require('node:path'); const {ts}=require('./source-loader.cjs');
+const root=path.resolve(process.argv[2]||process.cwd()); let count=0; const errors=[];
+function walk(dir){for(const ent of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,ent.name);if(ent.isDirectory())walk(file);else if(/\.(ts|tsx|mts)$/.test(file)&&!file.endsWith('.d.ts')){count++;const source=ts.createSourceFile(file,fs.readFileSync(file,'utf8'),ts.ScriptTarget.Latest,true,file.endsWith('.tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS);for(const d of source.parseDiagnostics)errors.push({file:path.relative(root,file),code:d.code,message:ts.flattenDiagnosticMessageText(d.messageText,' ')});}}}
+walk(path.join(root,'test')); console.log(JSON.stringify({testFilesParsed:count,syntaxErrors:errors.length,errors,note:'Parse only. Not execution or type checking.'},null,2));process.exitCode=errors.length?1:0;
