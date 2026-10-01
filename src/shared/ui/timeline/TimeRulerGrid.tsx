@@ -16,8 +16,8 @@ export type TimeRulerGridVariant = 'grid' | 'ruler';
 /**
  * Rendering-only timeline guide.
  *
- * A-baseline deliberately separates the two jobs:
- * - `grid`: quiet structural lines behind records; 5-minute precision is omitted.
+ * A-baseline deliberately separates the two presentations:
+ * - `grid`: 5/15-minute edge graduations plus full-width 30/60-minute structure guides.
  * - `ruler`: short graduated ticks plus sparse labels for precise visual lookup.
  */
 export function TimeRulerGrid({ ticks, height, labels = false, variant = labels ? 'ruler' : 'grid' }: {

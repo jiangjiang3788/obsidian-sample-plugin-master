@@ -12,10 +12,13 @@ describe('统一时间轴刻度密度 · A 科学基线', () => {
   test.each([
     [10, 120, 180],
     [20, 60, 120],
-    [40, 30, 60],
-    [60, 15, 30],
-    [80, 15, 15],
-    [120, 5, 15],
+    [40, 30, 30],
+    [49, 30, 30],
+    [50, 5, 5],
+    [60, 5, 5],
+    [79, 5, 5],
+    [80, 5, 5],
+    [120, 5, 5],
     [180, 5, 5],
     [200, 5, 5],
   ])('%ipx/小时：宽屏标尺 %i 分钟，紧凑/触屏标尺 %i 分钟', (height, fine, compact) => {
@@ -28,19 +31,15 @@ describe('统一时间轴刻度密度 · A 科学基线', () => {
     expect(buildTimelineScale({ hourHeight: 16, densityMode: 'fine' }).tickStepMinutes).toBe(60);
     expect(buildTimelineScale({ hourHeight: 35.9, densityMode: 'fine' }).tickStepMinutes).toBe(60);
     expect(buildTimelineScale({ hourHeight: 36, densityMode: 'fine' }).tickStepMinutes).toBe(30);
-    expect(buildTimelineScale({ hourHeight: 55.9, densityMode: 'fine' }).tickStepMinutes).toBe(30);
-    expect(buildTimelineScale({ hourHeight: 56, densityMode: 'fine' }).tickStepMinutes).toBe(15);
-    expect(buildTimelineScale({ hourHeight: 119.9, densityMode: 'fine' }).tickStepMinutes).toBe(15);
-    expect(buildTimelineScale({ hourHeight: 120, densityMode: 'fine' }).tickStepMinutes).toBe(5);
+    expect(buildTimelineScale({ hourHeight: 49.9, densityMode: 'fine' }).tickStepMinutes).toBe(30);
+    expect(buildTimelineScale({ hourHeight: 50, densityMode: 'fine' }).tickStepMinutes).toBe(5);
 
     expect(buildTimelineScale({ hourHeight: 23.9, densityMode: 'compact' }).tickStepMinutes).toBe(120);
     expect(buildTimelineScale({ hourHeight: 24, densityMode: 'compact' }).tickStepMinutes).toBe(60);
-    expect(buildTimelineScale({ hourHeight: 47.9, densityMode: 'compact' }).tickStepMinutes).toBe(60);
-    expect(buildTimelineScale({ hourHeight: 48, densityMode: 'compact' }).tickStepMinutes).toBe(30);
-    expect(buildTimelineScale({ hourHeight: 79.9, densityMode: 'compact' }).tickStepMinutes).toBe(30);
-    expect(buildTimelineScale({ hourHeight: 80, densityMode: 'compact' }).tickStepMinutes).toBe(15);
-    expect(buildTimelineScale({ hourHeight: 179.9, densityMode: 'compact' }).tickStepMinutes).toBe(15);
-    expect(buildTimelineScale({ hourHeight: 180, densityMode: 'compact' }).tickStepMinutes).toBe(5);
+    expect(buildTimelineScale({ hourHeight: 39.9, densityMode: 'compact' }).tickStepMinutes).toBe(60);
+    expect(buildTimelineScale({ hourHeight: 40, densityMode: 'compact' }).tickStepMinutes).toBe(30);
+    expect(buildTimelineScale({ hourHeight: 49.9, densityMode: 'compact' }).tickStepMinutes).toBe(30);
+    expect(buildTimelineScale({ hourHeight: 50, densityMode: 'compact' }).tickStepMinutes).toBe(5);
   });
 
   it('窄桌面分栏和粗指针设备都使用紧凑策略', () => {
@@ -59,20 +58,25 @@ describe('统一时间轴刻度密度 · A 科学基线', () => {
     expect(legacy.densityMode).toBe('compact');
   });
 
-  it('5 分钟只作为标尺精度层，不进入数据画布', () => {
-    const scale = buildTimelineScale({ hourHeight: 200, maxHours: 1, densityMode: 'fine' });
+  it('50px/小时开放 5 分钟精度，并让日列与主标尺共享同一语义分辨率', () => {
+    const scale = buildTimelineScale({ hourHeight: 50, maxHours: 1, densityMode: 'fine' });
     const five = scale.ticks.find((tick) => tick.minute === 5);
     const quarter = scale.ticks.find((tick) => tick.minute === 15);
     const half = scale.ticks.find((tick) => tick.minute === 30);
     const hour = scale.ticks.find((tick) => tick.minute === 60);
 
     expect(scale.tickStepMinutes).toBe(5);
-    expect(scale.gridStepMinutes).toBe(15);
+    expect(scale.gridStepMinutes).toBe(5);
     expect(five?.level).toBe('five');
-    expect(five?.showInGrid).toBe(false);
+    expect(five?.showInGrid).toBe(true);
     expect(quarter?.showInGrid).toBe(true);
     expect(half?.showInGrid).toBe(true);
     expect(hour?.showInGrid).toBe(true);
+  });
+
+  it('小时刻度不再依赖粗线建立层级', () => {
+    expect(TIMELINE_TICK_STYLE.hour.width).toBe(1);
+    expect(TIMELINE_TICK_STYLE.hour.width).toBeLessThanOrEqual(1);
   });
 
   it('粗细与明度形成非线性视觉阶梯', () => {

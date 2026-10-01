@@ -397,11 +397,13 @@
   white-space: nowrap;
 }
 
-/* Timeline A-baseline: perceptual hierarchy, not graph paper.
+/* Timeline A-baseline: graduated rulers, not graph paper.
  *
  * - neutral tones preserve color for the records themselves;
- * - whole/half/quarter lines form the canvas hierarchy;
- * - 5-minute precision stays on the ruler and never crosses the data canvas;
+ * - 5/15-minute precision stays as short ticks on each day boundary;
+ * - 30/60-minute guides cross the day column to restore temporal structure;
+ * - 5-minute precision can therefore appear from 50 px/hour without turning
+ *   the canvas into graph paper;
  * - ruler tick length is an additional visual variable, so the hierarchy is
  *   recognizable even when stroke widths collapse to similar device pixels.
  */
@@ -416,7 +418,7 @@
   position: absolute;
   inset-inline: 0;
   box-sizing: border-box;
-  --timeline-ruler-length: 16px;
+  --timeline-ruler-length: 9px;
   --timeline-tick-color: color-mix(
     in srgb,
     var(--think-text-primary, var(--text-normal)) var(--timeline-tick-strength, 12%),
@@ -426,26 +428,41 @@
 
 /* Distinct neutral tones + weights. The values are intentionally non-linear. */
 .think-time-grid__tick--hour {
-  --timeline-ruler-length: 38px;
-  --timeline-tick-color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 38%, var(--think-bg-canvas, var(--background-primary)));
+  --timeline-ruler-length: 20px;
 }
 .think-time-grid__tick--half {
-  --timeline-ruler-length: 27px;
-  --timeline-tick-color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 23%, var(--think-bg-canvas, var(--background-primary)));
+  --timeline-ruler-length: 14px;
 }
 .think-time-grid__tick--quarter {
-  --timeline-ruler-length: 17px;
-  --timeline-tick-color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 12%, var(--think-bg-canvas, var(--background-primary)));
+  --timeline-ruler-length: 9px;
 }
 .think-time-grid__tick--five {
-  --timeline-ruler-length: 8px;
-  --timeline-tick-color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 7%, var(--think-bg-canvas, var(--background-primary)));
+  --timeline-ruler-length: 5px;
 }
 
-/* Data canvas: only structural lines. 5-minute ticks are removed by the
- * renderer as well, so there is no hidden full-width precision grid. */
+/* Data canvas: dense precision remains local to the day edge. Half-hour and
+ * hour levels are the only structural guides allowed to span the full column. */
 .think-time-grid--grid .think-time-grid__tick {
+  border-top: 0;
+}
+.think-time-grid--grid .think-time-grid__tick::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  width: var(--timeline-ruler-length);
   border-top: var(--timeline-tick-width, 1px) solid var(--timeline-tick-color);
+  box-sizing: border-box;
+}
+
+.think-time-grid--grid .think-time-grid__tick--half,
+.think-time-grid--grid .think-time-grid__tick--hour {
+  border-top: var(--timeline-tick-width, 1px) solid var(--timeline-tick-color);
+}
+
+.think-time-grid--grid .think-time-grid__tick--half::before,
+.think-time-grid--grid .think-time-grid__tick--hour::before {
+  content: none;
 }
 
 /* Ruler: no full-width lines. Each level becomes a graduated short tick that

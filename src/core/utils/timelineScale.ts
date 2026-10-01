@@ -8,8 +8,9 @@ export interface TimelineScaleTick {
   strokeWidth: number;
   strokeOpacity: number;
   /**
-   * Whether this tick may extend through the data canvas.
-   * A-baseline rule: 5-minute precision ticks belong to the ruler only.
+   * Whether this tick participates in the per-day data-column guide.
+   * Its semantic level decides whether CSS renders an edge graduation or a
+   * full-width structural guide.
    */
   showInGrid: boolean;
   label?: string;
@@ -21,7 +22,7 @@ export interface TimelineScale {
   densityMode: TimelineDensityMode;
   /** Finest visible ruler tick. */
   tickStepMinutes: number;
-  /** Finest line allowed to cross the data canvas. */
+  /** Finest graduation rendered by each data-column time guide. */
   gridStepMinutes: number;
   labelStepMinutes: number;
   tickPixelGap: number;
@@ -37,13 +38,13 @@ export interface TimelineScale {
  * These values intentionally use a non-linear visual ladder. A secondary line
  * should not be only numerically different from a primary line; it must be
  * perceptually quieter. Hue stays neutral while lightness/weight separate the
- * information levels. 5-minute ticks are precision references and never cross
- * the data canvas.
+ * information levels. Precision ticks stay short and local to ruler/day edges;
+ * only the 30-minute and 1-hour structure guides cross the data canvas.
  */
 export const TIMELINE_TICK_STYLE = Object.freeze({
-  hour: { width: 1.75, opacity: 0.38 },
-  half: { width: 1.25, opacity: 0.23 },
-  quarter: { width: 0.75, opacity: 0.12 },
+  hour: { width: 1, opacity: 0.38 },
+  half: { width: 0.75, opacity: 0.23 },
+  quarter: { width: 0.625, opacity: 0.12 },
   five: { width: 0.5, opacity: 0.07 },
 });
 
@@ -53,13 +54,15 @@ export const TIMELINE_TICK_STYLE = Object.freeze({
  * `fine` is used by a sufficiently wide, fine-pointer surface.
  * `compact` is used for touch surfaces and narrow panes (including a narrow
  * desktop split). Each semantic level has a minimum visual separation before it
- * is admitted to the ruler. The 5-minute level can therefore exist as a short
- * ruler tick without becoming a full-width grid line.
+ * is admitted to the ruler. The 5-minute level can therefore exist from
+ * 50 px/hour as a short ruler/edge tick without becoming a full-width grid line.
  */
 export const TIMELINE_SCALE_POLICY = Object.freeze({
   fine: {
     minimumTickGapPx: {
-      five: 10,
+      // A 5-minute graduation becomes useful at roughly 50 px/hour once it is
+      // confined to ruler/edge ticks instead of repeated as full-width lines.
+      five: 5 * (50 / 60),
       quarter: 14,
       half: 18,
       hour: 16,
@@ -69,9 +72,9 @@ export const TIMELINE_SCALE_POLICY = Object.freeze({
   },
   compact: {
     minimumTickGapPx: {
-      five: 15,
-      quarter: 20,
-      half: 24,
+      five: 5 * (50 / 60),
+      quarter: 15,
+      half: 20,
       hour: 24,
     },
     fallbackTickGapPx: 28,
@@ -100,13 +103,6 @@ function resolveTickStep(pixelsPerMinute: number, densityMode: TimelineDensityMo
   }
 
   return FALLBACK_TICK_STEPS.find((step) => step * pixelsPerMinute >= policy.fallbackTickGapPx) ?? 1440;
-}
-
-function resolveGridStep(tickStepMinutes: number): number {
-  // The precision layer is intentionally confined to the ruler. This keeps the
-  // canvas from becoming graph paper at high zoom while preserving 5-minute
-  // positioning cues for the eye.
-  return tickStepMinutes === 5 ? 15 : tickStepMinutes;
 }
 
 function resolveLabelStep(
@@ -155,7 +151,11 @@ export function buildTimelineScale(input: {
   const densityMode: TimelineDensityMode = input.densityMode ?? (input.coarsePointer ? 'compact' : 'fine');
   const pixelsPerMinute = hourHeight / 60;
   const tickStepMinutes = resolveTickStep(pixelsPerMinute, densityMode);
-  const gridStepMinutes = resolveGridStep(tickStepMinutes);
+  // Data-column guides use the same resolution as the ruler. Presentation is
+  // intentionally tiered in CSS: 5/15-minute ticks stay on the day edge while
+  // 30/60-minute structure guides cross the full column. One resolution source;
+  // one semantic level model; presentation remains rendering-only.
+  const gridStepMinutes = tickStepMinutes;
   const labelStepMinutes = resolveLabelStep(pixelsPerMinute, tickStepMinutes, densityMode);
   const tickPixelGap = tickStepMinutes * pixelsPerMinute;
   const labelPixelGap = labelStepMinutes * pixelsPerMinute;
@@ -178,7 +178,7 @@ export function buildTimelineScale(input: {
       label,
       strokeWidth: style.width,
       strokeOpacity: style.opacity,
-      showInGrid: level !== 'five',
+      showInGrid: minute % gridStepMinutes === 0,
     });
   }
 
