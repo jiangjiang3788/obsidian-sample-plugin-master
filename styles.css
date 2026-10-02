@@ -7024,7 +7024,13 @@ body.theme-dark .heatmap-cell.empty {
   position: relative;
   cursor: crosshair;
   user-select: none;
+  /* Keep both native scroll axes available until a touch long-press explicitly
+   * arms range creation. The gesture handler only prevents default after arm. */
+  touch-action: pan-x pan-y pinch-zoom;
+}
 
+.day-column-body--touch-select-armed {
+  cursor: crosshair;
 }
 
 .timeline-range-selection {
@@ -7317,7 +7323,7 @@ body.theme-dark .heatmap-cell.empty {
 
 .timeline-task-block[data-timeline-editable="true"] {
   cursor: grab;
-  touch-action: pan-y pinch-zoom;
+  touch-action: pan-x pan-y pinch-zoom;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -7343,7 +7349,7 @@ body.theme-dark .heatmap-cell.empty {
   z-index: calc(var(--think-z-raised) + 3);
   height: 8px;
   cursor: ns-resize;
-  touch-action: pan-y pinch-zoom;
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 .timeline-task-resize-handle::after {

@@ -59173,7 +59173,7 @@ const MOUSE_DRAG_THRESHOLD_PX = 4;
 const TOUCH_LONG_PRESS_MS = 350;
 const TOUCH_PRESS_SLOP_PX = 10;
 const TOUCH_DRAG_THRESHOLD_PX = 2;
-function findTouch(touches, identifier2) {
+function findTouch$1(touches, identifier2) {
   if (!touches) return null;
   for (let index = 0; index < touches.length; index += 1) {
     const touch = touches.item(index);
@@ -59350,6 +59350,7 @@ function TimelineTaskBlock({
     const active = {
       identifier: touch.identifier,
       mode,
+      startClientX: touch.clientX,
       startClientY: touch.clientY,
       anchorMinute: minute,
       armed: false,
@@ -59371,17 +59372,19 @@ function TimelineTaskBlock({
   const handleTouchMove = (event) => {
     const active = touchGestureRef.current;
     if (!active) return;
-    const touch = findTouch(event.touches, active.identifier);
+    const touch = findTouch$1(event.touches, active.identifier);
     if (!touch) return;
-    const distance = Math.abs(touch.clientY - active.startClientY);
+    const deltaX = touch.clientX - active.startClientX;
+    const deltaY = touch.clientY - active.startClientY;
+    const travel = Math.hypot(deltaX, deltaY);
     if (!active.armed) {
-      if (distance <= TOUCH_PRESS_SLOP_PX) return;
+      if (travel <= TOUCH_PRESS_SLOP_PX) return;
       clearTouchTimer(active);
       touchGestureRef.current = null;
       suppressClickUntilRef.current = Date.now() + 350;
       return;
     }
-    if (!active.dragging && distance < TOUCH_DRAG_THRESHOLD_PX) return;
+    if (!active.dragging && Math.abs(deltaY) < TOUCH_DRAG_THRESHOLD_PX) return;
     const currentMinute = minuteFromClientY(touch.clientY);
     if (currentMinute == null) return;
     const nextPreview = buildTimelineBlockGesturePreview({
@@ -59402,7 +59405,7 @@ function TimelineTaskBlock({
   const finishTouchGesture = (event, cancelled = false) => {
     const active = touchGestureRef.current;
     if (!active) return;
-    const touch = findTouch(event.changedTouches, active.identifier);
+    const touch = findTouch$1(event.changedTouches, active.identifier);
     if (!touch) return;
     clearTouchTimer(active);
     touchGestureRef.current = null;
@@ -59573,6 +59576,9 @@ function TimelineTaskBlock({
   );
 }
 const DRAG_THRESHOLD_PX = 4;
+const TOUCH_RANGE_LONG_PRESS_MS = 350;
+const TOUCH_RANGE_PRESS_SLOP_PX = 10;
+const TOUCH_RANGE_DRAG_THRESHOLD_PX = 2;
 const formatTimeMinute = (minute) => {
   const total = Math.round(minute);
   const h2 = Math.floor(total / 60) % 24;
@@ -59580,6 +59586,14 @@ const formatTimeMinute = (minute) => {
   return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
 };
 const formatRangeBoundaryMinute = (minute) => minute === 24 * 60 ? "24:00" : formatTimeMinute(minute);
+function findTouch(touches, identifier2) {
+  if (!touches) return null;
+  for (let index = 0; index < touches.length; index += 1) {
+    const touch = touches.item(index);
+    if (touch?.identifier === identifier2) return touch;
+  }
+  return null;
+}
 function DayColumnBody({
   day,
   blocks,
@@ -59593,20 +59607,28 @@ function DayColumnBody({
   onOpenRecordOrigin,
   onNotice
 }) {
+  const columnRef = A$1(null);
   const lastTouchRef = A$1(null);
   const suppressClickUntilRef = A$1(0);
   const dragStartRef = A$1(null);
+  const touchSelectionRef = A$1(null);
   const [dragSelection, setDragSelection] = d(null);
+  const [isTouchSelectionArmed, setIsTouchSelectionArmed] = d(false);
+  y(() => () => {
+    const active = touchSelectionRef.current;
+    if (active?.timerId != null) window.clearTimeout(active.timerId);
+  }, []);
   const handleBodyClick = (event) => {
     if (Date.now() < suppressClickUntilRef.current) return;
     onColumnClick(day, event);
   };
-  const minuteFromPointerEvent = (event) => {
-    const target = event.currentTarget;
+  const minuteFromClientY = (clientY) => {
+    const target = columnRef.current;
     if (!target) return null;
     const rect = target.getBoundingClientRect();
-    return timelineMinuteFromOffset(event.clientY - rect.top, hourHeight, maxHours);
+    return timelineMinuteFromOffset(clientY - rect.top, hourHeight, maxHours);
   };
+  const minuteFromPointerEvent = (event) => minuteFromClientY(event.clientY);
   const handleBodyPointerDown = (event) => {
     if (event.pointerType === "touch") return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
@@ -59652,8 +59674,98 @@ function DayColumnBody({
     dragStartRef.current = null;
     setDragSelection(null);
   };
+  const clearTouchSelectionTimer = (active) => {
+    if (!active || active.timerId == null) return;
+    window.clearTimeout(active.timerId);
+    active.timerId = null;
+  };
+  const handleBodyTouchStart = (event) => {
+    const touch = event.changedTouches?.item(0);
+    if (!touch) return;
+    const minute = minuteFromClientY(touch.clientY);
+    if (minute == null) return;
+    clearTouchSelectionTimer(touchSelectionRef.current);
+    setDragSelection(null);
+    setIsTouchSelectionArmed(false);
+    const active = {
+      identifier: touch.identifier,
+      startClientX: touch.clientX,
+      startClientY: touch.clientY,
+      startMinute: minute,
+      armed: false,
+      dragging: false,
+      cancelled: false,
+      timerId: null
+    };
+    active.timerId = window.setTimeout(() => {
+      if (touchSelectionRef.current !== active || active.cancelled) return;
+      active.armed = true;
+      active.timerId = null;
+      setIsTouchSelectionArmed(true);
+      setDragSelection(buildTimelineDragSelection(active.startMinute, active.startMinute, maxHours));
+      try {
+        navigator.vibrate?.(8);
+      } catch {
+      }
+    }, TOUCH_RANGE_LONG_PRESS_MS);
+    touchSelectionRef.current = active;
+  };
+  const handleBodyTouchMove = (event) => {
+    const active = touchSelectionRef.current;
+    if (!active) return;
+    const touch = findTouch(event.touches, active.identifier);
+    if (!touch) return;
+    const deltaX = touch.clientX - active.startClientX;
+    const deltaY = touch.clientY - active.startClientY;
+    const travel = Math.hypot(deltaX, deltaY);
+    if (!active.armed) {
+      if (travel <= TOUCH_RANGE_PRESS_SLOP_PX) return;
+      clearTouchSelectionTimer(active);
+      active.cancelled = true;
+      lastTouchRef.current = null;
+      suppressClickUntilRef.current = Date.now() + 350;
+      return;
+    }
+    if (!active.dragging && Math.abs(deltaY) < TOUCH_RANGE_DRAG_THRESHOLD_PX) return;
+    const minute = minuteFromClientY(touch.clientY);
+    if (minute == null) return;
+    const selection = buildTimelineDragSelection(active.startMinute, minute, maxHours);
+    if (!selection) return;
+    active.dragging = true;
+    event.preventDefault();
+    event.stopPropagation();
+    setDragSelection(selection);
+  };
   const handleBodyTouchEnd = (event) => {
-    const touch = event.changedTouches?.[0];
+    const active = touchSelectionRef.current;
+    if (active) {
+      const touch2 = findTouch(event.changedTouches, active.identifier);
+      if (touch2) {
+        clearTouchSelectionTimer(active);
+        touchSelectionRef.current = null;
+        setIsTouchSelectionArmed(false);
+        if (active.cancelled) {
+          setDragSelection(null);
+          lastTouchRef.current = null;
+          return;
+        }
+        if (active.armed) {
+          suppressClickUntilRef.current = Date.now() + 450;
+          lastTouchRef.current = null;
+          event.preventDefault();
+          event.stopPropagation();
+          const minute = minuteFromClientY(touch2.clientY);
+          const movedEnough = Math.abs(touch2.clientY - active.startClientY) >= TOUCH_RANGE_DRAG_THRESHOLD_PX;
+          const selection = movedEnough && minute != null ? buildTimelineDragSelection(active.startMinute, minute, maxHours) : active.dragging ? dragSelection : null;
+          setDragSelection(null);
+          if (selection && (active.dragging || movedEnough)) {
+            onColumnClick(day, event, { startMinute: selection.startMinute, endMinute: selection.endMinute });
+          }
+          return;
+        }
+      }
+    }
+    const touch = event.changedTouches?.item(0);
     if (!touch) return;
     const now2 = Date.now();
     const previous = lastTouchRef.current;
@@ -59665,10 +59777,22 @@ function DayColumnBody({
     onColumnClick(day, event);
     lastTouchRef.current = null;
   };
+  const handleBodyTouchCancel = (event) => {
+    const active = touchSelectionRef.current;
+    if (!active) return;
+    const touch = findTouch(event.changedTouches, active.identifier);
+    if (!touch) return;
+    clearTouchSelectionTimer(active);
+    touchSelectionRef.current = null;
+    lastTouchRef.current = null;
+    setIsTouchSelectionArmed(false);
+    setDragSelection(null);
+  };
   return /* @__PURE__ */ u2(
     "div",
     {
-      class: "day-column-body",
+      ref: columnRef,
+      class: `day-column-body${isTouchSelectionArmed ? " day-column-body--touch-select-armed" : ""}`,
       style: {
         height: `${timelineOffsetFromMinute(timelineVisibleEndMinute(maxHours), hourHeight)}px`
       },
@@ -59677,7 +59801,10 @@ function DayColumnBody({
       onPointerMove: (event) => handleBodyPointerMove(event),
       onPointerUp: (event) => handleBodyPointerUp(event),
       onPointerCancel: (event) => handleBodyPointerCancel(event),
+      onTouchStart: (event) => handleBodyTouchStart(event),
+      onTouchMove: (event) => handleBodyTouchMove(event),
       onTouchEnd: (event) => handleBodyTouchEnd(event),
+      onTouchCancel: (event) => handleBodyTouchCancel(event),
       children: [
         /* @__PURE__ */ u2(
           TimeRulerGrid,
