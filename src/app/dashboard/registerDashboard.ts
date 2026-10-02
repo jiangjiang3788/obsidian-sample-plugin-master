@@ -22,7 +22,7 @@ export function registerDashboardFeature(
   registry.register({
     id: 'dashboard',
     description: '仪表盘',
-    bootMode: 'blocking',
+    bootMode: 'background',
     boot: async (ctx) => {
       if (ctx?.dataScanPromise) await ctx.dataScanPromise;
       const watcher = new VaultWatcher(deps.eventsPort, deps.dataStore);

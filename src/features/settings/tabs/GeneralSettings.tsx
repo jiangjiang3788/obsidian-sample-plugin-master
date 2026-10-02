@@ -9,9 +9,16 @@ import {
 } from '@/app/public';
 import { ThinkCheckbox } from '@shared/ui/public';
 import { RecordTypeColorSettingsSection } from './RecordTypeColorSettingsSection';
+import { DevBuildUpdateControl } from '../components/DevBuildUpdateControl';
 
 /** 通用设置：模块开关。Record Type 颜色设置在 1.6.0 Presentation Convergence 引入。 */
-export function GeneralSettings() {
+export function GeneralSettings({
+  currentVersion,
+  onPullDevBuild,
+}: {
+  currentVersion?: string;
+  onPullDevBuild?: () => Promise<{ remoteVersion: string; branch: string }>;
+} = {}) {
   const floatingTimerEnabled = useSelector(selectFloatingTimerEnabled);
   const devConsoleStackEnabled = useSelector(selectDevConsoleStackEnabled);
   const useCases = useUseCases();
@@ -19,6 +26,12 @@ export function GeneralSettings() {
   return (
     <div className="think-settings-page">
       <RecordTypeColorSettingsSection />
+      {onPullDevBuild ? (
+        <section className="think-settings-section">
+          <h2 className="think-settings-section__title">开发版更新</h2>
+          <DevBuildUpdateControl currentVersion={currentVersion} onPullDevBuild={onPullDevBuild} />
+        </section>
+      ) : null}
       <section className="think-settings-section">
         <h2 className="think-settings-section__title">模块开关</h2>
         <div className="think-settings-stack think-settings-stack--tight">

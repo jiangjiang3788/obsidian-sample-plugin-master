@@ -1,25 +1,15 @@
 /*
  * Think OS stylesheet entry.
  *
- * Tokens stay in a named layer. Host-facing component rules are intentionally
- * unlayered: Obsidian and community themes are also unlayered author CSS, and
- * putting every plugin rule in a layer would make host rules win regardless of
- * specificity. Internal precedence is therefore explicit source order plus
- * scoped semantic class names; host overrides remain last and narrowly scoped.
+ * Keep foundational design tokens unlayered. This is intentionally conservative:
+ * Obsidian mobile runs inside the system WebView, and older Android WebViews can
+ * drop layered token declarations while still rendering the remaining HTML.
+ * Feature/component rules keep their existing explicit source order.
  */
 
-@layer think.reset,
-       think.tokens,
-       think.foundations,
-       think.primitives,
-       think.components,
-       think.features,
-       think.utilities,
-       think.overrides;
-
-@import "./tokens/semantic.css" layer(think.tokens);
-@import "./tokens/density.css" layer(think.tokens);
-@import "./tokens/data-colors.css" layer(think.tokens);
+@import "./tokens/semantic.css";
+@import "./tokens/density.css";
+@import "./tokens/data-colors.css";
 
 @import "./foundations/scope.css";
 @import "./foundations/typography.css";

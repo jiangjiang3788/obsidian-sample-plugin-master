@@ -50,7 +50,13 @@
   position: relative;
   cursor: crosshair;
   user-select: none;
+  /* Keep both native scroll axes available until a touch long-press explicitly
+   * arms range creation. The gesture handler only prevents default after arm. */
+  touch-action: pan-x pan-y pinch-zoom;
+}
 
+.day-column-body--touch-select-armed {
+  cursor: crosshair;
 }
 
 .timeline-range-selection {
@@ -285,7 +291,7 @@
 @container (max-width: 480px) {
   .timeline-view-wrapper {
     --timeline-day-width: 112px;
-    --timeline-time-axis-width: 58px;
+    --timeline-time-axis-width: 66px;
   }
 
   .day-header-title,
@@ -332,10 +338,20 @@
 }
 
 
-/* Timeline direct manipulation: the block itself moves; logical range boundaries resize. */
+/* Timeline direct manipulation. Mouse/pen drag immediately; touch requires a
+ * deliberate long press before the same move/resize operation is accepted.
+ * Native pan/pinch remains available before the long-press gesture is armed. */
 .timeline-task-block[data-timeline-editable="true"] {
   cursor: grab;
-  touch-action: none;
+  touch-action: pan-x pan-y pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.timeline-task-block--touch-armed {
+  outline: 2px solid var(--think-accent);
+  outline-offset: 1px;
 }
 
 .timeline-task-block--dragging {
@@ -353,7 +369,7 @@
   z-index: calc(var(--think-z-raised) + 3);
   height: 8px;
   cursor: ns-resize;
-  touch-action: none;
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 .timeline-task-resize-handle::after {
@@ -376,6 +392,7 @@
 
 .timeline-task-block:hover .timeline-task-resize-handle::after,
 .timeline-task-block:focus-within .timeline-task-resize-handle::after,
+.timeline-task-block--touch-armed .timeline-task-resize-handle::after,
 .timeline-task-block--dragging .timeline-task-resize-handle::after {
   opacity: 1;
 }
@@ -402,8 +419,8 @@
  * - neutral tones preserve color for the records themselves;
  * - 5/15-minute precision stays as short ticks on each day boundary;
  * - 30/60-minute guides cross the day column to restore temporal structure;
- * - 5-minute precision can therefore appear from 50 px/hour without turning
- *   the canvas into graph paper;
+ * - 5-minute precision appears only at high zoom; default zoom stays at
+ *   quarter-hour precision to avoid dense visual noise;
  * - ruler tick length is an additional visual variable, so the hierarchy is
  *   recognizable even when stroke widths collapse to similar device pixels.
  */
@@ -419,6 +436,7 @@
   inset-inline: 0;
   box-sizing: border-box;
   --timeline-ruler-length: 9px;
+  --timeline-tick-color: var(--think-border-strong, var(--background-modifier-border-hover));
   --timeline-tick-color: color-mix(
     in srgb,
     var(--think-text-primary, var(--text-normal)) var(--timeline-tick-strength, 12%),
@@ -468,7 +486,7 @@
 /* Ruler: no full-width lines. Each level becomes a graduated short tick that
  * terminates before the clock label. */
 .think-time-grid--ruler {
-  --timeline-axis-label-gutter: 47px;
+  --timeline-axis-label-gutter: 40px;
 }
 .think-time-grid--ruler .think-time-grid__tick {
   border-top: 0;
@@ -489,7 +507,8 @@
   transform: translateY(-50%);
   background: var(--think-bg-canvas, var(--background-primary));
   padding: 0 2px;
-  color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 66%, var(--think-bg-canvas, var(--background-primary)));
+  color: var(--think-text-secondary, var(--text-muted));
+  color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 72%, var(--think-bg-canvas, var(--background-primary)));
   font-size: var(--think-viz-font-axis, 12px);
   font-variant-numeric: tabular-nums;
   line-height: 1.2;

@@ -41,7 +41,17 @@ function clampTabIndex(value: unknown): number {
     return Math.min(Math.max(0, Math.floor(numeric)), SETTINGS_TAB_COUNT - 1);
 }
 
-export function SettingsRoot({ app, variant = 'workspace' }: { app: App; variant?: 'settings-tab' | 'workspace' }) {
+export function SettingsRoot({
+    app,
+    variant = 'workspace',
+    currentVersion,
+    onPullDevBuild,
+}: {
+    app: App;
+    variant?: 'settings-tab' | 'workspace';
+    currentVersion?: string;
+    onPullDevBuild?: () => Promise<{ remoteVersion: string; branch: string }>;
+}) {
     const deviceProfileAttrs = getThinkDeviceProfileAttributes();
     const [storedTabIndex, setStoredTabIndex] = useLocalStorage(SETTINGS_TABS_NO_QUICK_INPUT_KEY, 0);
     const tabIndex = clampTabIndex(storedTabIndex);
@@ -62,7 +72,7 @@ export function SettingsRoot({ app, variant = 'workspace' }: { app: App; variant
                 <main className="think-settings-workspace__content">
                     <TabPanel value={tabIndex} index={0}><DataManagementSettings /></TabPanel>
                     <TabPanel value={tabIndex} index={1}><LayoutSettings app={app} /></TabPanel>
-                    <TabPanel value={tabIndex} index={2}><GeneralSettings /></TabPanel>
+                    <TabPanel value={tabIndex} index={2}><GeneralSettings currentVersion={currentVersion} onPullDevBuild={onPullDevBuild} /></TabPanel>
                     <TabPanel value={tabIndex} index={3}><AiSettings /></TabPanel>
                 </main>
             </div>

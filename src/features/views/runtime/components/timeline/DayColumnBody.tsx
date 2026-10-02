@@ -1,9 +1,8 @@
-/** @jsxImportSource preact */
-import { TimeRulerGrid } from '@shared/ui/public';
 import { h } from 'preact';
 import type { JSX } from 'preact';
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import type { TaskBlock } from '@core/types/public';
+import { TimeRulerGrid } from '@shared/ui/public';
 import {
   buildTimelineDragSelection,
   buildTimelineScale,
@@ -30,7 +29,21 @@ interface DayColumnBodyProps {
   onNotice?: (message: string) => void;
 }
 
+interface ActiveTouchSelection {
+  identifier: number;
+  startClientX: number;
+  startClientY: number;
+  startMinute: number;
+  armed: boolean;
+  dragging: boolean;
+  cancelled: boolean;
+  timerId: number | null;
+}
+
 const DRAG_THRESHOLD_PX = 4;
+const TOUCH_RANGE_LONG_PRESS_MS = 350;
+const TOUCH_RANGE_PRESS_SLOP_PX = 10;
+const TOUCH_RANGE_DRAG_THRESHOLD_PX = 2;
 
 const formatTimeMinute = (minute: number) => {
   const total = Math.round(minute);
@@ -40,6 +53,15 @@ const formatTimeMinute = (minute: number) => {
 };
 
 const formatRangeBoundaryMinute = (minute: number) => minute === 24 * 60 ? '24:00' : formatTimeMinute(minute);
+
+function findTouch(touches: TouchList | undefined, identifier: number): Touch | null {
+  if (!touches) return null;
+  for (let index = 0; index < touches.length; index += 1) {
+    const touch = touches.item(index);
+    if (touch?.identifier === identifier) return touch;
+  }
+  return null;
+}
 
 export function DayColumnBody({
   day,
@@ -54,25 +76,36 @@ export function DayColumnBody({
   onOpenRecordOrigin,
   onNotice,
 }: DayColumnBodyProps) {
+  const columnRef = useRef<HTMLDivElement | null>(null);
   const lastTouchRef = useRef<{ time: number; x: number; y: number } | null>(null);
   const suppressClickUntilRef = useRef(0);
   const dragStartRef = useRef<{ pointerId: number; clientY: number; minute: number } | null>(null);
+  const touchSelectionRef = useRef<ActiveTouchSelection | null>(null);
   const [dragSelection, setDragSelection] = useState<TimelineDragSelectionModel | null>(null);
+  const [isTouchSelectionArmed, setIsTouchSelectionArmed] = useState(false);
+
+  useEffect(() => () => {
+    const active = touchSelectionRef.current;
+    if (active?.timerId != null) window.clearTimeout(active.timerId);
+  }, []);
 
   const handleBodyClick = (event: MouseEvent) => {
     if (Date.now() < suppressClickUntilRef.current) return;
     onColumnClick(day, event);
   };
 
-  const minuteFromPointerEvent = (event: PointerEvent) => {
-    const target = event.currentTarget as HTMLElement | null;
+  const minuteFromClientY = (clientY: number) => {
+    const target = columnRef.current;
     if (!target) return null;
     const rect = target.getBoundingClientRect();
-    return timelineMinuteFromOffset(event.clientY - rect.top, hourHeight, maxHours);
+    return timelineMinuteFromOffset(clientY - rect.top, hourHeight, maxHours);
   };
 
+  const minuteFromPointerEvent = (event: PointerEvent) => minuteFromClientY(event.clientY);
+
   const handleBodyPointerDown = (event: PointerEvent) => {
-    // Touch keeps the existing deliberate double-tap create behavior. Mouse/pen can drag a range.
+    // Touch uses a long-press-to-arm range gesture below. Mouse/pen keep the
+    // direct desktop drag-selection interaction.
     if (event.pointerType === 'touch') return;
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     const minute = minuteFromPointerEvent(event);
@@ -122,8 +155,120 @@ export function DayColumnBody({
     setDragSelection(null);
   };
 
+  const clearTouchSelectionTimer = (active: ActiveTouchSelection | null) => {
+    if (!active || active.timerId == null) return;
+    window.clearTimeout(active.timerId);
+    active.timerId = null;
+  };
+
+  const handleBodyTouchStart = (event: TouchEvent) => {
+    const touch = event.changedTouches?.item(0);
+    if (!touch) return;
+    const minute = minuteFromClientY(touch.clientY);
+    if (minute == null) return;
+
+    clearTouchSelectionTimer(touchSelectionRef.current);
+    setDragSelection(null);
+    setIsTouchSelectionArmed(false);
+
+    const active: ActiveTouchSelection = {
+      identifier: touch.identifier,
+      startClientX: touch.clientX,
+      startClientY: touch.clientY,
+      startMinute: minute,
+      armed: false,
+      dragging: false,
+      cancelled: false,
+      timerId: null,
+    };
+
+    active.timerId = window.setTimeout(() => {
+      if (touchSelectionRef.current !== active || active.cancelled) return;
+      active.armed = true;
+      active.timerId = null;
+      setIsTouchSelectionArmed(true);
+      // Show the first five-minute cell as acknowledgement that the long press
+      // has switched from scrolling to range creation. Releasing without a drag
+      // still cancels and creates nothing.
+      setDragSelection(buildTimelineDragSelection(active.startMinute, active.startMinute, maxHours));
+      try { navigator.vibrate?.(8); } catch { /* optional tactile acknowledgement */ }
+    }, TOUCH_RANGE_LONG_PRESS_MS);
+
+    touchSelectionRef.current = active;
+  };
+
+  const handleBodyTouchMove = (event: TouchEvent) => {
+    const active = touchSelectionRef.current;
+    if (!active) return;
+    const touch = findTouch(event.touches, active.identifier);
+    if (!touch) return;
+
+    const deltaX = touch.clientX - active.startClientX;
+    const deltaY = touch.clientY - active.startClientY;
+    const travel = Math.hypot(deltaX, deltaY);
+
+    // Before the long press, every ordinary swipe belongs to native scrolling
+    // (horizontal day navigation or vertical timeline scrolling). Do not steal it.
+    if (!active.armed) {
+      if (travel <= TOUCH_RANGE_PRESS_SLOP_PX) return;
+      clearTouchSelectionTimer(active);
+      active.cancelled = true;
+      lastTouchRef.current = null;
+      suppressClickUntilRef.current = Date.now() + 350;
+      return;
+    }
+
+    if (!active.dragging && Math.abs(deltaY) < TOUCH_RANGE_DRAG_THRESHOLD_PX) return;
+    const minute = minuteFromClientY(touch.clientY);
+    if (minute == null) return;
+    const selection = buildTimelineDragSelection(active.startMinute, minute, maxHours);
+    if (!selection) return;
+
+    active.dragging = true;
+    event.preventDefault();
+    event.stopPropagation();
+    setDragSelection(selection);
+  };
+
   const handleBodyTouchEnd = (event: TouchEvent) => {
-    const touch = event.changedTouches?.[0];
+    const active = touchSelectionRef.current;
+    if (active) {
+      const touch = findTouch(event.changedTouches, active.identifier);
+      if (touch) {
+        clearTouchSelectionTimer(active);
+        touchSelectionRef.current = null;
+        setIsTouchSelectionArmed(false);
+
+        if (active.cancelled) {
+          setDragSelection(null);
+          lastTouchRef.current = null;
+          return;
+        }
+
+        if (active.armed) {
+          suppressClickUntilRef.current = Date.now() + 450;
+          lastTouchRef.current = null;
+          event.preventDefault();
+          event.stopPropagation();
+
+          const minute = minuteFromClientY(touch.clientY);
+          const movedEnough = Math.abs(touch.clientY - active.startClientY) >= TOUCH_RANGE_DRAG_THRESHOLD_PX;
+          const selection = movedEnough && minute != null
+            ? buildTimelineDragSelection(active.startMinute, minute, maxHours)
+            : (active.dragging ? dragSelection : null);
+
+          setDragSelection(null);
+          if (selection && (active.dragging || movedEnough)) {
+            onColumnClick(day, event, { startMinute: selection.startMinute, endMinute: selection.endMinute });
+          }
+          return;
+        }
+      }
+    }
+
+    // Preserve the existing mobile double-tap point-create shortcut. It only
+    // runs when the touch never became a scroll or long-press range gesture.
+    const touch = event.changedTouches?.item(0);
     if (!touch) return;
 
     const now = Date.now();
@@ -142,9 +287,22 @@ export function DayColumnBody({
     lastTouchRef.current = null;
   };
 
+  const handleBodyTouchCancel = (event: TouchEvent) => {
+    const active = touchSelectionRef.current;
+    if (!active) return;
+    const touch = findTouch(event.changedTouches, active.identifier);
+    if (!touch) return;
+    clearTouchSelectionTimer(active);
+    touchSelectionRef.current = null;
+    lastTouchRef.current = null;
+    setIsTouchSelectionArmed(false);
+    setDragSelection(null);
+  };
+
   return (
     <div
-      class="day-column-body"
+      ref={columnRef}
+      class={`day-column-body${isTouchSelectionArmed ? ' day-column-body--touch-select-armed' : ''}`}
       style={{
         height: `${timelineOffsetFromMinute(timelineVisibleEndMinute(maxHours), hourHeight)}px`,
 
@@ -154,7 +312,10 @@ export function DayColumnBody({
       onPointerMove={(event) => handleBodyPointerMove(event as any)}
       onPointerUp={(event) => handleBodyPointerUp(event as any)}
       onPointerCancel={(event) => handleBodyPointerCancel(event as any)}
+      onTouchStart={(event) => handleBodyTouchStart(event as any)}
+      onTouchMove={(event) => handleBodyTouchMove(event as any)}
       onTouchEnd={(event) => handleBodyTouchEnd(event as any)}
+      onTouchCancel={(event) => handleBodyTouchCancel(event as any)}
     >
       <TimeRulerGrid
         ticks={(scale ?? buildTimelineScale({ hourHeight, maxHours })).ticks}

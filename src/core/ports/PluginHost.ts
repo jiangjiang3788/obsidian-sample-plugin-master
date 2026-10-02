@@ -10,7 +10,7 @@
  */
 export interface PluginHost {
   app: any;
-  manifest: { id: string };
+  manifest: { id: string; version?: string };
   addCommand(command: unknown): unknown;
   addRibbonIcon(icon: string, title: string, callback: () => void): unknown;
   register(callback: unknown): unknown;

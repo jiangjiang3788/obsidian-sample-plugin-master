@@ -307,7 +307,7 @@ export function QuickInputModalContent({
               onRequestSubmit={handleSubmit}
               onEnergyCapture={handleEnergyCapture}
               isMobileLike={isMobileLike}
-              autoFocusContent={mode === 'create'}
+              autoFocusContent={mode === 'create' && !isMobileLike}
             />
             {operationMode === 'edit' && editItem?.recordType === 'task' && normalizeTaskStatus(editItem.status) ? (
               <TaskLifecycleEditor

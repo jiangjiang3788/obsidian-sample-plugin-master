@@ -18,12 +18,12 @@ describe('功能贡献统一注册组合', () => {
     const features = registry.list();
     expect(features.map((feature) => feature.id)).toEqual(['dashboard', 'whiteboard', 'settings', 'quickinput', 'aiinput']);
     expect(new Set(features.map((feature) => feature.id)).size).toBe(features.length);
-    expect(features.find((feature) => feature.id === 'dashboard')?.bootMode).toBe('blocking');
-    // Whiteboard must register its Obsidian view synchronously before workspace restoration;
-    // command/settings surfaces can boot in the background.
+    expect(features.find((feature) => feature.id === 'dashboard')?.bootMode).toBe('background');
+    // Dashboard waits for the data scan, so it must not extend Plugin.onload(). Whiteboard
+    // still registers its Obsidian view synchronously before workspace restoration.
     expect(features.find((feature) => feature.id === 'whiteboard')?.bootMode).toBe('blocking');
     expect(features
-      .filter((feature) => !['dashboard', 'whiteboard'].includes(feature.id))
+      .filter((feature) => feature.id !== 'whiteboard')
       .every((feature) => feature.bootMode === 'background')).toBe(true);
   });
 });

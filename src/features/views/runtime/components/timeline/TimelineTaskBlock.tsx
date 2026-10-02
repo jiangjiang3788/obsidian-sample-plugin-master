@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { JSX } from 'preact';
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import type { TaskBlock } from '@core/types/public';
 import {
   buildTimelineBlockGesturePreview,
@@ -39,7 +39,30 @@ interface ActiveGesture {
   dragging: boolean;
 }
 
-const DRAG_THRESHOLD_PX = 4;
+interface ActiveTouchGesture {
+  identifier: number;
+  mode: GestureMode;
+  startClientX: number;
+  startClientY: number;
+  anchorMinute: number;
+  armed: boolean;
+  dragging: boolean;
+  timerId: number | null;
+}
+
+const MOUSE_DRAG_THRESHOLD_PX = 4;
+const TOUCH_LONG_PRESS_MS = 350;
+const TOUCH_PRESS_SLOP_PX = 10;
+const TOUCH_DRAG_THRESHOLD_PX = 2;
+
+function findTouch(touches: TouchList | undefined, identifier: number): Touch | null {
+  if (!touches) return null;
+  for (let index = 0; index < touches.length; index += 1) {
+    const touch = touches.item(index);
+    if (touch?.identifier === identifier) return touch;
+  }
+  return null;
+}
 
 function formatTimeMinute(minute: number): string {
   const total = Math.round(minute);
@@ -50,7 +73,7 @@ function formatTimeMinute(minute: number): string {
 
 function generateTaskBlockTitle(block: TaskBlock): string {
   if (!block.timelineRange.end) {
-    return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间点: ${formatTimeMinute(block.startMinute)}\n拖动可修改时间\n${RECORD_MODIFIER_ORIGIN_HINT}`;
+    return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间点: ${formatTimeMinute(block.startMinute)}\n鼠标拖动；触屏长按后拖动可修改时间\n${RECORD_MODIFIER_ORIGIN_HINT}`;
   }
 
   const start = dayjs(block.timelineRange.start);
@@ -58,7 +81,7 @@ function generateTaskBlockTitle(block: TaskBlock): string {
   const rangeText = start.isSame(end, 'day')
     ? `${start.format('HH:mm')} - ${end.format('HH:mm')}`
     : `${start.format('MM-DD HH:mm')} - ${end.format('MM-DD HH:mm')}`;
-  return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间: ${rangeText}\n拖动块可移动；拖动上下边缘可修改起止\n${RECORD_MODIFIER_ORIGIN_HINT}`;
+  return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间: ${rangeText}\n鼠标直接拖动；触屏长按后拖动块或上下边缘可修改时间\n${RECORD_MODIFIER_ORIGIN_HINT}`;
 }
 
 function formatPreviewLabel(range: { start: string; end?: string }, durationMinutes: number): string {
@@ -85,10 +108,17 @@ export function TimelineTaskBlock({
 }: TimelineTaskBlockProps) {
   const blockRef = useRef<HTMLDivElement | null>(null);
   const gestureRef = useRef<ActiveGesture | null>(null);
+  const touchGestureRef = useRef<ActiveTouchGesture | null>(null);
   const suppressClickUntilRef = useRef(0);
   const [preview, setPreview] = useState<ReturnType<typeof buildTimelineBlockGesturePreview>>(null);
   const previewRef = useRef<ReturnType<typeof buildTimelineBlockGesturePreview>>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isTouchArmed, setIsTouchArmed] = useState(false);
+
+  useEffect(() => () => {
+    const active = touchGestureRef.current;
+    if (active?.timerId != null) window.clearTimeout(active.timerId);
+  }, []);
 
   const isPlanned = block.timelineSource === 'task-plan';
   const isPoint = !block.timelineRange.end;
@@ -129,6 +159,10 @@ export function TimelineTaskBlock({
   };
 
   const beginGesture = (event: PointerEvent, mode: GestureMode) => {
+    // Touch has its own deliberate long-press state machine below. Keeping it
+    // out of PointerEvent drag handling prevents a normal scroll from becoming
+    // a timeline edit after only a few pixels of finger movement.
+    if (event.pointerType === 'touch') return;
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     const minute = minuteFromClientY(event.clientY);
     if (minute == null) return;
@@ -146,7 +180,7 @@ export function TimelineTaskBlock({
   const handlePointerMove = (event: PointerEvent) => {
     const active = gestureRef.current;
     if (!active || active.pointerId !== event.pointerId) return;
-    if (!active.dragging && Math.abs(event.clientY - active.startClientY) < DRAG_THRESHOLD_PX) return;
+    if (!active.dragging && Math.abs(event.clientY - active.startClientY) < MOUSE_DRAG_THRESHOLD_PX) return;
 
     const currentMinute = minuteFromClientY(event.clientY);
     if (currentMinute == null) return;
@@ -176,7 +210,7 @@ export function TimelineTaskBlock({
     let committedPreview = previewRef.current;
     // Pointer-move events can be coalesced or omitted by hosts/test DOMs. Rebuild the final
     // preview from pointer-up so a real drag still commits its logical range exactly once.
-    if (!cancelled && !committedPreview && Math.abs(event.clientY - active.startClientY) >= DRAG_THRESHOLD_PX) {
+    if (!cancelled && !committedPreview && Math.abs(event.clientY - active.startClientY) >= MOUSE_DRAG_THRESHOLD_PX) {
       const currentMinute = minuteFromClientY(event.clientY);
       if (currentMinute != null) {
         committedPreview = buildTimelineBlockGesturePreview({
@@ -197,6 +231,132 @@ export function TimelineTaskBlock({
     suppressClickUntilRef.current = Date.now() + 350;
     event.preventDefault();
     event.stopPropagation();
+    if (!onUpdateTimelineRange) {
+      onNotice?.('未提供时间轴保存处理器，无法更新时间');
+      return;
+    }
+    Promise.resolve(onUpdateTimelineRange({
+      target: block.timelineEditTarget,
+      range: committedPreview.range,
+    })).catch(() => undefined);
+  };
+
+  const clearTouchTimer = (active: ActiveTouchGesture | null) => {
+    if (!active || active.timerId == null) return;
+    window.clearTimeout(active.timerId);
+    active.timerId = null;
+  };
+
+  const beginTouchGesture = (event: TouchEvent, mode: GestureMode) => {
+    const touch = event.changedTouches?.item(0);
+    if (!touch) return;
+    const minute = minuteFromClientY(touch.clientY);
+    if (minute == null) return;
+
+    event.stopPropagation();
+    clearTouchTimer(touchGestureRef.current);
+    previewRef.current = null;
+    setPreview(null);
+    setIsDragging(false);
+    setIsTouchArmed(false);
+
+    const active: ActiveTouchGesture = {
+      identifier: touch.identifier,
+      mode,
+      startClientX: touch.clientX,
+      startClientY: touch.clientY,
+      anchorMinute: minute,
+      armed: false,
+      dragging: false,
+      timerId: null,
+    };
+    active.timerId = window.setTimeout(() => {
+      if (touchGestureRef.current !== active) return;
+      active.armed = true;
+      active.timerId = null;
+      setIsTouchArmed(true);
+      try { navigator.vibrate?.(8); } catch { /* optional tactile acknowledgement */ }
+    }, TOUCH_LONG_PRESS_MS);
+    touchGestureRef.current = active;
+  };
+
+  const handleTouchMove = (event: TouchEvent) => {
+    const active = touchGestureRef.current;
+    if (!active) return;
+    const touch = findTouch(event.touches, active.identifier);
+    if (!touch) return;
+    const deltaX = touch.clientX - active.startClientX;
+    const deltaY = touch.clientY - active.startClientY;
+    const travel = Math.hypot(deltaX, deltaY);
+
+    // Before the long press is confirmed, movement in either axis is native
+    // scrolling. Horizontal day swipes must cancel the edit candidate just as
+    // vertical timeline swipes do.
+    if (!active.armed) {
+      if (travel <= TOUCH_PRESS_SLOP_PX) return;
+      clearTouchTimer(active);
+      touchGestureRef.current = null;
+      suppressClickUntilRef.current = Date.now() + 350;
+      return;
+    }
+
+    if (!active.dragging && Math.abs(deltaY) < TOUCH_DRAG_THRESHOLD_PX) return;
+    const currentMinute = minuteFromClientY(touch.clientY);
+    if (currentMinute == null) return;
+    const nextPreview = buildTimelineBlockGesturePreview({
+      block,
+      mode: active.mode,
+      anchorMinute: active.anchorMinute,
+      currentMinute,
+      maxHours,
+    });
+    if (!nextPreview) return;
+
+    active.dragging = true;
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+    previewRef.current = nextPreview;
+    setPreview(nextPreview);
+  };
+
+  const finishTouchGesture = (event: TouchEvent, cancelled = false) => {
+    const active = touchGestureRef.current;
+    if (!active) return;
+    const touch = findTouch(event.changedTouches, active.identifier);
+    if (!touch) return;
+
+    clearTouchTimer(active);
+    touchGestureRef.current = null;
+    setIsTouchArmed(false);
+
+    // A regular tap remains the existing click-to-open interaction. A long
+    // press, however, is an explicit edit intent and must not synthesize a click.
+    if (!active.armed) return;
+    suppressClickUntilRef.current = Date.now() + 450;
+    event.preventDefault();
+    event.stopPropagation();
+
+    let committedPreview = previewRef.current;
+    if (!cancelled && !committedPreview && Math.abs(touch.clientY - active.startClientY) >= TOUCH_DRAG_THRESHOLD_PX) {
+      const currentMinute = minuteFromClientY(touch.clientY);
+      if (currentMinute != null) {
+        committedPreview = buildTimelineBlockGesturePreview({
+          block,
+          mode: active.mode,
+          anchorMinute: active.anchorMinute,
+          currentMinute,
+          maxHours,
+        });
+      }
+    }
+
+    const didDrag = !!committedPreview && !cancelled;
+    previewRef.current = null;
+    setPreview(null);
+    setIsDragging(false);
+    if (!didDrag || !committedPreview) return;
+
     if (!onUpdateTimelineRange) {
       onNotice?.('未提供时间轴保存处理器，无法更新时间');
       return;
@@ -239,6 +399,7 @@ export function TimelineTaskBlock({
   const className = `timeline-task-block timeline-task-block--${lifecycle.className}`
     + `${isPoint ? ' timeline-task-block--point' : ''}`
     + `${isPlanned ? ' timeline-task-block--planned' : ''}`
+    + `${isTouchArmed ? ' timeline-task-block--touch-armed' : ''}`
     + `${isDragging ? ' timeline-task-block--dragging' : ''}`;
 
   const blockStyle = {
@@ -272,8 +433,10 @@ export function TimelineTaskBlock({
       onPointerMove={(event) => handlePointerMove(event as any)}
       onPointerUp={(event) => finishGesture(event as any)}
       onPointerCancel={(event) => finishGesture(event as any, true)}
-      onTouchStart={(event) => event.stopPropagation()}
-      onTouchEnd={(event) => event.stopPropagation()}
+      onTouchStart={(event) => beginTouchGesture(event as any, 'move')}
+      onTouchMove={(event) => handleTouchMove(event as any)}
+      onTouchEnd={(event) => finishTouchGesture(event as any)}
+      onTouchCancel={(event) => finishTouchGesture(event as any, true)}
     >
       {!isPoint && block.isRangeStart ? (
         <div
@@ -281,6 +444,7 @@ export function TimelineTaskBlock({
           role="separator"
           aria-label="拖动修改开始时间"
           onPointerDown={(event) => beginGesture(event as any, 'resize-start')}
+          onTouchStart={(event) => beginTouchGesture(event as any, 'resize-start')}
           onClick={(event) => event.stopPropagation()}
         />
       ) : null}
@@ -309,6 +473,7 @@ export function TimelineTaskBlock({
       <div
         class="task-buttons"
         onPointerDown={(event) => event.stopPropagation()}
+        onTouchStart={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
       >
         {canAlign ? (
@@ -339,6 +504,7 @@ export function TimelineTaskBlock({
           role="separator"
           aria-label="拖动修改结束时间"
           onPointerDown={(event) => beginGesture(event as any, 'resize-end')}
+          onTouchStart={(event) => beginTouchGesture(event as any, 'resize-end')}
           onClick={(event) => event.stopPropagation()}
         />
       ) : null}

@@ -42,10 +42,13 @@ export interface TimelineScale {
  * only the 30-minute and 1-hour structure guides cross the data canvas.
  */
 export const TIMELINE_TICK_STYLE = Object.freeze({
-  hour: { width: 1, opacity: 0.38 },
-  half: { width: 0.75, opacity: 0.23 },
-  quarter: { width: 0.625, opacity: 0.12 },
-  five: { width: 0.5, opacity: 0.07 },
+  // Keep every rule on a full device pixel. Hierarchy is expressed through
+  // contrast and tick length instead of sub-pixel widths that blur on desktop
+  // and disappear on high-density mobile displays.
+  hour: { width: 1, opacity: 0.68 },
+  half: { width: 1, opacity: 0.42 },
+  quarter: { width: 1, opacity: 0.28 },
+  five: { width: 1, opacity: 0.18 },
 });
 
 /**
@@ -54,31 +57,31 @@ export const TIMELINE_TICK_STYLE = Object.freeze({
  * `fine` is used by a sufficiently wide, fine-pointer surface.
  * `compact` is used for touch surfaces and narrow panes (including a narrow
  * desktop split). Each semantic level has a minimum visual separation before it
- * is admitted to the ruler. The 5-minute level can therefore exist from
- * 50 px/hour as a short ruler/edge tick without becoming a full-width grid line.
+ * is admitted to the ruler. The 5-minute level is intentionally delayed until
+ * roughly 120 px/hour so default zoom stays readable instead of becoming visual noise.
  */
 export const TIMELINE_SCALE_POLICY = Object.freeze({
+  // Desktop and touch share one semantic-density contract. The finest tick is
+  // admitted only when it has enough physical separation to remain readable.
   fine: {
     minimumTickGapPx: {
-      // A 5-minute graduation becomes useful at roughly 50 px/hour once it is
-      // confined to ruler/edge ticks instead of repeated as full-width lines.
-      five: 5 * (50 / 60),
-      quarter: 14,
-      half: 18,
-      hour: 16,
+      five: 10,
+      quarter: 10,
+      half: 14,
+      hour: 18,
     },
     fallbackTickGapPx: 18,
     minimumLabelGapPx: 44,
   },
   compact: {
     minimumTickGapPx: {
-      five: 5 * (50 / 60),
-      quarter: 15,
-      half: 20,
-      hour: 24,
+      five: 10,
+      quarter: 10,
+      half: 14,
+      hour: 18,
     },
-    fallbackTickGapPx: 28,
-    minimumLabelGapPx: 52,
+    fallbackTickGapPx: 18,
+    minimumLabelGapPx: 44,
   },
 } as const);
 
