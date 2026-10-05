@@ -69,14 +69,27 @@ describe('统一时间轴刻度密度 · A 科学基线', () => {
     expect(zoomed.ticks.find((tick) => tick.minute === 5)?.level).toBe('five');
   });
 
-  it('所有刻度使用稳定的 1px 线宽，层级由明度表达', () => {
+  it('3 小时锚点使用独立粗线，其余刻度保持稳定 1px 层级', () => {
+    expect(TIMELINE_TICK_STYLE.major.width).toBe(2);
     expect(TIMELINE_TICK_STYLE.hour.width).toBe(1);
     expect(TIMELINE_TICK_STYLE.half.width).toBe(1);
     expect(TIMELINE_TICK_STYLE.quarter.width).toBe(1);
     expect(TIMELINE_TICK_STYLE.five.width).toBe(1);
+    expect(TIMELINE_TICK_STYLE.major.opacity).toBeGreaterThan(TIMELINE_TICK_STYLE.hour.opacity);
     expect(TIMELINE_TICK_STYLE.hour.opacity).toBeGreaterThan(TIMELINE_TICK_STYLE.half.opacity);
     expect(TIMELINE_TICK_STYLE.half.opacity).toBeGreaterThan(TIMELINE_TICK_STYLE.quarter.opacity);
     expect(TIMELINE_TICK_STYLE.quarter.opacity).toBeGreaterThan(TIMELINE_TICK_STYLE.five.opacity);
+  });
+
+  it('03/06/09/12 等三小时节点始终是 major 锚点，即使基础刻度更稀疏', () => {
+    const scale = buildTimelineScale({ hourHeight: 10, maxHours: 12, densityMode: 'compact' });
+    expect(scale.tickStepMinutes).toBe(120);
+    for (const minute of [0, 180, 360, 540, 720]) {
+      const tick = scale.ticks.find((item) => item.minute === minute);
+      expect(tick?.level).toBe('major');
+      expect(tick?.strokeWidth).toBe(2);
+      expect(tick?.showInGrid).toBe(true);
+    }
   });
 
   it('标签只承担小时级方向感，不把半小时重复变成文字网格', () => {

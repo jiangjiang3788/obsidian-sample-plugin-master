@@ -27,18 +27,38 @@
 .modal.think-quick-input-modal .think-quick-input-footer-actions { display: flex; flex-wrap: wrap; gap: var(--think-space-3); }
 .modal.think-quick-input-modal .think-quick-input-footer-actions { justify-content: flex-end; }
 
-.modal.think-quick-input-modal--mobile .think-modal__body { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-quick-input-mobile-footer-space)); }
+.modal.think-quick-input-modal--mobile {
+  max-height: calc(var(--quick-input-visible-viewport-height, 100dvh) - 12px) !important;
+}
+.modal.think-quick-input-modal--mobile .modal-content,
+.modal.think-quick-input-modal--mobile .think-modal.think-modal--quick-input {
+  max-height: calc(var(--quick-input-visible-viewport-height, 100dvh) - 16px);
+}
+.modal.think-quick-input-modal--mobile .think-modal__body {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-quick-input-mobile-footer-space));
+}
 .modal.think-quick-input-modal--mobile .think-modal__footer--quick-input { position: sticky; bottom: 0; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-space-4)); background: var(--think-bg-elevated); }
-.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-suspected .think-modal__body { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 168px); }
-.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-detected .think-modal__body { padding-bottom: calc(var(--keyboard-height, 0px) + env(safe-area-inset-bottom, 0px) + 120px); }
+.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-suspected .think-modal__body {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + max(var(--think-quick-input-mobile-footer-space), var(--keyboard-accessory-inset, 0px)));
+}
+.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-detected .think-modal__body {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-quick-input-mobile-footer-space));
+}
 
 @supports not (height: 100dvh) {
   .modal.think-quick-input-modal,
   .modal.think-quick-input-modal .think-modal.think-modal--quick-input { max-height: calc(100vh - 32px); }
+  .modal.think-quick-input-modal--mobile {
+    max-height: calc(var(--quick-input-visible-viewport-height, 100vh) - 12px) !important;
+  }
+  .modal.think-quick-input-modal--mobile .modal-content,
+  .modal.think-quick-input-modal--mobile .think-modal.think-modal--quick-input {
+    max-height: calc(var(--quick-input-visible-viewport-height, 100vh) - 16px);
+  }
 }
 @media (max-width: 768px) {
   .modal.think-quick-input-modal { border-radius: var(--think-radius-md); }
-  .modal.think-quick-input-modal .think-modal.think-modal--quick-input { max-height: calc(100dvh - 16px); padding: var(--think-space-4); }
+  .modal.think-quick-input-modal .think-modal.think-modal--quick-input { max-height: calc(var(--quick-input-visible-viewport-height, 100dvh) - 16px); padding: var(--think-space-4); }
   .modal.think-quick-input-modal--mobile.think-quick-input-keyboard-active .think-modal__footer--quick-input { position: static; }
   .modal.think-quick-input-modal .think-quick-input-footer-row { align-items: stretch; }
 }
