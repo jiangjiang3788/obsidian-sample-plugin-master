@@ -79,41 +79,6 @@ describe('view interaction contract', () => {
     expect(origin).toHaveBeenCalledWith(item);
   });
 
-  test('double-primary contract keeps single click inert and opens primary on double click/tap', () => {
-    const primary = jest.fn();
-    const origin = jest.fn();
-    const gesture = createRecordGestureHandlers({
-      item,
-      onPrimary: primary,
-      onOpenOrigin: origin,
-      originActivation: 'modifier-only',
-      primaryActivation: 'double',
-    });
-
-    gesture.onClick(event());
-    expect(primary).not.toHaveBeenCalled();
-
-    gesture.onDblClick(event());
-    expect(primary).toHaveBeenCalledTimes(1);
-    expect(origin).not.toHaveBeenCalled();
-
-    const touchGesture = createRecordGestureHandlers({
-      item,
-      onPrimary: primary,
-      onOpenOrigin: origin,
-      originActivation: 'modifier-only',
-      primaryActivation: 'double',
-    });
-    touchGesture.onTouchEnd(event());
-    touchGesture.onTouchEnd(event());
-    expect(primary).toHaveBeenCalledTimes(2);
-
-    // Some touch WebViews synthesize a dblclick after the second touch activation.
-    // The primary action must remain exactly-once.
-    touchGesture.onDblClick(event());
-    expect(primary).toHaveBeenCalledTimes(2);
-  });
-
   test('keyboard activation uses primary, modifier keyboard activation uses origin', () => {
     const primary = jest.fn();
     const origin = jest.fn();

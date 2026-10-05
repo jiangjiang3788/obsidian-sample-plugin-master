@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 /**
- * Timeline direct-manipulation browser regression.
+ * Timeline pointer gesture browser regression.
  * Kept separate from the 1.5 non-AI core gate because JSDOM pointer capture/event delivery
  * is not the release authority for Timeline data/model/persistence contracts.
  */
@@ -37,17 +37,29 @@ function taskBlock(id: string) {
   } as any;
 }
 
-function pointerEvent(
-  type: string,
-  clientY: number,
-  pointerType: 'mouse' | 'touch' | 'pen' = 'mouse',
-  clientX = 24,
-  pointerId = 1,
-): PointerEvent {
-  return createPointerEvent(type, { clientY, clientX, button: 0, pointerId, pointerType });
+function pointerEvent(type: string, clientY: number): PointerEvent {
+  return createPointerEvent(type, { clientY, button: 0, pointerId: 1, pointerType: 'mouse' });
 }
 
-describe('Timeline direct-manipulation UI', () => {
+function touchEvent(type: string, clientY: number, clientX = 24): TouchEvent {
+  const touch = { identifier: 7, clientX, clientY } as Touch;
+  const event = new Event(type, { bubbles: true, cancelable: true }) as TouchEvent;
+  const activeTouches = type === 'touchend' || type === 'touchcancel' ? [] : [touch];
+  Object.defineProperty(event, 'touches', { configurable: true, value: touchList(activeTouches) });
+  Object.defineProperty(event, 'changedTouches', { configurable: true, value: touchList([touch]) });
+  return event;
+}
+
+function touchList(items: Touch[]): TouchList {
+  return {
+    length: items.length,
+    item: (index: number) => items[index] ?? null,
+    [Symbol.iterator]: function* () { yield* items; },
+    ...items.reduce((result, item, index) => ({ ...result, [index]: item }), {}),
+  } as TouchList;
+}
+
+describe('Timeline pointer gesture UI', () => {
   let host: HTMLDivElement;
 
   beforeEach(() => {
@@ -61,7 +73,7 @@ describe('Timeline direct-manipulation UI', () => {
     host.remove();
   });
 
-  it('moves only from the explicit grip; single click stays inert and double click edits', async () => {
+  it('previews locally while dragging, saves directly, and suppresses the synthetic edit click', async () => {
     const onUpdateTimelineRange = jest.fn().mockResolvedValue(undefined);
     const onOpenRecord = jest.fn();
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1_000);
@@ -83,18 +95,17 @@ describe('Timeline direct-manipulation UI', () => {
 
     const column = host.querySelector('.day-column-body') as HTMLElement;
     const task = host.querySelector('.timeline-task-block') as HTMLElement;
-    const moveHandle = host.querySelector('.timeline-task-move-handle') as HTMLElement;
     Object.defineProperty(column, 'getBoundingClientRect', {
       configurable: true,
       value: () => ({ top: 0, left: 0, right: 100, bottom: 1440, width: 100, height: 1440, x: 0, y: 0, toJSON: () => ({}) }),
     });
 
     await act(async () => {
-      moveHandle.dispatchEvent(pointerEvent('pointerdown', 60));
-      moveHandle.dispatchEvent(pointerEvent('pointermove', 120));
-      moveHandle.dispatchEvent(pointerEvent('pointerup', 120));
+      task.dispatchEvent(pointerEvent('pointerdown', 60));
+      task.dispatchEvent(pointerEvent('pointermove', 120));
+      task.dispatchEvent(pointerEvent('pointerup', 120));
     });
-    await waitForUi(() => onUpdateTimelineRange.mock.calls.length === 1, '等待 Timeline 握柄拖动范围提交');
+    await waitForUi(() => onUpdateTimelineRange.mock.calls.length === 1, '等待 Timeline 拖动范围提交');
 
     expect(onUpdateTimelineRange).toHaveBeenCalledTimes(1);
     expect(onUpdateTimelineRange).toHaveBeenCalledWith({
@@ -102,28 +113,26 @@ describe('Timeline direct-manipulation UI', () => {
       range: { start: '2026-08-26T02:00', end: '2026-08-26T02:30' },
     });
 
+    // Browsers may synthesize a click immediately after pointerup even though the user
+    // performed a drag. That click must be consumed instead of reopening QuickInput.
     await act(async () => {
-      task.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      task.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(onOpenRecord).not.toHaveBeenCalled();
 
+    // The suppression is short-lived and Timeline's normal "click = edit" contract
+    // remains intact after the drag gesture has finished.
     nowSpy.mockReturnValue(1_351);
     await act(async () => {
-      task.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-      task.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
-    });
-    expect(onOpenRecord).toHaveBeenCalledTimes(1);
-
-    const taskButtons = host.querySelector('.task-buttons') as HTMLElement;
-    await act(async () => {
-      taskButtons.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+      task.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(onOpenRecord).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps resize boundaries independent from the move grip', async () => {
+  it('cancels touch edit arming when the finger swipes horizontally across a task', async () => {
+    jest.useFakeTimers();
     const onUpdateTimelineRange = jest.fn().mockResolvedValue(undefined);
-    const block = taskBlock('task-resize');
+    const block = taskBlock('task-horizontal-scroll');
 
     await act(async () => render(
       <DayColumnBody
@@ -139,140 +148,26 @@ describe('Timeline direct-manipulation UI', () => {
     ));
 
     const column = host.querySelector('.day-column-body') as HTMLElement;
-    const startHandle = host.querySelector('.timeline-task-resize-handle--start') as HTMLElement;
-    const endHandle = host.querySelector('.timeline-task-resize-handle--end') as HTMLElement;
+    const task = host.querySelector('.timeline-task-block') as HTMLElement;
     Object.defineProperty(column, 'getBoundingClientRect', {
       configurable: true,
       value: () => ({ top: 0, left: 0, right: 100, bottom: 1440, width: 100, height: 1440, x: 0, y: 0, toJSON: () => ({}) }),
     });
 
     await act(async () => {
-      startHandle.dispatchEvent(pointerEvent('pointerdown', 60));
-      startHandle.dispatchEvent(pointerEvent('pointermove', 75));
-      startHandle.dispatchEvent(pointerEvent('pointerup', 75));
-    });
-    await waitForUi(() => onUpdateTimelineRange.mock.calls.length === 1, '等待 Timeline 开始边界提交');
-    expect(onUpdateTimelineRange.mock.calls[0][0]).toEqual({
-      target: { kind: 'task-range', recordId: 'task-resize' },
-      range: { start: '2026-08-26T01:15', end: '2026-08-26T01:30' },
+      task.dispatchEvent(touchEvent('touchstart', 60, 24));
+      task.dispatchEvent(touchEvent('touchmove', 61, 70));
+      jest.advanceTimersByTime(400);
+      task.dispatchEvent(touchEvent('touchend', 61, 70));
     });
 
-    await act(async () => {
-      endHandle.dispatchEvent(pointerEvent('pointerdown', 90, 'mouse', 80, 2));
-      endHandle.dispatchEvent(pointerEvent('pointermove', 120, 'mouse', 80, 2));
-      endHandle.dispatchEvent(pointerEvent('pointerup', 120, 'mouse', 80, 2));
-    });
-    await waitForUi(() => onUpdateTimelineRange.mock.calls.length === 2, '等待 Timeline 结束边界提交');
-    expect(onUpdateTimelineRange.mock.calls[1][0]).toEqual({
-      target: { kind: 'task-range', recordId: 'task-resize' },
-      range: { start: '2026-08-26T01:00', end: '2026-08-26T02:00' },
-    });
-  });
-
-  it('keeps task-body touch movement as native pan instead of arming a timeline edit', async () => {
-    const onUpdateTimelineRange = jest.fn().mockResolvedValue(undefined);
-    const onOpenRecord = jest.fn();
-    const block = taskBlock('task-scroll');
-
-    await act(async () => render(
-      <DayColumnBody
-        day="2026-08-26"
-        blocks={[block]}
-        hourHeight={60}
-        colorMap={{}}
-        maxHours={24}
-        onColumnClick={() => undefined}
-        onUpdateTimelineRange={onUpdateTimelineRange}
-        onOpenRecord={onOpenRecord}
-      />,
-      host,
-    ));
-
-    const task = host.querySelector('.timeline-task-block') as HTMLElement;
-    await act(async () => {
-      task.dispatchEvent(pointerEvent('pointerdown', 60, 'touch', 24, 7));
-      task.dispatchEvent(pointerEvent('pointermove', 122, 'touch', 25, 7));
-      task.dispatchEvent(pointerEvent('pointercancel', 122, 'touch', 25, 7));
-    });
-
+    expect(task.classList.contains('timeline-task-block--touch-armed')).toBe(false);
     expect(onUpdateTimelineRange).not.toHaveBeenCalled();
-    expect(onOpenRecord).not.toHaveBeenCalled();
-    expect(task.classList.contains('timeline-task-block--dragging')).toBe(false);
+    jest.useRealTimers();
   });
 
-  it('supports touch double-tap edit without making a single tap edit', async () => {
-    const onOpenRecord = jest.fn();
-    const nowSpy = jest.spyOn(Date, 'now');
-    const block = taskBlock('task-double-tap');
-
-    await act(async () => render(
-      <DayColumnBody
-        day="2026-08-26"
-        blocks={[block]}
-        hourHeight={60}
-        colorMap={{}}
-        maxHours={24}
-        onColumnClick={() => undefined}
-        onOpenRecord={onOpenRecord}
-      />,
-      host,
-    ));
-
-    const task = host.querySelector('.timeline-task-block') as HTMLElement;
-    nowSpy.mockReturnValue(1_000);
-    await act(async () => {
-      task.dispatchEvent(pointerEvent('pointerdown', 70, 'touch', 30, 8));
-      task.dispatchEvent(pointerEvent('pointerup', 70, 'touch', 30, 8));
-    });
-    expect(onOpenRecord).not.toHaveBeenCalled();
-
-    nowSpy.mockReturnValue(1_250);
-    await act(async () => {
-      task.dispatchEvent(pointerEvent('pointerdown', 70, 'touch', 31, 9));
-      task.dispatchEvent(pointerEvent('pointerup', 70, 'touch', 31, 9));
-    });
-    expect(onOpenRecord).toHaveBeenCalledTimes(1);
-  });
-
-  it('never turns a one-finger blank-column swipe into touch range creation', async () => {
-    const onColumnClick = jest.fn();
-
-    await act(async () => render(
-      <DayColumnBody
-        day="2026-08-26"
-        blocks={[]}
-        hourHeight={60}
-        colorMap={{}}
-        maxHours={24}
-        onColumnClick={onColumnClick}
-      />,
-      host,
-    ));
-
-    const column = host.querySelector('.day-column-body') as HTMLElement;
-    Object.defineProperty(column, 'getBoundingClientRect', {
-      configurable: true,
-      value: () => ({ top: 0, left: 0, right: 100, bottom: 1440, width: 100, height: 1440, x: 0, y: 0, toJSON: () => ({}) }),
-    });
-
-    const down = pointerEvent('pointerdown', 60, 'touch', 96, 11);
-    const move = pointerEvent('pointermove', 120, 'touch', 96, 11);
-    const up = pointerEvent('pointerup', 120, 'touch', 96, 11);
-    await act(async () => {
-      column.dispatchEvent(down);
-      column.dispatchEvent(move);
-      column.dispatchEvent(up);
-    });
-
-    expect(onColumnClick).not.toHaveBeenCalled();
-    expect(down.defaultPrevented).toBe(false);
-    expect(move.defaultPrevented).toBe(false);
-    expect(up.defaultPrevented).toBe(false);
-    expect(host.querySelector('.timeline-range-create-rail')).toBeNull();
-    expect(host.querySelector('.timeline-range-selection')).toBeNull();
-  });
-
-  it('keeps mouse drag-selection for precise desktop range creation', async () => {
+  it('long-presses blank timeline space then drags to create a selected time range', async () => {
+    jest.useFakeTimers();
     const onColumnClick = jest.fn();
 
     await act(async () => render(
@@ -294,18 +189,27 @@ describe('Timeline direct-manipulation UI', () => {
     });
 
     await act(async () => {
-      column.dispatchEvent(pointerEvent('pointerdown', 60, 'mouse', 50, 12));
-      column.dispatchEvent(pointerEvent('pointermove', 120, 'mouse', 50, 12));
-      column.dispatchEvent(pointerEvent('pointerup', 120, 'mouse', 50, 12));
+      column.dispatchEvent(touchEvent('touchstart', 60, 24));
+      jest.advanceTimersByTime(350);
+    });
+    expect(host.querySelector('.timeline-range-selection')).toBeTruthy();
+
+    await act(async () => {
+      column.dispatchEvent(touchEvent('touchmove', 120, 24));
+      column.dispatchEvent(touchEvent('touchend', 120, 24));
     });
 
     expect(onColumnClick).toHaveBeenCalledTimes(1);
+    expect(onColumnClick.mock.calls[0][0]).toBe('2026-08-26');
     expect(onColumnClick.mock.calls[0][2]).toEqual({ startMinute: 60, endMinute: 120 });
+    jest.useRealTimers();
   });
 
-  it('uses the same explicit move grip for touch without a long-press delay', async () => {
+  it('requires a long press before touch drag commits a timeline move', async () => {
+    jest.useFakeTimers();
     const onUpdateTimelineRange = jest.fn().mockResolvedValue(undefined);
-    const block = taskBlock('task-touch-grip');
+    const onOpenRecord = jest.fn();
+    const block = taskBlock('task-touch-drag');
 
     await act(async () => render(
       <DayColumnBody
@@ -316,27 +220,40 @@ describe('Timeline direct-manipulation UI', () => {
         maxHours={24}
         onColumnClick={() => undefined}
         onUpdateTimelineRange={onUpdateTimelineRange}
+        onOpenRecord={onOpenRecord}
       />,
       host,
     ));
 
     const column = host.querySelector('.day-column-body') as HTMLElement;
-    const moveHandle = host.querySelector('.timeline-task-move-handle') as HTMLElement;
+    const task = host.querySelector('.timeline-task-block') as HTMLElement;
     Object.defineProperty(column, 'getBoundingClientRect', {
       configurable: true,
       value: () => ({ top: 0, left: 0, right: 100, bottom: 1440, width: 100, height: 1440, x: 0, y: 0, toJSON: () => ({}) }),
     });
 
     await act(async () => {
-      moveHandle.dispatchEvent(pointerEvent('pointerdown', 60, 'touch', 10, 12));
-      moveHandle.dispatchEvent(pointerEvent('pointermove', 120, 'touch', 10, 12));
-      moveHandle.dispatchEvent(pointerEvent('pointerup', 120, 'touch', 10, 12));
+      task.dispatchEvent(touchEvent('touchstart', 60));
+      jest.advanceTimersByTime(349);
+      task.dispatchEvent(touchEvent('touchmove', 120));
+      task.dispatchEvent(touchEvent('touchend', 120));
+    });
+    expect(onUpdateTimelineRange).not.toHaveBeenCalled();
+
+    await act(async () => {
+      task.dispatchEvent(touchEvent('touchstart', 60));
+      jest.advanceTimersByTime(350);
+      task.dispatchEvent(touchEvent('touchmove', 120));
+      task.dispatchEvent(touchEvent('touchend', 120));
     });
 
     expect(onUpdateTimelineRange).toHaveBeenCalledTimes(1);
     expect(onUpdateTimelineRange).toHaveBeenCalledWith({
-      target: { kind: 'task-range', recordId: 'task-touch-grip' },
+      target: { kind: 'task-range', recordId: 'task-touch-drag' },
       range: { start: '2026-08-26T02:00', end: '2026-08-26T02:30' },
     });
+    expect(onOpenRecord).not.toHaveBeenCalled();
+    jest.useRealTimers();
   });
+
 });

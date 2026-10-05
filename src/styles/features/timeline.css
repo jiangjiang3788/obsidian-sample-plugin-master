@@ -6,14 +6,6 @@
   --timeline-time-axis-width: 90px;
   overflow-x: auto;
   color: var(--think-text-primary);
-  /* Browser owns one-finger panning. Pinch-zoom is intentionally omitted here
-   * because Timeline implements semantic vertical zoom with Pointer Events.
-   * Timeline is an interaction canvas, so iOS text selection/callout must not
-   * compete with slow pans or long presses on ruler labels. */
-  touch-action: pan-x pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
 }
 
 .timeline-sticky-header,
@@ -58,10 +50,13 @@
   position: relative;
   cursor: crosshair;
   user-select: none;
-  /* Input-modality contract: finger movement on blank timeline space is always
-   * native pan. Range drag-selection is mouse/pen-only; touch creation uses a
-   * double tap, so no invisible full-height hit strip can steal vertical scroll. */
-  touch-action: pan-x pan-y;
+  /* Keep both native scroll axes available until a touch long-press explicitly
+   * arms range creation. The gesture handler only prevents default after arm. */
+  touch-action: pan-x pan-y pinch-zoom;
+}
+
+.day-column-body--touch-select-armed {
+  cursor: crosshair;
 }
 
 .timeline-range-selection {
@@ -158,7 +153,6 @@
   position: absolute;
   left: var(--think-space-1);
   right: var(--think-space-1);
-  z-index: 2;
   min-height: 2px;
 }
 
@@ -184,7 +178,7 @@
   min-width: 0;
   gap: var(--think-space-2);
   overflow: hidden;
-  padding: var(--think-space-1) var(--think-space-2) var(--think-space-1) calc(var(--think-space-2) + 14px);
+  padding: var(--think-space-1) var(--think-space-2);
   background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 14%, transparent);
   color: var(--think-text-primary);
   font-size: var(--think-viz-font-meta);
@@ -344,124 +338,72 @@
 }
 
 
-/* Timeline direct manipulation.
- *
- * The task body is a browse/scroll surface. Direct time mutation is only entered
- * through explicit controls: the left move grip or the top/bottom resize edges.
- * This makes move, resize, double-click edit, and vertical pan mutually exclusive
- * at hit-test level instead of trying to resolve them after the gesture starts. */
+/* Timeline direct manipulation. Mouse/pen drag immediately; touch requires a
+ * deliberate long press before the same move/resize operation is accepted.
+ * Native pan/pinch remains available before the long-press gesture is armed. */
 .timeline-task-block[data-timeline-editable="true"] {
-  cursor: default;
-  touch-action: pan-x pan-y;
+  cursor: grab;
+  touch-action: pan-x pan-y pinch-zoom;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
 
+.timeline-task-block--touch-armed {
+  outline: 2px solid var(--think-accent);
+  outline-offset: 1px;
+}
+
 .timeline-task-block--dragging {
   z-index: calc(var(--think-z-raised) + 2);
+  cursor: grabbing;
 }
 
 .timeline-task-block--dragging .timeline-task-link {
   pointer-events: none;
 }
 
-.timeline-task-move-handle {
-  position: absolute;
-  inset-inline-start: 1px;
-  top: 50%;
-  z-index: calc(var(--think-z-raised) + 3);
-  width: 15px;
-  height: clamp(12px, calc(100% - 8px), 30px);
-  border-radius: var(--think-radius-xs);
-  color: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 76%, var(--think-text-secondary));
-  cursor: grab;
-  touch-action: none;
-  transform: translateY(-50%);
-}
-
-.timeline-task-move-handle::after {
-  content: "";
-  position: absolute;
-  inset: 3px;
-  border-radius: inherit;
-  background: radial-gradient(circle, currentColor 1.1px, transparent 1.4px) 0 0 / 5px 5px;
-  opacity: 0.34;
-  transition: opacity var(--think-duration-fast) var(--think-ease-standard),
-    background var(--think-duration-fast) var(--think-ease-standard);
-}
-
-.timeline-task-move-handle:hover::after,
-.timeline-task-block:focus-within .timeline-task-move-handle::after,
-.timeline-task-block--dragging[data-timeline-gesture="move"] .timeline-task-move-handle::after {
-  opacity: 0.95;
-}
-
-.timeline-task-block--dragging[data-timeline-gesture="move"] .timeline-task-move-handle {
-  cursor: grabbing;
-  background: color-mix(in srgb, var(--think-accent) 14%, transparent);
-}
-
 .timeline-task-resize-handle {
+  display: none;
   position: absolute;
-  inset-inline-start: 18px;
-  inset-inline-end: 2px;
-  z-index: calc(var(--think-z-raised) + 4);
-  height: 10px;
+  inset-inline: 3px;
+  z-index: calc(var(--think-z-raised) + 3);
+  height: 8px;
   cursor: ns-resize;
-  touch-action: none;
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 .timeline-task-resize-handle::after {
   content: "";
   position: absolute;
   left: 50%;
-  width: min(42px, 48%);
+  width: 28px;
   height: 2px;
   border-radius: var(--think-radius-pill);
-  background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 78%, var(--think-bg-elevated));
-  opacity: 0.34;
+  background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 72%, var(--think-bg-elevated));
+  opacity: 0;
   transform: translateX(-50%);
-  transition: opacity var(--think-duration-fast) var(--think-ease-standard),
-    height var(--think-duration-fast) var(--think-ease-standard);
+  transition: opacity var(--think-duration-fast) var(--think-ease-standard);
 }
 
+.timeline-task-resize-handle--start { top: -3px; }
+.timeline-task-resize-handle--start::after { top: 3px; }
+.timeline-task-resize-handle--end { bottom: -3px; }
+.timeline-task-resize-handle--end::after { bottom: 3px; }
 
-/* When a rendered duration is too short for top and bottom hit areas to stay
- * vertically separate, split those resize affordances horizontally. The left
- * grip still owns move, start owns the middle-left segment, and end owns the
- * right segment; no two mutations share the same pixels. */
-.timeline-task-block[data-timeline-compact-range="true"] .timeline-task-resize-handle--start {
-  inset-inline-start: 18px;
-  inset-inline-end: 50%;
-}
-.timeline-task-block[data-timeline-compact-range="true"] .timeline-task-resize-handle--end {
-  inset-inline-start: 52%;
-  inset-inline-end: 2px;
-}
-.timeline-task-block[data-timeline-compact-range="true"] .timeline-task-resize-handle::after {
-  width: 78%;
-}
-
-.timeline-task-resize-handle--start { top: -4px; }
-.timeline-task-resize-handle--start::after { top: 4px; }
-.timeline-task-resize-handle--end { bottom: -4px; }
-.timeline-task-resize-handle--end::after { bottom: 4px; }
-
-.timeline-task-resize-handle:hover::after,
+.timeline-task-block:hover .timeline-task-resize-handle::after,
 .timeline-task-block:focus-within .timeline-task-resize-handle::after,
-.timeline-task-block--dragging[data-timeline-gesture="resize-start"] .timeline-task-resize-handle--start::after,
-.timeline-task-block--dragging[data-timeline-gesture="resize-end"] .timeline-task-resize-handle--end::after {
-  height: 3px;
+.timeline-task-block--touch-armed .timeline-task-resize-handle::after,
+.timeline-task-block--dragging .timeline-task-resize-handle::after {
   opacity: 1;
 }
 
 .timeline-task-drag-label {
   position: absolute;
   top: 2px;
-  left: 18px;
-  z-index: calc(var(--think-z-raised) + 5);
-  max-width: calc(100% - 22px);
+  left: 2px;
+  z-index: calc(var(--think-z-raised) + 4);
+  max-width: calc(100% - var(--think-space-2));
   padding: 1px var(--think-space-1);
   border-radius: var(--think-radius-xs);
   background: var(--think-bg-elevated);
@@ -473,24 +415,11 @@
   white-space: nowrap;
 }
 
-@media (pointer: coarse) {
-  .timeline-task-move-handle { width: 18px; }
-  .timeline-task-content {
-    padding-inline-start: calc(var(--think-space-2) + 17px);
-  }
-  .timeline-task-resize-handle { height: 12px; inset-inline-start: 21px; }
-  .timeline-task-block[data-timeline-compact-range="true"] .timeline-task-resize-handle--start { inset-inline-start: 21px; }
-  .timeline-task-resize-handle--start { top: -5px; }
-  .timeline-task-resize-handle--start::after { top: 5px; }
-  .timeline-task-resize-handle--end { bottom: -5px; }
-  .timeline-task-resize-handle--end::after { bottom: 5px; }
-}
-
 /* Timeline A-baseline: graduated rulers, not graph paper.
  *
  * - neutral tones preserve color for the records themselves;
  * - 5/15-minute precision stays as short ticks on each day boundary;
- * - 30/60-minute guides cross the day column, with stronger 3-hour anchors;
+ * - 30/60-minute guides cross the day column to restore temporal structure;
  * - 5-minute precision appears only at high zoom; default zoom stays at
  *   quarter-hour precision to avoid dense visual noise;
  * - ruler tick length is an additional visual variable, so the hierarchy is
@@ -517,9 +446,6 @@
 }
 
 /* Distinct neutral tones + weights. The values are intentionally non-linear. */
-.think-time-grid__tick--major {
-  --timeline-ruler-length: 28px;
-}
 .think-time-grid__tick--hour {
   --timeline-ruler-length: 20px;
 }
@@ -533,8 +459,8 @@
   --timeline-ruler-length: 5px;
 }
 
-/* Data canvas: dense precision remains local to the day edge. Half-hour,
- * hour, and semantic three-hour anchors may span the full column. */
+/* Data canvas: dense precision remains local to the day edge. Half-hour and
+ * hour levels are the only structural guides allowed to span the full column. */
 .think-time-grid--grid .think-time-grid__tick {
   border-top: 0;
 }
@@ -549,14 +475,12 @@
 }
 
 .think-time-grid--grid .think-time-grid__tick--half,
-.think-time-grid--grid .think-time-grid__tick--hour,
-.think-time-grid--grid .think-time-grid__tick--major {
+.think-time-grid--grid .think-time-grid__tick--hour {
   border-top: var(--timeline-tick-width, 1px) solid var(--timeline-tick-color);
 }
 
 .think-time-grid--grid .think-time-grid__tick--half::before,
-.think-time-grid--grid .think-time-grid__tick--hour::before,
-.think-time-grid--grid .think-time-grid__tick--major::before {
+.think-time-grid--grid .think-time-grid__tick--hour::before {
   content: none;
 }
 
@@ -591,9 +515,19 @@
   line-height: 1.2;
   white-space: nowrap;
 }
-.think-time-grid__tick--major .think-time-grid__label {
-  color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 92%, var(--think-bg-canvas, var(--background-primary)));
-  font-weight: var(--think-font-weight-semibold, 600);
-}
 .think-time-grid__label.is-first { transform: none; }
 .think-time-grid__label.is-last { transform: translateY(-100%); }
+
+
+/* Mobile editing follows a Calendar-style model: browsing first, controls after intent. */
+.timeline-task-block--edit-mode .timeline-task-resize-handle {
+  display: block;
+}
+
+.timeline-task-block:not(.timeline-task-block--edit-mode) .task-buttons {
+  display: none;
+}
+
+.timeline-task-block--edit-mode {
+  z-index: calc(var(--think-z-raised) + 1);
+}

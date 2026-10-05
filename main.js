@@ -21680,10 +21680,9 @@ function buildRecordSubmitRecoveryPresentation(result, options = {}) {
   };
 }
 const TIMELINE_TICK_STYLE = Object.freeze({
-  // Three-hour anchors (00/03/06/09/12/15/18/21/24) are intentionally heavier
-  // than ordinary hour rules so time-of-day can be recognized from the line
-  // pattern before reading a label. Other levels stay on full device pixels.
-  major: { width: 2, opacity: 0.88 },
+  // Keep every rule on a full device pixel. Hierarchy is expressed through
+  // contrast and tick length instead of sub-pixel widths that blur on desktop
+  // and disappear on high-density mobile displays.
   hour: { width: 1, opacity: 0.68 },
   half: { width: 1, opacity: 0.42 },
   quarter: { width: 1, opacity: 0.28 },
@@ -21733,9 +21732,7 @@ function resolveLabelStep(pixelsPerMinute, tickStepMinutes, densityMode) {
   const minimumLabelGap = TIMELINE_SCALE_POLICY[densityMode].minimumLabelGapPx;
   return LABEL_STEPS.find((step) => step >= tickStepMinutes && step % tickStepMinutes === 0 && step * pixelsPerMinute >= minimumLabelGap) ?? 1440;
 }
-const MAJOR_HOUR_STEP_MINUTES = 3 * 60;
 function resolveTickLevel(minute) {
-  if (minute % MAJOR_HOUR_STEP_MINUTES === 0) return "major";
   if (minute % 60 === 0) return "hour";
   if (minute % 30 === 0) return "half";
   if (minute % 15 === 0) return "quarter";
@@ -21759,14 +21756,7 @@ function buildTimelineScale(input) {
   const ticks = [];
   let lastLabelOffset = -Infinity;
   const minimumLabelGap = TIMELINE_SCALE_POLICY[densityMode].minimumLabelGapPx;
-  const tickMinutes = /* @__PURE__ */ new Set();
   for (let minute = Math.ceil(start2 / tickStepMinutes) * tickStepMinutes; minute <= end2; minute += tickStepMinutes) {
-    tickMinutes.add(minute);
-  }
-  for (let minute = Math.ceil(start2 / MAJOR_HOUR_STEP_MINUTES) * MAJOR_HOUR_STEP_MINUTES; minute <= end2; minute += MAJOR_HOUR_STEP_MINUTES) {
-    tickMinutes.add(minute);
-  }
-  for (const minute of [...tickMinutes].sort((a2, b2) => a2 - b2)) {
     const level = resolveTickLevel(minute);
     const offset2 = (minute - start2) * pixelsPerMinute;
     const label = minute % labelStepMinutes === 0 && offset2 - lastLabelOffset >= minimumLabelGap ? formatClockMinute(minute) : void 0;
@@ -21779,7 +21769,7 @@ function buildTimelineScale(input) {
       label,
       strokeWidth: style2.width,
       strokeOpacity: style2.opacity,
-      showInGrid: level === "major" || minute % gridStepMinutes === 0
+      showInGrid: minute % gridStepMinutes === 0
     });
   }
   return {
@@ -25584,12 +25574,6 @@ function normalizeViewMultiValue(value, options = {}) {
   const normalized2 = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
   return options.dedupe === false ? normalized2 : Array.from(new Set(normalized2));
 }
-function pointerDistance(points) {
-  if (points.size < 2) return null;
-  const [first2, second] = Array.from(points.values());
-  if (!first2 || !second) return null;
-  return Math.hypot(first2.x - second.x, first2.y - second.y);
-}
 function useTimelineZoom(options) {
   const {
     defaultHeight,
@@ -25598,55 +25582,44 @@ function useTimelineZoom(options) {
     step = 5
   } = options;
   const [hourHeight, setHourHeight] = d(defaultHeight);
-  const touchPointersRef = A$1(/* @__PURE__ */ new Map());
-  const pinchGestureRef = A$1(null);
+  const initialPinchDistanceRef = A$1(null);
+  const initialHourHeightRef = A$1(null);
   y(() => {
     setHourHeight(defaultHeight);
   }, [defaultHeight]);
-  const clampHeight = q$1((value) => Math.max(minHeight2, Math.min(maxHeight2, value)), [minHeight2, maxHeight2]);
   const handleWheel = q$1((e2) => {
     if (!e2.altKey) return;
     e2.preventDefault();
     setHourHeight((currentHeight) => {
       const newHeight = e2.deltaY < 0 ? currentHeight + step : currentHeight - step;
-      return clampHeight(newHeight);
+      return Math.max(minHeight2, Math.min(maxHeight2, newHeight));
     });
-  }, [clampHeight, step]);
-  const handlePointerDown = q$1((e2) => {
-    if (e2.pointerType !== "touch") return;
-    touchPointersRef.current.set(e2.pointerId, { x: e2.clientX, y: e2.clientY });
-    if (touchPointersRef.current.size === 2) {
-      const initialDistance = pointerDistance(touchPointersRef.current);
-      if (initialDistance && initialDistance > 0) {
-        pinchGestureRef.current = {
-          initialDistance,
-          initialHourHeight: hourHeight
-        };
-      }
-    } else if (touchPointersRef.current.size > 2) {
-      pinchGestureRef.current = null;
+  }, [minHeight2, maxHeight2, step]);
+  const handleTouchStart = q$1((e2) => {
+    if (e2.touches.length === 2) {
+      e2.preventDefault();
+      const t1 = e2.touches[0];
+      const t22 = e2.touches[1];
+      const distance = Math.hypot(t1.clientX - t22.clientX, t1.clientY - t22.clientY);
+      initialPinchDistanceRef.current = distance;
+      initialHourHeightRef.current = hourHeight;
     }
   }, [hourHeight]);
-  const handlePointerMove = q$1((e2) => {
-    if (e2.pointerType !== "touch" || !touchPointersRef.current.has(e2.pointerId)) return;
-    touchPointersRef.current.set(e2.pointerId, { x: e2.clientX, y: e2.clientY });
-    const pinch = pinchGestureRef.current;
-    if (!pinch || touchPointersRef.current.size !== 2) return;
-    const currentDistance = pointerDistance(touchPointersRef.current);
-    if (!currentDistance || pinch.initialDistance <= 0) return;
-    const scale = currentDistance / pinch.initialDistance;
-    setHourHeight(clampHeight(pinch.initialHourHeight * scale));
-  }, [clampHeight]);
-  const finishTouchPointer = q$1((e2) => {
-    if (e2.pointerType !== "touch") return;
-    touchPointersRef.current.delete(e2.pointerId);
-    if (touchPointersRef.current.size !== 2) {
-      pinchGestureRef.current = null;
-      return;
+  const handleTouchMove = q$1((e2) => {
+    if (e2.touches.length === 2 && initialPinchDistanceRef.current) {
+      e2.preventDefault();
+      const t1 = e2.touches[0];
+      const t22 = e2.touches[1];
+      const currentDistance = Math.hypot(t1.clientX - t22.clientX, t1.clientY - t22.clientY);
+      const scale = currentDistance / initialPinchDistanceRef.current;
+      const newHeight = (initialHourHeightRef.current || defaultHeight) * scale;
+      setHourHeight(Math.max(minHeight2, Math.min(maxHeight2, newHeight)));
     }
-    const initialDistance = pointerDistance(touchPointersRef.current);
-    pinchGestureRef.current = initialDistance && initialDistance > 0 ? { initialDistance, initialHourHeight: hourHeight } : null;
-  }, [hourHeight]);
+  }, [defaultHeight, minHeight2, maxHeight2]);
+  const handleTouchEnd = q$1(() => {
+    initialPinchDistanceRef.current = null;
+    initialHourHeightRef.current = null;
+  }, []);
   const zoomToMax = q$1(() => {
     setHourHeight(maxHeight2);
   }, [maxHeight2]);
@@ -25656,10 +25629,9 @@ function useTimelineZoom(options) {
     zoomToMax,
     zoomHandlers: {
       onWheel: handleWheel,
-      onPointerDown: handlePointerDown,
-      onPointerMove: handlePointerMove,
-      onPointerUp: finishTouchPointer,
-      onPointerCancel: finishTouchPointer
+      onTouchStart: handleTouchStart,
+      onTouchMove: handleTouchMove,
+      onTouchEnd: handleTouchEnd
     }
   };
 }
@@ -32417,11 +32389,11 @@ function useThemeProps({
   });
 }
 const useEnhancedEffect = typeof window !== "undefined" ? _ : y;
-function clamp$2(val, min2 = Number.MIN_SAFE_INTEGER, max2 = Number.MAX_SAFE_INTEGER) {
+function clamp$1(val, min2 = Number.MIN_SAFE_INTEGER, max2 = Number.MAX_SAFE_INTEGER) {
   return Math.max(min2, Math.min(val, max2));
 }
 function clampWrapper(value, min2 = 0, max2 = 1) {
-  return clamp$2(value, min2, max2);
+  return clamp$1(value, min2, max2);
 }
 function hexToRgb(color2) {
   color2 = color2.slice(1);
@@ -45202,13 +45174,12 @@ function ThinkRange({ className, ...props }) {
 }
 const RECORD_GESTURE_MULTI_ACTIVATION_MS = 320;
 const RECORD_GESTURE_HINT = "点击编辑；按住控制键或⌘键点击，或双击打开原文";
-const RECORD_DOUBLE_PRIMARY_HINT = "双击编辑；按住控制键或⌘键点击打开原文";
+const RECORD_MODIFIER_ORIGIN_HINT = "点击编辑；按住控制键或⌘键点击打开原文";
 function createRecordGestureHandlers(params) {
   let lastTouchAt = 0;
   let suppressClickUntil = 0;
   let pendingPrimary = null;
   const originActivation = params.originActivation ?? "modifier-and-double";
-  const primaryActivation = params.primaryActivation ?? "single";
   const cancelPendingPrimary = () => {
     if (pendingPrimary !== null) {
       clearTimeout(pendingPrimary);
@@ -45245,38 +45216,18 @@ function createRecordGestureHandlers(params) {
         openOrigin();
         return;
       }
-      if (primaryActivation === "double") return;
       schedulePrimary();
     },
     onDblClick: (event) => {
       stopInteractionEvent(event);
-      if (Date.now() < suppressClickUntil) return;
       cancelPendingPrimary();
-      if (primaryActivation === "double") {
-        suppressClickUntil = Date.now() + RECORD_GESTURE_MULTI_ACTIVATION_MS;
-        openPrimary();
-        return;
-      }
       if (originActivation === "modifier-only") return;
       suppressClickUntil = Date.now() + RECORD_GESTURE_MULTI_ACTIVATION_MS;
       openOrigin();
     },
     onTouchEnd: (event) => {
       const now2 = Date.now();
-      const isDoubleTouch = !!lastTouchAt && now2 - lastTouchAt <= RECORD_GESTURE_MULTI_ACTIVATION_MS;
-      if (primaryActivation === "double") {
-        if (isDoubleTouch) {
-          lastTouchAt = 0;
-          cancelPendingPrimary();
-          suppressClickUntil = now2 + RECORD_GESTURE_MULTI_ACTIVATION_MS;
-          stopInteractionEvent(event);
-          openPrimary();
-          return;
-        }
-        lastTouchAt = now2;
-        return;
-      }
-      if (originActivation !== "modifier-only" && isDoubleTouch) {
+      if (originActivation !== "modifier-only" && lastTouchAt && now2 - lastTouchAt <= RECORD_GESTURE_MULTI_ACTIVATION_MS) {
         lastTouchAt = 0;
         cancelPendingPrimary();
         suppressClickUntil = now2 + RECORD_GESTURE_MULTI_ACTIVATION_MS;
@@ -50179,12 +50130,6 @@ function unmountModalContent(containerEl) {
   } catch (error) {
   }
 }
-const KEYBOARD_ACTIVATION_THRESHOLD_PX = 120;
-const FOCUSED_FIELD_TOP_GUTTER_PX = 16;
-const FOCUSED_FIELD_BOTTOM_GUTTER_PX = 20;
-function clamp$1(value, min2, max2) {
-  return Math.min(max2, Math.max(min2, value));
-}
 function setCssPx(el, name, height2) {
   el.style.setProperty(name, `${Math.max(0, Math.round(height2))}px`);
 }
@@ -50193,26 +50138,12 @@ function isKeyboardInput(el) {
   if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") return true;
   return el.isContentEditable;
 }
-function resolveQuickInputKeyboardViewportState(input) {
-  const baselineViewportHeight = Math.max(1, input.baselineViewportHeight);
-  const viewportHeight = Math.max(1, input.viewportHeight);
-  const viewportTop = Math.max(0, input.viewportTop || 0);
-  const keyboardHeight = Math.max(0, Math.round(baselineViewportHeight - viewportHeight));
-  const detected = input.focused && keyboardHeight > KEYBOARD_ACTIVATION_THRESHOLD_PX;
-  const anticipatedInset = input.focused && !detected ? clamp$1(Math.round(baselineViewportHeight * 0.38), 200, 360) : 0;
-  return {
-    viewportTop,
-    viewportHeight,
-    viewportBottom: viewportTop + viewportHeight,
-    keyboardHeight,
-    detected,
-    focused: input.focused,
-    anticipatedInset
-  };
-}
 function setupQuickInputKeyboardDetection(host) {
   const { contentEl, modalEl } = host;
   let baselineViewportHeight = window.visualViewport?.height || window.innerHeight;
+  const keyboardActivationThreshold = 150;
+  const suspectedBottomInset = 156;
+  const detectedBottomInsetExtra = 120;
   const setKeyboardHeight = (height2) => {
     setCssPx(modalEl, "--keyboard-height", height2);
     setCssPx(document.documentElement, "--keyboard-height", height2);
@@ -50220,24 +50151,12 @@ function setupQuickInputKeyboardDetection(host) {
   const setAccessoryInset = (height2) => {
     setCssPx(modalEl, "--keyboard-accessory-inset", height2);
   };
-  const setVisibleViewportHeight = (height2) => {
-    setCssPx(modalEl, "--quick-input-visible-viewport-height", height2);
-  };
   const hasActiveKeyboardInput = () => {
     const activeElement2 = document.activeElement;
     return !!activeElement2 && contentEl.contains(activeElement2) && isKeyboardInput(activeElement2);
   };
   const getBodyContainer = () => contentEl.querySelector(".think-modal__body");
-  const readViewportState = () => {
-    const viewport2 = window.visualViewport;
-    return resolveQuickInputKeyboardViewportState({
-      baselineViewportHeight,
-      viewportHeight: viewport2?.height || window.innerHeight,
-      viewportTop: viewport2?.offsetTop || 0,
-      focused: hasActiveKeyboardInput()
-    });
-  };
-  const ensureTargetVisible = (state, target) => {
+  const ensureTargetVisible = (target) => {
     const activeTarget = target && contentEl.contains(target) ? target : document.activeElement;
     if (!activeTarget || !isKeyboardInput(activeTarget) || !contentEl.contains(activeTarget)) return;
     const container = getBodyContainer();
@@ -50246,15 +50165,11 @@ function setupQuickInputKeyboardDetection(host) {
     const node2 = anchor || activeTarget;
     const nodeRect = node2.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
-    const safeTop = Math.max(containerRect.top + FOCUSED_FIELD_TOP_GUTTER_PX, state.viewportTop + FOCUSED_FIELD_TOP_GUTTER_PX);
-    let safeBottom = Math.min(containerRect.bottom, state.viewportBottom) - FOCUSED_FIELD_BOTTOM_GUTTER_PX;
-    if (state.focused && !state.detected) {
-      const predictiveFocusBand = clamp$1(Math.round(state.viewportHeight * 0.46), 150, 360);
-      safeBottom = Math.min(safeBottom, safeTop + predictiveFocusBand);
-    }
-    safeBottom = Math.max(safeTop + 44, safeBottom);
+    const accessoryInset = Number.parseInt(modalEl.style.getPropertyValue("--keyboard-accessory-inset") || "0", 10) || suspectedBottomInset;
+    const safeTop = containerRect.top + 12;
+    const safeBottom = containerRect.bottom - Math.max(72, accessoryInset);
     if (nodeRect.bottom > safeBottom) {
-      container.scrollTop += nodeRect.bottom - safeBottom + 24;
+      container.scrollTop += nodeRect.bottom - safeBottom + 28;
     } else if (nodeRect.top < safeTop) {
       container.scrollTop -= safeTop - nodeRect.top + 12;
     }
@@ -50268,45 +50183,56 @@ function setupQuickInputKeyboardDetection(host) {
     }
   };
   const updateKeyboardState = (target) => {
-    const state = readViewportState();
-    const active = state.focused;
-    modalEl.classList.toggle("think-quick-input-keyboard-active", active);
-    modalEl.classList.toggle("think-quick-input-keyboard-detected", state.detected);
-    modalEl.classList.toggle("think-quick-input-keyboard-suspected", active && !state.detected);
-    setVisibleViewportHeight(state.viewportHeight);
-    setKeyboardHeight(state.detected ? state.keyboardHeight : 0);
-    setAccessoryInset(state.detected ? 0 : state.anticipatedInset);
-    if (active) {
-      modalEl.style.setProperty("--keyboard-offset", `${state.viewportTop}px`);
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const heightDiff = Math.max(0, Math.round(baselineViewportHeight - viewportHeight));
+    const hasFocusedInput = hasActiveKeyboardInput();
+    const detected = heightDiff > keyboardActivationThreshold && hasFocusedInput;
+    const suspected = hasFocusedInput;
+    modalEl.classList.toggle("think-quick-input-keyboard-detected", detected);
+    modalEl.classList.toggle("think-quick-input-keyboard-suspected", suspected);
+    if (detected) {
+      setKeyboardHeight(heightDiff);
+      setAccessoryInset(heightDiff + detectedBottomInsetExtra);
+      const offsetTop = window.visualViewport?.offsetTop || 0;
+      modalEl.style.setProperty("--keyboard-offset", `${offsetTop}px`);
+    } else if (suspected) {
+      setKeyboardHeight(0);
+      setAccessoryInset(suspectedBottomInset);
+      modalEl.style.removeProperty("--keyboard-offset");
     } else {
+      setKeyboardHeight(0);
+      setAccessoryInset(0);
       modalEl.style.removeProperty("--keyboard-offset");
     }
-    if (!active && state.keyboardHeight <= 0) {
-      baselineViewportHeight = state.viewportHeight;
+    if (heightDiff <= 0 && !hasFocusedInput) {
+      baselineViewportHeight = viewportHeight;
     }
-    if (active) ensureTargetVisible(state, target);
+    if (suspected) {
+      ensureTargetVisible(target);
+    }
   };
   const scheduleVisibilityPasses = (target) => {
     const run = () => updateKeyboardState(target);
     requestAnimationFrame(run);
-    window.setTimeout(run, 80);
-    window.setTimeout(run, 180);
-    window.setTimeout(run, 320);
-    window.setTimeout(run, 520);
+    window.setTimeout(run, 120);
+    window.setTimeout(run, 260);
+    window.setTimeout(run, 420);
   };
   const handleFocusIn = (event) => {
     const target = event.target;
     if (!isKeyboardInput(target)) return;
-    updateKeyboardState(target);
     scheduleVisibilityPasses(target);
   };
-  const handleFocusOut = () => {
+  const handleFocusOut = (event) => {
+    if (!(event.target instanceof HTMLElement)) {
+      window.setTimeout(() => updateKeyboardState(document.activeElement), 60);
+      return;
+    }
+    if (!contentEl.contains(event.target)) {
+      window.setTimeout(() => updateKeyboardState(document.activeElement), 60);
+      return;
+    }
     window.setTimeout(() => updateKeyboardState(document.activeElement), 60);
-  };
-  const handleInput = (event) => {
-    const target = event.target;
-    if (!isKeyboardInput(target)) return;
-    updateKeyboardState(target);
   };
   const handleViewportResize = () => {
     updateKeyboardState(document.activeElement);
@@ -50322,7 +50248,6 @@ function setupQuickInputKeyboardDetection(host) {
   };
   contentEl.addEventListener("focusin", handleFocusIn);
   contentEl.addEventListener("focusout", handleFocusOut);
-  contentEl.addEventListener("input", handleInput);
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", handleViewportResize);
     window.visualViewport.addEventListener("scroll", handleViewportScroll, { passive: true });
@@ -50332,12 +50257,10 @@ function setupQuickInputKeyboardDetection(host) {
   window.addEventListener("orientationchange", handleOrientationChange);
   setKeyboardHeight(0);
   setAccessoryInset(0);
-  setVisibleViewportHeight(window.visualViewport?.height || window.innerHeight);
   updateKeyboardState(document.activeElement);
   return () => {
     contentEl.removeEventListener("focusin", handleFocusIn);
     contentEl.removeEventListener("focusout", handleFocusOut);
-    contentEl.removeEventListener("input", handleInput);
     if (window.visualViewport) {
       window.visualViewport.removeEventListener("resize", handleViewportResize);
       window.visualViewport.removeEventListener("scroll", handleViewportScroll);
@@ -50349,8 +50272,6 @@ function setupQuickInputKeyboardDetection(host) {
     modalEl.style.removeProperty("--keyboard-height");
     modalEl.style.removeProperty("--keyboard-accessory-inset");
     modalEl.style.removeProperty("--keyboard-offset");
-    modalEl.style.removeProperty("--quick-input-visible-viewport-height");
-    modalEl.classList.remove("think-quick-input-keyboard-active");
     modalEl.classList.remove("think-quick-input-keyboard-detected");
     modalEl.classList.remove("think-quick-input-keyboard-suspected");
   };
@@ -59248,8 +59169,18 @@ function DayColumnHeader({
     ) })
   ] });
 }
-const DIRECT_MANIPULATION_THRESHOLD_PX = 4;
-const TOUCH_TAP_SLOP_PX$1 = 10;
+const MOUSE_DRAG_THRESHOLD_PX = 4;
+const TOUCH_LONG_PRESS_MS = 350;
+const TOUCH_PRESS_SLOP_PX = 10;
+const TOUCH_DRAG_THRESHOLD_PX = 2;
+function findTouch$1(touches, identifier2) {
+  if (!touches) return null;
+  for (let index = 0; index < touches.length; index += 1) {
+    const touch = touches.item(index);
+    if (touch?.identifier === identifier2) return touch;
+  }
+  return null;
+}
 function formatTimeMinute$1(minute) {
   const total = Math.round(minute);
   const h2 = Math.floor(total / 60) % 24;
@@ -59260,14 +59191,16 @@ function generateTaskBlockTitle(block) {
   if (!block.timelineRange.end) {
     return `${block.timelineSource === "task-plan" ? "计划" : "任务"}: ${block.pureText}
 时间点: ${formatTimeMinute$1(block.startMinute)}
-拖动左侧握柄移动时间点；${RECORD_DOUBLE_PRIMARY_HINT}`;
+鼠标拖动；触屏长按后拖动可修改时间
+${RECORD_MODIFIER_ORIGIN_HINT}`;
   }
   const start2 = dayjs(block.timelineRange.start);
   const end2 = dayjs(block.timelineRange.end);
   const rangeText = start2.isSame(end2, "day") ? `${start2.format("HH:mm")} - ${end2.format("HH:mm")}` : `${start2.format("MM-DD HH:mm")} - ${end2.format("MM-DD HH:mm")}`;
   return `${block.timelineSource === "task-plan" ? "计划" : "任务"}: ${block.pureText}
 时间: ${rangeText}
-拖动左侧握柄移动整个时段；拖动上/下边界修改开始/结束时间；${RECORD_DOUBLE_PRIMARY_HINT}`;
+鼠标直接拖动；触屏长按后拖动块或上下边缘可修改时间
+${RECORD_MODIFIER_ORIGIN_HINT}`;
 }
 function formatPreviewLabel(range, durationMinutes2) {
   const start2 = dayjs(range.start);
@@ -59290,12 +59223,17 @@ function TimelineTaskBlock({
 }) {
   const blockRef = A$1(null);
   const gestureRef = A$1(null);
-  const touchTapRef = A$1(null);
+  const touchGestureRef = A$1(null);
   const suppressClickUntilRef = A$1(0);
   const [preview, setPreview] = d(null);
   const previewRef = A$1(null);
   const [isDragging, setIsDragging] = d(false);
-  const [activeGestureMode, setActiveGestureMode] = d(null);
+  const [isTouchArmed, setIsTouchArmed] = d(false);
+  const [isEditMode, setIsEditMode] = d(false);
+  y(() => () => {
+    const active = touchGestureRef.current;
+    if (active?.timerId != null) window.clearTimeout(active.timerId);
+  }, []);
   const isPlanned = block.timelineSource === "task-plan";
   const isPoint = !block.timelineRange.end;
   const goalKey = getTimelineGoalKey(block);
@@ -59306,7 +59244,6 @@ function TimelineTaskBlock({
   const top2 = timelineOffsetFromMinute(visibleStart, hourHeight);
   const naturalHeight = timelineOffsetFromMinute(visibleEnd, hourHeight) - top2;
   const renderHeight = isPoint ? 22 : Math.max(naturalHeight, 2);
-  const compactDirectManipulation = !isPoint && renderHeight < 24;
   const editItem = { ...block, id: block.taskRecordId, recordType: "task" };
   const originItem = block.timelineSource === "task-session" ? { ...block, id: block.sessionRecordId || block.id } : editItem;
   const handleOpenTask = () => {
@@ -59316,8 +59253,7 @@ function TimelineTaskBlock({
     item: originItem,
     onOpenOrigin: onOpenRecordOrigin,
     onPrimary: handleOpenTask,
-    originActivation: "modifier-only",
-    primaryActivation: "double"
+    originActivation: "modifier-only"
   });
   const minuteFromClientY = (clientY) => {
     const column2 = blockRef.current?.parentElement;
@@ -59326,6 +59262,7 @@ function TimelineTaskBlock({
     return timelineMinuteFromOffset(clientY - rect.top, hourHeight, maxHours);
   };
   const beginGesture = (event, mode) => {
+    if (event.pointerType === "touch") return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
     const minute = minuteFromClientY(event.clientY);
     if (minute == null) return;
@@ -59337,13 +59274,12 @@ function TimelineTaskBlock({
       anchorMinute: minute,
       dragging: false
     };
-    setActiveGestureMode(mode);
     blockRef.current?.setPointerCapture?.(event.pointerId);
   };
   const handlePointerMove = (event) => {
     const active = gestureRef.current;
     if (!active || active.pointerId !== event.pointerId) return;
-    if (!active.dragging && Math.abs(event.clientY - active.startClientY) < DIRECT_MANIPULATION_THRESHOLD_PX) return;
+    if (!active.dragging && Math.abs(event.clientY - active.startClientY) < MOUSE_DRAG_THRESHOLD_PX) return;
     const currentMinute = minuteFromClientY(event.clientY);
     if (currentMinute == null) return;
     const nextPreview = buildTimelineBlockGesturePreview({
@@ -59367,7 +59303,7 @@ function TimelineTaskBlock({
     gestureRef.current = null;
     blockRef.current?.releasePointerCapture?.(event.pointerId);
     let committedPreview = previewRef.current;
-    if (!cancelled && !committedPreview && Math.abs(event.clientY - active.startClientY) >= DIRECT_MANIPULATION_THRESHOLD_PX) {
+    if (!cancelled && !committedPreview && Math.abs(event.clientY - active.startClientY) >= MOUSE_DRAG_THRESHOLD_PX) {
       const currentMinute = minuteFromClientY(event.clientY);
       if (currentMinute != null) {
         committedPreview = buildTimelineBlockGesturePreview({
@@ -59383,7 +59319,6 @@ function TimelineTaskBlock({
     previewRef.current = null;
     setPreview(null);
     setIsDragging(false);
-    setActiveGestureMode(null);
     if (!didDrag || !committedPreview) return;
     suppressClickUntilRef.current = Date.now() + 350;
     event.preventDefault();
@@ -59397,32 +59332,116 @@ function TimelineTaskBlock({
       range: committedPreview.range
     })).catch(() => void 0);
   };
-  const handleBlockPointerDown = (event) => {
+  const clearTouchTimer = (active) => {
+    if (!active || active.timerId == null) return;
+    window.clearTimeout(active.timerId);
+    active.timerId = null;
+  };
+  const beginTouchGesture = (event, mode) => {
+    const touch = event.changedTouches?.item(0);
+    if (!touch) return;
+    const minute = minuteFromClientY(touch.clientY);
+    if (minute == null) return;
     event.stopPropagation();
-    if (event.pointerType !== "touch") return;
-    touchTapRef.current = {
-      pointerId: event.pointerId,
-      startClientX: event.clientX,
-      startClientY: event.clientY,
-      moved: false
+    clearTouchTimer(touchGestureRef.current);
+    previewRef.current = null;
+    setPreview(null);
+    setIsDragging(false);
+    setIsTouchArmed(false);
+    const active = {
+      identifier: touch.identifier,
+      mode,
+      startClientX: touch.clientX,
+      startClientY: touch.clientY,
+      anchorMinute: minute,
+      armed: false,
+      dragging: false,
+      timerId: null
     };
+    active.timerId = window.setTimeout(() => {
+      if (touchGestureRef.current !== active) return;
+      active.armed = true;
+      active.timerId = null;
+      setIsTouchArmed(true);
+      setIsEditMode(true);
+      try {
+        navigator.vibrate?.(8);
+      } catch {
+      }
+    }, TOUCH_LONG_PRESS_MS);
+    touchGestureRef.current = active;
   };
-  const updateTouchTap = (event) => {
-    const tap = touchTapRef.current;
-    if (!tap || tap.pointerId !== event.pointerId) return;
-    if (Math.hypot(event.clientX - tap.startClientX, event.clientY - tap.startClientY) > TOUCH_TAP_SLOP_PX$1) {
-      tap.moved = true;
-    }
-  };
-  const finishTouchTap = (event, cancelled = false) => {
-    const tap = touchTapRef.current;
-    if (!tap || tap.pointerId !== event.pointerId) return;
-    touchTapRef.current = null;
-    if (cancelled || tap.moved) {
-      blockGesture.cancelPendingPrimary();
+  const handleTouchMove = (event) => {
+    const active = touchGestureRef.current;
+    if (!active) return;
+    const touch = findTouch$1(event.touches, active.identifier);
+    if (!touch) return;
+    const deltaX = touch.clientX - active.startClientX;
+    const deltaY = touch.clientY - active.startClientY;
+    const travel = Math.hypot(deltaX, deltaY);
+    if (!active.armed) {
+      if (travel <= TOUCH_PRESS_SLOP_PX) return;
+      clearTouchTimer(active);
+      touchGestureRef.current = null;
+      suppressClickUntilRef.current = Date.now() + 350;
       return;
     }
-    blockGesture.onTouchEnd(event);
+    if (!active.dragging && Math.abs(deltaY) < TOUCH_DRAG_THRESHOLD_PX) return;
+    const currentMinute = minuteFromClientY(touch.clientY);
+    if (currentMinute == null) return;
+    const nextPreview = buildTimelineBlockGesturePreview({
+      block,
+      mode: active.mode,
+      anchorMinute: active.anchorMinute,
+      currentMinute,
+      maxHours
+    });
+    if (!nextPreview) return;
+    active.dragging = true;
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+    previewRef.current = nextPreview;
+    setPreview(nextPreview);
+  };
+  const finishTouchGesture = (event, cancelled = false) => {
+    const active = touchGestureRef.current;
+    if (!active) return;
+    const touch = findTouch$1(event.changedTouches, active.identifier);
+    if (!touch) return;
+    clearTouchTimer(active);
+    touchGestureRef.current = null;
+    setIsTouchArmed(false);
+    if (!active.armed) return;
+    suppressClickUntilRef.current = Date.now() + 450;
+    event.preventDefault();
+    event.stopPropagation();
+    let committedPreview = previewRef.current;
+    if (!cancelled && !committedPreview && Math.abs(touch.clientY - active.startClientY) >= TOUCH_DRAG_THRESHOLD_PX) {
+      const currentMinute = minuteFromClientY(touch.clientY);
+      if (currentMinute != null) {
+        committedPreview = buildTimelineBlockGesturePreview({
+          block,
+          mode: active.mode,
+          anchorMinute: active.anchorMinute,
+          currentMinute,
+          maxHours
+        });
+      }
+    }
+    const didDrag = !!committedPreview && !cancelled;
+    previewRef.current = null;
+    setPreview(null);
+    setIsDragging(false);
+    if (!didDrag || !committedPreview) return;
+    if (!onUpdateTimelineRange) {
+      onNotice?.("未提供时间轴保存处理器，无法更新时间");
+      return;
+    }
+    Promise.resolve(onUpdateTimelineRange({
+      target: block.timelineEditTarget,
+      range: committedPreview.range
+    })).catch(() => void 0);
   };
   const commitRange = (range, failureMessage) => {
     if (!range) {
@@ -59449,17 +59468,11 @@ function TimelineTaskBlock({
   };
   const canAlign = !isPoint && !isPlanned && block.isRangeStart && block.isRangeEnd;
   const canAlignToNext = !!(canAlign && nextBlock && nextBlock.blockStartMinute > block.blockStartMinute);
-  const className = `timeline-task-block timeline-task-block--${lifecycle.className}${isPoint ? " timeline-task-block--point" : ""}${isPlanned ? " timeline-task-block--planned" : ""}${isDragging ? " timeline-task-block--dragging" : ""}`;
+  const className = `timeline-task-block timeline-task-block--${lifecycle.className}${isPoint ? " timeline-task-block--point" : ""}${isPlanned ? " timeline-task-block--planned" : ""}${isTouchArmed ? " timeline-task-block--touch-armed" : ""}${isEditMode ? " timeline-task-block--edit-mode" : ""}${isDragging ? " timeline-task-block--dragging" : ""}`;
   const blockStyle = {
     top: `${top2}px`,
     height: `${renderHeight}px`,
     "--timeline-goal-color": goalColor
-  };
-  const consumeSuppressedActivation = (event) => {
-    if (Date.now() >= suppressClickUntilRef.current) return false;
-    event.preventDefault();
-    event.stopPropagation();
-    return true;
   };
   return /* @__PURE__ */ u2(
     "div",
@@ -59470,64 +59483,43 @@ function TimelineTaskBlock({
       "data-timeline-kind": isPoint ? "point" : "range",
       "data-timeline-layer": isPlanned ? "planned" : block.timelineSource === "task-session" ? "actual" : "legacy",
       "data-timeline-editable": "true",
-      "data-timeline-compact-range": compactDirectManipulation ? "true" : "false",
-      "data-timeline-gesture": activeGestureMode || void 0,
       title: `${generateTaskBlockTitle(block)}
 状态: ${lifecycle.label}`,
       style: blockStyle,
       onClick: (event) => {
-        if (consumeSuppressedActivation(event)) return;
+        if (Date.now() < suppressClickUntilRef.current) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
         blockGesture.onClick?.(event);
       },
-      onDblClick: (event) => {
-        if (consumeSuppressedActivation(event)) return;
-        blockGesture.onDblClick?.(event);
-      },
-      onPointerDown: (event) => handleBlockPointerDown(event),
-      onPointerMove: (event) => {
-        updateTouchTap(event);
-        handlePointerMove(event);
-      },
-      onPointerUp: (event) => {
-        finishTouchTap(event);
-        finishGesture(event);
-      },
-      onPointerCancel: (event) => {
-        finishTouchTap(event, true);
-        finishGesture(event, true);
-      },
+      onPointerDown: (event) => beginGesture(event, "move"),
+      onPointerMove: (event) => handlePointerMove(event),
+      onPointerUp: (event) => finishGesture(event),
+      onPointerCancel: (event) => finishGesture(event, true),
+      onTouchStart: (event) => beginTouchGesture(event, "move"),
+      onTouchMove: (event) => handleTouchMove(event),
+      onTouchEnd: (event) => finishTouchGesture(event),
+      onTouchCancel: (event) => finishTouchGesture(event, true),
       children: [
-        !isPoint && block.isRangeStart ? /* @__PURE__ */ u2(
+        !isPoint && block.isRangeStart && isEditMode ? /* @__PURE__ */ u2(
           "div",
           {
             class: "timeline-task-resize-handle timeline-task-resize-handle--start",
             role: "separator",
             "aria-label": "拖动修改开始时间",
-            title: "拖动：修改开始时间",
             onPointerDown: (event) => beginGesture(event, "resize-start"),
-            onClick: (event) => event.stopPropagation(),
-            onDblClick: (event) => event.stopPropagation()
+            onTouchStart: (event) => beginTouchGesture(event, "resize-start"),
+            onClick: (event) => event.stopPropagation()
           }
         ) : null,
-        /* @__PURE__ */ u2(
-          "div",
-          {
-            class: "timeline-task-move-handle",
-            role: "separator",
-            "aria-label": "拖动移动整个任务时段",
-            title: "拖动：移动整个任务时段",
-            onPointerDown: (event) => beginGesture(event, "move"),
-            onClick: (event) => event.stopPropagation(),
-            onDblClick: (event) => event.stopPropagation()
-          }
-        ),
         /* @__PURE__ */ u2(
           "div",
           {
             class: "timeline-task-link",
             role: "button",
             tabIndex: 0,
-            "aria-label": `${block.title || block.pureText}，双击编辑`,
             onKeyDown: blockGesture.onKeyDown,
             children: /* @__PURE__ */ u2("div", { class: "timeline-task-content", children: [
               /* @__PURE__ */ u2("span", { class: "timeline-task-status", "aria-label": lifecycle.label, title: lifecycle.label, children: lifecycle.emoji }),
@@ -59542,9 +59534,9 @@ function TimelineTaskBlock({
           {
             class: "task-buttons",
             onPointerDown: (event) => event.stopPropagation(),
+            onTouchStart: (event) => event.stopPropagation(),
             onClick: (event) => event.stopPropagation(),
-            onDblClick: (event) => event.stopPropagation(),
-            children: canAlign ? /* @__PURE__ */ u2(S, { children: [
+            children: canAlign && isEditMode ? /* @__PURE__ */ u2(S, { children: [
               /* @__PURE__ */ u2(
                 ThinkIconButton,
                 {
@@ -59576,10 +59568,9 @@ function TimelineTaskBlock({
             class: "timeline-task-resize-handle timeline-task-resize-handle--end",
             role: "separator",
             "aria-label": "拖动修改结束时间",
-            title: "拖动：修改结束时间",
             onPointerDown: (event) => beginGesture(event, "resize-end"),
-            onClick: (event) => event.stopPropagation(),
-            onDblClick: (event) => event.stopPropagation()
+            onTouchStart: (event) => beginTouchGesture(event, "resize-end"),
+            onClick: (event) => event.stopPropagation()
           }
         ) : null
       ]
@@ -59587,9 +59578,9 @@ function TimelineTaskBlock({
   );
 }
 const DRAG_THRESHOLD_PX = 4;
-const TOUCH_TAP_SLOP_PX = 10;
-const DOUBLE_TAP_WINDOW_MS = 350;
-const DOUBLE_TAP_SLOP_PX = 24;
+const TOUCH_RANGE_LONG_PRESS_MS = 350;
+const TOUCH_RANGE_PRESS_SLOP_PX = 10;
+const TOUCH_RANGE_DRAG_THRESHOLD_PX = 2;
 const formatTimeMinute = (minute) => {
   const total = Math.round(minute);
   const h2 = Math.floor(total / 60) % 24;
@@ -59597,6 +59588,14 @@ const formatTimeMinute = (minute) => {
   return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
 };
 const formatRangeBoundaryMinute = (minute) => minute === 24 * 60 ? "24:00" : formatTimeMinute(minute);
+function findTouch(touches, identifier2) {
+  if (!touches) return null;
+  for (let index = 0; index < touches.length; index += 1) {
+    const touch = touches.item(index);
+    if (touch?.identifier === identifier2) return touch;
+  }
+  return null;
+}
 function DayColumnBody({
   day,
   blocks,
@@ -59612,15 +59611,17 @@ function DayColumnBody({
 }) {
   const columnRef = A$1(null);
   const lastTouchRef = A$1(null);
-  const touchTapRef = A$1(null);
   const suppressClickUntilRef = A$1(0);
-  const rangeGestureRef = A$1(null);
+  const dragStartRef = A$1(null);
+  const touchSelectionRef = A$1(null);
   const [dragSelection, setDragSelection] = d(null);
+  const [isTouchSelectionArmed, setIsTouchSelectionArmed] = d(false);
+  y(() => () => {
+    const active = touchSelectionRef.current;
+    if (active?.timerId != null) window.clearTimeout(active.timerId);
+  }, []);
   const handleBodyClick = (event) => {
-    if (Date.now() < suppressClickUntilRef.current) {
-      event.preventDefault();
-      return;
-    }
+    if (Date.now() < suppressClickUntilRef.current) return;
     onColumnClick(day, event);
   };
   const minuteFromClientY = (clientY) => {
@@ -59629,117 +59630,171 @@ function DayColumnBody({
     const rect = target.getBoundingClientRect();
     return timelineMinuteFromOffset(clientY - rect.top, hourHeight, maxHours);
   };
-  const beginRangeGesture = (event) => {
-    if (event.pointerType === "mouse" && event.button !== 0) return false;
-    const minute = minuteFromClientY(event.clientY);
-    if (minute == null) return false;
-    const captureTarget = event.currentTarget;
-    rangeGestureRef.current = {
-      pointerId: event.pointerId,
-      startClientY: event.clientY,
-      startMinute: minute,
-      dragging: false,
-      captureTarget
-    };
-    captureTarget?.setPointerCapture?.(event.pointerId);
+  const minuteFromPointerEvent = (event) => minuteFromClientY(event.clientY);
+  const handleBodyPointerDown = (event) => {
+    if (event.pointerType === "touch") return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    const minute = minuteFromPointerEvent(event);
+    if (minute == null) return;
+    dragStartRef.current = { pointerId: event.pointerId, clientY: event.clientY, minute };
+    event.currentTarget?.setPointerCapture?.(event.pointerId);
     setDragSelection(null);
-    return true;
   };
-  const updateRangeGesture = (event) => {
-    const start2 = rangeGestureRef.current;
-    if (!start2 || start2.pointerId !== event.pointerId) return false;
-    if (!start2.dragging && Math.abs(event.clientY - start2.startClientY) < DRAG_THRESHOLD_PX) return true;
-    const minute = minuteFromClientY(event.clientY);
-    if (minute == null) return true;
-    const selection = buildTimelineDragSelection(start2.startMinute, minute, maxHours);
-    if (!selection) return true;
-    start2.dragging = true;
+  const handleBodyPointerMove = (event) => {
+    const start2 = dragStartRef.current;
+    if (!start2 || start2.pointerId !== event.pointerId) return;
+    if (!dragSelection && Math.abs(event.clientY - start2.clientY) < DRAG_THRESHOLD_PX) return;
+    const minute = minuteFromPointerEvent(event);
+    if (minute == null) return;
+    const selection = buildTimelineDragSelection(start2.minute, minute, maxHours);
+    if (!selection) return;
     event.preventDefault();
     setDragSelection(selection);
-    return true;
   };
-  const finishRangeGesture = (event, cancelled = false) => {
-    const start2 = rangeGestureRef.current;
-    if (!start2 || start2.pointerId !== event.pointerId) return false;
-    rangeGestureRef.current = null;
-    start2.captureTarget?.releasePointerCapture?.(event.pointerId);
-    const movedEnough = Math.abs(event.clientY - start2.startClientY) >= DRAG_THRESHOLD_PX;
-    if (cancelled || !start2.dragging && !movedEnough) {
+  const handleBodyPointerUp = (event) => {
+    const start2 = dragStartRef.current;
+    if (!start2 || start2.pointerId !== event.pointerId) return;
+    dragStartRef.current = null;
+    event.currentTarget?.releasePointerCapture?.(event.pointerId);
+    if (Math.abs(event.clientY - start2.clientY) < DRAG_THRESHOLD_PX) {
       setDragSelection(null);
-      return true;
+      return;
     }
-    const minute = minuteFromClientY(event.clientY);
-    const selection = minute == null ? dragSelection : buildTimelineDragSelection(start2.startMinute, minute, maxHours);
+    const minute = minuteFromPointerEvent(event);
+    const selection = minute == null ? dragSelection : buildTimelineDragSelection(start2.minute, minute, maxHours);
     if (!selection) {
       setDragSelection(null);
-      return true;
+      return;
     }
     suppressClickUntilRef.current = Date.now() + 350;
     event.preventDefault();
     onColumnClick(day, event, { startMinute: selection.startMinute, endMinute: selection.endMinute });
     setDragSelection(null);
-    return true;
-  };
-  const handleBodyPointerDown = (event) => {
-    if (event.pointerType === "touch") {
-      touchTapRef.current = {
-        pointerId: event.pointerId,
-        startClientX: event.clientX,
-        startClientY: event.clientY,
-        moved: false
-      };
-      return;
-    }
-    beginRangeGesture(event);
-  };
-  const handleBodyPointerMove = (event) => {
-    if (event.pointerType === "touch") {
-      const tap = touchTapRef.current;
-      if (!tap || tap.pointerId !== event.pointerId) return;
-      if (Math.hypot(event.clientX - tap.startClientX, event.clientY - tap.startClientY) > TOUCH_TAP_SLOP_PX) {
-        tap.moved = true;
-      }
-      return;
-    }
-    updateRangeGesture(event);
-  };
-  const handleBodyPointerUp = (event) => {
-    if (event.pointerType === "touch") {
-      const tap = touchTapRef.current;
-      if (!tap || tap.pointerId !== event.pointerId) return;
-      touchTapRef.current = null;
-      suppressClickUntilRef.current = Date.now() + 450;
-      if (tap.moved) {
-        lastTouchRef.current = null;
-        return;
-      }
-      const now2 = Date.now();
-      const previous = lastTouchRef.current;
-      const isDoubleTap = !!previous && now2 - previous.time <= DOUBLE_TAP_WINDOW_MS && Math.abs(previous.x - event.clientX) <= DOUBLE_TAP_SLOP_PX && Math.abs(previous.y - event.clientY) <= DOUBLE_TAP_SLOP_PX;
-      if (isDoubleTap) {
-        event.preventDefault();
-        onColumnClick(day, event);
-        lastTouchRef.current = null;
-      } else {
-        lastTouchRef.current = { time: now2, x: event.clientX, y: event.clientY };
-      }
-      return;
-    }
-    finishRangeGesture(event);
   };
   const handleBodyPointerCancel = (event) => {
-    if (event.pointerType === "touch") {
-      if (touchTapRef.current?.pointerId === event.pointerId) touchTapRef.current = null;
+    if (dragStartRef.current?.pointerId !== event.pointerId) return;
+    dragStartRef.current = null;
+    setDragSelection(null);
+  };
+  const clearTouchSelectionTimer = (active) => {
+    if (!active || active.timerId == null) return;
+    window.clearTimeout(active.timerId);
+    active.timerId = null;
+  };
+  const handleBodyTouchStart = (event) => {
+    const touch = event.changedTouches?.item(0);
+    if (!touch) return;
+    const minute = minuteFromClientY(touch.clientY);
+    if (minute == null) return;
+    clearTouchSelectionTimer(touchSelectionRef.current);
+    setDragSelection(null);
+    setIsTouchSelectionArmed(false);
+    const active = {
+      identifier: touch.identifier,
+      startClientX: touch.clientX,
+      startClientY: touch.clientY,
+      startMinute: minute,
+      armed: false,
+      dragging: false,
+      cancelled: false,
+      timerId: null
+    };
+    active.timerId = window.setTimeout(() => {
+      if (touchSelectionRef.current !== active || active.cancelled) return;
+      active.armed = true;
+      active.timerId = null;
+      setIsTouchSelectionArmed(true);
+      setDragSelection(buildTimelineDragSelection(active.startMinute, active.startMinute, maxHours));
+      try {
+        navigator.vibrate?.(8);
+      } catch {
+      }
+    }, TOUCH_RANGE_LONG_PRESS_MS);
+    touchSelectionRef.current = active;
+  };
+  const handleBodyTouchMove = (event) => {
+    const active = touchSelectionRef.current;
+    if (!active) return;
+    const touch = findTouch(event.touches, active.identifier);
+    if (!touch) return;
+    const deltaX = touch.clientX - active.startClientX;
+    const deltaY = touch.clientY - active.startClientY;
+    const travel = Math.hypot(deltaX, deltaY);
+    if (!active.armed) {
+      if (travel <= TOUCH_RANGE_PRESS_SLOP_PX) return;
+      clearTouchSelectionTimer(active);
+      active.cancelled = true;
       lastTouchRef.current = null;
+      suppressClickUntilRef.current = Date.now() + 350;
       return;
     }
-    finishRangeGesture(event, true);
+    if (!active.dragging && Math.abs(deltaY) < TOUCH_RANGE_DRAG_THRESHOLD_PX) return;
+    const minute = minuteFromClientY(touch.clientY);
+    if (minute == null) return;
+    const selection = buildTimelineDragSelection(active.startMinute, minute, maxHours);
+    if (!selection) return;
+    active.dragging = true;
+    event.preventDefault();
+    event.stopPropagation();
+    setDragSelection(selection);
+  };
+  const handleBodyTouchEnd = (event) => {
+    const active = touchSelectionRef.current;
+    if (active) {
+      const touch2 = findTouch(event.changedTouches, active.identifier);
+      if (touch2) {
+        clearTouchSelectionTimer(active);
+        touchSelectionRef.current = null;
+        setIsTouchSelectionArmed(false);
+        if (active.cancelled) {
+          setDragSelection(null);
+          lastTouchRef.current = null;
+          return;
+        }
+        if (active.armed) {
+          suppressClickUntilRef.current = Date.now() + 450;
+          lastTouchRef.current = null;
+          event.preventDefault();
+          event.stopPropagation();
+          const minute = minuteFromClientY(touch2.clientY);
+          const movedEnough = Math.abs(touch2.clientY - active.startClientY) >= TOUCH_RANGE_DRAG_THRESHOLD_PX;
+          const selection = movedEnough && minute != null ? buildTimelineDragSelection(active.startMinute, minute, maxHours) : active.dragging ? dragSelection : null;
+          setDragSelection(null);
+          if (selection && (active.dragging || movedEnough)) {
+            onColumnClick(day, event, { startMinute: selection.startMinute, endMinute: selection.endMinute });
+          }
+          return;
+        }
+      }
+    }
+    const touch = event.changedTouches?.item(0);
+    if (!touch) return;
+    const now2 = Date.now();
+    const previous = lastTouchRef.current;
+    const isDoubleTap = !!previous && now2 - previous.time <= 350 && Math.abs(previous.x - touch.clientX) <= 24 && Math.abs(previous.y - touch.clientY) <= 24;
+    lastTouchRef.current = { time: now2, x: touch.clientX, y: touch.clientY };
+    suppressClickUntilRef.current = now2 + 450;
+    if (!isDoubleTap) return;
+    event.preventDefault();
+    onColumnClick(day, event);
+    lastTouchRef.current = null;
+  };
+  const handleBodyTouchCancel = (event) => {
+    const active = touchSelectionRef.current;
+    if (!active) return;
+    const touch = findTouch(event.changedTouches, active.identifier);
+    if (!touch) return;
+    clearTouchSelectionTimer(active);
+    touchSelectionRef.current = null;
+    lastTouchRef.current = null;
+    setIsTouchSelectionArmed(false);
+    setDragSelection(null);
   };
   return /* @__PURE__ */ u2(
     "div",
     {
       ref: columnRef,
-      class: "day-column-body",
+      class: `day-column-body${isTouchSelectionArmed ? " day-column-body--touch-select-armed" : ""}`,
       style: {
         height: `${timelineOffsetFromMinute(timelineVisibleEndMinute(maxHours), hourHeight)}px`
       },
@@ -59748,6 +59803,10 @@ function DayColumnBody({
       onPointerMove: (event) => handleBodyPointerMove(event),
       onPointerUp: (event) => handleBodyPointerUp(event),
       onPointerCancel: (event) => handleBodyPointerCancel(event),
+      onTouchStart: (event) => handleBodyTouchStart(event),
+      onTouchMove: (event) => handleBodyTouchMove(event),
+      onTouchEnd: (event) => handleBodyTouchEnd(event),
+      onTouchCancel: (event) => handleBodyTouchCancel(event),
       children: [
         /* @__PURE__ */ u2(
           TimeRulerGrid,

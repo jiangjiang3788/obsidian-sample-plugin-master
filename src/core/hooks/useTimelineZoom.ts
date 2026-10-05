@@ -8,101 +8,60 @@ interface UseTimelineZoomOptions {
     step?: number;
 }
 
-interface TouchPointerPoint {
-    x: number;
-    y: number;
-}
-
-interface ActivePinchGesture {
-    initialDistance: number;
-    initialHourHeight: number;
-}
-
-function pointerDistance(points: Map<number, TouchPointerPoint>): number | null {
-    if (points.size < 2) return null;
-    const [first, second] = Array.from(points.values());
-    if (!first || !second) return null;
-    return Math.hypot(first.x - second.x, first.y - second.y);
-}
-
 export function useTimelineZoom(options: UseTimelineZoomOptions) {
-    const {
-        defaultHeight,
-        minHeight = 10,
-        maxHeight = 200,
-        step = 5
+    const { 
+        defaultHeight, 
+        minHeight = 10, 
+        maxHeight = 200, 
+        step = 5 
     } = options;
 
     const [hourHeight, setHourHeight] = useState(defaultHeight);
-    const touchPointersRef = useRef<Map<number, TouchPointerPoint>>(new Map());
-    const pinchGestureRef = useRef<ActivePinchGesture | null>(null);
+    const initialPinchDistanceRef = useRef<number | null>(null);
+    const initialHourHeightRef = useRef<number | null>(null);
 
     useEffect(() => {
         setHourHeight(defaultHeight);
     }, [defaultHeight]);
-
-    const clampHeight = useCallback((value: number) => (
-        Math.max(minHeight, Math.min(maxHeight, value))
-    ), [minHeight, maxHeight]);
 
     const handleWheel = useCallback((e: WheelEvent) => {
         if (!e.altKey) return;
         e.preventDefault();
         setHourHeight((currentHeight: number) => {
             const newHeight = e.deltaY < 0 ? currentHeight + step : currentHeight - step;
-            return clampHeight(newHeight);
+            return Math.max(minHeight, Math.min(maxHeight, newHeight));
         });
-    }, [clampHeight, step]);
+    }, [minHeight, maxHeight, step]);
 
-    const handlePointerDown = useCallback((e: PointerEvent) => {
-        if (e.pointerType !== 'touch') return;
-        touchPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-        // The surface CSS deliberately allows one-finger pan but not browser
-        // pinch-zoom. With two active touch pointers we can therefore implement
-        // timeline zoom without a scroll-blocking TouchEvent/preventDefault path.
-        if (touchPointersRef.current.size === 2) {
-            const initialDistance = pointerDistance(touchPointersRef.current);
-            if (initialDistance && initialDistance > 0) {
-                pinchGestureRef.current = {
-                    initialDistance,
-                    initialHourHeight: hourHeight,
-                };
-            }
-        } else if (touchPointersRef.current.size > 2) {
-            // Do not reuse a two-pointer baseline across a three-finger gesture.
-            pinchGestureRef.current = null;
+    const handleTouchStart = useCallback((e: TouchEvent) => {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            const t1 = e.touches[0];
+            const t2 = e.touches[1];
+            const distance = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+            initialPinchDistanceRef.current = distance;
+            initialHourHeightRef.current = hourHeight;
         }
     }, [hourHeight]);
 
-    const handlePointerMove = useCallback((e: PointerEvent) => {
-        if (e.pointerType !== 'touch' || !touchPointersRef.current.has(e.pointerId)) return;
-        touchPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-        const pinch = pinchGestureRef.current;
-        if (!pinch || touchPointersRef.current.size !== 2) return;
-        const currentDistance = pointerDistance(touchPointersRef.current);
-        if (!currentDistance || pinch.initialDistance <= 0) return;
-
-        const scale = currentDistance / pinch.initialDistance;
-        setHourHeight(clampHeight(pinch.initialHourHeight * scale));
-    }, [clampHeight]);
-
-    const finishTouchPointer = useCallback((e: PointerEvent) => {
-        if (e.pointerType !== 'touch') return;
-        touchPointersRef.current.delete(e.pointerId);
-        if (touchPointersRef.current.size !== 2) {
-            pinchGestureRef.current = null;
-            return;
+    const handleTouchMove = useCallback((e: TouchEvent) => {
+        if (e.touches.length === 2 && initialPinchDistanceRef.current) {
+            e.preventDefault();
+            const t1 = e.touches[0];
+            const t2 = e.touches[1];
+            const currentDistance = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+            
+            const scale = currentDistance / initialPinchDistanceRef.current;
+            const newHeight = (initialHourHeightRef.current || defaultHeight) * scale;
+            
+            setHourHeight(Math.max(minHeight, Math.min(maxHeight, newHeight)));
         }
+    }, [defaultHeight, minHeight, maxHeight]);
 
-        // If a three-finger gesture returns to exactly two touches, establish a
-        // fresh baseline instead of jumping against the stale original pair.
-        const initialDistance = pointerDistance(touchPointersRef.current);
-        pinchGestureRef.current = initialDistance && initialDistance > 0
-            ? { initialDistance, initialHourHeight: hourHeight }
-            : null;
-    }, [hourHeight]);
+    const handleTouchEnd = useCallback(() => {
+        initialPinchDistanceRef.current = null;
+        initialHourHeightRef.current = null;
+    }, []);
 
     const zoomToMax = useCallback(() => {
         setHourHeight(maxHeight);
@@ -114,10 +73,9 @@ export function useTimelineZoom(options: UseTimelineZoomOptions) {
         zoomToMax,
         zoomHandlers: {
             onWheel: handleWheel as any,
-            onPointerDown: handlePointerDown as any,
-            onPointerMove: handlePointerMove as any,
-            onPointerUp: finishTouchPointer as any,
-            onPointerCancel: finishTouchPointer as any,
+            onTouchStart: handleTouchStart as any,
+            onTouchMove: handleTouchMove as any,
+            onTouchEnd: handleTouchEnd as any
         }
     };
 }

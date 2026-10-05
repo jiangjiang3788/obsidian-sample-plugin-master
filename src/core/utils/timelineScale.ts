@@ -1,4 +1,4 @@
-export type TimelineTickLevel = 'major' | 'hour' | 'half' | 'quarter' | 'five';
+export type TimelineTickLevel = 'hour' | 'half' | 'quarter' | 'five';
 export type TimelineDensityMode = 'fine' | 'compact';
 
 export interface TimelineScaleTick {
@@ -39,13 +39,12 @@ export interface TimelineScale {
  * should not be only numerically different from a primary line; it must be
  * perceptually quieter. Hue stays neutral while lightness/weight separate the
  * information levels. Precision ticks stay short and local to ruler/day edges;
- * only the 30-minute, hourly, and three-hour anchor guides cross the data canvas.
+ * only the 30-minute and 1-hour structure guides cross the data canvas.
  */
 export const TIMELINE_TICK_STYLE = Object.freeze({
-  // Three-hour anchors (00/03/06/09/12/15/18/21/24) are intentionally heavier
-  // than ordinary hour rules so time-of-day can be recognized from the line
-  // pattern before reading a label. Other levels stay on full device pixels.
-  major: { width: 2, opacity: 0.88 },
+  // Keep every rule on a full device pixel. Hierarchy is expressed through
+  // contrast and tick length instead of sub-pixel widths that blur on desktop
+  // and disappear on high-density mobile displays.
   hour: { width: 1, opacity: 0.68 },
   half: { width: 1, opacity: 0.42 },
   quarter: { width: 1, opacity: 0.28 },
@@ -86,7 +85,7 @@ export const TIMELINE_SCALE_POLICY = Object.freeze({
   },
 } as const);
 
-const SEMANTIC_TICK_CANDIDATES: ReadonlyArray<{ step: number; level: Exclude<TimelineTickLevel, 'major'> }> = [
+const SEMANTIC_TICK_CANDIDATES: ReadonlyArray<{ step: number; level: TimelineTickLevel }> = [
   { step: 5, level: 'five' },
   { step: 15, level: 'quarter' },
   { step: 30, level: 'half' },
@@ -122,10 +121,7 @@ function resolveLabelStep(
   )) ?? 1440;
 }
 
-const MAJOR_HOUR_STEP_MINUTES = 3 * 60;
-
 function resolveTickLevel(minute: number): TimelineTickLevel {
-  if (minute % MAJOR_HOUR_STEP_MINUTES === 0) return 'major';
   if (minute % 60 === 0) return 'hour';
   if (minute % 30 === 0) return 'half';
   if (minute % 15 === 0) return 'quarter';
@@ -160,8 +156,8 @@ export function buildTimelineScale(input: {
   const tickStepMinutes = resolveTickStep(pixelsPerMinute, densityMode);
   // Data-column guides use the same resolution as the ruler. Presentation is
   // intentionally tiered in CSS: 5/15-minute ticks stay on the day edge while
-  // 30/60-minute structure guides plus 3-hour anchors cross the full column.
-  // One resolution source; one semantic level model; presentation remains rendering-only.
+  // 30/60-minute structure guides cross the full column. One resolution source;
+  // one semantic level model; presentation remains rendering-only.
   const gridStepMinutes = tickStepMinutes;
   const labelStepMinutes = resolveLabelStep(pixelsPerMinute, tickStepMinutes, densityMode);
   const tickPixelGap = tickStepMinutes * pixelsPerMinute;
@@ -169,20 +165,8 @@ export function buildTimelineScale(input: {
   const ticks: TimelineScaleTick[] = [];
   let lastLabelOffset = -Infinity;
   const minimumLabelGap = TIMELINE_SCALE_POLICY[densityMode].minimumLabelGapPx;
-  const tickMinutes = new Set<number>();
 
-  // Resolution ticks answer “how precise is the current zoom?”. Three-hour
-  // anchors answer a different question: “where am I in the day?”. Keep the two
-  // concerns independent so 03/06/09/12… remain recognizable even when a very
-  // compressed view chooses a coarser base resolution.
   for (let minute = Math.ceil(start / tickStepMinutes) * tickStepMinutes; minute <= end; minute += tickStepMinutes) {
-    tickMinutes.add(minute);
-  }
-  for (let minute = Math.ceil(start / MAJOR_HOUR_STEP_MINUTES) * MAJOR_HOUR_STEP_MINUTES; minute <= end; minute += MAJOR_HOUR_STEP_MINUTES) {
-    tickMinutes.add(minute);
-  }
-
-  for (const minute of [...tickMinutes].sort((a, b) => a - b)) {
     const level = resolveTickLevel(minute);
     const offset = (minute - start) * pixelsPerMinute;
     const label = minute % labelStepMinutes === 0 && offset - lastLabelOffset >= minimumLabelGap
@@ -197,7 +181,7 @@ export function buildTimelineScale(input: {
       label,
       strokeWidth: style.width,
       strokeOpacity: style.opacity,
-      showInGrid: level === 'major' || minute % gridStepMinutes === 0,
+      showInGrid: minute % gridStepMinutes === 0,
     });
   }
 
