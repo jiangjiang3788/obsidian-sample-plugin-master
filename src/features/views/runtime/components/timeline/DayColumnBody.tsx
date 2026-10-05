@@ -152,6 +152,10 @@ export function DayColumnBody({
 
   const handleBodyPointerDown = (event: PointerEvent) => {
     if (event.pointerType === 'touch') {
+      // Coarse-pointer policy: one-finger movement on blank timeline space is
+      // always native pan. Touch may double-tap to create at a time point, but
+      // it never enters range selection from a drag. Mouse/pen retain direct
+      // drag-to-select because they do not compete with finger scrolling.
       touchTapRef.current = {
         pointerId: event.pointerId,
         startClientX: event.clientX,
@@ -214,30 +218,6 @@ export function DayColumnBody({
     finishRangeGesture(event, true);
   };
 
-  const handleRangeRailPointerDown = (event: PointerEvent) => {
-    // Touch range creation lives on an explicit edge rail. The rest of the day
-    // column always remains a native pan surface, so vertical scrolling no longer
-    // races a long-press timer for ownership of the same gesture.
-    event.stopPropagation();
-    if (!beginRangeGesture(event)) return;
-    event.preventDefault();
-  };
-
-  const handleRangeRailPointerMove = (event: PointerEvent) => {
-    event.stopPropagation();
-    updateRangeGesture(event);
-  };
-
-  const handleRangeRailPointerUp = (event: PointerEvent) => {
-    event.stopPropagation();
-    finishRangeGesture(event);
-  };
-
-  const handleRangeRailPointerCancel = (event: PointerEvent) => {
-    event.stopPropagation();
-    finishRangeGesture(event, true);
-  };
-
   return (
     <div
       ref={columnRef}
@@ -255,20 +235,6 @@ export function DayColumnBody({
         ticks={(scale ?? buildTimelineScale({ hourHeight, maxHours })).ticks}
         height={timelineOffsetFromMinute(timelineVisibleEndMinute(maxHours), hourHeight)}
         variant="grid"
-      />
-
-      <div
-        class="timeline-range-create-rail"
-        aria-label="拖动此边缘选择时段"
-        title="拖动此边缘：选择一个时段"
-        onPointerDown={(event) => handleRangeRailPointerDown(event as any)}
-        onPointerMove={(event) => handleRangeRailPointerMove(event as any)}
-        onPointerUp={(event) => handleRangeRailPointerUp(event as any)}
-        onPointerCancel={(event) => handleRangeRailPointerCancel(event as any)}
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-        }}
       />
 
       {dragSelection ? (

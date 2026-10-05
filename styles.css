@@ -6981,6 +6981,14 @@ body.theme-dark .heatmap-cell.empty {
   --timeline-time-axis-width: 90px;
   overflow-x: auto;
   color: var(--think-text-primary);
+  /* Browser owns one-finger panning. Pinch-zoom is intentionally omitted here
+   * because Timeline implements semantic vertical zoom with Pointer Events.
+   * Timeline is an interaction canvas, so iOS text selection/callout must not
+   * compete with slow pans or long presses on ruler labels. */
+  touch-action: pan-x pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .timeline-sticky-header,
@@ -7024,41 +7032,10 @@ body.theme-dark .heatmap-cell.empty {
   position: relative;
   cursor: crosshair;
   user-select: none;
-  /* The main canvas is always a native pan surface. Touch range creation lives
-   * on the explicit edge rail so scrolling never competes with edit arming. */
-  touch-action: pan-x pan-y pinch-zoom;
-}
-
-.timeline-range-create-rail {
-  position: absolute;
-  inset-block: 0;
-  inset-inline-end: 0;
-  z-index: 1;
-  width: 12px;
-  cursor: ns-resize;
-  touch-action: none;
-}
-
-.timeline-range-create-rail::after {
-  content: "";
-  position: sticky;
-  top: 50%;
-  display: block;
-  width: 3px;
-  height: 34px;
-  margin-inline: auto;
-  border-radius: var(--think-radius-pill);
-  background: color-mix(in srgb, var(--think-text-secondary) 24%, transparent);
-  opacity: 0.35;
-  transform: translateY(-50%);
-  transition: opacity var(--think-duration-fast) var(--think-ease-standard),
-    background var(--think-duration-fast) var(--think-ease-standard);
-}
-
-.day-column-body:hover .timeline-range-create-rail::after,
-.timeline-range-create-rail:hover::after {
-  background: color-mix(in srgb, var(--think-accent) 58%, transparent);
-  opacity: 0.8;
+  /* Input-modality contract: finger movement on blank timeline space is always
+   * native pan. Range drag-selection is mouse/pen-only; touch creation uses a
+   * double tap, so no invisible full-height hit strip can steal vertical scroll. */
+  touch-action: pan-x pan-y;
 }
 
 .timeline-range-selection {
@@ -7355,7 +7332,7 @@ body.theme-dark .heatmap-cell.empty {
 
 .timeline-task-block[data-timeline-editable="true"] {
   cursor: default;
-  touch-action: pan-x pan-y pinch-zoom;
+  touch-action: pan-x pan-y;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -7482,8 +7459,6 @@ body.theme-dark .heatmap-cell.empty {
 }
 
 @media (pointer: coarse) {
-  .timeline-range-create-rail { width: 16px; }
-  .timeline-range-create-rail::after { width: 4px; opacity: 0.55; }
   .timeline-task-move-handle { width: 18px; }
   .timeline-task-content {
     padding-inline-start: calc(var(--think-space-2) + 17px);

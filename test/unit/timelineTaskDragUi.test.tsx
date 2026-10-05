@@ -234,7 +234,7 @@ describe('Timeline direct-manipulation UI', () => {
     expect(onOpenRecord).toHaveBeenCalledTimes(1);
   });
 
-  it('creates a touch time range only from the explicit edge rail', async () => {
+  it('never turns a one-finger blank-column swipe into touch range creation', async () => {
     const onColumnClick = jest.fn();
 
     await act(async () => render(
@@ -250,20 +250,56 @@ describe('Timeline direct-manipulation UI', () => {
     ));
 
     const column = host.querySelector('.day-column-body') as HTMLElement;
-    const rail = host.querySelector('.timeline-range-create-rail') as HTMLElement;
+    Object.defineProperty(column, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({ top: 0, left: 0, right: 100, bottom: 1440, width: 100, height: 1440, x: 0, y: 0, toJSON: () => ({}) }),
+    });
+
+    const down = pointerEvent('pointerdown', 60, 'touch', 96, 11);
+    const move = pointerEvent('pointermove', 120, 'touch', 96, 11);
+    const up = pointerEvent('pointerup', 120, 'touch', 96, 11);
+    await act(async () => {
+      column.dispatchEvent(down);
+      column.dispatchEvent(move);
+      column.dispatchEvent(up);
+    });
+
+    expect(onColumnClick).not.toHaveBeenCalled();
+    expect(down.defaultPrevented).toBe(false);
+    expect(move.defaultPrevented).toBe(false);
+    expect(up.defaultPrevented).toBe(false);
+    expect(host.querySelector('.timeline-range-create-rail')).toBeNull();
+    expect(host.querySelector('.timeline-range-selection')).toBeNull();
+  });
+
+  it('keeps mouse drag-selection for precise desktop range creation', async () => {
+    const onColumnClick = jest.fn();
+
+    await act(async () => render(
+      <DayColumnBody
+        day="2026-08-26"
+        blocks={[]}
+        hourHeight={60}
+        colorMap={{}}
+        maxHours={24}
+        onColumnClick={onColumnClick}
+      />,
+      host,
+    ));
+
+    const column = host.querySelector('.day-column-body') as HTMLElement;
     Object.defineProperty(column, 'getBoundingClientRect', {
       configurable: true,
       value: () => ({ top: 0, left: 0, right: 100, bottom: 1440, width: 100, height: 1440, x: 0, y: 0, toJSON: () => ({}) }),
     });
 
     await act(async () => {
-      rail.dispatchEvent(pointerEvent('pointerdown', 60, 'touch', 96, 11));
-      rail.dispatchEvent(pointerEvent('pointermove', 120, 'touch', 96, 11));
-      rail.dispatchEvent(pointerEvent('pointerup', 120, 'touch', 96, 11));
+      column.dispatchEvent(pointerEvent('pointerdown', 60, 'mouse', 50, 12));
+      column.dispatchEvent(pointerEvent('pointermove', 120, 'mouse', 50, 12));
+      column.dispatchEvent(pointerEvent('pointerup', 120, 'mouse', 50, 12));
     });
 
     expect(onColumnClick).toHaveBeenCalledTimes(1);
-    expect(onColumnClick.mock.calls[0][0]).toBe('2026-08-26');
     expect(onColumnClick.mock.calls[0][2]).toEqual({ startMinute: 60, endMinute: 120 });
   });
 

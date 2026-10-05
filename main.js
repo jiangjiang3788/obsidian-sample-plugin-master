@@ -25584,6 +25584,12 @@ function normalizeViewMultiValue(value, options = {}) {
   const normalized2 = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
   return options.dedupe === false ? normalized2 : Array.from(new Set(normalized2));
 }
+function pointerDistance(points) {
+  if (points.size < 2) return null;
+  const [first2, second] = Array.from(points.values());
+  if (!first2 || !second) return null;
+  return Math.hypot(first2.x - second.x, first2.y - second.y);
+}
 function useTimelineZoom(options) {
   const {
     defaultHeight,
@@ -25592,44 +25598,55 @@ function useTimelineZoom(options) {
     step = 5
   } = options;
   const [hourHeight, setHourHeight] = d(defaultHeight);
-  const initialPinchDistanceRef = A$1(null);
-  const initialHourHeightRef = A$1(null);
+  const touchPointersRef = A$1(/* @__PURE__ */ new Map());
+  const pinchGestureRef = A$1(null);
   y(() => {
     setHourHeight(defaultHeight);
   }, [defaultHeight]);
+  const clampHeight = q$1((value) => Math.max(minHeight2, Math.min(maxHeight2, value)), [minHeight2, maxHeight2]);
   const handleWheel = q$1((e2) => {
     if (!e2.altKey) return;
     e2.preventDefault();
     setHourHeight((currentHeight) => {
       const newHeight = e2.deltaY < 0 ? currentHeight + step : currentHeight - step;
-      return Math.max(minHeight2, Math.min(maxHeight2, newHeight));
+      return clampHeight(newHeight);
     });
-  }, [minHeight2, maxHeight2, step]);
-  const handleTouchStart = q$1((e2) => {
-    if (e2.touches.length === 2) {
-      e2.preventDefault();
-      const t1 = e2.touches[0];
-      const t22 = e2.touches[1];
-      const distance = Math.hypot(t1.clientX - t22.clientX, t1.clientY - t22.clientY);
-      initialPinchDistanceRef.current = distance;
-      initialHourHeightRef.current = hourHeight;
+  }, [clampHeight, step]);
+  const handlePointerDown = q$1((e2) => {
+    if (e2.pointerType !== "touch") return;
+    touchPointersRef.current.set(e2.pointerId, { x: e2.clientX, y: e2.clientY });
+    if (touchPointersRef.current.size === 2) {
+      const initialDistance = pointerDistance(touchPointersRef.current);
+      if (initialDistance && initialDistance > 0) {
+        pinchGestureRef.current = {
+          initialDistance,
+          initialHourHeight: hourHeight
+        };
+      }
+    } else if (touchPointersRef.current.size > 2) {
+      pinchGestureRef.current = null;
     }
   }, [hourHeight]);
-  const handleTouchMove = q$1((e2) => {
-    if (e2.touches.length === 2 && initialPinchDistanceRef.current) {
-      e2.preventDefault();
-      const t1 = e2.touches[0];
-      const t22 = e2.touches[1];
-      const currentDistance = Math.hypot(t1.clientX - t22.clientX, t1.clientY - t22.clientY);
-      const scale = currentDistance / initialPinchDistanceRef.current;
-      const newHeight = (initialHourHeightRef.current || defaultHeight) * scale;
-      setHourHeight(Math.max(minHeight2, Math.min(maxHeight2, newHeight)));
+  const handlePointerMove = q$1((e2) => {
+    if (e2.pointerType !== "touch" || !touchPointersRef.current.has(e2.pointerId)) return;
+    touchPointersRef.current.set(e2.pointerId, { x: e2.clientX, y: e2.clientY });
+    const pinch = pinchGestureRef.current;
+    if (!pinch || touchPointersRef.current.size !== 2) return;
+    const currentDistance = pointerDistance(touchPointersRef.current);
+    if (!currentDistance || pinch.initialDistance <= 0) return;
+    const scale = currentDistance / pinch.initialDistance;
+    setHourHeight(clampHeight(pinch.initialHourHeight * scale));
+  }, [clampHeight]);
+  const finishTouchPointer = q$1((e2) => {
+    if (e2.pointerType !== "touch") return;
+    touchPointersRef.current.delete(e2.pointerId);
+    if (touchPointersRef.current.size !== 2) {
+      pinchGestureRef.current = null;
+      return;
     }
-  }, [defaultHeight, minHeight2, maxHeight2]);
-  const handleTouchEnd = q$1(() => {
-    initialPinchDistanceRef.current = null;
-    initialHourHeightRef.current = null;
-  }, []);
+    const initialDistance = pointerDistance(touchPointersRef.current);
+    pinchGestureRef.current = initialDistance && initialDistance > 0 ? { initialDistance, initialHourHeight: hourHeight } : null;
+  }, [hourHeight]);
   const zoomToMax = q$1(() => {
     setHourHeight(maxHeight2);
   }, [maxHeight2]);
@@ -25639,9 +25656,10 @@ function useTimelineZoom(options) {
     zoomToMax,
     zoomHandlers: {
       onWheel: handleWheel,
-      onTouchStart: handleTouchStart,
-      onTouchMove: handleTouchMove,
-      onTouchEnd: handleTouchEnd
+      onPointerDown: handlePointerDown,
+      onPointerMove: handlePointerMove,
+      onPointerUp: finishTouchPointer,
+      onPointerCancel: finishTouchPointer
     }
   };
 }
@@ -59717,23 +59735,6 @@ function DayColumnBody({
     }
     finishRangeGesture(event, true);
   };
-  const handleRangeRailPointerDown = (event) => {
-    event.stopPropagation();
-    if (!beginRangeGesture(event)) return;
-    event.preventDefault();
-  };
-  const handleRangeRailPointerMove = (event) => {
-    event.stopPropagation();
-    updateRangeGesture(event);
-  };
-  const handleRangeRailPointerUp = (event) => {
-    event.stopPropagation();
-    finishRangeGesture(event);
-  };
-  const handleRangeRailPointerCancel = (event) => {
-    event.stopPropagation();
-    finishRangeGesture(event, true);
-  };
   return /* @__PURE__ */ u2(
     "div",
     {
@@ -59754,22 +59755,6 @@ function DayColumnBody({
             ticks: (scale ?? buildTimelineScale({ hourHeight, maxHours })).ticks,
             height: timelineOffsetFromMinute(timelineVisibleEndMinute(maxHours), hourHeight),
             variant: "grid"
-          }
-        ),
-        /* @__PURE__ */ u2(
-          "div",
-          {
-            class: "timeline-range-create-rail",
-            "aria-label": "拖动此边缘选择时段",
-            title: "拖动此边缘：选择一个时段",
-            onPointerDown: (event) => handleRangeRailPointerDown(event),
-            onPointerMove: (event) => handleRangeRailPointerMove(event),
-            onPointerUp: (event) => handleRangeRailPointerUp(event),
-            onPointerCancel: (event) => handleRangeRailPointerCancel(event),
-            onClick: (event) => {
-              event.preventDefault();
-              event.stopPropagation();
-            }
           }
         ),
         dragSelection ? /* @__PURE__ */ u2(
