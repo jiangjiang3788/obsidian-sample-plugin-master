@@ -23,6 +23,7 @@ function normalizeHeatmapConfig(value: Record<string, any> | undefined): Heatmap
 
     return {
         displayMode: v.displayMode === 'habit' || v.displayMode === 'count' ? v.displayMode : base.displayMode,
+        recordScope: v.recordScope === 'all' ? 'all' : 'source',
         sourceRecordTypeId: typeof v.sourceRecordTypeId === 'string' ? v.sourceRecordTypeId : base.sourceRecordTypeId,
         goalPaths: Array.isArray(v.goalPaths)
             ? v.goalPaths.filter((x): x is string => typeof x === 'string')
@@ -80,13 +81,23 @@ export function HeatmapViewEditor({ value, onChange, module, dataStore }: ViewEd
             <ConfigSection title="数据来源">
                 <ConfigFieldRow
                     label="源记录类型"
-                    description="视图将从此记录类型模板的评分字段中读取 表情符号/图片/颜色映射。"
+                    description="指定打卡记录类型及其评分→Emoji/图片/颜色映射；仅源类型模式下会同时过滤其他记录。"
                 >
                     <SimpleSelect
                         value={config.sourceRecordTypeId}
                         options={recordTypeOptions}
                         onChange={val => onChange({ sourceRecordTypeId: val })}
                         placeholder="-- 请选择用于打卡的记录类型 --"
+                    />
+                </ConfigFieldRow>
+                <ConfigFieldRow
+                    label="记录范围"
+                    description="默认只显示选中的源记录类型（如果没有选择，则兼容显示所有）；需要目标活动总览时可改为所有记录类型。"
+                >
+                    <SimpleSelect
+                        value={config.recordScope}
+                        options={[{ value: 'source', label: '仅源记录类型' }, { value: 'all', label: '所有记录类型（兼容原模式）' }]}
+                        onChange={val => onChange({ recordScope: val === 'all' ? 'all' : 'source' })}
                     />
                 </ConfigFieldRow>
             </ConfigSection>

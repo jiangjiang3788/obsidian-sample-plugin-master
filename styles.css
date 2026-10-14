@@ -2272,12 +2272,22 @@
   --think-data-grid-row-height: var(--think-control-height-sm);
   --think-data-grid-cell-padding-block: var(--think-rhythm-inline);
   --think-data-grid-cell-padding-inline: var(--think-rhythm-row);
-  --think-data-grid-border: color-mix(in srgb, var(--think-border-control) 72%, transparent);
+  --think-data-grid-border: var(--think-border-control);
   --think-data-grid-frame-border: var(--think-border-frame);
   --think-data-grid-header-bg: var(--think-surface-subtle);
-  --think-data-grid-hover-bg: color-mix(in srgb, var(--think-bg-hover) 40%, transparent);
+  --think-data-grid-hover-bg: var(--think-bg-hover);
   --think-data-grid-selected-bg: var(--think-surface-selection);
   --think-data-grid-heatmap-cell-size: 36px;
+}
+
+/* Keep core grid geometry visible even where CSS color-mix() is unavailable.
+ * Enhance in one shared place rather than adding per-view/mobile patches. */
+
+@supports (color: color-mix(in srgb, white 50%, black)) {
+  .think-os {
+    --think-data-grid-border: color-mix(in srgb, var(--think-border-control) 72%, transparent);
+    --think-data-grid-hover-bg: color-mix(in srgb, var(--think-bg-hover) 40%, transparent);
+  }
 }
 
 .think-os .think-data-grid-scroll {
@@ -2394,11 +2404,21 @@
   --think-viz-row-height-md: 32px;
   --think-viz-plot-height-sm: 112px;
   --think-viz-plot-height-md: 300px;
-  --think-viz-guide: color-mix(in srgb, var(--think-border-subtle) 58%, transparent);
-  --think-viz-guide-strong: color-mix(in srgb, var(--think-border-strong) 72%, transparent);
-  --think-viz-track: color-mix(in srgb, var(--think-bg-surface-2) 72%, var(--think-bg-canvas));
-  --think-viz-hover: color-mix(in srgb, var(--think-bg-hover) 44%, transparent);
-  --think-viz-selection: color-mix(in srgb, var(--think-accent) 10%, transparent);
+  --think-viz-guide: var(--think-border-subtle);
+  --think-viz-guide-strong: var(--think-border-strong);
+  --think-viz-track: var(--think-bg-surface-2);
+  --think-viz-hover: var(--think-bg-hover);
+  --think-viz-selection: var(--think-surface-selection);
+}
+
+@supports (color: color-mix(in srgb, white 50%, black)) {
+  .think-os {
+    --think-viz-guide: color-mix(in srgb, var(--think-border-subtle) 58%, transparent);
+    --think-viz-guide-strong: color-mix(in srgb, var(--think-border-strong) 72%, transparent);
+    --think-viz-track: color-mix(in srgb, var(--think-bg-surface-2) 72%, var(--think-bg-canvas));
+    --think-viz-hover: color-mix(in srgb, var(--think-bg-hover) 44%, transparent);
+    --think-viz-selection: color-mix(in srgb, var(--think-accent) 10%, transparent);
+  }
 }
 
 .think-os .think-viz-surface {
@@ -6410,7 +6430,7 @@
     min-width: 0;
     padding: var(--think-space-3);
     font-size: var(--think-data-grid-font-size);
-    container-type: inline-size;
+    container: think-heatmap / inline-size;
 }
 
 .heatmap-view-wrapper,
@@ -6688,10 +6708,9 @@ body.theme-dark .heatmap-cell.empty {
     background: color-mix(in srgb, var(--think-data-5) 14%, transparent);
 }
 
-@container (max-width: 560px) {
-    .heatmap-container {
+@container think-heatmap (max-width: 560px) {
+    .heatmap-container > * {
         --heatmap-cell-size: 32px;
-        padding: var(--think-space-2);
     }
 
     .heatmap-goal-header.row-inline-layout {
@@ -6708,8 +6727,8 @@ body.theme-dark .heatmap-cell.empty {
     }
 }
 
-@container (max-width: 400px) {
-    .heatmap-container { --heatmap-cell-size: 30px; }
+@container think-heatmap (max-width: 400px) {
+    .heatmap-container > * { --heatmap-cell-size: 30px; }
     .heatmap-view-wrapper,
     .heatmap-day-view,
     .heatmap-goal-day-view { gap: var(--think-space-3); }
@@ -6979,6 +6998,7 @@ body.theme-dark .heatmap-cell.empty {
 .timeline-view-wrapper {
   --timeline-day-width: 150px;
   --timeline-time-axis-width: 90px;
+  container: think-timeline / inline-size;
   overflow-x: auto;
   color: var(--think-text-primary);
 }
@@ -7041,6 +7061,7 @@ body.theme-dark .heatmap-cell.empty {
   overflow: visible;
   border: 1px solid var(--think-accent);
   border-radius: var(--think-radius-xs);
+  background: var(--think-surface-selection);
   background: color-mix(in srgb, var(--think-accent) 16%, transparent);
   pointer-events: none;
 }
@@ -7154,6 +7175,7 @@ body.theme-dark .heatmap-cell.empty {
   gap: var(--think-space-2);
   overflow: hidden;
   padding: var(--think-space-1) var(--think-space-2);
+  background: var(--think-surface-subtle);
   background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 14%, transparent);
   color: var(--think-text-primary);
   font-size: var(--think-viz-font-meta);
@@ -7189,6 +7211,7 @@ body.theme-dark .heatmap-cell.empty {
 }
 
 .timeline-task-block--open .timeline-task-content {
+  background: var(--think-bg-surface-1);
   background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 7%, transparent);
 }
 
@@ -7197,6 +7220,7 @@ body.theme-dark .heatmap-cell.empty {
 }
 
 .timeline-task-block--done .timeline-task-content {
+  background: var(--think-surface-selection);
   background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 18%, transparent);
 }
 
@@ -7251,8 +7275,9 @@ body.theme-dark .heatmap-cell.empty {
   min-width: 104px;
 }
 
-@container (max-width: 720px) {
-  .timeline-view-wrapper {
+@container think-timeline (max-width: 720px) {
+  .timeline-sticky-header,
+  .timeline-scrollable-body {
     --timeline-day-width: 124px;
     --timeline-time-axis-width: 68px;
   }
@@ -7262,8 +7287,9 @@ body.theme-dark .heatmap-cell.empty {
   }
 }
 
-@container (max-width: 480px) {
-  .timeline-view-wrapper {
+@container think-timeline (max-width: 480px) {
+  .timeline-sticky-header,
+  .timeline-scrollable-body {
     --timeline-day-width: 112px;
     --timeline-time-axis-width: 66px;
   }

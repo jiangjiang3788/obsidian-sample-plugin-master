@@ -5,7 +5,7 @@
     min-width: 0;
     padding: var(--think-space-3);
     font-size: var(--think-data-grid-font-size);
-    container-type: inline-size;
+    container: think-heatmap / inline-size;
 }
 
 .heatmap-view-wrapper,
@@ -280,10 +280,9 @@ body.theme-dark .heatmap-cell.empty {
     background: color-mix(in srgb, var(--think-data-5) 14%, transparent);
 }
 
-@container (max-width: 560px) {
-    .heatmap-container {
+@container think-heatmap (max-width: 560px) {
+    .heatmap-container > * {
         --heatmap-cell-size: 32px;
-        padding: var(--think-space-2);
     }
 
     .heatmap-goal-header.row-inline-layout {
@@ -300,8 +299,8 @@ body.theme-dark .heatmap-cell.empty {
     }
 }
 
-@container (max-width: 400px) {
-    .heatmap-container { --heatmap-cell-size: 30px; }
+@container think-heatmap (max-width: 400px) {
+    .heatmap-container > * { --heatmap-cell-size: 30px; }
     .heatmap-view-wrapper,
     .heatmap-day-view,
     .heatmap-goal-day-view { gap: var(--think-space-3); }

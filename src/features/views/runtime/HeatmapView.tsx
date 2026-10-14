@@ -69,8 +69,12 @@ export function HeatmapView({
     const heatmapSourceRecordTypeId = resolveRecordTypeId(config.sourceRecordTypeId);
 
     const resolveCellRatingMapping = (goalPath: string, presetContext?: HeatmapPresetContext): Map<string, string> => {
-        if (presetContext?.ratingOptions?.length) return buildHeatmapRatingMapping(presetContext.ratingOptions);
-        return ratingMappingsCache.get(inputSettings, heatmapSourceRecordTypeId || '', goalPath);
+        const sourceTypeId = presetContext?.sourceRecordTypeId
+            ? resolveRecordTypeId(presetContext.sourceRecordTypeId)
+            : heatmapSourceRecordTypeId;
+        const fallback = ratingMappingsCache.get(inputSettings, sourceTypeId || '', goalPath);
+        if (!presetContext?.ratingOptions?.length) return fallback;
+        return buildHeatmapRatingMapping(presetContext.ratingOptions, fallback);
     };
 
     const inferredRecordTypeIdByGoal = useMemo(() => inferHeatmapRecordTypeIdByGoal(items), [items]);

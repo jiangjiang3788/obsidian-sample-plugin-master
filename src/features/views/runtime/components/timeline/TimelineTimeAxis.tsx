@@ -61,7 +61,7 @@ export function TimelineTimeAxis({
   return (
     <div
       class="time-axis"
-      style={`flex:0 0 ${width}px;height:${grid.height}px;`}
+      style={`flex:0 0 var(--timeline-time-axis-width, ${width}px);height:${grid.height}px;`}
       title="双击：最大缩放并定位到当前时间"
       onDblClick={handleDoubleClick}
     >

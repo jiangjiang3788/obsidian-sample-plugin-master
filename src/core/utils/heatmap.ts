@@ -42,7 +42,8 @@ export function getEffectiveDisplayCount(item: RecordViewItem): number {
 }
 
 export const isImagePath = (value: string): boolean => {
-    return /\.(png|svg|jpg|jpeg|gif)$/i.test(value);
+    // Images can be synced from Windows and may be remote links with query parameters.
+    return /\.(png|svg|jpg|jpeg|gif|webp|avif)(?:[?#].*)?$/i.test(value.trim());
 };
 
 export const isHexColor = (value: string): boolean => {

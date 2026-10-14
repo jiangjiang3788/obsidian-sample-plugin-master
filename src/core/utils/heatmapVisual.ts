@@ -30,8 +30,14 @@ function readExtra(item: RecordViewItem | undefined, key: string): unknown {
   return (item as any)?.extra?.[key];
 }
 
-export function buildHeatmapRatingMapping(options?: HeatmapRatingOptionLike[] | null): Map<string, string> {
-  const mapping = new Map<string, string>();
+export function buildHeatmapRatingMapping(
+  options?: HeatmapRatingOptionLike[] | null,
+  fallbackMapping?: ReadonlyMap<string, string>,
+): Map<string, string> {
+  // Goal-specific options override the RecordType template while leaving any
+  // other ratings available. This prevents a partial Goal override from showing
+  // raw numbers instead of the shared emoji/image choices.
+  const mapping = new Map<string, string>(fallbackMapping || []);
   for (const option of options || []) {
     const value = firstNonEmptyText(option?.value, option);
     const label = firstNonEmptyText(option?.label, option?.value, option);

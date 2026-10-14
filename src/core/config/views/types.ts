@@ -20,6 +20,8 @@ export interface StatisticsViewConfig extends ViewTemporalConfig {
 /** HeatmapView 默认配置（供视图 + 编辑器复用）。 */
 export interface HeatmapViewConfig extends ViewTemporalConfig {
   displayMode: 'habit' | 'count';
+  /** Default: display the selected source Record Type; all keeps the legacy multi-type heatmap. */
+  recordScope: 'source' | 'all';
   sourceRecordTypeId: string;
   goalPaths: string[];
   maxDailyChecks: number;

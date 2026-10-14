@@ -16,7 +16,7 @@ export function TimelineOverallSummary(props: {
   untrackedLabel: string;
 }) {
   const { width, goalSummary, currentView, goalHours, totalHours, goalOrder, colorMap, untrackedLabel } = props;
-  const containerStyle = { flex: `0 0 ${width}px` };
+  const containerStyle = { flex: `0 0 var(--timeline-time-axis-width, ${width}px)` };
   return (
     <div class="summary-progress-container" style={containerStyle}>
       <div class="summary-title" title={goalSummary ? '实际时间只统计任务计时记录；悬浮每一行查看目标时间、实际时间和子目标明细。' : undefined}>

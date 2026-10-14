@@ -19327,6 +19327,7 @@ const EXCEL_VIEW_DEFAULT_CONFIG = {
 const HEATMAP_VIEW_DEFAULT_CONFIG = {
   dateRole: "default",
   displayMode: "habit",
+  recordScope: "source",
   sourceRecordTypeId: "",
   goalPaths: [],
   maxDailyChecks: 10,
@@ -20915,7 +20916,7 @@ function getEffectiveDisplayCount(item) {
   return item.displayCount || 1;
 }
 const isImagePath = (value) => {
-  return /\.(png|svg|jpg|jpeg|gif)$/i.test(value);
+  return /\.(png|svg|jpg|jpeg|gif|webp|avif)(?:[?#].*)?$/i.test(value.trim());
 };
 const isHexColor = (value) => {
   return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value);
@@ -20932,10 +20933,15 @@ function buildRatingMapping(inputSettings, recordTypeId) {
 }
 class RatingMappingCache {
   cache = /* @__PURE__ */ new Map();
+  lastSettings = null;
   clear() {
     this.cache.clear();
   }
   get(inputSettings, recordTypeId, goalPath) {
+    if (this.lastSettings !== inputSettings) {
+      this.clear();
+      this.lastSettings = inputSettings;
+    }
     const cacheKey = `${recordTypeId}:${goalPath || "default"}`;
     const cached2 = this.cache.get(cacheKey);
     if (cached2) return cached2;
@@ -20966,8 +20972,8 @@ function firstNonEmptyText$1(...values2) {
 function readExtra(item, key) {
   return item?.extra?.[key];
 }
-function buildHeatmapRatingMapping(options) {
-  const mapping = /* @__PURE__ */ new Map();
+function buildHeatmapRatingMapping(options, fallbackMapping) {
+  const mapping = new Map(fallbackMapping || []);
   for (const option of options || []) {
     const value = firstNonEmptyText$1(option?.value, option);
     const label = firstNonEmptyText$1(option?.label, option?.value, option);
@@ -51057,10 +51063,13 @@ function openRecordOrigin({ app, item, target = "_blank" }) {
   window.open(uri, target);
 }
 function resolveVaultResourcePath(app, path) {
+  const source = String(path || "").trim();
+  if (/^(?:https?:|data:|blob:|app:|capacitor:|file:|content:|obsidian:)/i.test(source)) return source;
+  const normalized2 = source.replace(/\\/g, "/").replace(/^\.\//, "");
   try {
-    return app?.vault?.adapter?.getResourcePath?.(path) || path;
+    return app?.vault?.adapter?.getResourcePath?.(normalized2) || normalized2;
   } catch {
-    return path;
+    return normalized2;
   }
 }
 const BACKDROP_CLOSE_EVENTS = ["pointerdown", "click"];
@@ -57246,6 +57255,7 @@ function normalizeHeatmapConfig(value) {
   const v2 = value ?? {};
   return {
     displayMode: v2.displayMode === "habit" || v2.displayMode === "count" ? v2.displayMode : base.displayMode,
+    recordScope: v2.recordScope === "all" ? "all" : "source",
     sourceRecordTypeId: typeof v2.sourceRecordTypeId === "string" ? v2.sourceRecordTypeId : base.sourceRecordTypeId,
     goalPaths: Array.isArray(v2.goalPaths) ? v2.goalPaths.filter((x2) => typeof x2 === "string") : base.goalPaths,
     maxDailyChecks: typeof v2.maxDailyChecks === "number" ? v2.maxDailyChecks : base.maxDailyChecks,
@@ -57289,22 +57299,39 @@ function HeatmapViewEditor({ value, onChange, module: module2, dataStore }) {
     {
       title: "打卡视图",
       children: [
-        /* @__PURE__ */ u2(ConfigSection, { title: "数据来源", children: /* @__PURE__ */ u2(
-          ConfigFieldRow,
-          {
-            label: "源记录类型",
-            description: "视图将从此记录类型模板的评分字段中读取 表情符号/图片/颜色映射。",
-            children: /* @__PURE__ */ u2(
-              SimpleSelect,
-              {
-                value: config2.sourceRecordTypeId,
-                options: recordTypeOptions,
-                onChange: (val) => onChange({ sourceRecordTypeId: val }),
-                placeholder: "-- 请选择用于打卡的记录类型 --"
-              }
-            )
-          }
-        ) }),
+        /* @__PURE__ */ u2(ConfigSection, { title: "数据来源", children: [
+          /* @__PURE__ */ u2(
+            ConfigFieldRow,
+            {
+              label: "源记录类型",
+              description: "指定打卡记录类型及其评分→Emoji/图片/颜色映射；仅源类型模式下会同时过滤其他记录。",
+              children: /* @__PURE__ */ u2(
+                SimpleSelect,
+                {
+                  value: config2.sourceRecordTypeId,
+                  options: recordTypeOptions,
+                  onChange: (val) => onChange({ sourceRecordTypeId: val }),
+                  placeholder: "-- 请选择用于打卡的记录类型 --"
+                }
+              )
+            }
+          ),
+          /* @__PURE__ */ u2(
+            ConfigFieldRow,
+            {
+              label: "记录范围",
+              description: "默认只显示选中的源记录类型（如果没有选择，则兼容显示所有）；需要目标活动总览时可改为所有记录类型。",
+              children: /* @__PURE__ */ u2(
+                SimpleSelect,
+                {
+                  value: config2.recordScope,
+                  options: [{ value: "source", label: "仅源记录类型" }, { value: "all", label: "所有记录类型（兼容原模式）" }],
+                  onChange: (val) => onChange({ recordScope: val === "all" ? "all" : "source" })
+                }
+              )
+            }
+          )
+        ] }),
         /* @__PURE__ */ u2(ConfigSection, { title: "目标范围", children: /* @__PURE__ */ u2(
           ConfigFieldRow,
           {
@@ -59856,7 +59883,7 @@ function DayColumnBody({
 }
 function TimelineOverallSummary(props) {
   const { width: width2, goalSummary, currentView, goalHours, totalHours, goalOrder, colorMap, untrackedLabel } = props;
-  const containerStyle = { flex: `0 0 ${width2}px` };
+  const containerStyle = { flex: `0 0 var(--timeline-time-axis-width, ${width2}px)` };
   return /* @__PURE__ */ u2("div", { class: "summary-progress-container", style: containerStyle, children: [
     /* @__PURE__ */ u2("div", { class: "summary-title", title: goalSummary ? "实际时间只统计任务计时记录；悬浮每一行查看目标时间、实际时间和子目标明细。" : void 0, children: "总结" }),
     /* @__PURE__ */ u2("div", { class: "summary-content", children: goalSummary ? /* @__PURE__ */ u2(GoalAllocationBlock, { summary: goalSummary, currentView, metric: "deviation" }) : totalHours > 0 ? /* @__PURE__ */ u2(ProgressBlock, { goalHours, order: goalOrder, totalHours, colorMap, untrackedLabel }) : null })
@@ -59905,7 +59932,7 @@ function TimelineTimeAxis({
     "div",
     {
       class: "time-axis",
-      style: `flex:0 0 ${width2}px;height:${grid.height}px;`,
+      style: `flex:0 0 var(--timeline-time-axis-width, ${width2}px);height:${grid.height}px;`,
       title: "双击：最大缩放并定位到当前时间",
       onDblClick: handleDoubleClick,
       children: [
@@ -61202,11 +61229,28 @@ function dateKeyOf(item) {
 function itemGoalPath(item) {
   return normalizeGoalPath(String(item.goalPath || item.extra?.["目标"] || "")) || "";
 }
+function canonicalRecordTypeId(rawValue) {
+  const raw = firstText(rawValue);
+  if (!raw) return "";
+  if (raw === "打卡") return "core.habit";
+  if (raw === "任务") return "core.task";
+  if (raw === "思考" || raw === "闪念") return "core.thought";
+  return raw.startsWith("core.") ? raw : `core.${raw}`;
+}
 function itemRecordType(item) {
-  const raw = firstText(item.recordType);
-  if (raw === "habit" || raw === "打卡") return "core.habit";
-  if (raw === "task" || raw === "任务") return "core.task";
-  return raw.startsWith("core.") ? raw : raw;
+  return canonicalRecordTypeId(item.recordType);
+}
+function selectedSourceRecordTypeId(config2, inputSettings) {
+  const selected = firstText(config2.sourceRecordTypeId);
+  if (!selected) return "";
+  const template = (inputSettings?.recordTypes || []).find(
+    (type) => type.id === selected || type.recordTypeId === selected || type.name === selected
+  );
+  if (template) return canonicalRecordTypeId(template.recordTypeId || template.id);
+  if (selected.startsWith("core.") || ["habit", "thought", "task", "打卡", "思考", "任务"].includes(selected)) {
+    return canonicalRecordTypeId(selected);
+  }
+  return "";
 }
 function extractRatingOptions(template) {
   const fields = Array.isArray(template?.fields) ? template.fields : [];
@@ -61219,7 +61263,7 @@ function buildPresetLookups(goalSettings) {
   for (const [index, raw] of (goalSettings?.goalTemplates || []).entries()) {
     const template = raw;
     const goalPath = normalizeGoalPath(firstText(template.goalPath));
-    const recordTypeId = firstText(template.recordTypeId) || firstText(template.recordTypeId);
+    const recordTypeId = firstText(template.recordTypeId);
     if (!goalPath || !recordTypeId || template.enabled === false) continue;
     const id = firstText(template.id) || `${goalPath}\0${recordTypeId}`;
     const meta = {
@@ -61244,10 +61288,12 @@ function rootPath(goalPath) {
 function buildHeatmapViewModel(params) {
   const { items, module: module2, goals = [], goalSettings } = params;
   const config2 = module2.viewConfig || {};
+  const sourceTypeId = config2.recordScope === "all" ? "" : selectedSourceRecordTypeId(config2, params.inputSettings);
+  const scopedItems = sourceTypeId ? items.filter((item) => itemRecordType(item) === sourceTypeId) : items;
   const configured = Array.isArray(config2.goalPaths) ? config2.goalPaths.map((value) => normalizeGoalPath(String(value)) || "").filter((path) => !!path) : [];
   const configuredSet = new Set(configured);
   const inferred = /* @__PURE__ */ new Set();
-  for (const item of items) {
+  for (const item of scopedItems) {
     const path = itemGoalPath(item);
     if (path) inferred.add(path);
   }
@@ -61292,10 +61338,11 @@ function buildHeatmapViewModel(params) {
     return entry;
   }
   for (const preset of lookups.allHabits) {
+    if (sourceTypeId && canonicalRecordTypeId(preset.recordTypeId) !== sourceTypeId) continue;
     if (configuredSet.size && !configuredSet.has(preset.goalPath)) continue;
     ensureEntry(preset.goalPath, preset);
   }
-  for (const item of items) {
+  for (const item of scopedItems) {
     const date2 = dateKeyOf(item);
     const path = itemGoalPath(item);
     if (!date2 || !path) continue;
@@ -61337,7 +61384,7 @@ function HeatmapView({
   const ratingMappingsCache = T$1(() => new RatingMappingCache(), []);
   const normalizedCurrentView = currentView === "日" || currentView === "day" ? "天" : currentView;
   const isDayView = normalizedCurrentView === "天";
-  const dataModel = T$1(() => buildHeatmapViewModel({ items, module: module2, goals, goalSettings }), [items, module2, inputSettings, goals, goalSettings]);
+  const dataModel = T$1(() => buildHeatmapViewModel({ items, module: module2, inputSettings, goals, goalSettings }), [items, module2, inputSettings, goals, goalSettings]);
   const goalPathsToTrack = dataModel.goalPathsToTrack;
   const dataByGoalAndDate = dataModel.dataByGoalAndDate;
   const goalGroupsToDisplay = T$1(() => filterGoalHeatmapGroups(dataModel.goalGroups), [dataModel.goalGroups]);
@@ -61348,8 +61395,10 @@ function HeatmapView({
   });
   const heatmapSourceRecordTypeId = resolveRecordTypeId2(config2.sourceRecordTypeId);
   const resolveCellRatingMapping = (goalPath, presetContext) => {
-    if (presetContext?.ratingOptions?.length) return buildHeatmapRatingMapping(presetContext.ratingOptions);
-    return ratingMappingsCache.get(inputSettings, heatmapSourceRecordTypeId || "", goalPath);
+    const sourceTypeId = presetContext?.sourceRecordTypeId ? resolveRecordTypeId2(presetContext.sourceRecordTypeId) : heatmapSourceRecordTypeId;
+    const fallback = ratingMappingsCache.get(inputSettings, sourceTypeId || "", goalPath);
+    if (!presetContext?.ratingOptions?.length) return fallback;
+    return buildHeatmapRatingMapping(presetContext.ratingOptions, fallback);
   };
   const inferredRecordTypeIdByGoal = T$1(() => inferHeatmapRecordTypeIdByGoal(items), [items]);
   const resolveCreateRecordTypeId = (goalPath, item, sourceRecordTypeId) => resolveHeatmapCreateRecordTypeId({

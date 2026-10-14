@@ -26,6 +26,8 @@ export interface HeatmapGoalGroup {
 
 type HeatmapViewConfigLike = {
     goalPaths?: unknown;
+    sourceRecordTypeId?: unknown;
+    recordScope?: unknown;
 };
 
 type HeatmapGoalTemplateLike = GoalTemplateStorageRow & { recordTypeId?: unknown; id?: unknown };
@@ -65,11 +67,34 @@ function itemGoalPath(item: RecordViewItem): string {
     return normalizeGoalPath(String(item.goalPath || item.extra?.['目标'] || '')) || '';
 }
 
+function canonicalRecordTypeId(rawValue: unknown): string {
+    const raw = firstText(rawValue);
+    if (!raw) return '';
+    if (raw === '打卡') return 'core.habit';
+    if (raw === '任务') return 'core.task';
+    if (raw === '思考' || raw === '闪念') return 'core.thought';
+    return raw.startsWith('core.') ? raw : `core.${raw}`;
+}
+
 function itemRecordType(item: RecordViewItem): string {
-    const raw = firstText(item.recordType);
-    if (raw === 'habit' || raw === '打卡') return 'core.habit';
-    if (raw === 'task' || raw === '任务') return 'core.task';
-    return raw.startsWith('core.') ? raw : raw;
+    return canonicalRecordTypeId(item.recordType);
+}
+
+/** Resolve Capture Template ID -> canonical recordTypeId before filtering.
+ * Never compare UI template IDs directly to stored Record type names. */
+function selectedSourceRecordTypeId(config: HeatmapViewConfigLike, inputSettings: InputSettings): string {
+    const selected = firstText(config.sourceRecordTypeId);
+    if (!selected) return '';
+    const template = (inputSettings?.recordTypes || []).find((type) =>
+        type.id === selected || type.recordTypeId === selected || type.name === selected,
+    );
+    if (template) return canonicalRecordTypeId(template.recordTypeId || template.id);
+    // A canonical id can be persisted directly when the source template has changed.
+    if (selected.startsWith('core.') || ['habit', 'thought', 'task', '打卡', '思考', '任务'].includes(selected)) {
+        return canonicalRecordTypeId(selected);
+    }
+    // An unresolved custom template id must not accidentally hide every record.
+    return '';
 }
 
 function extractRatingOptions(template: GoalTemplateStorageRow | null | undefined): HeatmapRatingOptionLike[] {
@@ -91,7 +116,7 @@ function buildPresetLookups(goalSettings: GoalSettings | undefined): {
     for (const [index, raw] of (goalSettings?.goalTemplates || []).entries()) {
         const template: HeatmapGoalTemplateLike = raw;
         const goalPath = normalizeGoalPath(firstText(template.goalPath));
-        const recordTypeId = firstText(template.recordTypeId) || firstText(template.recordTypeId);
+        const recordTypeId = firstText(template.recordTypeId);
         if (!goalPath || !recordTypeId || template.enabled === false) continue;
         const id = firstText(template.id) || `${goalPath}\u0000${recordTypeId}`;
         const meta: PresetMeta = {
@@ -128,8 +153,12 @@ export function buildHeatmapViewModel(params: {
     goalGroups: HeatmapGoalGroup[];
 } {
     const { items, module, goals = [], goalSettings } = params;
-    void params.inputSettings;
     const config = (module.viewConfig || {}) as HeatmapViewConfigLike;
+    // With a selected source type, the heatmap represents *that* activity,
+    // not every Thought/Task sharing the Goal. `all` is an explicit overview mode.
+    // With no source selected, retain the historical Goal-based behaviour.
+    const sourceTypeId = config.recordScope === 'all' ? '' : selectedSourceRecordTypeId(config, params.inputSettings);
+    const scopedItems = sourceTypeId ? items.filter((item) => itemRecordType(item) === sourceTypeId) : items;
     const configured = Array.isArray(config.goalPaths)
         ? config.goalPaths
             .map((value) => normalizeGoalPath(String(value)) || '')
@@ -138,7 +167,7 @@ export function buildHeatmapViewModel(params: {
     const configuredSet = new Set(configured);
 
     const inferred = new Set<string>();
-    for (const item of items) {
+    for (const item of scopedItems) {
         const path = itemGoalPath(item);
         if (path) inferred.add(path);
     }
@@ -188,11 +217,12 @@ export function buildHeatmapViewModel(params: {
     }
 
     for (const preset of lookups.allHabits) {
+        if (sourceTypeId && canonicalRecordTypeId(preset.recordTypeId) !== sourceTypeId) continue;
         if (configuredSet.size && !configuredSet.has(preset.goalPath)) continue;
         ensureEntry(preset.goalPath, preset);
     }
 
-    for (const item of items) {
+    for (const item of scopedItems) {
         const date = dateKeyOf(item);
         const path = itemGoalPath(item);
         if (!date || !path) continue;

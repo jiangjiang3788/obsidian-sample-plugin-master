@@ -4,6 +4,7 @@
 .timeline-view-wrapper {
   --timeline-day-width: 150px;
   --timeline-time-axis-width: 90px;
+  container: think-timeline / inline-size;
   overflow-x: auto;
   color: var(--think-text-primary);
 }
@@ -67,6 +68,7 @@
   overflow: visible;
   border: 1px solid var(--think-accent);
   border-radius: var(--think-radius-xs);
+  background: var(--think-surface-selection);
   background: color-mix(in srgb, var(--think-accent) 16%, transparent);
   pointer-events: none;
 }
@@ -179,6 +181,7 @@
   gap: var(--think-space-2);
   overflow: hidden;
   padding: var(--think-space-1) var(--think-space-2);
+  background: var(--think-surface-subtle);
   background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 14%, transparent);
   color: var(--think-text-primary);
   font-size: var(--think-viz-font-meta);
@@ -213,6 +216,7 @@
 }
 
 .timeline-task-block--open .timeline-task-content {
+  background: var(--think-bg-surface-1);
   background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 7%, transparent);
 }
 
@@ -221,6 +225,7 @@
 }
 
 .timeline-task-block--done .timeline-task-content {
+  background: var(--think-surface-selection);
   background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 18%, transparent);
 }
 
@@ -277,8 +282,9 @@
 }
 
 
-@container (max-width: 720px) {
-  .timeline-view-wrapper {
+@container think-timeline (max-width: 720px) {
+  .timeline-sticky-header,
+  .timeline-scrollable-body {
     --timeline-day-width: 124px;
     --timeline-time-axis-width: 68px;
   }
@@ -288,8 +294,9 @@
   }
 }
 
-@container (max-width: 480px) {
-  .timeline-view-wrapper {
+@container think-timeline (max-width: 480px) {
+  .timeline-sticky-header,
+  .timeline-scrollable-body {
     --timeline-day-width: 112px;
     --timeline-time-axis-width: 66px;
   }

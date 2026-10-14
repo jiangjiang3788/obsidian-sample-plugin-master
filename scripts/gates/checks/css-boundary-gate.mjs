@@ -174,7 +174,6 @@ for (const [file, metrics] of Object.entries(snapshot.scripts)) {
 }
 
 const requiredMainFragments = [
-  '@layer think.reset',
   'tokens/semantic.css',
   'tokens/density.css',
   'tokens/data-colors.css',
@@ -211,6 +210,14 @@ const requiredMainFragments = [
 ];
 const mainCssPath = path.join(ROOT, 'src/styles/main.css');
 const mainCss = fs.existsSync(mainCssPath) ? fs.readFileSync(mainCssPath, 'utf8') : '';
+// Obsidian host/theme styles are not under our layer-order control. Keep plugin CSS
+// unlayered; enforce the published policy instead of requiring the removed rule.
+for (const file of walk(path.join(SRC, 'styles'), (candidate) => candidate.endsWith('.css'))) {
+  if (/@layer\b/.test(stripComments(fs.readFileSync(file, 'utf8')))) {
+    violations.push({ file, loc: '1:1', message: 'Plugin CSS must remain unlayered for consistent Obsidian host/theme cascade.' });
+  }
+}
+
 for (const fragment of requiredMainFragments) {
   if (!mainCss.includes(fragment)) {
     violations.push({ file: mainCssPath, loc: '1:1', message: `CSS entry is missing “${fragment}”.` });

@@ -8,12 +8,21 @@
   --think-data-grid-row-height: var(--think-control-height-sm);
   --think-data-grid-cell-padding-block: var(--think-rhythm-inline);
   --think-data-grid-cell-padding-inline: var(--think-rhythm-row);
-  --think-data-grid-border: color-mix(in srgb, var(--think-border-control) 72%, transparent);
+  --think-data-grid-border: var(--think-border-control);
   --think-data-grid-frame-border: var(--think-border-frame);
   --think-data-grid-header-bg: var(--think-surface-subtle);
-  --think-data-grid-hover-bg: color-mix(in srgb, var(--think-bg-hover) 40%, transparent);
+  --think-data-grid-hover-bg: var(--think-bg-hover);
   --think-data-grid-selected-bg: var(--think-surface-selection);
   --think-data-grid-heatmap-cell-size: 36px;
+}
+
+/* Keep core grid geometry visible even where CSS color-mix() is unavailable.
+ * Enhance in one shared place rather than adding per-view/mobile patches. */
+@supports (color: color-mix(in srgb, white 50%, black)) {
+  .think-os {
+    --think-data-grid-border: color-mix(in srgb, var(--think-border-control) 72%, transparent);
+    --think-data-grid-hover-bg: color-mix(in srgb, var(--think-bg-hover) 40%, transparent);
+  }
 }
 
 .think-os .think-data-grid-scroll {

@@ -24,12 +24,18 @@ export function buildRatingMapping(
 /** Rating mapping depends on Goal × Record Type, not Theme metadata. */
 export class RatingMappingCache {
     private cache = new Map<string, Map<string, string>>();
+    private lastSettings: InputSettings | null = null;
 
     clear(): void {
         this.cache.clear();
     }
 
     get(inputSettings: InputSettings, recordTypeId: string, goalPath?: string): Map<string, string> {
+        // Settings replacements are immutable in the app store; drop stale mapping cache.
+        if (this.lastSettings !== inputSettings) {
+            this.clear();
+            this.lastSettings = inputSettings;
+        }
         const cacheKey = `${recordTypeId}:${goalPath || 'default'}`;
         const cached = this.cache.get(cacheKey);
         if (cached) return cached;

@@ -55,7 +55,7 @@ export const EXCEL_VIEW_DEFAULT_CONFIG: ExcelViewConfig = {
 
 export const HEATMAP_VIEW_DEFAULT_CONFIG: HeatmapViewConfig = {
   dateRole: 'default',
-  displayMode: 'habit', sourceRecordTypeId: '', goalPaths: [], maxDailyChecks: 10, allowManualEdit: true,
+  displayMode: 'habit', recordScope: 'source', sourceRecordTypeId: '', goalPaths: [], maxDailyChecks: 10, allowManualEdit: true,
 };
 
 export const PROGRESS_VIEW_DEFAULT_CONFIG: ProgressViewConfig = {

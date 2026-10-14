@@ -12,11 +12,20 @@
   --think-viz-row-height-md: 32px;
   --think-viz-plot-height-sm: 112px;
   --think-viz-plot-height-md: 300px;
-  --think-viz-guide: color-mix(in srgb, var(--think-border-subtle) 58%, transparent);
-  --think-viz-guide-strong: color-mix(in srgb, var(--think-border-strong) 72%, transparent);
-  --think-viz-track: color-mix(in srgb, var(--think-bg-surface-2) 72%, var(--think-bg-canvas));
-  --think-viz-hover: color-mix(in srgb, var(--think-bg-hover) 44%, transparent);
-  --think-viz-selection: color-mix(in srgb, var(--think-accent) 10%, transparent);
+  --think-viz-guide: var(--think-border-subtle);
+  --think-viz-guide-strong: var(--think-border-strong);
+  --think-viz-track: var(--think-bg-surface-2);
+  --think-viz-hover: var(--think-bg-hover);
+  --think-viz-selection: var(--think-surface-selection);
+}
+@supports (color: color-mix(in srgb, white 50%, black)) {
+  .think-os {
+    --think-viz-guide: color-mix(in srgb, var(--think-border-subtle) 58%, transparent);
+    --think-viz-guide-strong: color-mix(in srgb, var(--think-border-strong) 72%, transparent);
+    --think-viz-track: color-mix(in srgb, var(--think-bg-surface-2) 72%, var(--think-bg-canvas));
+    --think-viz-hover: color-mix(in srgb, var(--think-bg-hover) 44%, transparent);
+    --think-viz-selection: color-mix(in srgb, var(--think-accent) 10%, transparent);
+  }
 }
 .think-os .think-viz-surface {
   min-width: 0;
