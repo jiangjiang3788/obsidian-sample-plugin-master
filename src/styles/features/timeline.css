@@ -156,6 +156,7 @@
   left: var(--think-space-1);
   right: var(--think-space-1);
   min-height: 2px;
+  --timeline-fill-opacity: 0.12;
 }
 
 .timeline-task-link {
@@ -174,6 +175,7 @@
 }
 
 .timeline-task-content {
+  position: relative;
   display: flex;
   flex: 1 1 auto;
   align-items: center;
@@ -181,11 +183,27 @@
   gap: var(--think-space-2);
   overflow: hidden;
   padding: var(--think-space-1) var(--think-space-2);
-  background: var(--think-surface-subtle);
-  background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 14%, transparent);
+  border-inline-start: 2px solid var(--timeline-goal-color, #718096);
+  background: var(--think-bg-canvas, var(--background-primary, transparent));
   color: var(--think-text-primary);
   font-size: var(--think-viz-font-meta);
   line-height: var(--think-line-height-tight);
+}
+
+/* Use regular alpha compositing instead of color-mix() so Android WebView
+ * paints the same translucent goal tint without fading the label or emoji. */
+.timeline-task-content::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--timeline-goal-color, #718096);
+  opacity: var(--timeline-fill-opacity);
+  pointer-events: none;
+}
+
+.timeline-task-content > * {
+  position: relative;
+  z-index: 1;
 }
 
 .timeline-task-icon {
@@ -215,19 +233,13 @@
   outline-offset: -1px;
 }
 
-.timeline-task-block--open .timeline-task-content {
-  background: var(--think-bg-surface-1);
-  background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 7%, transparent);
-}
+.timeline-task-block--open { --timeline-fill-opacity: 0.11; }
 
 .timeline-task-block--open .timeline-task-status {
   opacity: 0.72;
 }
 
-.timeline-task-block--done .timeline-task-content {
-  background: var(--think-surface-selection);
-  background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 18%, transparent);
-}
+.timeline-task-block--done { --timeline-fill-opacity: 0.22; }
 
 .timeline-task-block--done .timeline-task-status {
   font-weight: var(--think-font-weight-bold);
@@ -320,9 +332,10 @@
 }
 
 /* Non-completed terminal states are distinct from an open Task. */
+.timeline-task-block--cancelled,
+.timeline-task-block--skipped { --timeline-fill-opacity: 0.09; }
 .timeline-task-block--cancelled .timeline-task-content,
 .timeline-task-block--skipped .timeline-task-content {
-  background: color-mix(in srgb, var(--think-bg-surface-2) 86%, transparent);
   color: var(--think-text-secondary);
 }
 .timeline-task-block--cancelled .timeline-task-link,
@@ -339,9 +352,9 @@
 
 /* V8: planned Task slots are a derived layer, visually distinct from actual Sessions. */
 .timeline-task-block.timeline-task-block--planned {
-  border-style: dashed;
-  opacity: 0.62;
-  background: color-mix(in srgb, var(--timeline-goal-color) 10%, transparent);
+  --timeline-fill-opacity: 0.13;
+  border: 1px dashed var(--timeline-goal-color, #718096);
+  opacity: 0.72;
 }
 
 

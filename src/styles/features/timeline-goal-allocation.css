@@ -31,7 +31,8 @@
   inset-inline-start: 0;
   min-width: 0;
   border-radius: inherit;
-  background: color-mix(in srgb, var(--timeline-goal-allocation-color) 46%, transparent);
+  background: var(--timeline-goal-allocation-color, #718096);
+  opacity: 0.50;
 }
 .timeline-goal-allocation-budget-marker {
   position: absolute;

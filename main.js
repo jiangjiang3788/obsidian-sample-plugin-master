@@ -60010,6 +60010,7 @@ function TimelineDailyView({
       "data-timeline-label-step": scale.labelStepMinutes,
       "data-timeline-grid-step": scale.gridStepMinutes,
       "data-timeline-density": densityMode,
+      "data-timeline-rendered-blocks": dayColumns.reduce((count, column2) => count + column2.blocks.length, 0),
       "data-timeline-hour-height": Math.round(hourHeight * 100) / 100,
       "data-timeline-tick-gap": Math.round(scale.tickPixelGap * 100) / 100,
       ...zoomHandlers,
