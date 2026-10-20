@@ -58,7 +58,8 @@ export function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPul
     setUpdating(true);
     setState({ kind: 'idle', message: '' });
     try {
-      const result = await onPullDevBuild(preview);
+      // The updater re-checks GitHub main at click time; never pin to a stale preview.
+      const result = await onPullDevBuild();
       const versionText = currentVersion ? `${currentVersion} → ${result.remoteVersion}` : result.remoteVersion;
       const time = result.githubPushedAt
         ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(result.githubPushedAt)}`
@@ -66,7 +67,7 @@ export function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPul
       setPreview(result);
       setState({
         kind: 'success',
-        message: `已拉取 GitHub ${result.branch} 开发版（${versionText}）。${time}。请完全关闭并重新打开 Obsidian。`,
+        message: `已拉取 GitHub ${result.branch} 开发版（${versionText}，SHA ${result.commitSha.slice(0, 7)}）。${time}。请完全关闭并重新打开 Obsidian。`,
       });
     } catch (error) {
       setState({ kind: 'error', message: `拉取失败：${error instanceof Error ? error.message : String(error)}` });
@@ -82,7 +83,7 @@ export function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPul
         <div className="think-settings-row__body think-settings-stack think-settings-stack--tight">
           {preview ? (
             <span className="think-settings-help" data-github-commit-time>
-              远端版本：{preview.remoteVersion} · {preview.githubPushedAt
+              远端版本：{preview.remoteVersion} · SHA：{preview.commitSha.slice(0, 7)} · {preview.githubPushedAt
                 ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(preview.githubPushedAt)}`
                 : `GitHub 推送时间：暂未查到该版本的推送记录；Git 提交时间（非推送时间）：${formatGitHubCommitTime(preview.githubCommitAt)}`}
             </span>
@@ -91,7 +92,7 @@ export function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPul
           <ThinkButton variant="secondary" size="sm" loading={updating} onClick={() => { void handlePull(); }}>
             {updating ? '正在拉取…' : '从 GitHub 拉取最新开发版'}
           </ThinkButton>
-          <span className="think-settings-help">从 main 分支同一 SHA 下载三个插件文件，逐一校验写入，失败自动回滚。能匹配到该 SHA 的 PushEvent 才显示 GitHub 推送时间；否则明确标为提交时间（不是上传时间）。</span>
+          <span className="think-settings-help">点击时重新获取 main 最新 SHA，再下载并校验三个插件文件；失败自动回滚。GitHub 推送时间只在匹配到该 SHA 的 PushEvent 时显示，查询失败不会阻止下载或重启提示。</span>
           {state.kind !== 'idle' ? <ThinkNotice tone={state.kind === 'success' ? 'success' : 'danger'}>{state.message}</ThinkNotice> : null}
         </div>
       </div>

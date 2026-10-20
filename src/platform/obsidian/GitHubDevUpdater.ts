@@ -54,6 +54,23 @@ export interface GitHubDevUpdaterHost {
 
 type GitHubHead = { sha: string; committedAt: string | null };
 
+const OPTIONAL_PUSH_TIME_WAIT_MS = 1200;
+
+function errorText(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/** A best-effort timestamp lookup must never indefinitely hold up an update. */
+function waitForPushTime(promise: Promise<string | null>): Promise<string | null> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), OPTIONAL_PUSH_TIME_WAIT_MS);
+    void promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      () => { clearTimeout(timer); resolve(null); },
+    );
+  });
+}
+
 function isCommitSha(value: unknown): value is string {
   return typeof value === 'string' && /^[0-9a-f]{40}$/i.test(value);
 }
@@ -73,13 +90,13 @@ async function readGitHubHead(): Promise<GitHubHead> {
   let payload: any;
   try {
     const response = await requestUrl({
-      url: `${GITHUB_API}/commits/${GITHUB_BRANCH}`,
+      url: `${GITHUB_API}/commits/${GITHUB_BRANCH}?t=${Date.now()}`,
       headers: { Accept: 'application/vnd.github+json' },
     });
     if (response.status !== 200) throw new Error(`HTTP ${response.status}`);
     payload = response.json;
-  } catch {
-    throw new Error('GitHub 提交信息不可用，无法确保同一版本，已停止下载；请稍后重试');
+  } catch (error) {
+    throw new Error(`获取 GitHub ${GITHUB_BRANCH} 最新提交失败：${errorText(error)}；尚未覆盖本地文件`);
   }
   if (!isCommitSha(payload?.sha)) throw new Error('GitHub 未返回有效提交 SHA，已停止下载');
   return { sha: payload.sha, committedAt: validIsoTime(payload?.commit?.committer?.date) };
@@ -146,8 +163,15 @@ function parseAndValidateManifest(text: string, expectedPluginId: string): { ver
 }
 
 async function readFileAtRevision(file: DevBuildFile, sha: string): Promise<string> {
-  const response = await requestUrl({ url: rawFileUrl(file, sha) });
-  if (response.status !== 200) throw new Error(`下载 ${file} 失败（HTTP ${response.status}）`);
+  let response: Awaited<ReturnType<typeof requestUrl>>;
+  try {
+    response = await requestUrl({ url: rawFileUrl(file, sha) });
+  } catch (error) {
+    throw new Error(`下载 ${file}（${sha.slice(0, 7)}）失败：${errorText(error)}；尚未覆盖本地文件`);
+  }
+  if (response.status !== 200) {
+    throw new Error(`下载 ${file}（${sha.slice(0, 7)}）失败：HTTP ${response.status}；尚未覆盖本地文件`);
+  }
   assertDownloadedFile(file, response.text);
   return response.text;
 }
@@ -161,7 +185,7 @@ async function downloadPinnedBuild(sha: string): Promise<Record<DevBuildFile, st
 async function infoAtHead(head: GitHubHead, expectedPluginId: string): Promise<GitHubDevBuildInfo> {
   const [manifestText, githubPushedAt] = await Promise.all([
     readFileAtRevision('manifest.json', head.sha),
-    readGitHubPushTime(head.sha),
+    waitForPushTime(readGitHubPushTime(head.sha)),
   ]);
   return {
     remoteVersion: parseAndValidateManifest(manifestText, expectedPluginId).version,
@@ -229,30 +253,46 @@ async function installPinnedFiles(
   }
 }
 
-/** Install a coherent, immutable revision or make no changes. */
+/** Always resolve main again on click: the settings preview may be stale.
+ * Download all three files at that freshly resolved, immutable SHA. */
 export async function pullGitHubDevBuild(
   host: GitHubDevUpdaterHost,
-  preview?: GitHubDevBuildInfo | null,
+  _preview?: GitHubDevBuildInfo | null,
 ): Promise<GitHubDevUpdateResult> {
-  const selected = preview && isCommitSha(preview.commitSha)
-    ? preview : await getGitHubDevBuildInfo(host.manifest.id);
-  if (!isCommitSha(selected.commitSha)) throw new Error('预览 SHA 无效，已停止下载');
-  const downloaded = await downloadPinnedBuild(selected.commitSha);
+  const head = await readGitHubHead();
+  // Start the optional push-time lookup in parallel, not after writing files.
+  const pushTimePromise = readGitHubPushTime(head.sha);
+  const downloaded = await downloadPinnedBuild(head.sha);
   const manifest = parseAndValidateManifest(downloaded['manifest.json'], host.manifest.id);
-  if (manifest.version !== selected.remoteVersion) {
-    throw new Error('GitHub 预览版本与下载版本不匹配，未覆盖本地文件');
-  }
   const pluginDir = normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
   await installPinnedFiles(host.app.vault.adapter, pluginDir, downloaded);
 
-  // PushEvent may appear after the initial preview (GitHub events are delayed).
-  // A failed metadata lookup must not invalidate an already completed update.
-  const updatedPushAt = selected.githubPushedAt ?? await readGitHubPushTime(selected.commitSha);
-  const installed: GitHubDevUpdateResult = updatedPushAt
-    ? { ...selected, githubPushedAt: updatedPushAt } : selected;
-  // The settings component can unmount or scroll away; the native notice is
-  // shown at the actual download-complete/restart step and stays until dismissed.
-  try { new Notice(formatGitHubDevRestartNotice(installed), 0); }
-  catch { /* Display failures must not misreport a successful installation. */ }
+  // A missing/slow PushEvent is metadata only: the successful update must
+  // still return and show the restart reminder promptly.
+  const githubPushedAt = await waitForPushTime(pushTimePromise);
+  const installed: GitHubDevUpdateResult = {
+    remoteVersion: manifest.version,
+    branch: GITHUB_BRANCH,
+    githubCommitAt: head.committedAt,
+    githubPushedAt,
+    commitSha: head.sha,
+  };
+  let notice: Notice | null = null;
+  try { notice = new Notice(formatGitHubDevRestartNotice(installed), 0); }
+  catch { /* A notification failure cannot turn a completed install into an error. */ }
+
+  // The events API may deliver the exact PushEvent late. Update the same
+  // persistent notice when it arrives, without ever delaying download success.
+  if (!githubPushedAt && notice) {
+    const successNotice = notice;
+    void pushTimePromise.then((latePushedAt) => {
+      if (!latePushedAt) return;
+      try {
+        successNotice.setMessage(formatGitHubDevRestartNotice({
+          ...installed, githubPushedAt: latePushedAt,
+        }));
+      } catch { /* A dismissed notice must not affect the installation. */ }
+    });
+  }
   return installed;
 }

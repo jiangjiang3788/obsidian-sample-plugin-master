@@ -68,7 +68,7 @@ describe('GitHubDevUpdater pinned transactional updates', () => {
     ], sha)).toBe(pushedAt);
   });
 
-  it('previews GitHub push/commit timestamps and downloads all files at the previewed SHA', async () => {
+  it('previews GitHub push/commit timestamps and downloads all files at the current main SHA', async () => {
     mockGitHub();
     await expect(getGitHubDevBuildInfo('think-os')).resolves.toEqual(preview);
     const { host, write, files } = makeHost();
@@ -81,6 +81,21 @@ describe('GitHubDevUpdater pinned transactional updates', () => {
     }
   });
 
+  it('ignores a stale preview and re-reads main SHA when downloading', async () => {
+    mockGitHub();
+    const { host } = makeHost();
+    const obsoleteSha = 'b'.repeat(40);
+    await expect(pullGitHubDevBuild(host, {
+      ...preview, remoteVersion: '1.0.0', commitSha: obsoleteSha,
+    })).resolves.toMatchObject({ commitSha: sha, remoteVersion: '1.18.2' });
+    const rawUrls = requestUrlMock.mock.calls
+      .map(([arg]: any[]) => String(arg.url))
+      .filter((url) => url.includes('raw.githubusercontent'));
+    expect(rawUrls).toHaveLength(3);
+    expect(rawUrls.every((url) => url.includes(`/${sha}/`))).toBe(true);
+    expect(rawUrls.every((url) => !url.includes(`/${obsoleteSha}/`))).toBe(true);
+  });
+
   it('shows only commit time when the matching push event has expired', async () => {
     mockGitHub({ events: [] });
     await expect(getGitHubDevBuildInfo('think-os')).resolves.toMatchObject({
@@ -91,18 +106,19 @@ describe('GitHubDevUpdater pinned transactional updates', () => {
   it('stops safely if the immutable SHA cannot be resolved (no moving main fallback)', async () => {
     mockGitHub({ failHead: true });
     const { host, write } = makeHost();
-    await expect(pullGitHubDevBuild(host)).rejects.toThrow('无法确保同一版本');
+    await expect(pullGitHubDevBuild(host)).rejects.toThrow('获取 GitHub main 最新提交失败');
     expect(write).not.toHaveBeenCalled();
   });
 
-  it('rejects version mismatches and partial downloads before modifying disk', async () => {
+  it('rejects invalid manifests and partial downloads before modifying disk', async () => {
     mockGitHub();
     const { host, write } = makeHost();
-    await expect(pullGitHubDevBuild(host, { ...preview, remoteVersion: '9.9.9' }))
-      .rejects.toThrow('预览版本与下载版本不匹配');
+    const wrongPluginHost = { ...host, manifest: { id: 'not-think-os' } };
+    await expect(pullGitHubDevBuild(wrongPluginHost))
+      .rejects.toThrow('远端插件 ID 不匹配');
     expect(write).not.toHaveBeenCalled();
     mockGitHub({ failCss: true });
-    await expect(pullGitHubDevBuild(host, preview)).rejects.toThrow('下载 styles.css 失败');
+    await expect(pullGitHubDevBuild(host, preview)).rejects.toThrow('下载 styles.css');
     expect(write).not.toHaveBeenCalled();
   });
 

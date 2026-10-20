@@ -69219,13 +69219,13 @@ function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPullDevBui
     setUpdating(true);
     setState({ kind: "idle", message: "" });
     try {
-      const result = await onPullDevBuild(preview);
+      const result = await onPullDevBuild();
       const versionText = currentVersion ? `${currentVersion} → ${result.remoteVersion}` : result.remoteVersion;
       const time2 = result.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(result.githubPushedAt)}` : `GitHub 推送时间：暂未查到该版本的推送记录；Git 提交时间（非推送时间）：${formatGitHubCommitTime(result.githubCommitAt)}`;
       setPreview(result);
       setState({
         kind: "success",
-        message: `已拉取 GitHub ${result.branch} 开发版（${versionText}）。${time2}。请完全关闭并重新打开 Obsidian。`
+        message: `已拉取 GitHub ${result.branch} 开发版（${versionText}，SHA ${result.commitSha.slice(0, 7)}）。${time2}。请完全关闭并重新打开 Obsidian。`
       });
     } catch (error) {
       setState({ kind: "error", message: `拉取失败：${error instanceof Error ? error.message : String(error)}` });
@@ -69239,13 +69239,15 @@ function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPullDevBui
       preview ? /* @__PURE__ */ u2("span", { className: "think-settings-help", "data-github-commit-time": true, children: [
         "远端版本：",
         preview.remoteVersion,
+        " · SHA：",
+        preview.commitSha.slice(0, 7),
         " · ",
         preview.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(preview.githubPushedAt)}` : `GitHub 推送时间：暂未查到该版本的推送记录；Git 提交时间（非推送时间）：${formatGitHubCommitTime(preview.githubCommitAt)}`
       ] }) : checking ? /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "正在读取 GitHub 版本与提交时间…" }) : checkError ? /* @__PURE__ */ u2("span", { className: "think-settings-help", children: checkError }) : null,
       /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", loading: updating, onClick: () => {
         void handlePull();
       }, children: updating ? "正在拉取…" : "从 GitHub 拉取最新开发版" }),
-      /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "从 main 分支同一 SHA 下载三个插件文件，逐一校验写入，失败自动回滚。能匹配到该 SHA 的 PushEvent 才显示 GitHub 推送时间；否则明确标为提交时间（不是上传时间）。" }),
+      /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "点击时重新获取 main 最新 SHA，再下载并校验三个插件文件；失败自动回滚。GitHub 推送时间只在匹配到该 SHA 的 PushEvent 时显示，查询失败不会阻止下载或重启提示。" }),
       state.kind !== "idle" ? /* @__PURE__ */ u2(ThinkNotice, { tone: state.kind === "success" ? "success" : "danger", children: state.message }) : null
     ] })
   ] }) });
@@ -71847,6 +71849,25 @@ Git 提交时间（非推送时间）：${formatLocalGitHubTime(info.githubCommi
 ${pushed}${committed}
 请完全退出并重新打开 Obsidian。`;
 }
+const OPTIONAL_PUSH_TIME_WAIT_MS = 1200;
+function errorText(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+function waitForPushTime(promise) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), OPTIONAL_PUSH_TIME_WAIT_MS);
+    void promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(null);
+      }
+    );
+  });
+}
 function isCommitSha(value) {
   return typeof value === "string" && /^[0-9a-f]{40}$/i.test(value);
 }
@@ -71860,13 +71881,13 @@ async function readGitHubHead() {
   let payload;
   try {
     const response = await obsidian.requestUrl({
-      url: `${GITHUB_API}/commits/${GITHUB_BRANCH}`,
+      url: `${GITHUB_API}/commits/${GITHUB_BRANCH}?t=${Date.now()}`,
       headers: { Accept: "application/vnd.github+json" }
     });
     if (response.status !== 200) throw new Error(`HTTP ${response.status}`);
     payload = response.json;
-  } catch {
-    throw new Error("GitHub 提交信息不可用，无法确保同一版本，已停止下载；请稍后重试");
+  } catch (error) {
+    throw new Error(`获取 GitHub ${GITHUB_BRANCH} 最新提交失败：${errorText(error)}；尚未覆盖本地文件`);
   }
   if (!isCommitSha(payload?.sha)) throw new Error("GitHub 未返回有效提交 SHA，已停止下载");
   return { sha: payload.sha, committedAt: validIsoTime(payload?.commit?.committer?.date) };
@@ -71925,8 +71946,15 @@ function parseAndValidateManifest(text2, expectedPluginId) {
   return { version: manifest.version.trim() };
 }
 async function readFileAtRevision(file, sha) {
-  const response = await obsidian.requestUrl({ url: rawFileUrl(file, sha) });
-  if (response.status !== 200) throw new Error(`下载 ${file} 失败（HTTP ${response.status}）`);
+  let response;
+  try {
+    response = await obsidian.requestUrl({ url: rawFileUrl(file, sha) });
+  } catch (error) {
+    throw new Error(`下载 ${file}（${sha.slice(0, 7)}）失败：${errorText(error)}；尚未覆盖本地文件`);
+  }
+  if (response.status !== 200) {
+    throw new Error(`下载 ${file}（${sha.slice(0, 7)}）失败：HTTP ${response.status}；尚未覆盖本地文件`);
+  }
   assertDownloadedFile(file, response.text);
   return response.text;
 }
@@ -71937,7 +71965,7 @@ async function downloadPinnedBuild(sha) {
 async function infoAtHead(head, expectedPluginId) {
   const [manifestText, githubPushedAt] = await Promise.all([
     readFileAtRevision("manifest.json", head.sha),
-    readGitHubPushTime(head.sha)
+    waitForPushTime(readGitHubPushTime(head.sha))
   ]);
   return {
     remoteVersion: parseAndValidateManifest(manifestText, expectedPluginId).version,
@@ -71993,21 +72021,38 @@ async function installPinnedFiles(adapter, dir, downloaded) {
     throw new Error(`${message}；已回滚到原版本`);
   }
 }
-async function pullGitHubDevBuild(host, preview) {
-  const selected = preview && isCommitSha(preview.commitSha) ? preview : await getGitHubDevBuildInfo(host.manifest.id);
-  if (!isCommitSha(selected.commitSha)) throw new Error("预览 SHA 无效，已停止下载");
-  const downloaded = await downloadPinnedBuild(selected.commitSha);
+async function pullGitHubDevBuild(host, _preview) {
+  const head = await readGitHubHead();
+  const pushTimePromise = readGitHubPushTime(head.sha);
+  const downloaded = await downloadPinnedBuild(head.sha);
   const manifest = parseAndValidateManifest(downloaded["manifest.json"], host.manifest.id);
-  if (manifest.version !== selected.remoteVersion) {
-    throw new Error("GitHub 预览版本与下载版本不匹配，未覆盖本地文件");
-  }
   const pluginDir = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
   await installPinnedFiles(host.app.vault.adapter, pluginDir, downloaded);
-  const updatedPushAt = selected.githubPushedAt ?? await readGitHubPushTime(selected.commitSha);
-  const installed = updatedPushAt ? { ...selected, githubPushedAt: updatedPushAt } : selected;
+  const githubPushedAt = await waitForPushTime(pushTimePromise);
+  const installed = {
+    remoteVersion: manifest.version,
+    branch: GITHUB_BRANCH,
+    githubCommitAt: head.committedAt,
+    githubPushedAt,
+    commitSha: head.sha
+  };
+  let notice = null;
   try {
-    new obsidian.Notice(formatGitHubDevRestartNotice(installed), 0);
+    notice = new obsidian.Notice(formatGitHubDevRestartNotice(installed), 0);
   } catch {
+  }
+  if (!githubPushedAt && notice) {
+    const successNotice = notice;
+    void pushTimePromise.then((latePushedAt) => {
+      if (!latePushedAt) return;
+      try {
+        successNotice.setMessage(formatGitHubDevRestartNotice({
+          ...installed,
+          githubPushedAt: latePushedAt
+        }));
+      } catch {
+      }
+    });
   }
   return installed;
 }
@@ -72041,7 +72086,7 @@ class ThinkSettingsView extends obsidian.ItemView {
           variant: "workspace",
           currentVersion: this.plugin.manifest.version,
           onInspectDevBuild: () => getGitHubDevBuildInfo(this.plugin.manifest.id),
-          onPullDevBuild: (preview) => pullGitHubDevBuild(this.plugin, preview)
+          onPullDevBuild: (preview) => pullGitHubDevBuild(this.plugin)
         }
       ),
       this.services
@@ -72100,7 +72145,7 @@ class SettingsTab extends obsidian.PluginSettingTab {
         {
           currentVersion: this.plugin.manifest.version,
           onInspectDevBuild: () => getGitHubDevBuildInfo(this.plugin.manifest.id),
-          onPullDevBuild: (preview) => pullGitHubDevBuild(this.plugin, preview),
+          onPullDevBuild: (preview) => pullGitHubDevBuild(this.plugin),
           onOpenWorkspace: () => {
             void openThinkSettingsWorkspaceView(this.plugin).catch((error) => {
               new obsidian.Notice(`打开 思考系统控制台失败：${error instanceof Error ? error.message : String(error)}`);
