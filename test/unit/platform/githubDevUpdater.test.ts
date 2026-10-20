@@ -6,6 +6,7 @@ import {
 
 const requestUrlMock = requestUrl as jest.MockedFunction<typeof requestUrl>;
 const sha = 'a'.repeat(40);
+const previousSha = 'b'.repeat(40);
 const committedAt = '2026-10-14T03:12:00.000Z';
 const pushedAt = '2026-10-14T03:17:00.000Z';
 const contents = {
@@ -13,8 +14,8 @@ const contents = {
   'styles.css': `.think-os { display: block; }\n${' '.repeat(120)}`,
   'manifest.json': JSON.stringify({ id: 'think-os', version: '1.18.2', main: 'main.js', styles: 'styles.css' }),
 };
-const preview = {
-  remoteVersion: '1.18.2', branch: 'main', githubPushedAt: pushedAt,
+const inspected = {
+  remoteVersion: '1.18.2', branch: 'main', githubPushedAt: null,
   githubCommitAt: committedAt, commitSha: sha,
 };
 
@@ -34,33 +35,49 @@ function makeHost() {
   return { files, write, adapter, host: { app: { vault: { configDir: '.obsidian', adapter } }, manifest: { id: 'think-os' } } };
 }
 
-function mockGitHub(input: { failHead?: boolean; failCss?: boolean; events?: unknown } = {}) {
+function mockGitHub(input: {
+  headStatus?: number; failCss?: number; eventsStatus?: number; events?: unknown;
+  headSha?: string; rateLimit?: boolean;
+} = {}) {
   requestUrlMock.mockImplementation(async (options: any) => {
     const url = String(options?.url || '');
+    const headSha = input.headSha ?? sha;
     if (url.includes('/commits/main')) {
-      return { status: input.failHead ? 403 : 200, json: { sha, commit: { committer: { date: committedAt } } } } as any;
+      return {
+        status: input.headStatus ?? 200,
+        headers: input.rateLimit ? { 'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': '1791980000' } : {},
+        text: JSON.stringify({ sha: headSha, commit: { committer: { date: committedAt } }, message: 'API rate limit exceeded' }),
+      } as any;
     }
     if (url.includes('/events?')) {
-      return { status: 200, json: input.events ?? [{
-        type: 'PushEvent', created_at: pushedAt,
-        payload: { ref: 'refs/heads/main', head: sha },
-      }] } as any;
+      return { status: input.eventsStatus ?? 200, headers: {},
+        text: JSON.stringify(input.events ?? [{
+          type: 'PushEvent', created_at: pushedAt, payload: { ref: 'refs/heads/main', head: headSha },
+        }]),
+      } as any;
     }
     for (const [file, content] of Object.entries(contents)) {
-      if (url.includes(`/${sha}/${file}?`)) {
-        return { status: input.failCss && file === 'styles.css' ? 503 : 200, text: content } as any;
+      if (url.includes(`/${headSha}/${file}`) || url.includes(`/${previousSha}/${file}`)) {
+        const status = file === 'styles.css' ? input.failCss ?? 200 : 200;
+        return { status, headers: {}, text: status === 200 ? content : JSON.stringify({ message: 'Forbidden' }) } as any;
       }
     }
-    return { status: 404, text: '' } as any;
+    return { status: 404, headers: {}, text: 'Not found' } as any;
   });
 }
 
-describe('GitHubDevUpdater pinned transactional updates', () => {
+function rawCalls() {
+  return requestUrlMock.mock.calls
+    .map(([arg]: any[]) => String(arg.url))
+    .filter((url) => url.includes('raw.githubusercontent.com'));
+}
+
+describe('GitHubDevUpdater - limited API budget, pinned download and diagnostics', () => {
   beforeEach(() => requestUrlMock.mockReset());
 
-  it('matches exact GitHub PushEvent SHA+branch, never labels commit time as upload time', () => {
+  it('only matches a push event with an exact branch and SHA', () => {
     expect(findGitHubRevisionPushTime([
-      { type: 'PushEvent', created_at: pushedAt, payload: { ref: 'refs/heads/main', head: 'b'.repeat(40) } },
+      { type: 'PushEvent', created_at: pushedAt, payload: { ref: 'refs/heads/main', head: previousSha } },
       { type: 'PushEvent', created_at: pushedAt, payload: { ref: 'refs/heads/test', head: sha } },
     ], sha)).toBeNull();
     expect(findGitHubRevisionPushTime([
@@ -68,83 +85,88 @@ describe('GitHubDevUpdater pinned transactional updates', () => {
     ], sha)).toBe(pushedAt);
   });
 
-  it('previews GitHub push/commit timestamps and downloads all files at the current main SHA', async () => {
+  it('inspects main + manifest only; does not waste API requests on events during preview', async () => {
     mockGitHub();
-    await expect(getGitHubDevBuildInfo('think-os')).resolves.toEqual(preview);
+    await expect(getGitHubDevBuildInfo('think-os')).resolves.toEqual(inspected);
+    expect(requestUrlMock.mock.calls).toHaveLength(2);
+    expect(requestUrlMock.mock.calls.some(([arg]: any[]) => String(arg.url).includes('/events?'))).toBe(false);
+  });
+
+  it('refreshes main on ordinary click, pins the same SHA for three raw files and shows push time', async () => {
+    mockGitHub();
     const { host, write, files } = makeHost();
-    await expect(pullGitHubDevBuild(host, preview)).resolves.toEqual(preview);
-    expect(requestUrlMock.mock.calls.filter(([arg]: any[]) => String(arg.url).includes('raw.githubusercontent'))
-      .every(([arg]: any[]) => String(arg.url).includes(`/${sha}/`))).toBe(true);
+    await expect(pullGitHubDevBuild(host)).resolves.toEqual({ ...inspected, githubPushedAt: pushedAt });
+    expect(rawCalls()).toHaveLength(3);
+    expect(rawCalls().every((url) => url.includes(`/${sha}/`) && !url.includes('?t='))).toBe(true);
     expect(write.mock.calls.map(([path]) => path.split('/').pop())).toEqual(['main.js', 'styles.css', 'manifest.json']);
     for (const file of ['main.js', 'styles.css', 'manifest.json'] as const) {
       expect(files[`.obsidian/plugins/think-os/${file}`]).toBe(contents[file]);
     }
+    expect(requestUrlMock.mock.calls.filter(([arg]: any[]) => String(arg.url).includes('/events?'))).toHaveLength(1);
   });
 
-  it('ignores a stale preview and re-reads main SHA when downloading', async () => {
-    mockGitHub();
-    const { host } = makeHost();
-    const obsoleteSha = 'b'.repeat(40);
-    await expect(pullGitHubDevBuild(host, {
-      ...preview, remoteVersion: '1.0.0', commitSha: obsoleteSha,
-    })).resolves.toMatchObject({ commitSha: sha, remoteVersion: '1.18.2' });
-    const rawUrls = requestUrlMock.mock.calls
-      .map(([arg]: any[]) => String(arg.url))
-      .filter((url) => url.includes('raw.githubusercontent'));
-    expect(rawUrls).toHaveLength(3);
-    expect(rawUrls.every((url) => url.includes(`/${sha}/`))).toBe(true);
-    expect(rawUrls.every((url) => !url.includes(`/${obsoleteSha}/`))).toBe(true);
-  });
-
-  it('shows only commit time when the matching push event has expired', async () => {
-    mockGitHub({ events: [] });
-    await expect(getGitHubDevBuildInfo('think-os')).resolves.toMatchObject({
-      githubPushedAt: null, githubCommitAt: committedAt, commitSha: sha,
-    });
-  });
-
-  it('stops safely if the immutable SHA cannot be resolved (no moving main fallback)', async () => {
-    mockGitHub({ failHead: true });
+  it('reports GitHub API 403 with endpoint + reset time, without writing local files', async () => {
+    mockGitHub({ headStatus: 403, rateLimit: true });
     const { host, write } = makeHost();
-    await expect(pullGitHubDevBuild(host)).rejects.toThrow('获取 GitHub main 最新提交失败');
+    await expect(pullGitHubDevBuild(host)).rejects.toThrow(/api.github.com.*HTTP 403.*配额已用完/);
     expect(write).not.toHaveBeenCalled();
+    expect(requestUrlMock.mock.calls.every(([options]: any[]) => options.throw === false)).toBe(true);
   });
 
-  it('rejects invalid manifests and partial downloads before modifying disk', async () => {
+  it('allows explicitly chosen inspected SHA when main is 403, without falsely claiming latest', async () => {
+    mockGitHub({ headStatus: 403 });
+    const { host, write, files } = makeHost();
+    await expect(pullGitHubDevBuild(host, inspected)).resolves.toMatchObject({ commitSha: sha });
+    expect(requestUrlMock.mock.calls.some(([arg]: any[]) => String(arg.url).includes('/commits/main'))).toBe(false);
+    expect(rawCalls()).toHaveLength(3);
+    expect(write).toHaveBeenCalledTimes(3);
+    expect(files['.obsidian/plugins/think-os/main.js']).toBe(contents['main.js']);
+  });
+
+  it('diagnoses a raw asset 403 separately from API rate limit; does not write any file', async () => {
+    mockGitHub({ failCss: 403 });
+    const { host, write } = makeHost();
+    await expect(pullGitHubDevBuild(host)).rejects.toThrow(/下载 styles.css.*raw.githubusercontent.com.*HTTP 403/);
+    expect(write).not.toHaveBeenCalled();
+    expect(requestUrlMock.mock.calls.filter(([arg]: any[]) => String(arg.url).includes('/events?'))).toHaveLength(0);
+  });
+
+  it('treats a PushEvent 403 as optional and still finishes installation', async () => {
+    mockGitHub({ eventsStatus: 403 });
+    const { host, write } = makeHost();
+    await expect(pullGitHubDevBuild(host)).resolves.toMatchObject({ githubPushedAt: null });
+    expect(write).toHaveBeenCalledTimes(3);
+  });
+
+  it('rejects wrong plugin ID and partial downloads before touching disk', async () => {
     mockGitHub();
     const { host, write } = makeHost();
-    const wrongPluginHost = { ...host, manifest: { id: 'not-think-os' } };
-    await expect(pullGitHubDevBuild(wrongPluginHost))
+    await expect(pullGitHubDevBuild({ ...host, manifest: { id: 'not-think-os' } }))
       .rejects.toThrow('远端插件 ID 不匹配');
     expect(write).not.toHaveBeenCalled();
-    mockGitHub({ failCss: true });
-    await expect(pullGitHubDevBuild(host, preview)).rejects.toThrow('下载 styles.css');
+    mockGitHub({ failCss: 503 });
+    await expect(pullGitHubDevBuild(host)).rejects.toThrow('下载 styles.css');
     expect(write).not.toHaveBeenCalled();
   });
 
-  it('restores even the partially-written file if the write rejects mid-stream', async () => {
+  it('rolls back after partially written files and silent readback corruption', async () => {
     mockGitHub();
     const { host, write, files } = makeHost();
     let failed = false;
     write.mockImplementation(async (path: string, data: string) => {
-      files[path] = data; // storage wrote bytes BEFORE reporting the failure
+      files[path] = data;
       if (!failed && path.endsWith('/styles.css')) { failed = true; throw new Error('disk full'); }
     });
-    await expect(pullGitHubDevBuild(host, preview)).rejects.toThrow('已回滚到原版本');
+    await expect(pullGitHubDevBuild(host)).rejects.toThrow('已回滚到原版本');
     expect(files['.obsidian/plugins/think-os/main.js']).toBe('old-main');
     expect(files['.obsidian/plugins/think-os/styles.css']).toBe('old-css');
-    expect(files['.obsidian/plugins/think-os/manifest.json']).toContain('1.0.0');
-  });
-
-  it('detects silent readback corruption and rolls back', async () => {
-    mockGitHub();
-    const { host, files, write } = makeHost();
+    write.mockReset();
     let corrupt = true;
     write.mockImplementation(async (path: string, text: string) => {
       files[path] = corrupt && path.endsWith('main.js') ? 'corrupt bytes' : text;
       corrupt = false;
     });
-    await expect(pullGitHubDevBuild(host, preview)).rejects.toThrow('main.js 写入校验失败');
+    await expect(pullGitHubDevBuild(host)).rejects.toThrow('main.js 写入校验失败');
     expect(files['.obsidian/plugins/think-os/main.js']).toBe('old-main');
   });
 });

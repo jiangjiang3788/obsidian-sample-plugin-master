@@ -169,7 +169,9 @@ export function buildRecordOutputPlan(input: {
     const capturedAt = new Date().toISOString();
     const taskFields = {
       status,
-      content: renderData['任务内容'] ?? renderData['内容'] ?? renderData.content,
+      // Semantic body is normalized to content by TemplateFieldAdapter.
+      // A legacy/stale 任务内容 alias must never override an edited 内容 field.
+      content: renderData.content ?? renderData['任务内容'] ?? renderData['内容'],
       goalPath: renderData.goalPath,
       priority: renderData['优先级'] ?? renderData.priority,
       importance: renderData['重要程度'] ?? renderData.importance,

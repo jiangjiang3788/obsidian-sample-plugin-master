@@ -13,6 +13,7 @@ import { buildInitialEditFormData } from "./EditBackfillMapper";
 import { getTemplateRecordTypes } from "@/core/recordTypes/public";
 import { asUnknownRecord, readFirstString } from "@/core/utils/unknownRecord";
 import { normalizeFieldToken } from "@/core/fields/fieldTokenSemantics";
+import { getTemplateFieldSemantic } from "@/core/fields/TemplateFieldAdapter";
 
 export interface BuildEditStateInput {
   settings: ThinkSettings;
@@ -236,8 +237,14 @@ export function buildEditRecordState(
       || item.extra?.['正文']
       || '',
     ).trim();
-    if (taskBody && !String(initialFormData['任务内容'] ?? '').trim()) {
-      initialFormData['任务内容'] = taskBody;
+    // A Goal template may use 内容, content or another semantic body key. Do not
+    // inject a second stale 任务内容 key: OutputPlanner used to prefer that alias
+    // over the actual field the user edited, silently restoring the old name.
+    const bodyKey = resolvedDependencies.template?.fields.find(
+      (field) => getTemplateFieldSemantic(field) === 'body',
+    )?.key || '任务内容';
+    if (taskBody && !String(initialFormData[bodyKey] ?? '').trim()) {
+      initialFormData[bodyKey] = taskBody;
     }
     if (parsedSnapshot.semantic.goalPath && !String(initialFormData.goalPath ?? '').trim()) {
       initialFormData.goalPath = parsedSnapshot.semantic.goalPath;

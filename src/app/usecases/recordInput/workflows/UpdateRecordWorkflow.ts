@@ -81,8 +81,9 @@ export function buildTaskLifecycleBypassIssue(
 function taskSeriesDefaults(renderData: Record<string, unknown>) {
   const update: Record<string, unknown> = {};
 
-  if (hasAnyKey(renderData, ['任务内容', '内容', 'content'])) {
-    update.content = optionScalar(renderData['任务内容'] ?? renderData['内容'] ?? renderData.content);
+  if (hasAnyKey(renderData, ['content', '任务内容', '内容'])) {
+    // Keep TaskSeries defaults consistent with the current Task's saved body.
+    update.content = optionScalar(renderData.content ?? renderData['任务内容'] ?? renderData['内容']);
   }
   if (hasAnyKey(renderData, ['goalPath', '目标'])) {
     update.goalPath = nullableText(renderData.goalPath ?? renderData['目标']);

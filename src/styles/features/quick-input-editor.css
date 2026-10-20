@@ -221,7 +221,11 @@
 
 .think-quick-input-editor .think-qif-textarea {
   min-height: 118px;
-  overflow-y: hidden;
+  /* Bound auto-growing content so long dictation scrolls inside the control
+   * instead of forcing the entire modal underneath the iOS keyboard. */
+  max-height: 340px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   resize: none;
 }
 

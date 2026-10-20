@@ -30,7 +30,8 @@
 .modal.think-quick-input-modal--mobile .think-modal__body { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-quick-input-mobile-footer-space)); }
 .modal.think-quick-input-modal--mobile .think-modal__footer--quick-input { position: sticky; bottom: 0; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-space-4)); background: var(--think-bg-elevated); }
 .modal.think-quick-input-modal--mobile.think-quick-input-keyboard-suspected .think-modal__body { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 168px); }
-.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-detected .think-modal__body { padding-bottom: calc(var(--keyboard-height, 0px) + env(safe-area-inset-bottom, 0px) + 120px); }
+.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-detected .think-modal__body,
+.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-fallback .think-modal__body { padding-bottom: var(--think-space-3); }
 
 @supports not (height: 100dvh) {
   .modal.think-quick-input-modal,
@@ -39,11 +40,42 @@
 @media (max-width: 768px) {
   .modal.think-quick-input-modal { border-radius: var(--think-radius-md); }
   .modal.think-quick-input-modal .think-modal.think-modal--quick-input { max-height: calc(100dvh - 16px); padding: var(--think-space-4); }
-  .modal.think-quick-input-modal--mobile.think-quick-input-keyboard-active .think-modal__footer--quick-input { position: static; }
+
   .modal.think-quick-input-modal .think-quick-input-footer-row { align-items: stretch; }
 }
 .modal.think-quick-input-modal[data-think-platform="ios"] .think-modal__footer--quick-input,
 .modal.think-quick-input-modal[data-think-platform="android"] .think-modal__footer--quick-input { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--think-space-4)); }
+
+/* A software keyboard occupies part of the layout viewport in iOS WebKit.
+ * Size the dialog to the measured visual viewport instead of compensating
+ * with a keyboard-height-sized padding inside an already shrunken scrollport. */
+.modal.think-quick-input-modal--mobile {
+  max-height: var(--think-qif-visible-height, calc(100dvh - 16px)) !important;
+}
+.modal.think-quick-input-modal--mobile .modal-content,
+.modal.think-quick-input-modal--mobile .think-modal.think-modal--quick-input {
+  max-height: var(--think-qif-visible-height, calc(100dvh - 16px));
+}
+.modal.think-quick-input-modal--mobile .think-modal__body { flex: 1 1 auto; }
+.modal.think-quick-input-modal--mobile .think-qif-textarea {
+  max-height: var(--think-qif-textarea-max-height, 320px);
+  overflow-y: auto;
+}
+.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-detected,
+.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-fallback {
+  position: fixed !important;
+  inset: auto !important;
+  top: calc(var(--think-qif-visible-top, 0px) + 8px) !important;
+  left: 50% !important;
+  margin: 0 !important;
+  transform: translateX(-50%) !important;
+}
+.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-detected .think-modal__footer--quick-input,
+.modal.think-quick-input-modal--mobile.think-quick-input-keyboard-fallback .think-modal__footer--quick-input {
+  position: static;
+  padding-bottom: var(--think-space-2);
+}
+
 
 /*
  * Stable desktop baseline for the active Quick Input editor.

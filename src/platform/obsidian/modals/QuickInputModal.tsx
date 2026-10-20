@@ -77,6 +77,10 @@ export class QuickInputModal extends Modal {
   open(): void {
     const now = Date.now();
     const signature = this.getOpenSignature();
+    // Opening the same capture again must not silently close an unsaved draft,
+    // even when a voice keyboard or another command repeats the action later.
+    if (QuickInputModal.activeModal && QuickInputModal.activeModal !== this
+      && QuickInputModal.activeModal.getOpenSignature() === signature) return;
     if (signature === QuickInputModal.lastOpenSignature && now - QuickInputModal.lastOpenAt < 450) {
       return;
     }

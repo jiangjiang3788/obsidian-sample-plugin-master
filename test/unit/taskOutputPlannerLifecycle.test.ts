@@ -3,6 +3,8 @@
  * @covers F053/unit
  */
 import { buildRecordOutputPlan } from '@/core/recordInput/snapshot/OutputPlanner';
+import { buildEditRecordState } from '@/core/recordInput/editStateResolver';
+import { buildExplicitTaskSeriesEditPlan } from '@/app/usecases/recordInput/workflows/UpdateRecordWorkflow';
 import type { RecordCaptureTemplate } from '@/core/recordInput/CaptureTemplate';
 
 const taskTemplate: RecordCaptureTemplate = {
@@ -149,4 +151,78 @@ describe('Task OutputPlanner lifecycle invariants', () => {
     expect(plan.outputContent).not.toContain('记录类型:: task-session');
   });
 
+});
+
+
+describe('Timeline Task name edit persistence regression', () => {
+  const aliasedTaskTemplate: RecordCaptureTemplate = {
+    ...taskTemplate,
+    fields: taskTemplate.fields.map((field) => field.key === '任务内容'
+      ? { ...field, key: '内容' }
+      : field),
+  };
+
+  it('does not backfill a stale 任务内容 alongside a Goal-template 内容 editor field', () => {
+    const item = {
+      id: 'task.01KZZQ6G798KJN54XBGKJVH7YX',
+      recordType: 'task',
+      status: 'open',
+      title: '旧名称',
+      content: '旧名称',
+      editableText: '旧名称',
+      scheduledAt: '2026-10-19T09:00',
+      goalPath: '工作/项目',
+      tags: [],
+      created: 0,
+      modified: 0,
+      extra: {},
+      source: { path: '01/2026/2-0其他.md', startLine: 1, endLine: 8, modified: 0 },
+    } as any;
+    const settings = {
+      goalSettings: {
+        goals: [{ path: '工作/项目', status: 'active' }],
+        goalTemplates: [{
+          goalPath: '工作/项目', recordTypeId: 'core.task', enabled: true,
+          fields: aliasedTaskTemplate.fields,
+        }],
+      },
+    } as any;
+    const prepared = buildEditRecordState({ settings, item, preferredRecordTypeId: 'core.task' });
+    expect(prepared.initialFormData['内容']).toBe('旧名称');
+    expect(prepared.initialFormData).not.toHaveProperty('任务内容');
+
+    const plan = buildRecordOutputPlan({
+      template: prepared.template,
+      recordId: item.id,
+      formData: { ...prepared.initialFormData, 内容: '新名称' },
+    });
+    expect(plan.outputContent).toContain('内容:: 新名称');
+    expect(plan.outputContent).not.toContain('内容:: 旧名称');
+  });
+
+  it('writes the edited semantic body even when legacy aliases contain an old name', () => {
+    const plan = buildRecordOutputPlan({
+      template: aliasedTaskTemplate,
+      recordId: 'task.01KZZQ6G798KJN54XBGKJVH7YY',
+      formData: { status: 'open', 内容: '修改后的名称', 任务内容: '修改前的名称' },
+    });
+    expect(plan.outputContent).toContain('内容:: 修改后的名称');
+    expect(plan.outputContent).not.toContain('内容:: 修改前的名称');
+  });
+
+  it('uses the same new name for the future occurrences of a recurring Task', () => {
+    const plan = buildRecordOutputPlan({
+      template: aliasedTaskTemplate,
+      recordId: 'task.01KZZQ6G798KJN54XBGKJVH7YZ',
+      formData: {
+        status: 'open', 内容: '周期任务新名称', 任务内容: '周期任务旧名称',
+        seriesId: 'task-series.01KZZQ6G798KJN54XBGKJVH7YZ',
+      },
+    });
+    const seriesPlan = buildExplicitTaskSeriesEditPlan({
+      item: { recordType: 'task', seriesId: 'task-series.01KZZQ6G798KJN54XBGKJVH7YZ' } as any,
+      meta: { taskSeriesEdit: { scope: 'current_and_future' } },
+    }, plan.renderData);
+    expect(seriesPlan).toMatchObject({ update: { content: '周期任务新名称' } });
+  });
 });

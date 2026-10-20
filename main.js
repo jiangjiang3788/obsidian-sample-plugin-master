@@ -11197,7 +11197,9 @@ function buildRecordOutputPlan(input) {
     const capturedAt = (/* @__PURE__ */ new Date()).toISOString();
     const taskFields = {
       status,
-      content: renderData["任务内容"] ?? renderData["内容"] ?? renderData.content,
+      // Semantic body is normalized to content by TemplateFieldAdapter.
+      // A legacy/stale 任务内容 alias must never override an edited 内容 field.
+      content: renderData.content ?? renderData["任务内容"] ?? renderData["内容"],
       goalPath: renderData.goalPath,
       priority: renderData["优先级"] ?? renderData.priority,
       importance: renderData["重要程度"] ?? renderData.importance,
@@ -27234,8 +27236,11 @@ function buildEditRecordState(input) {
     const taskBody = String(
       parsedSnapshot.semantic.editableText || parsedSnapshot.semantic.content || parsedSnapshot.semantic.title || item.extra?.["内容"] || item.extra?.["正文"] || ""
     ).trim();
-    if (taskBody && !String(initialFormData["任务内容"] ?? "").trim()) {
-      initialFormData["任务内容"] = taskBody;
+    const bodyKey = resolvedDependencies.template?.fields.find(
+      (field) => getTemplateFieldSemantic(field) === "body"
+    )?.key || "任务内容";
+    if (taskBody && !String(initialFormData[bodyKey] ?? "").trim()) {
+      initialFormData[bodyKey] = taskBody;
     }
     if (parsedSnapshot.semantic.goalPath && !String(initialFormData.goalPath ?? "").trim()) {
       initialFormData.goalPath = parsedSnapshot.semantic.goalPath;
@@ -27962,8 +27967,8 @@ function buildTaskLifecycleBypassIssue(item, formData) {
 }
 function taskSeriesDefaults(renderData) {
   const update = {};
-  if (hasAnyKey(renderData, ["任务内容", "内容", "content"])) {
-    update.content = optionScalar(renderData["任务内容"] ?? renderData["内容"] ?? renderData.content);
+  if (hasAnyKey(renderData, ["content", "任务内容", "内容"])) {
+    update.content = optionScalar(renderData.content ?? renderData["任务内容"] ?? renderData["内容"]);
   }
   if (hasAnyKey(renderData, ["goalPath", "目标"])) {
     update.goalPath = nullableText(renderData.goalPath ?? renderData["目标"]);
@@ -47183,10 +47188,22 @@ function QuickInputHierarchyFieldRenderer({
 function readInputValue$1(event) {
   return String(event.currentTarget?.value ?? "");
 }
+const pendingTextAreaResizes = /* @__PURE__ */ new WeakSet();
 function setTextareaAutoHeight(el, minHeight2) {
-  if (!el) return;
-  el.style.height = "auto";
-  el.style.height = `${Math.max(el.scrollHeight, minHeight2)}px`;
+  if (!el || pendingTextAreaResizes.has(el)) return;
+  pendingTextAreaResizes.add(el);
+  const schedule = typeof window.requestAnimationFrame === "function" ? window.requestAnimationFrame.bind(window) : (callback) => window.setTimeout(() => callback(Date.now()), 16);
+  schedule(() => {
+    pendingTextAreaResizes.delete(el);
+    if (!el.isConnected) return;
+    const priorScrollTop = el.scrollTop;
+    const appendingAtEnd = document.activeElement === el && el.selectionEnd >= el.value.length;
+    el.style.height = "auto";
+    const cssMaxHeight = Number.parseFloat(window.getComputedStyle(el).maxHeight);
+    const allowedHeight = Number.isFinite(cssMaxHeight) ? cssMaxHeight : Number.POSITIVE_INFINITY;
+    el.style.height = `${Math.max(minHeight2, Math.min(el.scrollHeight, allowedHeight))}px`;
+    el.scrollTop = appendingAtEnd ? el.scrollHeight : priorScrollTop;
+  });
 }
 function isComposingKeyboardEvent(event) {
   const nativeEvent = event.nativeEvent;
@@ -49109,6 +49126,7 @@ function QuickInputEditor({
   const dataStore = useDataStore();
   const initialFieldSource = recordInputMode === "create" ? "context" : "edit_backfill";
   const recordInputModeRef = A$1(recordInputMode);
+  const resetIdentityRef = A$1({ initialRecordTypeId, context });
   const [session, dispatchSession] = h(
     reduceRecordInputSession,
     initializeRecordInputSession({
@@ -49127,6 +49145,9 @@ function QuickInputEditor({
     timeDirection
   } = session;
   y(() => {
+    const previous = resetIdentityRef.current;
+    if (previous.initialRecordTypeId === initialRecordTypeId && previous.context === context) return;
+    resetIdentityRef.current = { initialRecordTypeId, context };
     const modeForReset = recordInputModeRef.current;
     const sourceForReset = modeForReset === "create" ? "context" : "edit_backfill";
     dispatchSession({
@@ -50375,8 +50396,21 @@ function unmountModalContent(containerEl) {
   } catch (error) {
   }
 }
+function resolveQuickInputKeyboardViewportState(input) {
+  const heightDiff = Math.max(0, Math.round(input.baselineViewportHeight - input.viewportHeight));
+  const detected = input.focused && heightDiff > 150;
+  return {
+    detected,
+    keyboardHeight: detected ? heightDiff : 0,
+    viewportBottom: (input.viewportTop || 0) + input.viewportHeight,
+    // For WebViews which do not expose keyboard resize, reserve space only
+    // after focus has been stable for a short time (see fallback below).
+    anticipatedInset: input.focused && !detected ? Math.min(320, Math.max(220, Math.round(input.baselineViewportHeight * 0.34))) : 0
+  };
+}
 function setCssPx(el, name, height2) {
-  el.style.setProperty(name, `${Math.max(0, Math.round(height2))}px`);
+  const value = `${Math.max(0, Math.round(height2))}px`;
+  if (el.style.getPropertyValue(name) !== value) el.style.setProperty(name, value);
 }
 function isKeyboardInput(el) {
   if (!(el instanceof HTMLElement)) return false;
@@ -50386,15 +50420,17 @@ function isKeyboardInput(el) {
 function setupQuickInputKeyboardDetection(host) {
   const { contentEl, modalEl } = host;
   let baselineViewportHeight = window.visualViewport?.height || window.innerHeight;
-  const keyboardActivationThreshold = 150;
-  const suspectedBottomInset = 156;
-  const detectedBottomInsetExtra = 120;
-  const setKeyboardHeight = (height2) => {
-    setCssPx(modalEl, "--keyboard-height", height2);
-    setCssPx(document.documentElement, "--keyboard-height", height2);
-  };
-  const setAccessoryInset = (height2) => {
-    setCssPx(modalEl, "--keyboard-accessory-inset", height2);
+  let focusedAt = Date.now();
+  let disposed2 = false;
+  let visibilityFrame = 0;
+  let viewportFrame = 0;
+  const scheduledTimers = /* @__PURE__ */ new Set();
+  const scheduleTimeout = (callback, delay) => {
+    const id = window.setTimeout(() => {
+      scheduledTimers.delete(id);
+      if (!disposed2) callback();
+    }, delay);
+    scheduledTimers.add(id);
   };
   const hasActiveKeyboardInput = () => {
     const activeElement2 = document.activeElement;
@@ -50402,123 +50438,143 @@ function setupQuickInputKeyboardDetection(host) {
   };
   const getBodyContainer = () => contentEl.querySelector(".think-modal__body");
   const ensureTargetVisible = (target) => {
+    if (disposed2) return;
     const activeTarget = target && contentEl.contains(target) ? target : document.activeElement;
     if (!activeTarget || !isKeyboardInput(activeTarget) || !contentEl.contains(activeTarget)) return;
     const container = getBodyContainer();
     if (!container) return;
-    const anchor = activeTarget.closest(".think-form-row, .think-inline-field-row, .think-textarea-row");
-    const node2 = anchor || activeTarget;
+    const node2 = activeTarget.tagName === "TEXTAREA" ? activeTarget : activeTarget.closest(".think-form-row, .think-inline-field-row, .think-textarea-row") || activeTarget;
     const nodeRect = node2.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
-    const accessoryInset = Number.parseInt(modalEl.style.getPropertyValue("--keyboard-accessory-inset") || "0", 10) || suspectedBottomInset;
     const safeTop = containerRect.top + 12;
-    const safeBottom = containerRect.bottom - Math.max(72, accessoryInset);
-    if (nodeRect.bottom > safeBottom) {
-      container.scrollTop += nodeRect.bottom - safeBottom + 28;
-    } else if (nodeRect.top < safeTop) {
-      container.scrollTop -= safeTop - nodeRect.top + 12;
-    }
-    if (activeTarget instanceof HTMLTextAreaElement) {
-      const lineReserve = 44;
-      const caretBottom = activeTarget.scrollHeight - activeTarget.scrollTop;
-      const visibleHeight = activeTarget.clientHeight - lineReserve;
-      if (caretBottom > visibleHeight) {
-        activeTarget.scrollTop = Math.max(0, activeTarget.scrollHeight - visibleHeight);
+    const safeBottom = containerRect.bottom - 12;
+    const availableHeight = Math.max(0, safeBottom - safeTop);
+    if (availableHeight <= 0) return;
+    const textarea = activeTarget instanceof HTMLTextAreaElement ? activeTarget : null;
+    const typingAtEnd = !!textarea && textarea.selectionEnd >= textarea.value.length;
+    if (nodeRect.height > availableHeight) {
+      if (typingAtEnd && nodeRect.bottom > safeBottom) {
+        container.scrollTop += nodeRect.bottom - safeBottom + 8;
+      } else if (nodeRect.top > safeTop) {
+        container.scrollTop += nodeRect.top - safeTop;
+      } else if (nodeRect.bottom < safeBottom) {
+        container.scrollTop -= safeBottom - nodeRect.bottom;
       }
+    } else if (nodeRect.bottom > safeBottom) {
+      container.scrollTop += nodeRect.bottom - safeBottom + 8;
+    } else if (nodeRect.top < safeTop) {
+      container.scrollTop -= safeTop - nodeRect.top + 8;
     }
   };
   const updateKeyboardState = (target) => {
-    const viewportHeight = window.visualViewport?.height || window.innerHeight;
-    const heightDiff = Math.max(0, Math.round(baselineViewportHeight - viewportHeight));
-    const hasFocusedInput = hasActiveKeyboardInput();
-    const detected = heightDiff > keyboardActivationThreshold && hasFocusedInput;
-    const suspected = hasFocusedInput;
-    modalEl.classList.toggle("think-quick-input-keyboard-detected", detected);
-    modalEl.classList.toggle("think-quick-input-keyboard-suspected", suspected);
-    if (detected) {
-      setKeyboardHeight(heightDiff);
-      setAccessoryInset(heightDiff + detectedBottomInsetExtra);
-      const offsetTop = window.visualViewport?.offsetTop || 0;
-      modalEl.style.setProperty("--keyboard-offset", `${offsetTop}px`);
-    } else if (suspected) {
-      setKeyboardHeight(0);
-      setAccessoryInset(suspectedBottomInset);
-      modalEl.style.removeProperty("--keyboard-offset");
-    } else {
-      setKeyboardHeight(0);
-      setAccessoryInset(0);
-      modalEl.style.removeProperty("--keyboard-offset");
-    }
-    if (heightDiff <= 0 && !hasFocusedInput) {
+    if (disposed2) return;
+    const viewport2 = window.visualViewport;
+    const viewportHeight = viewport2?.height || window.innerHeight;
+    const viewportTop = viewport2?.offsetTop || 0;
+    const focused = hasActiveKeyboardInput();
+    const state = resolveQuickInputKeyboardViewportState({
+      baselineViewportHeight,
+      viewportHeight,
+      viewportTop,
+      focused
+    });
+    const fallback = focused && !state.detected && Date.now() - focusedAt >= 450;
+    const availableHeight = Math.max(190, viewportHeight - (fallback ? state.anticipatedInset : 0) - 16);
+    modalEl.classList.toggle("think-quick-input-keyboard-detected", state.detected);
+    modalEl.classList.toggle("think-quick-input-keyboard-suspected", focused);
+    modalEl.classList.toggle("think-quick-input-keyboard-fallback", fallback);
+    setCssPx(modalEl, "--keyboard-height", state.keyboardHeight);
+    setCssPx(modalEl, "--think-qif-visible-height", availableHeight);
+    setCssPx(modalEl, "--think-qif-visible-top", viewportTop);
+    setCssPx(modalEl, "--think-qif-textarea-max-height", Math.max(128, Math.min(320, availableHeight * 0.48)));
+    setCssPx(document.documentElement, "--keyboard-height", state.keyboardHeight);
+    if (!focused && viewportHeight >= baselineViewportHeight - 1) {
       baselineViewportHeight = viewportHeight;
     }
-    if (suspected) {
-      ensureTargetVisible(target);
-    }
+    if (focused) ensureTargetVisible(target);
   };
-  const scheduleVisibilityPasses = (target) => {
-    const run = () => updateKeyboardState(target);
-    requestAnimationFrame(run);
-    window.setTimeout(run, 120);
-    window.setTimeout(run, 260);
-    window.setTimeout(run, 420);
+  const scheduleViewportUpdate = () => {
+    if (disposed2 || viewportFrame) return;
+    viewportFrame = window.requestAnimationFrame(() => {
+      viewportFrame = 0;
+      updateKeyboardState();
+    });
+  };
+  const scheduleVisibility = () => {
+    if (disposed2 || visibilityFrame) return;
+    visibilityFrame = window.requestAnimationFrame(() => {
+      visibilityFrame = window.requestAnimationFrame(() => {
+        visibilityFrame = 0;
+        ensureTargetVisible();
+      });
+    });
   };
   const handleFocusIn = (event) => {
-    const target = event.target;
-    if (!isKeyboardInput(target)) return;
-    scheduleVisibilityPasses(target);
+    if (!isKeyboardInput(event.target)) return;
+    focusedAt = Date.now();
+    updateKeyboardState(event.target);
+    scheduleTimeout(() => updateKeyboardState(), 120);
+    scheduleTimeout(() => updateKeyboardState(), 280);
+    scheduleTimeout(() => updateKeyboardState(), 540);
   };
-  const handleFocusOut = (event) => {
-    if (!(event.target instanceof HTMLElement)) {
-      window.setTimeout(() => updateKeyboardState(document.activeElement), 60);
-      return;
+  const handleFocusOut = () => scheduleTimeout(() => updateKeyboardState(), 60);
+  const handleInput = (event) => {
+    if (isKeyboardInput(event.target)) scheduleVisibility();
+  };
+  const handleCompositionEnd = (event) => {
+    if (isKeyboardInput(event.target)) {
+      scheduleVisibility();
+      scheduleTimeout(() => ensureTargetVisible(), 70);
     }
-    if (!contentEl.contains(event.target)) {
-      window.setTimeout(() => updateKeyboardState(document.activeElement), 60);
-      return;
-    }
-    window.setTimeout(() => updateKeyboardState(document.activeElement), 60);
   };
-  const handleViewportResize = () => {
-    updateKeyboardState(document.activeElement);
-  };
-  const handleViewportScroll = () => {
-    updateKeyboardState(document.activeElement);
-  };
-  const handleOrientationChange = () => {
-    setTimeout(() => {
+  const handleOrientationChange = () => scheduleTimeout(() => {
+    if (!hasActiveKeyboardInput()) {
       baselineViewportHeight = window.visualViewport?.height || window.innerHeight;
-      updateKeyboardState(document.activeElement);
-    }, 500);
-  };
+    } else {
+      baselineViewportHeight = Math.max(window.innerHeight, window.visualViewport?.height || 0);
+    }
+    updateKeyboardState();
+  }, 500);
   contentEl.addEventListener("focusin", handleFocusIn);
   contentEl.addEventListener("focusout", handleFocusOut);
+  contentEl.addEventListener("input", handleInput, true);
+  contentEl.addEventListener("compositionend", handleCompositionEnd, true);
   if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", handleViewportResize);
-    window.visualViewport.addEventListener("scroll", handleViewportScroll, { passive: true });
+    window.visualViewport.addEventListener("resize", scheduleViewportUpdate);
+    window.visualViewport.addEventListener("scroll", scheduleViewportUpdate, { passive: true });
   } else {
-    window.addEventListener("resize", handleViewportResize);
+    window.addEventListener("resize", scheduleViewportUpdate);
   }
   window.addEventListener("orientationchange", handleOrientationChange);
-  setKeyboardHeight(0);
-  setAccessoryInset(0);
-  updateKeyboardState(document.activeElement);
+  updateKeyboardState();
   return () => {
+    disposed2 = true;
     contentEl.removeEventListener("focusin", handleFocusIn);
     contentEl.removeEventListener("focusout", handleFocusOut);
+    contentEl.removeEventListener("input", handleInput, true);
+    contentEl.removeEventListener("compositionend", handleCompositionEnd, true);
     if (window.visualViewport) {
-      window.visualViewport.removeEventListener("resize", handleViewportResize);
-      window.visualViewport.removeEventListener("scroll", handleViewportScroll);
+      window.visualViewport.removeEventListener("resize", scheduleViewportUpdate);
+      window.visualViewport.removeEventListener("scroll", scheduleViewportUpdate);
     } else {
-      window.removeEventListener("resize", handleViewportResize);
+      window.removeEventListener("resize", scheduleViewportUpdate);
     }
     window.removeEventListener("orientationchange", handleOrientationChange);
+    scheduledTimers.forEach((id) => window.clearTimeout(id));
+    if (visibilityFrame) window.cancelAnimationFrame(visibilityFrame);
+    if (viewportFrame) window.cancelAnimationFrame(viewportFrame);
     document.documentElement.style.removeProperty("--keyboard-height");
-    modalEl.style.removeProperty("--keyboard-height");
-    modalEl.style.removeProperty("--keyboard-accessory-inset");
-    modalEl.style.removeProperty("--keyboard-offset");
-    modalEl.classList.remove("think-quick-input-keyboard-detected");
-    modalEl.classList.remove("think-quick-input-keyboard-suspected");
+    for (const property of [
+      "--keyboard-height",
+      "--think-qif-visible-height",
+      "--think-qif-visible-top",
+      "--think-qif-textarea-max-height"
+    ]) modalEl.style.removeProperty(property);
+    modalEl.classList.remove(
+      "think-quick-input-keyboard-detected",
+      "think-quick-input-keyboard-suspected",
+      "think-quick-input-keyboard-fallback"
+    );
   };
 }
 function formatQuickInputNotice(message, tone = "error") {
@@ -50573,6 +50629,7 @@ class QuickInputModal extends obsidian.Modal {
   open() {
     const now2 = Date.now();
     const signature = this.getOpenSignature();
+    if (QuickInputModal.activeModal && QuickInputModal.activeModal !== this && QuickInputModal.activeModal.getOpenSignature() === signature) return;
     if (signature === QuickInputModal.lastOpenSignature && now2 - QuickInputModal.lastOpenAt < 450) {
       return;
     }
@@ -69366,38 +69423,45 @@ function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPullDevBui
   const [preview, setPreview] = d(null);
   const [checkError, setCheckError] = d("");
   const [state, setState] = d({ kind: "idle", message: "" });
+  const [showPinnedFallback, setShowPinnedFallback] = d(false);
+  const inspectRef = A$1(onInspectDevBuild);
+  inspectRef.current = onInspectDevBuild;
   y(() => {
-    if (!onInspectDevBuild) return;
+    const inspect = inspectRef.current;
+    if (!inspect) return;
     let mounted = true;
     setChecking(true);
-    onInspectDevBuild().then((info) => {
+    inspect().then((info) => {
       if (mounted) {
         setPreview(info);
         setCheckError("");
       }
-    }).catch(() => {
-      if (mounted) setCheckError("远端版本信息暂不可用，可直接尝试下载");
+    }).catch((error) => {
+      if (mounted) setCheckError(`检查 GitHub 版本失败：${error instanceof Error ? error.message : String(error)}`);
     }).finally(() => {
       if (mounted) setChecking(false);
     });
     return () => {
       mounted = false;
     };
-  }, [onInspectDevBuild]);
-  const handlePull = async () => {
+  }, []);
+  const handlePull = async (pinnedPreview = null) => {
     if (updating) return;
     setUpdating(true);
+    setShowPinnedFallback(false);
     setState({ kind: "idle", message: "" });
     try {
-      const result = await onPullDevBuild();
+      const result = await onPullDevBuild(pinnedPreview);
       const versionText = currentVersion ? `${currentVersion} → ${result.remoteVersion}` : result.remoteVersion;
       const time2 = result.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(result.githubPushedAt)}` : `GitHub 推送时间：暂未查到该版本的推送记录；Git 提交时间（非推送时间）：${formatGitHubCommitTime(result.githubCommitAt)}`;
       setPreview(result);
       setState({
         kind: "success",
-        message: `已拉取 GitHub ${result.branch} 开发版（${versionText}，SHA ${result.commitSha.slice(0, 7)}）。${time2}。请完全关闭并重新打开 Obsidian。`
+        message: `已拉取 GitHub ${result.branch} 开发版（${versionText}，SHA ${result.commitSha.slice(0, 7)}）。${time2}。${pinnedPreview ? "本次安装的是之前检查的 SHA，未验证它仍为最新。" : ""}请完全关闭并重新打开 Obsidian。`
       });
     } catch (error) {
+      const isHeadError = Boolean(error && typeof error === "object" && "requestStage" in error && error.requestStage === "head");
+      setShowPinnedFallback(!pinnedPreview && isHeadError && Boolean(preview));
       setState({ kind: "error", message: `拉取失败：${error instanceof Error ? error.message : String(error)}` });
     } finally {
       setUpdating(false);
@@ -69412,12 +69476,19 @@ function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPullDevBui
         " · SHA：",
         preview.commitSha.slice(0, 7),
         " · ",
-        preview.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(preview.githubPushedAt)}` : `GitHub 推送时间：暂未查到该版本的推送记录；Git 提交时间（非推送时间）：${formatGitHubCommitTime(preview.githubCommitAt)}`
+        preview.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(preview.githubPushedAt)}` : `${state.kind === "success" ? "GitHub 推送时间：暂未查到对应推送记录" : "GitHub 推送时间：安装后查询"}；Git 提交时间（非推送时间）：${formatGitHubCommitTime(preview.githubCommitAt)}`
       ] }) : checking ? /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "正在读取 GitHub 版本与提交时间…" }) : checkError ? /* @__PURE__ */ u2("span", { className: "think-settings-help", children: checkError }) : null,
       /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", loading: updating, onClick: () => {
         void handlePull();
       }, children: updating ? "正在拉取…" : "从 GitHub 拉取最新开发版" }),
-      /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "点击时重新获取 main 最新 SHA，再下载并校验三个插件文件；失败自动回滚。GitHub 推送时间只在匹配到该 SHA 的 PushEvent 时显示，查询失败不会阻止下载或重启提示。" }),
+      showPinnedFallback && preview && !updating ? /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: () => {
+        void handlePull(preview);
+      }, children: [
+        "下载已检查的 ",
+        preview.commitSha.slice(0, 7),
+        "（可能不是最新）"
+      ] }) : null,
+      /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "正常下载会重新检查 main 最新 SHA，并校验三个插件文件，失败自动回滚。推送时间只在成功安装后尝试查询一次；若 GitHub 拒绝查询最新提交，可明确选择已检查的 SHA（可能不是最新）。" }),
       state.kind !== "idle" ? /* @__PURE__ */ u2(ThinkNotice, { tone: state.kind === "success" ? "success" : "danger", children: state.message }) : null
     ] })
   ] }) });
@@ -72045,19 +72116,73 @@ function validIsoTime(value) {
   return typeof value === "string" && Number.isFinite(Date.parse(value)) ? new Date(value).toISOString() : null;
 }
 function rawFileUrl(file, revision) {
-  return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${revision}/${file}?t=${Date.now()}`;
+  return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${revision}/${file}`;
+}
+class GitHubRequestError extends Error {
+  constructor(requestStage, httpStatus, message) {
+    super(message);
+    this.requestStage = requestStage;
+    this.httpStatus = httpStatus;
+    this.name = "GitHubRequestError";
+  }
+  requestStage;
+  httpStatus;
+}
+function responseHeader(response, name) {
+  return Object.entries(response.headers || {}).find(([key]) => key.toLowerCase() === name)?.[1];
+}
+function responseJson(response) {
+  if (typeof response.text === "string") return JSON.parse(response.text);
+  return response.json;
+}
+function describeHttpFailure(stage, operation, response) {
+  const status = response.status;
+  const remaining = responseHeader(response, "x-ratelimit-remaining");
+  const retryAfter = responseHeader(response, "retry-after");
+  const reset = Number(responseHeader(response, "x-ratelimit-reset"));
+  const resetTime = Number.isFinite(reset) && reset > 0 ? new Date(reset * 1e3).toLocaleString("zh-CN", { hour12: false }) : null;
+  let reason = "";
+  if (status === 403 || status === 429) {
+    if (remaining === "0") reason = resetTime ? `GitHub API 配额已用完，请在 ${resetTime} 后再试` : "GitHub API 配额已用完，请稍后重试";
+    else if (retryAfter) reason = `GitHub 要求等待 ${retryAfter} 秒后重试`;
+    else reason = "请求被拒绝，可能是访问限制、限流或网络代理问题";
+  } else if (status === 404) reason = "目标文件不存在或仓库未推送该构建产物";
+  let serverMessage = "";
+  try {
+    const message = responseJson(response)?.message;
+    if (typeof message === "string") serverMessage = message.replace(/\s+/g, " ").slice(0, 160);
+  } catch {
+  }
+  const extra = [reason, serverMessage].filter(Boolean).join("；");
+  return new GitHubRequestError(
+    stage,
+    status,
+    `${operation} 失败：HTTP ${status}${extra ? `（${extra}）` : ""}；尚未覆盖本地文件`
+  );
 }
 async function readGitHubHead() {
+  let response;
+  try {
+    response = await obsidian.requestUrl({
+      url: `${GITHUB_API}/commits/${GITHUB_BRANCH}`,
+      headers: { Accept: "application/vnd.github+json", "Cache-Control": "no-cache" },
+      throw: false
+    });
+  } catch (error) {
+    throw new GitHubRequestError(
+      "head",
+      null,
+      `获取 GitHub ${GITHUB_BRANCH} 最新提交失败（api.github.com）：${errorText(error)}；尚未覆盖本地文件`
+    );
+  }
+  if (response.status !== 200) {
+    throw describeHttpFailure("head", `获取 GitHub ${GITHUB_BRANCH} 最新提交（api.github.com）`, response);
+  }
   let payload;
   try {
-    const response = await obsidian.requestUrl({
-      url: `${GITHUB_API}/commits/${GITHUB_BRANCH}?t=${Date.now()}`,
-      headers: { Accept: "application/vnd.github+json" }
-    });
-    if (response.status !== 200) throw new Error(`HTTP ${response.status}`);
-    payload = response.json;
-  } catch (error) {
-    throw new Error(`获取 GitHub ${GITHUB_BRANCH} 最新提交失败：${errorText(error)}；尚未覆盖本地文件`);
+    payload = responseJson(response);
+  } catch {
+    throw new Error("GitHub 最新提交响应不是有效 JSON，已停止下载");
   }
   if (!isCommitSha(payload?.sha)) throw new Error("GitHub 未返回有效提交 SHA，已停止下载");
   return { sha: payload.sha, committedAt: validIsoTime(payload?.commit?.committer?.date) };
@@ -72073,17 +72198,13 @@ function findGitHubRevisionPushTime(events2, sha) {
 }
 async function readGitHubPushTime(sha) {
   try {
-    for (let page = 1; page <= 3; page++) {
-      const response = await obsidian.requestUrl({
-        url: `${GITHUB_API}/events?per_page=100&page=${page}`,
-        headers: { Accept: "application/vnd.github+json" }
-      });
-      if (response.status !== 200 || !Array.isArray(response.json)) return null;
-      const matched = findGitHubRevisionPushTime(response.json, sha);
-      if (matched) return matched;
-      if (response.json.length < 100) break;
-    }
-    return null;
+    const response = await obsidian.requestUrl({
+      url: `${GITHUB_API}/events?per_page=100`,
+      headers: { Accept: "application/vnd.github+json" },
+      throw: false
+    });
+    if (response.status !== 200) return null;
+    return findGitHubRevisionPushTime(responseJson(response), sha);
   } catch {
     return null;
   }
@@ -72118,29 +72239,35 @@ function parseAndValidateManifest(text2, expectedPluginId) {
 async function readFileAtRevision(file, sha) {
   let response;
   try {
-    response = await obsidian.requestUrl({ url: rawFileUrl(file, sha) });
+    response = await obsidian.requestUrl({ url: rawFileUrl(file, sha), throw: false });
   } catch (error) {
-    throw new Error(`下载 ${file}（${sha.slice(0, 7)}）失败：${errorText(error)}；尚未覆盖本地文件`);
+    throw new GitHubRequestError(
+      "file",
+      null,
+      `下载 ${file}（${sha.slice(0, 7)}，raw.githubusercontent.com）失败：${errorText(error)}；尚未覆盖本地文件`
+    );
   }
   if (response.status !== 200) {
-    throw new Error(`下载 ${file}（${sha.slice(0, 7)}）失败：HTTP ${response.status}；尚未覆盖本地文件`);
+    throw describeHttpFailure(
+      "file",
+      `下载 ${file}（${sha.slice(0, 7)}，raw.githubusercontent.com）`,
+      response
+    );
   }
   assertDownloadedFile(file, response.text);
   return response.text;
 }
 async function downloadPinnedBuild(sha) {
-  const entries = await Promise.all(DEV_BUILD_FILES.map(async (file) => [file, await readFileAtRevision(file, sha)]));
-  return Object.fromEntries(entries);
+  const downloaded = {};
+  for (const file of DEV_BUILD_FILES) downloaded[file] = await readFileAtRevision(file, sha);
+  return downloaded;
 }
 async function infoAtHead(head, expectedPluginId) {
-  const [manifestText, githubPushedAt] = await Promise.all([
-    readFileAtRevision("manifest.json", head.sha),
-    waitForPushTime(readGitHubPushTime(head.sha))
-  ]);
+  const manifestText = await readFileAtRevision("manifest.json", head.sha);
   return {
     remoteVersion: parseAndValidateManifest(manifestText, expectedPluginId).version,
     branch: GITHUB_BRANCH,
-    githubPushedAt,
+    githubPushedAt: null,
     githubCommitAt: head.committedAt,
     commitSha: head.sha
   };
@@ -72191,13 +72318,20 @@ async function installPinnedFiles(adapter, dir, downloaded) {
     throw new Error(`${message}；已回滚到原版本`);
   }
 }
-async function pullGitHubDevBuild(host, _preview) {
-  const head = await readGitHubHead();
-  const pushTimePromise = readGitHubPushTime(head.sha);
+async function pullGitHubDevBuild(host, pinnedPreview) {
+  const pinned = pinnedPreview != null;
+  if (pinned && !isCommitSha(pinnedPreview.commitSha)) {
+    throw new Error("已检查版本 SHA 无效，已停止下载");
+  }
+  const head = pinned ? { sha: pinnedPreview.commitSha, committedAt: pinnedPreview.githubCommitAt } : await readGitHubHead();
   const downloaded = await downloadPinnedBuild(head.sha);
   const manifest = parseAndValidateManifest(downloaded["manifest.json"], host.manifest.id);
+  if (pinned && manifest.version !== pinnedPreview.remoteVersion) {
+    throw new Error("已检查版本与下载的 manifest.json 不一致，未覆盖本地文件");
+  }
   const pluginDir = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
   await installPinnedFiles(host.app.vault.adapter, pluginDir, downloaded);
+  const pushTimePromise = pinnedPreview?.githubPushedAt ? Promise.resolve(pinnedPreview.githubPushedAt) : readGitHubPushTime(head.sha);
   const githubPushedAt = await waitForPushTime(pushTimePromise);
   const installed = {
     remoteVersion: manifest.version,
@@ -72206,9 +72340,10 @@ async function pullGitHubDevBuild(host, _preview) {
     githubPushedAt,
     commitSha: head.sha
   };
+  const warning = pinned ? "\n本次安装先前检查的 SHA，未验证它仍是 main 最新提交。" : "";
   let notice = null;
   try {
-    notice = new obsidian.Notice(formatGitHubDevRestartNotice(installed), 0);
+    notice = new obsidian.Notice(formatGitHubDevRestartNotice(installed) + warning, 0);
   } catch {
   }
   if (!githubPushedAt && notice) {
@@ -72219,7 +72354,7 @@ async function pullGitHubDevBuild(host, _preview) {
         successNotice.setMessage(formatGitHubDevRestartNotice({
           ...installed,
           githubPushedAt: latePushedAt
-        }));
+        }) + warning);
       } catch {
       }
     });
@@ -72256,7 +72391,7 @@ class ThinkSettingsView extends obsidian.ItemView {
           variant: "workspace",
           currentVersion: this.plugin.manifest.version,
           onInspectDevBuild: () => getGitHubDevBuildInfo(this.plugin.manifest.id),
-          onPullDevBuild: (preview) => pullGitHubDevBuild(this.plugin)
+          onPullDevBuild: (preview) => pullGitHubDevBuild(this.plugin, preview)
         }
       ),
       this.services
@@ -72315,7 +72450,7 @@ class SettingsTab extends obsidian.PluginSettingTab {
         {
           currentVersion: this.plugin.manifest.version,
           onInspectDevBuild: () => getGitHubDevBuildInfo(this.plugin.manifest.id),
-          onPullDevBuild: (preview) => pullGitHubDevBuild(this.plugin),
+          onPullDevBuild: (preview) => pullGitHubDevBuild(this.plugin, preview),
           onOpenWorkspace: () => {
             void openThinkSettingsWorkspaceView(this.plugin).catch((error) => {
               new obsidian.Notice(`打开 思考系统控制台失败：${error instanceof Error ? error.message : String(error)}`);

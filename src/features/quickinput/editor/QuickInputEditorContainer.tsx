@@ -61,6 +61,9 @@ export function QuickInputEditor({
   const dataStore = useDataStore();
   const initialFieldSource = recordInputMode === 'create' ? 'context' : 'edit_backfill';
   const recordInputModeRef = useRef(recordInputMode);
+  // Initialization already uses these props in useReducer. A second reset in
+  // the first passive effect can erase text entered while the modal is opening.
+  const resetIdentityRef = useRef({ initialRecordTypeId, context });
   const [session, dispatchSession] = useReducer(
     reduceRecordInputSession,
     initializeRecordInputSession({
@@ -82,6 +85,9 @@ export function QuickInputEditor({
 
   // 不要依赖 initialFormData（可能是新对象）→ 用 block/context 变化作为 reset 语义。
   useEffect(() => {
+    const previous = resetIdentityRef.current;
+    if (previous.initialRecordTypeId === initialRecordTypeId && previous.context === context) return;
+    resetIdentityRef.current = { initialRecordTypeId, context };
     const modeForReset = recordInputModeRef.current;
     const sourceForReset = modeForReset === 'create' ? 'context' : 'edit_backfill';
     dispatchSession({
