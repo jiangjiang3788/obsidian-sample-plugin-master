@@ -6,7 +6,7 @@ import type { WorkspaceLeaf } from 'obsidian';
 import type { PluginHost } from '@core/ports/public';
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { SettingsRoot } from './SettingsRoot';
-import { pullGitHubDevBuild } from './GitHubDevUpdater';
+import { getGitHubDevBuildInfo, pullGitHubDevBuild } from './GitHubDevUpdater';
 
 export const THINK_SETTINGS_VIEW_TYPE = 'think-os-settings-view';
 
@@ -39,7 +39,8 @@ export class ThinkSettingsView extends ItemView {
                 app={this.plugin.app}
                 variant="workspace"
                 currentVersion={this.plugin.manifest.version}
-                onPullDevBuild={() => pullGitHubDevBuild(this.plugin)}
+                onInspectDevBuild={() => getGitHubDevBuildInfo(this.plugin.manifest.id)}
+                onPullDevBuild={(preview) => pullGitHubDevBuild(this.plugin, preview)}
             />,
             this.services,
         );

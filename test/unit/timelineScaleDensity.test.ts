@@ -96,6 +96,19 @@ describe('统一时间轴刻度密度 · A 科学基线', () => {
     }
   });
 
+  it('始终绘制 03/06/09/12 关键时刻，缩小到 10px/小时仍不丢线', () => {
+    for (const hourHeight of [10, 20, 50, 120]) {
+      const scale = buildTimelineScale({ hourHeight, maxHours: 24 });
+      for (const minute of [180, 360, 540, 720]) {
+        const tick = scale.ticks.find((item) => item.minute === minute);
+        expect(tick).toBeTruthy();
+        expect(tick?.showInGrid).toBe(true);
+        expect(tick?.level).toBe('hour');
+      }
+      expect(scale.ticks.map((tick) => tick.minute)).toEqual([...scale.ticks.map((tick) => tick.minute)].sort((a, b) => a - b));
+    }
+  });
+
   it('渲染分辨率不改变记录时间范围或偏移精度', () => {
     const fine = buildTimelineScale({ hourHeight: 60, startMinute: 9 * 60 + 7, endMinute: 10 * 60 + 13, densityMode: 'fine' });
     const compact = buildTimelineScale({ hourHeight: 60, startMinute: 9 * 60 + 7, endMinute: 10 * 60 + 13, densityMode: 'compact' });

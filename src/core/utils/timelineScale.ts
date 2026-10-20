@@ -1,6 +1,14 @@
 export type TimelineTickLevel = 'hour' | 'half' | 'quarter' | 'five';
 export type TimelineDensityMode = 'fine' | 'compact';
 
+/** One canonical schedule for highlighted clock anchors across all clients. */
+export const TIMELINE_KEY_HOURS = [3, 6, 9, 12] as const;
+export type TimelineKeyHour = (typeof TIMELINE_KEY_HOURS)[number];
+export function timelineKeyHour(minute: number): TimelineKeyHour | null {
+  const hour = minute / 60;
+  return TIMELINE_KEY_HOURS.find((candidate) => candidate === hour) ?? null;
+}
+
 export interface TimelineScaleTick {
   minute: number;
   offset: number;
@@ -184,6 +192,22 @@ export function buildTimelineScale(input: {
       showInGrid: minute % gridStepMinutes === 0,
     });
   }
+
+  // Important daily anchors stay visible even when extreme zoom-out skips their
+  // normal hour ticks. They are rendering-only and never affect time snapping.
+  for (const minute of TIMELINE_KEY_HOURS.map((hour) => hour * 60)) {
+    if (minute < start || minute > end || ticks.some((tick) => tick.minute === minute)) continue;
+    const style = TIMELINE_TICK_STYLE.hour;
+    ticks.push({
+      minute,
+      offset: (minute - start) * pixelsPerMinute,
+      level: 'hour',
+      strokeWidth: style.width,
+      strokeOpacity: style.opacity,
+      showInGrid: true,
+    });
+  }
+  ticks.sort((a, b) => a.minute - b.minute);
 
   return {
     hourHeight,

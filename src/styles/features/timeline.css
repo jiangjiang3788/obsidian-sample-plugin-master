@@ -6,8 +6,42 @@
   --timeline-time-axis-width: 90px;
   container: think-timeline / inline-size;
   overflow-x: auto;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
   color: var(--think-text-primary);
+  /* Timeline cells are interaction targets, never selectable article text. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
+
+/* A horizontal-only overflow element computes overflow-y:auto in WebKit.
+ * Without a bounded height it can swallow vertical swipes without actually
+ * scrolling. Give touch devices a real native two-axis scroller instead. */
+@media (hover: none) and (pointer: coarse) {
+  .timeline-view-wrapper {
+    max-height: 68vh;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+  }
+  @supports (height: 100dvh) {
+    .timeline-view-wrapper { max-height: 68dvh; }
+  }
+}
+
+/* The Obsidian mobile class is a stable fallback when an Android WebView
+ * reports mouse-like hover/pointer capabilities (stylus, Samsung DeX, etc.). */
+body.is-mobile .timeline-view-wrapper {
+  max-height: 68vh;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+}
+@supports (height: 100dvh) {
+  body.is-mobile .timeline-view-wrapper { max-height: 68dvh; }
+}
+
 
 .timeline-sticky-header,
 .timeline-scrollable-body {
@@ -51,9 +85,12 @@
   position: relative;
   cursor: crosshair;
   user-select: none;
-  /* Keep both native scroll axes available until a touch long-press explicitly
-   * arms range creation. The gesture handler only prevents default after arm. */
-  touch-action: pan-x pan-y pinch-zoom;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  /* Native scroll owns both axes, while app-owned PointerEvent logic handles
+   * two-finger timeline zoom (do not opt into browser page pinch zoom).
+   * Only an armed long press may prevent the touchmove default. */
+  touch-action: pan-x pan-y;
 }
 
 .day-column-body--touch-select-armed {
@@ -156,7 +193,8 @@
   left: var(--think-space-1);
   right: var(--think-space-1);
   min-height: 2px;
-  --timeline-fill-opacity: 0.12;
+  --timeline-fill-opacity: 0.24;
+  --timeline-fill-strength: 24%;
 }
 
 .timeline-task-link {
@@ -183,8 +221,8 @@
   gap: var(--think-space-2);
   overflow: hidden;
   padding: var(--think-space-1) var(--think-space-2);
-  border-inline-start: 2px solid var(--timeline-goal-color, #718096);
-  background: var(--think-bg-canvas, var(--background-primary, transparent));
+  border-inline-start: 3px solid var(--timeline-goal-color, var(--think-data-neutral));
+  background: var(--think-bg-surface-2);
   color: var(--think-text-primary);
   font-size: var(--think-viz-font-meta);
   line-height: var(--think-line-height-tight);
@@ -233,13 +271,19 @@
   outline-offset: -1px;
 }
 
-.timeline-task-block--open { --timeline-fill-opacity: 0.11; }
+.timeline-task-block--open {
+  --timeline-fill-opacity: 0.24;
+  --timeline-fill-strength: 24%;
+}
 
 .timeline-task-block--open .timeline-task-status {
   opacity: 0.72;
 }
 
-.timeline-task-block--done { --timeline-fill-opacity: 0.22; }
+.timeline-task-block--done {
+  --timeline-fill-opacity: 0.38;
+  --timeline-fill-strength: 38%;
+}
 
 .timeline-task-block--done .timeline-task-status {
   font-weight: var(--think-font-weight-bold);
@@ -319,6 +363,23 @@
   }
 }
 
+/* Container queries may be unsupported in older Android WebViews. This
+ * fallback retains usable widths without creating a second mobile stylesheet. */
+@supports not (container-type: inline-size) {
+  @media (max-width: 720px) {
+    .timeline-sticky-header, .timeline-scrollable-body {
+      --timeline-day-width: 124px;
+      --timeline-time-axis-width: 68px;
+    }
+  }
+  @media (max-width: 480px) {
+    .timeline-sticky-header, .timeline-scrollable-body {
+      --timeline-day-width: 112px;
+      --timeline-time-axis-width: 66px;
+    }
+  }
+}
+
 /* startAt-only Tasks are rendered as point markers without inventing duration. */
 .timeline-task-block--point {
   min-height: 22px;
@@ -352,7 +413,8 @@
 
 /* V8: planned Task slots are a derived layer, visually distinct from actual Sessions. */
 .timeline-task-block.timeline-task-block--planned {
-  --timeline-fill-opacity: 0.13;
+  --timeline-fill-opacity: 0.26;
+  --timeline-fill-strength: 26%;
   border: 1px dashed var(--timeline-goal-color, #718096);
   opacity: 0.72;
 }
@@ -363,7 +425,7 @@
  * Native pan/pinch remains available before the long-press gesture is armed. */
 .timeline-task-block[data-timeline-editable="true"] {
   cursor: grab;
-  touch-action: pan-x pan-y pinch-zoom;
+  touch-action: pan-x pan-y;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -390,7 +452,7 @@
   z-index: calc(var(--think-z-raised) + 3);
   height: 8px;
   cursor: ns-resize;
-  touch-action: pan-x pan-y pinch-zoom;
+  touch-action: pan-x pan-y;
 }
 
 .timeline-task-resize-handle::after {
@@ -400,7 +462,7 @@
   width: 28px;
   height: 2px;
   border-radius: var(--think-radius-pill);
-  background: color-mix(in srgb, var(--timeline-goal-color, var(--think-accent)) 72%, var(--think-bg-elevated));
+  background: var(--timeline-goal-color, var(--think-accent));
   opacity: 0;
   transform: translateX(-50%);
   transition: opacity var(--think-duration-fast) var(--think-ease-standard);
@@ -457,12 +519,37 @@
   inset-inline: 0;
   box-sizing: border-box;
   --timeline-ruler-length: 9px;
-  --timeline-tick-color: var(--think-border-strong, var(--background-modifier-border-hover));
-  --timeline-tick-color: color-mix(
-    in srgb,
-    var(--think-text-primary, var(--text-normal)) var(--timeline-tick-strength, 12%),
-    var(--think-bg-canvas, var(--background-primary))
-  );
+  /* Android/WebView fallback must be a valid color even without color-mix(). */
+  --timeline-tick-color: var(--think-viz-guide-strong, var(--background-modifier-border));
+}
+
+/* Respect older Android WebViews: advanced color functions only run if parsed. */
+@supports (color: color-mix(in srgb, white 50%, black)) {
+  .timeline-task-content {
+    background: color-mix(in srgb,
+      var(--timeline-goal-color, var(--think-data-neutral)) var(--timeline-fill-strength), var(--think-bg-canvas));
+  }
+  .timeline-task-content::before { content: none; }
+  .think-time-grid__tick:not([class*="think-time-grid__tick--key-"]) {
+    --timeline-tick-color: color-mix(in srgb,
+      var(--think-text-primary, var(--text-normal)) var(--timeline-tick-strength, 12%),
+      var(--think-bg-canvas, var(--background-primary)));
+  }
+}
+
+/* 03:00 / 06:00 / 09:00 / 12:00 get distinct, theme-aware accents.
+ * Highlight both the ruler label and the horizontal guide (not task data). */
+.think-time-grid__tick--key-3  { --timeline-tick-color: var(--think-data-1, #4f7cff); }
+.think-time-grid__tick--key-6  { --timeline-tick-color: var(--think-data-2, #20a675); }
+.think-time-grid__tick--key-9  { --timeline-tick-color: var(--think-data-3, #d98b22); }
+.think-time-grid__tick--key-12 { --timeline-tick-color: var(--think-data-5, #8b68d8); }
+.think-time-grid__tick[class*="think-time-grid__tick--key-"] {
+  --timeline-ruler-length: 22px;
+  font-weight: var(--think-font-weight-semibold);
+}
+.think-time-grid__tick[class*="think-time-grid__tick--key-"] .think-time-grid__label {
+  color: var(--timeline-tick-color);
+  font-weight: var(--think-font-weight-semibold);
 }
 
 /* Distinct neutral tones + weights. The values are intentionally non-linear. */
@@ -529,7 +616,7 @@
   background: var(--think-bg-canvas, var(--background-primary));
   padding: 0 2px;
   color: var(--think-text-secondary, var(--text-muted));
-  color: color-mix(in srgb, var(--think-text-primary, var(--text-normal)) 72%, var(--think-bg-canvas, var(--background-primary)));
+  /* Baseline color above stays valid even on pre-color-mix Android. */
   font-size: var(--think-viz-font-axis, 12px);
   font-variant-numeric: tabular-nums;
   line-height: 1.2;

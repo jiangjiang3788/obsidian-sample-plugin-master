@@ -7,6 +7,7 @@
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 import { createPointerEvent, waitForUi } from '../support/uiTestUtils';
+import { TIMELINE_TOUCH_POLICY } from '@/shared/ui/timeline/TimelineTouchGesture';
 import { DayColumnBody } from '@/features/views/runtime/components/timeline/DayColumnBody';
 
 function taskBlock(id: string) {
@@ -190,7 +191,7 @@ describe('Timeline pointer gesture UI', () => {
 
     await act(async () => {
       column.dispatchEvent(touchEvent('touchstart', 60, 24));
-      jest.advanceTimersByTime(350);
+      jest.advanceTimersByTime(TIMELINE_TOUCH_POLICY.longPressMs);
     });
     expect(host.querySelector('.timeline-range-selection')).toBeTruthy();
 
@@ -242,7 +243,7 @@ describe('Timeline pointer gesture UI', () => {
 
     await act(async () => {
       task.dispatchEvent(touchEvent('touchstart', 60));
-      jest.advanceTimersByTime(350);
+      jest.advanceTimersByTime(TIMELINE_TOUCH_POLICY.longPressMs);
       task.dispatchEvent(touchEvent('touchmove', 120));
       task.dispatchEvent(touchEvent('touchend', 120));
     });

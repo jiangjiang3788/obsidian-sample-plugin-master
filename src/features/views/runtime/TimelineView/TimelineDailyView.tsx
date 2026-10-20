@@ -70,6 +70,13 @@ export function TimelineDailyView({
       data-timeline-rendered-blocks={dayColumns.reduce((count, column) => count + column.blocks.length, 0)}
       data-timeline-hour-height={Math.round(hourHeight * 100) / 100}
       data-timeline-tick-gap={Math.round(scale.tickPixelGap * 100) / 100}
+      onContextMenu={(event) => {
+        // Block the iOS text-selection/copy callout only on coarse touch devices.
+        // Mouse users keep the desktop right-click context menu.
+        if (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches) {
+          event.preventDefault();
+        }
+      }}
       {...zoomHandlers}
     >
       <div class="timeline-sticky-header">

@@ -30,7 +30,7 @@
     "jscpd": "npx --yes jscpd --config config/jscpd.json",
     "arch:audit": "node scripts/audit/arch-audit.mjs",
     "audit:shared-ui": "node scripts/audit/audit-shared-ui-imports.mjs",
-    "ci": "npm run verify:ci",
+    "ci": "npm run verify:cinpm run verify:ci",
     "selectors:coverage": "node scripts/audit/selectors-coverage-report.mjs",
     "typecheck:src": "tsc -p config/tsconfig.json --noEmit",
     "typecheck:test": "tsc -p config/tsconfig.test.json --noEmit",

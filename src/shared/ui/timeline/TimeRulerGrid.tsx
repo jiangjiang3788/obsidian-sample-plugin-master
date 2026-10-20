@@ -1,5 +1,6 @@
 /** @jsxImportSource preact */
 import type { JSX } from 'preact';
+import { timelineKeyHour } from '@core/utils/public';
 
 export interface TimeRulerTick {
   minute: number;
@@ -35,7 +36,7 @@ export function TimeRulerGrid({ ticks, height, labels = false, variant = labels 
   >
     {visibleTicks.map((tick) => <div
       key={tick.minute}
-      className={`think-time-grid__tick think-time-grid__tick--${tick.level}`}
+      className={`think-time-grid__tick think-time-grid__tick--${tick.level}${timelineKeyHour(tick.minute) === null ? '' : ` think-time-grid__tick--key-${timelineKeyHour(tick.minute)}`}`}
       data-tick-level={tick.level}
       data-tick-minute={tick.minute}
       style={{

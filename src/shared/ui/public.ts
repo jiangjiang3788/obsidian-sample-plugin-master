@@ -41,3 +41,6 @@ export { TimeRulerGrid } from './timeline/TimeRulerGrid';
 export { useTimelineDensityMode, resolveTimelineDensityMode, TIMELINE_COMPACT_WIDTH_PX } from './timeline/useTimelineDensityMode';
 export type { TimelineUiDensityMode } from './timeline/useTimelineDensityMode';
 export { useCoarseTimelineDensity } from './timeline/useCoarseTimelineDensity';
+
+export { useTimelineTouchGesture } from './timeline/useTimelineTouchGesture';
+export { findTimelineTouch, TIMELINE_TOUCH_POLICY } from './timeline/TimelineTouchGesture';

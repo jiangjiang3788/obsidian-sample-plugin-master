@@ -21685,6 +21685,11 @@ function buildRecordSubmitRecoveryPresentation(result, options = {}) {
     canRetry: result.operation === "update" || result.operation === "delete" || result.operation === "time_update" || result.operation === "complete" || result.operation === "task_session"
   };
 }
+const TIMELINE_KEY_HOURS = [3, 6, 9, 12];
+function timelineKeyHour(minute) {
+  const hour = minute / 60;
+  return TIMELINE_KEY_HOURS.find((candidate) => candidate === hour) ?? null;
+}
 const TIMELINE_TICK_STYLE = Object.freeze({
   // Keep every rule on a full device pixel. Hierarchy is expressed through
   // contrast and tick length instead of sub-pixel widths that blur on desktop
@@ -21778,6 +21783,19 @@ function buildTimelineScale(input) {
       showInGrid: minute % gridStepMinutes === 0
     });
   }
+  for (const minute of TIMELINE_KEY_HOURS.map((hour) => hour * 60)) {
+    if (minute < start2 || minute > end2 || ticks.some((tick) => tick.minute === minute)) continue;
+    const style2 = TIMELINE_TICK_STYLE.hour;
+    ticks.push({
+      minute,
+      offset: (minute - start2) * pixelsPerMinute,
+      level: "hour",
+      strokeWidth: style2.width,
+      strokeOpacity: style2.opacity,
+      showInGrid: true
+    });
+  }
+  ticks.sort((a2, b2) => a2.minute - b2.minute);
   return {
     hourHeight,
     height: (end2 - start2) * pixelsPerMinute,
@@ -25581,63 +25599,62 @@ function normalizeViewMultiValue(value, options = {}) {
   return options.dedupe === false ? normalized2 : Array.from(new Set(normalized2));
 }
 function useTimelineZoom(options) {
-  const {
-    defaultHeight,
-    minHeight: minHeight2 = 10,
-    maxHeight: maxHeight2 = 200,
-    step = 5
-  } = options;
+  const { defaultHeight, minHeight: minHeight2 = 10, maxHeight: maxHeight2 = 200, step = 5 } = options;
   const [hourHeight, setHourHeight] = d(defaultHeight);
-  const initialPinchDistanceRef = A$1(null);
-  const initialHourHeightRef = A$1(null);
+  const pointersRef = A$1(/* @__PURE__ */ new Map());
+  const pinchRef = A$1(null);
   y(() => {
     setHourHeight(defaultHeight);
   }, [defaultHeight]);
-  const handleWheel = q$1((e2) => {
-    if (!e2.altKey) return;
-    e2.preventDefault();
-    setHourHeight((currentHeight) => {
-      const newHeight = e2.deltaY < 0 ? currentHeight + step : currentHeight - step;
-      return Math.max(minHeight2, Math.min(maxHeight2, newHeight));
-    });
-  }, [minHeight2, maxHeight2, step]);
-  const handleTouchStart = q$1((e2) => {
-    if (e2.touches.length === 2) {
-      e2.preventDefault();
-      const t1 = e2.touches[0];
-      const t22 = e2.touches[1];
-      const distance = Math.hypot(t1.clientX - t22.clientX, t1.clientY - t22.clientY);
-      initialPinchDistanceRef.current = distance;
-      initialHourHeightRef.current = hourHeight;
-    }
-  }, [hourHeight]);
-  const handleTouchMove = q$1((e2) => {
-    if (e2.touches.length === 2 && initialPinchDistanceRef.current) {
-      e2.preventDefault();
-      const t1 = e2.touches[0];
-      const t22 = e2.touches[1];
-      const currentDistance = Math.hypot(t1.clientX - t22.clientX, t1.clientY - t22.clientY);
-      const scale = currentDistance / initialPinchDistanceRef.current;
-      const newHeight = (initialHourHeightRef.current || defaultHeight) * scale;
-      setHourHeight(Math.max(minHeight2, Math.min(maxHeight2, newHeight)));
-    }
-  }, [defaultHeight, minHeight2, maxHeight2]);
-  const handleTouchEnd = q$1(() => {
-    initialPinchDistanceRef.current = null;
-    initialHourHeightRef.current = null;
+  y(() => () => {
+    pointersRef.current.clear();
+    pinchRef.current = null;
   }, []);
-  const zoomToMax = q$1(() => {
-    setHourHeight(maxHeight2);
-  }, [maxHeight2]);
+  const distanceBetweenPointers = () => {
+    const positions = [...pointersRef.current.values()];
+    if (positions.length !== 2) return null;
+    return Math.hypot(positions[0].x - positions[1].x, positions[0].y - positions[1].y);
+  };
+  const handleWheel = q$1((event) => {
+    if (!event.altKey) return;
+    event.preventDefault();
+    setHourHeight((current2) => Math.max(minHeight2, Math.min(
+      maxHeight2,
+      current2 + (event.deltaY < 0 ? step : -step)
+    )));
+  }, [minHeight2, maxHeight2, step]);
+  const handlePointerDown = (event) => {
+    if (event.pointerType !== "touch") return;
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointersRef.current.size === 2) {
+      const distance = distanceBetweenPointers();
+      pinchRef.current = distance && distance > 0 ? { distance, hourHeight } : null;
+    } else if (pointersRef.current.size > 2) pinchRef.current = null;
+  };
+  const handlePointerMove = (event) => {
+    if (!pointersRef.current.has(event.pointerId)) return;
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointersRef.current.size !== 2 || !pinchRef.current) return;
+    const distance = distanceBetweenPointers();
+    if (distance == null) return;
+    const scaled = pinchRef.current.hourHeight * distance / pinchRef.current.distance;
+    setHourHeight(Math.max(minHeight2, Math.min(maxHeight2, scaled)));
+  };
+  const handlePointerEnd = (event) => {
+    pointersRef.current.delete(event.pointerId);
+    pinchRef.current = null;
+  };
+  const zoomToMax = q$1(() => setHourHeight(maxHeight2), [maxHeight2]);
   return {
     hourHeight,
     maxHourHeight: maxHeight2,
     zoomToMax,
     zoomHandlers: {
       onWheel: handleWheel,
-      onTouchStart: handleTouchStart,
-      onTouchMove: handleTouchMove,
-      onTouchEnd: handleTouchEnd
+      onPointerDown: handlePointerDown,
+      onPointerMove: handlePointerMove,
+      onPointerUp: handlePointerEnd,
+      onPointerCancel: handlePointerEnd
     }
   };
 }
@@ -46473,7 +46490,7 @@ function TimeRulerGrid({ ticks, height: height2, labels = false, variant = label
       children: visibleTicks.map((tick) => /* @__PURE__ */ u2(
         "div",
         {
-          className: `think-time-grid__tick think-time-grid__tick--${tick.level}`,
+          className: `think-time-grid__tick think-time-grid__tick--${tick.level}${timelineKeyHour(tick.minute) === null ? "" : ` think-time-grid__tick--key-${timelineKeyHour(tick.minute)}`}`,
           "data-tick-level": tick.level,
           "data-tick-minute": tick.minute,
           style: {
@@ -46525,6 +46542,91 @@ function useTimelineDensityMode(host) {
     };
   }, [host]);
   return mode;
+}
+const TIMELINE_TOUCH_POLICY = Object.freeze({
+  longPressMs: 520,
+  panSlopPx: 10,
+  dragThresholdPx: 2
+});
+class TimelineTouchGesture {
+  constructor(onArm) {
+    this.onArm = onArm;
+  }
+  onArm;
+  active = null;
+  start(point, mode, touchCount = 1) {
+    this.cancel();
+    if (touchCount !== 1) return false;
+    const anchor = { identifier: point.identifier, clientX: point.clientX, clientY: point.clientY, mode };
+    const current2 = { anchor, armed: false, dragging: false, timer: null };
+    current2.timer = setTimeout(() => {
+      if (this.active !== current2) return;
+      current2.timer = null;
+      current2.armed = true;
+      this.onArm(anchor);
+    }, TIMELINE_TOUCH_POLICY.longPressMs);
+    this.active = current2;
+    return true;
+  }
+  move(point, touchCount) {
+    const current2 = this.active;
+    if (!current2 || current2.anchor.identifier !== point.identifier) {
+      if (touchCount !== 1) this.cancel();
+      return "none";
+    }
+    if (touchCount !== 1) {
+      this.cancel();
+      return "scroll";
+    }
+    const dx = point.clientX - current2.anchor.clientX;
+    const dy = point.clientY - current2.anchor.clientY;
+    if (!current2.armed) {
+      if (Math.hypot(dx, dy) <= TIMELINE_TOUCH_POLICY.panSlopPx) return "pending";
+      this.cancel();
+      return "scroll";
+    }
+    if (!current2.dragging && Math.abs(dy) < TIMELINE_TOUCH_POLICY.dragThresholdPx) return "armed";
+    current2.dragging = true;
+    return "drag";
+  }
+  end(point, cancelled = false) {
+    const current2 = this.active;
+    if (!current2 || current2.anchor.identifier !== point.identifier) return null;
+    this.cancel();
+    if (cancelled) return null;
+    const moved2 = Math.abs(point.clientY - current2.anchor.clientY) >= TIMELINE_TOUCH_POLICY.dragThresholdPx;
+    return {
+      kind: !current2.armed ? "tap" : current2.dragging || moved2 ? "drag" : "press",
+      anchor: current2.anchor,
+      point
+    };
+  }
+  cancel() {
+    if (this.active?.timer !== null && this.active?.timer !== void 0) clearTimeout(this.active.timer);
+    this.active = null;
+  }
+  get armed() {
+    return !!this.active?.armed;
+  }
+  get pending() {
+    return !!this.active;
+  }
+}
+function findTimelineTouch(touches, identifier2) {
+  if (!touches) return null;
+  for (let i2 = 0; i2 < touches.length; i2 += 1) {
+    const touch = touches.item(i2);
+    if (touch?.identifier === identifier2) return touch;
+  }
+  return null;
+}
+function useTimelineTouchGesture(onArm) {
+  const onArmRef = A$1(onArm);
+  onArmRef.current = onArm;
+  const controllerRef = A$1(null);
+  if (!controllerRef.current) controllerRef.current = new TimelineTouchGesture((anchor) => onArmRef.current(anchor));
+  y(() => () => controllerRef.current?.cancel(), []);
+  return controllerRef.current;
 }
 function mountWithServices(containerEl, children, services) {
   const finalServices = services ?? createServices();
@@ -59197,17 +59299,6 @@ function DayColumnHeader({
   ] });
 }
 const MOUSE_DRAG_THRESHOLD_PX = 4;
-const TOUCH_LONG_PRESS_MS = 350;
-const TOUCH_PRESS_SLOP_PX = 10;
-const TOUCH_DRAG_THRESHOLD_PX = 2;
-function findTouch$1(touches, identifier2) {
-  if (!touches) return null;
-  for (let index = 0; index < touches.length; index += 1) {
-    const touch = touches.item(index);
-    if (touch?.identifier === identifier2) return touch;
-  }
-  return null;
-}
 function formatTimeMinute$1(minute) {
   const total = Math.round(minute);
   const h2 = Math.floor(total / 60) % 24;
@@ -59250,17 +59341,23 @@ function TimelineTaskBlock({
 }) {
   const blockRef = A$1(null);
   const gestureRef = A$1(null);
-  const touchGestureRef = A$1(null);
+  const touchIdentifierRef = A$1(null);
+  const touchAnchorMinuteRef = A$1(null);
+  const touchGestureModeRef = A$1("move");
   const suppressClickUntilRef = A$1(0);
   const [preview, setPreview] = d(null);
   const previewRef = A$1(null);
   const [isDragging, setIsDragging] = d(false);
   const [isTouchArmed, setIsTouchArmed] = d(false);
   const [isEditMode, setIsEditMode] = d(false);
-  y(() => () => {
-    const active = touchGestureRef.current;
-    if (active?.timerId != null) window.clearTimeout(active.timerId);
-  }, []);
+  const touchGesture = useTimelineTouchGesture(() => {
+    setIsTouchArmed(true);
+    setIsEditMode(true);
+    try {
+      navigator.vibrate?.(8);
+    } catch {
+    }
+  });
   const isPlanned = block.timelineSource === "task-plan";
   const isPoint = !block.timelineRange.end;
   const goalKey = getTimelineGoalKey(block);
@@ -59359,72 +59456,60 @@ function TimelineTaskBlock({
       range: committedPreview.range
     })).catch(() => void 0);
   };
-  const clearTouchTimer = (active) => {
-    if (!active || active.timerId == null) return;
-    window.clearTimeout(active.timerId);
-    active.timerId = null;
-  };
-  const beginTouchGesture = (event, mode) => {
-    const touch = event.changedTouches?.item(0);
-    if (!touch) return;
-    const minute = minuteFromClientY(touch.clientY);
-    if (minute == null) return;
-    event.stopPropagation();
-    clearTouchTimer(touchGestureRef.current);
+  const resetTouchPreview = () => {
     previewRef.current = null;
     setPreview(null);
     setIsDragging(false);
     setIsTouchArmed(false);
-    const active = {
-      identifier: touch.identifier,
-      mode,
-      startClientX: touch.clientX,
-      startClientY: touch.clientY,
-      anchorMinute: minute,
-      armed: false,
-      dragging: false,
-      timerId: null
-    };
-    active.timerId = window.setTimeout(() => {
-      if (touchGestureRef.current !== active) return;
-      active.armed = true;
-      active.timerId = null;
-      setIsTouchArmed(true);
-      setIsEditMode(true);
-      try {
-        navigator.vibrate?.(8);
-      } catch {
-      }
-    }, TOUCH_LONG_PRESS_MS);
-    touchGestureRef.current = active;
   };
-  const handleTouchMove = (event) => {
-    const active = touchGestureRef.current;
-    if (!active) return;
-    const touch = findTouch$1(event.touches, active.identifier);
-    if (!touch) return;
-    const deltaX = touch.clientX - active.startClientX;
-    const deltaY = touch.clientY - active.startClientY;
-    const travel = Math.hypot(deltaX, deltaY);
-    if (!active.armed) {
-      if (travel <= TOUCH_PRESS_SLOP_PX) return;
-      clearTouchTimer(active);
-      touchGestureRef.current = null;
-      suppressClickUntilRef.current = Date.now() + 350;
+  const beginTouchGesture = (event, mode) => {
+    event.stopPropagation();
+    if (event.touches?.length !== 1) {
+      touchGesture.cancel();
+      touchIdentifierRef.current = null;
+      resetTouchPreview();
       return;
     }
-    if (!active.dragging && Math.abs(deltaY) < TOUCH_DRAG_THRESHOLD_PX) return;
+    const touch = event.changedTouches?.item(0);
+    if (!touch) return;
+    const minute = minuteFromClientY(touch.clientY);
+    if (minute == null) return;
+    touchIdentifierRef.current = touch.identifier;
+    touchAnchorMinuteRef.current = minute;
+    touchGestureModeRef.current = mode;
+    resetTouchPreview();
+    touchGesture.start(touch, mode);
+  };
+  const handleTouchMove = (event) => {
+    const identifier2 = touchIdentifierRef.current;
+    if (identifier2 == null) return;
+    const touch = findTimelineTouch(event.touches, identifier2);
+    if (!touch || event.touches.length !== 1) {
+      touchGesture.cancel();
+      touchIdentifierRef.current = null;
+      resetTouchPreview();
+      return;
+    }
+    const outcome = touchGesture.move(touch, event.touches.length);
+    if (outcome === "scroll") {
+      suppressClickUntilRef.current = Date.now() + 350;
+      touchIdentifierRef.current = null;
+      resetTouchPreview();
+      return;
+    }
+    if (outcome !== "drag") return;
+    const anchorMinute = touchAnchorMinuteRef.current;
     const currentMinute = minuteFromClientY(touch.clientY);
-    if (currentMinute == null) return;
+    if (anchorMinute == null || currentMinute == null) return;
+    const mode = touchGestureModeRef.current;
     const nextPreview = buildTimelineBlockGesturePreview({
       block,
-      mode: active.mode,
-      anchorMinute: active.anchorMinute,
+      mode,
+      anchorMinute,
       currentMinute,
       maxHours
     });
     if (!nextPreview) return;
-    active.dragging = true;
     event.preventDefault();
     event.stopPropagation();
     setIsDragging(true);
@@ -59432,35 +59517,30 @@ function TimelineTaskBlock({
     setPreview(nextPreview);
   };
   const finishTouchGesture = (event, cancelled = false) => {
-    const active = touchGestureRef.current;
-    if (!active) return;
-    const touch = findTouch$1(event.changedTouches, active.identifier);
-    if (!touch) return;
-    clearTouchTimer(active);
-    touchGestureRef.current = null;
+    event.stopPropagation();
+    const identifier2 = touchIdentifierRef.current;
+    const touch = identifier2 == null ? null : findTimelineTouch(event.changedTouches, identifier2);
+    if (!touch) {
+      if (cancelled) {
+        touchGesture.cancel();
+        resetTouchPreview();
+      }
+      return;
+    }
+    const outcome = touchGesture.end(touch, cancelled);
+    touchIdentifierRef.current = null;
     setIsTouchArmed(false);
-    if (!active.armed) return;
+    if (!outcome || outcome.kind === "tap") {
+      resetTouchPreview();
+      return;
+    }
     suppressClickUntilRef.current = Date.now() + 450;
     event.preventDefault();
-    event.stopPropagation();
-    let committedPreview = previewRef.current;
-    if (!cancelled && !committedPreview && Math.abs(touch.clientY - active.startClientY) >= TOUCH_DRAG_THRESHOLD_PX) {
-      const currentMinute = minuteFromClientY(touch.clientY);
-      if (currentMinute != null) {
-        committedPreview = buildTimelineBlockGesturePreview({
-          block,
-          mode: active.mode,
-          anchorMinute: active.anchorMinute,
-          currentMinute,
-          maxHours
-        });
-      }
-    }
-    const didDrag = !!committedPreview && !cancelled;
-    previewRef.current = null;
-    setPreview(null);
-    setIsDragging(false);
-    if (!didDrag || !committedPreview) return;
+    const anchorMinute = touchAnchorMinuteRef.current;
+    const currentMinute = minuteFromClientY(touch.clientY);
+    const committedPreview = !cancelled && outcome.kind === "drag" && anchorMinute != null && currentMinute != null ? buildTimelineBlockGesturePreview({ block, mode: outcome.anchor.mode, anchorMinute, currentMinute, maxHours }) : null;
+    resetTouchPreview();
+    if (!committedPreview) return;
     if (!onUpdateTimelineRange) {
       onNotice?.("未提供时间轴保存处理器，无法更新时间");
       return;
@@ -59605,9 +59685,6 @@ function TimelineTaskBlock({
   );
 }
 const DRAG_THRESHOLD_PX = 4;
-const TOUCH_RANGE_LONG_PRESS_MS = 350;
-const TOUCH_RANGE_PRESS_SLOP_PX = 10;
-const TOUCH_RANGE_DRAG_THRESHOLD_PX = 2;
 const formatTimeMinute = (minute) => {
   const total = Math.round(minute);
   const h2 = Math.floor(total / 60) % 24;
@@ -59615,14 +59692,6 @@ const formatTimeMinute = (minute) => {
   return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
 };
 const formatRangeBoundaryMinute = (minute) => minute === 24 * 60 ? "24:00" : formatTimeMinute(minute);
-function findTouch(touches, identifier2) {
-  if (!touches) return null;
-  for (let index = 0; index < touches.length; index += 1) {
-    const touch = touches.item(index);
-    if (touch?.identifier === identifier2) return touch;
-  }
-  return null;
-}
 function DayColumnBody({
   day,
   blocks,
@@ -59640,13 +59709,21 @@ function DayColumnBody({
   const lastTouchRef = A$1(null);
   const suppressClickUntilRef = A$1(0);
   const dragStartRef = A$1(null);
-  const touchSelectionRef = A$1(null);
+  const touchIdentifierRef = A$1(null);
+  const touchStartMinuteRef = A$1(null);
+  const touchSwipeCancelledRef = A$1(false);
   const [dragSelection, setDragSelection] = d(null);
   const [isTouchSelectionArmed, setIsTouchSelectionArmed] = d(false);
-  y(() => () => {
-    const active = touchSelectionRef.current;
-    if (active?.timerId != null) window.clearTimeout(active.timerId);
-  }, []);
+  const touchGesture = useTimelineTouchGesture(() => {
+    const minute = touchStartMinuteRef.current;
+    if (minute == null) return;
+    setIsTouchSelectionArmed(true);
+    setDragSelection(buildTimelineDragSelection(minute, minute, maxHours));
+    try {
+      navigator.vibrate?.(8);
+    } catch {
+    }
+  });
   const handleBodyClick = (event) => {
     if (Date.now() < suppressClickUntilRef.current) return;
     onColumnClick(day, event);
@@ -59703,99 +59780,89 @@ function DayColumnBody({
     dragStartRef.current = null;
     setDragSelection(null);
   };
-  const clearTouchSelectionTimer = (active) => {
-    if (!active || active.timerId == null) return;
-    window.clearTimeout(active.timerId);
-    active.timerId = null;
+  const resetTouchSelection = () => {
+    setIsTouchSelectionArmed(false);
+    setDragSelection(null);
   };
   const handleBodyTouchStart = (event) => {
+    if (event.touches?.length !== 1) {
+      touchGesture.cancel();
+      touchIdentifierRef.current = null;
+      touchSwipeCancelledRef.current = true;
+      lastTouchRef.current = null;
+      resetTouchSelection();
+      return;
+    }
     const touch = event.changedTouches?.item(0);
     if (!touch) return;
     const minute = minuteFromClientY(touch.clientY);
     if (minute == null) return;
-    clearTouchSelectionTimer(touchSelectionRef.current);
-    setDragSelection(null);
-    setIsTouchSelectionArmed(false);
-    const active = {
-      identifier: touch.identifier,
-      startClientX: touch.clientX,
-      startClientY: touch.clientY,
-      startMinute: minute,
-      armed: false,
-      dragging: false,
-      cancelled: false,
-      timerId: null
-    };
-    active.timerId = window.setTimeout(() => {
-      if (touchSelectionRef.current !== active || active.cancelled) return;
-      active.armed = true;
-      active.timerId = null;
-      setIsTouchSelectionArmed(true);
-      setDragSelection(buildTimelineDragSelection(active.startMinute, active.startMinute, maxHours));
-      try {
-        navigator.vibrate?.(8);
-      } catch {
-      }
-    }, TOUCH_RANGE_LONG_PRESS_MS);
-    touchSelectionRef.current = active;
+    touchSwipeCancelledRef.current = false;
+    touchIdentifierRef.current = touch.identifier;
+    touchStartMinuteRef.current = minute;
+    resetTouchSelection();
+    touchGesture.start(touch, "select");
   };
   const handleBodyTouchMove = (event) => {
-    const active = touchSelectionRef.current;
-    if (!active) return;
-    const touch = findTouch(event.touches, active.identifier);
-    if (!touch) return;
-    const deltaX = touch.clientX - active.startClientX;
-    const deltaY = touch.clientY - active.startClientY;
-    const travel = Math.hypot(deltaX, deltaY);
-    if (!active.armed) {
-      if (travel <= TOUCH_RANGE_PRESS_SLOP_PX) return;
-      clearTouchSelectionTimer(active);
-      active.cancelled = true;
+    const identifier2 = touchIdentifierRef.current;
+    if (identifier2 == null) return;
+    const touch = findTimelineTouch(event.touches, identifier2);
+    if (!touch || event.touches.length !== 1) {
+      touchGesture.cancel();
+      touchIdentifierRef.current = null;
+      touchSwipeCancelledRef.current = true;
       lastTouchRef.current = null;
-      suppressClickUntilRef.current = Date.now() + 350;
+      resetTouchSelection();
       return;
     }
-    if (!active.dragging && Math.abs(deltaY) < TOUCH_RANGE_DRAG_THRESHOLD_PX) return;
+    const outcome = touchGesture.move(touch, event.touches.length);
+    if (outcome === "scroll") {
+      touchIdentifierRef.current = null;
+      touchSwipeCancelledRef.current = true;
+      lastTouchRef.current = null;
+      suppressClickUntilRef.current = Date.now() + 350;
+      resetTouchSelection();
+      return;
+    }
+    if (outcome !== "drag") return;
+    const startMinute = touchStartMinuteRef.current;
     const minute = minuteFromClientY(touch.clientY);
-    if (minute == null) return;
-    const selection = buildTimelineDragSelection(active.startMinute, minute, maxHours);
+    if (startMinute == null || minute == null) return;
+    const selection = buildTimelineDragSelection(startMinute, minute, maxHours);
     if (!selection) return;
-    active.dragging = true;
     event.preventDefault();
     event.stopPropagation();
     setDragSelection(selection);
   };
   const handleBodyTouchEnd = (event) => {
-    const active = touchSelectionRef.current;
-    if (active) {
-      const touch2 = findTouch(event.changedTouches, active.identifier);
-      if (touch2) {
-        clearTouchSelectionTimer(active);
-        touchSelectionRef.current = null;
-        setIsTouchSelectionArmed(false);
-        if (active.cancelled) {
-          setDragSelection(null);
-          lastTouchRef.current = null;
-          return;
-        }
-        if (active.armed) {
-          suppressClickUntilRef.current = Date.now() + 450;
-          lastTouchRef.current = null;
-          event.preventDefault();
-          event.stopPropagation();
-          const minute = minuteFromClientY(touch2.clientY);
-          const movedEnough = Math.abs(touch2.clientY - active.startClientY) >= TOUCH_RANGE_DRAG_THRESHOLD_PX;
-          const selection = movedEnough && minute != null ? buildTimelineDragSelection(active.startMinute, minute, maxHours) : active.dragging ? dragSelection : null;
-          setDragSelection(null);
-          if (selection && (active.dragging || movedEnough)) {
-            onColumnClick(day, event, { startMinute: selection.startMinute, endMinute: selection.endMinute });
-          }
-          return;
-        }
-      }
+    if (touchSwipeCancelledRef.current) {
+      touchSwipeCancelledRef.current = false;
+      touchGesture.cancel();
+      resetTouchSelection();
+      return;
     }
-    const touch = event.changedTouches?.item(0);
+    const identifier2 = touchIdentifierRef.current;
+    const touch = identifier2 == null ? null : findTimelineTouch(event.changedTouches, identifier2);
     if (!touch) return;
+    const outcome = touchGesture.end(touch);
+    touchIdentifierRef.current = null;
+    resetTouchSelection();
+    if (!outcome) return;
+    if (outcome.kind !== "tap") {
+      suppressClickUntilRef.current = Date.now() + 450;
+      lastTouchRef.current = null;
+      event.preventDefault();
+      event.stopPropagation();
+      if (outcome.kind !== "drag") return;
+      const startMinute = touchStartMinuteRef.current;
+      const minute = minuteFromClientY(touch.clientY);
+      const selection = startMinute == null || minute == null ? null : buildTimelineDragSelection(startMinute, minute, maxHours);
+      if (selection) onColumnClick(day, event, {
+        startMinute: selection.startMinute,
+        endMinute: selection.endMinute
+      });
+      return;
+    }
     const now2 = Date.now();
     const previous = lastTouchRef.current;
     const isDoubleTap = !!previous && now2 - previous.time <= 350 && Math.abs(previous.x - touch.clientX) <= 24 && Math.abs(previous.y - touch.clientY) <= 24;
@@ -59806,16 +59873,12 @@ function DayColumnBody({
     onColumnClick(day, event);
     lastTouchRef.current = null;
   };
-  const handleBodyTouchCancel = (event) => {
-    const active = touchSelectionRef.current;
-    if (!active) return;
-    const touch = findTouch(event.changedTouches, active.identifier);
-    if (!touch) return;
-    clearTouchSelectionTimer(active);
-    touchSelectionRef.current = null;
+  const handleBodyTouchCancel = (_event) => {
+    touchGesture.cancel();
+    touchIdentifierRef.current = null;
+    touchSwipeCancelledRef.current = true;
     lastTouchRef.current = null;
-    setIsTouchSelectionArmed(false);
-    setDragSelection(null);
+    resetTouchSelection();
   };
   return /* @__PURE__ */ u2(
     "div",
@@ -59833,7 +59896,7 @@ function DayColumnBody({
       onTouchStart: (event) => handleBodyTouchStart(event),
       onTouchMove: (event) => handleBodyTouchMove(event),
       onTouchEnd: (event) => handleBodyTouchEnd(event),
-      onTouchCancel: (event) => handleBodyTouchCancel(event),
+      onTouchCancel: (event) => handleBodyTouchCancel(),
       children: [
         /* @__PURE__ */ u2(
           TimeRulerGrid,
@@ -60013,6 +60076,11 @@ function TimelineDailyView({
       "data-timeline-rendered-blocks": dayColumns.reduce((count, column2) => count + column2.blocks.length, 0),
       "data-timeline-hour-height": Math.round(hourHeight * 100) / 100,
       "data-timeline-tick-gap": Math.round(scale.tickPixelGap * 100) / 100,
+      onContextMenu: (event) => {
+        if (typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches) {
+          event.preventDefault();
+        }
+      },
       ...zoomHandlers,
       children: [
         /* @__PURE__ */ u2("div", { class: "timeline-sticky-header", children: [
@@ -66106,12 +66174,17 @@ function getInitialDeferredHeight(viewType) {
 }
 function ViewportDeferredView({ viewType, children }) {
   const hostRef = A$1(null);
-  const [nearViewport, setNearViewport] = d(false);
+  const eagerMobileTimeline = viewType === "TimelineView" && detectThinkDeviceProfile().isMobileLike;
+  const [nearViewport, setNearViewport] = d(eagerMobileTimeline);
   const [measuredHeight, setMeasuredHeight] = d(() => getInitialDeferredHeight(viewType));
   y(() => {
     setMeasuredHeight(getInitialDeferredHeight(viewType));
   }, [viewType]);
   y(() => {
+    if (eagerMobileTimeline) {
+      setNearViewport(true);
+      return;
+    }
     const host = hostRef.current;
     if (!host) return;
     if (typeof IntersectionObserver === "undefined") {
@@ -66128,7 +66201,7 @@ function ViewportDeferredView({ viewType, children }) {
     });
     observer.observe(host);
     return () => observer.disconnect();
-  }, [viewType]);
+  }, [viewType, eagerMobileTimeline]);
   y(() => {
     if (!nearViewport) return;
     const host = hostRef.current;
@@ -69106,25 +69179,56 @@ ObsidianVaultPort = __decorateClass([
   singleton(),
   __decorateParam(0, inject(AppToken))
 ], ObsidianVaultPort);
-function DevBuildUpdateControl({ currentVersion, onPullDevBuild }) {
+function formatGitHubCommitTime(value) {
+  if (!value || !Number.isFinite(Date.parse(value))) return "暂不可用";
+  return new Date(value).toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+}
+function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPullDevBuild }) {
   const [updating, setUpdating] = d(false);
+  const [checking, setChecking] = d(Boolean(onInspectDevBuild));
+  const [preview, setPreview] = d(null);
+  const [checkError, setCheckError] = d("");
   const [state, setState] = d({ kind: "idle", message: "" });
+  y(() => {
+    if (!onInspectDevBuild) return;
+    let mounted = true;
+    setChecking(true);
+    onInspectDevBuild().then((info) => {
+      if (mounted) {
+        setPreview(info);
+        setCheckError("");
+      }
+    }).catch(() => {
+      if (mounted) setCheckError("远端版本信息暂不可用，可直接尝试下载");
+    }).finally(() => {
+      if (mounted) setChecking(false);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [onInspectDevBuild]);
   const handlePull = async () => {
     if (updating) return;
     setUpdating(true);
     setState({ kind: "idle", message: "" });
     try {
-      const result = await onPullDevBuild();
+      const result = await onPullDevBuild(preview);
       const versionText = currentVersion ? `${currentVersion} → ${result.remoteVersion}` : result.remoteVersion;
+      const time2 = result.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(result.githubPushedAt)}` : `提交时间（本地，非上传时间）：${formatGitHubCommitTime(result.githubCommitAt)}`;
+      setPreview(result);
       setState({
         kind: "success",
-        message: `已拉取 GitHub ${result.branch} 开发版（${versionText}）。请完全关闭并重新打开 Obsidian。`
+        message: `已拉取 GitHub ${result.branch} 开发版（${versionText}）。${time2}。请完全关闭并重新打开 Obsidian。`
       });
     } catch (error) {
-      setState({
-        kind: "error",
-        message: `拉取失败：${error instanceof Error ? error.message : String(error)}`
-      });
+      setState({ kind: "error", message: `拉取失败：${error instanceof Error ? error.message : String(error)}` });
     } finally {
       setUpdating(false);
     }
@@ -69132,10 +69236,16 @@ function DevBuildUpdateControl({ currentVersion, onPullDevBuild }) {
   return /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
     /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "GitHub 开发版" }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-settings-stack think-settings-stack--tight", children: [
+      preview ? /* @__PURE__ */ u2("span", { className: "think-settings-help", "data-github-commit-time": true, children: [
+        "远端版本：",
+        preview.remoteVersion,
+        " · ",
+        preview.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(preview.githubPushedAt)}` : `提交时间（本地，非上传时间）：${formatGitHubCommitTime(preview.githubCommitAt)}`
+      ] }) : checking ? /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "正在读取 GitHub 版本与提交时间…" }) : checkError ? /* @__PURE__ */ u2("span", { className: "think-settings-help", children: checkError }) : null,
       /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", loading: updating, onClick: () => {
         void handlePull();
       }, children: updating ? "正在拉取…" : "从 GitHub 拉取最新开发版" }),
-      /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "从公开仓库 main 分支下载 main.js、manifest.json、styles.css；全部下载并校验成功后才覆盖本地插件。" }),
+      /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "从 main 分支同一 SHA 下载三个插件文件，逐一校验写入，失败自动回滚。能匹配到该 SHA 的 PushEvent 才显示 GitHub 推送时间；否则明确标为提交时间（不是上传时间）。" }),
       state.kind !== "idle" ? /* @__PURE__ */ u2(ThinkNotice, { tone: state.kind === "success" ? "success" : "danger", children: state.message }) : null
     ] })
   ] }) });
@@ -69288,7 +69398,8 @@ function RecordTypeColorSettingsSection() {
 }
 function GeneralSettings({
   currentVersion,
-  onPullDevBuild
+  onPullDevBuild,
+  onInspectDevBuild
 } = {}) {
   const floatingTimerEnabled = useSelector(selectFloatingTimerEnabled);
   const devConsoleStackEnabled = useSelector(selectDevConsoleStackEnabled);
@@ -69297,7 +69408,7 @@ function GeneralSettings({
     /* @__PURE__ */ u2(RecordTypeColorSettingsSection, {}),
     onPullDevBuild ? /* @__PURE__ */ u2("section", { className: "think-settings-section", children: [
       /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "开发版更新" }),
-      /* @__PURE__ */ u2(DevBuildUpdateControl, { currentVersion, onPullDevBuild })
+      /* @__PURE__ */ u2(DevBuildUpdateControl, { currentVersion, onPullDevBuild, onInspectDevBuild })
     ] }) : null,
     /* @__PURE__ */ u2("section", { className: "think-settings-section", children: [
       /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "模块开关" }),
@@ -71685,7 +71796,8 @@ function SettingsRoot({
   app,
   variant = "workspace",
   currentVersion,
-  onPullDevBuild
+  onPullDevBuild,
+  onInspectDevBuild
 }) {
   const deviceProfileAttrs = getThinkDeviceProfileAttributes();
   const [storedTabIndex, setStoredTabIndex] = useLocalStorage(SETTINGS_TABS_NO_QUICK_INPUT_KEY, 0);
@@ -71705,7 +71817,7 @@ function SettingsRoot({
     /* @__PURE__ */ u2("main", { className: "think-settings-workspace__content", children: [
       /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u2(DataManagementSettings, {}) }),
       /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u2(LayoutSettings, { app }) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(GeneralSettings, { currentVersion, onPullDevBuild }) }),
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(GeneralSettings, { currentVersion, onPullDevBuild, onInspectDevBuild }) }),
       /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u2(AiSettings, {}) })
     ] })
   ] }) });
@@ -71713,23 +71825,57 @@ function SettingsRoot({
 const GITHUB_OWNER = "jiangjiang3788";
 const GITHUB_REPO = "obsidian-sample-plugin-master";
 const GITHUB_BRANCH = "main";
-const DEV_BUILD_FILES = ["main.js", "manifest.json", "styles.css"];
-function rawFileUrl(file, cacheBust) {
-  return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${file}?t=${cacheBust}`;
+const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
+const DEV_BUILD_FILES = ["main.js", "styles.css", "manifest.json"];
+function isCommitSha(value) {
+  return typeof value === "string" && /^[0-9a-f]{40}$/i.test(value);
+}
+function validIsoTime(value) {
+  return typeof value === "string" && Number.isFinite(Date.parse(value)) ? new Date(value).toISOString() : null;
+}
+function rawFileUrl(file, revision) {
+  return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${revision}/${file}?t=${Date.now()}`;
+}
+async function readGitHubHead() {
+  let payload;
+  try {
+    const response = await obsidian.requestUrl({
+      url: `${GITHUB_API}/commits/${GITHUB_BRANCH}`,
+      headers: { Accept: "application/vnd.github+json" }
+    });
+    if (response.status !== 200) throw new Error(`HTTP ${response.status}`);
+    payload = response.json;
+  } catch {
+    throw new Error("GitHub 提交信息不可用，无法确保同一版本，已停止下载；请稍后重试");
+  }
+  if (!isCommitSha(payload?.sha)) throw new Error("GitHub 未返回有效提交 SHA，已停止下载");
+  return { sha: payload.sha, committedAt: validIsoTime(payload?.commit?.committer?.date) };
+}
+function findGitHubRevisionPushTime(events2, sha) {
+  if (!Array.isArray(events2) || !isCommitSha(sha)) return null;
+  for (const event of events2) {
+    if (event?.type === "PushEvent" && event?.payload?.ref === `refs/heads/${GITHUB_BRANCH}` && event?.payload?.head === sha) {
+      return validIsoTime(event.created_at);
+    }
+  }
+  return null;
+}
+async function readGitHubPushTime(sha) {
+  try {
+    const response = await obsidian.requestUrl({
+      url: `${GITHUB_API}/events?per_page=100`,
+      headers: { Accept: "application/vnd.github+json" }
+    });
+    return response.status === 200 ? findGitHubRevisionPushTime(response.json, sha) : null;
+  } catch {
+    return null;
+  }
 }
 function assertDownloadedFile(file, text2) {
-  if (!text2.trim()) {
-    throw new Error(`${file} 内容为空`);
-  }
-  if (/^\s*<(?:!doctype|html)/i.test(text2)) {
-    throw new Error(`${file} 返回了网页内容，而不是插件文件`);
-  }
-  if (file === "main.js" && text2.length < 1e3) {
-    throw new Error("main.js 内容异常，已停止覆盖");
-  }
-  if (file === "styles.css" && text2.length < 100) {
-    throw new Error("styles.css 内容异常，已停止覆盖");
-  }
+  if (!text2.trim()) throw new Error(`${file} 内容为空`);
+  if (/^\s*<(?:!doctype|html)/i.test(text2)) throw new Error(`${file} 返回了网页内容，而不是插件文件`);
+  if (file === "main.js" && text2.length < 1e3) throw new Error("main.js 内容异常，已停止覆盖");
+  if (file === "styles.css" && text2.length < 100) throw new Error("styles.css 内容异常，已停止覆盖");
 }
 function parseAndValidateManifest(text2, expectedPluginId) {
   let manifest;
@@ -71747,65 +71893,91 @@ function parseAndValidateManifest(text2, expectedPluginId) {
   if (manifest?.styles && manifest.styles !== "styles.css") {
     throw new Error(`远端 manifest styles 字段异常：${String(manifest.styles)}`);
   }
+  if (typeof manifest.version !== "string" || !manifest.version.trim()) {
+    throw new Error("远端版本号缺失，已停止覆盖");
+  }
+  return { version: manifest.version.trim() };
+}
+async function readFileAtRevision(file, sha) {
+  const response = await obsidian.requestUrl({ url: rawFileUrl(file, sha) });
+  if (response.status !== 200) throw new Error(`下载 ${file} 失败（HTTP ${response.status}）`);
+  assertDownloadedFile(file, response.text);
+  return response.text;
+}
+async function downloadPinnedBuild(sha) {
+  const entries = await Promise.all(DEV_BUILD_FILES.map(async (file) => [file, await readFileAtRevision(file, sha)]));
+  return Object.fromEntries(entries);
+}
+async function infoAtHead(head, expectedPluginId) {
+  const [manifestText, githubPushedAt] = await Promise.all([
+    readFileAtRevision("manifest.json", head.sha),
+    readGitHubPushTime(head.sha)
+  ]);
   return {
-    version: typeof manifest?.version === "string" && manifest.version.trim() ? manifest.version.trim() : "未标版本"
+    remoteVersion: parseAndValidateManifest(manifestText, expectedPluginId).version,
+    branch: GITHUB_BRANCH,
+    githubPushedAt,
+    githubCommitAt: head.committedAt,
+    commitSha: head.sha
   };
 }
-async function downloadDevBuild() {
-  const cacheBust = `${Date.now()}`;
-  const entries = await Promise.all(
-    DEV_BUILD_FILES.map(async (file) => {
-      const response = await obsidian.requestUrl({ url: rawFileUrl(file, cacheBust) });
-      if (response.status !== 200) {
-        throw new Error(`下载 ${file} 失败（HTTP ${response.status}）`);
-      }
-      assertDownloadedFile(file, response.text);
-      return [file, response.text];
-    })
-  );
-  return Object.fromEntries(entries);
+async function getGitHubDevBuildInfo(expectedPluginId) {
+  return infoAtHead(await readGitHubHead(), expectedPluginId);
 }
 async function readBackups(adapter, pluginDir) {
-  const entries = await Promise.all(
-    DEV_BUILD_FILES.map(async (file) => {
-      const path = `${pluginDir}/${file}`;
-      const exists = await adapter.exists(path);
-      return [file, exists ? await adapter.read(path) : null];
-    })
-  );
-  return Object.fromEntries(entries);
+  const entries = await Promise.all(DEV_BUILD_FILES.map(async (file) => {
+    const path = `${pluginDir}/${file}`;
+    return [file, await adapter.exists(path) ? await adapter.read(path) : null];
+  }));
+  const backups = Object.fromEntries(entries);
+  if (DEV_BUILD_FILES.some((file) => backups[file] === null) && !adapter.remove) {
+    throw new Error("本地插件文件缺失且存储不支持回滚删除，已停止覆盖");
+  }
+  return backups;
 }
-async function rollbackFiles(adapter, pluginDir, backups, writtenFiles) {
-  for (const file of [...writtenFiles].reverse()) {
-    const previous = backups[file];
-    if (previous === null) continue;
+async function restoreBackups(adapter, dir, backups, touched) {
+  const errors = [];
+  for (const file of [...touched].reverse()) {
     try {
-      await adapter.write(`${pluginDir}/${file}`, previous);
+      const path = `${dir}/${file}`;
+      if (backups[file] === null) await adapter.remove(path);
+      else await adapter.write(path, backups[file]);
     } catch {
+      errors.push(file);
     }
   }
+  return errors;
 }
-async function pullGitHubDevBuild(host) {
-  const downloaded = await downloadDevBuild();
-  const remoteManifest = parseAndValidateManifest(downloaded["manifest.json"], host.manifest.id);
-  const pluginDir = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
-  const adapter = host.app.vault.adapter;
-  const backups = await readBackups(adapter, pluginDir);
-  const writtenFiles = [];
+async function installPinnedFiles(adapter, dir, downloaded) {
+  const backups = await readBackups(adapter, dir);
+  const touched = [];
   try {
-    const writeOrder = ["main.js", "styles.css", "manifest.json"];
-    for (const file of writeOrder) {
-      await adapter.write(`${pluginDir}/${file}`, downloaded[file]);
-      writtenFiles.push(file);
+    for (const file of DEV_BUILD_FILES) {
+      touched.push(file);
+      const path = `${dir}/${file}`;
+      await adapter.write(path, downloaded[file]);
+      if (await adapter.read(path) !== downloaded[file]) {
+        throw new Error(`${file} 写入校验失败`);
+      }
     }
   } catch (error) {
-    await rollbackFiles(adapter, pluginDir, backups, writtenFiles);
-    throw error;
+    const failed = await restoreBackups(adapter, dir, backups, touched);
+    const message = error instanceof Error ? error.message : String(error);
+    if (failed.length) throw new Error(`${message}；回滚 ${failed.join("、")} 失败，请从备份恢复`);
+    throw new Error(`${message}；已回滚到原版本`);
   }
-  return {
-    remoteVersion: remoteManifest.version,
-    branch: GITHUB_BRANCH
-  };
+}
+async function pullGitHubDevBuild(host, preview) {
+  const selected = preview && isCommitSha(preview.commitSha) ? preview : await getGitHubDevBuildInfo(host.manifest.id);
+  if (!isCommitSha(selected.commitSha)) throw new Error("预览 SHA 无效，已停止下载");
+  const downloaded = await downloadPinnedBuild(selected.commitSha);
+  const manifest = parseAndValidateManifest(downloaded["manifest.json"], host.manifest.id);
+  if (manifest.version !== selected.remoteVersion) {
+    throw new Error("GitHub 预览版本与下载版本不匹配，未覆盖本地文件");
+  }
+  const pluginDir = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
+  await installPinnedFiles(host.app.vault.adapter, pluginDir, downloaded);
+  return selected;
 }
 const THINK_SETTINGS_VIEW_TYPE = "think-os-settings-view";
 class ThinkSettingsView extends obsidian.ItemView {
@@ -71836,7 +72008,8 @@ class ThinkSettingsView extends obsidian.ItemView {
           app: this.plugin.app,
           variant: "workspace",
           currentVersion: this.plugin.manifest.version,
-          onPullDevBuild: () => pullGitHubDevBuild(this.plugin)
+          onInspectDevBuild: () => getGitHubDevBuildInfo(this.plugin.manifest.id),
+          onPullDevBuild: (preview) => pullGitHubDevBuild(this.plugin, preview)
         }
       ),
       this.services
@@ -71863,13 +72036,14 @@ async function openThinkSettingsWorkspaceView(plugin) {
 function SettingsLauncher({
   onOpenWorkspace,
   onPullDevBuild,
+  onInspectDevBuild,
   currentVersion
 }) {
   const deviceProfileAttrs = getThinkDeviceProfileAttributes();
   return /* @__PURE__ */ u2("section", { className: "think-os think-os--settings think-setting-root think-setting-root--launcher", ...deviceProfileAttrs, children: [
     /* @__PURE__ */ u2("h2", { className: "think-settings-launcher__title", children: "思考系统控制台" }),
     /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: onOpenWorkspace, children: "打开 思考系统控制台" }),
-    /* @__PURE__ */ u2(DevBuildUpdateControl, { currentVersion, onPullDevBuild })
+    /* @__PURE__ */ u2(DevBuildUpdateControl, { currentVersion, onPullDevBuild, onInspectDevBuild })
   ] });
 }
 class SettingsTab extends obsidian.PluginSettingTab {
@@ -71893,7 +72067,8 @@ class SettingsTab extends obsidian.PluginSettingTab {
         SettingsLauncher,
         {
           currentVersion: this.plugin.manifest.version,
-          onPullDevBuild: () => pullGitHubDevBuild(this.plugin),
+          onInspectDevBuild: () => getGitHubDevBuildInfo(this.plugin.manifest.id),
+          onPullDevBuild: (preview) => pullGitHubDevBuild(this.plugin, preview),
           onOpenWorkspace: () => {
             void openThinkSettingsWorkspaceView(this.plugin).catch((error) => {
               new obsidian.Notice(`打开 思考系统控制台失败：${error instanceof Error ? error.message : String(error)}`);

@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
 import type { JSX } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import type { TaskBlock } from '@core/types/public';
 import {
   buildTimelineBlockGesturePreview,
@@ -14,7 +14,7 @@ import {
 } from '@core/utils/public';
 import { getTaskSessionResultPresentation, getTaskStatusPresentation } from '@core/records/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, UpdateTimelineRangeHandler } from '@shared/types/public';
-import { createRecordGestureHandlers, RECORD_MODIFIER_ORIGIN_HINT, ThinkIcon, ThinkIconButton } from '@shared/ui/public';
+import { createRecordGestureHandlers, findTimelineTouch, RECORD_MODIFIER_ORIGIN_HINT, ThinkIcon, ThinkIconButton, useTimelineTouchGesture } from '@shared/ui/public';
 
 interface TimelineTaskBlockProps {
   block: TaskBlock;
@@ -39,30 +39,7 @@ interface ActiveGesture {
   dragging: boolean;
 }
 
-interface ActiveTouchGesture {
-  identifier: number;
-  mode: GestureMode;
-  startClientX: number;
-  startClientY: number;
-  anchorMinute: number;
-  armed: boolean;
-  dragging: boolean;
-  timerId: number | null;
-}
-
 const MOUSE_DRAG_THRESHOLD_PX = 4;
-const TOUCH_LONG_PRESS_MS = 350;
-const TOUCH_PRESS_SLOP_PX = 10;
-const TOUCH_DRAG_THRESHOLD_PX = 2;
-
-function findTouch(touches: TouchList | undefined, identifier: number): Touch | null {
-  if (!touches) return null;
-  for (let index = 0; index < touches.length; index += 1) {
-    const touch = touches.item(index);
-    if (touch?.identifier === identifier) return touch;
-  }
-  return null;
-}
 
 function formatTimeMinute(minute: number): string {
   const total = Math.round(minute);
@@ -108,7 +85,9 @@ export function TimelineTaskBlock({
 }: TimelineTaskBlockProps) {
   const blockRef = useRef<HTMLDivElement | null>(null);
   const gestureRef = useRef<ActiveGesture | null>(null);
-  const touchGestureRef = useRef<ActiveTouchGesture | null>(null);
+  const touchIdentifierRef = useRef<number | null>(null);
+  const touchAnchorMinuteRef = useRef<number | null>(null);
+  const touchGestureModeRef = useRef<GestureMode>('move');
   const suppressClickUntilRef = useRef(0);
   const [preview, setPreview] = useState<ReturnType<typeof buildTimelineBlockGesturePreview>>(null);
   const previewRef = useRef<ReturnType<typeof buildTimelineBlockGesturePreview>>(null);
@@ -117,10 +96,13 @@ export function TimelineTaskBlock({
   // Editing controls are intentionally hidden until a deliberate long press.
   const [isEditMode, setIsEditMode] = useState(false);
 
-  useEffect(() => () => {
-    const active = touchGestureRef.current;
-    if (active?.timerId != null) window.clearTimeout(active.timerId);
-  }, []);
+  // Task blocks and empty day cells consume the SAME long-press policy. The
+  // controller owns cancellation/timers; native scrolling stays the default.
+  const touchGesture = useTimelineTouchGesture<GestureMode>(() => {
+    setIsTouchArmed(true);
+    setIsEditMode(true);
+    try { navigator.vibrate?.(8); } catch { /* optional vibration */ }
+  });
 
   const isPlanned = block.timelineSource === 'task-plan';
   const isPoint = !block.timelineRange.end;
@@ -243,79 +225,61 @@ export function TimelineTaskBlock({
     })).catch(() => undefined);
   };
 
-  const clearTouchTimer = (active: ActiveTouchGesture | null) => {
-    if (!active || active.timerId == null) return;
-    window.clearTimeout(active.timerId);
-    active.timerId = null;
-  };
-
-  const beginTouchGesture = (event: TouchEvent, mode: GestureMode) => {
-    const touch = event.changedTouches?.item(0);
-    if (!touch) return;
-    const minute = minuteFromClientY(touch.clientY);
-    if (minute == null) return;
-
-    event.stopPropagation();
-    clearTouchTimer(touchGestureRef.current);
+  const resetTouchPreview = () => {
     previewRef.current = null;
     setPreview(null);
     setIsDragging(false);
     setIsTouchArmed(false);
+  };
 
-    const active: ActiveTouchGesture = {
-      identifier: touch.identifier,
-      mode,
-      startClientX: touch.clientX,
-      startClientY: touch.clientY,
-      anchorMinute: minute,
-      armed: false,
-      dragging: false,
-      timerId: null,
-    };
-    active.timerId = window.setTimeout(() => {
-      if (touchGestureRef.current !== active) return;
-      active.armed = true;
-      active.timerId = null;
-      setIsTouchArmed(true);
-      setIsEditMode(true);
-      try { navigator.vibrate?.(8); } catch { /* optional tactile acknowledgement */ }
-    }, TOUCH_LONG_PRESS_MS);
-    touchGestureRef.current = active;
+  const beginTouchGesture = (event: TouchEvent, mode: GestureMode) => {
+    // Do not let empty-cell handlers start while a finger touches a task.
+    // Stopping propagation is safe; preventing default here is NOT (iOS scroll).
+    event.stopPropagation();
+    if (event.touches?.length !== 1) {
+      touchGesture.cancel();
+      touchIdentifierRef.current = null;
+      resetTouchPreview();
+      return;
+    }
+    const touch = event.changedTouches?.item(0);
+    if (!touch) return;
+    const minute = minuteFromClientY(touch.clientY);
+    if (minute == null) return;
+    touchIdentifierRef.current = touch.identifier;
+    touchAnchorMinuteRef.current = minute;
+    touchGestureModeRef.current = mode;
+    resetTouchPreview();
+    touchGesture.start(touch, mode);
   };
 
   const handleTouchMove = (event: TouchEvent) => {
-    const active = touchGestureRef.current;
-    if (!active) return;
-    const touch = findTouch(event.touches, active.identifier);
-    if (!touch) return;
-    const deltaX = touch.clientX - active.startClientX;
-    const deltaY = touch.clientY - active.startClientY;
-    const travel = Math.hypot(deltaX, deltaY);
-
-    // Before the long press is confirmed, movement in either axis is native
-    // scrolling. Horizontal day swipes must cancel the edit candidate just as
-    // vertical timeline swipes do.
-    if (!active.armed) {
-      if (travel <= TOUCH_PRESS_SLOP_PX) return;
-      clearTouchTimer(active);
-      touchGestureRef.current = null;
-      suppressClickUntilRef.current = Date.now() + 350;
+    const identifier = touchIdentifierRef.current;
+    if (identifier == null) return;
+    const touch = findTimelineTouch(event.touches, identifier);
+    if (!touch || event.touches.length !== 1) {
+      touchGesture.cancel();
+      touchIdentifierRef.current = null;
+      resetTouchPreview();
       return;
     }
-
-    if (!active.dragging && Math.abs(deltaY) < TOUCH_DRAG_THRESHOLD_PX) return;
+    const outcome = touchGesture.move(touch, event.touches.length);
+    if (outcome === 'scroll') {
+      // On an ordinary finger swipe let the browser pan without interference.
+      suppressClickUntilRef.current = Date.now() + 350;
+      touchIdentifierRef.current = null;
+      resetTouchPreview();
+      return;
+    }
+    if (outcome !== 'drag') return;
+    const anchorMinute = touchAnchorMinuteRef.current;
     const currentMinute = minuteFromClientY(touch.clientY);
-    if (currentMinute == null) return;
+    if (anchorMinute == null || currentMinute == null) return;
+    const mode = touchGestureModeRef.current;
     const nextPreview = buildTimelineBlockGesturePreview({
-      block,
-      mode: active.mode,
-      anchorMinute: active.anchorMinute,
-      currentMinute,
-      maxHours,
+      block, mode, anchorMinute, currentMinute, maxHours,
     });
     if (!nextPreview) return;
-
-    active.dragging = true;
     event.preventDefault();
     event.stopPropagation();
     setIsDragging(true);
@@ -324,42 +288,33 @@ export function TimelineTaskBlock({
   };
 
   const finishTouchGesture = (event: TouchEvent, cancelled = false) => {
-    const active = touchGestureRef.current;
-    if (!active) return;
-    const touch = findTouch(event.changedTouches, active.identifier);
-    if (!touch) return;
-
-    clearTouchTimer(active);
-    touchGestureRef.current = null;
+    // Always stop bubbling to the empty-cell double-tap create handler, even if
+    // the user swiped and the long-press candidate was already discarded.
+    event.stopPropagation();
+    const identifier = touchIdentifierRef.current;
+    const touch = identifier == null ? null : findTimelineTouch(event.changedTouches, identifier);
+    if (!touch) {
+      if (cancelled) { touchGesture.cancel(); resetTouchPreview(); }
+      return;
+    }
+    const outcome = touchGesture.end(touch, cancelled);
+    touchIdentifierRef.current = null;
     setIsTouchArmed(false);
-
-    // A regular tap remains the existing click-to-open interaction. A long
-    // press, however, is an explicit edit intent and must not synthesize a click.
-    if (!active.armed) return;
+    if (!outcome || outcome.kind === 'tap') {
+      resetTouchPreview();
+      return;
+    }
     suppressClickUntilRef.current = Date.now() + 450;
     event.preventDefault();
-    event.stopPropagation();
-
-    let committedPreview = previewRef.current;
-    if (!cancelled && !committedPreview && Math.abs(touch.clientY - active.startClientY) >= TOUCH_DRAG_THRESHOLD_PX) {
-      const currentMinute = minuteFromClientY(touch.clientY);
-      if (currentMinute != null) {
-        committedPreview = buildTimelineBlockGesturePreview({
-          block,
-          mode: active.mode,
-          anchorMinute: active.anchorMinute,
-          currentMinute,
-          maxHours,
-        });
-      }
-    }
-
-    const didDrag = !!committedPreview && !cancelled;
-    previewRef.current = null;
-    setPreview(null);
-    setIsDragging(false);
-    if (!didDrag || !committedPreview) return;
-
+    const anchorMinute = touchAnchorMinuteRef.current;
+    // Rebuild from the released finger position, not a potentially stale state
+    // update: WebKit may coalesce the last touchmove before touchend.
+    const currentMinute = minuteFromClientY(touch.clientY);
+    const committedPreview = !cancelled && outcome.kind === 'drag' && anchorMinute != null && currentMinute != null
+      ? buildTimelineBlockGesturePreview({ block, mode: outcome.anchor.mode, anchorMinute, currentMinute, maxHours })
+      : null;
+    resetTouchPreview();
+    if (!committedPreview) return;
     if (!onUpdateTimelineRange) {
       onNotice?.('未提供时间轴保存处理器，无法更新时间');
       return;

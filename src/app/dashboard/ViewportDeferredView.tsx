@@ -4,6 +4,7 @@ import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { getViewDefinition } from '@core/view/public';
 import type { ViewName } from '@core/types/public';
+import { detectThinkDeviceProfile } from '@shared/utils/public';
 
 function getInitialDeferredHeight(viewType: ViewName): number {
   return getViewDefinition(viewType)?.layout.deferredMinHeight ?? 320;
@@ -11,7 +12,11 @@ function getInitialDeferredHeight(viewType: ViewName): number {
 
 export function ViewportDeferredView({ viewType, children }: { viewType: ViewName; children: ComponentChildren }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
-  const [nearViewport, setNearViewport] = useState(false);
+  // Android WebViews can miss the first IntersectionObserver notification for
+  // very tall timelines inside nested Obsidian scrollers. Never hide the only
+  // timeline behind a potentially permanent mobile deferred placeholder.
+  const eagerMobileTimeline = viewType === 'TimelineView' && detectThinkDeviceProfile().isMobileLike;
+  const [nearViewport, setNearViewport] = useState(eagerMobileTimeline);
   const [measuredHeight, setMeasuredHeight] = useState(() => getInitialDeferredHeight(viewType));
 
   useEffect(() => {
@@ -19,6 +24,10 @@ export function ViewportDeferredView({ viewType, children }: { viewType: ViewNam
   }, [viewType]);
 
   useEffect(() => {
+    if (eagerMobileTimeline) {
+      setNearViewport(true);
+      return;
+    }
     const host = hostRef.current;
     if (!host) return;
     if (typeof IntersectionObserver === 'undefined') {
@@ -36,7 +45,7 @@ export function ViewportDeferredView({ viewType, children }: { viewType: ViewNam
     });
     observer.observe(host);
     return () => observer.disconnect();
-  }, [viewType]);
+  }, [viewType, eagerMobileTimeline]);
 
   useEffect(() => {
     if (!nearViewport) return;
