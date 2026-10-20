@@ -7082,9 +7082,9 @@ body.is-mobile .timeline-view-wrapper {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  /* Native scroll owns both axes, while app-owned PointerEvent logic handles
-   * two-finger timeline zoom (do not opt into browser page pinch zoom).
-   * Only an armed long press may prevent the touchmove default. */
+  /* Native one-finger scrolling remains enabled. A capturing, non-passive
+   * TouchEvent listener handles ONLY actual two-finger pinch zoom on WebKit.
+   * Long-press editing has exclusive ownership of one-finger range drags. */
   touch-action: pan-x pan-y;
 }
 

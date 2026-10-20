@@ -71,6 +71,18 @@ export function DayColumnBody({
     // long-press drag is allowed to create a range.
     setDragSelection(buildTimelineDragSelection(minute, minute, maxHours));
     try { navigator.vibrate?.(8); } catch { /* optional feedback */ }
+  }, (wasActive) => {
+    // Two fingers anywhere on this timeline must cancel a pending range,
+    // even when the second finger lands in ANOTHER column or task block.
+    touchIdentifierRef.current = null;
+    touchStartMinuteRef.current = null;
+    touchSwipeCancelledRef.current = true;
+    lastTouchRef.current = null;
+    suppressClickUntilRef.current = Date.now() + 450;
+    if (wasActive) {
+      setIsTouchSelectionArmed(false);
+      setDragSelection(null);
+    }
   });
 
   const handleBodyClick = (event: MouseEvent) => {

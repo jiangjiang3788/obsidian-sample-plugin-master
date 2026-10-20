@@ -7,7 +7,8 @@
 import { h, render } from 'preact';
 import { act } from 'preact/test-utils';
 import { createPointerEvent, waitForUi } from '../support/uiTestUtils';
-import { TIMELINE_TOUCH_POLICY } from '@/shared/ui/timeline/TimelineTouchGesture';
+import { TIMELINE_TOUCH_POLICY, TimelineTouchScope } from '@/shared/ui/timeline/TimelineTouchGesture';
+import { TimelineTouchScopeContext } from '@/shared/ui/timeline/useTimelineTouchGesture';
 import { DayColumnBody } from '@/features/views/runtime/components/timeline/DayColumnBody';
 
 function taskBlock(id: string) {
@@ -203,6 +204,42 @@ describe('Timeline pointer gesture UI', () => {
     expect(onColumnClick).toHaveBeenCalledTimes(1);
     expect(onColumnClick.mock.calls[0][0]).toBe('2026-08-26');
     expect(onColumnClick.mock.calls[0][2]).toEqual({ startMinute: 60, endMinute: 120 });
+    jest.useRealTimers();
+  });
+
+  it('a second finger cancels an active range edit without creating a range or zoom', async () => {
+    jest.useFakeTimers();
+    const scope = new TimelineTouchScope();
+    const onColumnClick = jest.fn();
+    await act(async () => render(
+      <TimelineTouchScopeContext.Provider value={scope}>
+        <DayColumnBody
+          day="2026-08-26"
+          blocks={[]}
+          hourHeight={60}
+          colorMap={{}}
+          maxHours={24}
+          onColumnClick={onColumnClick}
+        />
+      </TimelineTouchScopeContext.Provider>, host,
+    ));
+    const column = host.querySelector('.day-column-body') as HTMLElement;
+    Object.defineProperty(column, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({ top: 0, left: 0, right: 100, bottom: 1440, width: 100, height: 1440, x: 0, y: 0, toJSON: () => ({}) }),
+    });
+    await act(async () => {
+      column.dispatchEvent(touchEvent('touchstart', 60));
+      jest.advanceTimersByTime(TIMELINE_TOUCH_POLICY.longPressMs);
+      column.dispatchEvent(touchEvent('touchmove', 120));
+    });
+    expect(host.querySelector('.timeline-range-selection')).toBeTruthy();
+    let allowed: boolean | null = null;
+    await act(async () => { allowed = scope.requestPinch(); });
+    expect(allowed).toBe(false); // editing was already being dragged
+    expect(host.querySelector('.timeline-range-selection')).toBeNull();
+    await act(async () => { column.dispatchEvent(touchEvent('touchend', 120)); });
+    expect(onColumnClick).not.toHaveBeenCalled();
     jest.useRealTimers();
   });
 

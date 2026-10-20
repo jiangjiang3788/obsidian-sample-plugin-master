@@ -1,4 +1,4 @@
-import { TIMELINE_TOUCH_POLICY, TimelineTouchGesture } from '@/shared/ui/timeline/TimelineTouchGesture';
+import { TIMELINE_TOUCH_POLICY, TimelineTouchGesture, TimelineTouchScope } from '@/shared/ui/timeline/TimelineTouchGesture';
 
 const point = (clientX = 10, clientY = 50, identifier = 7) => ({ identifier, clientX, clientY });
 
@@ -66,5 +66,40 @@ describe('Timeline unified touch gesture arbitration', () => {
     gesture.cancel();
     jest.advanceTimersByTime(1500);
     expect(arm).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('Timeline touch scope: pinch and edit are mutually exclusive', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => { jest.clearAllTimers(); jest.useRealTimers(); });
+
+  it('cancels a pending long press when another finger lands in a different child', () => {
+    const onArm = jest.fn();
+    const gesture = new TimelineTouchGesture(onArm);
+    const scope = new TimelineTouchScope();
+    const onPinchCancel = jest.fn();
+    scope.register({ pending: () => gesture.pending, dragging: () => gesture.dragging, cancel: () => {
+      gesture.cancel();
+      onPinchCancel();
+    } });
+    gesture.start(point(), 'select');
+    expect(scope.requestPinch()).toBe(true);
+    jest.advanceTimersByTime(TIMELINE_TOUCH_POLICY.longPressMs + 20);
+    expect(onArm).not.toHaveBeenCalled();
+    expect(onPinchCancel).toHaveBeenCalledTimes(1);
+    expect(gesture.end(point())).toBeNull();
+  });
+
+  it('an established time-range drag cancels on second finger WITHOUT turning into zoom', () => {
+    const gesture = new TimelineTouchGesture(jest.fn());
+    const scope = new TimelineTouchScope();
+    scope.register({ pending: () => gesture.pending, dragging: () => gesture.dragging, cancel: () => gesture.cancel() });
+    gesture.start(point(), 'resize-end');
+    jest.advanceTimersByTime(TIMELINE_TOUCH_POLICY.longPressMs);
+    expect(gesture.move(point(10, 100), 1)).toBe('drag');
+    expect(scope.requestPinch()).toBe(false);
+    expect(gesture.pending).toBe(false);
+    expect(gesture.end(point(10, 100))).toBeNull();
   });
 });

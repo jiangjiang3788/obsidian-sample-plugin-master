@@ -42,5 +42,5 @@ export { useTimelineDensityMode, resolveTimelineDensityMode, TIMELINE_COMPACT_WI
 export type { TimelineUiDensityMode } from './timeline/useTimelineDensityMode';
 export { useCoarseTimelineDensity } from './timeline/useCoarseTimelineDensity';
 
-export { useTimelineTouchGesture } from './timeline/useTimelineTouchGesture';
-export { findTimelineTouch, TIMELINE_TOUCH_POLICY } from './timeline/TimelineTouchGesture';
+export { useTimelineTouchGesture, TimelineTouchScopeContext } from './timeline/useTimelineTouchGesture';
+export { findTimelineTouch, TIMELINE_TOUCH_POLICY, TimelineTouchScope } from './timeline/TimelineTouchGesture';

@@ -25598,23 +25598,143 @@ function normalizeViewMultiValue(value, options = {}) {
   const normalized2 = rawValues.flatMap((v2) => String(v2 ?? "").split(/[,，\n]/)).map((part) => part.trim()).filter(Boolean);
   return options.dedupe === false ? normalized2 : Array.from(new Set(normalized2));
 }
+function attachTimelineTouchZoom(surface, getHourHeight, onScale, requestPinch = () => true) {
+  const localTouchIds = /* @__PURE__ */ new Set();
+  let pinch = null;
+  let blockedUntilRelease = false;
+  const getPair = (event) => {
+    if (event.touches.length !== 2 || localTouchIds.size !== 2) return null;
+    const first2 = event.touches.item(0);
+    const second = event.touches.item(1);
+    return first2 && second && localTouchIds.has(first2.identifier) && localTouchIds.has(second.identifier) ? [first2, second] : null;
+  };
+  const onStart = (event) => {
+    const live = /* @__PURE__ */ new Set();
+    for (let i2 = 0; i2 < event.touches.length; i2 += 1) {
+      const touch = event.touches.item(i2);
+      if (touch) live.add(touch.identifier);
+    }
+    for (const id of localTouchIds) if (!live.has(id)) localTouchIds.delete(id);
+    for (let i2 = 0; i2 < event.changedTouches.length; i2 += 1) {
+      const touch = event.changedTouches.item(i2);
+      if (touch) localTouchIds.add(touch.identifier);
+    }
+    if (event.touches.length > 2) {
+      pinch = null;
+      blockedUntilRelease = true;
+      return;
+    }
+    if (pinch || blockedUntilRelease) return;
+    const pair = getPair(event);
+    if (!pair) return;
+    const distance = Math.hypot(pair[0].clientX - pair[1].clientX, pair[0].clientY - pair[1].clientY);
+    if (distance < 12) return;
+    if (!requestPinch()) {
+      blockedUntilRelease = true;
+      return;
+    }
+    const midY = (pair[0].clientY + pair[1].clientY) / 2;
+    const content = surface.querySelector(".timeline-scrollable-body");
+    const top2 = (content ?? surface).getBoundingClientRect().top;
+    pinch = {
+      ids: [pair[0].identifier, pair[1].identifier],
+      distance,
+      hourHeight: getHourHeight(),
+      midY,
+      contentY: midY - top2,
+      scrollTop: surface.scrollTop,
+      sawTouchPinchMove: false
+    };
+    if (event.cancelable) event.preventDefault();
+  };
+  const onMove = (event) => {
+    if (!pinch) return;
+    const pair = getPair(event);
+    if (!pair || !pinch.ids.includes(pair[0].identifier) || !pinch.ids.includes(pair[1].identifier)) {
+      pinch = null;
+      blockedUntilRelease = true;
+      return;
+    }
+    if (event.cancelable) event.preventDefault();
+    const distance = Math.hypot(pair[0].clientX - pair[1].clientX, pair[0].clientY - pair[1].clientY);
+    if (Math.abs(distance - pinch.distance) < 4) return;
+    pinch.sawTouchPinchMove = true;
+    const ratio2 = distance / pinch.distance;
+    const targetHeight = pinch.hourHeight * ratio2;
+    const currentMidY = (pair[0].clientY + pair[1].clientY) / 2;
+    onScale(targetHeight, {
+      hourHeight: pinch.hourHeight,
+      scrollTop: pinch.scrollTop,
+      contentY: pinch.contentY,
+      verticalPan: pinch.midY - currentMidY
+    });
+  };
+  const onEnd = (event) => {
+    const live = /* @__PURE__ */ new Set();
+    for (let i2 = 0; i2 < event.touches.length; i2 += 1) {
+      const touch = event.touches.item(i2);
+      if (touch) live.add(touch.identifier);
+    }
+    for (const id of localTouchIds) if (!live.has(id)) localTouchIds.delete(id);
+    if (!getPair(event)) pinch = null;
+    if (event.touches.length === 0) {
+      localTouchIds.clear();
+      blockedUntilRelease = false;
+    }
+  };
+  const onBrowserGesture = (event) => {
+    if (!pinch) return;
+    if (event.cancelable) event.preventDefault();
+    const scale = event.scale;
+    if (event.type === "gesturechange" && !pinch.sawTouchPinchMove && typeof scale === "number" && Number.isFinite(scale) && Math.abs(scale - 1) * pinch.distance >= 4 && scale > 0) {
+      onScale(pinch.hourHeight * scale, {
+        hourHeight: pinch.hourHeight,
+        scrollTop: pinch.scrollTop,
+        contentY: pinch.contentY,
+        verticalPan: 0
+      });
+    }
+  };
+  const onBrowserGestureEnd = () => {
+    pinch = null;
+  };
+  surface.addEventListener("touchstart", onStart, { capture: true, passive: false });
+  surface.addEventListener("touchmove", onMove, { capture: true, passive: false });
+  surface.addEventListener("touchend", onEnd, { capture: true, passive: true });
+  surface.addEventListener("touchcancel", onEnd, { capture: true, passive: true });
+  surface.addEventListener("gesturestart", onBrowserGesture, { capture: true, passive: false });
+  surface.addEventListener("gesturechange", onBrowserGesture, { capture: true, passive: false });
+  surface.addEventListener("gestureend", onBrowserGestureEnd, { capture: true, passive: true });
+  return () => {
+    surface.removeEventListener("touchstart", onStart, true);
+    surface.removeEventListener("touchmove", onMove, true);
+    surface.removeEventListener("touchend", onEnd, true);
+    surface.removeEventListener("touchcancel", onEnd, true);
+    surface.removeEventListener("gesturestart", onBrowserGesture, true);
+    surface.removeEventListener("gesturechange", onBrowserGesture, true);
+    surface.removeEventListener("gestureend", onBrowserGestureEnd, true);
+    localTouchIds.clear();
+    pinch = null;
+  };
+}
 function useTimelineZoom(options) {
   const { defaultHeight, minHeight: minHeight2 = 10, maxHeight: maxHeight2 = 200, step = 5 } = options;
   const [hourHeight, setHourHeight] = d(defaultHeight);
-  const pointersRef = A$1(/* @__PURE__ */ new Map());
-  const pinchRef = A$1(null);
+  const hourHeightRef = A$1(hourHeight);
+  hourHeightRef.current = hourHeight;
+  const pendingScrollRef = A$1(null);
   y(() => {
     setHourHeight(defaultHeight);
   }, [defaultHeight]);
+  _(() => {
+    const pending = pendingScrollRef.current;
+    if (!pending) return;
+    pendingScrollRef.current = null;
+    pending.surface.scrollTop = Math.max(0, pending.top);
+  }, [hourHeight]);
   y(() => () => {
-    pointersRef.current.clear();
-    pinchRef.current = null;
+    pendingScrollRef.current = null;
   }, []);
-  const distanceBetweenPointers = () => {
-    const positions = [...pointersRef.current.values()];
-    if (positions.length !== 2) return null;
-    return Math.hypot(positions[0].x - positions[1].x, positions[0].y - positions[1].y);
-  };
   const handleWheel = q$1((event) => {
     if (!event.altKey) return;
     event.preventDefault();
@@ -25623,39 +25743,22 @@ function useTimelineZoom(options) {
       current2 + (event.deltaY < 0 ? step : -step)
     )));
   }, [minHeight2, maxHeight2, step]);
-  const handlePointerDown = (event) => {
-    if (event.pointerType !== "touch") return;
-    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    if (pointersRef.current.size === 2) {
-      const distance = distanceBetweenPointers();
-      pinchRef.current = distance && distance > 0 ? { distance, hourHeight } : null;
-    } else if (pointersRef.current.size > 2) pinchRef.current = null;
-  };
-  const handlePointerMove = (event) => {
-    if (!pointersRef.current.has(event.pointerId)) return;
-    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    if (pointersRef.current.size !== 2 || !pinchRef.current) return;
-    const distance = distanceBetweenPointers();
-    if (distance == null) return;
-    const scaled = pinchRef.current.hourHeight * distance / pinchRef.current.distance;
-    setHourHeight(Math.max(minHeight2, Math.min(maxHeight2, scaled)));
-  };
-  const handlePointerEnd = (event) => {
-    pointersRef.current.delete(event.pointerId);
-    pinchRef.current = null;
-  };
+  const bindTouchSurface = q$1((surface, requestPinch) => attachTimelineTouchZoom(surface, () => hourHeightRef.current, (requestedHeight, anchor) => {
+    const clamped = Math.max(minHeight2, Math.min(maxHeight2, requestedHeight));
+    const desiredTop = Math.max(0, anchor.scrollTop + anchor.contentY * (clamped / anchor.hourHeight - 1) + anchor.verticalPan);
+    if (clamped === hourHeightRef.current) {
+      surface.scrollTop = desiredTop;
+    } else {
+      pendingScrollRef.current = { surface, top: desiredTop };
+      setHourHeight(clamped);
+    }
+  }, requestPinch), [minHeight2, maxHeight2]);
   const zoomToMax = q$1(() => setHourHeight(maxHeight2), [maxHeight2]);
   return {
     hourHeight,
     maxHourHeight: maxHeight2,
     zoomToMax,
-    zoomHandlers: {
-      onWheel: handleWheel,
-      onPointerDown: handlePointerDown,
-      onPointerMove: handlePointerMove,
-      onPointerUp: handlePointerEnd,
-      onPointerCancel: handlePointerEnd
-    }
+    zoomHandlers: { onWheel: handleWheel, bindTouchSurface }
   };
 }
 function buildViewRecordQuery(input) {
@@ -46608,6 +46711,9 @@ class TimelineTouchGesture {
   get armed() {
     return !!this.active?.armed;
   }
+  get dragging() {
+    return !!this.active?.dragging;
+  }
   get pending() {
     return !!this.active;
   }
@@ -46620,11 +46726,42 @@ function findTimelineTouch(touches, identifier2) {
   }
   return null;
 }
-function useTimelineTouchGesture(onArm) {
+class TimelineTouchScope {
+  candidates = /* @__PURE__ */ new Set();
+  register(candidate) {
+    this.candidates.add(candidate);
+    return () => {
+      this.candidates.delete(candidate);
+    };
+  }
+  requestPinch() {
+    const wasDragging = [...this.candidates].some((candidate) => candidate.dragging());
+    for (const candidate of this.candidates) candidate.cancel();
+    return !wasDragging;
+  }
+}
+const TimelineTouchScopeContext = X$1(null);
+function useTimelineTouchGesture(onArm, onPinchCancel) {
+  const scope = x$1(TimelineTouchScopeContext);
   const onArmRef = A$1(onArm);
   onArmRef.current = onArm;
+  const onPinchCancelRef = A$1(onPinchCancel);
+  onPinchCancelRef.current = onPinchCancel;
   const controllerRef = A$1(null);
   if (!controllerRef.current) controllerRef.current = new TimelineTouchGesture((anchor) => onArmRef.current(anchor));
+  y(() => {
+    const controller = controllerRef.current;
+    if (!scope || !controller) return;
+    return scope.register({
+      pending: () => controller.pending,
+      dragging: () => controller.dragging,
+      cancel: () => {
+        const wasActive = controller.pending;
+        controller.cancel();
+        onPinchCancelRef.current?.(wasActive);
+      }
+    });
+  }, [scope]);
   y(() => () => controllerRef.current?.cancel(), []);
   return controllerRef.current;
 }
@@ -59357,6 +59494,15 @@ function TimelineTaskBlock({
       navigator.vibrate?.(8);
     } catch {
     }
+  }, (wasActive) => {
+    if (!wasActive) return;
+    touchIdentifierRef.current = null;
+    touchAnchorMinuteRef.current = null;
+    suppressClickUntilRef.current = Date.now() + 450;
+    previewRef.current = null;
+    setPreview(null);
+    setIsDragging(false);
+    setIsTouchArmed(false);
   });
   const isPlanned = block.timelineSource === "task-plan";
   const isPoint = !block.timelineRange.end;
@@ -59723,6 +59869,16 @@ function DayColumnBody({
       navigator.vibrate?.(8);
     } catch {
     }
+  }, (wasActive) => {
+    touchIdentifierRef.current = null;
+    touchStartMinuteRef.current = null;
+    touchSwipeCancelledRef.current = true;
+    lastTouchRef.current = null;
+    suppressClickUntilRef.current = Date.now() + 450;
+    if (wasActive) {
+      setIsTouchSelectionArmed(false);
+      setDragSelection(null);
+    }
   });
   const handleBodyClick = (event) => {
     if (Date.now() < suppressClickUntilRef.current) return;
@@ -60060,15 +60216,29 @@ function TimelineDailyView({
   onColumnClick
 }) {
   const hostRef = A$1(null);
+  const scopeRef = A$1(null);
+  if (!scopeRef.current) scopeRef.current = new TimelineTouchScope();
+  const detachPinchRef = A$1(null);
+  const bindPinch = zoomHandlers.bindTouchSurface;
+  const setHostRef = q$1((node2) => {
+    if (hostRef.current === node2) return;
+    detachPinchRef.current?.();
+    detachPinchRef.current = null;
+    hostRef.current = node2;
+    if (node2 && bindPinch) {
+      detachPinchRef.current = bindPinch(node2, () => scopeRef.current?.requestPinch() ?? true);
+    }
+  }, [bindPinch]);
+  y(() => () => detachPinchRef.current?.(), []);
   const densityMode = useTimelineDensityMode(hostRef);
   const scale = buildTimelineScale({ hourHeight, maxHours, densityMode });
   const dayColumns = buildTimelineDayColumns(dailyViewData);
   const timeAxisRows = buildTimelineTimeAxisRows(maxHours, hourHeight);
-  return /* @__PURE__ */ u2(
+  return /* @__PURE__ */ u2(TimelineTouchScopeContext.Provider, { value: scopeRef.current, children: /* @__PURE__ */ u2(
     "div",
     {
       class: "timeline-view-wrapper think-viz-surface",
-      ref: hostRef,
+      ref: setHostRef,
       "data-timeline-tick-step": scale.tickStepMinutes,
       "data-timeline-label-step": scale.labelStepMinutes,
       "data-timeline-grid-step": scale.gridStepMinutes,
@@ -60081,7 +60251,7 @@ function TimelineDailyView({
           event.preventDefault();
         }
       },
-      ...zoomHandlers,
+      onWheel: zoomHandlers.onWheel,
       children: [
         /* @__PURE__ */ u2("div", { class: "timeline-sticky-header", children: [
           /* @__PURE__ */ u2(
@@ -60144,7 +60314,7 @@ function TimelineDailyView({
         ] })
       ]
     }
-  );
+  ) });
 }
 function TimelineViewView(props) {
   const {

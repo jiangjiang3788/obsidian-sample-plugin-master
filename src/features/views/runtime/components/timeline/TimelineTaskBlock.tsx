@@ -102,6 +102,19 @@ export function TimelineTaskBlock({
     setIsTouchArmed(true);
     setIsEditMode(true);
     try { navigator.vibrate?.(8); } catch { /* optional vibration */ }
+  }, (wasActive) => {
+    if (!wasActive) return;
+    // A second finger may land on another block. Root capture cancels this
+    // editor before zoom can start, not just when this block sees touchmove.
+    touchIdentifierRef.current = null;
+    touchAnchorMinuteRef.current = null;
+    suppressClickUntilRef.current = Date.now() + 450;
+    previewRef.current = null;
+    setPreview(null);
+    setIsDragging(false);
+    setIsTouchArmed(false);
+    // Keep the existing resize handle mounted during the pinch: removing the
+    // touched DOM node mid-gesture can cause a WebKit touchcancel.
   });
 
   const isPlanned = block.timelineSource === 'task-plan';

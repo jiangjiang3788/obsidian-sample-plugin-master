@@ -98,6 +98,7 @@ export class TimelineTouchGesture<Mode extends string> {
   }
 
   get armed(): boolean { return !!this.active?.armed; }
+  get dragging(): boolean { return !!this.active?.dragging; }
   get pending(): boolean { return !!this.active; }
 }
 
@@ -109,4 +110,30 @@ export function findTimelineTouch(touches: TouchList | undefined, identifier: nu
     if (touch?.identifier === identifier) return touch;
   }
   return null;
+}
+
+/**
+ * One timeline surface owns the exclusive choice between multi-touch zoom and
+ * touch range editing. Only active children are interrupted; a real in-flight
+ * range drag cancels on a second finger but NEVER converts into a pinch.
+ */
+export class TimelineTouchScope {
+  private readonly candidates = new Set<{
+    pending: () => boolean;
+    dragging: () => boolean;
+    cancel: () => void;
+  }>();
+
+  register(candidate: { pending: () => boolean; dragging: () => boolean; cancel: () => void }): () => void {
+    this.candidates.add(candidate);
+    return () => { this.candidates.delete(candidate); };
+  }
+
+  requestPinch(): boolean {
+    const wasDragging = [...this.candidates].some((candidate) => candidate.dragging());
+    // Also reset per-column double-tap memory when no press is pending.
+    // Participants keep this a no-op for blocks that are not active.
+    for (const candidate of this.candidates) candidate.cancel();
+    return !wasDragging;
+  }
 }

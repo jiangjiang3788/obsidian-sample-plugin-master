@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
-import { useRef } from 'preact/hooks';
+import { useCallback, useEffect, useRef } from 'preact/hooks';
 import { buildTimelineScale } from '@core/utils/public';
-import { useTimelineDensityMode } from '@shared/ui/public';
+import { useTimelineDensityMode, TimelineTouchScope, TimelineTouchScopeContext } from '@shared/ui/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, UpdateTimelineRangeHandler } from '@shared/types/public';
 import type { GoalTimeAllocationSummary } from '@core/goal/public';
 import { DayColumnHeader, DayColumnBody, TimelineOverallSummary, TimelineTimeAxis } from '../components/timeline';
@@ -54,15 +54,30 @@ export function TimelineDailyView({
   onNotice,
   onColumnClick,
 }: TimelineDailyViewProps) {
-  const hostRef = useRef<HTMLDivElement>(null);
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const scopeRef = useRef<TimelineTouchScope | null>(null);
+  if (!scopeRef.current) scopeRef.current = new TimelineTouchScope();
+  const detachPinchRef = useRef<(() => void) | null>(null);
+  const bindPinch = zoomHandlers.bindTouchSurface;
+  const setHostRef = useCallback((node: HTMLDivElement | null) => {
+    if (hostRef.current === node) return;
+    detachPinchRef.current?.();
+    detachPinchRef.current = null;
+    hostRef.current = node;
+    if (node && bindPinch) {
+      detachPinchRef.current = bindPinch(node, () => scopeRef.current?.requestPinch() ?? true);
+    }
+  }, [bindPinch]);
+  useEffect(() => () => detachPinchRef.current?.(), []);
   const densityMode = useTimelineDensityMode(hostRef);
   const scale = buildTimelineScale({ hourHeight, maxHours, densityMode });
   const dayColumns = buildTimelineDayColumns(dailyViewData);
   const timeAxisRows = buildTimelineTimeAxisRows(maxHours, hourHeight);
   return (
+    <TimelineTouchScopeContext.Provider value={scopeRef.current}>
     <div
       class="timeline-view-wrapper think-viz-surface"
-      ref={hostRef}
+      ref={setHostRef}
       data-timeline-tick-step={scale.tickStepMinutes}
       data-timeline-label-step={scale.labelStepMinutes}
       data-timeline-grid-step={scale.gridStepMinutes}
@@ -77,7 +92,7 @@ export function TimelineDailyView({
           event.preventDefault();
         }
       }}
-      {...zoomHandlers}
+      onWheel={zoomHandlers.onWheel}
     >
       <div class="timeline-sticky-header">
         <TimelineOverallSummary
@@ -134,5 +149,6 @@ export function TimelineDailyView({
         ))}
       </div>
     </div>
+    </TimelineTouchScopeContext.Provider>
   );
 }
