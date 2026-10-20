@@ -62,7 +62,7 @@ export function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPul
       const versionText = currentVersion ? `${currentVersion} → ${result.remoteVersion}` : result.remoteVersion;
       const time = result.githubPushedAt
         ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(result.githubPushedAt)}`
-        : `提交时间（本地，非上传时间）：${formatGitHubCommitTime(result.githubCommitAt)}`;
+        : `GitHub 推送时间：暂未查到该版本的推送记录；Git 提交时间（非推送时间）：${formatGitHubCommitTime(result.githubCommitAt)}`;
       setPreview(result);
       setState({
         kind: 'success',
@@ -84,7 +84,7 @@ export function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPul
             <span className="think-settings-help" data-github-commit-time>
               远端版本：{preview.remoteVersion} · {preview.githubPushedAt
                 ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(preview.githubPushedAt)}`
-                : `提交时间（本地，非上传时间）：${formatGitHubCommitTime(preview.githubCommitAt)}`}
+                : `GitHub 推送时间：暂未查到该版本的推送记录；Git 提交时间（非推送时间）：${formatGitHubCommitTime(preview.githubCommitAt)}`}
             </span>
           ) : checking ? <span className="think-settings-help">正在读取 GitHub 版本与提交时间…</span>
             : checkError ? <span className="think-settings-help">{checkError}</span> : null}

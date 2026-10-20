@@ -69221,7 +69221,7 @@ function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPullDevBui
     try {
       const result = await onPullDevBuild(preview);
       const versionText = currentVersion ? `${currentVersion} → ${result.remoteVersion}` : result.remoteVersion;
-      const time2 = result.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(result.githubPushedAt)}` : `提交时间（本地，非上传时间）：${formatGitHubCommitTime(result.githubCommitAt)}`;
+      const time2 = result.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(result.githubPushedAt)}` : `GitHub 推送时间：暂未查到该版本的推送记录；Git 提交时间（非推送时间）：${formatGitHubCommitTime(result.githubCommitAt)}`;
       setPreview(result);
       setState({
         kind: "success",
@@ -69240,7 +69240,7 @@ function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPullDevBui
         "远端版本：",
         preview.remoteVersion,
         " · ",
-        preview.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(preview.githubPushedAt)}` : `提交时间（本地，非上传时间）：${formatGitHubCommitTime(preview.githubCommitAt)}`
+        preview.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(preview.githubPushedAt)}` : `GitHub 推送时间：暂未查到该版本的推送记录；Git 提交时间（非推送时间）：${formatGitHubCommitTime(preview.githubCommitAt)}`
       ] }) : checking ? /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "正在读取 GitHub 版本与提交时间…" }) : checkError ? /* @__PURE__ */ u2("span", { className: "think-settings-help", children: checkError }) : null,
       /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", loading: updating, onClick: () => {
         void handlePull();
@@ -71827,6 +71827,26 @@ const GITHUB_REPO = "obsidian-sample-plugin-master";
 const GITHUB_BRANCH = "main";
 const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
 const DEV_BUILD_FILES = ["main.js", "styles.css", "manifest.json"];
+function formatLocalGitHubTime(value) {
+  if (!value || !Number.isFinite(Date.parse(value))) return "暂不可用";
+  return new Date(value).toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+}
+function formatGitHubDevRestartNotice(info) {
+  const pushed = info.githubPushedAt ? `GitHub 推送时间（本地）：${formatLocalGitHubTime(info.githubPushedAt)}` : "GitHub 推送时间：暂未查到该版本对应的推送记录";
+  const committed = !info.githubPushedAt && info.githubCommitAt ? `
+Git 提交时间（非推送时间）：${formatLocalGitHubTime(info.githubCommitAt)}` : "";
+  return `Think OS 开发版下载完成
+版本：${info.remoteVersion}（${info.branch} · ${info.commitSha.slice(0, 7)}）
+${pushed}${committed}
+请完全退出并重新打开 Obsidian。`;
+}
 function isCommitSha(value) {
   return typeof value === "string" && /^[0-9a-f]{40}$/i.test(value);
 }
@@ -71862,11 +71882,17 @@ function findGitHubRevisionPushTime(events2, sha) {
 }
 async function readGitHubPushTime(sha) {
   try {
-    const response = await obsidian.requestUrl({
-      url: `${GITHUB_API}/events?per_page=100`,
-      headers: { Accept: "application/vnd.github+json" }
-    });
-    return response.status === 200 ? findGitHubRevisionPushTime(response.json, sha) : null;
+    for (let page = 1; page <= 3; page++) {
+      const response = await obsidian.requestUrl({
+        url: `${GITHUB_API}/events?per_page=100&page=${page}`,
+        headers: { Accept: "application/vnd.github+json" }
+      });
+      if (response.status !== 200 || !Array.isArray(response.json)) return null;
+      const matched = findGitHubRevisionPushTime(response.json, sha);
+      if (matched) return matched;
+      if (response.json.length < 100) break;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -71977,7 +72003,13 @@ async function pullGitHubDevBuild(host, preview) {
   }
   const pluginDir = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
   await installPinnedFiles(host.app.vault.adapter, pluginDir, downloaded);
-  return selected;
+  const updatedPushAt = selected.githubPushedAt ?? await readGitHubPushTime(selected.commitSha);
+  const installed = updatedPushAt ? { ...selected, githubPushedAt: updatedPushAt } : selected;
+  try {
+    new obsidian.Notice(formatGitHubDevRestartNotice(installed), 0);
+  } catch {
+  }
+  return installed;
 }
 const THINK_SETTINGS_VIEW_TYPE = "think-os-settings-view";
 class ThinkSettingsView extends obsidian.ItemView {

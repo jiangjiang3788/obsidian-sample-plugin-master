@@ -1,4 +1,4 @@
-import { normalizePath, requestUrl } from 'obsidian';
+import { Notice, normalizePath, requestUrl } from 'obsidian';
 
 const GITHUB_OWNER = 'jiangjiang3788';
 const GITHUB_REPO = 'obsidian-sample-plugin-master';
@@ -26,6 +26,26 @@ export interface GitHubDevBuildInfo {
 }
 
 export interface GitHubDevUpdateResult extends GitHubDevBuildInfo {}
+
+function formatLocalGitHubTime(value: string | null): string {
+  if (!value || !Number.isFinite(Date.parse(value))) return '暂不可用';
+  return new Date(value).toLocaleString('zh-CN', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+}
+
+/** Always include the push-time field in the restart reminder. A Git commit's
+ * timestamp must never be represented as its GitHub push/upload timestamp. */
+export function formatGitHubDevRestartNotice(info: GitHubDevUpdateResult): string {
+  const pushed = info.githubPushedAt
+    ? `GitHub 推送时间（本地）：${formatLocalGitHubTime(info.githubPushedAt)}`
+    : 'GitHub 推送时间：暂未查到该版本对应的推送记录';
+  const committed = !info.githubPushedAt && info.githubCommitAt
+    ? `\nGit 提交时间（非推送时间）：${formatLocalGitHubTime(info.githubCommitAt)}`
+    : '';
+  return `Think OS 开发版下载完成\n版本：${info.remoteVersion}（${info.branch} · ${info.commitSha.slice(0, 7)}）\n${pushed}${committed}\n请完全退出并重新打开 Obsidian。`;
+}
 
 export interface GitHubDevUpdaterHost {
   app: { vault: { configDir: string; adapter: VaultAdapterLike } };
@@ -81,11 +101,19 @@ export function findGitHubRevisionPushTime(events: unknown, sha: string): string
 
 async function readGitHubPushTime(sha: string): Promise<string | null> {
   try {
-    const response = await requestUrl({
-      url: `${GITHUB_API}/events?per_page=100`,
-      headers: { Accept: 'application/vnd.github+json' },
-    });
-    return response.status === 200 ? findGitHubRevisionPushTime(response.json, sha) : null;
+    // GitHub retains at most 300 recent events, 100 per page. An exact match
+    // may be on page 2/3, especially when a repository is active.
+    for (let page = 1; page <= 3; page++) {
+      const response = await requestUrl({
+        url: `${GITHUB_API}/events?per_page=100&page=${page}`,
+        headers: { Accept: 'application/vnd.github+json' },
+      });
+      if (response.status !== 200 || !Array.isArray(response.json)) return null;
+      const matched = findGitHubRevisionPushTime(response.json, sha);
+      if (matched) return matched;
+      if (response.json.length < 100) break;
+    }
+    return null;
   } catch {
     return null; // Push-event metadata must never block a valid pinned update.
   }
@@ -216,5 +244,15 @@ export async function pullGitHubDevBuild(
   }
   const pluginDir = normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
   await installPinnedFiles(host.app.vault.adapter, pluginDir, downloaded);
-  return selected;
+
+  // PushEvent may appear after the initial preview (GitHub events are delayed).
+  // A failed metadata lookup must not invalidate an already completed update.
+  const updatedPushAt = selected.githubPushedAt ?? await readGitHubPushTime(selected.commitSha);
+  const installed: GitHubDevUpdateResult = updatedPushAt
+    ? { ...selected, githubPushedAt: updatedPushAt } : selected;
+  // The settings component can unmount or scroll away; the native notice is
+  // shown at the actual download-complete/restart step and stays until dismissed.
+  try { new Notice(formatGitHubDevRestartNotice(installed), 0); }
+  catch { /* Display failures must not misreport a successful installation. */ }
+  return installed;
 }

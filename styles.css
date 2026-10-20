@@ -7218,7 +7218,9 @@ body.is-mobile .timeline-view-wrapper {
   overflow: hidden;
   padding: var(--think-space-1) var(--think-space-2);
   border-inline-start: 3px solid var(--timeline-goal-color, var(--think-data-neutral));
-  background: var(--think-bg-surface-2);
+  /* Keep the fill itself transparent; background blending with an opaque
+   * canvas looks like 100% opacity even when the goal tint is only 24%. */
+  background: transparent;
   color: var(--think-text-primary);
   font-size: var(--think-viz-font-meta);
   line-height: var(--think-line-height-tight);
@@ -7536,7 +7538,7 @@ body.is-mobile .timeline-view-wrapper {
 @supports (color: color-mix(in srgb, white 50%, black)) {
   .timeline-task-content {
     background: color-mix(in srgb,
-      var(--timeline-goal-color, var(--think-data-neutral)) var(--timeline-fill-strength), var(--think-bg-canvas));
+      var(--timeline-goal-color, var(--think-data-neutral)) var(--timeline-fill-strength), transparent);
   }
   .timeline-task-content::before { content: none; }
   .think-time-grid__tick:not([class*="think-time-grid__tick--key-"]) {
@@ -7559,6 +7561,8 @@ body.is-mobile .timeline-view-wrapper {
 
 .think-time-grid__tick[class*="think-time-grid__tick--key-"] {
   --timeline-ruler-length: 22px;
+  /* Slightly heavier than the neutral 1px guides; both ruler and grid. */
+  --timeline-key-tick-width: 1.25px;
   font-weight: var(--think-font-weight-semibold);
 }
 
@@ -7598,13 +7602,13 @@ body.is-mobile .timeline-view-wrapper {
   inset-inline-start: 0;
   top: 0;
   width: var(--timeline-ruler-length);
-  border-top: var(--timeline-tick-width, 1px) solid var(--timeline-tick-color);
+  border-top: var(--timeline-key-tick-width, var(--timeline-tick-width, 1px)) solid var(--timeline-tick-color);
   box-sizing: border-box;
 }
 
 .think-time-grid--grid .think-time-grid__tick--half,
 .think-time-grid--grid .think-time-grid__tick--hour {
-  border-top: var(--timeline-tick-width, 1px) solid var(--timeline-tick-color);
+  border-top: var(--timeline-key-tick-width, var(--timeline-tick-width, 1px)) solid var(--timeline-tick-color);
 }
 
 .think-time-grid--grid .think-time-grid__tick--half::before,
@@ -7629,7 +7633,7 @@ body.is-mobile .timeline-view-wrapper {
   inset-inline-end: var(--timeline-axis-label-gutter);
   top: 0;
   width: min(var(--timeline-ruler-length), calc(100% - var(--timeline-axis-label-gutter) - 3px));
-  border-top: var(--timeline-tick-width, 1px) solid var(--timeline-tick-color);
+  border-top: var(--timeline-key-tick-width, var(--timeline-tick-width, 1px)) solid var(--timeline-tick-color);
   box-sizing: border-box;
 }
 
