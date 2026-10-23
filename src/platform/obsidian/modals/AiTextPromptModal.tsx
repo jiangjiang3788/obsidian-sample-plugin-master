@@ -4,7 +4,7 @@ import { useState } from 'preact/hooks';
 import { App, Modal } from 'obsidian';
 import { ModalHeader, SmartToyIcon, ThinkButton, ThinkTextarea } from '@shared/ui/public';
 import { installBackdropCloseGuard } from './modalBackdropGuard';
-import { prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
+import { recordThinkModalClose, prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
 
 interface AiTextPromptFormProps {
     onSubmit: (text: string) => void;
@@ -102,6 +102,7 @@ export class AiTextPromptModal extends Modal {
     }
 
     onClose() {
+        recordThinkModalClose(this);
         this.cleanupBackdropCloseGuard?.();
         this.cleanupBackdropCloseGuard = null;
         this.resolvePromise?.(null);

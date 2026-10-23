@@ -1,4 +1,5 @@
 import { Notice, normalizePath, requestUrl } from 'obsidian';
+import { traceThinkOperation } from './ThinkDiagnostics';
 
 const GITHUB_OWNER = 'jiangjiang3788';
 const GITHUB_REPO = 'obsidian-sample-plugin-master';
@@ -6,6 +7,11 @@ const GITHUB_BRANCH = 'main';
 const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
 const DEV_BUILD_FILES = ['main.js', 'styles.css', 'manifest.json'] as const;
 type DevBuildFile = (typeof DEV_BUILD_FILES)[number];
+
+// Both the settings UI and the command palette call this updater. Their
+// writes must not interleave: a rollback from one update could otherwise
+// overwrite the other update's successfully installed files.
+let installInProgress = false;
 
 interface VaultAdapterLike {
   exists(path: string): Promise<boolean>;
@@ -253,7 +259,7 @@ async function infoAtHead(head: GitHubHead, expectedPluginId: string): Promise<G
 }
 
 export async function getGitHubDevBuildInfo(expectedPluginId: string): Promise<GitHubDevBuildInfo> {
-  return infoAtHead(await readGitHubHead(), expectedPluginId);
+  return traceThinkOperation('github.check', async () => infoAtHead(await readGitHubHead(), expectedPluginId), 'updates');
 }
 
 type Backups = Record<DevBuildFile, string | null>;
@@ -316,49 +322,59 @@ export async function pullGitHubDevBuild(
   host: GitHubDevUpdaterHost,
   pinnedPreview?: GitHubDevBuildInfo | null,
 ): Promise<GitHubDevUpdateResult> {
-  const pinned = pinnedPreview != null;
-  if (pinned && !isCommitSha(pinnedPreview.commitSha)) {
-    throw new Error('已检查版本 SHA 无效，已停止下载');
+  if (installInProgress) {
+    throw new Error('Think OS 开发版正在下载或安装，请勿重复操作');
   }
-  const head = pinned
-    ? { sha: pinnedPreview.commitSha, committedAt: pinnedPreview.githubCommitAt }
-    : await readGitHubHead();
-  const downloaded = await downloadPinnedBuild(head.sha);
-  const manifest = parseAndValidateManifest(downloaded['manifest.json'], host.manifest.id);
-  if (pinned && manifest.version !== pinnedPreview.remoteVersion) {
-    throw new Error('已检查版本与下载的 manifest.json 不一致，未覆盖本地文件');
-  }
-  const pluginDir = normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
-  await installPinnedFiles(host.app.vault.adapter, pluginDir, downloaded);
+  installInProgress = true;
+  try {
+    return await traceThinkOperation('github.install', async () => {
+      const pinned = pinnedPreview != null;
+      if (pinned && !isCommitSha(pinnedPreview.commitSha)) {
+        throw new Error('已检查版本 SHA 无效，已停止下载');
+      }
+      const head = pinned
+        ? { sha: pinnedPreview.commitSha, committedAt: pinnedPreview.githubCommitAt }
+        : await readGitHubHead();
+      const downloaded = await downloadPinnedBuild(head.sha);
+      const manifest = parseAndValidateManifest(downloaded['manifest.json'], host.manifest.id);
+      if (pinned && manifest.version !== pinnedPreview.remoteVersion) {
+        throw new Error('已检查版本与下载的 manifest.json 不一致，未覆盖本地文件');
+      }
+      const pluginDir = normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
+      await installPinnedFiles(host.app.vault.adapter, pluginDir, downloaded);
 
-  // Delay the optional API call until all files have been committed successfully.
-  // It may fail or be rate limited; neither case invalidates the update.
-  const pushTimePromise = pinnedPreview?.githubPushedAt
-    ? Promise.resolve(pinnedPreview.githubPushedAt)
-    : readGitHubPushTime(head.sha);
-  const githubPushedAt = await waitForPushTime(pushTimePromise);
-  const installed: GitHubDevUpdateResult = {
-    remoteVersion: manifest.version,
-    branch: GITHUB_BRANCH,
-    githubCommitAt: head.committedAt,
-    githubPushedAt,
-    commitSha: head.sha,
-  };
-  const warning = pinned ? '\n本次安装先前检查的 SHA，未验证它仍是 main 最新提交。' : '';
-  let notice: Notice | null = null;
-  try { notice = new Notice(formatGitHubDevRestartNotice(installed) + warning, 0); }
-  catch { /* Notice failure cannot turn a completed install into an error. */ }
+      // Delay the optional API call until all files have been committed successfully.
+      // It may fail or be rate limited; neither case invalidates the update.
+      const pushTimePromise = pinnedPreview?.githubPushedAt
+        ? Promise.resolve(pinnedPreview.githubPushedAt)
+        : readGitHubPushTime(head.sha);
+      const githubPushedAt = await waitForPushTime(pushTimePromise);
+      const installed: GitHubDevUpdateResult = {
+        remoteVersion: manifest.version,
+        branch: GITHUB_BRANCH,
+        githubCommitAt: head.committedAt,
+        githubPushedAt,
+        commitSha: head.sha,
+      };
+      const warning = pinned ? '\n本次安装先前检查的 SHA，未验证它仍是 main 最新提交。' : '';
+      let notice: Notice | null = null;
+      try { notice = new Notice(formatGitHubDevRestartNotice(installed) + warning, 0); }
+      catch { /* Notice failure cannot turn a completed install into an error. */ }
 
-  if (!githubPushedAt && notice) {
-    const successNotice = notice;
-    void pushTimePromise.then((latePushedAt) => {
-      if (!latePushedAt) return;
-      try {
-        successNotice.setMessage(formatGitHubDevRestartNotice({
-          ...installed, githubPushedAt: latePushedAt,
-        }) + warning);
-      } catch { /* A dismissed notice must not affect the installation. */ }
-    });
+      if (!githubPushedAt && notice) {
+        const successNotice = notice;
+        void pushTimePromise.then((latePushedAt) => {
+          if (!latePushedAt) return;
+          try {
+            successNotice.setMessage(formatGitHubDevRestartNotice({
+              ...installed, githubPushedAt: latePushedAt,
+            }) + warning);
+          } catch { /* A dismissed notice must not affect the installation. */ }
+        });
+      }
+      return installed;
+    }, 'updates');
+  } finally {
+    installInProgress = false;
   }
-  return installed;
 }

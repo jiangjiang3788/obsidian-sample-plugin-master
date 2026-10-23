@@ -25,7 +25,7 @@ import { buildAiBatchConfirmRecordItems } from './AiBatchConfirmModel';
 import { AiBatchConfirmRecordHeader } from './AiBatchConfirmRecordHeader';
 import { AiBatchConfirmSidebar } from './AiBatchConfirmSidebar';
 import { installBackdropCloseGuard } from './modalBackdropGuard';
-import { prepareThinkModal } from './modalPreact';
+import { recordThinkModalClose, prepareThinkModal } from './modalPreact';
 import { useAiBatchConfirmActions } from './useAiBatchConfirmActions';
 
 export class AiBatchConfirmModal extends Modal {
@@ -80,6 +80,7 @@ export class AiBatchConfirmModal extends Modal {
   }
 
   onClose() {
+    recordThinkModalClose(this);
     this.cleanupBackdropCloseGuard?.();
     this.cleanupBackdropCloseGuard = null;
     if (!this.resolved && this.resolvePromise) {

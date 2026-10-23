@@ -17,6 +17,35 @@ describe('Think OS performance diagnostics', () => {
     }
   });
 
+  it('distinguishes plugin dialogs but never claims unrelated Obsidian UI', () => {
+    const cases = [
+      ['think-ai-chat-modal', 'ai-chat'],
+      ['think-ai-batch-confirm-modal', 'ai-batch'],
+      ['think-ai-prompt-modal', 'ai-prompt'],
+      ['think-checkin-modal-host', 'checkin'],
+      ['think-name-prompt-modal', 'name-prompt'],
+      ['think-quick-input-modal', 'quickinput'],
+    ];
+    for (const [className, expectedSurface] of cases) {
+      const modal = document.createElement('div');
+      modal.className = `think-os think-modal-host ${className}`;
+      const button = document.createElement('button');
+      button.textContent = '用户输入的私密标题';
+      modal.append(button);
+      document.body.append(modal);
+      try {
+        expect(getThinkSurface(button)).toBe(expectedSurface);
+        expect(describeThinkControl(button)).not.toContain(button.textContent);
+      } finally {
+        modal.remove();
+      }
+    }
+    const unrelated = document.createElement('button');
+    document.body.append(unrelated);
+    try { expect(getThinkSurface(unrelated)).toBeNull(); }
+    finally { unrelated.remove(); }
+  });
+
   it('calculates slowest p95 response per UI action without text payloads', () => {
     const sample = (action: string, durationMs: number) => ({
       time: '', session: '', platform: 'android', surface: 'quickinput', action,
@@ -52,10 +81,12 @@ describe('Think OS performance diagnostics', () => {
     try {
       recorder.start();
       textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      textarea.dispatchEvent(new Event('input', { bubbles: true })); // no per-letter log spam
       await recorder.flush();
       const content = [...writes.values()].join('\n');
       expect(content).toContain('quickinput');
       expect(content).toContain('input:textarea');
+      expect(content.match(/input:textarea/g)).toHaveLength(1);
       expect(content).not.toContain(textarea.value);
     } finally {
       recorder.stop();

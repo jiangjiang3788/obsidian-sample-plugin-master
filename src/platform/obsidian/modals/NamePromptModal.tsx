@@ -5,7 +5,7 @@ import type { App } from 'obsidian';
 import { Modal } from 'obsidian';
 import { ModalHeader, ThinkButton, ThinkInput } from '@shared/ui/public';
 import type { NamePromptOptions } from '@core/ports/public';
-import { prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
+import { recordThinkModalClose, prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
 
 function PromptComponent({ title, placeholder, ctaText, initialValue, onSubmit, onCancel }: {
   title: string;
@@ -77,6 +77,7 @@ export class NamePromptModal extends Modal {
   }
 
   onClose() {
+    recordThinkModalClose(this);
     this.resolvePromise?.(null);
     this.resolvePromise = null;
     unmountModalContent(this.contentEl);

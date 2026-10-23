@@ -10,7 +10,7 @@ import {
     createRecordGestureHandlers,
     RECORD_GESTURE_HINT,
 } from '@shared/ui/public';
-import { prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
+import { recordThinkModalClose, prepareThinkModal, renderModalContent, unmountModalContent } from './modalPreact';
 
 export interface CheckinManagerData {
     displayCount: number;
@@ -143,5 +143,8 @@ export class CheckinManagerModal extends Modal {
         ));
     }
 
-    onClose() { unmountModalContent(this.contentEl); }
+    onClose() {
+        recordThinkModalClose(this);
+        unmountModalContent(this.contentEl);
+    }
 }

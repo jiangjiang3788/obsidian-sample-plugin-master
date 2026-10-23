@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { assertSettingsLocationSafe } from '@/platform/obsidian/settingsLocationGuard';
-import { ThinkDiagnostics } from '@/platform/obsidian/ThinkDiagnostics';
+import { ThinkDiagnostics, recordThinkDiagnostic, traceThinkOperation } from '@/platform/obsidian/ThinkDiagnostics';
+import { pullGitHubDevBuild } from '@/platform/obsidian/GitHubDevUpdater';
 
 import { ensureReflectMetadata } from '@core/bootstrap/public';
 
@@ -151,6 +152,30 @@ export default class ThinkPlugin extends Plugin {
         // 主要用于修复：升级/重构后 cache 不一致导致 items=0 的情况。
 
         this.addCommand({
+            id: 'think-update-github-dev-build',
+            name: '更新：从 GitHub 下载并安装最新开发版',
+            callback: async () => {
+                new Notice('Think OS：正在检查 GitHub 最新开发版并下载…', 4000);
+                try {
+                    // Share the settings button's validation, rollback and restart notice.
+                    // This command queries main directly: opening Settings is unnecessary.
+                    await pullGitHubDevBuild(this);
+                } catch (error: unknown) {
+                    new Notice(`Think OS 更新失败：${error instanceof Error ? error.message : String(error)}`, 10000);
+                }
+            },
+        });
+
+        this.addCommand({
+            id: 'think-mark-performance-lag',
+            name: '诊断：标记刚才发生的一次卡顿',
+            callback: () => {
+                this.diagnostics?.record('lifecycle', 'plugin', 'lag.mark');
+                new Notice('已标记卡顿；稍后导出诊断报告即可查看标记前后的事件。');
+            },
+        });
+
+        this.addCommand({
             id: 'think-export-performance-diagnostics',
             name: '诊断：导出操作与卡顿报告（不含输入内容）',
             callback: async () => {
@@ -168,7 +193,7 @@ export default class ThinkPlugin extends Plugin {
             callback: async () => {
                 try {
                     new Notice('思考系统：正在重建索引...', 3000);
-                    await this.serviceManager.dataStore.clearCacheAndRescan('full');
+                    await traceThinkOperation('index.rebuild', () => this.serviceManager.dataStore.clearCacheAndRescan('full'), 'commands');
                     new Notice('思考系统：索引重建完成', 3000);
                 } catch (e: any) {
                     new Notice(`思考系统：索引重建失败 - ${e?.message || e}`, 5000);
@@ -182,6 +207,7 @@ export default class ThinkPlugin extends Plugin {
             name: '打开智能助手对话',
             callback: () => {
                 // ✅ 通过 capabilities 统一入口触发
+                recordThinkDiagnostic('ai.open', undefined, undefined, 'commands');
                 this.capabilities.ai.openChat();
             }
         });
@@ -197,7 +223,7 @@ export default class ThinkPlugin extends Plugin {
                     ctaText: '开始',
                 });
                 if (!taskId) return;
-                await this.capabilities.timer.startOrResume(taskId.trim());
+                await traceThinkOperation('timer.start-resume', () => this.capabilities.timer.startOrResume(taskId.trim()), 'timer');
             },
         });
 
@@ -211,7 +237,7 @@ export default class ThinkPlugin extends Plugin {
                     new Notice('没有找到可停止的计时器');
                     return;
                 }
-                await this.capabilities.timer.stopAndApply(active.id);
+                await traceThinkOperation('timer.stop-apply', () => this.capabilities.timer.stopAndApply(active.id), 'timer');
             },
         });
     }

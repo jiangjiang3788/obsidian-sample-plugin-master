@@ -6,7 +6,7 @@ import { Modal } from 'obsidian';
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { AiChatModalContainer } from '@/features/aichat/AiChatModalContainer';
 import type { AiServices } from '@/features/aichat/types';
-import { prepareThinkModal } from './modalPreact';
+import { prepareThinkModal, recordThinkModalClose } from './modalPreact';
 import { AiBatchConfirmModal } from './AiBatchConfirmModal';
 import { createAiNaturalRecordParserFromStore } from '@/features/aiinput/aiInputRuntime';
 
@@ -66,6 +66,7 @@ export class AiChatModal extends Modal {
     }
 
     onClose() {
+        recordThinkModalClose(this);
         if (this.keydownStopper) {
             this.contentEl.removeEventListener('keydown', this.keydownStopper);
             this.keydownStopper = undefined;

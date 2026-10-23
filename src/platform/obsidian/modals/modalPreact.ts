@@ -4,7 +4,7 @@ import type { Modal } from 'obsidian';
 import { render, unmountComponentAtNode } from 'preact/compat';
 import { ThinkMuiThemeProvider } from '@shared/ui/public';
 import { applyThinkDeviceProfileAttributes } from '@shared/utils/public';
-
+import { getThinkSurface, recordThinkDiagnostic } from '../ThinkDiagnostics';
 
 export function prepareThinkModal(modal: Modal, ...classes: string[]): HTMLElement {
   modal.contentEl.empty();
@@ -12,7 +12,15 @@ export function prepareThinkModal(modal: Modal, ...classes: string[]): HTMLEleme
     modal.modalEl.addClass(className);
   }
   applyThinkDeviceProfileAttributes(modal.modalEl);
+  const surface = getThinkSurface(modal.modalEl);
+  // Quick input already traces its own opening duration.
+  if (surface && surface !== 'quickinput') recordThinkDiagnostic('modal.open', undefined, undefined, surface);
   return modal.contentEl;
+}
+
+/** All Obsidian modal close events share the same plugin-owned surface classification. */
+export function recordThinkModalClose(modal: Modal): void {
+  recordThinkDiagnostic('modal.close', undefined, undefined, getThinkSurface(modal.modalEl) || 'think-ui');
 }
 
 /**

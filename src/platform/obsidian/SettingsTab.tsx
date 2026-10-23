@@ -9,6 +9,7 @@ import { getThinkDeviceProfileAttributes } from '@shared/utils/public';
 import { SettingsRoot } from './SettingsRoot';
 import { openThinkSettingsWorkspaceView } from './ThinkSettingsView';
 import { getGitHubDevBuildInfo, pullGitHubDevBuild } from './GitHubDevUpdater';
+import { recordThinkDiagnostic } from './ThinkDiagnostics';
 
 function SettingsLauncher({
     onOpenWorkspace,
@@ -42,6 +43,7 @@ export class SettingsTab extends PluginSettingTab {
     }
 
     display(): void {
+        const startedAt = performance.now();
         const { containerEl } = this;
         containerEl.empty();
         mountWithServices(
@@ -58,9 +60,11 @@ export class SettingsTab extends PluginSettingTab {
             />,
             this.services,
         );
+        recordThinkDiagnostic('settings.launcher-open', performance.now() - startedAt, undefined, 'settings');
     }
 
     hide(): void {
+        recordThinkDiagnostic('settings.launcher-close', undefined, undefined, 'settings');
         unmountPreact(this.containerEl);
     }
 }

@@ -105,6 +105,30 @@ describe('GitHubDevUpdater - limited API budget, pinned download and diagnostics
     expect(requestUrlMock.mock.calls.filter(([arg]: any[]) => String(arg.url).includes('/events?'))).toHaveLength(1);
   });
 
+  it('rejects overlapping settings/command updates without extra requests or interleaved writes', async () => {
+    mockGitHub();
+    const request = requestUrlMock.getMockImplementation()!;
+    let releaseHead!: () => void;
+    const headGate = new Promise<void>((resolve) => { releaseHead = resolve; });
+    requestUrlMock.mockImplementation(async (options) => {
+      if (String(options?.url).includes('/commits/main')) await headGate;
+      return request(options);
+    });
+    const { host, write } = makeHost();
+    const first = pullGitHubDevBuild(host);
+    await expect(pullGitHubDevBuild(host)).rejects.toThrow('正在下载或安装');
+    expect(requestUrlMock.mock.calls.filter(([options]) => String(options.url).includes('/commits/main')))
+      .toHaveLength(1);
+    expect(write).not.toHaveBeenCalled();
+    releaseHead();
+    await expect(first).resolves.toMatchObject({ commitSha: sha });
+    expect(write).toHaveBeenCalledTimes(3);
+
+    // The guard is removed on completion, so a later update can still run.
+    await expect(pullGitHubDevBuild(host)).resolves.toMatchObject({ commitSha: sha });
+    expect(write).toHaveBeenCalledTimes(6);
+  });
+
   it('reports GitHub API 403 with endpoint + reset time, without writing local files', async () => {
     mockGitHub({ headStatus: 403, rateLimit: true });
     const { host, write } = makeHost();

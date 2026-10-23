@@ -1,5 +1,6 @@
 import { requestUrl } from 'obsidian';
 import type { AiHttpResponse, AiHttpTransport } from '@core/ai/public';
+import { recordThinkDiagnostic } from './ThinkDiagnostics';
 
 function createAbortError(): Error {
     try {
@@ -117,19 +118,28 @@ function asAbortSignal(signal: RequestInit['signal']): AbortSignal | undefined {
 export class ObsidianAiHttpTransport implements AiHttpTransport {
     async request(url: string, init: RequestInit): Promise<AiHttpResponse> {
         const signal = asAbortSignal(init.signal);
-        throwIfAborted(signal);
-
-        const response = await raceWithAbort(
-            requestUrl({
-                url,
-                method: String(init.method ?? 'GET'),
-                headers: normalizeRequestHeaders(init.headers),
-                body: normalizeRequestBody(init.body),
-            }),
-            signal
-        );
+        const startedAt = performance.now();
+        let response: Awaited<ReturnType<typeof requestUrl>>;
+        try {
+            throwIfAborted(signal);
+            response = await raceWithAbort(
+                requestUrl({
+                    url,
+                    method: String(init.method ?? 'GET'),
+                    headers: normalizeRequestHeaders(init.headers),
+                    body: normalizeRequestBody(init.body),
+                }),
+                signal
+            );
+        } catch (error) {
+            const outcome = signal?.aborted ? 'cancelled' : 'failure';
+            recordThinkDiagnostic('http.request', performance.now() - startedAt, outcome, 'ai');
+            throw error;
+        }
 
         const status = response.status ?? 200;
+        recordThinkDiagnostic('http.request', performance.now() - startedAt,
+            status >= 200 && status < 300 ? 'success' : 'http-error', 'ai');
         const text = typeof response.text === 'string' ? response.text : '';
         const headers = makeHeadersLike(response.headers);
         const responseRecord = response as unknown as Record<string, unknown>;
