@@ -2008,236 +2008,1200 @@ async function assertSettingsLocationSafe(app, pluginDirectory) {
     throw new Error(`settings_location_conflict: 当前读取 ${canonical}，但仅发现 ${legacy}。已停止初始化，原文件未改动。请备份两处文件并使用只读诊断确认，再显式导入；不要创建空配置。`);
   }
 }
-const MAX_LOG_BYTES = 1e6;
-const FLUSH_INTERVAL_MS = 15e3;
-const SCOPE_SELECTOR = ".think-quick-input-modal, .think-whiteboard-workspace-view, .think-settings-workspace-view, .think-os";
-function describeThinkControl(element) {
-  const control = element.closest('button, input, textarea, select, [role="button"], [role="tab"], [role="option"]') || element;
-  const tag = control.tagName.toLowerCase();
-  const className = Array.from(control.classList).find((value) => /^think-[a-z0-9_-]{1,64}$/.test(value));
-  return `${tag}${className ? `.${className}` : ""}`;
+let enabled = false;
+function setDevConsoleStackEnabled(v2) {
+  enabled = !!v2;
 }
-function getThinkSurface(target) {
-  if (!(target instanceof Element)) return null;
-  const scope = target.closest(SCOPE_SELECTOR);
-  if (!scope) return null;
-  if (scope.matches(".think-quick-input-modal")) return "quickinput";
-  if (scope.matches(".think-whiteboard-workspace-view") || scope.closest(".think-whiteboard-workspace-view")) return "whiteboard";
-  if (scope.matches(".think-settings-workspace-view, .think-os--settings") || scope.closest(".think-settings-workspace-view")) return "settings";
-  if (scope.matches(".think-os--layout") || scope.closest(".think-os--layout")) return "dashboard";
-  if (scope.matches(".think-floating-panel") || scope.closest(".think-floating-panel")) return "floating-panel";
-  return "think-ui";
+function isDevConsoleStackEnabled() {
+  return enabled;
 }
-function detectPlatform$1() {
-  const ua = navigator.userAgent || "";
-  if (/android/i.test(ua)) return "android";
-  if (/iphone|ipad|ipod/i.test(ua) || /macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return "ios";
-  if (/windows/i.test(ua)) return "windows";
-  if (/mac/i.test(ua)) return "macos";
-  if (/linux/i.test(ua)) return "linux";
-  return "other";
-}
-function summarizeThinkLatency(entries) {
-  const buckets = /* @__PURE__ */ new Map();
-  for (const item of entries) {
-    if (item.durationMs == null || !["response", "long-task", "lifecycle"].includes(item.kind)) continue;
-    const label = `${item.surface} / ${item.action}`;
-    const values2 = buckets.get(label) || [];
-    values2.push(item.durationMs);
-    buckets.set(label, values2);
+function emit$1(level, args) {
+  if (!isDevConsoleStackEnabled()) return;
+  try {
+    const method = console[level];
+    if (typeof method === "function") {
+      method.apply(console, args);
+    }
+  } catch {
   }
-  return Array.from(buckets, ([action2, values2]) => {
-    values2.sort((a2, b2) => a2 - b2);
-    return { action: action2, count: values2.length, p95Ms: values2[Math.ceil(values2.length * 0.95) - 1], maxMs: values2[values2.length - 1] };
-  }).sort((a2, b2) => b2.p95Ms - a2.p95Ms).slice(0, 20);
 }
-let activeDiagnostics = null;
-function recordThinkDiagnostic(action2, durationMs2, outcome, surface = "quickinput") {
-  activeDiagnostics?.record("lifecycle", surface, action2, durationMs2, outcome);
+function diagnosticLog(...args) {
+  emit$1("log", args);
 }
-class ThinkDiagnostics {
-  constructor(plugin) {
-    this.plugin = plugin;
-    const directory = plugin.manifest.dir || `${plugin.app.vault.configDir}/plugins/${plugin.manifest.id}`;
-    this.filePath = `${directory}/think-os-performance.jsonl`;
+function diagnosticWarn(...args) {
+  emit$1("warn", args);
+}
+function diagnosticError(...args) {
+  emit$1("error", args);
+}
+function diagnosticTrace(...args) {
+  emit$1("trace", args);
+}
+var ErrorType = /* @__PURE__ */ ((ErrorType2) => {
+  ErrorType2["NETWORK"] = "NETWORK";
+  ErrorType2["VALIDATION"] = "VALIDATION";
+  ErrorType2["PERMISSION"] = "PERMISSION";
+  ErrorType2["FILE_SYSTEM"] = "FILE_SYSTEM";
+  ErrorType2["SERVICE"] = "SERVICE";
+  ErrorType2["PLUGIN"] = "PLUGIN";
+  ErrorType2["UNKNOWN"] = "UNKNOWN";
+  return ErrorType2;
+})(ErrorType || {});
+class BaseError extends Error {
+  type;
+  timestamp;
+  context;
+  constructor(message, type = ErrorType.UNKNOWN, context) {
+    super(message);
+    this.name = this.constructor.name;
+    this.type = type;
+    this.timestamp = Date.now();
+    this.context = context;
+    const ErrorWithCaptureStack = Error;
+    ErrorWithCaptureStack.captureStackTrace?.(this, this.constructor);
   }
-  plugin;
-  session = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-  platform = detectPlatform$1();
-  filePath;
-  pending = [];
-  writeQueue = Promise.resolve();
-  interval;
-  observer;
-  lastScrollAt = 0;
-  lastWriteWarningAt = 0;
-  running = false;
-  start() {
-    if (this.running) return;
-    this.running = true;
-    activeDiagnostics = this;
-    document.addEventListener("click", this.onInteraction, true);
-    document.addEventListener("input", this.onInteraction, true);
-    document.addEventListener("change", this.onInteraction, true);
-    document.addEventListener("compositionstart", this.onInteraction, true);
-    document.addEventListener("compositionend", this.onInteraction, true);
-    document.addEventListener("focusin", this.onInteraction, true);
-    document.addEventListener("keydown", this.onInteraction, true);
-    document.addEventListener("scroll", this.onInteraction, true);
-    document.addEventListener("visibilitychange", this.onVisibilityChange);
-    this.plugin.registerEvent(this.plugin.app.workspace.on("active-leaf-change", (leaf) => {
-      const viewType = leaf?.view?.getViewType();
-      if (viewType === "think-os-settings-view") this.record("lifecycle", "settings", "activate");
-      else if (viewType === "think-os-whiteboard") this.record("lifecycle", "whiteboard", "activate");
-      else if (leaf?.view?.containerEl?.querySelector(".think-os--layout")) this.record("lifecycle", "dashboard", "activate");
-    }));
-    this.interval = window.setInterval(() => {
-      void this.flush();
-    }, FLUSH_INTERVAL_MS);
-    if (typeof PerformanceObserver !== "undefined") {
-      try {
-        this.observer = new PerformanceObserver((list) => {
-          for (const entry of list.getEntries()) {
-            if (entry.duration < 50) continue;
-            const active = document.activeElement;
-            if (getThinkSurface(active) || document.querySelector(".think-quick-input-modal, .think-os--layout, .think-settings-workspace-view, .think-whiteboard-workspace-view")) {
-              this.record("long-task", "webview", "main-thread", entry.duration);
-            }
-          }
-        });
-        this.observer.observe({ entryTypes: ["longtask"] });
-      } catch {
-        this.observer?.disconnect();
-        this.observer = void 0;
+}
+class NetworkError extends BaseError {
+  constructor(message, context) {
+    super(message, ErrorType.NETWORK, context);
+  }
+}
+class ValidationError extends BaseError {
+  constructor(message, context) {
+    super(message, ErrorType.VALIDATION, context);
+  }
+}
+class PermissionError extends BaseError {
+  constructor(message, context) {
+    super(message, ErrorType.PERMISSION, context);
+  }
+}
+class FileSystemError extends BaseError {
+  constructor(message, context) {
+    super(message, ErrorType.FILE_SYSTEM, context);
+  }
+}
+class ServiceError extends BaseError {
+  constructor(message, context) {
+    super(message, ErrorType.SERVICE, context);
+  }
+}
+class PluginError extends BaseError {
+  constructor(message, context) {
+    super(message, ErrorType.PLUGIN, context);
+  }
+}
+function classifyError(error) {
+  if (error instanceof NetworkError) return ErrorType.NETWORK;
+  if (error instanceof ValidationError) return ErrorType.VALIDATION;
+  if (error instanceof PermissionError) return ErrorType.PERMISSION;
+  if (error instanceof FileSystemError) return ErrorType.FILE_SYSTEM;
+  if (error instanceof ServiceError) return ErrorType.SERVICE;
+  if (error instanceof PluginError) return ErrorType.PLUGIN;
+  const message = error.message.toLowerCase();
+  if (message.includes("network") || message.includes("fetch") || message.includes("timeout")) {
+    return ErrorType.NETWORK;
+  }
+  if (message.includes("permission") || message.includes("access denied")) {
+    return ErrorType.PERMISSION;
+  }
+  if (message.includes("file") || message.includes("path") || message.includes("directory")) {
+    return ErrorType.FILE_SYSTEM;
+  }
+  if (message.includes("invalid") || message.includes("validation")) {
+    return ErrorType.VALIDATION;
+  }
+  return ErrorType.UNKNOWN;
+}
+function moveItemInArray(array2, id, direction) {
+  const next2 = [...array2];
+  const item = next2.find((candidate) => candidate.id === id);
+  if (!item) return next2;
+  const siblings = next2.filter((candidate) => candidate.parentId === item.parentId);
+  const index = siblings.findIndex((candidate) => candidate.id === id);
+  const target = direction === "up" ? index - 1 : index + 1;
+  if (index < 0 || target < 0 || target >= siblings.length) return next2;
+  const from2 = next2.findIndex((candidate) => candidate.id === id);
+  const to = next2.findIndex((candidate) => candidate.id === siblings[target].id);
+  if (from2 < 0 || to < 0) return next2;
+  const [moved2] = next2.splice(from2, 1);
+  next2.splice(to, 0, moved2);
+  return next2;
+}
+function arrayMove$1(array2, from2, to) {
+  const next2 = [...array2];
+  const [moved2] = next2.splice(from2, 1);
+  next2.splice(to, 0, moved2);
+  return next2;
+}
+function generateId(prefix2 = "id") {
+  return `${prefix2}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
+}
+var SECONDS_A_MINUTE = 60;
+var SECONDS_A_HOUR = SECONDS_A_MINUTE * 60;
+var SECONDS_A_DAY = SECONDS_A_HOUR * 24;
+var SECONDS_A_WEEK = SECONDS_A_DAY * 7;
+var MILLISECONDS_A_SECOND = 1e3;
+var MILLISECONDS_A_MINUTE = SECONDS_A_MINUTE * MILLISECONDS_A_SECOND;
+var MILLISECONDS_A_HOUR = SECONDS_A_HOUR * MILLISECONDS_A_SECOND;
+var MILLISECONDS_A_DAY = SECONDS_A_DAY * MILLISECONDS_A_SECOND;
+var MILLISECONDS_A_WEEK = SECONDS_A_WEEK * MILLISECONDS_A_SECOND;
+var MS$1 = "millisecond";
+var S$1 = "second";
+var MIN = "minute";
+var H$2 = "hour";
+var D$3 = "day";
+var W$2 = "week";
+var M$2 = "month";
+var Q$2 = "quarter";
+var Y$1 = "year";
+var DATE$1 = "date";
+var FORMAT_DEFAULT = "YYYY-MM-DDTHH:mm:ssZ";
+var INVALID_DATE_STRING = "Invalid Date";
+var REGEX_PARSE = /^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/;
+var REGEX_FORMAT = /\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g;
+const en$1 = {
+  name: "en",
+  weekdays: "Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"),
+  months: "January_February_March_April_May_June_July_August_September_October_November_December".split("_"),
+  ordinal: function ordinal(n2) {
+    var s2 = ["th", "st", "nd", "rd"];
+    var v2 = n2 % 100;
+    return "[" + n2 + (s2[(v2 - 20) % 10] || s2[v2] || s2[0]) + "]";
+  }
+};
+var padStart = function padStart2(string2, length2, pad2) {
+  var s2 = String(string2);
+  if (!s2 || s2.length >= length2) return string2;
+  return "" + Array(length2 + 1 - s2.length).join(pad2) + string2;
+};
+var padZoneStr = function padZoneStr2(instance2) {
+  var negMinutes = -instance2.utcOffset();
+  var minutes = Math.abs(negMinutes);
+  var hourOffset = Math.floor(minutes / 60);
+  var minuteOffset = minutes % 60;
+  return (negMinutes <= 0 ? "+" : "-") + padStart(hourOffset, 2, "0") + ":" + padStart(minuteOffset, 2, "0");
+};
+var monthDiff = function monthDiff2(a2, b2) {
+  if (a2.date() < b2.date()) return -monthDiff2(b2, a2);
+  var wholeMonthDiff = (b2.year() - a2.year()) * 12 + (b2.month() - a2.month());
+  var anchor = a2.clone().add(wholeMonthDiff, M$2);
+  var c2 = b2 - anchor < 0;
+  var anchor2 = a2.clone().add(wholeMonthDiff + (c2 ? -1 : 1), M$2);
+  return +(-(wholeMonthDiff + (b2 - anchor) / (c2 ? anchor - anchor2 : anchor2 - anchor)) || 0);
+};
+var absFloor = function absFloor2(n2) {
+  return n2 < 0 ? Math.ceil(n2) || 0 : Math.floor(n2);
+};
+var prettyUnit = function prettyUnit2(u3) {
+  var special = {
+    M: M$2,
+    y: Y$1,
+    w: W$2,
+    d: D$3,
+    D: DATE$1,
+    h: H$2,
+    m: MIN,
+    s: S$1,
+    ms: MS$1,
+    Q: Q$2
+  };
+  return special[u3] || String(u3 || "").toLowerCase().replace(/s$/, "");
+};
+var isUndefined = function isUndefined2(s2) {
+  return s2 === void 0;
+};
+const U$2 = {
+  s: padStart,
+  z: padZoneStr,
+  m: monthDiff,
+  a: absFloor,
+  p: prettyUnit,
+  u: isUndefined
+};
+var L$2 = "en";
+var Ls = {};
+Ls[L$2] = en$1;
+var IS_DAYJS = "$isDayjsObject";
+var isDayjs = function isDayjs2(d2) {
+  return d2 instanceof Dayjs || !!(d2 && d2[IS_DAYJS]);
+};
+var parseLocale = function parseLocale2(preset, object2, isLocal) {
+  var l2;
+  if (!preset) return L$2;
+  if (typeof preset === "string") {
+    var presetLower = preset.toLowerCase();
+    if (Ls[presetLower]) {
+      l2 = presetLower;
+    }
+    if (object2) {
+      Ls[presetLower] = object2;
+      l2 = presetLower;
+    }
+    var presetSplit = preset.split("-");
+    if (!l2 && presetSplit.length > 1) {
+      return parseLocale2(presetSplit[0]);
+    }
+  } else {
+    var name = preset.name;
+    Ls[name] = preset;
+    l2 = name;
+  }
+  if (!isLocal && l2) L$2 = l2;
+  return l2 || !isLocal && L$2;
+};
+var dayjs = function dayjs2(date2, c2) {
+  if (isDayjs(date2)) {
+    return date2.clone();
+  }
+  var cfg = typeof c2 === "object" ? c2 : {};
+  cfg.date = date2;
+  cfg.args = arguments;
+  return new Dayjs(cfg);
+};
+var wrapper$1 = function wrapper(date2, instance2) {
+  return dayjs(date2, {
+    locale: instance2.$L,
+    utc: instance2.$u,
+    x: instance2.$x,
+    $offset: instance2.$offset
+    // todo: refactor; do not use this.$offset in you code
+  });
+};
+var Utils = U$2;
+Utils.l = parseLocale;
+Utils.i = isDayjs;
+Utils.w = wrapper$1;
+var parseDate$2 = function parseDate(cfg) {
+  var date2 = cfg.date, utc = cfg.utc;
+  if (date2 === null) return /* @__PURE__ */ new Date(NaN);
+  if (Utils.u(date2)) return /* @__PURE__ */ new Date();
+  if (date2 instanceof Date) return new Date(date2);
+  if (typeof date2 === "string" && !/Z$/i.test(date2)) {
+    var d2 = date2.match(REGEX_PARSE);
+    if (d2) {
+      var m2 = d2[2] - 1 || 0;
+      var ms = (d2[7] || "0").substring(0, 3);
+      if (utc) {
+        return new Date(Date.UTC(d2[1], m2, d2[3] || 1, d2[4] || 0, d2[5] || 0, d2[6] || 0, ms));
       }
+      return new Date(d2[1], m2, d2[3] || 1, d2[4] || 0, d2[5] || 0, d2[6] || 0, ms);
     }
-    this.record("lifecycle", "plugin", "start");
   }
-  onVisibilityChange = () => {
-    if (document.visibilityState === "hidden") void this.flush();
+  return new Date(date2);
+};
+var Dayjs = /* @__PURE__ */ (function() {
+  function Dayjs2(cfg) {
+    this.$L = parseLocale(cfg.locale, null, true);
+    this.parse(cfg);
+    this.$x = this.$x || cfg.x || {};
+    this[IS_DAYJS] = true;
+  }
+  var _proto = Dayjs2.prototype;
+  _proto.parse = function parse2(cfg) {
+    this.$d = parseDate$2(cfg);
+    this.init();
   };
-  onInteraction = (event) => {
-    const surface = getThinkSurface(event.target);
-    if (!surface || !(event.target instanceof Element)) return;
-    if (event.type === "scroll") {
-      const now2 = Date.now();
-      if (now2 - this.lastScrollAt < 700) return;
-      this.lastScrollAt = now2;
-    }
-    if (event.type === "keydown") {
-      const keyboard = event;
-      if (keyboard.repeat || !["Enter", "Escape", "Tab", "ArrowDown", "ArrowUp", " "].includes(keyboard.key)) return;
-    }
-    const action2 = `${event.type}:${describeThinkControl(event.target)}`;
-    this.record("interaction", surface, action2);
-    if (event.type !== "click" || typeof requestAnimationFrame !== "function") return;
-    const start2 = performance.now();
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      if (this.running) this.record("response", surface, action2, performance.now() - start2);
-    }));
+  _proto.init = function init() {
+    var $d = this.$d;
+    this.$y = $d.getFullYear();
+    this.$M = $d.getMonth();
+    this.$D = $d.getDate();
+    this.$W = $d.getDay();
+    this.$H = $d.getHours();
+    this.$m = $d.getMinutes();
+    this.$s = $d.getSeconds();
+    this.$ms = $d.getMilliseconds();
   };
-  record(kind, surface, action2, durationMs2, outcome) {
-    if (!this.running) return;
-    const safe = (value) => /^[a-z0-9_.:/ -]{1,110}$/i.test(value) ? value : "unknown";
-    const entry = {
-      time: (/* @__PURE__ */ new Date()).toISOString(),
-      session: this.session,
-      platform: this.platform,
-      kind,
-      surface: safe(surface),
-      action: safe(action2)
+  _proto.$utils = function $utils() {
+    return Utils;
+  };
+  _proto.isValid = function isValid() {
+    return !(this.$d.toString() === INVALID_DATE_STRING);
+  };
+  _proto.isSame = function isSame(that, units) {
+    var other = dayjs(that);
+    return this.startOf(units) <= other && other <= this.endOf(units);
+  };
+  _proto.isAfter = function isAfter(that, units) {
+    return dayjs(that) < this.startOf(units);
+  };
+  _proto.isBefore = function isBefore(that, units) {
+    return this.endOf(units) < dayjs(that);
+  };
+  _proto.$g = function $g(input, get, set2) {
+    if (Utils.u(input)) return this[get];
+    return this.set(set2, input);
+  };
+  _proto.unix = function unix() {
+    return Math.floor(this.valueOf() / 1e3);
+  };
+  _proto.valueOf = function valueOf() {
+    return this.$d.getTime();
+  };
+  _proto.startOf = function startOf(units, _startOf) {
+    var _this = this;
+    var isStartOf = !Utils.u(_startOf) ? _startOf : true;
+    var unit = Utils.p(units);
+    var instanceFactory = function instanceFactory2(d2, m2) {
+      var ins = Utils.w(_this.$u ? Date.UTC(_this.$y, m2, d2) : new Date(_this.$y, m2, d2), _this);
+      return isStartOf ? ins : ins.endOf(D$3);
     };
-    if (typeof durationMs2 === "number" && Number.isFinite(durationMs2)) entry.durationMs = Math.round(durationMs2);
-    if (outcome) entry.outcome = safe(outcome);
-    this.pending.push(entry);
-    if (this.pending.length > 2e3) this.pending.splice(0, this.pending.length - 2e3);
-  }
-  async flush() {
-    if (this.pending.length === 0) return this.writeQueue;
-    const batch = this.pending.splice(0);
-    const text2 = batch.map((entry) => JSON.stringify(entry)).join("\n") + "\n";
-    this.writeQueue = this.writeQueue.catch(() => void 0).then(async () => {
-      const adapter = this.plugin.app.vault.adapter;
-      const existing = await adapter.stat(this.filePath);
-      if (existing && existing.size + text2.length > MAX_LOG_BYTES) {
-        const previous = `${this.filePath}.old`;
-        if (await adapter.exists(previous)) await adapter.remove(previous);
-        await adapter.rename(this.filePath, previous);
+    var instanceFactorySet = function instanceFactorySet2(method, slice2) {
+      var argumentStart = [0, 0, 0, 0];
+      var argumentEnd = [23, 59, 59, 999];
+      return Utils.w(_this.toDate()[method].apply(
+        // eslint-disable-line prefer-spread
+        _this.toDate("s"),
+        (isStartOf ? argumentStart : argumentEnd).slice(slice2)
+      ), _this);
+    };
+    var $W = this.$W, $M = this.$M, $D = this.$D;
+    var utcPad = "set" + (this.$u ? "UTC" : "");
+    switch (unit) {
+      case Y$1:
+        return isStartOf ? instanceFactory(1, 0) : instanceFactory(31, 11);
+      case M$2:
+        return isStartOf ? instanceFactory(1, $M) : instanceFactory(0, $M + 1);
+      case W$2: {
+        var weekStart = this.$locale().weekStart || 0;
+        var gap2 = ($W < weekStart ? $W + 7 : $W) - weekStart;
+        return instanceFactory(isStartOf ? $D - gap2 : $D + (6 - gap2), $M);
       }
-      const appendable = adapter;
-      if (!existing) {
-        await adapter.write(this.filePath, text2);
-      } else if (typeof appendable.append === "function" && await adapter.exists(this.filePath)) {
-        await appendable.append(this.filePath, text2);
-      } else {
-        const prior = await adapter.exists(this.filePath) ? await adapter.read(this.filePath) : "";
-        await adapter.write(this.filePath, prior + text2);
+      case D$3:
+      case DATE$1:
+        return instanceFactorySet(utcPad + "Hours", 0);
+      case H$2:
+        return instanceFactorySet(utcPad + "Minutes", 1);
+      case MIN:
+        return instanceFactorySet(utcPad + "Seconds", 2);
+      case S$1:
+        return instanceFactorySet(utcPad + "Milliseconds", 3);
+      default:
+        return this.clone();
+    }
+  };
+  _proto.endOf = function endOf(arg2) {
+    return this.startOf(arg2, false);
+  };
+  _proto.$set = function $set(units, _int2) {
+    var _C$D$C$DATE$C$M$C$Y$C;
+    var unit = Utils.p(units);
+    var utcPad = "set" + (this.$u ? "UTC" : "");
+    var name = (_C$D$C$DATE$C$M$C$Y$C = {}, _C$D$C$DATE$C$M$C$Y$C[D$3] = utcPad + "Date", _C$D$C$DATE$C$M$C$Y$C[DATE$1] = utcPad + "Date", _C$D$C$DATE$C$M$C$Y$C[M$2] = utcPad + "Month", _C$D$C$DATE$C$M$C$Y$C[Y$1] = utcPad + "FullYear", _C$D$C$DATE$C$M$C$Y$C[H$2] = utcPad + "Hours", _C$D$C$DATE$C$M$C$Y$C[MIN] = utcPad + "Minutes", _C$D$C$DATE$C$M$C$Y$C[S$1] = utcPad + "Seconds", _C$D$C$DATE$C$M$C$Y$C[MS$1] = utcPad + "Milliseconds", _C$D$C$DATE$C$M$C$Y$C)[unit];
+    var arg2 = unit === D$3 ? this.$D + (_int2 - this.$W) : _int2;
+    if (unit === M$2 || unit === Y$1) {
+      var date2 = this.clone().set(DATE$1, 1);
+      date2.$d[name](arg2);
+      date2.init();
+      this.$d = date2.set(DATE$1, Math.min(this.$D, date2.daysInMonth())).$d;
+    } else if (name) this.$d[name](arg2);
+    this.init();
+    return this;
+  };
+  _proto.set = function set2(string2, _int2) {
+    return this.clone().$set(string2, _int2);
+  };
+  _proto.get = function get(unit) {
+    return this[Utils.p(unit)]();
+  };
+  _proto.add = function add2(number2, units) {
+    var _this2 = this, _C$MIN$C$H$C$S$unit;
+    number2 = Number(number2);
+    var unit = Utils.p(units);
+    var instanceFactorySet = function instanceFactorySet2(n2) {
+      var d2 = dayjs(_this2);
+      return Utils.w(d2.date(d2.date() + Math.round(n2 * number2)), _this2);
+    };
+    if (unit === M$2) {
+      return this.set(M$2, this.$M + number2);
+    }
+    if (unit === Y$1) {
+      return this.set(Y$1, this.$y + number2);
+    }
+    if (unit === D$3) {
+      return instanceFactorySet(1);
+    }
+    if (unit === W$2) {
+      return instanceFactorySet(7);
+    }
+    var step = (_C$MIN$C$H$C$S$unit = {}, _C$MIN$C$H$C$S$unit[MIN] = MILLISECONDS_A_MINUTE, _C$MIN$C$H$C$S$unit[H$2] = MILLISECONDS_A_HOUR, _C$MIN$C$H$C$S$unit[S$1] = MILLISECONDS_A_SECOND, _C$MIN$C$H$C$S$unit)[unit] || 1;
+    var nextTimeStamp = this.$d.getTime() + number2 * step;
+    return Utils.w(nextTimeStamp, this);
+  };
+  _proto.subtract = function subtract2(number2, string2) {
+    return this.add(number2 * -1, string2);
+  };
+  _proto.format = function format(formatStr) {
+    var _this3 = this;
+    var locale2 = this.$locale();
+    if (!this.isValid()) return locale2.invalidDate || INVALID_DATE_STRING;
+    var str = formatStr || FORMAT_DEFAULT;
+    var zoneStr = Utils.z(this);
+    var $H = this.$H, $m = this.$m, $M = this.$M;
+    var weekdays = locale2.weekdays, months = locale2.months, meridiem2 = locale2.meridiem;
+    var getShort = function getShort2(arr, index, full, length2) {
+      return arr && (arr[index] || arr(_this3, str)) || full[index].slice(0, length2);
+    };
+    var get$H = function get$H2(num) {
+      return Utils.s($H % 12 || 12, num, "0");
+    };
+    var meridiemFunc = meridiem2 || function(hour, minute, isLowercase) {
+      var m2 = hour < 12 ? "AM" : "PM";
+      return isLowercase ? m2.toLowerCase() : m2;
+    };
+    var matches = function matches2(match5) {
+      switch (match5) {
+        case "YY":
+          return String(_this3.$y).slice(-2);
+        case "YYYY":
+          return Utils.s(_this3.$y, 4, "0");
+        case "M":
+          return $M + 1;
+        case "MM":
+          return Utils.s($M + 1, 2, "0");
+        case "MMM":
+          return getShort(locale2.monthsShort, $M, months, 3);
+        case "MMMM":
+          return getShort(months, $M);
+        case "D":
+          return _this3.$D;
+        case "DD":
+          return Utils.s(_this3.$D, 2, "0");
+        case "d":
+          return String(_this3.$W);
+        case "dd":
+          return getShort(locale2.weekdaysMin, _this3.$W, weekdays, 2);
+        case "ddd":
+          return getShort(locale2.weekdaysShort, _this3.$W, weekdays, 3);
+        case "dddd":
+          return weekdays[_this3.$W];
+        case "H":
+          return String($H);
+        case "HH":
+          return Utils.s($H, 2, "0");
+        case "h":
+          return get$H(1);
+        case "hh":
+          return get$H(2);
+        case "a":
+          return meridiemFunc($H, $m, true);
+        case "A":
+          return meridiemFunc($H, $m, false);
+        case "m":
+          return String($m);
+        case "mm":
+          return Utils.s($m, 2, "0");
+        case "s":
+          return String(_this3.$s);
+        case "ss":
+          return Utils.s(_this3.$s, 2, "0");
+        case "SSS":
+          return Utils.s(_this3.$ms, 3, "0");
+        case "Z":
+          return zoneStr;
       }
-    }).catch((error) => {
-      this.pending.unshift(...batch);
-      if (this.pending.length > 2e3) this.pending.splice(0, this.pending.length - 2e3);
-      if (Date.now() - this.lastWriteWarningAt >= 6e4) {
-        this.lastWriteWarningAt = Date.now();
-        console.warn("[Think OS diagnostics] Local diagnostic write failed", error);
-      }
+      return null;
+    };
+    return str.replace(REGEX_FORMAT, function(match5, $1) {
+      return $1 || matches(match5) || zoneStr.replace(":", "");
     });
-    return this.writeQueue;
+  };
+  _proto.utcOffset = function utcOffset() {
+    return -Math.round(this.$d.getTimezoneOffset() / 15) * 15;
+  };
+  _proto.diff = function diff(input, units, _float) {
+    var _this4 = this;
+    var unit = Utils.p(units);
+    var that = dayjs(input);
+    var zoneDelta = (that.utcOffset() - this.utcOffset()) * MILLISECONDS_A_MINUTE;
+    var diff2 = this - that;
+    var getMonth = function getMonth2() {
+      return Utils.m(_this4, that);
+    };
+    var result;
+    switch (unit) {
+      case Y$1:
+        result = getMonth() / 12;
+        break;
+      case M$2:
+        result = getMonth();
+        break;
+      case Q$2:
+        result = getMonth() / 3;
+        break;
+      case W$2:
+        result = (diff2 - zoneDelta) / MILLISECONDS_A_WEEK;
+        break;
+      case D$3:
+        result = (diff2 - zoneDelta) / MILLISECONDS_A_DAY;
+        break;
+      case H$2:
+        result = diff2 / MILLISECONDS_A_HOUR;
+        break;
+      case MIN:
+        result = diff2 / MILLISECONDS_A_MINUTE;
+        break;
+      case S$1:
+        result = diff2 / MILLISECONDS_A_SECOND;
+        break;
+      default:
+        result = diff2;
+        break;
+    }
+    return _float ? result : Utils.a(result);
+  };
+  _proto.daysInMonth = function daysInMonth() {
+    return this.endOf(M$2).$D;
+  };
+  _proto.$locale = function $locale() {
+    return Ls[this.$L];
+  };
+  _proto.locale = function locale2(preset, object2) {
+    if (!preset) return this.$L;
+    var that = this.clone();
+    var nextLocaleName = parseLocale(preset, object2, true);
+    if (nextLocaleName) that.$L = nextLocaleName;
+    return that;
+  };
+  _proto.clone = function clone2() {
+    return Utils.w(this.$d, this);
+  };
+  _proto.toDate = function toDate() {
+    return new Date(this.valueOf());
+  };
+  _proto.toJSON = function toJSON() {
+    return this.isValid() ? this.toISOString() : null;
+  };
+  _proto.toISOString = function toISOString() {
+    return this.$d.toISOString();
+  };
+  _proto.toString = function toString() {
+    return this.$d.toUTCString();
+  };
+  return Dayjs2;
+})();
+var proto = Dayjs.prototype;
+dayjs.prototype = proto;
+[["$ms", MS$1], ["$s", S$1], ["$m", MIN], ["$H", H$2], ["$W", D$3], ["$M", M$2], ["$y", Y$1], ["$D", DATE$1]].forEach(function(g2) {
+  proto[g2[1]] = function(input) {
+    return this.$g(input, g2[0], g2[1]);
+  };
+});
+dayjs.extend = function(plugin, option) {
+  if (!plugin.$i) {
+    plugin(option, Dayjs, dayjs);
+    plugin.$i = true;
   }
-  async exportReport() {
-    this.record("lifecycle", "plugin", "export");
-    await this.flush();
-    const adapter = this.plugin.app.vault.adapter;
-    const previous = `${this.filePath}.old`;
-    const raw = `${await adapter.exists(previous) ? await adapter.read(previous) : ""}${await adapter.exists(this.filePath) ? await adapter.read(this.filePath) : ""}`;
-    const events2 = [];
-    for (const line2 of raw.split("\n")) {
-      if (!line2) continue;
-      try {
-        events2.push(JSON.parse(line2));
-      } catch {
+  return dayjs;
+};
+dayjs.locale = parseLocale;
+dayjs.isDayjs = isDayjs;
+dayjs.unix = function(timestamp2) {
+  return dayjs(timestamp2 * 1e3);
+};
+dayjs.en = Ls[L$2];
+dayjs.Ls = Ls;
+dayjs.p = {};
+var locale$1 = {
+  name: "zh-cn",
+  weekdays: "星期日_星期一_星期二_星期三_星期四_星期五_星期六".split("_"),
+  weekdaysShort: "周日_周一_周二_周三_周四_周五_周六".split("_"),
+  weekdaysMin: "日_一_二_三_四_五_六".split("_"),
+  months: "一月_二月_三月_四月_五月_六月_七月_八月_九月_十月_十一月_十二月".split("_"),
+  monthsShort: "1月_2月_3月_4月_5月_6月_7月_8月_9月_10月_11月_12月".split("_"),
+  ordinal: function ordinal2(number2, period) {
+    switch (period) {
+      case "W":
+        return number2 + "周";
+      default:
+        return number2 + "日";
+    }
+  },
+  weekStart: 1,
+  yearStart: 4,
+  formats: {
+    LT: "HH:mm",
+    LTS: "HH:mm:ss",
+    L: "YYYY/MM/DD",
+    LL: "YYYY年M月D日",
+    LLL: "YYYY年M月D日Ah点mm分",
+    LLLL: "YYYY年M月D日ddddAh点mm分",
+    l: "YYYY/M/D",
+    ll: "YYYY年M月D日",
+    lll: "YYYY年M月D日 HH:mm",
+    llll: "YYYY年M月D日dddd HH:mm"
+  },
+  relativeTime: {
+    future: "%s内",
+    past: "%s前",
+    s: "几秒",
+    m: "1 分钟",
+    mm: "%d 分钟",
+    h: "1 小时",
+    hh: "%d 小时",
+    d: "1 天",
+    dd: "%d 天",
+    M: "1 个月",
+    MM: "%d 个月",
+    y: "1 年",
+    yy: "%d 年"
+  },
+  meridiem: function meridiem(hour, minute) {
+    var hm = hour * 100 + minute;
+    if (hm < 600) {
+      return "凌晨";
+    } else if (hm < 900) {
+      return "早上";
+    } else if (hm < 1100) {
+      return "上午";
+    } else if (hm < 1300) {
+      return "中午";
+    } else if (hm < 1800) {
+      return "下午";
+    }
+    return "晚上";
+  }
+};
+dayjs.locale(locale$1, null, true);
+const quarterOfYear = (function(o2, c2) {
+  var proto2 = c2.prototype;
+  proto2.quarter = function(quarter) {
+    if (!this.$utils().u(quarter)) {
+      return this.month(this.month() % 3 + (quarter - 1) * 3);
+    }
+    return Math.ceil((this.month() + 1) / 3);
+  };
+  var oldAdd = proto2.add;
+  proto2.add = function(number2, units) {
+    number2 = Number(number2);
+    var unit = this.$utils().p(units);
+    if (unit === Q$2) {
+      return this.add(number2 * 3, M$2);
+    }
+    return oldAdd.bind(this)(number2, units);
+  };
+  var oldStartOf = proto2.startOf;
+  proto2.startOf = function(units, startOf) {
+    var utils = this.$utils();
+    var isStartOf = !utils.u(startOf) ? startOf : true;
+    var unit = utils.p(units);
+    if (unit === Q$2) {
+      var quarter = this.quarter() - 1;
+      return isStartOf ? this.month(quarter * 3).startOf(M$2).startOf(D$3) : this.month(quarter * 3 + 2).endOf(M$2).endOf(D$3);
+    }
+    return oldStartOf.bind(this)(units, startOf);
+  };
+});
+const weekOfYear = (function(o2, c2, d2) {
+  var proto2 = c2.prototype;
+  proto2.week = function(week) {
+    if (week === void 0) {
+      week = null;
+    }
+    if (week !== null) {
+      return this.add((week - this.week()) * 7, D$3);
+    }
+    var yearStart = this.$locale().yearStart || 1;
+    if (this.month() === 11 && this.date() > 25) {
+      var nextYearStartDay = d2(this).startOf(Y$1).add(1, Y$1).date(yearStart);
+      var thisEndOfWeek = d2(this).endOf(W$2);
+      if (nextYearStartDay.isBefore(thisEndOfWeek)) {
+        return 1;
       }
     }
-    const folder = "Think/diagnostics";
-    if (!await adapter.exists("Think")) await adapter.mkdir("Think");
-    if (!await adapter.exists(folder)) await adapter.mkdir(folder);
-    const timestamp2 = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
-    const base = `${folder}/think-os-${timestamp2}`;
-    await adapter.write(`${base}.jsonl`, raw);
-    const rows = summarizeThinkLatency(events2);
-    const lines = [
-      "# Think OS 本地性能诊断",
-      "",
-      `- 设备：${this.platform}`,
-      `- 采集事件：${events2.length}（最近约 2 MB，日志滚动覆盖）`,
-      "- 只包含界面操作和时间；不包含笔记、语音、输入文字或文件路径。",
-      "- 点击响应：点击到下两帧的耗时，并不等于数据保存完成。",
-      "- 主线程长任务：WebView 全局耗时，不一定由 Think OS 引起。",
-      "",
-      "## 响应耗时 Top 20",
-      "",
-      "| 界面 / 操作 | 次数 | P95 (ms) | 最大 (ms) |",
-      "| --- | ---: | ---: | ---: |",
-      ...rows.map(({ action: action2, count, p95Ms, maxMs }) => `| ${action2} | ${count} | ${p95Ms} | ${maxMs} |`),
-      "",
-      `原始事件：[[${base}.jsonl]]`,
-      ""
-    ];
-    await adapter.write(`${base}.md`, lines.join("\n"));
-    new obsidian.Notice("Think OS 诊断已导出到 Think/diagnostics（报告与原始日志）");
-    return `${base}.md`;
-  }
-  stop() {
-    if (!this.running) return;
-    this.record("lifecycle", "plugin", "stop");
-    this.running = false;
-    if (activeDiagnostics === this) activeDiagnostics = null;
-    for (const type of ["click", "input", "change", "compositionstart", "compositionend", "focusin", "keydown", "scroll"]) {
-      document.removeEventListener(type, this.onInteraction, true);
+    var yearStartDay = d2(this).startOf(Y$1).date(yearStart);
+    var yearStartWeek = yearStartDay.startOf(W$2).subtract(1, MS$1);
+    var diffInWeek = this.diff(yearStartWeek, W$2, true);
+    if (diffInWeek < 0) {
+      return d2(this).startOf("week").week();
     }
-    document.removeEventListener("visibilitychange", this.onVisibilityChange);
-    if (this.interval !== void 0) window.clearInterval(this.interval);
-    this.observer?.disconnect();
-    void this.flush();
+    return Math.ceil(diffInWeek);
+  };
+  proto2.weeks = function(week) {
+    if (week === void 0) {
+      week = null;
+    }
+    return this.week(week);
+  };
+});
+var t$1 = function t(format) {
+  return format.replace(/(\[[^\]]+])|(MMMM|MM|DD|dddd)/g, function(_2, a2, b2) {
+    return a2 || b2.slice(1);
+  });
+};
+var englishFormats = {
+  LTS: "h:mm:ss A",
+  LT: "h:mm A",
+  L: "MM/DD/YYYY",
+  LL: "MMMM D, YYYY",
+  LLL: "MMMM D, YYYY h:mm A",
+  LLLL: "dddd, MMMM D, YYYY h:mm A"
+};
+var u$3 = function u(formatStr, formats) {
+  return formatStr.replace(/(\[[^\]]+])|(LTS?|l{1,4}|L{1,4})/g, function(_2, a2, b2) {
+    var B2 = b2 && b2.toUpperCase();
+    return a2 || formats[b2] || englishFormats[b2] || t$1(formats[B2]);
+  });
+};
+var formattingTokens = /(\[[^[]*\])|([-_:/.,()\s]+)|(A|a|Q|YYYY|YY?|ww?|MM?M?M?|Do|DD?|hh?|HH?|mm?|ss?|S{1,3}|z|ZZ?)/g;
+var match1 = /\d/;
+var match2 = /\d\d/;
+var match3 = /\d{3}/;
+var match4 = /\d{4}/;
+var match1to2 = /\d\d?/;
+var matchSigned = /[+-]?\d+/;
+var matchOffset = /[+-]\d\d:?(\d\d)?|Z/;
+var matchWord = /\d*[^-_:/,()\s\d]+/;
+var locale = {};
+var parseTwoDigitYear = function parseTwoDigitYear2(input) {
+  input = +input;
+  return input + (input > 68 ? 1900 : 2e3);
+};
+function offsetFromString(string2) {
+  if (!string2) return 0;
+  if (string2 === "Z") return 0;
+  var parts = string2.match(/([+-]|\d\d)/g);
+  var minutes = +(parts[1] * 60) + (+parts[2] || 0);
+  return minutes === 0 ? 0 : parts[0] === "+" ? -minutes : minutes;
+}
+var addInput = function addInput2(property) {
+  return function(input) {
+    this[property] = +input;
+  };
+};
+var zoneExpressions = [matchOffset, function(input) {
+  var zone = this.zone || (this.zone = {});
+  zone.offset = offsetFromString(input);
+}];
+var getLocalePart = function getLocalePart2(name) {
+  var part = locale[name];
+  return part && (part.indexOf ? part : part.s.concat(part.f));
+};
+var meridiemMatch = function meridiemMatch2(input, isLowerCase) {
+  var isAfternoon;
+  var _locale = locale, meridiem2 = _locale.meridiem;
+  if (!meridiem2) {
+    isAfternoon = input === (isLowerCase ? "pm" : "PM");
+  } else {
+    for (var i2 = 1; i2 <= 24; i2 += 1) {
+      if (input.indexOf(meridiem2(i2, 0, isLowerCase)) > -1) {
+        isAfternoon = i2 > 12;
+        break;
+      }
+    }
+  }
+  return isAfternoon;
+};
+var expressions = {
+  A: [matchWord, function(input) {
+    this.afternoon = meridiemMatch(input, false);
+  }],
+  a: [matchWord, function(input) {
+    this.afternoon = meridiemMatch(input, true);
+  }],
+  Q: [match1, function(input) {
+    this.month = (input - 1) * 3 + 1;
+  }],
+  S: [match1, function(input) {
+    this.milliseconds = +input * 100;
+  }],
+  SS: [match2, function(input) {
+    this.milliseconds = +input * 10;
+  }],
+  SSS: [match3, function(input) {
+    this.milliseconds = +input;
+  }],
+  s: [match1to2, addInput("seconds")],
+  ss: [match1to2, addInput("seconds")],
+  m: [match1to2, addInput("minutes")],
+  mm: [match1to2, addInput("minutes")],
+  H: [match1to2, addInput("hours")],
+  h: [match1to2, addInput("hours")],
+  HH: [match1to2, addInput("hours")],
+  hh: [match1to2, addInput("hours")],
+  D: [match1to2, addInput("day")],
+  DD: [match2, addInput("day")],
+  Do: [matchWord, function(input) {
+    var _locale2 = locale, ordinal4 = _locale2.ordinal;
+    var _input$match = input.match(/\d+/);
+    this.day = _input$match[0];
+    if (!ordinal4) return;
+    for (var i2 = 1; i2 <= 31; i2 += 1) {
+      if (ordinal4(i2).replace(/\[|\]/g, "") === input) {
+        this.day = i2;
+      }
+    }
+  }],
+  w: [match1to2, addInput("week")],
+  ww: [match2, addInput("week")],
+  M: [match1to2, addInput("month")],
+  MM: [match2, addInput("month")],
+  MMM: [matchWord, function(input) {
+    var months = getLocalePart("months");
+    var monthsShort = getLocalePart("monthsShort");
+    var matchIndex = (monthsShort || months.map(function(_2) {
+      return _2.slice(0, 3);
+    })).indexOf(input) + 1;
+    if (matchIndex < 1) {
+      throw new Error();
+    }
+    this.month = matchIndex % 12 || matchIndex;
+  }],
+  MMMM: [matchWord, function(input) {
+    var months = getLocalePart("months");
+    var matchIndex = months.indexOf(input) + 1;
+    if (matchIndex < 1) {
+      throw new Error();
+    }
+    this.month = matchIndex % 12 || matchIndex;
+  }],
+  Y: [matchSigned, addInput("year")],
+  YY: [match2, function(input) {
+    this.year = parseTwoDigitYear(input);
+  }],
+  YYYY: [match4, addInput("year")],
+  Z: zoneExpressions,
+  ZZ: zoneExpressions
+};
+function correctHours(time2) {
+  var afternoon = time2.afternoon;
+  if (afternoon !== void 0) {
+    var hours = time2.hours;
+    if (afternoon) {
+      if (hours < 12) {
+        time2.hours += 12;
+      }
+    } else if (hours === 12) {
+      time2.hours = 0;
+    }
+    delete time2.afternoon;
+  }
+}
+function makeParser(format) {
+  format = u$3(format, locale && locale.formats);
+  var array2 = format.match(formattingTokens);
+  var length2 = array2.length;
+  for (var i2 = 0; i2 < length2; i2 += 1) {
+    var token2 = array2[i2];
+    var parseTo = expressions[token2];
+    var regex = parseTo && parseTo[0];
+    var parser = parseTo && parseTo[1];
+    if (parser) {
+      array2[i2] = {
+        regex,
+        parser
+      };
+    } else {
+      array2[i2] = token2.replace(/^\[|\]$/g, "");
+    }
+  }
+  return function(input) {
+    var time2 = {};
+    for (var _i = 0, start2 = 0; _i < length2; _i += 1) {
+      var _token = array2[_i];
+      if (typeof _token === "string") {
+        start2 += _token.length;
+      } else {
+        var _regex2 = _token.regex, _parser = _token.parser;
+        var part = input.slice(start2);
+        var match5 = _regex2.exec(part);
+        var value = match5[0];
+        _parser.call(time2, value);
+        input = input.replace(value, "");
+      }
+    }
+    correctHours(time2);
+    return time2;
+  };
+}
+var parseFormattedInput = function parseFormattedInput2(input, format, utc, dayjs3) {
+  try {
+    if (["x", "X"].indexOf(format) > -1) return new Date((format === "X" ? 1e3 : 1) * input);
+    var parser = makeParser(format);
+    var _parser2 = parser(input), year = _parser2.year, month = _parser2.month, day = _parser2.day, hours = _parser2.hours, minutes = _parser2.minutes, seconds = _parser2.seconds, milliseconds = _parser2.milliseconds, zone = _parser2.zone, week = _parser2.week;
+    var now2 = /* @__PURE__ */ new Date();
+    var d2 = day || (!year && !month ? now2.getDate() : 1);
+    var y2 = year || now2.getFullYear();
+    var M2 = 0;
+    if (!(year && !month)) {
+      M2 = month > 0 ? month - 1 : now2.getMonth();
+    }
+    var h2 = hours || 0;
+    var m2 = minutes || 0;
+    var s2 = seconds || 0;
+    var ms = milliseconds || 0;
+    if (zone) {
+      return new Date(Date.UTC(y2, M2, d2, h2, m2, s2, ms + zone.offset * 60 * 1e3));
+    }
+    if (utc) {
+      return new Date(Date.UTC(y2, M2, d2, h2, m2, s2, ms));
+    }
+    var newDate;
+    newDate = new Date(y2, M2, d2, h2, m2, s2, ms);
+    if (week) {
+      newDate = dayjs3(newDate).week(week).toDate();
+    }
+    return newDate;
+  } catch (e2) {
+    return /* @__PURE__ */ new Date("");
+  }
+};
+const customParse = (function(o2, C2, d2) {
+  d2.p.customParseFormat = true;
+  if (o2 && o2.parseTwoDigitYear) {
+    parseTwoDigitYear = o2.parseTwoDigitYear;
+  }
+  var proto2 = C2.prototype;
+  var oldParse = proto2.parse;
+  proto2.parse = function(cfg) {
+    var date2 = cfg.date, utc = cfg.utc, args = cfg.args;
+    this.$u = utc;
+    var format = args[1];
+    if (typeof format === "string") {
+      var isStrictWithoutLocale = args[2] === true;
+      var isStrictWithLocale = args[3] === true;
+      var isStrict = isStrictWithoutLocale || isStrictWithLocale;
+      var pl = args[2];
+      if (isStrictWithLocale) {
+        pl = args[2];
+      }
+      locale = this.$locale();
+      if (!isStrictWithoutLocale && pl) {
+        locale = d2.Ls[pl];
+      }
+      this.$d = parseFormattedInput(date2, format, utc, d2);
+      this.init();
+      if (pl && pl !== true) this.$L = this.locale(pl).$L;
+      if (isStrict && date2 != this.format(format)) {
+        this.$d = /* @__PURE__ */ new Date("");
+      }
+      locale = {};
+    } else if (format instanceof Array) {
+      var len = format.length;
+      for (var i2 = 1; i2 <= len; i2 += 1) {
+        args[1] = format[i2 - 1];
+        var result = d2.apply(this, args);
+        if (result.isValid()) {
+          this.$d = result.$d;
+          this.$L = result.$L;
+          this.init();
+          break;
+        }
+        if (i2 === len) this.$d = /* @__PURE__ */ new Date("");
+      }
+    } else {
+      oldParse.call(this, cfg);
+    }
+  };
+});
+var isoWeekPrettyUnit = "isoweek";
+const isoWeek = (function(o2, c2, d2) {
+  var getYearFirstThursday = function getYearFirstThursday2(year, isUtc) {
+    var yearFirstDay = (isUtc ? d2.utc : d2)().year(year).startOf(Y$1);
+    var addDiffDays = 4 - yearFirstDay.isoWeekday();
+    if (yearFirstDay.isoWeekday() > 4) {
+      addDiffDays += 7;
+    }
+    return yearFirstDay.add(addDiffDays, D$3);
+  };
+  var getCurrentWeekThursday = function getCurrentWeekThursday2(ins) {
+    return ins.add(4 - ins.isoWeekday(), D$3);
+  };
+  var proto2 = c2.prototype;
+  proto2.isoWeekYear = function() {
+    var nowWeekThursday = getCurrentWeekThursday(this);
+    return nowWeekThursday.year();
+  };
+  proto2.isoWeek = function(week) {
+    if (!this.$utils().u(week)) {
+      return this.add((week - this.isoWeek()) * 7, D$3);
+    }
+    var nowWeekThursday = getCurrentWeekThursday(this);
+    var diffWeekThursday = getYearFirstThursday(this.isoWeekYear(), this.$u);
+    return nowWeekThursday.diff(diffWeekThursday, W$2) + 1;
+  };
+  proto2.isoWeekday = function(week) {
+    if (!this.$utils().u(week)) {
+      return this.day(this.day() % 7 ? week : week - 7);
+    }
+    return this.day() || 7;
+  };
+  var oldStartOf = proto2.startOf;
+  proto2.startOf = function(units, startOf) {
+    var utils = this.$utils();
+    var isStartOf = !utils.u(startOf) ? startOf : true;
+    var unit = utils.p(units);
+    if (unit === isoWeekPrettyUnit) {
+      return isStartOf ? this.date(this.date() - (this.isoWeekday() - 1)).startOf("day") : this.date(this.date() - 1 - (this.isoWeekday() - 1) + 7).endOf("day");
+    }
+    return oldStartOf.bind(this)(units, startOf);
+  };
+});
+const isSameOrBefore = (function(o2, c2) {
+  c2.prototype.isSameOrBefore = function(that, units) {
+    return this.isSame(that, units) || this.isBefore(that, units);
+  };
+});
+const isBetween = (function(o2, c2, d2) {
+  c2.prototype.isBetween = function(a2, b2, u3, i2) {
+    var dA = d2(a2);
+    var dB = d2(b2);
+    i2 = i2 || "()";
+    var dAi = i2[0] === "(";
+    var dBi = i2[1] === ")";
+    return (dAi ? this.isAfter(dA, u3) : !this.isBefore(dA, u3)) && (dBi ? this.isBefore(dB, u3) : !this.isAfter(dB, u3)) || (dAi ? this.isBefore(dA, u3) : !this.isAfter(dA, u3)) && (dBi ? this.isAfter(dB, u3) : !this.isBefore(dB, u3));
+  };
+});
+dayjs.extend(quarterOfYear);
+dayjs.extend(weekOfYear);
+dayjs.extend(customParse);
+dayjs.extend(isoWeek);
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isBetween);
+dayjs.locale("zh-cn");
+function normalizeTimelineView(view) {
+  switch (view) {
+    case "年":
+    case "季":
+    case "月":
+    case "周":
+    case "天":
+      return view;
+    // Some parts of the UI may still use "日"; normalize it to "天".
+    case "日":
+      return "天";
+    default:
+      return "天";
+  }
+}
+function isoWeekKey(d2) {
+  return `${d2.isoWeekYear()}-W${String(d2.isoWeek()).padStart(2, "0")}`;
+}
+function isSameIsoWeek(a2, b2) {
+  return isoWeekKey(a2) === isoWeekKey(b2);
+}
+function rangeKeyForView(anchor, view) {
+  switch (view) {
+    case "年":
+      return anchor.format("YYYY");
+    case "季": {
+      return `${anchor.year()}-Q${anchor.quarter()}`;
+    }
+    case "月":
+      return anchor.format("YYYY-MM");
+    case "周": {
+      const isoYear = anchor.isoWeekYear();
+      const isoWeek2 = anchor.isoWeek();
+      return `${isoYear}-W${String(isoWeek2).padStart(2, "0")}`;
+    }
+    case "天":
+    default:
+      return anchor.format("YYYY-MM-DD");
+  }
+}
+function calculateTimelineRange(anchor, view) {
+  let start2;
+  let end2;
+  switch (view) {
+    case "年":
+      start2 = anchor.startOf("year");
+      end2 = anchor.endOf("year");
+      break;
+    case "季":
+      start2 = anchor.startOf("quarter");
+      end2 = anchor.endOf("quarter");
+      break;
+    case "月":
+      start2 = anchor.startOf("month");
+      end2 = anchor.endOf("month");
+      break;
+    case "周":
+      start2 = anchor.startOf("isoWeek");
+      end2 = anchor.endOf("isoWeek");
+      break;
+    case "天":
+    default:
+      start2 = anchor.startOf("day");
+      end2 = anchor.endOf("day");
+      break;
+  }
+  return {
+    view,
+    anchor,
+    start: start2,
+    end: end2,
+    key: rangeKeyForView(anchor, view)
+  };
+}
+function toIsoDateTuple(range) {
+  return [range.start.format("YYYY-MM-DD"), range.end.format("YYYY-MM-DD")];
+}
+const todayISO = () => dayjs().format("YYYY-MM-DD");
+function formatSecondsToHHMMSS(totalSeconds) {
+  if (isNaN(totalSeconds) || totalSeconds < 0) {
+    return "00:00:00";
+  }
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor(totalSeconds % 3600 / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  const pad2 = (num) => String(num).padStart(2, "0");
+  return `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
+}
+const timeToMinutes = (time2) => {
+  if (!time2 || !/^\d{1,2}:\d{2}$/.test(time2)) return null;
+  const [h2, m2] = time2.split(":").map(Number);
+  return h2 * 60 + m2;
+};
+const minutesToTime = (minutes) => {
+  if (isNaN(minutes) || minutes < 0) return "";
+  const h2 = Math.floor(minutes / 60) % 24;
+  const m2 = minutes % 60;
+  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
+};
+function normalizeDateStr(raw) {
+  const s2 = (raw || "").replace(/\//g, "-");
+  const d2 = dayjs(s2, ["YYYY-MM-DD", "YYYY-M-D", "YYYY/MM/DD", "YYYY/M/D"], true);
+  return d2.isValid() ? d2.format("YYYY-MM-DD") : s2;
+}
+const QTXT = ["一", "二", "三", "四"];
+function formatDateForView(d2, v2) {
+  switch (v2) {
+    case "年":
+      return d2.format("YYYY年");
+    case "季":
+      return `${d2.year()}年${QTXT[d2.quarter() - 1]}季度`;
+    case "月":
+      return d2.format("YYYY-MM");
+    case "周": {
+      const isoYear = d2.isoWeekYear();
+      const isoWeekNum = d2.isoWeek();
+      return `${isoYear}年第${isoWeekNum}周`;
+    }
+    default:
+      return d2.format("YYYY-MM-DD");
+  }
+}
+const getWeeksInYear = (year) => {
+  const endOfYear = dayjs().year(year).endOf("year");
+  return endOfYear.isoWeek() === 1 ? 52 : endOfYear.isoWeek();
+};
+function getPeriodCount(period, date2) {
+  if (!date2 || !date2.isValid()) {
+    return void 0;
+  }
+  switch (period) {
+    case "年":
+      return date2.year();
+    case "季":
+      return date2.quarter();
+    case "月":
+      return date2.month() + 1;
+    // dayjs month is 0-indexed
+    case "周":
+      return date2.isoWeek();
+    default:
+      return void 0;
   }
 }
 const DEFAULT_ACTION_META = {
@@ -2319,7 +3283,7 @@ function pushEntry(entry) {
   } catch {
   }
 }
-function emit$1(level, args, source = "devLogger") {
+function emit(level, args, source = "devLogger") {
   if (!shouldLog()) return;
   const entry = makeEntry(level, source, args);
   pushEntry(entry);
@@ -2334,13 +3298,13 @@ function emit$1(level, args, source = "devLogger") {
   }
 }
 function devLog(...args) {
-  emit$1("log", args);
+  emit("log", args);
 }
 function devWarn(...args) {
-  emit$1("warn", args);
+  emit("warn", args);
 }
 function devError(...args) {
-  emit$1("error", args);
+  emit("error", args);
 }
 function devTime(label) {
   if (!shouldLog()) return;
@@ -2422,12 +3386,8271 @@ function logSettingsWrite(meta, before, after) {
   const m2 = normalizeMeta(meta);
   const diff = shallowDiff(before, after);
   const diffInfo = diff.length ? diff.join(", ") : "(no shallow diff)";
-  emit$1("log", [`[SETTINGS_WRITE] action=${m2.action} source=${m2.source} diff=${diffInfo}`], "settings");
+  emit("log", [`[SETTINGS_WRITE] action=${m2.action} source=${m2.source} diff=${diffInfo}`], "settings");
   if (m2.debugStack) {
-    emit$1("trace", ["[SETTINGS_WRITE stack]"], "settings");
+    emit("trace", ["[SETTINGS_WRITE stack]"], "settings");
   }
-  emit$1("log", ["before:", safeStringify(before)], "settings");
-  emit$1("log", ["after :", safeStringify(after)], "settings");
+  emit("log", ["before:", safeStringify(before)], "settings");
+  emit("log", ["after :", safeStringify(after)], "settings");
+}
+const BLOCK_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  view: "BlockView",
+  title: "块视图",
+  collapsed: false,
+  fields: [],
+  group: "recordType"
+};
+const ENERGY_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  windowDays: 7,
+  recentSampleLimit: 5,
+  maxGoals: 3,
+  goalPath: "",
+  showTimeline: true,
+  showContext: true,
+  showEffects: true,
+  analysisWindowDays: 30,
+  showPatterns: true,
+  showManagement: true,
+  currentContext: "any"
+};
+const EISENHOWER_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  showUnclassified: true
+};
+const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  timeField: "date",
+  titleField: "primaryText",
+  contentField: "content",
+  groupByDay: true,
+  showWeekday: true,
+  maxContentLength: 160,
+  fields: ["primaryText", "date"],
+  groupFields: []
+};
+const EXCEL_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  view: "ExcelView",
+  title: "数据表格",
+  collapsed: false,
+  fields: []
+};
+const HEATMAP_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  displayMode: "habit",
+  recordScope: "source",
+  sourceRecordTypeId: "",
+  goalPaths: [],
+  maxDailyChecks: 10,
+  allowManualEdit: true
+};
+const PROGRESS_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  mode: "goal",
+  metric: "recordCount",
+  statusFilter: ["active", "paused"],
+  basePoints: 1,
+  levelStep: 20,
+  includedRecordTypes: [],
+  ratingBonusThreshold: 4,
+  ratingBonusPoints: 1,
+  showGoalBreakdown: true,
+  showRecordTypeBreakdown: true,
+  topN: 5
+};
+const STATISTICS_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  groupBy: "goal",
+  metric: "recordCount",
+  chartType: "bar",
+  goalPath: "",
+  topN: 10,
+  categories: [],
+  displayMode: "smart",
+  minVisibleHeight: 15,
+  usePeriodField: false
+};
+const TABLE_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  view: "TableView",
+  title: "表格视图",
+  collapsed: false,
+  rowField: "recordType",
+  colField: "date"
+};
+const TIMELINE_VIEW_DEFAULT_CONFIG = {
+  dateRole: "default",
+  defaultHourHeight: 50,
+  MAX_HOURS_PER_DAY: 24,
+  UNTRACKED_LABEL: "未记录"
+};
+const BLOCK_EXPORT_DEFAULT_CONFIG = {
+  strategy: "records"
+};
+const TABLE_EXPORT_CONFIG = {
+  strategy: "records"
+};
+const EXCEL_EXPORT_CONFIG = {
+  strategy: "table"
+};
+const TIMELINE_EXPORT_CONFIG = {
+  strategy: "timeline",
+  taskSessionMode: "expanded",
+  taskSessionScope: "range"
+};
+const EVENT_TIMELINE_EXPORT_CONFIG = {
+  strategy: "event-timeline"
+};
+const STATISTICS_EXPORT_CONFIG = {
+  strategy: "statistics"
+};
+const HEATMAP_EXPORT_CONFIG = {
+  strategy: "heatmap"
+};
+const PROGRESS_EXPORT_CONFIG = {
+  strategy: "progress"
+};
+const ENERGY_EXPORT_CONFIG = {
+  strategy: "energy"
+};
+const EISENHOWER_EXPORT_CONFIG = {
+  strategy: "eisenhower"
+};
+const VIEW_DEFINITIONS = {
+  BlockView: {
+    label: "块视图",
+    defaultConfig: BLOCK_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 480, freeformHeight: 340, deferredMinHeight: 420 },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: BLOCK_EXPORT_DEFAULT_CONFIG
+  },
+  TableView: {
+    label: "表格",
+    defaultConfig: TABLE_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 680, freeformHeight: 420, deferredMinHeight: 420 },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: TABLE_EXPORT_CONFIG
+  },
+  ExcelView: {
+    label: "数据表格",
+    defaultConfig: EXCEL_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 760, freeformHeight: 460, deferredMinHeight: 420 },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: EXCEL_EXPORT_CONFIG
+  },
+  TimelineView: {
+    label: "时间轴",
+    defaultConfig: TIMELINE_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 680, freeformHeight: 420, deferredMinHeight: 520 },
+    capabilities: { headerCreate: true, export: true },
+    exportConfig: TIMELINE_EXPORT_CONFIG
+  },
+  StatisticsView: {
+    label: "统计",
+    defaultConfig: STATISTICS_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 440, freeformHeight: 340, deferredMinHeight: 320 },
+    capabilities: { headerCreate: true, export: true },
+    exportConfig: STATISTICS_EXPORT_CONFIG
+  },
+  HeatmapView: {
+    label: "打卡",
+    defaultConfig: HEATMAP_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 520, freeformHeight: 360, deferredMinHeight: 360 },
+    capabilities: { headerCreate: true, export: true },
+    exportConfig: HEATMAP_EXPORT_CONFIG
+  },
+  EventTimelineView: {
+    label: "事件时间线",
+    defaultConfig: EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 680, freeformHeight: 420, deferredMinHeight: 420 },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: EVENT_TIMELINE_EXPORT_CONFIG
+  },
+  ProgressView: {
+    label: "成长",
+    defaultConfig: PROGRESS_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 480, freeformHeight: 360, deferredMinHeight: 360 },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: PROGRESS_EXPORT_CONFIG
+  },
+  EnergyView: {
+    label: "精力",
+    defaultConfig: ENERGY_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 720, freeformHeight: 620, deferredMinHeight: 440 },
+    capabilities: { headerCreate: true, export: true },
+    exportConfig: ENERGY_EXPORT_CONFIG
+  },
+  EisenhowerView: {
+    label: "四象限",
+    defaultConfig: EISENHOWER_VIEW_DEFAULT_CONFIG,
+    layout: { freeformWidth: 760, freeformHeight: 560, deferredMinHeight: 480 },
+    capabilities: { headerCreate: false, export: true },
+    exportConfig: EISENHOWER_EXPORT_CONFIG
+  }
+};
+const VIEW_OPTIONS = Object.freeze(
+  Object.keys(VIEW_DEFINITIONS)
+);
+Object.freeze(
+  Object.fromEntries(
+    VIEW_OPTIONS.map((viewType) => [viewType, VIEW_DEFINITIONS[viewType].defaultConfig])
+  )
+);
+function isRegisteredViewName(value) {
+  return Object.prototype.hasOwnProperty.call(VIEW_DEFINITIONS, value);
+}
+function getViewDefinition(viewType) {
+  if (!isRegisteredViewName(viewType)) return void 0;
+  return VIEW_DEFINITIONS[viewType];
+}
+function getViewLabel(viewType) {
+  const fallback = viewType.replace(/View$/, "") || viewType;
+  return getViewDefinition(viewType)?.label ?? fallback;
+}
+function getViewDefaultConfig(viewType) {
+  return getViewDefinition(viewType)?.defaultConfig;
+}
+function getViewExportConfig(viewType) {
+  return getViewDefinition(viewType)?.exportConfig;
+}
+function viewHasCapability(viewType, capability) {
+  return getViewDefinition(viewType)?.capabilities[capability] === true;
+}
+const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
+function isImageLikeValue(value) {
+  const raw = String(value ?? "").trim();
+  return !!raw && (/^https?:\/\//i.test(raw) || /^!\[\[.+\]\]$/.test(raw) || IMAGE_EXT_RE.test(raw));
+}
+function normalizeImageValue(value) {
+  if (value && typeof value === "object" && "src" in value) {
+    const image = value;
+    const src2 = String(image.src || "").trim();
+    if (!src2) return void 0;
+    return {
+      src: src2,
+      kind: inferImageKind(src2),
+      alt: typeof image.alt === "string" ? image.alt : void 0,
+      caption: typeof image.caption === "string" ? image.caption : void 0
+    };
+  }
+  const raw = String(value ?? "").trim();
+  if (!raw) return void 0;
+  const wikilink = raw.match(/^!\[\[(.+?)\]\]$/);
+  const src = wikilink ? wikilink[1].trim() : raw;
+  return { src, kind: inferImageKind(raw) };
+}
+function inferImageKind(src) {
+  if (/^https?:\/\//i.test(src)) return "url";
+  if (/^!\[\[.+\]\]$/.test(src)) return "wikilink";
+  if (src.includes("/") || IMAGE_EXT_RE.test(src)) return "vault";
+  return "unknown";
+}
+function isImageFieldDefinition(def) {
+  return !!def && (def.valueType === "image" || def.inputType === "image" || def.inputType === "multiImage" || def.semantic === "image");
+}
+const TASK_STATUS_PRESENTATION$1 = {
+  open: { status: "open", label: "未完成", emoji: "⏳", className: "open" },
+  done: { status: "done", label: "已完成", emoji: "✅", className: "done" },
+  cancelled: { status: "cancelled", label: "已取消", emoji: "❌", className: "cancelled" },
+  skipped: { status: "skipped", label: "已跳过", emoji: "⏭️", className: "skipped" }
+};
+function isTaskRecord(item) {
+  return item?.recordType === "task";
+}
+function normalizeTaskStatus(value) {
+  const status = String(value || "").trim().toLowerCase();
+  return status === "open" || status === "done" || status === "cancelled" || status === "skipped" ? status : null;
+}
+function getTaskStatusPresentation(value) {
+  const status = normalizeTaskStatus(value) ?? "open";
+  return TASK_STATUS_PRESENTATION$1[status];
+}
+function getTaskStatus(item) {
+  if (!isTaskRecord(item)) return null;
+  return normalizeTaskStatus(item.status);
+}
+function isTaskCompleted(item) {
+  return getTaskStatus(item) === "done";
+}
+function isTaskOpen(item) {
+  return getTaskStatus(item) === "open";
+}
+function canTransitionTaskStatus(from2, command, options) {
+  if (command === "reopen") return from2 === "done" || from2 === "cancelled" || from2 === "skipped";
+  if (from2 !== "open") return false;
+  if (command === "skip") return options.recurring;
+  if (command === "cancel") return !options.recurring;
+  return command === "complete";
+}
+function nextTaskStatus(command) {
+  if (command === "complete") return "done";
+  if (command === "cancel") return "cancelled";
+  if (command === "skip") return "skipped";
+  return "open";
+}
+const RECORD_SCHEMA_CONTRACT_VERSION = 2;
+function f$3(key, role, persistence, valueType, description, options = {}) {
+  return { key, role, persistence, valueType, description, ...options };
+}
+const ENVELOPE = [
+  f$3("记录ID", "identity", "target", "record-id", "稳定的记录标识；不会根据文件路径或行号推导。", { required: true, aliases: ["recordId", "id"] }),
+  f$3("记录类型", "identity", "target", "enum", "业务记录类型标识。", { required: true, aliases: ["recordType"] })
+];
+const GOAL = [
+  f$3("目标", "canonical-reference", "target", "string", "规范且可读的目标路径；路径本身就是目标标识。", { aliases: ["goalPath"] })
+];
+const DATE = f$3("日期", "business-fact", "target", "date", "记录发生日期或业务日期。", { aliases: ["date"] });
+const CONTENT = f$3("内容", "business-fact", "target", "string", "用户填写的主要记录内容。", { aliases: ["content", "任务内容"] });
+const TAGS = f$3("标签", "business-fact", "target", "tags", "用户填写的标签；为空时省略。", { aliases: ["tags"] });
+const ICON = f$3("图标", "display-snapshot", "target", "string", "历史显示快照；后续规则决定是否可由显示样式替代。", { aliases: ["icon"] });
+const GENERIC_COMMON = [...ENVELOPE, ...GOAL, DATE];
+const THOUGHT_SCHEMA = {
+  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
+  recordType: "thought",
+  displayName: "思考",
+  family: "generic",
+  capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
+  recordFields: [...GENERIC_COMMON, TAGS, ICON, CONTENT]
+};
+const FEELING_SCHEMA = {
+  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
+  recordType: "feeling",
+  displayName: "感受",
+  family: "generic",
+  capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
+  recordFields: [...GENERIC_COMMON, TAGS, ICON, CONTENT]
+};
+const EVENT_SCHEMA = {
+  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
+  recordType: "event",
+  displayName: "事件",
+  family: "generic",
+  capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
+  recordFields: [...GENERIC_COMMON, TAGS, ICON, CONTENT]
+};
+const HABIT_SCHEMA = {
+  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
+  recordType: "habit",
+  displayName: "打卡",
+  family: "generic",
+  capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
+  recordFields: [
+    ...GENERIC_COMMON,
+    f$3("评分", "business-fact", "target", "number", "习惯打卡的评分或数值。", { aliases: ["rating"] }),
+    f$3("图片", "business-fact", "target", "string", "规范的图片或评分展示值。", { aliases: ["image"] }),
+    CONTENT
+  ]
+};
+function periodRecord(recordType, displayName) {
+  return {
+    contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
+    recordType,
+    displayName,
+    family: "generic",
+    capabilities: { userVisible: true, goalBindable: true, dated: true, periodAware: true, customFields: true },
+    recordFields: [
+      ...GENERIC_COMMON,
+      f$3("周期粒度", "business-fact", "target", "enum", "唯一持久化的周期事实；周期标识和名称由“日期 + 周期粒度”推导。", { aliases: ["periodGranularity"], allowedValues: ["week", "month", "quarter", "year"] }),
+      ICON,
+      CONTENT
+    ]
+  };
+}
+const PLAN_SCHEMA = periodRecord("plan", "计划");
+const REVIEW_SCHEMA = periodRecord("review", "总结");
+function simpleGoalRecord(recordType, displayName) {
+  return {
+    contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
+    recordType,
+    displayName,
+    family: "generic",
+    capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
+    recordFields: [...GENERIC_COMMON, ICON, CONTENT]
+  };
+}
+const BLOCKER_SCHEMA = simpleGoalRecord("blocker", "阻碍");
+const MILESTONE_SCHEMA = simpleGoalRecord("milestone", "里程碑");
+const TASK_DEMAND_FIELDS = [
+  f$3("优先级", "domain-fact", "target", "enum", "用户设置的任务优先级。", { aliases: ["priority"], allowedValues: ["lowest", "low", "medium", "high", "highest"] }),
+  f$3("重要程度", "domain-fact", "target", "enum", "艾森豪威尔重要程度分类；缺失表示未分类。", { aliases: ["importance"], allowedValues: ["important", "normal"] }),
+  f$3("紧急程度", "domain-fact", "target", "enum", "艾森豪威尔紧急程度分类；缺失表示未分类。", { aliases: ["urgency"], allowedValues: ["urgent", "normal"] }),
+  f$3("预计时长", "domain-fact", "target", "number", "用户设置的预计时长（分钟）。手工任务时间段缺少结束时间时可用它补全；多段计时历史仍以任务计时记录为准。", { aliases: ["expectedDurationMinutes"] }),
+  f$3("精力要求", "domain-fact", "target", "enum", "设置的综合精力要求。", { aliases: ["energyDemand"], allowedValues: ["low", "medium", "high"] }),
+  f$3("脑力要求", "domain-fact", "target", "enum", "设置的脑力要求。", { aliases: ["brainDemand"], allowedValues: ["low", "medium", "high"] }),
+  f$3("体力要求", "domain-fact", "target", "enum", "设置的体力要求。", { aliases: ["physicalDemand"], allowedValues: ["low", "medium", "high"] }),
+  f$3("可用场景", "domain-fact", "target", "string", "任务实际可执行的场景；为空或“任意”表示不限制。", { aliases: ["availabilityContexts"] }),
+  f$3("恢复意图", "domain-fact", "omit-default", "boolean", "任务明确以恢复精力为目的时启用。", { aliases: ["recoveryIntent"], defaultValue: false })
+];
+const TASK_SCHEMA = {
+  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
+  recordType: "task",
+  displayName: "任务",
+  family: "task-domain",
+  capabilities: { userVisible: true, goalBindable: true, dated: true, statusful: true, customFields: true },
+  recordFields: [
+    ...ENVELOPE,
+    f$3("状态", "domain-fact", "target", "enum", "任务生命周期状态。", { required: true, aliases: ["status"], allowedValues: ["open", "done", "cancelled", "skipped"] }),
+    f$3("创建于", "domain-fact", "target", "datetime", "任务创建时间。", { aliases: ["createdAt"] }),
+    ...GOAL,
+    f$3("系列ID", "canonical-reference", "target", "record-id", "可选的任务系列引用。", { aliases: ["seriesId"] }),
+    f$3("计划时间", "domain-fact", "target", "datetime", "计划执行时间。", { aliases: ["scheduledAt"] }),
+    f$3("开始时间", "domain-fact", "target", "datetime", "旧版或手工任务时间段的开始时间。新计划使用计划时间；实际执行使用任务计时记录。", { aliases: ["startAt"] }),
+    f$3("结束时间", "domain-fact", "target", "datetime", "旧版或手工任务时间段的结束时间。为兼容保留；实际执行使用任务计时记录。", { aliases: ["endAt"] }),
+    f$3("截止时间", "domain-fact", "target", "datetime", "截止时间。", { aliases: ["dueAt"] }),
+    f$3("计划日期", "domain-fact", "target", "date", "当前记录使用的仅日期计划执行信息。", { aliases: ["scheduledDate"] }),
+    f$3("开始日期", "domain-fact", "target", "date", "当前记录使用的仅日期开始信息。", { aliases: ["startDate"] }),
+    f$3("截止日期", "domain-fact", "target", "date", "当前记录使用的仅日期截止信息。", { aliases: ["dueDate"] }),
+    f$3("完成于", "domain-fact", "target", "datetime", "任务完成时间或日期。", { aliases: ["completedAt"] }),
+    f$3("取消于", "domain-fact", "target", "datetime", "任务取消时间或日期。", { aliases: ["cancelledAt"] }),
+    f$3("跳过于", "domain-fact", "target", "datetime", "重复任务本次跳过的时间或日期。", { aliases: ["skippedAt"] }),
+    ...TASK_DEMAND_FIELDS,
+    f$3("内容", "domain-fact", "target", "string", "任务意图或内容。", { aliases: ["content", "任务内容"] })
+  ]
+};
+const TASK_SERIES_SCHEMA = {
+  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
+  recordType: "task-series",
+  displayName: "任务系列",
+  family: "task-domain",
+  capabilities: { userVisible: false, goalBindable: true, dated: true, statusful: true },
+  recordFields: [
+    ...ENVELOPE,
+    f$3("状态", "domain-fact", "target", "enum", "任务系列生命周期状态。", { required: true, aliases: ["status"], allowedValues: ["active", "stopped"] }),
+    ...GOAL,
+    ...TASK_DEMAND_FIELDS,
+    f$3("重复单位", "domain-fact", "target", "enum", "结构化重复单位。", { required: true, aliases: ["recurrenceUnit"], allowedValues: ["day", "week", "month", "quarter", "year"] }),
+    f$3("重复间隔", "domain-fact", "target", "number", "结构化重复间隔。", { required: true, aliases: ["recurrenceInterval"], defaultValue: 1 }),
+    f$3("重复锚点", "domain-fact", "target", "enum", "结构化重复锚点。", { required: true, aliases: ["recurrenceAnchor"], allowedValues: ["scheduled", "start", "due", "completion"], defaultValue: "scheduled" }),
+    f$3("系列开始日期", "domain-fact", "target", "date", "系列锚点或开始日期。", { aliases: ["seriesStartDate"] }),
+    f$3("当前任务ID", "canonical-reference", "target", "record-id", "当前活动任务引用。", { aliases: ["currentTaskId"] }),
+    f$3("滚动策略", "domain-fact", "omit-default", "enum", "滚动策略；当前仅支持并默认使用延续策略。", { aliases: ["rolloverPolicy"], allowedValues: ["carry"], defaultValue: "carry" }),
+    f$3("内容", "domain-fact", "target", "string", "长期重复任务定义。", { aliases: ["content"] })
+  ]
+};
+const TASK_SESSION_SCHEMA = {
+  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
+  recordType: "task-session",
+  displayName: "任务工作块",
+  family: "internal-history",
+  capabilities: { userVisible: false, goalBindable: true, dated: true, executionHistory: true },
+  recordFields: [
+    ...ENVELOPE,
+    f$3("任务ID", "canonical-reference", "target", "record-id", "已执行任务的引用。", { required: true, aliases: ["taskId"] }),
+    f$3("系列ID", "canonical-reference", "target", "record-id", "可选的任务系列引用。", { aliases: ["seriesId"] }),
+    ...GOAL,
+    f$3("开始于", "domain-fact", "target", "datetime", "本次实际执行开始时间。", { required: true, aliases: ["sessionStartedAt"] }),
+    f$3("结束于", "domain-fact", "target", "datetime", "本次实际执行结束时间。", { required: true, aliases: ["sessionEndedAt"] }),
+    f$3("时长", "domain-fact", "target", "number", "本次实际执行时长（分钟）。", { required: true, aliases: ["sessionDurationMinutes"] }),
+    f$3("结果", "domain-fact", "target", "enum", "本次执行结果。", { required: true, aliases: ["sessionResult"], allowedValues: ["work-block-ended", "task-completed"] }),
+    f$3("来源", "measurement-provenance", "target", "enum", "实际执行记录来源。", { required: true, aliases: ["sessionSource"], allowedValues: ["timer", "energy-view", "timeline", "unknown"] }),
+    f$3("建议时长", "domain-fact", "target", "number", "执行时的建议时长快照。", { aliases: ["suggestedDurationMinutes"] }),
+    f$3("开始精力记录ID", "canonical-reference", "target", "record-id", "执行开始时的精力快照。", { aliases: ["startEnergyRecordId"] }),
+    f$3("结束精力记录ID", "canonical-reference", "target", "record-id", "执行结束后关联的精力快照。", { aliases: ["endEnergyRecordId"] }),
+    f$3("精力变化", "domain-fact", "target", "number", "关联的综合精力变化。", { aliases: ["energyDelta"] }),
+    f$3("脑力变化", "domain-fact", "target", "number", "关联的脑力变化。", { aliases: ["brainDelta"] }),
+    f$3("体力变化", "domain-fact", "target", "number", "关联的体力变化。", { aliases: ["physicalDelta"] })
+  ]
+};
+const ENERGY_SCHEMA = {
+  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
+  recordType: "energy",
+  displayName: "精力",
+  family: "energy-domain",
+  capabilities: { userVisible: true, goalBindable: true, dated: true, subtypeAware: true, customFields: true },
+  recordFields: [
+    ...ENVELOPE,
+    f$3("记录子类型", "domain-fact", "target", "enum", "精力记录子类型。", { required: true, aliases: ["recordSubtype"], allowedValues: ["snapshot", "change", "recovery", "depletion", "stop"] }),
+    ...GOAL,
+    DATE,
+    f$3("时间", "business-fact", "target", "string", "已知时使用的精力观测时间。", { aliases: ["time"] }),
+    f$3("时段", "business-fact", "target", "string", "无法确定准确时间时使用的精力观测时段。", { aliases: ["period"] }),
+    f$3("精力值", "domain-fact", "target", "number", "规范的 0–100 综合精力分数。", { aliases: ["score"] }),
+    f$3("脑力精力", "domain-fact", "target", "number", "详细脑力分数。", { aliases: ["brainScore"] }),
+    f$3("体力精力", "domain-fact", "target", "number", "详细体力分数。", { aliases: ["physicalScore"] }),
+    f$3("综合算法", "measurement-provenance", "target", "string", "详细分数的综合算法。", { aliases: ["aggregateMethod"] }),
+    f$3("评分模式", "measurement-provenance", "target", "enum", "精力分数的记录方式。", { aliases: ["scoreMode"], allowedValues: ["quick", "detailed", "percent"] }),
+    f$3("记录方式", "measurement-provenance", "target", "enum", "实时记录或回顾补记。", { aliases: ["captureMode"], allowedValues: ["realtime", "retrospective"] }),
+    f$3("时间精度", "measurement-provenance", "target", "enum", "观测时间精度。", { aliases: ["timePrecision"], allowedValues: ["exact", "approximate", "period", "day"] }),
+    f$3("记录时间", "measurement-provenance", "target", "datetime", "可用时记录实际录入时间。", { aliases: ["recordedAt"] }),
+    f$3("来源", "measurement-provenance", "target", "string", "记录入口或来源。", { aliases: ["source"] })
+  ]
+};
+const RECORD_TYPE_IDS = {
+  TASK: "core.task",
+  PLAN: "core.plan",
+  REVIEW: "core.review",
+  THOUGHT: "core.thought",
+  FEELING: "core.feeling",
+  HABIT: "core.habit",
+  EVENT: "core.event",
+  BLOCKER: "core.blocker",
+  MILESTONE: "core.milestone",
+  ENERGY: "core.energy",
+  TASK_SERIES: "internal.task-series",
+  TASK_SESSION: "internal.task-session"
+};
+const dateField = { id: "core.field.date", key: "日期", label: "日期", type: "date", semantic: "date" };
+const iconField = { id: "core.field.icon", key: "icon", label: "图标", type: "text", semantic: "icon" };
+const contentField = { id: "core.field.content", key: "内容", label: "内容", type: "textarea", semantic: "body" };
+function define(contract, capture) {
+  return {
+    ...contract,
+    ...capture,
+    key: contract.recordType,
+    system: true,
+    version: 1
+  };
+}
+const TASK_FIELDS = [
+  { id: "core.task.status", key: "status", label: "状态", type: "singleSelect", semantic: "status", defaultValue: "open", autoSelectFirst: true, options: [
+    { value: "open", label: `${TASK_STATUS_PRESENTATION$1.open.emoji} ${TASK_STATUS_PRESENTATION$1.open.label}` },
+    { value: "done", label: `${TASK_STATUS_PRESENTATION$1.done.emoji} ${TASK_STATUS_PRESENTATION$1.done.label}` }
+  ] },
+  { id: "core.task.content", key: "任务内容", label: "内容", type: "text", semantic: "body" },
+  { id: "core.task.recurrenceUnit", key: "recurrenceUnit", label: "重复", type: "singleSelect", semantic: "recurrence", defaultValue: "none", autoSelectFirst: true, options: [
+    { value: "none", label: "不重复" },
+    { value: "day", label: "天" },
+    { value: "week", label: "周" },
+    { value: "month", label: "月" },
+    { value: "quarter", label: "季" },
+    { value: "year", label: "年" }
+  ] },
+  { id: "core.task.recurrenceInterval", key: "recurrenceInterval", label: "重复间隔", type: "number", min: 1, defaultValue: "1" },
+  // Task owns planning facts. Actual execution intervals belong to TaskSession;
+  // Timeline retrospective capture synthesizes its own execution-time fields.
+  { id: "core.task.scheduledAt", key: "scheduledAt", label: "计划时间", type: "datetime", semantic: "startTime" },
+  { id: "core.task.expectedDurationMinutes", key: "expectedDurationMinutes", label: "预计时长（分钟）", type: "number", semantic: "duration", min: 1 },
+  { id: "core.task.dueAt", key: "dueAt", label: "截止时间", type: "datetime" },
+  { id: "core.task.priority", key: "priority", label: "优先级", type: "singleSelect", autoSelectFirst: true, options: [
+    { value: "lowest", label: "最低" },
+    { value: "low", label: "低" },
+    { value: "medium", label: "中" },
+    { value: "high", label: "高" },
+    { value: "highest", label: "最高" }
+  ] },
+  { id: "core.task.importance", key: "importance", label: "重要程度", type: "singleSelect", options: [
+    { value: "important", label: "重要" },
+    { value: "normal", label: "普通" }
+  ] },
+  { id: "core.task.urgency", key: "urgency", label: "紧急程度", type: "singleSelect", options: [
+    { value: "urgent", label: "紧急" },
+    { value: "normal", label: "不紧急" }
+  ] },
+  { id: "core.task.energyDemand", key: "energyDemand", label: "精力要求", type: "singleSelect", autoSelectFirst: true, options: [
+    { value: "low", label: "低" },
+    { value: "medium", label: "中" },
+    { value: "high", label: "高" }
+  ] },
+  { id: "core.task.brainDemand", key: "brainDemand", label: "脑力要求", type: "singleSelect", autoSelectFirst: true, options: [
+    { value: "low", label: "低" },
+    { value: "medium", label: "中" },
+    { value: "high", label: "高" }
+  ] },
+  { id: "core.task.physicalDemand", key: "physicalDemand", label: "体力要求", type: "singleSelect", autoSelectFirst: true, options: [
+    { value: "low", label: "低" },
+    { value: "medium", label: "中" },
+    { value: "high", label: "高" }
+  ] },
+  { id: "core.task.availabilityContexts", key: "availabilityContexts", label: "可用场景", type: "multiSelect", options: [
+    { value: "any", label: "任意" },
+    { value: "work", label: "工作" },
+    { value: "home", label: "家" },
+    { value: "commute", label: "通勤" },
+    { value: "out", label: "外出" }
+  ] },
+  { id: "core.task.recoveryIntent", key: "recoveryIntent", label: "恢复意图", type: "boolean" }
+];
+const TASK_DEFINITION = define(TASK_SCHEMA, {
+  id: RECORD_TYPE_IDS.TASK,
+  name: "任务",
+  captureMode: "template",
+  recordTypeId: RECORD_TYPE_IDS.TASK,
+  description: "目标下的可执行任务。",
+  fields: TASK_FIELDS,
+  targetFile: "01/{{year}}/2-0其他.md",
+  appendUnderHeader: "## {{goalPath}}"
+});
+function genericTemplate(contract, input) {
+  return define(contract, {
+    id: input.id,
+    name: input.name,
+    captureMode: "template",
+    recordTypeId: input.id,
+    description: input.description,
+    fields: [contentField, dateField, ...input.extraFields || [], iconField],
+    periodPolicy: input.period ? { enabled: true, granularity: "week" } : void 0,
+    targetFile: input.targetFile,
+    appendUnderHeader: "## {{goalPath}}"
+  });
+}
+const PLAN_DEFINITION = genericTemplate(PLAN_SCHEMA, { id: RECORD_TYPE_IDS.PLAN, name: "计划", description: "目标周期计划。", targetFile: "01/{{year}}/计划.md", period: true });
+const REVIEW_DEFINITION = genericTemplate(REVIEW_SCHEMA, { id: RECORD_TYPE_IDS.REVIEW, name: "总结", description: "目标复盘总结。", targetFile: "01/{{year}}/总结.md", period: true });
+const THOUGHT_DEFINITION = genericTemplate(THOUGHT_SCHEMA, { id: RECORD_TYPE_IDS.THOUGHT, name: "思考", description: "目标相关思考。", targetFile: "01/{{year}}/闪念.md" });
+const FEELING_DEFINITION = genericTemplate(FEELING_SCHEMA, { id: RECORD_TYPE_IDS.FEELING, name: "感受", description: "目标相关的主观感受与体验。", targetFile: "01/{{year}}/闪念.md" });
+const HABIT_DEFINITION = genericTemplate(HABIT_SCHEMA, {
+  id: RECORD_TYPE_IDS.HABIT,
+  name: "打卡",
+  description: "目标习惯或进度打卡。",
+  targetFile: "01/{{year}}/打卡.md",
+  extraFields: [{ id: "core.habit.rating", key: "评分", label: "评分", type: "rating", semantic: "rating" }]
+});
+const EVENT_DEFINITION = genericTemplate(EVENT_SCHEMA, { id: RECORD_TYPE_IDS.EVENT, name: "事件", description: "目标相关事件与外部事实。", targetFile: "01/{{year}}/闪念.md" });
+const BLOCKER_DEFINITION = genericTemplate(BLOCKER_SCHEMA, { id: RECORD_TYPE_IDS.BLOCKER, name: "阻碍项", description: "目标推进过程中的阻碍和风险。", targetFile: "01/{{year}}/阻碍项.md" });
+const MILESTONE_DEFINITION = genericTemplate(MILESTONE_SCHEMA, { id: RECORD_TYPE_IDS.MILESTONE, name: "里程碑", description: "目标阶段成果和重要节点。", targetFile: "01/{{year}}/里程碑.md" });
+const ENERGY_DEFINITION = define(ENERGY_SCHEMA, {
+  id: RECORD_TYPE_IDS.ENERGY,
+  name: "精力",
+  captureMode: "direct",
+  description: "目标绑定的精力状态记录；不创建目标模板，使用直接采集协议。",
+  fields: [],
+  targetFile: "01/{{year}}/精力.md",
+  appendUnderHeader: "## {{goalPath}}"
+});
+const TASK_SERIES_DEFINITION = define(TASK_SERIES_SCHEMA, {
+  id: RECORD_TYPE_IDS.TASK_SERIES,
+  name: "任务系列",
+  captureMode: "internal",
+  description: "循环任务的长期领域定义。",
+  fields: [],
+  targetFile: ""
+});
+const TASK_SESSION_DEFINITION = define(TASK_SESSION_SCHEMA, {
+  id: RECORD_TYPE_IDS.TASK_SESSION,
+  name: "任务工作块",
+  captureMode: "internal",
+  description: "一次已发生的任务执行事实。",
+  fields: [],
+  targetFile: ""
+});
+const RECORD_SCHEMA_DEFINITIONS = [
+  TASK_DEFINITION,
+  HABIT_DEFINITION,
+  PLAN_DEFINITION,
+  REVIEW_DEFINITION,
+  THOUGHT_DEFINITION,
+  FEELING_DEFINITION,
+  EVENT_DEFINITION,
+  BLOCKER_DEFINITION,
+  MILESTONE_DEFINITION,
+  ENERGY_DEFINITION,
+  TASK_SERIES_DEFINITION,
+  TASK_SESSION_DEFINITION
+];
+function normalizeKey(value) {
+  return String(value ?? "").trim().toLocaleLowerCase();
+}
+const BY_RECORD_TYPE = new Map(
+  RECORD_SCHEMA_DEFINITIONS.map((schema) => [schema.recordType, schema])
+);
+const BY_TYPE_ID = new Map(
+  RECORD_SCHEMA_DEFINITIONS.map((schema) => [schema.id, schema])
+);
+const FIELD_INDEX = /* @__PURE__ */ new Map();
+for (const schema of RECORD_SCHEMA_DEFINITIONS) {
+  const index = /* @__PURE__ */ new Map();
+  for (const field of schema.recordFields) {
+    index.set(normalizeKey(field.key), field);
+    for (const alias of field.aliases || []) index.set(normalizeKey(alias), field);
+  }
+  FIELD_INDEX.set(schema.recordType, index);
+}
+function getRecordSchemaDefinition(recordType) {
+  const key = String(recordType || "").trim();
+  return BY_RECORD_TYPE.get(key) || null;
+}
+function requireRecordSchemaDefinition(recordType) {
+  const schema = getRecordSchemaDefinition(recordType);
+  if (!schema) throw new Error(`unknown_record_schema:${String(recordType || "")}`);
+  return schema;
+}
+function getRecordSchemaDefinitionById(typeId) {
+  return BY_TYPE_ID.get(String(typeId || "").trim()) || null;
+}
+function getRecordFieldContract(recordType, fieldKey) {
+  const schema = getRecordSchemaDefinition(recordType);
+  if (!schema) return null;
+  return FIELD_INDEX.get(schema.recordType)?.get(normalizeKey(fieldKey)) || null;
+}
+const FIELD_CATEGORY_LABELS = {
+  core: "核心字段",
+  file: "文件字段",
+  custom: "自定义字段"
+};
+const FIELD_CATEGORY_ORDER = ["core", "file", "custom"];
+const text$4 = (partial2) => ({
+  valueType: "string",
+  ...partial2
+});
+const FIELD_REGISTRY = {
+  // --- 核心字段 ---
+  id: text$4({ key: "id", label: "记录标识", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
+  title: text$4({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录的真实标题；为空时保持为空，不承担类型特定兜底。" }),
+  primaryText: text$4({ key: "primaryText", label: "主显示值", category: "core", source: "derived", semantic: "title", description: "按记录类型派生的主要识别值；只用于展示，不写回标题或笔记文档。" }),
+  content: text$4({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文；任务与其他记录统一为用户正文，不包含存储层元数据" }),
+  editableText: text$4({ key: "editableText", label: "可编辑正文", category: "core", source: "item", semantic: "body", inputType: "textarea", hiddenByDefault: true, description: "编辑态正文真源" }),
+  rawSource: text$4({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
+  fullData: text$4({ key: "fullData", label: "完整数据", category: "core", source: "derived", semantic: "body", inputType: "textarea", aliases: ["完整数据", "原始数据", "源数据", "完整源文本", "原始源文本", "rawsource", "rawData", "sourceText", "fullData", "originalData"], description: "原始完整记录块，仅用于调试或导出，不作为业务语义真源。" }),
+  // --- 内置核心业务字段 ---
+  tags: { key: "tags", label: "标签", valueType: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "tags", cardinality: "multi", hierarchical: true, aliases: ["标签", "tags"], description: "多值层级标签，例如 项目/插件、地点/家", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
+  goalPath: text$4({ key: "goalPath", label: "目标", valueType: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "goalPath", hierarchical: true, aliases: ["目标", "目标路径", "goalPath"], description: "单值目标路径；目标是独立实体，不使用标签语义。" }),
+  rootGoal: text$4({ key: "rootGoal", label: "根目标", valueType: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["根目标"] }),
+  leafGoal: text$4({ key: "leafGoal", label: "叶目标", valueType: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["叶目标"] }),
+  cycleId: text$4({ key: "cycleId", label: "周期标识", category: "core", source: "item", semantic: "cycleId", inputType: "text", aliases: ["周期ID", "cycleId"] }),
+  "period.id": text$4({ key: "period.id", label: "周期标识", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期ID", "periodId"] }),
+  "period.label": text$4({ key: "period.label", label: "周期", category: "core", source: "derived", semantic: "period", inputType: "text", aliases: ["周期", "periodLabel"] }),
+  "period.granularity": text$4({ key: "period.granularity", label: "周期粒度", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期粒度", "periodGranularity"] }),
+  recordType: text$4({
+    key: "recordType",
+    label: "记录类型",
+    category: "core",
+    source: "item",
+    semantic: "recordType",
+    inputType: "singleSelect",
+    options: RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.capabilities.userVisible).map((definition) => ({ value: definition.recordType, label: definition.name || definition.displayName || definition.recordType })),
+    aliases: ["记录类型", "recordType"],
+    formatter: (value) => {
+      const raw = String(value ?? "").trim();
+      if (!raw) return "";
+      const canonical = raw.replace(/^(?:core|internal)\./, "");
+      const recordType = getRecordSchemaDefinition(canonical);
+      return recordType?.name || recordType?.displayName || raw;
+    }
+  }),
+  recordSubtype: text$4({ key: "recordSubtype", label: "记录子类型", category: "core", source: "item", semantic: "recordSubtype", inputType: "singleSelect", aliases: ["记录子类型", "recordSubtype"], description: "领域内部子类型；当前由精力记录使用。" }),
+  status: text$4({ key: "status", label: "状态", category: "core", source: "item", semantic: "status", inputType: "singleSelect", aliases: ["状态", "status"], description: "实体显式状态；任务使用未完成、已完成、已取消、已跳过四种状态。" }),
+  cadence: text$4({ key: "cadence", label: "任务周期", category: "core", source: "derived", semantic: "recurrence", inputType: "singleSelect", aliases: ["任务周期", "cadence"], description: "由任务系列的结构化重复规则派生：日常、每日、每周、每月、每季度、每年。" }),
+  date: { key: "date", label: "日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["日期", "date"], description: "记录的主要日期" },
+  priority: text$4({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
+  importance: text$4({ key: "importance", label: "重要程度", category: "core", source: "item", semantic: "none", inputType: "singleSelect", aliases: ["重要程度", "importance"], options: [
+    { value: "important", label: "重要" },
+    { value: "normal", label: "普通" }
+  ] }),
+  urgency: text$4({ key: "urgency", label: "紧急程度", category: "core", source: "item", semantic: "none", inputType: "singleSelect", aliases: ["紧急程度", "urgency"], options: [
+    { value: "urgent", label: "紧急" },
+    { value: "normal", label: "不紧急" }
+  ] }),
+  icon: { key: "icon", label: "图标", valueType: "icon", inputType: "text", category: "core", source: "item", semantic: "icon" },
+  recurrence: text$4({ key: "recurrence", label: "重复规则", category: "core", source: "derived", semantic: "recurrence", description: "任务系列结构化重复规则的只读展示结果。" }),
+  period: text$4({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
+  startTime: { key: "startTime", label: "开始时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "startTime", aliases: ["时间", "time", "start"] },
+  endTime: { key: "endTime", label: "结束时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "endTime", aliases: ["结束", "end"] },
+  expectedDurationMinutes: { key: "expectedDurationMinutes", label: "预计时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["预计时长", "expectedDurationMinutes"], description: "任务的用户声明时长；可与开始时间组成手工时间段，存在任务计时记录时仍优先使用计时历史。" },
+  scheduledAt: { key: "scheduledAt", label: "计划时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["计划时间", "scheduledAt"] },
+  startAt: { key: "startAt", label: "开始时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["开始时间", "startAt"] },
+  endAt: { key: "endAt", label: "结束时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["结束时间", "endAt"] },
+  dueAt: { key: "dueAt", label: "截止时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["截止时间", "dueAt"] },
+  scheduledDate: { key: "scheduledDate", label: "计划日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["计划日期", "scheduledDate"] },
+  startDate: { key: "startDate", label: "开始日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["开始日期", "startDate"] },
+  dueDate: { key: "dueDate", label: "截止日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["截止日期", "dueDate"] },
+  completedAt: text$4({ key: "completedAt", label: "完成时间", category: "core", source: "item", semantic: "date", aliases: ["完成于", "completedAt"] }),
+  createdAt: text$4({ key: "createdAt", label: "创建时间", category: "core", source: "item", semantic: "date", aliases: ["创建于", "createdAt"], hiddenByDefault: true }),
+  energyDemand: text$4({ key: "energyDemand", label: "精力要求", category: "core", source: "item", semantic: "none", aliases: ["精力要求", "energyDemand"] }),
+  brainDemand: text$4({ key: "brainDemand", label: "脑力要求", category: "core", source: "item", semantic: "none", aliases: ["脑力要求", "brainDemand"] }),
+  physicalDemand: text$4({ key: "physicalDemand", label: "体力要求", category: "core", source: "item", semantic: "none", aliases: ["体力要求", "physicalDemand"] }),
+  availabilityContexts: { key: "availabilityContexts", label: "可用场景", valueType: "tags", inputType: "multiSelect", category: "core", source: "item", semantic: "none", cardinality: "multi", aliases: ["可用场景", "availabilityContexts"], options: [
+    { value: "any", label: "任意" },
+    { value: "work", label: "工作" },
+    { value: "home", label: "家" },
+    { value: "commute", label: "通勤" },
+    { value: "out", label: "外出" }
+  ], description: "任务实际可执行的场景；留空或任意表示不限制。" },
+  recoveryIntent: { key: "recoveryIntent", label: "恢复意图", valueType: "boolean", inputType: "boolean", category: "core", source: "item", semantic: "none", aliases: ["恢复意图", "recoveryIntent"], description: "标记散步、休息等主动恢复类任务。" },
+  duration: { key: "duration", label: "时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"], hiddenByDefault: true, description: "通用视图时长结果；任务声明时长使用预计时长字段，多段执行时长来自任务计时记录。" },
+  rating: { key: "rating", label: "评分", valueType: "number", inputType: "rating", category: "core", source: "item", semantic: "rating", aliases: ["评分", "rating"] },
+  image: { key: "image", label: "图片", valueType: "image", inputType: "image", category: "core", source: "item", semantic: "image", aliases: ["图片", "image"], description: "通用图片字段" },
+  // --- 分类派生 ---
+  // --- 文件字段 ---
+  "file.path": text$4({ key: "file.path", label: "文件路径", category: "file", source: "file", semantic: "filePath", aliases: ["文件路径", "filepath", "filePath", "path"] }),
+  "file.basename": text$4({ key: "file.basename", label: "文件名", category: "file", source: "file", semantic: "fileName", aliases: ["文件名", "filename", "basename"] }),
+  "file.name": text$4({ key: "file.name", label: "文件名", category: "file", source: "file", semantic: "fileName", hiddenByDefault: true }),
+  "file.folder": text$4({ key: "file.folder", label: "文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["文件夹"] }),
+  folder: text$4({ key: "folder", label: "父文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["父文件夹"] }),
+  header: text$4({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "笔记文档所在章节，只表示文件位置，不参与目标归属" }),
+  // --- 时间/统计派生 ---
+  startISO: { key: "startISO", label: "开始日期", valueType: "date", category: "core", source: "derived", semantic: "date" },
+  endISO: { key: "endISO", label: "结束日期", valueType: "date", category: "core", source: "derived", semantic: "date" },
+  periodCount: { key: "periodCount", label: "粒度序号", valueType: "number", category: "core", source: "derived", semantic: "period" },
+  displayCount: { key: "displayCount", label: "显示次数", valueType: "number", category: "core", source: "item" },
+  levelCount: { key: "levelCount", label: "等级次数", valueType: "number", category: "core", source: "item" },
+  countForLevel: { key: "countForLevel", label: "计入等级", valueType: "boolean", category: "core", source: "item" },
+  manuallyEdited: { key: "manuallyEdited", label: "手动编辑", valueType: "boolean", category: "core", source: "item" }
+};
+const VIEW_FIELD_PICKER_KEYS = /* @__PURE__ */ new Set([
+  "title",
+  "primaryText",
+  "content",
+  "tags",
+  "goalPath",
+  "rootGoal",
+  "leafGoal",
+  "recordType",
+  "recordSubtype",
+  "status",
+  "cadence",
+  "date",
+  "scheduledAt",
+  "startAt",
+  "endAt",
+  "dueAt",
+  "scheduledDate",
+  "startDate",
+  "dueDate",
+  "completedAt",
+  "priority",
+  "importance",
+  "urgency",
+  "expectedDurationMinutes",
+  "energyDemand",
+  "brainDemand",
+  "physicalDemand",
+  "availabilityContexts",
+  "recoveryIntent",
+  "rating",
+  "image",
+  "icon",
+  "period.label",
+  "recurrence",
+  "file.path",
+  "file.basename",
+  "file.folder",
+  "header"
+]);
+const FIELD_PICKER_KEY_ORDER = new Map(
+  Array.from(VIEW_FIELD_PICKER_KEYS).map((key, index) => [String(key), index])
+);
+function getFieldPickerKeyRank(key) {
+  return FIELD_PICKER_KEY_ORDER.get(key) ?? Number.MAX_SAFE_INTEGER;
+}
+function compareFieldDefinitionsForPicker(a2, b2) {
+  const aCategory = FIELD_CATEGORY_ORDER.includes(a2.category) ? a2.category : "custom";
+  const bCategory = FIELD_CATEGORY_ORDER.includes(b2.category) ? b2.category : "custom";
+  const byCategory = FIELD_CATEGORY_ORDER.indexOf(aCategory) - FIELD_CATEGORY_ORDER.indexOf(bCategory);
+  if (byCategory !== 0) return byCategory;
+  const byRank = getFieldPickerKeyRank(a2.key) - getFieldPickerKeyRank(b2.key);
+  if (byRank !== 0 && Number.isFinite(byRank)) return byRank;
+  return a2.label.localeCompare(b2.label, "zh-CN");
+}
+const HIDDEN_EXTRA_ALIAS_KEYS = [
+  "正文",
+  "内容",
+  "任务内容",
+  "记录内容",
+  "editableText"
+];
+const HIDDEN_EXTRA_ALIAS_SET$1 = new Set(HIDDEN_EXTRA_ALIAS_KEYS);
+function isVisibleExtraField(_item, key) {
+  return !HIDDEN_EXTRA_ALIAS_SET$1.has(key);
+}
+function inferExtraFieldType(value) {
+  if (typeof value === "number") return "number";
+  if (typeof value === "boolean") return "boolean";
+  if (isImageLikeValue(value)) return "image";
+  return "string";
+}
+function getAvailableFields(items) {
+  const allFields = /* @__PURE__ */ new Map();
+  const registeredLabels = /* @__PURE__ */ new Set();
+  Object.values(FIELD_REGISTRY).forEach((def) => {
+    registeredLabels.add(def.label);
+    registeredLabels.add(def.key);
+    (def.aliases || []).forEach((alias) => registeredLabels.add(alias));
+    if (def.hiddenByDefault || !VIEW_FIELD_PICKER_KEYS.has(def.key)) return;
+    allFields.set(def.key, def);
+  });
+  items.forEach((it) => {
+    Object.keys(it.extra || {}).forEach((key) => {
+      if (!isVisibleExtraField(it, key)) return;
+      if (!key || key.length > 64 || /[\r\n:：]/.test(key)) return;
+      if (registeredLabels.has(key)) return;
+      const fullKey = "extra." + key;
+      if (!allFields.has(fullKey)) {
+        const value = it.extra[key];
+        const inferredType = inferExtraFieldType(value);
+        allFields.set(fullKey, {
+          key: fullKey,
+          label: key,
+          valueType: inferredType,
+          inputType: inferredType === "image" ? "image" : inferredType === "boolean" ? "boolean" : inferredType === "number" ? "number" : "text",
+          semantic: inferredType === "image" ? "image" : "none",
+          category: "custom",
+          source: "extra",
+          cardinality: "single",
+          description: "从笔记文档中未知键值对解析出的自定义字段"
+        });
+      }
+    });
+  });
+  return Array.from(allFields.values()).sort(compareFieldDefinitionsForPicker);
+}
+function getFieldCategory(key) {
+  const def = getFieldDefinition(key);
+  if (!def) {
+    if (key.startsWith("file.")) return "file";
+    return "custom";
+  }
+  return FIELD_CATEGORY_ORDER.includes(def.category) ? def.category : "custom";
+}
+function getFieldCategoryLabel(key) {
+  return FIELD_CATEGORY_LABELS[getFieldCategory(key)];
+}
+function getFieldPickerOptions(fields) {
+  const seen = /* @__PURE__ */ new Set();
+  const options = [];
+  for (const field of fields || []) {
+    const value = getCanonicalFieldKey(field);
+    if (!value || seen.has(value)) continue;
+    seen.add(value);
+    const def = getFieldDefinition(value);
+    const category = def?.category && FIELD_CATEGORY_ORDER.includes(def.category) ? def.category : "custom";
+    options.push({
+      value,
+      label: def?.label || getFieldLabel(value),
+      category,
+      group: FIELD_CATEGORY_LABELS[category],
+      description: def?.description
+    });
+  }
+  return options.sort((a2, b2) => {
+    const byCategory = FIELD_CATEGORY_ORDER.indexOf(a2.category) - FIELD_CATEGORY_ORDER.indexOf(b2.category);
+    if (byCategory !== 0) return byCategory;
+    const byRank = getFieldPickerKeyRank(a2.value) - getFieldPickerKeyRank(b2.value);
+    if (byRank !== 0 && Number.isFinite(byRank)) return byRank;
+    return a2.label.localeCompare(b2.label, "zh-CN");
+  });
+}
+const FIELD_ALIAS_MAP = {};
+for (const def of Object.values(FIELD_REGISTRY)) {
+  FIELD_ALIAS_MAP[def.key] = def.key;
+  FIELD_ALIAS_MAP[def.label] = def.key;
+  (def.aliases || []).forEach((alias) => {
+    FIELD_ALIAS_MAP[alias] = def.key;
+  });
+}
+function getCanonicalFieldKey(key) {
+  const raw = String(key || "").trim();
+  if (!raw) return raw;
+  if (raw.startsWith("extra.") || raw.startsWith("file.")) return raw;
+  return FIELD_ALIAS_MAP[raw] || raw;
+}
+function getFieldDefinition(key) {
+  const canonical = getCanonicalFieldKey(key);
+  if (FIELD_REGISTRY[canonical]) return FIELD_REGISTRY[canonical];
+  if (canonical.startsWith("extra.")) {
+    const label = canonical.slice(6);
+    return { key: canonical, label, valueType: "custom", inputType: "text", semantic: "none", category: "custom", source: "extra" };
+  }
+  return void 0;
+}
+const FIELD_LABEL_ALIASES = {
+  filename: "文件名",
+  basename: "文件名",
+  filepath: "文件路径",
+  filePath: "文件路径",
+  path: "路径"
+};
+function getFieldLabel(key) {
+  const def = getFieldDefinition(key);
+  if (def) return def.label;
+  if (FIELD_LABEL_ALIASES[key]) return FIELD_LABEL_ALIASES[key];
+  if (key.startsWith("extra.")) return key.slice(6);
+  if (key.startsWith("file.")) {
+    const tail = key.slice(5);
+    return FIELD_LABEL_ALIASES[tail] || `文件.${tail}`;
+  }
+  return key;
+}
+function formatFieldValue$1(field, value, item) {
+  if (value === null || value === void 0) return "";
+  const def = getFieldDefinition(field);
+  if (def?.formatter) return def.formatter(value, item);
+  const formatOne = (entry) => {
+    const raw = String(entry ?? "");
+    const option = def?.options?.find((candidate) => candidate.value === raw);
+    return option?.label || raw;
+  };
+  return Array.isArray(value) ? value.map(formatOne).join(", ") : formatOne(value);
+}
+function normalizeSegment(value) {
+  return String(value ?? "").trim();
+}
+function normalizeHierarchyPathParts(value) {
+  if (Array.isArray(value)) return value.flatMap((entry) => normalizeHierarchyPathParts(entry));
+  return String(value ?? "").split("/").map(normalizeSegment).filter(Boolean);
+}
+function normalizeHierarchyPathValue(value) {
+  const parts = normalizeHierarchyPathParts(value);
+  return parts.length ? parts.join("/") : null;
+}
+function splitHierarchyPathValue(value) {
+  const parts = normalizeHierarchyPathParts(value);
+  const path = parts.length ? parts.join("/") : null;
+  return {
+    path,
+    parts,
+    root: parts[0] ?? null,
+    leaf: parts.length ? parts[parts.length - 1] : null
+  };
+}
+function getHierarchyPathLeaf(value) {
+  return splitHierarchyPathValue(value).leaf ?? "";
+}
+function normalizeHierarchyPath(value) {
+  return normalizeHierarchyPathValue(value) || void 0;
+}
+function splitHierarchyPath(value) {
+  const parts = splitHierarchyPathValue(value);
+  return {
+    path: parts.path || void 0,
+    parts: parts.parts,
+    root: parts.root || void 0,
+    leaf: parts.leaf || void 0
+  };
+}
+function normalizeTagPath(value) {
+  const raw = String(value ?? "").trim().replace(/^#+/, "");
+  if (!raw) return void 0;
+  const parts = raw.split("/").map((part) => part.trim()).filter(Boolean);
+  return parts.length ? parts.join("/") : void 0;
+}
+function normalizeTag(value) {
+  return normalizeTagPath(value);
+}
+function parseTagList(value) {
+  const rawValues = Array.isArray(value) ? value : String(value ?? "").split(/[,，]/);
+  const tags2 = rawValues.map(normalizeTag).filter((tag) => !!tag);
+  return Array.from(new Set(tags2));
+}
+const RECURRENCE_UNITS = /* @__PURE__ */ new Set(["day", "week", "month", "quarter", "year"]);
+const RECURRENCE_ANCHORS = /* @__PURE__ */ new Set(["scheduled", "start", "due", "completion"]);
+function normalizeRecurrenceInfo(value) {
+  if (!value) return null;
+  const unit = String(value.unit || "").trim().toLowerCase();
+  const anchor = String(value.anchor || "").trim().toLowerCase();
+  const interval = Number(value.interval);
+  if (!RECURRENCE_UNITS.has(unit)) return null;
+  if (!RECURRENCE_ANCHORS.has(anchor)) return null;
+  if (!Number.isInteger(interval) || interval < 1) return null;
+  return { unit, interval, anchor };
+}
+function getTaskRecurrenceInfo(item) {
+  return normalizeRecurrenceInfo(item.recurrenceInfo);
+}
+function isTaskRecurring(item) {
+  return Boolean(String(item.seriesId || "").trim());
+}
+function formatTaskRecurrence(info) {
+  const recurrence = normalizeRecurrenceInfo(info);
+  if (!recurrence) return "";
+  const interval = recurrence.interval === 1 ? "" : `${recurrence.interval} `;
+  return `every ${interval}${recurrence.unit}${recurrence.interval === 1 ? "" : "s"}`;
+}
+function addRecurrenceToDate(baseDateISO, recurrence) {
+  const normalizedBase = normalizeDateStr(baseDateISO) || baseDateISO;
+  const base = dayjs(normalizedBase, ["YYYY-MM-DD", "YYYY/MM/DD"]);
+  if (!base.isValid()) throw new Error(`task_recurrence_invalid_base_date:${baseDateISO}`);
+  const next2 = recurrence.unit === "quarter" ? base.add(recurrence.interval * 3, "month") : base.add(recurrence.interval, recurrence.unit);
+  return next2.format("YYYY-MM-DD");
+}
+function addRecurrenceToDateTime(baseValue, recurrence) {
+  const raw = String(baseValue || "").trim();
+  if (!raw) return raw;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return addRecurrenceToDate(raw, recurrence);
+  const base = dayjs(raw.replace(" ", "T"));
+  if (!base.isValid()) throw new Error(`task_recurrence_invalid_base_datetime:${baseValue}`);
+  const next2 = recurrence.unit === "quarter" ? base.add(recurrence.interval * 3, "month") : base.add(recurrence.interval, recurrence.unit);
+  return next2.format("YYYY-MM-DDTHH:mm");
+}
+function firstTime(...values2) {
+  return values2.find((value) => Boolean(String(value || "").trim()));
+}
+function getTaskRecurrenceBaseDate(task, recurrence, completedAtISO) {
+  const completion = String(completedAtISO || "").trim();
+  if (recurrence.anchor === "completion") return completion;
+  if (recurrence.anchor === "start") return firstTime(task.startAt, task.startDate, task.scheduledAt, task.scheduledDate, task.dueAt, task.dueDate) || completion;
+  if (recurrence.anchor === "due") return firstTime(task.dueAt, task.dueDate, task.startAt, task.startDate, task.scheduledAt, task.scheduledDate) || completion;
+  return firstTime(task.scheduledAt, task.scheduledDate, task.startAt, task.startDate, task.dueAt, task.dueDate) || completion;
+}
+function buildNextOccurrenceDates(task, recurrence, completedAtISO) {
+  const base = getTaskRecurrenceBaseDate(task, recurrence, completedAtISO);
+  const nextAnchor = addRecurrenceToDateTime(base, recurrence);
+  const result = {};
+  const shift = (value) => value ? addRecurrenceToDateTime(value, recurrence) : void 0;
+  if (recurrence.anchor === "scheduled") {
+    if (task.scheduledAt) result.scheduledAt = nextAnchor;
+    else result.scheduledDate = nextAnchor.slice(0, 10);
+  } else {
+    result.scheduledAt = shift(task.scheduledAt);
+    result.scheduledDate = shift(task.scheduledDate)?.slice(0, 10);
+  }
+  if (recurrence.anchor === "start") result.startAt = nextAnchor;
+  else {
+    result.startAt = shift(task.startAt);
+    result.startDate = shift(task.startDate)?.slice(0, 10);
+  }
+  if (recurrence.anchor === "due") {
+    if (task.dueAt) result.dueAt = nextAnchor;
+    else result.dueDate = nextAnchor.slice(0, 10);
+  } else {
+    result.dueAt = shift(task.dueAt);
+    result.dueDate = shift(task.dueDate)?.slice(0, 10);
+  }
+  if (recurrence.anchor === "completion" && !result.scheduledAt && !result.scheduledDate && !result.startAt && !result.startDate && !result.dueAt && !result.dueDate) result.scheduledAt = nextAnchor;
+  return result;
+}
+const TASK_CADENCE_ORDER = ["routine", "day", "week", "month", "quarter", "year"];
+const TASK_CADENCE_META = {
+  routine: { label: "日常任务", emoji: "🌿" },
+  day: { label: "天任务", emoji: "☀️" },
+  week: { label: "周任务", emoji: "📅" },
+  month: { label: "月任务", emoji: "🗓️" },
+  quarter: { label: "季任务", emoji: "🍂" },
+  year: { label: "年任务", emoji: "🧭" }
+};
+function getTaskCadence(item) {
+  const recurrence = getTaskRecurrenceInfo(item);
+  if (!recurrence) return "routine";
+  if (recurrence.unit === "day") return "day";
+  if (recurrence.unit === "week") return "week";
+  if (recurrence.unit === "year") return "year";
+  if (recurrence.unit === "quarter") return "quarter";
+  return "month";
+}
+function isUnknownRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function asUnknownRecord(value) {
+  return isUnknownRecord(value) ? value : void 0;
+}
+function readUnknown(record2, key) {
+  return record2?.[key];
+}
+function readString$1(record2, key) {
+  const value = readUnknown(record2, key);
+  return typeof value === "string" ? value : void 0;
+}
+function readTrimmedString(record2, key) {
+  const value = readString$1(record2, key)?.trim();
+  return value ? value : void 0;
+}
+function readNumber$1(record2, key) {
+  const value = readUnknown(record2, key);
+  return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+}
+function readStringArray(record2, key) {
+  const value = readUnknown(record2, key);
+  if (!Array.isArray(value)) return [];
+  return value.filter((item) => typeof item === "string");
+}
+function readRecordArray(record2, key) {
+  const value = readUnknown(record2, key);
+  if (!Array.isArray(value)) return [];
+  return value.filter(isUnknownRecord);
+}
+function readFirstString(record2, keys) {
+  for (const key of keys) {
+    const value = readTrimmedString(record2, key);
+    if (value) return value;
+  }
+  return void 0;
+}
+const ENERGY_QUICK_LEVELS = [20, 40, 60, 80, 100];
+const DEFAULT_ENERGY_SETTINGS = {
+  defaultGoalPath: ""
+};
+const ENERGY_QUICK_LEVEL_LABELS = {
+  20: "很低",
+  40: "偏低",
+  60: "一般",
+  80: "较高",
+  100: "充沛"
+};
+function normalizeEnergyScore(value) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(Math.min(100, Math.max(0, value)));
+}
+function toEnergyQuickLevel(value) {
+  const score = normalizeEnergyScore(value);
+  return ENERGY_QUICK_LEVELS.reduce((best, candidate) => Math.abs(candidate - score) < Math.abs(best - score) ? candidate : best, ENERGY_QUICK_LEVELS[0]);
+}
+function isEnergyQuickLevel(value) {
+  return ENERGY_QUICK_LEVELS.includes(value);
+}
+function calculateDetailedEnergyScore(brainScore, physicalScore) {
+  const brain = normalizeEnergyScore(brainScore);
+  const physical = normalizeEnergyScore(physicalScore);
+  return normalizeEnergyScore((brain + physical) / 2);
+}
+function readNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const text2 = String(value ?? "").trim();
+  if (!text2) return void 0;
+  const parsed = Number(text2);
+  return Number.isFinite(parsed) ? parsed : void 0;
+}
+function readText$1(value) {
+  const text2 = String(value ?? "").trim();
+  return text2 || void 0;
+}
+function readScore(value) {
+  const parsed = readNumber(value);
+  if (parsed == null || parsed < 0 || parsed > 100) return void 0;
+  return Math.round(parsed);
+}
+function isEnergyItem(item) {
+  const block = String(item.recordType || item.extra?.["记录类型"] || "").replace(/^core\./i, "").trim().toLowerCase();
+  return block === "energy";
+}
+function readEnergyItemSnapshot(item) {
+  if (!isEnergyItem(item)) return null;
+  const extra = item.extra || {};
+  const score = readScore(extra["精力值"]);
+  if (score == null) return null;
+  const explicitQuick = readNumber(extra["精力档位"]);
+  const quickLevel = explicitQuick != null && isEnergyQuickLevel(explicitQuick) ? explicitQuick : toEnergyQuickLevel(score);
+  const modeText = readText$1(extra["评分模式"]);
+  const scoreMode = modeText === "quick" || modeText === "detailed" || modeText === "percent" ? modeText : void 0;
+  const captureText = readText$1(extra["记录方式"]);
+  const captureMode2 = captureText === "realtime" || captureText === "retrospective" ? captureText : void 0;
+  const precisionText = readText$1(extra["时间精度"]);
+  const timePrecision = precisionText === "exact" || precisionText === "approximate" || precisionText === "period" || precisionText === "day" ? precisionText : void 0;
+  return {
+    score,
+    quickLevel,
+    brainScore: readScore(extra["脑力精力"]),
+    physicalScore: readScore(extra["体力精力"]),
+    scoreMode,
+    captureMode: captureMode2,
+    timePrecision,
+    date: readText$1(item.date || extra["日期"]),
+    time: readText$1(item.startTime || extra["时间"]),
+    recordedAt: readText$1(extra["记录时间"]),
+    source: readText$1(extra["来源"])
+  };
+}
+function energySnapshotOccurrenceKey(snapshot) {
+  return `${snapshot.date || ""}T${snapshot.time || "00:00"}`;
+}
+const RECORD_TYPE_PRESENTATION_ORDER = [
+  "task",
+  "energy",
+  "habit",
+  "event",
+  "feeling",
+  "thought",
+  "review",
+  "plan",
+  "blocker",
+  "milestone"
+];
+const RECORD_TYPE_ICONS = Object.freeze({
+  task: "✓",
+  energy: "⚡",
+  habit: "♥",
+  event: "◷",
+  feeling: "♡",
+  thought: "✦",
+  review: "≡",
+  plan: "◇",
+  blocker: "!",
+  milestone: "◆"
+});
+const RECORD_TYPE_PRESENTATION_REGISTRY = Object.freeze(
+  Object.fromEntries(
+    RECORD_TYPE_PRESENTATION_ORDER.map((recordType, index) => [
+      recordType,
+      {
+        order: (index + 1) * 10,
+        icon: RECORD_TYPE_ICONS[recordType],
+        colorToken: `--think-record-type-${recordType}`
+      }
+    ])
+  )
+);
+const ALIASES = /* @__PURE__ */ new Map();
+for (const schema of RECORD_SCHEMA_DEFINITIONS) {
+  const candidates = [schema.recordType, schema.id, schema.key, schema.name, schema.displayName];
+  for (const candidate of candidates) {
+    const key = String(candidate || "").trim().toLocaleLowerCase();
+    if (key) ALIASES.set(key, schema.recordType);
+  }
+}
+function toUserVisibleRecordType(recordType) {
+  if (recordType === "task-session" || recordType === "task-series") return "task";
+  return recordType;
+}
+function normalizeRecordTypePresentationKey(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const direct = ALIASES.get(raw.toLocaleLowerCase());
+  if (direct) return toUserVisibleRecordType(direct);
+  const withoutNamespace = raw.replace(/^(?:core|internal)\./i, "").trim().toLocaleLowerCase();
+  const aliased = ALIASES.get(withoutNamespace) || withoutNamespace;
+  return toUserVisibleRecordType(aliased);
+}
+function getRecordTypePresentationOrder(value) {
+  const key = normalizeRecordTypePresentationKey(value);
+  return RECORD_TYPE_PRESENTATION_REGISTRY[key]?.order ?? Number.MAX_SAFE_INTEGER;
+}
+function getRecordTypePresentation(value) {
+  const recordType = normalizeRecordTypePresentationKey(value);
+  const schema = RECORD_SCHEMA_DEFINITIONS.find((candidate) => candidate.recordType === recordType);
+  const identity2 = RECORD_TYPE_PRESENTATION_REGISTRY[recordType];
+  return {
+    recordType,
+    label: schema?.name || schema?.displayName || recordType || "记录",
+    order: identity2?.order ?? Number.MAX_SAFE_INTEGER,
+    icon: identity2?.icon || "•",
+    colorToken: identity2?.colorToken || "--think-record-type-neutral"
+  };
+}
+function compareRecordTypeKeys(left2, right2) {
+  const leftKey = normalizeRecordTypePresentationKey(left2);
+  const rightKey = normalizeRecordTypePresentationKey(right2);
+  const leftOrder = getRecordTypePresentationOrder(leftKey);
+  const rightOrder = getRecordTypePresentationOrder(rightKey);
+  if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+  return leftKey.localeCompare(rightKey, "zh-CN");
+}
+function sortRecordTypesByPresentation(items, getKey) {
+  return [...items].sort((left2, right2) => compareRecordTypeKeys(getKey(left2), getKey(right2)));
+}
+const ENERGY_RECORD_TYPE_ID = RECORD_TYPE_IDS.ENERGY;
+const DEFAULT_RECORD_TYPES = Object.freeze(
+  sortRecordTypesByPresentation(
+    RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.capabilities.userVisible && definition.captureMode !== "internal"),
+    (definition) => definition.recordType
+  )
+);
+const DEFAULT_TEMPLATE_RECORD_TYPES = Object.freeze(
+  sortRecordTypesByPresentation(
+    RECORD_SCHEMA_DEFINITIONS.filter(
+      (definition) => definition.capabilities.userVisible && definition.captureMode === "template" && typeof definition.recordTypeId === "string"
+    ),
+    (definition) => definition.recordType
+  )
+);
+function getEffectiveRecordTypes() {
+  return [...DEFAULT_RECORD_TYPES];
+}
+function getTemplateRecordTypes() {
+  return [...DEFAULT_TEMPLATE_RECORD_TYPES];
+}
+function getRecordTypeById(recordTypeId) {
+  const id = String(recordTypeId || "").trim();
+  return DEFAULT_RECORD_TYPES.find((item) => item.id === id) || null;
+}
+function getTemplateRecordTypeById(recordTypeId) {
+  const id = String(recordTypeId || "").trim();
+  return DEFAULT_TEMPLATE_RECORD_TYPES.find((item) => item.id === id) || null;
+}
+function buildRecordTypeInputSettings() {
+  return { recordTypes: [...DEFAULT_TEMPLATE_RECORD_TYPES] };
+}
+const DEFAULT_RECORD_TYPE_COLOR_HEX = Object.freeze({
+  task: "#4f7cff",
+  energy: "#d98b22",
+  habit: "#20a675",
+  event: "#e8783d",
+  feeling: "#c85f9e",
+  thought: "#8b68d8",
+  review: "#d65b74",
+  plan: "#547aa5",
+  blocker: "#c94f4f",
+  milestone: "#a98213"
+});
+function normalizeRecordTypeColorHex(value) {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (/^#[0-9a-f]{6}$/.test(raw)) return raw;
+  if (/^#[0-9a-f]{3}$/.test(raw)) {
+    return `#${raw.slice(1).split("").map((part) => part + part).join("")}`;
+  }
+  return null;
+}
+function normalizeRecordTypeColorOverrides(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const source = value;
+  const out = {};
+  for (const recordType of RECORD_TYPE_PRESENTATION_ORDER) {
+    const color2 = normalizeRecordTypeColorHex(source[recordType]);
+    if (color2) out[recordType] = color2;
+  }
+  return out;
+}
+function buildRecordTypeColorCssVariables(overrides) {
+  const normalized2 = normalizeRecordTypeColorOverrides(overrides);
+  return Object.fromEntries(
+    RECORD_TYPE_PRESENTATION_ORDER.filter((recordType) => !!normalized2[recordType]).map((recordType) => [`--think-record-type-${recordType}`, normalized2[recordType]])
+  );
+}
+function compact(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+function fallbackLabel(item) {
+  return getRecordTypePresentation(item.recordType).label;
+}
+function genericPrimary(item) {
+  return compact(item.content) || fallbackLabel(item);
+}
+const energyPrimary = (item) => {
+  const snapshot = readEnergyItemSnapshot(item);
+  if (snapshot) return `精力 ${snapshot.score}`;
+  return compact(item.content) || "精力";
+};
+const habitPrimary = (item) => {
+  const content = compact(item.content);
+  if (content) return content;
+  if (item.rating != null && Number.isFinite(Number(item.rating))) return `打卡 · 评分 ${item.rating}`;
+  return "打卡";
+};
+const taskSessionPrimary = (item) => {
+  const content = compact(item.content);
+  if (content) return content;
+  if (item.sessionDurationMinutes != null && Number.isFinite(Number(item.sessionDurationMinutes))) {
+    return `任务工作块 · ${item.sessionDurationMinutes} 分钟`;
+  }
+  return "任务工作块";
+};
+const PRIMARY_TEXT_RESOLVERS = {
+  task: genericPrimary,
+  "task-session": taskSessionPrimary,
+  "task-series": genericPrimary,
+  energy: energyPrimary,
+  habit: habitPrimary,
+  event: genericPrimary,
+  feeling: genericPrimary,
+  thought: genericPrimary,
+  review: genericPrimary,
+  plan: genericPrimary,
+  blocker: genericPrimary,
+  milestone: genericPrimary
+};
+function getRecordPrimaryText(item) {
+  const title = compact(item.title);
+  if (title) return title;
+  const recordType = normalizeRecordTypePresentationKey(item.recordType);
+  const resolver = PRIMARY_TEXT_RESOLVERS[recordType];
+  return resolver ? resolver(item) : genericPrimary(item);
+}
+function normalizeFieldKey(field) {
+  return getCanonicalFieldKey(field);
+}
+function readFileField(item, field) {
+  const file = item.file;
+  const fileRecord = asUnknownRecord(file);
+  const key = field.slice("file.".length);
+  if (key === "name" || key === "basename") {
+    return file?.basename ?? item.fileName ?? item.filename;
+  }
+  if (key === "folder") {
+    return file?.folder ?? item.folder;
+  }
+  return readUnknown(fileRecord, key);
+}
+function readImageField(item) {
+  return normalizeImageValue(item.image ?? item.extra?.["图片"] ?? item.extra?.["image"]);
+}
+function readCanonicalField(item, canonicalField) {
+  if (canonicalField.startsWith("extra.")) {
+    return item.extra?.[canonicalField.slice("extra.".length)];
+  }
+  if (canonicalField.startsWith("file.")) {
+    return readFileField(item, canonicalField);
+  }
+  if (canonicalField === "primaryText") return getRecordPrimaryText(item);
+  if (canonicalField === "goalPath") {
+    return splitHierarchyPath(item.goalPath).path;
+  }
+  if (canonicalField === "rootGoal") {
+    return item.rootGoal || splitHierarchyPath(item.goalPath).root;
+  }
+  if (canonicalField === "leafGoal") {
+    return item.leafGoal || splitHierarchyPath(item.goalPath).leaf;
+  }
+  if (canonicalField === "status") return item.status;
+  if (canonicalField === "cadence") return item.recordType === "task" ? getTaskCadence(item) : void 0;
+  if (canonicalField === "recurrence") return formatTaskRecurrence(item.recurrenceInfo);
+  if (canonicalField === "period.id") {
+    return readFirstString(asUnknownRecord(item), ["cycleId", "periodId"]);
+  }
+  if (canonicalField === "period.label") {
+    return readFirstString(asUnknownRecord(item), ["period", "周期"]);
+  }
+  if (canonicalField === "period.granularity") {
+    return readFirstString(asUnknownRecord(item), ["periodGranularity", "goalGranularity"]);
+  }
+  if (canonicalField === "tags") {
+    return parseTagList(item.tags || []);
+  }
+  if (canonicalField === "fullData") {
+    return item.rawSource || item.fullData || item.content || "";
+  }
+  if (canonicalField === "image") {
+    return readImageField(item);
+  }
+  if (canonicalField === "time") {
+    return item.startTime;
+  }
+  if (canonicalField === "filename" || canonicalField === "fileName") {
+    return item.file?.basename ?? item.fileName ?? item.filename;
+  }
+  return readUnknown(asUnknownRecord(item), canonicalField);
+}
+function resolveFieldValue(item, field) {
+  const canonicalField = normalizeFieldKey(field);
+  const def = getFieldDefinition(canonicalField);
+  let value = readCanonicalField(item, canonicalField);
+  if (value === void 0) {
+    const injectedFields = asUnknownRecord(readUnknown(asUnknownRecord(item), "fields"));
+    value = readUnknown(injectedFields, canonicalField);
+    if (value === void 0 && field !== canonicalField) value = readUnknown(injectedFields, field);
+  }
+  const source = def?.source || "unknown";
+  return {
+    requestedField: field,
+    field: canonicalField,
+    value,
+    source,
+    derived: source === "derived"
+  };
+}
+function readFieldValue(item, field) {
+  return resolveFieldValue(item, field).value;
+}
+function getAllFields(items) {
+  return getAvailableFields(items).map((field) => field.key);
+}
+function readField(item, field) {
+  return readFieldValue(item, field);
+}
+const TECHNICAL_FIELDS = /* @__PURE__ */ new Set([
+  "id",
+  "seriesId",
+  "taskId",
+  "currentTaskId",
+  "cycleId",
+  "fullData",
+  "rawSource",
+  "created",
+  "modified",
+  "file",
+  "source",
+  "filename",
+  "fileName",
+  "folder",
+  "header",
+  "startEnergyRecordId",
+  "endEnergyRecordId"
+]);
+const INTERNAL_RECORD_TYPES = /* @__PURE__ */ new Set(["task-session", "task-series"]);
+const RECORD_PROFILE_FIELDS = {
+  habit: ["goalPath", "date", "rating", "image", "content"],
+  plan: ["goalPath", "date", "period", "content"],
+  review: ["goalPath", "date", "period", "content"],
+  thought: ["goalPath", "date", "content"],
+  feeling: ["goalPath", "date", "content"],
+  event: ["goalPath", "date", "content"],
+  blocker: ["goalPath", "date", "content"],
+  milestone: ["goalPath", "date", "content"],
+  energy: ["goalPath", "date"]
+};
+const TASK_STATUS_PRESENTATION = {
+  open: { emoji: "⏳", label: "未完成" },
+  done: { emoji: "✅", label: "已完成" },
+  cancelled: { emoji: "🚫", label: "已取消" },
+  skipped: { emoji: "⏭️", label: "已跳过" },
+  unknown: { emoji: "•", label: "未知" }
+};
+const QUADRANT_LABELS = {
+  q1: "重要且紧急",
+  q2: "重要不紧急",
+  q3: "不重要但紧急",
+  q4: "不重要不紧急",
+  unclassified: "未分类"
+};
+function getExportConfig(viewType) {
+  return getViewExportConfig(viewType) || BLOCK_EXPORT_DEFAULT_CONFIG;
+}
+function compactText$2(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+function formatNumber(value) {
+  return Number.isInteger(value) ? String(value) : String(Math.round(value * 100) / 100);
+}
+function formatMinutes(value) {
+  return `${formatNumber(value)} 分钟`;
+}
+function formatDateTime$1(value) {
+  const text2 = String(value ?? "").trim();
+  if (!text2) return "";
+  const iso = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?$/.exec(text2);
+  return iso ? `${iso[1]} ${iso[2]}` : text2;
+}
+function dateOnly(value) {
+  const text2 = String(value ?? "").trim();
+  const match5 = /^(\d{4}-\d{2}-\d{2})/.exec(text2);
+  return match5?.[1] || text2;
+}
+function localDateText(value) {
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+}
+function isEmpty$3(value) {
+  return value === void 0 || value === null || value === "" || Array.isArray(value) && value.length === 0;
+}
+function fieldLabel(field) {
+  const canonical = normalizeFieldKey(field);
+  return getFieldDefinition(canonical)?.label || field;
+}
+function formatStatus(value) {
+  const key = String(value ?? "").trim();
+  return TASK_STATUS_PRESENTATION[key]?.label || key;
+}
+function formatFieldValue(field, rawValue) {
+  const canonical = normalizeFieldKey(field);
+  if (canonical === "recordType") return getRecordTypePresentation(rawValue).label;
+  if (canonical === "status") return formatStatus(rawValue);
+  if (canonical === "primaryText") return compactText$2(rawValue);
+  if (Array.isArray(rawValue)) return rawValue.map(compactText$2).filter(Boolean).join("、");
+  if (/At$/.test(canonical) || ["date", "scheduledDate", "startDate", "dueDate", "doneDate", "cancelledDate"].includes(canonical)) {
+    return formatDateTime$1(rawValue);
+  }
+  return String(rawValue);
+}
+function imageDisplay(value) {
+  const text2 = String(value ?? "").trim();
+  if (!text2) return "";
+  const isEmojiOnly = /^[\p{Emoji}\p{Emoji_Presentation}\p{Extended_Pictographic}\s]*$/u.test(text2) && text2.length <= 8 && !text2.includes(".");
+  if (isEmojiOnly || text2.startsWith("![[") || text2.startsWith("![")) return text2;
+  return `![[${text2}]]`;
+}
+function pushField(lines, label, value, field) {
+  if (isEmpty$3(value)) return;
+  if (field === "image") {
+    const display2 = imageDisplay(value);
+    if (display2) lines.push(`  - ${label}：${display2}`);
+    return;
+  }
+  const display = field ? formatFieldValue(field, value) : String(value);
+  if (!display) return;
+  if (field === "content" && display.includes("\n")) {
+    lines.push(`  - ${label}：`);
+    for (const row of display.split(/\r?\n/).map((line2) => line2.trim()).filter(Boolean)) lines.push(`    - ${row}`);
+    return;
+  }
+  lines.push(`  - ${label}：${display}`);
+}
+function timestamp$1(value) {
+  const text2 = String(value ?? "").trim();
+  if (!text2) return null;
+  const ms = Date.parse(text2);
+  return Number.isFinite(ms) ? ms : null;
+}
+function overlapsRange(startValue, endValue, dateRange) {
+  if (!dateRange) return true;
+  const start2 = timestamp$1(startValue);
+  if (start2 == null) return false;
+  const end2 = timestamp$1(endValue) ?? start2;
+  return end2 >= dateRange[0].getTime() && start2 <= dateRange[1].getTime();
+}
+function inRange(value, dateRange) {
+  if (!dateRange) return true;
+  const ms = timestamp$1(value);
+  return ms != null && ms >= dateRange[0].getTime() && ms <= dateRange[1].getTime();
+}
+function sessionMap(records) {
+  const result = /* @__PURE__ */ new Map();
+  for (const record2 of records) {
+    if (record2.recordType !== "task-session") continue;
+    const taskId = String(record2.taskId || "").trim();
+    if (!taskId) continue;
+    const rows = result.get(taskId) || [];
+    rows.push(record2);
+    result.set(taskId, rows);
+  }
+  for (const rows of result.values()) rows.sort((a2, b2) => String(a2.sessionStartedAt || "").localeCompare(String(b2.sessionStartedAt || "")));
+  return result;
+}
+function resolveGroupFields(request, config2) {
+  const view = request.viewInstance;
+  if (view?.viewType === "TableView") {
+    const rowField = String(view.viewConfig?.rowField || "").trim();
+    const colField = String(view.viewConfig?.colField || "").trim();
+    return Array.from(new Set([rowField, colField].filter(Boolean)));
+  }
+  if (view?.groupFields?.length) return view.groupFields.filter(Boolean);
+  if (view?.group) return [view.group];
+  return config2.defaultGroupFields || [];
+}
+function createExportRuntimeContext(request) {
+  const config2 = request.config || getExportConfig(request.viewInstance?.viewType || "BlockView");
+  const relatedRecords = request.relatedRecords || request.items;
+  const userVisibleTypes = new Set(request.items.filter((item) => !INTERNAL_RECORD_TYPES.has(item.recordType)).map((item) => getRecordTypePresentation(item.recordType).recordType));
+  return {
+    request,
+    config: config2,
+    relatedRecords,
+    sessionsByTask: sessionMap(relatedRecords),
+    recordTypeCount: userVisibleTypes.size,
+    groupFields: resolveGroupFields(request, config2)
+  };
+}
+function filteredTaskSessions(item, ctx) {
+  const sessions = ctx.sessionsByTask.get(item.id) || [];
+  if (ctx.config.taskSessionScope !== "range" || !ctx.request.dateRange) return sessions;
+  return sessions.filter((session) => overlapsRange(session.sessionStartedAt, session.sessionEndedAt, ctx.request.dateRange));
+}
+function durationWithinExportScope(startValue, endValue, fallbackMinutes, ctx) {
+  const start2 = timestamp$1(startValue);
+  let end2 = timestamp$1(endValue);
+  const fallback = Number(fallbackMinutes);
+  const hasFallback = Number.isFinite(fallback) && fallback > 0;
+  if (start2 != null && end2 == null && hasFallback) end2 = start2 + fallback * 6e4;
+  if (start2 != null && end2 != null && end2 >= start2) {
+    if (ctx.config.taskSessionScope === "range" && ctx.request.dateRange) {
+      const scopedStart = Math.max(start2, ctx.request.dateRange[0].getTime());
+      const scopedEnd = Math.min(end2, ctx.request.dateRange[1].getTime());
+      if (scopedEnd <= scopedStart) return null;
+      return (scopedEnd - scopedStart) / 6e4;
+    }
+    return (end2 - start2) / 6e4;
+  }
+  return hasFallback ? fallback : null;
+}
+function taskActualDuration(item, ctx) {
+  const allSessions = ctx.sessionsByTask.get(item.id) || [];
+  const sessions = filteredTaskSessions(item, ctx).map((session) => durationWithinExportScope(
+    session.sessionStartedAt,
+    session.sessionEndedAt,
+    session.sessionDurationMinutes,
+    ctx
+  )).filter((minutes) => minutes != null && Number.isFinite(minutes) && minutes > 0);
+  if (sessions.length > 0) {
+    return { minutes: Math.round(sessions.reduce((sum, minutes) => sum + minutes, 0) * 100) / 100, sessionCount: sessions.length };
+  }
+  if (allSessions.length > 0) return { minutes: null, sessionCount: 0 };
+  const legacyMinutes = durationWithinExportScope(item.startAt, item.endAt, null, ctx);
+  if (legacyMinutes != null && legacyMinutes > 0) {
+    return { minutes: Math.round(legacyMinutes * 100) / 100, sessionCount: 0 };
+  }
+  return { minutes: null, sessionCount: 0 };
+}
+function viewExtraFields(item, ctx, alreadyUsed) {
+  const result = [];
+  for (const rawField of ctx.request.viewInstance?.fields || []) {
+    const field = normalizeFieldKey(rawField);
+    if (!field || ["primaryText", "title"].includes(field) || TECHNICAL_FIELDS.has(field) || alreadyUsed.has(field)) continue;
+    if (item.recordType === "task" && ["status", "expectedDurationMinutes", "goalPath", "completedAt", "cancelledAt", "skippedAt"].includes(field)) continue;
+    alreadyUsed.add(field);
+    result.push(field);
+  }
+  return result;
+}
+function resolveMainText(item, ctx) {
+  const view = ctx.request.viewInstance;
+  if (view?.viewType === "EventTimelineView") {
+    const titleField = String(view.viewConfig?.titleField || "primaryText");
+    const text2 = compactText$2(readField(item, titleField));
+    if (text2) return text2;
+  }
+  return compactText$2(getRecordPrimaryText(item)) || getRecordTypePresentation(item.recordType).label;
+}
+function rootGoal(item) {
+  return compactText$2(item.rootGoal) || compactText$2(item.goalPath).split("/").filter(Boolean)[0] || "未分类";
+}
+function itemDate(item) {
+  return dateOnly(item.date || item.completedAt || item.doneDate || item.startAt || item.scheduledAt || item.createdDate || "");
+}
+const CROCKFORD$1 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+function encodeTime(time2, length2 = 10) {
+  let value = Math.max(0, Math.floor(time2));
+  let output = "";
+  for (let i2 = 0; i2 < length2; i2++) {
+    output = CROCKFORD$1[value % 32] + output;
+    value = Math.floor(value / 32);
+  }
+  return output;
+}
+function randomChars(length2) {
+  const values2 = new Uint8Array(length2);
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.getRandomValues) {
+    cryptoApi.getRandomValues(values2);
+  } else {
+    for (let i2 = 0; i2 < values2.length; i2++) values2[i2] = Math.floor(Math.random() * 256);
+  }
+  let output = "";
+  for (const value of values2) output += CROCKFORD$1[value % 32];
+  return output;
+}
+function recordIdPrefixForRecordType(recordType) {
+  switch (String(recordType || "").trim().toLowerCase()) {
+    case "task":
+      return "task";
+    case "task-series":
+      return "taskseries";
+    case "task-session":
+      return "tasksession";
+    case "energy":
+      return "energy";
+    default:
+      return "rec";
+  }
+}
+function createRecordId(recordType, now2 = Date.now()) {
+  const prefix2 = recordIdPrefixForRecordType(recordType);
+  return `${prefix2}.${encodeTime(now2)}${randomChars(16)}`;
+}
+function isStableRecordId(value) {
+  return /^(?:rec|task|taskseries|tasksession|energy)\.[0-9A-HJKMNP-TV-Z]{26}$/.test(String(value || "").trim());
+}
+function compactText$1(value) {
+  return String(value ?? "").trim();
+}
+function normalizeTextToken(value) {
+  return compactText$1(value).toLowerCase();
+}
+function containsTagMarker(value) {
+  return value.includes("#") || value.includes("＃");
+}
+function normalizeGoalPath(path) {
+  const normalized2 = splitHierarchyPathValue(path).path;
+  if (!normalized2 || containsTagMarker(normalized2)) return null;
+  return normalized2;
+}
+function requireGoalPath(path) {
+  const normalized2 = normalizeGoalPath(path);
+  if (!normalized2) throw new Error("目标路径无效：必须使用斜杠分隔，且不能包含 # 标记。");
+  return normalized2;
+}
+function splitGoalPath(path) {
+  const normalized2 = normalizeGoalPath(path);
+  const parts = splitHierarchyPathValue(normalized2);
+  return {
+    goalPath: parts.path,
+    rootGoal: parts.root,
+    leafGoal: parts.leaf
+  };
+}
+function getGoalPathCandidates(path) {
+  const normalized2 = normalizeGoalPath(path);
+  if (!normalized2) return [];
+  const parts = splitHierarchyPathValue(normalized2).parts;
+  const result = [];
+  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
+  return result;
+}
+function getParentGoalPath(path) {
+  const normalized2 = normalizeGoalPath(path);
+  if (!normalized2) return null;
+  const parts = normalized2.split("/").filter(Boolean);
+  return parts.length > 1 ? parts.slice(0, -1).join("/") : null;
+}
+function getGoalLeaf(path) {
+  return splitGoalPath(path).leafGoal || "";
+}
+const DEFAULT_MULTI_SEPARATOR = ", ";
+function isFieldCodecMultiValue(def) {
+  const inputType = def?.inputType;
+  return def?.cardinality === "multi" || inputType === "multiSelect" || inputType === "multiPath" || inputType === "multiTag" || inputType === "multiImage";
+}
+function isFieldCodecPath(def) {
+  return def?.valueType === "path" || def?.inputType === "path" || def?.inputType === "multiPath" || def?.semantic === "goalPath";
+}
+function isFieldCodecTag(def) {
+  return def?.valueType === "tags" || def?.inputType === "tag" || def?.inputType === "multiTag" || def?.semantic === "tags";
+}
+function isFieldCodecImage(def) {
+  return def?.valueType === "image" || def?.inputType === "image" || def?.inputType === "multiImage" || def?.semantic === "image";
+}
+function splitMarkdownMultiValue(value) {
+  if (Array.isArray(value)) return value.flatMap(splitMarkdownMultiValue);
+  return String(value ?? "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+}
+function decodeUnknownMarkdownKvValue(value) {
+  const raw = String(value ?? "").trim();
+  if (/^(true|false)$/i.test(raw)) return raw.toLowerCase() === "true";
+  if (raw !== "") {
+    const numeric = Number(raw);
+    if (!Number.isNaN(numeric)) return numeric;
+  }
+  return raw;
+}
+function decodeNumberValue(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const raw = String(value ?? "").trim();
+  if (!raw) return void 0;
+  const numeric = Number(raw);
+  return Number.isNaN(numeric) ? void 0 : numeric;
+}
+function decodeBooleanValue(value) {
+  if (typeof value === "boolean") return value;
+  const raw = normalizeTextToken(value);
+  if (!raw) return void 0;
+  if (["true", "yes", "y", "1", "是"].includes(raw)) return true;
+  if (["false", "no", "n", "0", "否"].includes(raw)) return false;
+  return void 0;
+}
+function decodeImageValue(value) {
+  return normalizeImageValue(value);
+}
+function valueKind(def) {
+  return def?.valueType;
+}
+function semanticKind(def) {
+  return def?.semantic;
+}
+function decodeMarkdownFieldValue(value, def) {
+  if (value === void 0 || value === null) return void 0;
+  if (isFieldCodecMultiValue(def)) {
+    if (isFieldCodecTag(def)) return parseTagList(value);
+    if (isFieldCodecImage(def)) {
+      return splitMarkdownMultiValue(value).map(decodeImageValue).filter((img) => !!img);
+    }
+    if (isFieldCodecPath(def)) {
+      return splitMarkdownMultiValue(value).map(normalizeHierarchyPath).filter((path) => !!path);
+    }
+    return splitMarkdownMultiValue(value);
+  }
+  if (isFieldCodecTag(def)) return parseTagList(value);
+  if (isFieldCodecImage(def)) return decodeImageValue(value);
+  if (isFieldCodecPath(def)) {
+    if (semanticKind(def) === "goalPath") return normalizeGoalPath(String(value ?? "")) || void 0;
+    return normalizeHierarchyPath(value) || void 0;
+  }
+  if (valueKind(def) === "number" || semanticKind(def) === "duration" || semanticKind(def) === "rating") {
+    return decodeNumberValue(value);
+  }
+  if (valueKind(def) === "boolean") return decodeBooleanValue(value);
+  return decodeUnknownMarkdownKvValue(value);
+}
+function imageFieldValueToMarkdown(value, options = {}) {
+  const src = String(value.src || "").trim();
+  if (!src) return "";
+  if (options.embedWikiImages && value.kind === "wikilink") return `![[${src}]]`;
+  return src;
+}
+function encodeFieldValueForMarkdown(value, def, options = {}) {
+  if (value === void 0 || value === null) return "";
+  if (Array.isArray(value)) {
+    const separator = options.multiSeparator ?? DEFAULT_MULTI_SEPARATOR;
+    return value.map((item) => encodeFieldValueForMarkdown(item, { ...def, cardinality: "single" }, options)).map((part) => part.trim()).filter(Boolean).join(separator);
+  }
+  if (isFieldCodecImage(def) || value && typeof value === "object" && "src" in value) {
+    const image = normalizeImageValue(value);
+    return image ? imageFieldValueToMarkdown(image, options) : "";
+  }
+  if (value && typeof value === "object") {
+    const objectValue = value;
+    if ("value" in objectValue) return encodeFieldValueForMarkdown(objectValue.value, def, options);
+    if ("label" in objectValue) return String(objectValue.label ?? "").trim();
+  }
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (semanticKind(def) === "goalPath") {
+    const raw = String(value).trim();
+    if (!raw) return "";
+    const canonical = normalizeGoalPath(raw);
+    if (!canonical) throw new Error("目标路径无效：目标不是标签，不能包含 # 标记。");
+    return canonical;
+  }
+  return String(value).trim();
+}
+function formatFieldValueForTemplate(value, def) {
+  return encodeFieldValueForMarkdown(value, def, { multiSeparator: ", " });
+}
+const FIELD_CODEC_PRESETS = {
+  tags: { valueType: "tags", inputType: "multiTag", semantic: "tags", cardinality: "multi" },
+  goalPath: { valueType: "path", inputType: "hierarchicalSingleSelect", semantic: "goalPath", cardinality: "single", hierarchical: true },
+  image: { valueType: "image", inputType: "image", semantic: "image" },
+  number: { valueType: "number", inputType: "number" },
+  boolean: { valueType: "boolean", inputType: "boolean" },
+  text: { valueType: "string", inputType: "text" }
+};
+const TASK_FIELD_ORDER = [
+  ["状态", ["状态", "status"]],
+  ["目标", ["目标", "goalPath"]],
+  ["创建于", ["创建于", "createdAt"]],
+  ["开始时间", ["开始时间", "startAt"]],
+  ["结束时间", ["结束时间", "endAt"]],
+  ["优先级", ["优先级", "priority"]],
+  ["重要程度", ["重要程度", "importance"]],
+  ["紧急程度", ["紧急程度", "urgency"]],
+  ["预计时长", ["预计时长", "expectedDurationMinutes"]],
+  ["精力要求", ["精力要求", "energyDemand"]],
+  ["脑力要求", ["脑力要求", "brainDemand"]],
+  ["体力要求", ["体力要求", "physicalDemand"]],
+  ["可用场景", ["可用场景", "availabilityContexts"]],
+  ["恢复意图", ["恢复意图", "recoveryIntent"]],
+  ["计划时间", ["计划时间", "scheduledAt"]],
+  ["截止时间", ["截止时间", "dueAt"]],
+  ["计划日期", ["计划日期", "scheduledDate"]],
+  ["开始日期", ["开始日期", "startDate"]],
+  ["截止日期", ["截止日期", "dueDate"]],
+  ["完成于", ["完成于", "completedAt"]],
+  ["取消于", ["取消于", "cancelledAt"]],
+  ["跳过于", ["跳过于", "skippedAt"]],
+  ["系列ID", ["系列ID", "seriesId"]]
+];
+const TASK_SERIES_FIELD_ORDER = [
+  ["状态", ["状态", "status"]],
+  ["目标", ["目标", "goalPath"]],
+  ["优先级", ["优先级", "priority"]],
+  ["重要程度", ["重要程度", "importance"]],
+  ["紧急程度", ["紧急程度", "urgency"]],
+  ["预计时长", ["预计时长", "expectedDurationMinutes"]],
+  ["精力要求", ["精力要求", "energyDemand"]],
+  ["脑力要求", ["脑力要求", "brainDemand"]],
+  ["体力要求", ["体力要求", "physicalDemand"]],
+  ["可用场景", ["可用场景", "availabilityContexts"]],
+  ["恢复意图", ["恢复意图", "recoveryIntent"]],
+  ["重复单位", ["重复单位", "recurrenceUnit"]],
+  ["重复间隔", ["重复间隔", "recurrenceInterval"]],
+  ["重复锚点", ["重复锚点", "recurrenceAnchor"]],
+  ["系列开始日期", ["系列开始日期", "seriesStartDate"]],
+  ["当前任务ID", ["当前任务ID", "currentTaskId"]],
+  ["滚动策略", ["滚动策略", "rolloverPolicy"]]
+];
+function decodeMarkdownString(value, preset = FIELD_CODEC_PRESETS.text) {
+  const decoded = decodeMarkdownFieldValue(value, preset);
+  const encoded = encodeFieldValueForMarkdown(decoded, preset).trim();
+  return encoded || void 0;
+}
+function decodeMarkdownNumber(value) {
+  const decoded = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.number);
+  return typeof decoded === "number" && Number.isFinite(decoded) ? decoded : void 0;
+}
+function normalizeMetaKey(key) {
+  return String(key ?? "").trim().toLowerCase();
+}
+function unique$1(values2) {
+  return Array.from(new Set(values2.map((value) => value.trim()).filter(Boolean)));
+}
+function buildTitle(content, tags2) {
+  let title = "";
+  const trimmed = content.trim();
+  if (trimmed) title = trimmed.split(/\r?\n/)[0];
+  else if (tags2.length > 0) title = tags2.join(", ");
+  return title.replace(new RegExp("^(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trim().slice(0, 80);
+}
+function parseDate$1(value) {
+  const raw = value.trim();
+  if (!raw) return void 0;
+  return normalizeDateStr(raw) || raw;
+}
+function normalizeStoredDateTime(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return void 0;
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(raw)) return raw.replace(" ", "T");
+  return raw;
+}
+function formatRecordDateTimeForMarkdown(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const naive = raw.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?$/);
+  if (naive) return `${naive[1]} ${naive[2]}`;
+  const parsed = new Date(raw);
+  if (!Number.isFinite(parsed.getTime())) return raw.replace("T", " ");
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  const hour = String(parsed.getHours()).padStart(2, "0");
+  const minute = String(parsed.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hour}:${minute}`;
+}
+const TASK_READABLE_DATETIME_LABELS = /* @__PURE__ */ new Set([
+  "创建于",
+  "计划时间",
+  "开始时间",
+  "结束时间",
+  "截止时间",
+  "完成于",
+  "取消于",
+  "跳过于"
+]);
+function decodeRecordContentLines(contentLines, _parentFolder) {
+  let date2;
+  const tags2 = [];
+  let goalPath;
+  const extra = {};
+  let content = "";
+  let contentStarted = false;
+  let icon;
+  let rating;
+  let image;
+  let recordType;
+  let recordSubtype;
+  let recordId;
+  let status;
+  let scheduledAt;
+  let startAt;
+  let endAt;
+  let dueAt;
+  let scheduledDate;
+  let startDate;
+  let dueDate;
+  let completedAt;
+  let cancelledAt;
+  let skippedAt;
+  let createdAt;
+  let priority;
+  let importance;
+  let urgency;
+  let expectedDurationMinutes;
+  let energyDemand;
+  let brainDemand;
+  let physicalDemand;
+  let availabilityContexts2;
+  let recoveryIntent;
+  let seriesId;
+  let recurrenceUnit;
+  let recurrenceInterval;
+  let recurrenceAnchor;
+  let seriesStartDate;
+  let currentTaskId;
+  let rolloverPolicy;
+  let taskId;
+  let sessionStartedAt;
+  let sessionEndedAt;
+  let sessionDurationMinutes;
+  let sessionResult;
+  let sessionSource;
+  let suggestedDurationMinutes;
+  let startEnergyRecordId;
+  let endEnergyRecordId;
+  let energyDelta;
+  let brainDelta;
+  let physicalDelta;
+  const envelopeRecordType = contentLines.map((rawLine) => rawLine.trim().match(/^([^:\r\n]{1,64})::\s*(.*)$/)).find((match5) => match5 && normalizeMetaKey(match5[1]) === "记录类型")?.[2]?.trim();
+  if (envelopeRecordType) recordType = envelopeRecordType;
+  const recordSchema = getRecordSchemaDefinition(recordType);
+  const supportsCustomFields = Boolean(recordSchema?.capabilities.customFields);
+  const supportsBody = Boolean(recordSchema && getRecordFieldContract(recordSchema.recordType, "内容"));
+  for (const rawLine of contentLines) {
+    if (contentStarted) {
+      content += (content ? "\n" : "") + rawLine;
+      continue;
+    }
+    const line2 = rawLine.trim();
+    const kv = line2.match(/^([^:\r\n]{1,64})::\s*(.*)$/);
+    if (kv) {
+      const rawKey = kv[1].trim();
+      const value = kv[2] || "";
+      const key = normalizeMetaKey(rawKey);
+      if (key === "记录id") recordId = value.trim() || void 0;
+      else if (key === "记录子类型") recordSubtype = value.trim() || void 0;
+      else if (key === "标签") tags2.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
+      else if (key === "系列id") seriesId = value.trim();
+      else if (key === "重复单位") {
+        const unit = value.trim().toLowerCase();
+        if (["day", "week", "month", "quarter", "year"].includes(unit)) recurrenceUnit = unit;
+      } else if (key === "重复间隔") {
+        const interval = Number.parseInt(value.trim(), 10);
+        if (Number.isInteger(interval) && interval > 0) recurrenceInterval = interval;
+      } else if (key === "重复锚点") {
+        const anchor = value.trim().toLowerCase();
+        if (["scheduled", "start", "due", "completion"].includes(anchor)) recurrenceAnchor = anchor;
+      } else if (key === "系列开始日期") seriesStartDate = parseDate$1(value);
+      else if (key === "当前任务id") currentTaskId = value.trim() || void 0;
+      else if (key === "滚动策略") {
+        if (value.trim().toLowerCase() === "carry") rolloverPolicy = "carry";
+      } else if (recordType === "task-session" && key === "任务id") taskId = value.trim() || void 0;
+      else if (recordType === "task-session" && key === "开始于") sessionStartedAt = normalizeStoredDateTime(value);
+      else if (recordType === "task-session" && key === "结束于") sessionEndedAt = normalizeStoredDateTime(value);
+      else if (recordType === "task-session" && key === "时长") sessionDurationMinutes = decodeMarkdownNumber(value);
+      else if (recordType === "task-session" && key === "结果") {
+        const result = value.trim().toLowerCase();
+        if (["work-block-ended", "task-completed"].includes(result)) sessionResult = result;
+      } else if (recordType === "task-session" && key === "来源") {
+        const source = value.trim().toLowerCase();
+        if (["timer", "energy-view", "timeline", "unknown"].includes(source)) sessionSource = source;
+      } else if (recordType === "task-session" && key === "建议时长") suggestedDurationMinutes = decodeMarkdownNumber(value);
+      else if (recordType === "task-session" && key === "开始精力记录id") startEnergyRecordId = value.trim() || void 0;
+      else if (recordType === "task-session" && key === "结束精力记录id") endEnergyRecordId = value.trim() || void 0;
+      else if (recordType === "task-session" && key === "精力变化") energyDelta = decodeMarkdownNumber(value);
+      else if (recordType === "task-session" && key === "脑力变化") brainDelta = decodeMarkdownNumber(value);
+      else if (recordType === "task-session" && key === "体力变化") physicalDelta = decodeMarkdownNumber(value);
+      else if (key === "记录类型") recordType = value.trim();
+      else if (key === "状态") status = value.trim().toLowerCase();
+      else if (key === "目标") goalPath = decodeMarkdownString(value, FIELD_CODEC_PRESETS.goalPath);
+      else if (key === "日期") date2 = parseDate$1(value);
+      else if (key === "计划时间") scheduledAt = normalizeStoredDateTime(value);
+      else if (key === "开始时间") startAt = normalizeStoredDateTime(value);
+      else if (key === "结束时间") endAt = normalizeStoredDateTime(value);
+      else if (key === "截止时间") dueAt = normalizeStoredDateTime(value);
+      else if (key === "计划日期") scheduledDate = parseDate$1(value);
+      else if (key === "开始日期") startDate = parseDate$1(value);
+      else if (key === "截止日期") dueDate = parseDate$1(value);
+      else if (key === "创建于") createdAt = normalizeStoredDateTime(value);
+      else if (key === "完成于") completedAt = normalizeStoredDateTime(value);
+      else if (key === "取消于") cancelledAt = normalizeStoredDateTime(value);
+      else if (key === "跳过于") skippedAt = normalizeStoredDateTime(value);
+      else if (key === "优先级") {
+        const p2 = value.trim().toLowerCase();
+        if (["lowest", "low", "medium", "high", "highest"].includes(p2)) priority = p2;
+      } else if (key === "重要程度") {
+        const candidate = value.trim().toLowerCase();
+        if (candidate === "important" || candidate === "normal") importance = candidate;
+      } else if (key === "紧急程度") {
+        const candidate = value.trim().toLowerCase();
+        if (candidate === "urgent" || candidate === "normal") urgency = candidate;
+      } else if (key === "预计时长") expectedDurationMinutes = decodeMarkdownNumber(value);
+      else if (key === "精力要求") energyDemand = value.trim().toLowerCase() || void 0;
+      else if (key === "脑力要求") brainDemand = value.trim().toLowerCase() || void 0;
+      else if (key === "体力要求") physicalDemand = value.trim().toLowerCase() || void 0;
+      else if (key === "可用场景") {
+        const allowed = /* @__PURE__ */ new Set(["any", "work", "home", "commute", "out"]);
+        const aliases2 = { "任意": "any", "工作": "work", "公司": "work", "家": "home", "居家": "home", "通勤": "commute", "外出": "out" };
+        const values2 = String(value || "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean).map((part) => aliases2[part] || part.toLowerCase()).filter((part) => allowed.has(part));
+        availabilityContexts2 = Array.from(new Set(values2));
+      } else if (key === "恢复意图") recoveryIntent = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.boolean);
+      else if (key === "评分") {
+        const decodedRating = decodeMarkdownNumber(value);
+        if (decodedRating !== void 0) rating = decodedRating;
+        else {
+          const visualRating = String(value || "").trim();
+          if (visualRating) {
+            extra[rawKey] = decodeUnknownMarkdownKvValue(visualRating);
+            if (!image) image = visualRating;
+          }
+        }
+      } else if (key === "图标") icon = value.trim();
+      else if (key === "图片") image = decodeMarkdownString(value, FIELD_CODEC_PRESETS.image);
+      else if (key === "内容") {
+        if (supportsBody) {
+          contentStarted = true;
+          content = value;
+        }
+      } else if (supportsCustomFields) extra[rawKey] = decodeUnknownMarkdownKvValue(value);
+    } else {
+      continue;
+    }
+  }
+  const finalTags = unique$1(tags2);
+  return {
+    recordId,
+    title: buildTitle(content, finalTags),
+    content: content.trim(),
+    status,
+    date: date2,
+    scheduledAt,
+    startAt,
+    endAt,
+    dueAt,
+    scheduledDate,
+    startDate,
+    dueDate,
+    completedAt,
+    cancelledAt,
+    skippedAt,
+    createdAt,
+    tags: finalTags,
+    goalPath,
+    recordType,
+    recordSubtype,
+    extra,
+    icon,
+    rating,
+    image,
+    priority,
+    importance,
+    urgency,
+    expectedDurationMinutes,
+    energyDemand,
+    brainDemand,
+    physicalDemand,
+    availabilityContexts: availabilityContexts2,
+    recoveryIntent,
+    seriesId,
+    recurrenceUnit,
+    recurrenceInterval,
+    recurrenceAnchor,
+    seriesStartDate,
+    currentTaskId,
+    rolloverPolicy,
+    taskId,
+    sessionStartedAt,
+    sessionEndedAt,
+    sessionDurationMinutes,
+    sessionResult,
+    sessionSource,
+    suggestedDurationMinutes,
+    startEnergyRecordId,
+    endEnergyRecordId,
+    energyDelta,
+    brainDelta,
+    physicalDelta
+  };
+}
+function markdownScalar(value) {
+  if (value == null) return "";
+  if (Array.isArray(value)) return value.map((v2) => String(v2).trim()).filter(Boolean).join(", ");
+  if (typeof value === "object") return "";
+  return String(value).trim();
+}
+const TASK_SESSION_FIELD_ORDER = [
+  ["任务ID", ["任务ID", "taskId"]],
+  ["系列ID", ["系列ID", "seriesId"]],
+  ["目标", ["目标", "goalPath"]],
+  ["开始于", ["开始于", "sessionStartedAt"]],
+  ["结束于", ["结束于", "sessionEndedAt"]],
+  ["时长", ["时长", "sessionDurationMinutes"]],
+  ["结果", ["结果", "sessionResult"]],
+  ["来源", ["来源", "sessionSource"]],
+  ["建议时长", ["建议时长", "suggestedDurationMinutes"]],
+  ["开始精力记录ID", ["开始精力记录ID", "startEnergyRecordId"]],
+  ["结束精力记录ID", ["结束精力记录ID", "endEnergyRecordId"]],
+  ["精力变化", ["精力变化", "energyDelta"]],
+  ["脑力变化", ["脑力变化", "brainDelta"]],
+  ["体力变化", ["体力变化", "physicalDelta"]]
+];
+function firstValue(fields, keys) {
+  for (const key of keys) {
+    const value = markdownScalar(fields[key]);
+    if (value) return value;
+  }
+  return "";
+}
+const BODY_FIELD_ALIASES = ["内容", "content", "正文", "title", "任务内容", "阻碍", "里程碑"];
+function bodyValue(fields) {
+  for (const key of BODY_FIELD_ALIASES) {
+    const value = fields[key];
+    if (value === void 0 || value === null) continue;
+    if (typeof value === "object") continue;
+    return String(value).replace(/\r\n/g, "\n").trim();
+  }
+  return "";
+}
+function emitBody(lines, body) {
+  if (!body) return;
+  const parts = body.split("\n");
+  lines.push(`内容:: ${parts.shift() || ""}`);
+  lines.push(...parts);
+}
+function encodeRecordBlock(document2) {
+  const fields = document2.fields || {};
+  const lines = ["<!-- start -->", `记录ID:: ${document2.recordId}`, `记录类型:: ${document2.recordType}`];
+  const emitted = /* @__PURE__ */ new Set();
+  if (document2.recordType === "task") {
+    for (const [label, keys] of TASK_FIELD_ORDER) {
+      let value = firstValue(fields, keys);
+      if (label === "状态" && !value) value = "open";
+      if (label === "创建于" && !value) value = (/* @__PURE__ */ new Date()).toISOString();
+      if (value && TASK_READABLE_DATETIME_LABELS.has(label)) value = formatRecordDateTimeForMarkdown(value);
+      if (value) {
+        lines.push(`${label}:: ${value}`);
+        keys.forEach((key) => emitted.add(key));
+      }
+    }
+    for (const [key, raw] of Object.entries(fields)) {
+      if (emitted.has(key) || BODY_FIELD_ALIASES.includes(key) || ["记录ID", "recordId", "id", "记录类型", "recordType"].includes(key)) continue;
+      const value = markdownScalar(raw);
+      if (value) lines.push(`${key}:: ${value}`);
+    }
+    emitBody(lines, bodyValue(fields));
+  } else if (document2.recordType === "task-session") {
+    for (const [label, keys] of TASK_SESSION_FIELD_ORDER) {
+      const value = firstValue(fields, keys);
+      if (value) lines.push(`${label}:: ${value}`);
+    }
+  } else if (document2.recordType === "task-series") {
+    for (const [label, keys] of TASK_SERIES_FIELD_ORDER) {
+      let value = firstValue(fields, keys);
+      if (label === "状态" && !value) value = "active";
+      if (label === "重复间隔" && !value) value = "1";
+      if (label === "重复锚点" && !value) value = "scheduled";
+      if (label === "滚动策略" && !value) value = "carry";
+      if (value) lines.push(`${label}:: ${value}`);
+    }
+    emitBody(lines, bodyValue(fields));
+  } else {
+    const schema = getRecordSchemaDefinition(document2.recordType);
+    const supportsBody = Boolean(schema && getRecordFieldContract(schema.recordType, "内容"));
+    for (const [key, raw] of Object.entries(fields)) {
+      if (supportsBody && BODY_FIELD_ALIASES.includes(key)) continue;
+      if (["记录ID", "recordId", "id", "记录类型", "recordType"].includes(key)) continue;
+      const value = markdownScalar(raw);
+      if (value) lines.push(`${key}:: ${value}`);
+    }
+    if (supportsBody) emitBody(lines, bodyValue(fields));
+  }
+  lines.push("<!-- end -->");
+  return lines.join("\n");
+}
+function encodeRecordDraft(input) {
+  return encodeRecordBlock({
+    recordId: input.recordId,
+    recordType: input.draft.recordType,
+    fields: input.draft.fields
+  });
+}
+const ENERGY_TARGET_FILE = "01/精力.md";
+const ENERGY_APPEND_UNDER_HEADER = "## {{goalPath}}";
+function clean$1(value) {
+  return String(value || "").trim();
+}
+function buildEnergySnapshotRecord(input) {
+  const captureMode2 = input.captureMode || "realtime";
+  const timePrecision = input.timePrecision || (input.time ? "exact" : input.period ? "period" : "day");
+  const isDetailed = input.scoreMode === "detailed";
+  const brainScore = isDetailed ? normalizeEnergyScore(input.brainScore) : void 0;
+  const physicalScore = isDetailed ? normalizeEnergyScore(input.physicalScore) : void 0;
+  const score = isDetailed ? calculateDetailedEnergyScore(input.brainScore, input.physicalScore) : normalizeEnergyScore(input.score);
+  return {
+    ...input,
+    recordId: createRecordId("energy"),
+    goalPath: clean$1(input.goalPath) || void 0,
+    time: clean$1(input.time) || void 0,
+    period: clean$1(input.period) || void 0,
+    recordedAt: clean$1(input.recordedAt) || void 0,
+    source: clean$1(input.source) || void 0,
+    recordType: "energy",
+    subtype: "snapshot",
+    score,
+    scoreMode: input.scoreMode || "quick",
+    captureMode: captureMode2,
+    timePrecision,
+    quickLevel: toEnergyQuickLevel(score),
+    brainScore,
+    physicalScore,
+    aggregateMethod: isDetailed ? "arithmetic-mean-v1" : void 0
+  };
+}
+function buildEnergySnapshotMarkdown(input) {
+  const record2 = "recordType" in input ? input : buildEnergySnapshotRecord(input);
+  return encodeRecordBlock({
+    recordId: record2.recordId,
+    recordType: "energy",
+    fields: {
+      "记录子类型": "snapshot",
+      "目标": record2.goalPath,
+      "日期": record2.date,
+      "时间": record2.time,
+      "时段": record2.period,
+      "精力值": record2.score,
+      "脑力精力": record2.brainScore,
+      "体力精力": record2.physicalScore,
+      "综合算法": record2.aggregateMethod,
+      "评分模式": record2.scoreMode,
+      "记录方式": record2.captureMode,
+      "时间精度": record2.timePrecision,
+      "记录时间": record2.recordedAt,
+      "来源": record2.source
+    }
+  });
+}
+const ENERGY_PROTOCOL_ACTION = "thinkos-energy";
+const ENERGY_PROTOCOL_VERSION = 1;
+function readInteger(raw) {
+  const text2 = String(raw ?? "").trim();
+  if (!/^-?\d+$/.test(text2)) return null;
+  const value = Number(text2);
+  return Number.isSafeInteger(value) ? value : null;
+}
+function parseEnergyProtocolParams(params) {
+  const version2 = readInteger(params.v);
+  if (version2 !== ENERGY_PROTOCOL_VERSION) {
+    return { ok: false, message: `不支持的精力快捷协议版本：${params.v || "缺失"}。` };
+  }
+  const mode = String(params.mode || "").trim();
+  if (mode === "quick") {
+    const score = readInteger(params.energy);
+    if (score == null || !isEnergyQuickLevel(score)) {
+      return { ok: false, message: "快捷精力只接受 20 / 40 / 60 / 80 / 100。" };
+    }
+    return { ok: true, payload: { version: 1, mode: "quick", score } };
+  }
+  if (mode === "detailed") {
+    const brainScore = readInteger(params.mental);
+    const physicalScore = readInteger(params.physical);
+    if (brainScore == null || brainScore < 0 || brainScore > 100) {
+      return { ok: false, message: "详细精力的脑力必须是 0–100 的整数。" };
+    }
+    if (physicalScore == null || physicalScore < 0 || physicalScore > 100) {
+      return { ok: false, message: "详细精力的体力必须是 0–100 的整数。" };
+    }
+    return {
+      ok: true,
+      payload: {
+        version: 1,
+        mode: "detailed",
+        brainScore: normalizeEnergyScore(brainScore),
+        physicalScore: normalizeEnergyScore(physicalScore)
+      }
+    };
+  }
+  return { ok: false, message: "精力快捷协议的模式只支持“快捷”或“详细”。" };
+}
+function resolveEnergyCaptureGoal(goals, defaultGoalPath) {
+  const available = goals.filter((goal) => goal.status !== "archived");
+  const preferredPath = String(defaultGoalPath || "").trim();
+  if (preferredPath) {
+    const preferred = available.find((goal) => goal.path === preferredPath);
+    if (preferred) return preferred;
+  }
+  return available.find((goal) => goal.status === "active") || available[0] || null;
+}
+const TASK_SESSION_RESULT_PRESENTATION = {
+  "work-block-ended": { result: "work-block-ended", label: "工作块已结束", emoji: "▶️", className: "open", status: "open" },
+  "task-completed": { result: "task-completed", label: "本次执行已完成任务", emoji: "✅", className: "done", status: "done" }
+};
+function getTaskSessionResultPresentation(value) {
+  const result = String(value || "").trim();
+  return TASK_SESSION_RESULT_PRESENTATION[result] || null;
+}
+function normalizeTaskSessionDurationMinutes(value) {
+  const number2 = Number(value);
+  if (!Number.isFinite(number2) || number2 < 0) return null;
+  return Math.round(number2 * 100) / 100;
+}
+function buildTaskSessionFields(task, input) {
+  const durationMinutes2 = normalizeTaskSessionDurationMinutes(input.durationMinutes);
+  if (durationMinutes2 == null || durationMinutes2 <= 0) throw new Error("task_session_duration_invalid");
+  if (!input.startedAt || !Number.isFinite(Date.parse(input.startedAt))) throw new Error("task_session_started_at_invalid");
+  if (!input.endedAt || !Number.isFinite(Date.parse(input.endedAt))) throw new Error("task_session_ended_at_invalid");
+  if (Date.parse(input.endedAt) < Date.parse(input.startedAt)) throw new Error("task_session_time_order_invalid");
+  if (!["work-block-ended", "task-completed"].includes(input.result)) throw new Error("task_session_result_invalid");
+  if (!["timer", "energy-view", "timeline", "unknown"].includes(input.source)) throw new Error("task_session_source_invalid");
+  return {
+    taskId: task.id,
+    seriesId: task.seriesId,
+    goalPath: task.goalPath,
+    sessionStartedAt: input.startedAt,
+    sessionEndedAt: input.endedAt,
+    sessionDurationMinutes: durationMinutes2,
+    sessionResult: input.result,
+    sessionSource: input.source,
+    suggestedDurationMinutes: input.suggestedDurationMinutes,
+    startEnergyRecordId: input.startEnergyRecordId
+  };
+}
+function asTaskSessionRecord(record2) {
+  if (!record2 || record2.recordType !== "task-session") return null;
+  const candidate = record2;
+  if (!candidate.taskId) return null;
+  if (!candidate.sessionStartedAt || !Number.isFinite(Date.parse(candidate.sessionStartedAt))) return null;
+  if (!candidate.sessionEndedAt || !Number.isFinite(Date.parse(candidate.sessionEndedAt))) return null;
+  if (normalizeTaskSessionDurationMinutes(candidate.sessionDurationMinutes) == null) return null;
+  if (!["work-block-ended", "task-completed"].includes(String(candidate.sessionResult || ""))) return null;
+  if (!["timer", "energy-view", "timeline", "unknown"].includes(String(candidate.sessionSource || ""))) return null;
+  return record2;
+}
+function localSessionDay(value) {
+  const date2 = new Date(value);
+  if (!Number.isFinite(date2.getTime())) return "";
+  return `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
+}
+function recordedTaskMinutes(records, today) {
+  return records.reduce((sum, record2) => {
+    const session = asTaskSessionRecord(record2);
+    if (!session || localSessionDay(session.sessionStartedAt) !== today) return sum;
+    const duration2 = Number(session.sessionDurationMinutes);
+    if (!Number.isFinite(duration2) || duration2 <= 0) return sum;
+    return sum + Math.min(720, Math.max(0, duration2));
+  }, 0);
+}
+function buildEnergyActionPolicyContext(items, management, today) {
+  const dailyTaskMinutes = Math.round(recordedTaskMinutes(items, today));
+  const preserveGuardrail = management?.guardrails?.find((row) => row.key === "preserve-capacity" || row.key === "long-session");
+  const loadRisk = dailyTaskMinutes >= 180;
+  const preserveCapacityRisk = loadRisk || Boolean(preserveGuardrail);
+  let preserveCapacityReason;
+  if (dailyTaskMinutes >= 300) {
+    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}分钟，建议用更短工作块并到点收尾。`;
+  } else if (loadRisk) {
+    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}分钟，这一块先设明确停止点，给后续留余量。`;
+  } else if (preserveGuardrail) {
+    preserveCapacityReason = "你的历史里已出现高能后持续过久的迹象，这一块先设明确停止点。";
+  }
+  return { dailyTaskMinutes, preserveCapacityRisk, preserveCapacityReason };
+}
+function baseCap(band) {
+  if (band === "recover") return 30;
+  if (band === "steady") return 45;
+  return 60;
+}
+function resolveEnergyActionTiming(candidate, band, policy) {
+  const requested = candidate.durationMinutes && candidate.durationMinutes > 0 ? candidate.durationMinutes : void 0;
+  let cap = baseCap(band);
+  const personalDepletion = Boolean(
+    candidate.historicalEffect && candidate.historicalEffect.sampleCount >= 3 && candidate.historicalEffect.meanDelta <= -8
+  );
+  if (personalDepletion) cap = Math.min(cap, 45);
+  if (policy?.preserveCapacityRisk && band !== "recover") cap = Math.min(cap, 45);
+  if ((policy?.dailyTaskMinutes || 0) >= 300 && band !== "recover") cap = Math.min(cap, 30);
+  if (personalDepletion && (policy?.dailyTaskMinutes || 0) >= 180 && band !== "recover") cap = Math.min(cap, 30);
+  const minutes = Math.max(1, Math.round(Math.min(requested ?? cap, cap)));
+  const preserveCapacity = band !== "recover" && Boolean(policy?.preserveCapacityRisk);
+  return {
+    minutes,
+    preserveCapacity,
+    stopReason: preserveCapacity ? policy?.preserveCapacityReason : void 0
+  };
+}
+const ENERGY_RECOMMENDATION_LOW_THRESHOLD = 40;
+const ENERGY_RECOMMENDATION_HIGH_THRESHOLD = 80;
+const DEFAULT_MAXIMUM = 3;
+const PERSONAL_SAMPLE_MINIMUM = 3;
+function clampScore(value) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+function bandFor(score, lowThreshold, highThreshold) {
+  if (score <= lowThreshold) return "recover";
+  if (score >= highThreshold) return "use-capacity";
+  return "steady";
+}
+function stateLabel$1(band) {
+  if (band === "recover") return "低精力";
+  if (band === "use-capacity") return "高精力";
+  return "可用精力";
+}
+function loadValue(load2) {
+  if (load2 === "low") return 25;
+  if (load2 === "medium") return 55;
+  if (load2 === "high") return 85;
+  return void 0;
+}
+function demandFit(available, load2) {
+  const demand = loadValue(load2);
+  if (demand == null) return 0;
+  const gap2 = available - demand;
+  let fit = 16 - Math.abs(gap2) * 0.38;
+  if (gap2 < -5) fit -= Math.min(24, Math.abs(gap2) * 0.55);
+  return Math.max(-30, Math.min(16, Math.round(fit * 10) / 10));
+}
+function effectEvidence(effect2) {
+  return effect2 && effect2.sampleCount >= PERSONAL_SAMPLE_MINIMUM ? "personal" : "metadata";
+}
+function historicalFit(effect2, band) {
+  if (!effect2 || effect2.sampleCount < PERSONAL_SAMPLE_MINIMUM) return 0;
+  const delta = Math.max(-40, Math.min(40, effect2.meanDelta));
+  if (band === "recover") return delta * 1.25;
+  if (band === "use-capacity") return delta >= 0 ? Math.min(6, delta * 0.15) : delta * 0.38;
+  return delta * 0.55;
+}
+function durationFit(duration2, band) {
+  if (duration2 == null || duration2 <= 0) return 0;
+  if (band === "recover") {
+    if (duration2 <= 5) return 8;
+    if (duration2 <= 20) return 10;
+    if (duration2 <= 35) return 6;
+    if (duration2 <= 60) return -4;
+    return -14;
+  }
+  if (band === "use-capacity") {
+    if (duration2 <= 5) return -5;
+    if (duration2 <= 20) return 0;
+    if (duration2 <= 60) return 8;
+    if (duration2 <= 120) return 10;
+    return 2;
+  }
+  if (duration2 <= 5) return 1;
+  if (duration2 <= 45) return 6;
+  if (duration2 <= 75) return 2;
+  return -5;
+}
+function energyOpportunityFit(candidate, brain, physical, band) {
+  const brainFit = demandFit(brain, candidate.brainLoad);
+  const physicalFit = demandFit(physical, candidate.physicalLoad);
+  let score = brainFit + physicalFit;
+  if (band === "use-capacity") {
+    if (candidate.brainLoad === "high" && brain >= 80) score += 12;
+    if (candidate.physicalLoad === "high" && physical >= 80) score += 8;
+    if (!candidate.brainLoad && !candidate.physicalLoad) score -= 3;
+    if (candidate.brainLoad === "low" && candidate.physicalLoad !== "high") score -= 6;
+  } else if (band === "recover") {
+    if (candidate.brainLoad === "high") score -= 18;
+    if (candidate.physicalLoad === "high" && physical <= 45) score -= 18;
+    if (candidate.brainLoad === "low") score += 5;
+    if (candidate.physicalLoad === "low") score += 3;
+  }
+  return score;
+}
+function valueFit(value, band) {
+  if (band === "use-capacity") return (value - 50) * 0.9;
+  if (band === "steady") return (value - 50) * 0.3;
+  return (value - 50) * 0.1;
+}
+function opportunityCostPenalty(candidate, value, band) {
+  if (band !== "use-capacity") return 0;
+  const duration2 = candidate.durationMinutes;
+  const micro = duration2 != null && duration2 <= 5;
+  const lowDemand = candidate.brainLoad === "low" && candidate.physicalLoad !== "high";
+  if (candidate.recoveryIntent) return -18;
+  if (micro && value < 75) return -12;
+  if (lowDemand && value < 70) return -8;
+  return 0;
+}
+function candidateScore(candidate, context, band) {
+  const overall = clampScore(context.score);
+  const brain = context.brainScore == null ? overall : clampScore(context.brainScore);
+  const physical = context.physicalScore == null ? overall : clampScore(context.physicalScore);
+  const value = candidate.valueScore == null ? 50 : clampScore(candidate.valueScore);
+  let score = 50;
+  score += valueFit(value, band);
+  score += energyOpportunityFit(candidate, brain, physical, band);
+  score += durationFit(candidate.durationMinutes, band);
+  score += historicalFit(candidate.historicalEffect, band);
+  score += opportunityCostPenalty(candidate, value, band);
+  if (band === "recover" && candidate.recoveryIntent) score += 30;
+  if (band === "steady" && candidate.recoveryIntent) score += 5;
+  return Math.round(score * 10) / 10;
+}
+function signed$1(value) {
+  const rounded = Math.round(value);
+  return `${rounded > 0 ? "+" : ""}${rounded}`;
+}
+function loadLabel(load2) {
+  if (load2 === "high") return "高";
+  if (load2 === "medium") return "中";
+  if (load2 === "low") return "低";
+  return "";
+}
+function reasonFor(candidate, band, duration2) {
+  const parts = [];
+  if (band === "use-capacity") parts.push("当前高精力窗口");
+  else if (band === "recover") parts.push("当前低精力窗口");
+  else parts.push("当前精力可用");
+  if (candidate.valueScore != null && candidate.valueScore >= 75) parts.push("高价值/紧急");
+  if (candidate.brainLoad) parts.push(`${loadLabel(candidate.brainLoad)}脑力`);
+  if (candidate.physicalLoad) parts.push(`${loadLabel(candidate.physicalLoad)}体力`);
+  if (candidate.recoveryIntent) parts.push("恢复项");
+  parts.push(`建议 ${duration2}分钟`);
+  const effect2 = candidate.historicalEffect;
+  if (effect2 && effect2.sampleCount >= PERSONAL_SAMPLE_MINIMUM) {
+    parts.push(`个人历史 ${signed$1(effect2.meanDelta)} · 样本数 ${effect2.sampleCount}`);
+  }
+  return parts.join(" · ");
+}
+function buildEnergyActionRecommendations(context, candidates) {
+  const lowThreshold = Math.max(0, Math.min(80, Math.round(context.lowThreshold ?? ENERGY_RECOMMENDATION_LOW_THRESHOLD)));
+  const highThreshold = Math.max(lowThreshold + 1, Math.min(100, Math.round(context.highThreshold ?? ENERGY_RECOMMENDATION_HIGH_THRESHOLD)));
+  const maximum = Math.max(1, Math.min(500, Math.floor(context.maximumRecommendations ?? DEFAULT_MAXIMUM)));
+  const score = clampScore(context.score);
+  const band = bandFor(score, lowThreshold, highThreshold);
+  const normalizedContext = { ...context, score };
+  const ranked = candidates.filter((candidate) => !!candidate.id && !!candidate.title.trim()).map((candidate) => {
+    const timing = resolveEnergyActionTiming(candidate, band, context.actionPolicy);
+    const duration2 = timing.minutes;
+    return {
+      candidate,
+      band,
+      fitScore: candidateScore(candidate, normalizedContext, band),
+      evidence: effectEvidence(candidate.historicalEffect),
+      reason: reasonFor(candidate, band, duration2),
+      suggestedDurationMinutes: duration2,
+      preserveCapacity: timing.preserveCapacity,
+      stopReason: timing.stopReason
+    };
+  }).sort((left2, right2) => right2.fitScore - left2.fitScore || (right2.candidate.valueScore || 0) - (left2.candidate.valueScore || 0) || left2.candidate.title.localeCompare(right2.candidate.title, "zh-CN")).slice(0, maximum).map((row, index) => ({ ...row, rank: index + 1 }));
+  return {
+    band,
+    stateLabel: stateLabel$1(band),
+    recommendations: ranked,
+    consideredCount: candidates.length
+  };
+}
+const DEFAULT_HIGH_BEFORE_GAP = 60;
+const DEFAULT_HIGH_AFTER_GAP = 30;
+const DEFAULT_MINIMUM_TREND_SAMPLES = 3;
+const DEFAULT_SUPPORTED_TREND_SAMPLES = 5;
+function readEffectText(value) {
+  const text2 = String(value ?? "").trim();
+  return text2 || void 0;
+}
+function effectAbsoluteMinute(date2, time2) {
+  const stamp = Date.parse(`${date2}T${time2.length === 5 ? `${time2}:00` : time2}`);
+  return Number.isFinite(stamp) ? stamp / 6e4 : void 0;
+}
+function localDateTimeFromMs(stamp) {
+  const value = new Date(stamp);
+  const date2 = `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+  const time2 = `${String(value.getHours()).padStart(2, "0")}:${String(value.getMinutes()).padStart(2, "0")}`;
+  return { date: date2, time: time2 };
+}
+function resolveEffectActivityInterval(item, byId) {
+  const session = asTaskSessionRecord(item);
+  if (!session) return null;
+  const startMs = Date.parse(session.sessionStartedAt);
+  const endMs = Date.parse(session.sessionEndedAt);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return null;
+  const task = byId.get(session.taskId);
+  const activityItem = task ? {
+    ...task,
+    id: session.id,
+    goalPath: session.goalPath || task.goalPath,
+    duration: session.sessionDurationMinutes
+  } : session;
+  const start2 = localDateTimeFromMs(startMs);
+  const end2 = localDateTimeFromMs(endMs);
+  return {
+    item: activityItem,
+    startAbsolute: startMs / 6e4,
+    endAbsolute: endMs / 6e4,
+    startDate: start2.date,
+    startTime: start2.time,
+    endDate: end2.date,
+    endTime: end2.time,
+    durationMinutes: Math.max(1, Math.round(session.sessionDurationMinutes))
+  };
+}
+function readEffectEnergyPoint(item) {
+  if (!isEnergyItem(item)) return null;
+  const snapshot = readEnergyItemSnapshot(item);
+  if (!snapshot?.date || !snapshot.time) return null;
+  const absoluteMinute2 = effectAbsoluteMinute(snapshot.date, snapshot.time);
+  if (absoluteMinute2 == null) return null;
+  return {
+    itemId: item.id,
+    date: snapshot.date,
+    time: snapshot.time,
+    score: snapshot.score,
+    brainScore: snapshot.brainScore,
+    physicalScore: snapshot.physicalScore,
+    item,
+    absoluteMinute: absoluteMinute2
+  };
+}
+function activityTitle(item) {
+  return readEffectText(item.title) || readEffectText(item.content) || "未命名任务";
+}
+function classifyEnergyActivity(item) {
+  const text2 = [item.title, item.content, item.goalPath].map((value) => String(value || "")).join(" ");
+  if (/代码|编码|编程|开发|插件|debug|调试/i.test(text2)) return "代码 / 开发";
+  if (/会议|开会|沟通|讨论|同步/.test(text2)) return "会议 / 沟通";
+  if (/读书|阅读|看书|学习|课程/.test(text2)) return "阅读 / 学习";
+  if (/写作|记录|总结|复盘|笔记/.test(text2)) return "写作 / 记录";
+  if (/午睡|睡觉|睡眠|补觉/.test(text2)) return "睡眠 / 午睡";
+  if (/运动|锻炼|健身|跑步|散步|八段锦|瑜伽|骑行|游泳/.test(text2)) return "运动 / 活动";
+  if (/手机|抖音|短视频|刷视频|刷手机/.test(text2)) return "手机 / 短视频";
+  if (/吃饭|早餐|午饭|晚饭|餐|做饭/.test(text2)) return "饮食";
+  if (/孩子|陪娃|陪.*玩|家庭|家人/.test(text2)) return "家庭 / 陪伴";
+  if (/家务|打扫|收拾|整理/.test(text2)) return "家务 / 整理";
+  return activityTitle(item).slice(0, 24);
+}
+function effectGoalLabel(item) {
+  return readEffectText(item.goalPath) || "未分目标";
+}
+function effectDurationBucket(durationMinutes2) {
+  if (durationMinutes2 < 30) return "<30分钟";
+  if (durationMinutes2 < 60) return "30–59分钟";
+  if (durationMinutes2 < 90) return "60–89分钟";
+  if (durationMinutes2 < 120) return "90–119分钟";
+  return "≥120分钟";
+}
+function effectConfidence(beforeGap, afterGap, options) {
+  return beforeGap <= options.highBeforeGapMinutes && afterGap <= options.highAfterGapMinutes ? "high" : "medium";
+}
+function medianEffect(values2) {
+  const sorted = [...values2].sort((left2, right2) => left2 - right2);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
+}
+function meanEffect(values2) {
+  return values2.reduce((sum, value) => sum + value, 0) / Math.max(1, values2.length);
+}
+function roundedEffect(value) {
+  return Math.round(value * 10) / 10;
+}
+function aggregateEffectRows(samples, dimension, keyOf2, minimumTrendSamples, supportedTrendSamples) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const sample of samples) {
+    const key = keyOf2(sample);
+    const bucket = groups.get(key) || [];
+    bucket.push(sample);
+    groups.set(key, bucket);
+  }
+  return [...groups.entries()].map(([key, rows]) => {
+    const deltas = rows.map((row) => row.deltaScore);
+    const brainDeltas = rows.map((row) => row.deltaBrain).filter((value) => value != null);
+    const physicalDeltas = rows.map((row) => row.deltaPhysical).filter((value) => value != null);
+    const meanDelta = meanEffect(deltas);
+    const medianDelta = medianEffect(deltas);
+    const evidence = rows.length < minimumTrendSamples ? "insufficient" : rows.length < supportedTrendSamples ? "exploratory" : "supported";
+    let trend = "insufficient";
+    if (evidence !== "insufficient") {
+      if (meanDelta >= 8 && medianDelta >= 5) trend = "recovery";
+      else if (meanDelta <= -8 && medianDelta <= -5) trend = "depletion";
+      else trend = "mixed";
+    }
+    return {
+      dimension,
+      key,
+      label: key,
+      sampleCount: rows.length,
+      meanDelta: roundedEffect(meanDelta),
+      medianDelta: roundedEffect(medianDelta),
+      meanBrainDelta: brainDeltas.length ? roundedEffect(meanEffect(brainDeltas)) : void 0,
+      meanPhysicalDelta: physicalDeltas.length ? roundedEffect(meanEffect(physicalDeltas)) : void 0,
+      meanDurationMinutes: roundedEffect(meanEffect(rows.map((row) => row.durationMinutes))),
+      positiveCount: rows.filter((row) => row.deltaScore >= 5).length,
+      negativeCount: rows.filter((row) => row.deltaScore <= -5).length,
+      neutralCount: rows.filter((row) => Math.abs(row.deltaScore) < 5).length,
+      trend,
+      evidence
+    };
+  }).sort((left2, right2) => {
+    if (left2.sampleCount !== right2.sampleCount) return right2.sampleCount - left2.sampleCount;
+    return Math.abs(right2.meanDelta) - Math.abs(left2.meanDelta);
+  });
+}
+function buildEnergyEffects(items, options = {}) {
+  const highBeforeGapMinutes = Math.max(1, options.highBeforeGapMinutes ?? DEFAULT_HIGH_BEFORE_GAP);
+  const highAfterGapMinutes = Math.max(1, options.highAfterGapMinutes ?? DEFAULT_HIGH_AFTER_GAP);
+  const minimumTrendSamples = Math.max(2, options.minimumTrendSamples ?? DEFAULT_MINIMUM_TREND_SAMPLES);
+  const supportedTrendSamples = Math.max(minimumTrendSamples, options.supportedTrendSamples ?? DEFAULT_SUPPORTED_TREND_SAMPLES);
+  const byId = new Map(items.map((item) => [item.id, item]));
+  const pointById = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    const point = readEffectEnergyPoint(item);
+    if (point) pointById.set(point.itemId, point);
+  }
+  const intervals = items.map((item) => resolveEffectActivityInterval(item, byId)).filter((interval) => !!interval).sort((left2, right2) => left2.startAbsolute - right2.startAbsolute);
+  if (intervals.length === 0) return null;
+  const samples = [];
+  for (const record2 of items) {
+    const session = asTaskSessionRecord(record2);
+    if (!session?.startEnergyRecordId || !session.endEnergyRecordId) continue;
+    const interval = resolveEffectActivityInterval(record2, byId);
+    if (!interval) continue;
+    const before = pointById.get(session.startEnergyRecordId);
+    const after = pointById.get(session.endEnergyRecordId);
+    if (!before || !after || before.itemId === after.itemId) continue;
+    const beforeGapMinutes = Math.max(0, Math.round(interval.startAbsolute - before.absoluteMinute));
+    const afterGapMinutes = Math.max(0, Math.round(after.absoluteMinute - interval.endAbsolute));
+    const deltaScore = typeof session.energyDelta === "number" ? session.energyDelta : after.score - before.score;
+    const deltaBrain = typeof session.brainDelta === "number" ? session.brainDelta : before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : void 0;
+    const deltaPhysical = typeof session.physicalDelta === "number" ? session.physicalDelta : before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : void 0;
+    samples.push({
+      activityItemId: session.id,
+      activityTitle: activityTitle(interval.item),
+      activityLabel: classifyEnergyActivity(interval.item),
+      goalLabel: effectGoalLabel(interval.item),
+      durationBucket: effectDurationBucket(interval.durationMinutes),
+      durationMinutes: interval.durationMinutes,
+      startDate: interval.startDate,
+      startTime: interval.startTime,
+      endDate: interval.endDate,
+      endTime: interval.endTime,
+      before,
+      after,
+      beforeGapMinutes,
+      afterGapMinutes,
+      deltaScore,
+      deltaBrain,
+      deltaPhysical,
+      confidence: effectConfidence(beforeGapMinutes, afterGapMinutes, { highBeforeGapMinutes, highAfterGapMinutes }),
+      item: interval.item
+    });
+  }
+  return {
+    eligibleActivityCount: intervals.length,
+    pairedActivityCount: samples.length,
+    highConfidencePairCount: samples.filter((sample) => sample.confidence === "high").length,
+    mediumConfidencePairCount: samples.filter((sample) => sample.confidence === "medium").length,
+    excludedActivityCount: intervals.length - samples.length,
+    samples,
+    byActivity: aggregateEffectRows(samples, "activity", (sample) => sample.activityLabel, minimumTrendSamples, supportedTrendSamples),
+    byGoal: aggregateEffectRows(samples, "goal", (sample) => sample.goalLabel, minimumTrendSamples, supportedTrendSamples),
+    byDuration: aggregateEffectRows(samples, "duration", (sample) => sample.durationBucket, minimumTrendSamples, supportedTrendSamples)
+  };
+}
+function text$3(value) {
+  return String(value ?? "").trim();
+}
+function bool(value) {
+  if (typeof value === "boolean") return value;
+  const raw = text$3(value).toLowerCase();
+  if (!raw) return void 0;
+  if (["true", "1", "yes", "y", "是", "启用"].includes(raw)) return true;
+  if (["false", "0", "no", "n", "否", "禁用"].includes(raw)) return false;
+  return void 0;
+}
+function number$2(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const raw = text$3(value);
+  if (!raw) return void 0;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : void 0;
+}
+function normalizedBlock(item) {
+  return text$3(item.recordType || item.extra?.["记录类型"]).replace(/^core\./i, "").toLowerCase();
+}
+function sourceFor(item) {
+  const block = normalizedBlock(item);
+  if (block === "task") return "task";
+  if (block === "plan") return "plan";
+  if (block === "habit") return "habit";
+  return null;
+}
+function load(value) {
+  const raw = text$3(value).toLowerCase();
+  if (!raw) return void 0;
+  if (["low", "低", "轻", "轻量"].includes(raw)) return "low";
+  if (["medium", "mid", "中", "中等"].includes(raw)) return "medium";
+  if (["high", "高", "重", "高负荷"].includes(raw)) return "high";
+  return void 0;
+}
+const CONTEXT_ALIASES = {
+  any: "any",
+  "任意": "any",
+  work: "work",
+  "工作": "work",
+  "公司": "work",
+  home: "home",
+  "家": "home",
+  "居家": "home",
+  commute: "commute",
+  "通勤": "commute",
+  out: "out",
+  "外出": "out"
+};
+function availabilityContexts(value) {
+  const rows = Array.isArray(value) ? value : String(value ?? "").split(/[,，\n]/);
+  const normalized2 = rows.map((row) => CONTEXT_ALIASES[text$3(row)] || CONTEXT_ALIASES[text$3(row).toLowerCase()]).filter((row) => !!row);
+  return Array.from(new Set(normalized2));
+}
+function contextAllowed(item, currentContext) {
+  if (!currentContext || currentContext === "any") return true;
+  const contexts = availabilityContexts(item.availabilityContexts);
+  if (contexts.length === 0 || contexts.includes("any")) return true;
+  return contexts.includes(currentContext);
+}
+function median$2(values2) {
+  const sorted = values2.filter((value2) => Number.isFinite(value2) && value2 > 0).sort((a2, b2) => a2 - b2);
+  if (sorted.length < 2) return void 0;
+  const middle = Math.floor(sorted.length / 2);
+  const value = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+  return Math.max(1, Math.min(240, Math.round(value)));
+}
+function historyDurationMaps(records) {
+  const taskRows = /* @__PURE__ */ new Map();
+  const seriesRows = /* @__PURE__ */ new Map();
+  const byId = new Map(records.map((record2) => [record2.id, record2]));
+  for (const record2 of records) {
+    const session = asTaskSessionRecord(record2);
+    if (!session) continue;
+    const duration2 = number$2(session.sessionDurationMinutes);
+    if (!duration2 || duration2 <= 0) continue;
+    taskRows.set(session.taskId, [...taskRows.get(session.taskId) || [], duration2]);
+    const task = byId.get(session.taskId);
+    const seriesId = text$3(session.seriesId || task?.seriesId);
+    if (seriesId) seriesRows.set(seriesId, [...seriesRows.get(seriesId) || [], duration2]);
+  }
+  const build = (rows) => new Map([...rows].flatMap(([key, values2]) => {
+    const value = median$2(values2);
+    return value == null ? [] : [[key, value]];
+  }));
+  return { byTaskId: build(taskRows), bySeriesId: build(seriesRows) };
+}
+function inferredDuration(item, history) {
+  const direct = number$2(item.expectedDurationMinutes);
+  if (direct != null && direct > 0) return Math.max(1, Math.min(240, Math.round(direct)));
+  const seriesId = text$3(item.seriesId);
+  if (seriesId) {
+    const seriesDuration = history.bySeriesId.get(seriesId);
+    if (seriesDuration != null) return seriesDuration;
+  }
+  return history.byTaskId.get(item.id);
+}
+function priorityValue(item) {
+  const map = {
+    lowest: 20,
+    low: 35,
+    medium: 55,
+    high: 75,
+    highest: 95
+  };
+  return map[item.priority || ""] ?? 50;
+}
+function parseDayDiff(value, today) {
+  if (!value || !today) return null;
+  const valueMs = Date.parse(`${value}T12:00:00`);
+  const todayMs = Date.parse(`${today}T12:00:00`);
+  if (!Number.isFinite(valueMs) || !Number.isFinite(todayMs)) return null;
+  return Math.round((valueMs - todayMs) / 864e5);
+}
+function dueBonus(item, today) {
+  const due = text$3(item.dueDate).slice(0, 10);
+  const days = parseDayDiff(due, today);
+  if (days == null) return 0;
+  if (days < -30) return 0;
+  if (days < 0) return 18;
+  if (days <= 1) return 14;
+  if (days <= 3) return 8;
+  if (days <= 7) return 3;
+  return 0;
+}
+function scheduleBonus(item, today) {
+  const date2 = text$3(item.scheduledDate || item.startDate).slice(0, 10);
+  const diff = parseDayDiff(date2, today);
+  return diff === 0 ? 8 : 0;
+}
+function futureTask(item, today) {
+  const date2 = text$3(item.startDate || item.scheduledDate).slice(0, 10);
+  const diff = parseDayDiff(date2, today);
+  return diff != null && diff > 0;
+}
+function candidateTitle(item) {
+  return text$3(item.content || item.editableText || item.title).slice(0, 120);
+}
+function normalizedLabel(value) {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+function exclusionReason(item, source, today, options) {
+  const explicit = bool(item.extra?.["可推荐"] ?? item.extra?.["recommendable"]);
+  if (explicit === false) return "explicitly-disabled";
+  if (source === "task") {
+    if (!isTaskOpen(item)) return "not-open-task";
+    if (isTaskRecurring(item) && !options.includeRecurringTasks && explicit !== true) return "recurring-task";
+    if (futureTask(item, today) && options.includeFutureTasks !== true) return "future-task";
+    if (!contextAllowed(item, options.currentContext)) return "context-unavailable";
+    return null;
+  }
+  if (source === "habit") {
+    if (options.includeHabits === true && explicit === true && !item.doneDate && !item.cancelledDate) return null;
+    return "habit-not-opted-in";
+  }
+  if (source === "plan") {
+    if (options.includePlans === true && explicit === true && !item.doneDate && !item.cancelledDate) return null;
+    return "plan-not-opted-in";
+  }
+  return "not-action-source";
+}
+function incrementReason(diagnostics, reason) {
+  diagnostics.excludedByReason[reason] = (diagnostics.excludedByReason[reason] || 0) + 1;
+}
+function personalEffectFor(candidate, management) {
+  if (!management) return void 0;
+  const title = normalizedLabel(candidate.title);
+  const goal = normalizedLabel(candidate.goalPath || "");
+  const rows = [...management.recoveryCandidates, ...management.cautionCandidates];
+  const row = rows.find((entry) => normalizedLabel(entry.label) === title) || (goal ? rows.find((entry) => normalizedLabel(entry.label) === goal) : void 0);
+  if (!row || row.sampleCount < 3) return void 0;
+  return {
+    meanDelta: row.meanDelta,
+    sampleCount: row.sampleCount,
+    meanBrainDelta: row.meanBrainDelta,
+    meanPhysicalDelta: row.meanPhysicalDelta
+  };
+}
+function buildEnergyActionCandidateResult(items, options = {}) {
+  const today = options.today || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  const maximum = Math.max(1, Math.min(1e3, Math.floor(options.maximumCandidates ?? 500)));
+  const history = historyDurationMaps(options.historyRecords || items);
+  const candidates = [];
+  const seen = /* @__PURE__ */ new Set();
+  const diagnostics = {
+    totalItems: items.length,
+    taskItems: 0,
+    openTasks: 0,
+    recurringOpenTasks: 0,
+    futureOpenTasks: 0,
+    contextUnavailableTasks: 0,
+    eligibleTasks: 0,
+    eligiblePlans: 0,
+    eligibleHabits: 0,
+    candidateCount: 0,
+    excludedByReason: {}
+  };
+  for (const item of items) {
+    const source = sourceFor(item);
+    if (!source) {
+      incrementReason(diagnostics, "not-action-source");
+      continue;
+    }
+    if (source === "task") {
+      diagnostics.taskItems += 1;
+      if (isTaskOpen(item)) {
+        diagnostics.openTasks += 1;
+        if (isTaskRecurring(item)) diagnostics.recurringOpenTasks += 1;
+        if (futureTask(item, today)) diagnostics.futureOpenTasks += 1;
+        if (!contextAllowed(item, options.currentContext)) diagnostics.contextUnavailableTasks += 1;
+      }
+    }
+    const reason = exclusionReason(item, source, today, options);
+    if (reason) {
+      incrementReason(diagnostics, reason);
+      continue;
+    }
+    const title = candidateTitle(item);
+    if (!title) {
+      incrementReason(diagnostics, "missing-title");
+      continue;
+    }
+    if (source === "task") diagnostics.eligibleTasks += 1;
+    if (source === "plan") diagnostics.eligiblePlans += 1;
+    if (source === "habit") diagnostics.eligibleHabits += 1;
+    const dedupeKey = source === "task" && item.seriesId ? `series:${item.seriesId}` : `${source}:${item.id}`;
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+    const sharedLoad = load(item.energyDemand);
+    const valueScore = Math.max(0, Math.min(100, priorityValue(item) + dueBonus(item, today) + scheduleBonus(item, today)));
+    const contexts = availabilityContexts(item.availabilityContexts);
+    candidates.push({
+      id: item.id,
+      title,
+      source,
+      goalPath: item.goalPath,
+      seriesId: item.seriesId,
+      activityLabel: classifyEnergyActivity(item),
+      durationMinutes: inferredDuration(item, history),
+      brainLoad: load(item.brainDemand) || sharedLoad,
+      physicalLoad: load(item.physicalDemand) || sharedLoad,
+      valueScore,
+      availabilityContexts: contexts.length ? contexts : void 0,
+      recoveryIntent: item.recoveryIntent === true
+    });
+  }
+  const sorted = candidates.sort((left2, right2) => (right2.valueScore || 0) - (left2.valueScore || 0) || left2.title.localeCompare(right2.title, "zh-CN")).slice(0, maximum);
+  diagnostics.candidateCount = sorted.length;
+  return { candidates: sorted, diagnostics };
+}
+function attachEnergyRecommendationEvidence(candidates, management) {
+  return candidates.map((candidate) => {
+    if (candidate.historicalEffect) return candidate;
+    const historicalEffect = personalEffectFor(candidate, management);
+    return historicalEffect ? { ...candidate, historicalEffect } : candidate;
+  });
+}
+function text$2(value) {
+  return String(value ?? "").trim();
+}
+function normalized(value) {
+  return text$2(value).toLowerCase().replace(/\s+/g, " ");
+}
+function finiteNumber$1(value) {
+  const n2 = Number(value);
+  return Number.isFinite(n2) ? n2 : void 0;
+}
+function mean(values2) {
+  const finite = values2.filter(Number.isFinite);
+  if (!finite.length) return void 0;
+  return Math.round(finite.reduce((sum, value) => sum + value, 0) / finite.length * 10) / 10;
+}
+function median$1(values2) {
+  const finite = values2.filter((value2) => Number.isFinite(value2) && value2 > 0).sort((a2, b2) => a2 - b2);
+  if (!finite.length) return void 0;
+  const middle = Math.floor(finite.length / 2);
+  const value = finite.length % 2 ? finite[middle] : (finite[middle - 1] + finite[middle]) / 2;
+  return Math.round(value);
+}
+function aggregate(rows, keyOf2) {
+  const grouped = /* @__PURE__ */ new Map();
+  for (const row of rows) {
+    const key = normalized(keyOf2(row));
+    if (!key) continue;
+    grouped.set(key, [...grouped.get(key) || [], row]);
+  }
+  return new Map([...grouped.entries()].map(([key, group]) => [key, {
+    meanDelta: mean(group.map((row) => row.delta)) || 0,
+    sampleCount: group.length,
+    meanBrainDelta: mean(group.flatMap((row) => row.brainDelta == null ? [] : [row.brainDelta])),
+    meanPhysicalDelta: mean(group.flatMap((row) => row.physicalDelta == null ? [] : [row.physicalDelta])),
+    typicalDurationMinutes: median$1(group.flatMap((row) => row.durationMinutes == null ? [] : [row.durationMinutes])),
+    origin: "recommendation-feedback"
+  }]));
+}
+function buildFeedbackRows(items) {
+  const byId = new Map(items.map((item) => [item.id, item]));
+  const rows = [];
+  for (const item of items) {
+    const session = asTaskSessionRecord(item);
+    if (!session || !session.endEnergyRecordId) continue;
+    const delta = finiteNumber$1(session.energyDelta);
+    if (delta == null) continue;
+    const task = byId.get(session.taskId);
+    const goalPath = text$2(session.goalPath || task?.goalPath) || void 0;
+    const activity = task ? classifyEnergyActivity(task) : goalPath || "未分类活动";
+    rows.push({
+      taskId: session.taskId,
+      seriesId: session.seriesId || task?.seriesId,
+      activity,
+      goalPath,
+      delta,
+      brainDelta: finiteNumber$1(session.brainDelta),
+      physicalDelta: finiteNumber$1(session.physicalDelta),
+      durationMinutes: finiteNumber$1(session.sessionDurationMinutes)
+    });
+  }
+  return rows;
+}
+function recoveryEntries(effects, trend) {
+  return [...effects.entries()].flatMap(([key, effect2]) => {
+    if (effect2.sampleCount < 3) return [];
+    if (trend === "recovery" && effect2.meanDelta < 8) return [];
+    if (trend === "depletion" && effect2.meanDelta > -8) return [];
+    return [{ ...effect2, key, label: key, typicalDurationMinutes: effect2.typicalDurationMinutes }];
+  }).sort((left2, right2) => Math.abs(right2.meanDelta) - Math.abs(left2.meanDelta) || right2.sampleCount - left2.sampleCount);
+}
+function buildEnergyRecommendationLearning(items) {
+  const rows = buildFeedbackRows(items);
+  const byTaskId = aggregate(rows, (row) => row.taskId);
+  const bySeriesId = aggregate(rows.filter((row) => !!row.seriesId), (row) => row.seriesId || "");
+  const byActivity = aggregate(rows, (row) => row.activity);
+  const byGoal = aggregate(rows.filter((row) => !!row.goalPath), (row) => row.goalPath || "");
+  return {
+    feedbackSampleCount: rows.length,
+    pairedActivityCount: rows.length,
+    byTaskId,
+    bySeriesId,
+    byActivity,
+    byGoal,
+    recoveryActivities: recoveryEntries(byActivity, "recovery"),
+    depletionActivities: recoveryEntries(byActivity, "depletion")
+  };
+}
+function attachEnergyRecommendationLearning(candidates, learning) {
+  return candidates.map((candidate) => {
+    const taskEffect = learning.byTaskId.get(normalized(candidate.id));
+    const seriesEffect = candidate.seriesId ? learning.bySeriesId.get(normalized(candidate.seriesId)) : void 0;
+    const goalEffect = candidate.goalPath ? learning.byGoal.get(normalized(candidate.goalPath)) : void 0;
+    const activityEffect = candidate.activityLabel ? learning.byActivity.get(normalized(candidate.activityLabel)) : void 0;
+    const historicalEffect = taskEffect && taskEffect.sampleCount >= 3 ? taskEffect : seriesEffect && seriesEffect.sampleCount >= 3 ? seriesEffect : goalEffect && goalEffect.sampleCount >= 3 ? goalEffect : activityEffect && activityEffect.sampleCount >= 3 ? activityEffect : void 0;
+    return historicalEffect ? { ...candidate, historicalEffect } : candidate;
+  });
+}
+function ordinal3(value) {
+  const match5 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match5) return void 0;
+  const stamp = Date.UTC(Number(match5[1]), Number(match5[2]) - 1, Number(match5[3]));
+  const date2 = new Date(stamp);
+  if (date2.toISOString().slice(0, 10) !== value) return void 0;
+  return Math.floor(stamp / 864e5);
+}
+function ratio(value, total) {
+  if (total <= 0) return 0;
+  return Math.round(value / total * 1e3) / 1e3;
+}
+function pct(value) {
+  return Math.round(value * 100);
+}
+function buildEnergyDataQuality(items, options) {
+  const start2 = ordinal3(options.startDate);
+  const end2 = ordinal3(options.endDate);
+  const totalDays = start2 == null || end2 == null || end2 < start2 ? 0 : end2 - start2 + 1;
+  const snapshots = items.filter(isEnergyItem).map((item) => ({ item, snapshot: readEnergyItemSnapshot(item) })).filter((row) => !!row.snapshot).filter(({ snapshot }) => {
+    if (!snapshot.date) return false;
+    const value = ordinal3(snapshot.date);
+    return start2 != null && end2 != null && value != null && value >= start2 && value <= end2;
+  });
+  const sampledDays = new Set(snapshots.map(({ snapshot }) => snapshot.date).filter(Boolean)).size;
+  const realtimeSamples = snapshots.filter(({ snapshot }) => snapshot.captureMode !== "retrospective").length;
+  const retrospectiveSamples = snapshots.filter(({ snapshot }) => snapshot.captureMode === "retrospective").length;
+  const exactTimeSamples = snapshots.filter(({ snapshot }) => {
+    if (snapshot.timePrecision === "exact") return true;
+    return !snapshot.timePrecision && snapshot.captureMode !== "retrospective" && Boolean(snapshot.time);
+  }).length;
+  const approximateTimeSamples = snapshots.length - exactTimeSamples;
+  const detailedSamples = snapshots.filter(({ snapshot }) => snapshot.brainScore != null && snapshot.physicalScore != null).length;
+  const effects = buildEnergyEffects(options.effectRecords || items);
+  const coverageRatio = ratio(sampledDays, totalDays);
+  const realtimeRatio = ratio(realtimeSamples, snapshots.length);
+  const exactRatio = ratio(exactTimeSamples, snapshots.length);
+  const pairedActivityCount = effects?.pairedActivityCount || 0;
+  const highConfidencePairCount = effects?.highConfidencePairCount || 0;
+  const mediumConfidencePairCount = effects?.mediumConfidencePairCount || 0;
+  let level = "limited";
+  if (sampledDays >= Math.min(7, Math.max(4, Math.ceil(totalDays * 0.6))) && snapshots.length >= 8 && coverageRatio >= 0.6 && exactRatio >= 0.6) {
+    level = "strong";
+  } else if (sampledDays >= Math.min(3, Math.max(2, totalDays)) && snapshots.length >= 4) {
+    level = "usable";
+  }
+  const gaps = [];
+  if (sampledDays < Math.min(3, totalDays || 3)) gaps.push(`只有 ${sampledDays}/${totalDays || "—"} 天有记录`);
+  else if (coverageRatio < 0.5) gaps.push(`覆盖率 ${pct(coverageRatio)}%`);
+  if (snapshots.length > 0 && realtimeRatio < 0.5) gaps.push(`实时记录仅 ${pct(realtimeRatio)}%`);
+  if (snapshots.length > 0 && exactRatio < 0.5) gaps.push(`精确时间仅 ${pct(exactRatio)}%`);
+  if (pairedActivityCount < 3) gaps.push(`活动前后有效配对 ${pairedActivityCount}`);
+  const levelLabel = level === "strong" ? "较可靠" : level === "usable" ? "可观察" : "数据不足";
+  const message = level === "strong" ? `本周期 ${sampledDays}/${totalDays} 天有记录（${pct(coverageRatio)}%），可以形成观察性模式；仍不把时间邻近关系当因果。` : level === "usable" ? `本周期 ${sampledDays}/${totalDays} 天有记录（${pct(coverageRatio)}%）；可以看趋势，但个人规律仍需更多重复样本。` : `本周期 ${sampledDays}/${totalDays || "—"} 天有记录；先把地图当作状态记录，不强行形成规律。`;
+  return {
+    level,
+    levelLabel,
+    totalDays,
+    sampledDays,
+    coverageRatio,
+    sampleCount: snapshots.length,
+    realtimeSamples,
+    retrospectiveSamples,
+    exactTimeSamples,
+    approximateTimeSamples,
+    detailedSamples,
+    pairedActivityCount,
+    highConfidencePairCount,
+    mediumConfidencePairCount,
+    message,
+    gaps
+  };
+}
+const DEFAULT_RECENT_WINDOW_MINUTES = 120;
+const DEFAULT_RELIABLE_WINDOW_MINUTES = 60;
+const DEFAULT_MAX_NEARBY_ACTIVITIES = 3;
+function readText(value) {
+  const text2 = String(value ?? "").trim();
+  return text2 || void 0;
+}
+function normalizeRecordType(item) {
+  return String(item.recordType || item.extra?.["记录类型"] || "").replace(/^core\./i, "").trim().toLowerCase();
+}
+function isHabitLike(item) {
+  return normalizeRecordType(item) === "habit";
+}
+function matchesEnergyGoal(energyItem, candidate) {
+  const energyGoalPath = String(energyItem.goalPath || "").trim();
+  if (!energyGoalPath) return true;
+  return String(candidate.goalPath || "").trim() === energyGoalPath;
+}
+function occurrenceDate(item) {
+  if (item.recordType === "task-session" && item.sessionStartedAt) {
+    const value = new Date(item.sessionStartedAt);
+    if (Number.isFinite(value.getTime())) {
+      return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+    }
+  }
+  return readText(item.date) || readText(item.doneDate) || readText(item.startDate) || readText(item.scheduledDate) || readText(item.dueDate) || readText(item.createdDate) || readText(item.extra?.["日期"]);
+}
+function parseTimeMinutes(time2) {
+  const match5 = readText(time2)?.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match5) return void 0;
+  const hour = Number(match5[1]);
+  const minute = Number(match5[2]);
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return void 0;
+  return hour * 60 + minute;
+}
+function dateOrdinal$1(date2) {
+  const match5 = date2.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match5) return void 0;
+  return Math.floor(Date.UTC(Number(match5[1]), Number(match5[2]) - 1, Number(match5[3])) / 864e5);
+}
+function absoluteMinute(date2, time2) {
+  const ordinal4 = dateOrdinal$1(date2);
+  const minutes = parseTimeMinutes(time2);
+  if (ordinal4 == null || minutes == null) return void 0;
+  return ordinal4 * 1440 + minutes;
+}
+function localSessionParts$1(value) {
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return null;
+  return {
+    date: `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`,
+    time: `${String(parsed.getHours()).padStart(2, "0")}:${String(parsed.getMinutes()).padStart(2, "0")}`
+  };
+}
+function resolveActivityInterval(record2, byId) {
+  const session = asTaskSessionRecord(record2);
+  if (!session) return null;
+  const task = byId.get(session.taskId);
+  if (!task || task.recordType !== "task") return null;
+  const start2 = localSessionParts$1(session.sessionStartedAt);
+  const end2 = localSessionParts$1(session.sessionEndedAt);
+  if (!start2 || !end2) return null;
+  const startAbsolute = absoluteMinute(start2.date, start2.time);
+  const endAbsoluteRaw = absoluteMinute(end2.date, end2.time);
+  if (startAbsolute == null || endAbsoluteRaw == null) return null;
+  const duration2 = Number(session.sessionDurationMinutes);
+  if (!Number.isFinite(duration2) || duration2 < 0) return null;
+  const endAbsolute = Math.max(endAbsoluteRaw, startAbsolute + duration2);
+  return {
+    session,
+    task,
+    startAbsolute,
+    endAbsolute,
+    startDate: start2.date,
+    startTime: start2.time,
+    endDate: end2.date,
+    endTime: end2.time,
+    durationMinutes: Math.round(duration2)
+  };
+}
+function activityConfidence(relation, gapMinutes) {
+  if (gapMinutes <= 15) return "high";
+  if (gapMinutes <= 60) return "medium";
+  return "low";
+}
+function buildActivityContext(record2, byId, energyItemId, energyAbsolute, recentWindowMinutes) {
+  const interval = resolveActivityInterval(record2, byId);
+  if (!interval) return null;
+  const session = asTaskSessionRecord(record2);
+  const directStart = session.startEnergyRecordId === energyItemId;
+  const directEnd = session.endEnergyRecordId === energyItemId;
+  if (directStart || energyAbsolute >= interval.startAbsolute && energyAbsolute <= interval.endAbsolute) {
+    return {
+      itemId: session.id,
+      title: interval.task.content || interval.task.title || "未命名任务",
+      relation: "active",
+      confidence: "high",
+      gapMinutes: 0,
+      durationMinutes: interval.durationMinutes,
+      startDate: interval.startDate,
+      startTime: interval.startTime,
+      endDate: interval.endDate,
+      endTime: interval.endTime,
+      item: interval.task
+    };
+  }
+  const gapMinutes = directEnd ? 0 : Math.round(energyAbsolute - interval.endAbsolute);
+  if (gapMinutes < 0 || gapMinutes > recentWindowMinutes) return null;
+  return {
+    itemId: session.id,
+    title: interval.task.content || interval.task.title || "未命名任务",
+    relation: "recent",
+    confidence: directEnd ? "high" : activityConfidence("recent", gapMinutes),
+    gapMinutes,
+    durationMinutes: interval.durationMinutes,
+    startDate: interval.startDate,
+    startTime: interval.startTime,
+    endDate: interval.endDate,
+    endTime: interval.endTime,
+    item: interval.task
+  };
+}
+function activityRank(activity) {
+  const relationRank = activity.relation === "active" ? 0 : 1;
+  const confidenceRank = activity.confidence === "high" ? 0 : activity.confidence === "medium" ? 1 : 2;
+  return relationRank * 1e6 + confidenceRank * 1e5 + activity.gapMinutes;
+}
+function classifyDailySignal(item) {
+  if (!isHabitLike(item)) return null;
+  const text2 = [item.title, item.content, item.goalPath].map((value) => String(value || "")).join(" ");
+  if (/睡眠|睡觉|睡醒/.test(text2)) return "sleep";
+  if (/身体|体力|身体状态/.test(text2)) return "body";
+  if (/运动|锻炼|健身|跑步|散步|八段锦|瑜伽|骑行|游泳/.test(text2)) return "exercise";
+  return null;
+}
+function dailySignalLabel(kind) {
+  if (kind === "sleep") return "睡眠";
+  if (kind === "body") return "身体";
+  return "运动";
+}
+function dailySignalValue(item) {
+  if (typeof item.rating === "number") return item.rating;
+  const extra = item.extra || {};
+  for (const key of ["评分", "分数", "值", "状态"]) {
+    const value = extra[key];
+    if (typeof value === "number" || typeof value === "string" && value.trim()) return value;
+  }
+  return void 0;
+}
+function buildDailySignals(energyItem, items, date2) {
+  const byKind = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    if (item.id === energyItem.id || !matchesEnergyGoal(energyItem, item)) continue;
+    if (occurrenceDate(item) !== date2) continue;
+    const kind = classifyDailySignal(item);
+    if (!kind || byKind.has(kind)) continue;
+    byKind.set(kind, {
+      itemId: item.id,
+      kind,
+      label: dailySignalLabel(kind),
+      value: dailySignalValue(item),
+      item
+    });
+  }
+  return ["sleep", "body", "exercise"].map((kind) => byKind.get(kind)).filter((row) => !!row);
+}
+function resolveEnergyContext(energyItem, items, options = {}) {
+  const snapshot = readEnergyItemSnapshot(energyItem);
+  if (!snapshot?.date || !snapshot.time) return null;
+  const energyAbsolute = absoluteMinute(snapshot.date, snapshot.time);
+  if (energyAbsolute == null) return null;
+  const recentWindowMinutes = Math.max(0, options.recentWindowMinutes ?? DEFAULT_RECENT_WINDOW_MINUTES);
+  const reliableWindowMinutes = Math.max(0, options.reliableWindowMinutes ?? DEFAULT_RELIABLE_WINDOW_MINUTES);
+  const maxNearbyActivities = Math.max(1, options.maxNearbyActivities ?? DEFAULT_MAX_NEARBY_ACTIVITIES);
+  const byId = new Map(items.map((item) => [item.id, item]));
+  const nearbyActivities = items.filter((item) => item.id !== energyItem.id && item.recordType === "task-session").map((item) => buildActivityContext(item, byId, energyItem.id, energyAbsolute, recentWindowMinutes)).filter((row) => !!row).sort((left2, right2) => activityRank(left2) - activityRank(right2)).slice(0, maxNearbyActivities);
+  const primaryActivity = nearbyActivities.find((activity) => activity.relation === "active" || activity.gapMinutes <= reliableWindowMinutes);
+  const dailySignals = buildDailySignals(energyItem, items, snapshot.date);
+  return { primaryActivity, nearbyActivities, dailySignals };
+}
+function patternText(value) {
+  const text2 = String(value ?? "").trim();
+  return text2 || void 0;
+}
+function patternNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const text2 = patternText(value);
+  if (!text2) return void 0;
+  const parsed = Number(text2);
+  return Number.isFinite(parsed) ? parsed : void 0;
+}
+function patternDateOrdinal(value) {
+  const match5 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match5) return void 0;
+  const year = Number(match5[1]);
+  const month = Number(match5[2]);
+  const day = Number(match5[3]);
+  const stamp = Date.UTC(year, month - 1, day);
+  const date2 = new Date(stamp);
+  if (date2.getUTCFullYear() !== year || date2.getUTCMonth() !== month - 1 || date2.getUTCDate() !== day) return void 0;
+  return Math.floor(stamp / 864e5);
+}
+function patternDateFromOrdinal(ordinal4) {
+  return new Date(ordinal4 * 864e5).toISOString().slice(0, 10);
+}
+function patternTimeMinutes(value) {
+  const match5 = patternText(value)?.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match5) return void 0;
+  const hour = Number(match5[1]);
+  const minute = Number(match5[2]);
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return void 0;
+  return hour * 60 + minute;
+}
+function patternFormatTime(absoluteMinute2) {
+  const minuteOfDay = (Math.round(absoluteMinute2) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(minuteOfDay / 60)).padStart(2, "0")}:${String(minuteOfDay % 60).padStart(2, "0")}`;
+}
+function patternAbsoluteMinute(date2, time2) {
+  const ordinal4 = patternDateOrdinal(date2);
+  const minute = patternTimeMinutes(time2);
+  return ordinal4 == null || minute == null ? void 0 : ordinal4 * 1440 + minute;
+}
+function localSessionParts(value) {
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return null;
+  return {
+    date: `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`,
+    time: `${String(parsed.getHours()).padStart(2, "0")}:${String(parsed.getMinutes()).padStart(2, "0")}`
+  };
+}
+function resolvePatternActivity(item) {
+  const session = asTaskSessionRecord(item);
+  if (!session) return null;
+  const start2 = localSessionParts(session.sessionStartedAt);
+  const end2 = localSessionParts(session.sessionEndedAt);
+  if (!start2 || !end2) return null;
+  const startAbsolute = patternAbsoluteMinute(start2.date, start2.time);
+  const endAbsoluteRaw = patternAbsoluteMinute(end2.date, end2.time);
+  if (startAbsolute == null || endAbsoluteRaw == null) return null;
+  const duration2 = patternNumber(session.sessionDurationMinutes);
+  if (duration2 == null || duration2 < 0) return null;
+  const endAbsolute = Math.max(endAbsoluteRaw, startAbsolute + duration2);
+  if (endAbsolute <= startAbsolute) return null;
+  return { item: session, startAbsolute, endAbsolute, durationMinutes: Math.round(duration2) };
+}
+function patternEvidence(count) {
+  if (count >= 5) return "supported";
+  if (count >= 3) return "exploratory";
+  return "insufficient";
+}
+function patternMean(values2) {
+  if (!values2.length) return void 0;
+  return Math.round(values2.reduce((sum, value) => sum + value, 0) / values2.length * 10) / 10;
+}
+function patternMedian(values2) {
+  if (!values2.length) return void 0;
+  const sorted = [...values2].sort((a2, b2) => a2 - b2);
+  const middle = Math.floor(sorted.length / 2);
+  const raw = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+  return Math.round(raw * 10) / 10;
+}
+function patternTrend(values2) {
+  if (values2.length < 3) return "insufficient";
+  const avg = patternMean(values2) ?? 0;
+  const med = patternMedian(values2) ?? 0;
+  if (avg >= 5 && med >= 3) return "up";
+  if (avg <= -5 && med <= -3) return "down";
+  if (Math.abs(avg) < 5 && Math.abs(med) < 5) return "stable";
+  return "mixed";
+}
+function mergePatternSessions(intervals, gapMinutes) {
+  const sessions = [];
+  for (const interval of [...intervals].sort((a2, b2) => a2.startAbsolute - b2.startAbsolute)) {
+    const current2 = sessions[sessions.length - 1];
+    if (!current2 || interval.startAbsolute > current2.endAbsolute + gapMinutes) {
+      sessions.push({ startAbsolute: interval.startAbsolute, endAbsolute: interval.endAbsolute, durationMinutes: interval.durationMinutes, items: [interval.item] });
+      continue;
+    }
+    current2.endAbsolute = Math.max(current2.endAbsolute, interval.endAbsolute);
+    current2.durationMinutes = Math.round(current2.endAbsolute - current2.startAbsolute);
+    current2.items.push(interval.item);
+  }
+  return sessions;
+}
+const DAYPARTS = [
+  { key: "night", label: "深夜 00–06", startHour: 0, endHour: 6 },
+  { key: "morning", label: "早晨 06–10", startHour: 6, endHour: 10 },
+  { key: "midday", label: "上午 10–14", startHour: 10, endHour: 14 },
+  { key: "afternoon", label: "下午 14–18", startHour: 14, endHour: 18 },
+  { key: "evening", label: "晚上 18–22", startHour: 18, endHour: 22 },
+  { key: "late", label: "夜间 22–24", startHour: 22, endHour: 24 }
+];
+const LAG_WINDOWS = [
+  { key: "6h", label: "+6 小时", lagHours: 6, toleranceMinutes: 90 },
+  { key: "12h", label: "+12 小时", lagHours: 12, toleranceMinutes: 120 },
+  { key: "24h", label: "+24 小时", lagHours: 24, toleranceMinutes: 180 }
+];
+const SESSION_BUCKETS = [
+  { key: "lt30", label: "<30分钟", minMinutes: 0, maxMinutes: 29 },
+  { key: "30-59", label: "30–59分钟", minMinutes: 30, maxMinutes: 59 },
+  { key: "60-89", label: "60–89分钟", minMinutes: 60, maxMinutes: 89 },
+  { key: "90-119", label: "90–119分钟", minMinutes: 90, maxMinutes: 119 },
+  { key: "ge120", label: "≥120分钟", minMinutes: 120 }
+];
+function readPoints(items) {
+  const points = [];
+  for (const item of items) {
+    if (!isEnergyItem(item)) continue;
+    const snapshot = readEnergyItemSnapshot(item);
+    if (!snapshot?.date || !snapshot.time) continue;
+    const absolute = patternAbsoluteMinute(snapshot.date, snapshot.time);
+    const minuteOfDay = patternTimeMinutes(snapshot.time);
+    if (absolute == null || minuteOfDay == null) continue;
+    points.push({ itemId: item.id, date: snapshot.date, time: snapshot.time, absoluteMinute: absolute, minuteOfDay, score: snapshot.score, brainScore: snapshot.brainScore, physicalScore: snapshot.physicalScore, item });
+  }
+  return points.sort((a2, b2) => a2.absoluteMinute - b2.absoluteMinute);
+}
+function buildDayparts(points) {
+  return DAYPARTS.map((bucket) => {
+    const selected = points.filter((point) => point.minuteOfDay >= bucket.startHour * 60 && point.minuteOfDay < bucket.endHour * 60);
+    const brain = selected.flatMap((point) => point.brainScore == null ? [] : [point.brainScore]);
+    const physical = selected.flatMap((point) => point.physicalScore == null ? [] : [point.physicalScore]);
+    return {
+      ...bucket,
+      sampleCount: selected.length,
+      meanScore: patternMean(selected.map((point) => point.score)),
+      medianScore: patternMedian(selected.map((point) => point.score)),
+      meanBrainScore: patternMean(brain),
+      meanPhysicalScore: patternMean(physical),
+      evidence: patternEvidence(selected.length)
+    };
+  });
+}
+function nearestPoint(points, desired, tolerance, after) {
+  let best;
+  let bestGap = Number.POSITIVE_INFINITY;
+  for (const point of points) {
+    if (point.absoluteMinute <= after) continue;
+    const gap2 = Math.abs(point.absoluteMinute - desired);
+    if (gap2 <= tolerance && gap2 < bestGap) {
+      best = point;
+      bestGap = gap2;
+    }
+  }
+  return best;
+}
+function buildLag(points, windowStart) {
+  return LAG_WINDOWS.map((window2) => {
+    const deltas = [];
+    const brain = [];
+    const physical = [];
+    for (const baseline of points) {
+      if (baseline.absoluteMinute < windowStart) continue;
+      const target = nearestPoint(points, baseline.absoluteMinute + window2.lagHours * 60, window2.toleranceMinutes, baseline.absoluteMinute);
+      if (!target) continue;
+      deltas.push(target.score - baseline.score);
+      if (baseline.brainScore != null && target.brainScore != null) brain.push(target.brainScore - baseline.brainScore);
+      if (baseline.physicalScore != null && target.physicalScore != null) physical.push(target.physicalScore - baseline.physicalScore);
+    }
+    return {
+      ...window2,
+      sampleCount: deltas.length,
+      meanDelta: patternMean(deltas),
+      medianDelta: patternMedian(deltas),
+      meanBrainDelta: patternMean(brain),
+      meanPhysicalDelta: patternMean(physical),
+      trend: patternTrend(deltas),
+      evidence: patternEvidence(deltas.length)
+    };
+  });
+}
+function pairSession(session, pointById) {
+  const first2 = asTaskSessionRecord(session.items[0]);
+  const last = asTaskSessionRecord(session.items[session.items.length - 1]);
+  if (!first2?.startEnergyRecordId || !last?.endEnergyRecordId) return null;
+  const before = pointById.get(first2.startEnergyRecordId);
+  const after = pointById.get(last.endEnergyRecordId);
+  if (!before || !after || before.itemId === after.itemId) return null;
+  return {
+    session,
+    before,
+    after,
+    deltaScore: after.score - before.score,
+    deltaBrain: before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : void 0,
+    deltaPhysical: before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : void 0
+  };
+}
+function inBucket(session, bucket) {
+  return session.durationMinutes >= bucket.minMinutes && (!("maxMinutes" in bucket) || session.durationMinutes <= bucket.maxMinutes);
+}
+function buildContinuousWork(sessions, pairs) {
+  return SESSION_BUCKETS.map((bucket) => {
+    const bucketSessions = sessions.filter((session) => inBucket(session, bucket));
+    const bucketPairs = pairs.filter((pair) => inBucket(pair.session, bucket));
+    const deltas = bucketPairs.map((pair) => pair.deltaScore);
+    return {
+      ...bucket,
+      sessionCount: bucketSessions.length,
+      pairedSessionCount: bucketPairs.length,
+      meanDelta: patternMean(deltas),
+      medianDelta: patternMedian(deltas),
+      meanBrainDelta: patternMean(bucketPairs.flatMap((pair) => pair.deltaBrain == null ? [] : [pair.deltaBrain])),
+      meanPhysicalDelta: patternMean(bucketPairs.flatMap((pair) => pair.deltaPhysical == null ? [] : [pair.deltaPhysical])),
+      trend: patternTrend(deltas),
+      evidence: patternEvidence(bucketPairs.length)
+    };
+  });
+}
+function buildStopProxy(points, sessions, windowStart, threshold, workStartWindow, longMinutes, lateNightHour) {
+  const highPoints = points.filter((point) => point.absoluteMinute >= windowStart && point.score >= threshold);
+  const samples = [];
+  for (const point of highPoints) {
+    const session = sessions.find((candidate) => candidate.endAbsolute > point.absoluteMinute && (candidate.startAbsolute <= point.absoluteMinute || candidate.startAbsolute - point.absoluteMinute <= workStartWindow));
+    if (!session) continue;
+    const stopLatencyMinutes = Math.max(0, Math.round(session.endAbsolute - point.absoluteMinute));
+    const crossesMidnight = Math.floor(session.endAbsolute / 1440) > Math.floor(session.startAbsolute / 1440);
+    const endMinuteOfDay = (session.endAbsolute % 1440 + 1440) % 1440;
+    samples.push({
+      energyItemId: point.itemId,
+      date: point.date,
+      time: point.time,
+      score: point.score,
+      sessionDurationMinutes: Math.round(session.durationMinutes),
+      stopLatencyMinutes,
+      sessionStartTime: patternFormatTime(session.startAbsolute),
+      sessionEndTime: patternFormatTime(session.endAbsolute),
+      crossesMidnight,
+      lateNight: crossesMidnight || endMinuteOfDay >= lateNightHour * 60
+    });
+  }
+  const longCount = samples.filter((sample) => sample.stopLatencyMinutes >= longMinutes).length;
+  const lateCount = samples.filter((sample) => sample.lateNight).length;
+  return {
+    highEnergySampleCount: highPoints.length,
+    followedByWorkCount: samples.length,
+    longContinuationCount: longCount,
+    lateNightCount: lateCount,
+    meanSessionDurationMinutes: patternMean(samples.map((sample) => sample.sessionDurationMinutes)),
+    meanStopLatencyMinutes: patternMean(samples.map((sample) => sample.stopLatencyMinutes)),
+    longContinuationRatio: samples.length ? longCount / samples.length : void 0,
+    lateNightRatio: samples.length ? lateCount / samples.length : void 0,
+    evidence: patternEvidence(samples.length),
+    recentSamples: [...samples].sort((a2, b2) => `${b2.date} ${b2.time}`.localeCompare(`${a2.date} ${a2.time}`)).slice(0, 5)
+  };
+}
+function buildEnergyPatterns(items, options = {}) {
+  const points = readPoints(items);
+  const activityRecords = options.activityRecords || items;
+  if (!points.length) return null;
+  const analysisWindowDays = Math.max(7, Math.min(90, Math.floor(options.analysisWindowDays ?? 30)));
+  const sessionGapMinutes = Math.max(0, Math.min(60, Math.floor(options.sessionGapMinutes ?? 15)));
+  const highThreshold = Math.max(60, Math.min(100, Math.floor(options.highEnergyThreshold ?? 80)));
+  const workStartWindow = Math.max(0, Math.min(180, Math.floor(options.highEnergyWorkStartWindowMinutes ?? 60)));
+  const longMinutes = Math.max(30, Math.min(360, Math.floor(options.longContinuationMinutes ?? 120)));
+  const lateNightHour = Math.max(20, Math.min(23, Math.floor(options.lateNightHour ?? 23)));
+  const endOrdinal = Math.floor(points[points.length - 1].absoluteMinute / 1440);
+  const startOrdinal = endOrdinal - analysisWindowDays + 1;
+  const windowStart = startOrdinal * 1440;
+  const visiblePoints = points.filter((point) => point.absoluteMinute >= windowStart);
+  const intervals = activityRecords.map(resolvePatternActivity).filter((value) => !!value).filter((interval) => interval.endAbsolute >= windowStart);
+  const sessions = mergePatternSessions(intervals, sessionGapMinutes);
+  const evidencePoints = readPoints(activityRecords);
+  const pointById = new Map([...points, ...evidencePoints].map((point) => [point.itemId, point]));
+  const pairs = sessions.map((session) => pairSession(session, pointById)).filter((value) => !!value);
+  return {
+    analysisWindowDays,
+    startDate: patternDateFromOrdinal(startOrdinal),
+    endDate: patternDateFromOrdinal(endOrdinal),
+    energySampleCount: visiblePoints.length,
+    dayparts: buildDayparts(visiblePoints),
+    lag: buildLag(points, windowStart),
+    continuousWork: buildContinuousWork(sessions, pairs),
+    continuousSessionCount: sessions.length,
+    pairedContinuousSessionCount: pairs.length,
+    stopProxy: buildStopProxy(points, sessions, windowStart, highThreshold, workStartWindow, longMinutes, lateNightHour)
+  };
+}
+const DEFAULT_MAXIMUM_CANDIDATES = 3;
+const DEFAULT_MINIMUM_PERSONAL_SAMPLES = 3;
+const DEFAULT_HIGH_ENERGY_THRESHOLD = 80;
+const DEFAULT_DIMENSION_GAP = 15;
+function occurrenceKey(item) {
+  const snapshot = readEnergyItemSnapshot(item);
+  if (!snapshot) return "";
+  return `${snapshot.date || ""}T${snapshot.time || "00:00"}`;
+}
+function latestEnergyItem(items) {
+  return items.filter(isEnergyItem).filter((item) => !!readEnergyItemSnapshot(item)).sort((left2, right2) => occurrenceKey(right2).localeCompare(occurrenceKey(left2)))[0];
+}
+function stateFor(score, highThreshold) {
+  if (score <= 40) return "low";
+  if (score <= 60) return "guarded";
+  if (score < highThreshold) return "available";
+  return "high";
+}
+function stateLabel(state) {
+  if (state === "low") return "低精力";
+  if (state === "guarded") return "需要节制";
+  if (state === "available") return "可用精力";
+  return "高精力";
+}
+function dimensionFocus(brain, physical, gap2) {
+  if (brain == null || physical == null) return "balanced";
+  if (physical - brain >= gap2) return "brain-low";
+  if (brain - physical >= gap2) return "physical-low";
+  return "balanced";
+}
+function dimensionLabel(focus, brain, physical) {
+  if (focus === "brain-low") return `脑力明显低于体力（脑 ${brain} / 体 ${physical}）`;
+  if (focus === "physical-low") return `体力明显低于脑力（脑 ${brain} / 体 ${physical}）`;
+  if (brain != null && physical != null) return `脑体较均衡（脑 ${brain} / 体 ${physical}）`;
+  return void 0;
+}
+function latestState(items, highThreshold, dimensionGap) {
+  const item = latestEnergyItem(items);
+  if (!item) return null;
+  const snapshot = readEnergyItemSnapshot(item);
+  if (!snapshot) return null;
+  const state = stateFor(snapshot.score, highThreshold);
+  const focus = dimensionFocus(snapshot.brainScore, snapshot.physicalScore, dimensionGap);
+  return {
+    itemId: item.id,
+    score: snapshot.score,
+    brainScore: snapshot.brainScore,
+    physicalScore: snapshot.physicalScore,
+    date: snapshot.date,
+    time: snapshot.time,
+    state,
+    stateLabel: stateLabel(state),
+    dimensionFocus: focus,
+    dimensionLabel: dimensionLabel(focus, snapshot.brainScore, snapshot.physicalScore)
+  };
+}
+function evidenceWeight(value) {
+  if (value === "supported") return 2;
+  if (value === "exploratory") return 1;
+  return 0;
+}
+function focusBonus(row, focus, trend) {
+  const sign = trend === "recovery" ? 1 : -1;
+  if (focus === "brain-low" && row.meanBrainDelta != null) return Math.max(0, sign * row.meanBrainDelta) / 4;
+  if (focus === "physical-low" && row.meanPhysicalDelta != null) return Math.max(0, sign * row.meanPhysicalDelta) / 4;
+  return 0;
+}
+function candidateReason(row, focus) {
+  const parts = [`综合平均 ${row.meanDelta > 0 ? "+" : ""}${row.meanDelta}`];
+  if (focus === "brain-low" && row.meanBrainDelta != null) parts.push(`脑力 ${row.meanBrainDelta > 0 ? "+" : ""}${row.meanBrainDelta}`);
+  if (focus === "physical-low" && row.meanPhysicalDelta != null) parts.push(`体力 ${row.meanPhysicalDelta > 0 ? "+" : ""}${row.meanPhysicalDelta}`);
+  parts.push(`样本数 ${row.sampleCount}`);
+  return parts.join(" · ");
+}
+function selectCandidates(rows, trend, focus, limit, minimumSamples) {
+  return rows.filter((row) => row.trend === trend && row.sampleCount >= minimumSamples && row.evidence !== "insufficient").sort((left2, right2) => {
+    const evidenceDelta = evidenceWeight(right2.evidence) - evidenceWeight(left2.evidence);
+    if (evidenceDelta) return evidenceDelta;
+    const leftMagnitude = Math.abs(left2.meanDelta) + focusBonus(left2, focus, trend);
+    const rightMagnitude = Math.abs(right2.meanDelta) + focusBonus(right2, focus, trend);
+    if (rightMagnitude !== leftMagnitude) return rightMagnitude - leftMagnitude;
+    return right2.sampleCount - left2.sampleCount;
+  }).slice(0, limit).map((row) => ({
+    key: row.key,
+    label: row.label,
+    sampleCount: row.sampleCount,
+    meanDelta: row.meanDelta,
+    medianDelta: row.medianDelta,
+    meanBrainDelta: row.meanBrainDelta,
+    meanPhysicalDelta: row.meanPhysicalDelta,
+    evidence: row.evidence,
+    reason: candidateReason(row, focus)
+  }));
+}
+function buildGuardrails(items, evidenceRecords, analysisWindowDays, highThreshold) {
+  const patterns = buildEnergyPatterns(items, { activityRecords: evidenceRecords, analysisWindowDays, highEnergyThreshold: highThreshold });
+  if (!patterns) return [];
+  const rows = [];
+  const stop = patterns.stopProxy;
+  if (stop.followedByWorkCount >= 3 && stop.evidence !== "insufficient") {
+    const longRatio = stop.longContinuationRatio || 0;
+    const lateRatio = stop.lateNightRatio || 0;
+    if (longRatio >= 0.5 || lateRatio >= 0.4) {
+      const details = [
+        `高能后进入/处于工作，样本数 ${stop.followedByWorkCount}`,
+        `≥120分钟 ${Math.round(longRatio * 100)}%`,
+        `深夜延续 ${Math.round(lateRatio * 100)}%`
+      ];
+      rows.push({
+        key: "preserve-capacity",
+        level: "caution",
+        title: "高能时也要预先设停止点",
+        detail: details.join(" · "),
+        sampleCount: stop.followedByWorkCount,
+        evidence: stop.evidence
+      });
+    }
+  }
+  const longBucket = patterns.continuousWork.find((row) => row.key === "ge120");
+  if (longBucket && longBucket.pairedSessionCount >= 3 && longBucket.meanDelta != null && longBucket.meanDelta <= -8) {
+    rows.push({
+      key: "long-session",
+      level: "caution",
+      title: "长连续工作是当前值得防守的区间",
+      detail: `≥120分钟前后综合平均 ${longBucket.meanDelta > 0 ? "+" : ""}${longBucket.meanDelta} · 可配对样本数 ${longBucket.pairedSessionCount}`,
+      sampleCount: longBucket.pairedSessionCount,
+      evidence: longBucket.evidence
+    });
+  }
+  return rows;
+}
+function managementHeadline(latest2) {
+  if (latest2.state === "low") return "当前先考虑恢复，不必把低能状态硬撑成高负荷时段";
+  if (latest2.state === "guarded") return "当前有一定可用精力，但更适合控制负荷和工作长度";
+  if (latest2.state === "available") return "当前精力可用，优先把它用在高价值事项，同时观察消耗边界";
+  return "当前处于高精力，重点不是继续加码，而是把力量用在重要事项并保留停止能力";
+}
+function managementGuidance(latest2, recoveryCount, cautionCount) {
+  if (latest2.dimensionFocus === "brain-low") return recoveryCount ? "脑力低于体力：优先参考对脑力恢复更友好的个人候选。" : "脑力低于体力，但个人恢复样本还不够，先记录而不是猜。";
+  if (latest2.dimensionFocus === "physical-low") return recoveryCount ? "体力低于脑力：优先参考对体力恢复更友好的个人候选。" : "体力低于脑力，但个人恢复样本还不够，先记录而不是猜。";
+  if (latest2.state === "low" || latest2.state === "guarded") return recoveryCount ? "下面只列你的历史数据里重复出现的恢复候选；它们是观察关联，不是因果处方。" : "当前没有达到最小样本门槛的个人恢复候选。";
+  return cautionCount ? "高能不等于无限可用；下面的消耗候选和停止护栏用于帮助你保存力量。" : "目前没有足够个人样本形成明确消耗候选，保持观察即可。";
+}
+function buildEnergyManagement(items, options = {}) {
+  const maximumCandidates = Math.max(1, Math.min(5, Math.floor(options.maximumCandidates ?? DEFAULT_MAXIMUM_CANDIDATES)));
+  const minimumPersonalSamples = Math.max(3, Math.min(10, Math.floor(options.minimumPersonalSamples ?? DEFAULT_MINIMUM_PERSONAL_SAMPLES)));
+  const highThreshold = Math.max(60, Math.min(100, Math.floor(options.highEnergyThreshold ?? DEFAULT_HIGH_ENERGY_THRESHOLD)));
+  const dimensionGap = Math.max(5, Math.min(50, Math.floor(options.dimensionGapThreshold ?? DEFAULT_DIMENSION_GAP)));
+  const analysisWindowDays = Math.max(7, Math.min(90, Math.floor(options.analysisWindowDays ?? 30)));
+  const latest2 = latestState(items, highThreshold, dimensionGap);
+  if (!latest2) return null;
+  const evidenceRecords = options.evidenceRecords || items;
+  const effects = buildEnergyEffects(evidenceRecords);
+  const activityRows = effects?.byActivity || [];
+  const recoveryCandidates = selectCandidates(activityRows, "recovery", latest2.dimensionFocus, maximumCandidates, minimumPersonalSamples);
+  const cautionCandidates = selectCandidates(activityRows, "depletion", latest2.dimensionFocus, maximumCandidates, minimumPersonalSamples);
+  const guardrails = buildGuardrails(items, evidenceRecords, analysisWindowDays, highThreshold);
+  const pairedActivityCount = effects?.pairedActivityCount || 0;
+  const sufficient = recoveryCandidates.length > 0 || cautionCandidates.length > 0 || guardrails.length > 0;
+  return {
+    latest: latest2,
+    headline: managementHeadline(latest2),
+    guidance: managementGuidance(latest2, recoveryCandidates.length, cautionCandidates.length),
+    recoveryCandidates,
+    cautionCandidates,
+    guardrails,
+    readiness: {
+      pairedActivityCount,
+      recoveryCandidateCount: recoveryCandidates.length,
+      depletionCandidateCount: cautionCandidates.length,
+      stopProxySampleCount: guardrails.find((row) => row.key === "preserve-capacity")?.sampleCount || 0,
+      sufficientForPersonalSuggestions: sufficient,
+      message: sufficient ? `已有 ${pairedActivityCount} 个活动前后可配对样本；只展示达到 N≥${minimumPersonalSamples} 的个人候选。` : `目前只有 ${pairedActivityCount} 个活动前后可配对样本，尚没有达到 N≥${minimumPersonalSamples} 且方向稳定的个人候选。`
+    },
+    disclaimer: "个人历史关联，仅用于自我观察与安排，不代表因果、医学判断或必须执行的建议。"
+  };
+}
+function dateOrdinal(value) {
+  const match5 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match5) return void 0;
+  const year = Number(match5[1]);
+  const month = Number(match5[2]);
+  const day = Number(match5[3]);
+  const stamp = Date.UTC(year, month - 1, day);
+  const date2 = new Date(stamp);
+  if (date2.getUTCFullYear() !== year || date2.getUTCMonth() !== month - 1 || date2.getUTCDate() !== day) return void 0;
+  return Math.floor(stamp / 864e5);
+}
+function dateFromOrdinal(value) {
+  return new Date(value * 864e5).toISOString().slice(0, 10);
+}
+function timeMinutes(value) {
+  const match5 = value.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match5) return void 0;
+  const hour = Number(match5[1]);
+  const minute = Number(match5[2]);
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return void 0;
+  return hour * 60 + minute;
+}
+function captureMode(value) {
+  return String(value || "").trim() === "retrospective" ? "retrospective" : "realtime";
+}
+function roundMean(values2) {
+  if (!values2.length) return void 0;
+  return Math.round(values2.reduce((sum, value) => sum + value, 0) / values2.length * 10) / 10;
+}
+function readSample(item) {
+  if (!isEnergyItem(item)) return null;
+  const snapshot = readEnergyItemSnapshot(item);
+  if (!snapshot?.date || !snapshot.time) return null;
+  const ordinal4 = dateOrdinal(snapshot.date);
+  const minuteOfDay = timeMinutes(snapshot.time);
+  if (ordinal4 == null || minuteOfDay == null) return null;
+  return {
+    itemId: item.id,
+    date: snapshot.date,
+    time: snapshot.time,
+    minuteOfDay,
+    score: snapshot.score,
+    brainScore: snapshot.brainScore,
+    physicalScore: snapshot.physicalScore,
+    scoreMode: snapshot.scoreMode,
+    captureMode: captureMode(snapshot.captureMode),
+    item
+  };
+}
+function periodMode(currentView) {
+  if (currentView === "天") return "day-horizontal";
+  if (currentView === "周" || currentView === "月") return "date-time";
+  return "daily-dots";
+}
+function buildEnergyPeriod(items, options) {
+  const startOrdinal = dateOrdinal(options.startDate);
+  const endOrdinal = dateOrdinal(options.endDate);
+  if (startOrdinal == null || endOrdinal == null || endOrdinal < startOrdinal) return null;
+  const samples = items.map(readSample).filter((sample) => !!sample).filter((sample) => {
+    const ordinal4 = dateOrdinal(sample.date);
+    return ordinal4 != null && ordinal4 >= startOrdinal && ordinal4 <= endOrdinal;
+  }).sort((left2, right2) => left2.date.localeCompare(right2.date) || left2.minuteOfDay - right2.minuteOfDay);
+  const byDate = /* @__PURE__ */ new Map();
+  for (const sample of samples) {
+    const rows = byDate.get(sample.date) || [];
+    rows.push(sample);
+    byDate.set(sample.date, rows);
+  }
+  const days = [];
+  for (let ordinal4 = startOrdinal; ordinal4 <= endOrdinal; ordinal4 += 1) {
+    const date2 = dateFromOrdinal(ordinal4);
+    const daySamples = byDate.get(date2) || [];
+    days.push({
+      date: date2,
+      sampled: daySamples.length > 0,
+      samples: daySamples,
+      dailyScore: roundMean(daySamples.map((row) => row.score)),
+      dailyBrainScore: roundMean(daySamples.map((row) => row.brainScore).filter((value) => value != null)),
+      dailyPhysicalScore: roundMean(daySamples.map((row) => row.physicalScore).filter((value) => value != null))
+    });
+  }
+  const sampledDays = days.filter((day) => day.sampled).length;
+  return {
+    currentView: options.currentView,
+    mode: periodMode(options.currentView),
+    startDate: options.startDate,
+    endDate: options.endDate,
+    days,
+    sampledDays,
+    missingDays: days.length - sampledDays,
+    totalSamples: samples.length
+  };
+}
+const CODEBLOCK_LANG = "think";
+const EMPTY_LABEL = "无日期";
+const LOCAL_STORAGE_KEYS = {
+  SETTINGS_TABS: "think-settings-active-tab"
+};
+const DEFAULT_NAMES = {
+  NEW_LAYOUT: "新布局"
+};
+const UNKNOWN_GOAL_RANK = Number.MAX_SAFE_INTEGER - 1e3;
+const UNASSIGNED_GOAL_RANK = Number.MAX_SAFE_INTEGER;
+function finiteNumber(value, fallback) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+function normalizeOrderPath(value) {
+  return splitGoalPath(String(value ?? "")).goalPath || "";
+}
+function leafGoalLabel(value) {
+  const parsed = splitGoalPath(String(value ?? ""));
+  return parsed.leafGoal || parsed.goalPath || "";
+}
+function getGoalOrderPath(goal) {
+  if (!goal) return "";
+  return normalizeOrderPath(goal.path);
+}
+function getGoalOrderLabel(goal) {
+  if (!goal) return "";
+  return leafGoalLabel(goal.path);
+}
+function createGoalOrderIndex(goals = []) {
+  const rawDescriptors = (goals || []).map((goal, originalIndex) => {
+    const path = getGoalOrderPath(goal);
+    const parts = path.split("/").filter(Boolean);
+    return {
+      path,
+      parentPath: parts.slice(0, -1).join("/"),
+      order: finiteNumber(goal.sortOrder, originalIndex),
+      originalIndex
+    };
+  }).filter((entry) => Boolean(entry.path));
+  const descriptorByPath = /* @__PURE__ */ new Map();
+  for (const entry of rawDescriptors) {
+    if (!descriptorByPath.has(entry.path)) descriptorByPath.set(entry.path, entry);
+  }
+  const childrenByParent = /* @__PURE__ */ new Map();
+  const rootEntries = [];
+  for (const entry of descriptorByPath.values()) {
+    if (!entry.parentPath || !descriptorByPath.has(entry.parentPath)) {
+      rootEntries.push(entry);
+      continue;
+    }
+    const siblings = childrenByParent.get(entry.parentPath) || [];
+    siblings.push(entry);
+    childrenByParent.set(entry.parentPath, siblings);
+  }
+  const sortSiblings = (items) => items.sort((left2, right2) => {
+    if (left2.order !== right2.order) return left2.order - right2.order;
+    if (left2.originalIndex !== right2.originalIndex) return left2.originalIndex - right2.originalIndex;
+    return left2.path.localeCompare(right2.path, "zh-CN");
+  });
+  sortSiblings(rootEntries);
+  childrenByParent.forEach(sortSiblings);
+  const descriptors = [];
+  const visit = (entry) => {
+    descriptors.push(entry);
+    for (const child of childrenByParent.get(entry.path) || []) visit(child);
+  };
+  rootEntries.forEach(visit);
+  const byPath = /* @__PURE__ */ new Map();
+  const originalIndexByPath = /* @__PURE__ */ new Map();
+  const orderedPaths = [];
+  descriptors.forEach((entry, index) => {
+    byPath.set(entry.path, index);
+    originalIndexByPath.set(entry.path, entry.originalIndex);
+    orderedPaths.push(entry.path);
+  });
+  const rankOfPath = (path) => {
+    const normalized2 = normalizeOrderPath(path || "");
+    if (!normalized2 || normalized2 === "未归属目标") return UNASSIGNED_GOAL_RANK;
+    const known = byPath.get(normalized2);
+    return known === void 0 ? UNKNOWN_GOAL_RANK : known;
+  };
+  const compareGoalPaths = (left2, right2) => {
+    const leftPath = normalizeOrderPath(left2 || "");
+    const rightPath = normalizeOrderPath(right2 || "");
+    const leftRank = rankOfPath(leftPath);
+    const rightRank = rankOfPath(rightPath);
+    if (leftRank !== rightRank) return leftRank - rightRank;
+    return leftPath.localeCompare(rightPath, "zh-CN");
+  };
+  const compareGoals = (left2, right2) => {
+    const byPathOrder = compareGoalPaths(getGoalOrderPath(left2), getGoalOrderPath(right2));
+    if (byPathOrder !== 0) return byPathOrder;
+    return left2.path.localeCompare(right2.path, "zh-CN");
+  };
+  return { byPath, originalIndexByPath, orderedPaths, rankOfPath, compareGoalPaths, compareGoals };
+}
+function sortGoalsBySettingsOrder(goals = []) {
+  const order2 = createGoalOrderIndex(goals);
+  return [...goals].sort(order2.compareGoals);
+}
+function isGoalOrderField(field) {
+  const canonical = getCanonicalFieldKey(String(field || "").trim());
+  return ["goalPath", "rootGoal", "leafGoal"].includes(canonical);
+}
+function isRecordTypeOrderField(field) {
+  const canonical = getCanonicalFieldKey(String(field || "").trim());
+  return canonical === "recordType";
+}
+function normalizeText(value) {
+  if (value === null || value === void 0) return "";
+  return String(value).trim();
+}
+function firstText$1(value) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const candidate = firstText$1(item);
+      if (candidate) return candidate;
+    }
+    return "";
+  }
+  const text2 = normalizeText(value);
+  if (!text2) return "";
+  return text2.split(/[,，\n]/).map((part) => part.trim()).filter(Boolean)[0] || "";
+}
+function normalizeGoalComparable(value) {
+  const text2 = firstText$1(value);
+  if (!text2) return "";
+  return splitGoalPath(text2).goalPath || "";
+}
+function resolveGoalFieldComparable(field, rawValue, context) {
+  getCanonicalFieldKey(String(field || "").trim());
+  return normalizeGoalComparable(rawValue);
+}
+function compareFieldValuesByViewOrder(field, left2, right2, context) {
+  if (isGoalOrderField(field)) {
+    const goalOrder = createGoalOrderIndex(context?.goals || []);
+    const leftGoal = resolveGoalFieldComparable(field, left2);
+    const rightGoal = resolveGoalFieldComparable(field, right2);
+    const byGoal = goalOrder.compareGoalPaths(leftGoal, rightGoal);
+    if (byGoal !== 0) return byGoal;
+    return leftGoal.localeCompare(rightGoal, "zh-CN");
+  }
+  if (isRecordTypeOrderField(field)) {
+    return compareRecordTypeKeys(left2, right2);
+  }
+  return String(left2 ?? "").localeCompare(String(right2 ?? ""), "zh-CN");
+}
+function readOrderedFieldValue(item, field, context) {
+  const canonical = getCanonicalFieldKey(String(field || "").trim());
+  if (isGoalOrderField(canonical)) {
+    return item.goalPath || readField(item, canonical) || readField(item, "goalPath");
+  }
+  return readField(item, canonical);
+}
+function findFirstGoalOrderField(fields = []) {
+  for (const field of fields || []) {
+    if (isGoalOrderField(field)) return getCanonicalFieldKey(field);
+  }
+  return null;
+}
+function orderItemsByDisplayedGoalField(items = [], displayFields = [], context) {
+  const goalField = findFirstGoalOrderField(displayFields);
+  if (!goalField) return items;
+  const originalIndex = /* @__PURE__ */ new Map();
+  items.forEach((item, index) => originalIndex.set(item, index));
+  return [...items].sort((left2, right2) => {
+    const byGoal = compareFieldValuesByViewOrder(
+      goalField,
+      readOrderedFieldValue(left2, goalField),
+      readOrderedFieldValue(right2, goalField),
+      context
+    );
+    if (byGoal !== 0) return byGoal;
+    return (originalIndex.get(left2) ?? 0) - (originalIndex.get(right2) ?? 0);
+  });
+}
+function normalizeGroupKeys(value, defaultLabel) {
+  if (Array.isArray(value)) {
+    const keys = value.map((v2) => String(v2 ?? "").trim()).filter(Boolean);
+    return keys.length ? Array.from(new Set(keys)) : [defaultLabel];
+  }
+  const text2 = String(value ?? "").trim();
+  return text2 ? [text2] : [defaultLabel];
+}
+function formatGroupLabel(field, key) {
+  return formatFieldValue$1(field, key) || key;
+}
+function groupItemsByField(items, groupField, defaultLabel = "(未分类)") {
+  const grouped = {};
+  for (const item of items) {
+    const keys = normalizeGroupKeys(readField(item, groupField), defaultLabel);
+    for (const key of keys) {
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(item);
+    }
+  }
+  return grouped;
+}
+function getSortedGroupKeys(grouped, field, context) {
+  const keys = Object.keys(grouped);
+  if (field && (isGoalOrderField(field) || isRecordTypeOrderField(field))) {
+    return keys.sort((a2, b2) => compareFieldValuesByViewOrder(field, a2, b2, context));
+  }
+  return keys.sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+}
+function groupItemsByFields(items, fields, context) {
+  if (!fields || fields.length === 0) {
+    return [{
+      key: "__all__",
+      label: "__all__",
+      field: "__all__",
+      items
+    }];
+  }
+  const groupLevel = (levelItems, level) => {
+    const field = fields[level];
+    const grouped = groupItemsByField(levelItems, field);
+    const keys = getSortedGroupKeys(grouped, field, context);
+    return keys.map((key) => {
+      const bucket = grouped[key];
+      if (level === fields.length - 1) {
+        return {
+          key,
+          label: formatGroupLabel(field, key),
+          field,
+          items: bucket
+        };
+      } else {
+        return {
+          key,
+          label: formatGroupLabel(field, key),
+          field,
+          children: groupLevel(bucket, level + 1)
+        };
+      }
+    });
+  };
+  return groupLevel(items, 0);
+}
+function buildTableMatrix(items, rowField, colField, context) {
+  const rowVals = /* @__PURE__ */ new Set();
+  const colVals = /* @__PURE__ */ new Set();
+  const matrix = {};
+  items.forEach((item) => {
+    const rows = normalizeGroupKeys(readField(item, rowField), EMPTY_LABEL);
+    const cols = normalizeGroupKeys(readField(item, colField), EMPTY_LABEL);
+    rows.forEach((r2) => {
+      cols.forEach((c2) => {
+        rowVals.add(r2);
+        colVals.add(c2);
+        if (!matrix[r2]) matrix[r2] = {};
+        if (!matrix[r2][c2]) matrix[r2][c2] = [];
+        matrix[r2][c2].push(item);
+      });
+    });
+  });
+  const sortedRows = Array.from(rowVals).sort((a2, b2) => compareFieldValuesByViewOrder(rowField, a2, b2, context));
+  const sortedCols = Array.from(colVals).sort((a2, b2) => compareFieldValuesByViewOrder(colField, a2, b2, context));
+  return { matrix, sortedRows, sortedCols };
+}
+function isGroupedBy(ctx, field) {
+  const canonical = normalizeFieldKey(field);
+  return ctx.groupFields.some((groupField) => normalizeFieldKey(groupField) === canonical);
+}
+function viewExplicitlyShows(ctx, field) {
+  const canonical = normalizeFieldKey(field);
+  return (ctx.request.viewInstance?.fields || []).some((viewField) => normalizeFieldKey(viewField) === canonical);
+}
+function renderTask(item, ctx) {
+  const status = getTaskStatus(item) || "unknown";
+  const statusPresentation = TASK_STATUS_PRESENTATION[status] || TASK_STATUS_PRESENTATION.unknown;
+  const lines = [`- ${statusPresentation.emoji} ${resolveMainText(item, ctx) || "未命名任务"}`];
+  const used = /* @__PURE__ */ new Set(["primaryText", "title", "content", "status"]);
+  if (!isGroupedBy(ctx, "goalPath")) pushField(lines, "目标", item.goalPath, "goalPath");
+  used.add("goalPath");
+  const actual = taskActualDuration(item, ctx);
+  if (actual.minutes != null && actual.minutes > 0) {
+    const label = ctx.config.taskSessionScope === "range" ? "本期实际时长" : "实际时长";
+    const countSuffix = actual.sessionCount > 1 ? `（${actual.sessionCount} 次执行）` : "";
+    pushField(lines, label, `${formatMinutes(actual.minutes)}${countSuffix}`);
+  }
+  const expected = Number(item.expectedDurationMinutes);
+  if (Number.isFinite(expected) && expected > 0) {
+    pushField(lines, "预计时长", formatMinutes(expected));
+    used.add("expectedDurationMinutes");
+  }
+  if (status === "done") {
+    pushField(lines, "完成", formatDateTime$1(item.completedAt || item.doneDate));
+    used.add("completedAt");
+    used.add("doneDate");
+  } else if (status === "cancelled") {
+    pushField(lines, "取消", formatDateTime$1(item.cancelledAt || item.cancelledDate));
+    used.add("cancelledAt");
+    used.add("cancelledDate");
+  } else if (status === "skipped") {
+    pushField(lines, "跳过", formatDateTime$1(item.skippedAt));
+    used.add("skippedAt");
+  } else {
+    pushField(lines, "计划时间", formatDateTime$1(item.scheduledAt));
+    pushField(lines, "计划日期", formatDateTime$1(item.scheduledDate));
+    pushField(lines, "开始日期", formatDateTime$1(item.startDate));
+    pushField(lines, "截止时间", formatDateTime$1(item.dueAt));
+    pushField(lines, "截止日期", formatDateTime$1(item.dueDate));
+    for (const field of ["scheduledAt", "scheduledDate", "startDate", "dueAt", "dueDate"]) used.add(field);
+  }
+  if (item.priority && !isGroupedBy(ctx, "priority") && (status === "open" || viewExplicitlyShows(ctx, "priority"))) {
+    pushField(lines, "优先级", item.priority, "priority");
+    used.add("priority");
+  }
+  for (const field of viewExtraFields(item, ctx, used)) {
+    if (isGroupedBy(ctx, field)) continue;
+    const value = readField(item, field);
+    if (isEmpty$3(value) || field === "content" && compactText$2(value) === resolveMainText(item, ctx)) continue;
+    pushField(lines, fieldLabel(field), value, field);
+  }
+  if (ctx.config.taskSessionMode === "expanded") {
+    const sessions = filteredTaskSessions(item, ctx).filter((session) => Number(session.sessionDurationMinutes) > 0);
+    if (sessions.length > 0) {
+      lines.push("  - 执行：");
+      for (const session of sessions) {
+        const start2 = formatDateTime$1(session.sessionStartedAt);
+        const end2 = formatDateTime$1(session.sessionEndedAt);
+        const sameDay = dateOnly(start2) && dateOnly(start2) === dateOnly(end2);
+        const range = sameDay ? `${start2.slice(11)}–${end2.slice(11)}` : `${start2}–${end2}`;
+        lines.push(`    - ${range} · ${formatMinutes(Number(session.sessionDurationMinutes))}`);
+      }
+    }
+  }
+  return lines;
+}
+function renderEnergyRecord(item, ctx) {
+  const lines = [`- ${resolveMainText(item, ctx)}`];
+  const snapshot = readEnergyItemSnapshot(item);
+  if (!isGroupedBy(ctx, "goalPath")) pushField(lines, "目标", item.goalPath, "goalPath");
+  if (!snapshot) {
+    if (!isGroupedBy(ctx, "date")) pushField(lines, "日期", item.date, "date");
+    return lines;
+  }
+  if (!isGroupedBy(ctx, "date") && (snapshot.date || snapshot.time)) {
+    pushField(lines, "时间", `${snapshot.date || ""}${snapshot.time ? ` ${snapshot.time}` : ""}`.trim());
+  }
+  pushField(lines, "精力", snapshot.score);
+  pushField(lines, "脑力", snapshot.brainScore);
+  pushField(lines, "体力", snapshot.physicalScore);
+  return lines;
+}
+function renderGenericRecord(item, ctx, forceType = false) {
+  if (item.recordType === "task") return renderTask(item, ctx);
+  if (item.recordType === "energy") return renderEnergyRecord(item, ctx);
+  const lines = [`- ${resolveMainText(item, ctx)}`];
+  const used = /* @__PURE__ */ new Set(["primaryText", "title"]);
+  const groupedByRecordType = ctx.groupFields.some((field) => normalizeFieldKey(field) === "recordType");
+  if ((forceType || ctx.recordTypeCount > 1) && !groupedByRecordType) pushField(lines, "类型", getRecordTypePresentation(item.recordType).label);
+  for (const field of RECORD_PROFILE_FIELDS[item.recordType] || ["goalPath", "date", "content"]) {
+    used.add(field);
+    if (isGroupedBy(ctx, field)) continue;
+    const value = readField(item, field);
+    if (isEmpty$3(value) || field === "content" && compactText$2(value) === resolveMainText(item, ctx)) continue;
+    pushField(lines, fieldLabel(field), value, field);
+  }
+  for (const field of viewExtraFields(item, ctx, used)) {
+    if (isGroupedBy(ctx, field)) continue;
+    const value = readField(item, field);
+    if (isEmpty$3(value) || field === "content" && compactText$2(value) === resolveMainText(item, ctx)) continue;
+    pushField(lines, fieldLabel(field), value, field);
+  }
+  return lines;
+}
+function headingLabel(node2) {
+  return normalizeFieldKey(node2.field) === "recordType" ? getRecordTypePresentation(node2.key).label : node2.label || node2.key || "未分类";
+}
+function appendGroupTree(lines, nodes, ctx, level = 0) {
+  for (const node2 of nodes) {
+    if (node2.field !== "__all__") {
+      lines.push(`${"#".repeat(Math.min(6, level + 2))} ${headingLabel(node2)}`, "");
+    }
+    if (node2.children?.length) appendGroupTree(lines, node2.children, ctx, level + 1);
+    if (node2.items?.length) {
+      for (const item of node2.items) if (!INTERNAL_RECORD_TYPES.has(item.recordType)) lines.push(...renderGenericRecord(item, ctx));
+      lines.push("");
+    }
+  }
+}
+function titleLines(ctx) {
+  const title = compactText$2(ctx.request.viewInstance?.title);
+  return title ? [`# ${title}`, ""] : [];
+}
+function exportRecordList(ctx, inputItems = ctx.request.items, groupFields = ctx.groupFields) {
+  const items = inputItems.filter((item) => !INTERNAL_RECORD_TYPES.has(item.recordType));
+  const lines = titleLines(ctx);
+  if (!items.length) return lines.concat(["没有可导出的记录"]).join("\n").trim();
+  if (!groupFields.length) {
+    for (const item of items) lines.push(...renderGenericRecord(item, ctx));
+  } else {
+    appendGroupTree(lines, groupItemsByFields(items, groupFields, { goals: ctx.request.goals }), ctx);
+  }
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+function escapeTable(value) {
+  return compactText$2(value).replace(/\|/g, "\\|");
+}
+function tableCell(item, field, ctx) {
+  if (field === "primaryText") return escapeTable(resolveMainText(item, ctx));
+  if (field === "__actualDuration") {
+    if (item.recordType !== "task") return "";
+    const actual = taskActualDuration(item, ctx);
+    return actual.minutes != null && actual.minutes > 0 ? escapeTable(formatMinutes(actual.minutes)) : "";
+  }
+  if (field === "__expectedDuration") {
+    const expected = Number(item.expectedDurationMinutes);
+    return item.recordType === "task" && Number.isFinite(expected) && expected > 0 ? escapeTable(formatMinutes(expected)) : "";
+  }
+  const value = readField(item, field);
+  return isEmpty$3(value) ? "" : escapeTable(formatFieldValue(field, value));
+}
+function exportMarkdownTable(ctx) {
+  const items = ctx.request.items.filter((item) => !INTERNAL_RECORD_TYPES.has(item.recordType));
+  const lines = titleLines(ctx);
+  if (!items.length) return lines.concat(["没有可导出的记录"]).join("\n").trim();
+  const configured = (ctx.request.viewInstance?.fields || []).map(normalizeFieldKey).filter((field) => field && !TECHNICAL_FIELDS.has(field));
+  const columns = Array.from(/* @__PURE__ */ new Set(["primaryText", ...configured.filter((field) => !["title", "primaryText"].includes(field))]));
+  if (columns.length === 1) columns.push("recordType", "goalPath", "date");
+  if (items.some((item) => item.recordType === "task")) columns.push("__actualDuration", "__expectedDuration");
+  const uniqueColumns = Array.from(new Set(columns));
+  const labels = uniqueColumns.map((field) => field === "__actualDuration" ? "实际时长" : field === "__expectedDuration" ? "预计时长" : fieldLabel(field));
+  lines.push(`| ${labels.join(" | ")} |`, `| ${labels.map(() => "---").join(" | ")} |`);
+  for (const item of items) lines.push(`| ${uniqueColumns.map((field) => tableCell(item, field, ctx)).join(" | ")} |`);
+  return lines.join("\n").trim();
+}
+const TASK_QUADRANT_PRESENTATION = {
+  q1: { quadrant: "q1", emoji: "🔥", label: "紧急且重要", shortLabel: "紧急重要" },
+  q2: { quadrant: "q2", emoji: "🎯", label: "重要但不紧急", shortLabel: "重要不紧急" },
+  q3: { quadrant: "q3", emoji: "⚡", label: "紧急但不重要", shortLabel: "紧急不重要" },
+  q4: { quadrant: "q4", emoji: "🌿", label: "不紧急且不重要", shortLabel: "不紧急不重要" },
+  unclassified: { quadrant: "unclassified", emoji: "📥", label: "未分类", shortLabel: "未分类" }
+};
+function normalizeTaskImportance(value) {
+  const normalized2 = String(value ?? "").trim().toLowerCase();
+  return normalized2 === "important" || normalized2 === "normal" ? normalized2 : null;
+}
+function normalizeTaskUrgency(value) {
+  const normalized2 = String(value ?? "").trim().toLowerCase();
+  return normalized2 === "urgent" || normalized2 === "normal" ? normalized2 : null;
+}
+function deriveEisenhowerQuadrant(task) {
+  if (!task || task.recordType !== "task") return "unclassified";
+  const importance = normalizeTaskImportance(task.importance);
+  const urgency = normalizeTaskUrgency(task.urgency);
+  if (!importance || !urgency) return "unclassified";
+  if (importance === "important" && urgency === "urgent") return "q1";
+  if (importance === "important" && urgency === "normal") return "q2";
+  if (importance === "normal" && urgency === "urgent") return "q3";
+  return "q4";
+}
+function taskClassificationForQuadrant(quadrant) {
+  switch (quadrant) {
+    case "q1":
+      return { importance: "important", urgency: "urgent" };
+    case "q2":
+      return { importance: "important", urgency: "normal" };
+    case "q3":
+      return { importance: "normal", urgency: "urgent" };
+    case "q4":
+      return { importance: "normal", urgency: "normal" };
+    default:
+      return { importance: null, urgency: null };
+  }
+}
+function statisticMetricMatch(item, metric) {
+  if (metric === "taskCount") return item.recordType === "task";
+  if (metric === "doneTaskCount") return item.recordType === "task" && getTaskStatus(item) === "done";
+  if (metric === "habitCount") return item.recordType === "habit";
+  if (metric === "blockerCount") return item.recordType === "blocker";
+  if (metric === "milestoneCount") return item.recordType === "milestone";
+  return !INTERNAL_RECORD_TYPES.has(item.recordType);
+}
+function exportStatistics(ctx) {
+  const metric = String(ctx.request.viewInstance?.viewConfig?.metric || "recordCount");
+  const labels = {
+    recordCount: "记录数",
+    taskCount: "任务数",
+    doneTaskCount: "已完成任务",
+    habitCount: "打卡数",
+    blockerCount: "阻碍项",
+    milestoneCount: "里程碑"
+  };
+  const filtered = ctx.request.items.filter((item) => statisticMetricMatch(item, metric));
+  const counts = /* @__PURE__ */ new Map();
+  for (const item of filtered) counts.set(rootGoal(item), (counts.get(rootGoal(item)) || 0) + 1);
+  const topN = Math.max(0, Number(ctx.request.viewInstance?.viewConfig?.topN) || 0);
+  let rows = [...counts.entries()].sort((a2, b2) => b2[1] - a2[1] || a2[0].localeCompare(b2[0], "zh-CN"));
+  if (topN > 0) rows = rows.slice(0, topN);
+  const lines = titleLines(ctx);
+  lines.push(`- 指标：${labels[metric] || metric}`, `- 总计：${filtered.length}`);
+  if (rows.length) {
+    lines.push("", "## 分目标");
+    for (const [goal, count] of rows) lines.push(`- ${goal}：${count}`);
+  }
+  return lines.join("\n").trim();
+}
+function exportHeatmap(ctx) {
+  const lines = titleLines(ctx);
+  const configuredGoals = new Set((ctx.request.viewInstance?.viewConfig?.goalPaths || []).map((value) => String(value || "").trim()).filter(Boolean));
+  const sourceType = String(ctx.request.viewInstance?.viewConfig?.sourceRecordTypeId || "").replace(/^core\./, "").trim();
+  const byGoal = /* @__PURE__ */ new Map();
+  for (const item of ctx.request.items.filter((row) => !INTERNAL_RECORD_TYPES.has(row.recordType))) {
+    if (sourceType && item.recordType !== sourceType) continue;
+    const rawGoal = compactText$2(item.goalPath);
+    if (configuredGoals.size > 0 && !configuredGoals.has(rawGoal)) continue;
+    const goal = rawGoal || "未分类";
+    const rows = byGoal.get(goal) || [];
+    rows.push(item);
+    byGoal.set(goal, rows);
+  }
+  const configuredGoalOrder = (ctx.request.viewInstance?.viewConfig?.goalPaths || []).map(String);
+  const orderedGoals = [...byGoal.keys()].sort((a2, b2) => {
+    const ai = configuredGoalOrder.indexOf(a2);
+    const bi = configuredGoalOrder.indexOf(b2);
+    if (ai >= 0 || bi >= 0) return (ai < 0 ? Number.MAX_SAFE_INTEGER : ai) - (bi < 0 ? Number.MAX_SAFE_INTEGER : bi);
+    return a2.localeCompare(b2, "zh-CN");
+  });
+  for (const goal of orderedGoals) {
+    lines.push(`## ${goal}`, "");
+    const byDate = /* @__PURE__ */ new Map();
+    for (const item of byGoal.get(goal) || []) {
+      const date2 = itemDate(item) || "未标日期";
+      const rows = byDate.get(date2) || [];
+      rows.push(item);
+      byDate.set(date2, rows);
+    }
+    for (const [date2, rows] of [...byDate.entries()].sort((a2, b2) => a2[0].localeCompare(b2[0]))) {
+      const ratings = rows.map((row) => row.rating).filter((value) => value != null).map(String);
+      const images = rows.map((row) => imageDisplay(row.image)).filter(Boolean);
+      const parts = [`${rows.length} 次`];
+      if (ratings.length) parts.push(`评分 ${ratings.join("、")}`);
+      if (images.length) parts.push(images.join(" "));
+      lines.push(`- ${date2}：${parts.join(" · ")}`);
+    }
+    lines.push("");
+  }
+  if (!orderedGoals.length) lines.push("没有可导出的打卡记录");
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+function exportProgress(ctx) {
+  const lines = titleLines(ctx);
+  const byGoal = /* @__PURE__ */ new Map();
+  for (const item of ctx.request.items.filter((row) => !INTERNAL_RECORD_TYPES.has(row.recordType))) {
+    const goal = rootGoal(item);
+    const rows = byGoal.get(goal) || [];
+    rows.push(item);
+    byGoal.set(goal, rows);
+  }
+  lines.push(`- 目标数：${byGoal.size}`, `- 记录数：${ctx.request.items.filter((item) => !INTERNAL_RECORD_TYPES.has(item.recordType)).length}`);
+  for (const [goal, rows] of [...byGoal.entries()].sort((a2, b2) => b2[1].length - a2[1].length || a2[0].localeCompare(b2[0], "zh-CN"))) {
+    lines.push("", `## ${goal}`);
+    const typeCounts = /* @__PURE__ */ new Map();
+    for (const item of rows) {
+      const label = getRecordTypePresentation(item.recordType).label;
+      typeCounts.set(label, (typeCounts.get(label) || 0) + 1);
+    }
+    const doneTasks = rows.filter((item) => item.recordType === "task" && getTaskStatus(item) === "done").length;
+    lines.push(`- 记录：${rows.length}`);
+    if (doneTasks) lines.push(`- 已完成任务：${doneTasks}`);
+    lines.push(`- 类型：${[...typeCounts.entries()].map(([label, count]) => `${label} ${count}`).join("、")}`);
+  }
+  return lines.join("\n").trim();
+}
+function energyOccurrence(item) {
+  const snapshot = readEnergyItemSnapshot(item);
+  return snapshot ? `${snapshot.date || ""}T${snapshot.time || ""}` : "";
+}
+function exportEnergy(ctx) {
+  const requestedGoal = compactText$2(ctx.request.viewInstance?.viewConfig?.goalPath);
+  const energyItems = ctx.request.items.filter((item) => {
+    if (item.recordType !== "energy" || requestedGoal && compactText$2(item.goalPath) !== requestedGoal) return false;
+    const snapshot = readEnergyItemSnapshot(item);
+    if (!snapshot) return false;
+    if (!ctx.request.dateRange) return true;
+    return inRange(`${snapshot.date || ""}T${snapshot.time || "00:00"}`, ctx.request.dateRange) || (snapshot.date ? localDateText(ctx.request.dateRange[0]) <= snapshot.date && snapshot.date <= localDateText(ctx.request.dateRange[1]) : false);
+  });
+  const lines = titleLines(ctx);
+  if (!energyItems.length) return lines.concat(["没有可导出的精力记录"]).join("\n").trim();
+  const byGoal = /* @__PURE__ */ new Map();
+  for (const item of energyItems) {
+    const goal = compactText$2(item.goalPath) || "未分类";
+    const rows = byGoal.get(goal) || [];
+    rows.push(item);
+    byGoal.set(goal, rows);
+  }
+  lines.push(`- 样本数：${energyItems.length}`);
+  for (const [goal, rows] of [...byGoal.entries()].sort((a2, b2) => a2[0].localeCompare(b2[0], "zh-CN"))) {
+    const snapshots = [...rows].sort((a2, b2) => energyOccurrence(b2).localeCompare(energyOccurrence(a2))).map(readEnergyItemSnapshot).filter((value) => !!value);
+    const latest2 = snapshots[0];
+    const average = snapshots.reduce((sum, row) => sum + row.score, 0) / snapshots.length;
+    lines.push("", `## ${goal}`, `- 样本：${snapshots.length}`, `- 平均精力：${formatNumber(Math.round(average * 10) / 10)}`);
+    if (latest2) lines.push(`- 最近：${latest2.score} · ${`${latest2.date || ""} ${latest2.time || ""}`.trim()}`);
+    const recent = snapshots.slice(0, 5).map((row) => `${row.date || ""}${row.time ? ` ${row.time}` : ""}=${row.score}`.trim());
+    if (recent.length) lines.push(`- 最近记录：${recent.join("；")}`);
+  }
+  return lines.join("\n").trim();
+}
+function exportEisenhower(ctx) {
+  const lines = titleLines(ctx);
+  const columns = /* @__PURE__ */ new Map([["q1", []], ["q2", []], ["q3", []], ["q4", []], ["unclassified", []]]);
+  for (const item of ctx.request.items) {
+    if (item.recordType !== "task" || getTaskStatus(item) !== "open") continue;
+    columns.get(deriveEisenhowerQuadrant(item))?.push(item);
+  }
+  let any = false;
+  for (const key of ["q1", "q2", "q3", "q4", "unclassified"]) {
+    const rows = columns.get(key) || [];
+    if (!rows.length) continue;
+    any = true;
+    lines.push(`## ${QUADRANT_LABELS[key]}`, "");
+    for (const item of rows) lines.push(...renderTask(item, ctx));
+    lines.push("");
+  }
+  if (!any) lines.push("没有未完成任务");
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+function eventTimelineItems(ctx) {
+  const timeField = String(ctx.request.viewInstance?.viewConfig?.timeField || "date");
+  const rows = ctx.request.items.filter((item) => {
+    const value = readField(item, timeField);
+    return ctx.request.dateRange ? inRange(value, ctx.request.dateRange) : value != null && value !== "";
+  });
+  return [...rows].sort((left2, right2) => String(readField(left2, timeField) || "").localeCompare(String(readField(right2, timeField) || "")));
+}
+function exportEventTimeline(ctx) {
+  const rows = eventTimelineItems(ctx);
+  if (ctx.groupFields.length) return exportRecordList(ctx, rows, ctx.groupFields);
+  if (ctx.request.viewInstance?.viewConfig?.groupByDay !== false) {
+    const timeField = String(ctx.request.viewInstance?.viewConfig?.timeField || "date");
+    const lines = titleLines(ctx);
+    const byDay = /* @__PURE__ */ new Map();
+    for (const item of rows) {
+      const day = dateOnly(readField(item, timeField)) || "未标日期";
+      const bucket = byDay.get(day) || [];
+      bucket.push(item);
+      byDay.set(day, bucket);
+    }
+    for (const [day, bucket] of byDay) {
+      lines.push(`## ${day}`, "");
+      for (const item of bucket) lines.push(...renderGenericRecord(item, ctx));
+      lines.push("");
+    }
+    return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  }
+  return exportRecordList(ctx, rows, []);
+}
+function taskRelevantToTimeline(item, ctx) {
+  if (item.recordType !== "task") return false;
+  if (!ctx.request.dateRange) return true;
+  const sessions = (ctx.sessionsByTask.get(item.id) || []).filter((session) => overlapsRange(session.sessionStartedAt, session.sessionEndedAt, ctx.request.dateRange));
+  return sessions.length > 0 || overlapsRange(item.startAt, item.endAt, ctx.request.dateRange) || inRange(item.scheduledAt, ctx.request.dateRange) || inRange(item.startAt, ctx.request.dateRange);
+}
+function timelineSortKey(item, ctx) {
+  const firstSession = filteredTaskSessions(item, ctx)[0]?.sessionStartedAt;
+  return String(firstSession || item.startAt || item.scheduledAt || item.completedAt || item.date || "9999");
+}
+function exportTimeline(ctx) {
+  const tasks = ctx.request.items.filter((item) => taskRelevantToTimeline(item, ctx)).sort((a2, b2) => timelineSortKey(a2, ctx).localeCompare(timelineSortKey(b2, ctx)));
+  const lines = titleLines(ctx);
+  if (!tasks.length) return lines.concat(["没有当前时间范围内的任务"]).join("\n").trim();
+  const byDay = /* @__PURE__ */ new Map();
+  for (const task of tasks) {
+    const day = dateOnly(timelineSortKey(task, ctx)) || "未标日期";
+    const rows = byDay.get(day) || [];
+    rows.push(task);
+    byDay.set(day, rows);
+  }
+  for (const [day, rows] of byDay) {
+    lines.push(`## ${day}`, "");
+    for (const task of rows) lines.push(...renderTask(task, ctx));
+    lines.push("");
+  }
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+function getExportConfigByViewType(viewType) {
+  return getExportConfig(viewType);
+}
+function exportViewToMarkdown(request) {
+  const ctx = createExportRuntimeContext(request);
+  switch (ctx.config.strategy) {
+    case "table":
+      return exportMarkdownTable(ctx);
+    case "timeline":
+      return exportTimeline(ctx);
+    case "event-timeline":
+      return exportEventTimeline(ctx);
+    case "statistics":
+      return exportStatistics(ctx);
+    case "heatmap":
+      return exportHeatmap(ctx);
+    case "progress":
+      return exportProgress(ctx);
+    case "energy":
+      return exportEnergy(ctx);
+    case "eisenhower":
+      return exportEisenhower(ctx);
+    case "records":
+    default:
+      return exportRecordList(ctx);
+  }
+}
+function coerceForCompare(v2) {
+  if (v2 === null || v2 === void 0) return null;
+  if (typeof v2 === "number") return v2;
+  const s2 = String(v2).trim();
+  const isDateLike = /^\d{4}-\d{1,2}-\d{1,2}/.test(s2) || /^\d{4}\/\d{1,2}\/\d{1,2}/.test(s2);
+  if (isDateLike) {
+    const ts = Date.parse(s2.replace(/\//g, "-"));
+    if (!Number.isNaN(ts)) return ts;
+  }
+  const n2 = Number(s2);
+  if (!Number.isNaN(n2) && /\d/.test(s2) && !/[^\d.\-+eE]/.test(s2)) return n2;
+  return s2;
+}
+function cmpMixed(a2, b2) {
+  if (a2 == null && b2 == null) return 0;
+  if (a2 == null) return 1;
+  if (b2 == null) return -1;
+  const A2 = coerceForCompare(a2);
+  const B2 = coerceForCompare(b2);
+  if (typeof A2 === "number" && typeof B2 === "number") return A2 - B2;
+  return String(a2).localeCompare(String(b2), "zh");
+}
+function filterByRules(items, rules = []) {
+  if (!rules.length) return items;
+  return items.filter((item) => {
+    if (rules.length === 0) return true;
+    if (rules.length === 1) return matchRule(item, rules[0]);
+    let result = matchRule(item, rules[0]);
+    for (let i2 = 1; i2 < rules.length; i2++) {
+      const currentRule = rules[i2];
+      const previousRule = rules[i2 - 1];
+      const logic = previousRule.logic || "and";
+      if (logic === "and") {
+        result = result && matchRule(item, currentRule);
+      } else if (logic === "or") {
+        result = result || matchRule(item, currentRule);
+      }
+    }
+    return result;
+  });
+}
+function isEmptyValue$1(value) {
+  if (value === null || value === void 0) return true;
+  if (Array.isArray(value)) return value.length === 0;
+  return String(value).trim() === "";
+}
+function normalizeListValue(value) {
+  if (Array.isArray(value)) return value;
+  if (value === null || value === void 0) return [];
+  return String(value).split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
+}
+function normalizeBetweenValue(value) {
+  if (Array.isArray(value) && value.length >= 2) return [value[0], value[1]];
+  if (value === null || value === void 0) return null;
+  const text2 = String(value).trim();
+  if (!text2) return null;
+  const parts = text2.split(/\s*(?:~|～|至|到|\.\.|,|，)\s*/).filter(Boolean);
+  if (parts.length < 2) return null;
+  return [parts[0], parts[1]];
+}
+function matchRule(item, rule) {
+  const canonicalField = normalizeFieldKey(rule.field);
+  const itemRecord = asUnknownRecord(item);
+  let v1 = readField(item, canonicalField);
+  let v2 = rule.value;
+  if (rule.op === "empty") return isEmptyValue$1(v1);
+  if (rule.op === "notEmpty") return !isEmptyValue$1(v1);
+  if (canonicalField === "title") {
+    v1 = readString$1(itemRecord, "titleLower") ?? String(v1 ?? "").toLowerCase();
+    v2 = String(v2 ?? "").toLowerCase();
+  } else if (canonicalField === "content") {
+    v1 = readString$1(itemRecord, "contentLower") ?? String(v1 ?? "").toLowerCase();
+    v2 = String(v2 ?? "").toLowerCase();
+  } else if (["goalPath", "rootGoal", "leafGoal"].includes(canonicalField)) {
+    v1 = String(v1 ?? "").toLowerCase();
+    if (rule.op === "in" || rule.op === "notIn") {
+      v2 = normalizeListValue(v2).map((value) => String(value ?? "").toLowerCase());
+    } else {
+      v2 = String(v2 ?? "").toLowerCase();
+    }
+  } else if (canonicalField === "fullData") {
+    v1 = readString$1(itemRecord, "fullDataLower") ?? String(v1 ?? "").toLowerCase();
+    v2 = String(v2 ?? "").toLowerCase();
+  } else if (canonicalField === "tags") {
+    const listLower = readStringArray(itemRecord, "tagsLower").length ? readStringArray(itemRecord, "tagsLower") : Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : [];
+    const needle = String(v2 ?? "").toLowerCase();
+    if (rule.op === "includes" || rule.op === "=") {
+      return listLower.includes(needle);
+    }
+    if (rule.op === "!=") {
+      return !listLower.includes(needle);
+    }
+    if (rule.op === "in" || rule.op === "notIn") {
+      const needles = normalizeListValue(v2).map((x2) => String(x2).toLowerCase());
+      const matched = needles.some((needleValue) => listLower.includes(needleValue));
+      return rule.op === "in" ? matched : !matched;
+    }
+    v1 = listLower.join(",");
+    v2 = needle;
+  }
+  switch (rule.op) {
+    case "=":
+      return cmpMixed(v1, v2) === 0;
+    case "!=":
+      return cmpMixed(v1, v2) !== 0;
+    case "includes":
+      return Array.isArray(v1) ? v1.some((x2) => String(x2).includes(String(v2))) : String(v1).includes(String(v2));
+    case "regex":
+      try {
+        return new RegExp(String(v2)).test(String(v1));
+      } catch {
+        return false;
+      }
+    case ">":
+      return cmpMixed(v1, v2) > 0;
+    case "<":
+      return cmpMixed(v1, v2) < 0;
+    case "in": {
+      const values2 = Array.isArray(v2) ? v2 : normalizeListValue(v2);
+      return values2.some((value) => cmpMixed(v1, value) === 0);
+    }
+    case "notIn": {
+      const values2 = Array.isArray(v2) ? v2 : normalizeListValue(v2);
+      return !values2.some((value) => cmpMixed(v1, value) === 0);
+    }
+    case "between": {
+      const range = normalizeBetweenValue(v2);
+      if (!range) return false;
+      const [minValue, maxValue] = range;
+      return cmpMixed(v1, minValue) >= 0 && cmpMixed(v1, maxValue) <= 0;
+    }
+    default:
+      return false;
+  }
+}
+function sortItems(items, rules = []) {
+  if (!rules.length) return items;
+  return [...items].sort((a2, b2) => {
+    for (const r2 of rules) {
+      const canonicalField = normalizeFieldKey(r2.field);
+      const av = readField(a2, canonicalField);
+      const bv = readField(b2, canonicalField);
+      if (av == null && bv == null) continue;
+      if (av == null) return r2.dir === "asc" ? 1 : -1;
+      if (bv == null) return r2.dir === "asc" ? -1 : 1;
+      const cmp = cmpMixed(av, bv);
+      if (cmp !== 0) return r2.dir === "asc" ? cmp : -cmp;
+    }
+    return 0;
+  });
+}
+function filterByKeyword(items, kw) {
+  if (!kw.trim()) return items;
+  const s2 = kw.trim().toLowerCase();
+  return items.filter((it) => {
+    const itemRecord = asUnknownRecord(it);
+    const titleLower = readString$1(itemRecord, "titleLower") ?? (it.title || "").toLowerCase();
+    const contentLower = readString$1(itemRecord, "contentLower") ?? (it.content || "").toLowerCase();
+    const fullDataLower = readString$1(itemRecord, "fullDataLower") ?? (it.fullData || it.rawSource || "").toLowerCase();
+    const tagsLower = (it.tags || []).join(" ").toLowerCase();
+    const semanticText = [it.goalPath, it.recordType, it.status].filter(Boolean).join(" ").toLowerCase();
+    return (titleLower + " " + contentLower + " " + fullDataLower + " " + tagsLower + " " + semanticText).includes(s2);
+  });
+}
+function filterByPeriod(items, period) {
+  if (!period) {
+    return items;
+  }
+  return items.filter((item) => {
+    const itemPeriod = readField(item, "period");
+    return itemPeriod == null || itemPeriod === "" || itemPeriod === period;
+  });
+}
+const VIEW_DATE_ROLES = [
+  "default",
+  "task-scheduled",
+  "task-due",
+  "task-completed",
+  "task-actual"
+];
+function normalizeViewDateRole(value) {
+  const normalized2 = String(value || "").trim();
+  return VIEW_DATE_ROLES.includes(normalized2) ? normalized2 : void 0;
+}
+function isClosedTask(item) {
+  if (item.recordType !== "task") return false;
+  return item.status === "done" || item.status === "cancelled" || item.status === "skipped";
+}
+function isOpenTask(item) {
+  return item.recordType === "task" && !isClosedTask(item);
+}
+function itemGranularity(item) {
+  return String(readField(item, "period") || "天");
+}
+function isWithinDayRange(value, range) {
+  if (!value) return false;
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return false;
+  const [start2, end2] = toIsoDateTuple({
+    start: dayjs(range[0]).startOf("day"),
+    end: dayjs(range[1]).endOf("day")
+  });
+  const valueMs = parsed.valueOf();
+  return valueMs >= dayjs(start2).startOf("day").valueOf() && valueMs <= dayjs(end2).endOf("day").valueOf();
+}
+function isWithinMinuteRange(value, range) {
+  if (!value) return false;
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return false;
+  const startMs = dayjs(range[0]).valueOf();
+  const endMs = dayjs(range[1]).valueOf();
+  const valueMs = parsed.valueOf();
+  return valueMs >= startMs && valueMs <= endMs;
+}
+function readDateConstraintValue(item, constraint) {
+  const role = constraint.role || "default";
+  if (role === "task-scheduled") {
+    return item.recordType === "task" ? item.scheduledAt ?? item.scheduledDate : void 0;
+  }
+  if (role === "task-due") {
+    return item.recordType === "task" ? item.dueAt ?? item.dueDate : void 0;
+  }
+  if (role === "task-completed") {
+    return item.recordType === "task" ? item.completedAt ?? item.doneDate : void 0;
+  }
+  if (role === "task-actual") {
+    return item.recordType === "task-session" ? item.sessionStartedAt : void 0;
+  }
+  return readField(item, constraint.field || "date");
+}
+function applyStrictDateConstraint(items, constraint) {
+  const inRange2 = constraint.precision === "minute" ? isWithinMinuteRange : isWithinDayRange;
+  return items.filter((item) => inRange2(readDateConstraintValue(item, constraint), constraint.range));
+}
+function applyOverviewDateConstraint(items, constraint) {
+  const contextDate = dayjs(constraint.range[1]);
+  const field = constraint.field || "date";
+  return items.filter((item) => {
+    if (field === "date" && isOpenTask(item)) return true;
+    const rawDate = readDateConstraintValue(item, constraint);
+    if (!rawDate) return field === "date" ? !isClosedTask(item) : false;
+    const itemDate2 = dayjs(rawDate);
+    if (!itemDate2.isValid()) return field === "date" ? !isClosedTask(item) : false;
+    if (constraint.useFieldGranularity) {
+      switch (itemGranularity(item)) {
+        case "年":
+          return itemDate2.isSame(contextDate, "year");
+        case "季":
+          return itemDate2.isSame(contextDate, "quarter");
+        case "月":
+          return itemDate2.isSame(contextDate, "month");
+        case "周":
+          return isSameIsoWeek(itemDate2, contextDate);
+        default:
+          return isWithinDayRange(rawDate, constraint.range);
+      }
+    }
+    return isWithinDayRange(rawDate, constraint.range);
+  });
+}
+function applyStandardDateConstraint(items, constraint) {
+  const field = constraint.field || "date";
+  if (field !== "date") return applyStrictDateConstraint(items, { ...constraint });
+  let result = items;
+  const period = constraint.periodValue ?? (constraint.useFieldGranularity ? constraint.granularity : void 0);
+  if (period != null && String(period).trim()) result = filterByPeriod(result, String(period));
+  return result.filter((item) => {
+    if (isOpenTask(item)) return true;
+    const rawDate = readDateConstraintValue(item, constraint);
+    if (!rawDate) return !isClosedTask(item);
+    const parsed = dayjs(rawDate);
+    if (!parsed.isValid()) return !isClosedTask(item);
+    return isWithinDayRange(rawDate, constraint.range);
+  });
+}
+function applyDateConstraint(items, constraint) {
+  if (!constraint) return items;
+  const explicitRole = (constraint.role || "default") !== "default";
+  const mode = explicitRole ? "strict" : constraint.mode || (constraint.field && constraint.field !== "date" ? "strict" : "standard");
+  if (mode === "overview") return applyOverviewDateConstraint(items, constraint);
+  if (mode === "strict") return applyStrictDateConstraint(items, constraint);
+  return applyStandardDateConstraint(items, constraint);
+}
+const dateConstraintCache = /* @__PURE__ */ new WeakMap();
+const MAX_DATE_CACHE_ENTRIES_PER_SNAPSHOT = 48;
+function buildDateConstraintCacheKey(constraint) {
+  const [start2, end2] = constraint.range;
+  return JSON.stringify({
+    start: start2?.getTime?.() ?? Number(start2),
+    end: end2?.getTime?.() ?? Number(end2),
+    field: constraint.field || "date",
+    mode: constraint.mode || "",
+    granularity: constraint.granularity || "",
+    useFieldGranularity: !!constraint.useFieldGranularity,
+    periodValue: constraint.periodValue == null ? "" : String(constraint.periodValue),
+    precision: constraint.precision || "day",
+    role: constraint.role || "default"
+  });
+}
+function applyDateConstraintCached(items, constraint) {
+  if (!constraint) return items;
+  let byConstraint = dateConstraintCache.get(items);
+  if (!byConstraint) {
+    byConstraint = /* @__PURE__ */ new Map();
+    dateConstraintCache.set(items, byConstraint);
+  }
+  const key = buildDateConstraintCacheKey(constraint);
+  const cached2 = byConstraint.get(key);
+  if (cached2) return cached2;
+  const filtered = applyDateConstraint(items, constraint);
+  byConstraint.set(key, filtered);
+  if (byConstraint.size > MAX_DATE_CACHE_ENTRIES_PER_SNAPSHOT) {
+    const oldestKey = byConstraint.keys().next().value;
+    if (oldestKey) byConstraint.delete(oldestKey);
+  }
+  return filtered;
+}
+function executeRecordQuery(items, spec = {}) {
+  let result = applyDateConstraintCached(items, spec.date);
+  for (const group of spec.filterGroups || []) {
+    if (group.length) result = filterByRules(result, [...group]);
+  }
+  if (spec.keyword) result = filterByKeyword(result, spec.keyword);
+  if (spec.sort?.length) result = sortItems(result, [...spec.sort]);
+  const groupFields = (spec.groupBy || []).filter(Boolean);
+  const groupTree = groupFields.length ? groupItemsByFields(result, [...groupFields], spec.groupContext) : null;
+  return { items: result, groupTree };
+}
+function queryRecordItems(items, spec = {}) {
+  return executeRecordQuery(items, spec).items;
+}
+function collectGoalPathsForHeatmap(params) {
+  const { items, dataSource, sourceRecordType } = params;
+  const filteredItems = queryRecordItems(items, { filterGroups: [dataSource.filters || []] });
+  const paths = /* @__PURE__ */ new Set();
+  filteredItems.forEach((item) => {
+    const itemRecordTypeId = item.recordType ? `core.${String(item.recordType).replace(/^core\./, "")}` : "";
+    const sourceRecordTypeId = sourceRecordType.recordTypeId || sourceRecordType.id;
+    const goalPath = String(item.goalPath || item.extra?.["目标"] || "").trim();
+    if (itemRecordTypeId === sourceRecordTypeId && goalPath) paths.add(goalPath);
+  });
+  return Array.from(paths).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+}
+function getEffectiveLevelCount(item) {
+  if (item.levelCount !== void 0) return item.levelCount;
+  if (item.countForLevel === false) return 0;
+  return item.displayCount || 1;
+}
+function getEffectiveDisplayCount(item) {
+  return item.displayCount || 1;
+}
+const isImagePath = (value) => {
+  return /\.(png|svg|jpg|jpeg|gif|webp|avif)(?:[?#].*)?$/i.test(value.trim());
+};
+const isHexColor = (value) => {
+  return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value);
+};
+function getEffectiveHeatmapTemplate(settings, recordTypeId) {
+  return settings.recordTypes.find((block) => block.id === recordTypeId || block.recordTypeId === recordTypeId) ?? null;
+}
+function buildRatingMapping(inputSettings, recordTypeId) {
+  const effectiveTemplate = getEffectiveHeatmapTemplate(inputSettings, recordTypeId);
+  const ratingField = effectiveTemplate?.fields.find((field) => field.type === "rating");
+  return new Map(
+    ratingField?.options?.filter((option) => option.value).map((option) => [option.label || "", option.value]) || []
+  );
+}
+class RatingMappingCache {
+  cache = /* @__PURE__ */ new Map();
+  lastSettings = null;
+  clear() {
+    this.cache.clear();
+  }
+  get(inputSettings, recordTypeId, goalPath) {
+    if (this.lastSettings !== inputSettings) {
+      this.clear();
+      this.lastSettings = inputSettings;
+    }
+    const cacheKey = `${recordTypeId}:${goalPath || "default"}`;
+    const cached2 = this.cache.get(cacheKey);
+    if (cached2) return cached2;
+    const mapping = buildRatingMapping(inputSettings, recordTypeId);
+    this.cache.set(cacheKey, mapping);
+    return mapping;
+  }
+}
+function firstNonEmptyText$1(...values2) {
+  for (const value of values2) {
+    if (Array.isArray(value)) {
+      const nested2 = firstNonEmptyText$1(...value);
+      if (nested2) return nested2;
+      continue;
+    }
+    if (value && typeof value === "object") {
+      const objectValue = value;
+      const nested2 = firstNonEmptyText$1(objectValue.value, objectValue.label, objectValue.src, objectValue.path, objectValue.title);
+      if (nested2) return nested2;
+      continue;
+    }
+    if (value === void 0 || value === null) continue;
+    const text2 = String(value).trim();
+    if (text2) return text2;
+  }
+  return "";
+}
+function readExtra(item, key) {
+  return item?.extra?.[key];
+}
+function buildHeatmapRatingMapping(options, fallbackMapping) {
+  const mapping = new Map(fallbackMapping || []);
+  for (const option of options || []) {
+    const value = firstNonEmptyText$1(option?.value, option);
+    const label = firstNonEmptyText$1(option?.label, option?.value, option);
+    if (!value && !label) continue;
+    if (label) mapping.set(label, value || label);
+    if (value) mapping.set(value, value);
+  }
+  return mapping;
+}
+function readHeatmapRatingText(item) {
+  if (!item) return "";
+  return firstNonEmptyText$1(
+    item.rating,
+    readExtra(item, "评分"),
+    readExtra(item, "rating")
+  );
+}
+function readHeatmapVisualText(item) {
+  if (!item) return "";
+  return firstNonEmptyText$1(
+    item.image,
+    readExtra(item, "图片"),
+    readExtra(item, "image")
+  );
+}
+function getHeatmapItemVisualValue(item, ratingMapping) {
+  if (!item) return null;
+  const directVisual = readHeatmapVisualText(item);
+  if (directVisual) return directVisual;
+  const rating = readHeatmapRatingText(item);
+  if (!rating) return null;
+  return ratingMapping?.get(rating) || rating;
+}
+function getLatestHeatmapVisualValue(items, ratingMapping) {
+  if (!items || !items.length) return null;
+  const latestItemWithValue = [...items].reverse().find((item) => !!getHeatmapItemVisualValue(item, ratingMapping));
+  return getHeatmapItemVisualValue(latestItemWithValue, ratingMapping);
+}
+function getEffectiveTemplate(settings, recordTypeId) {
+  const configured = settings.recordTypes || [];
+  const templates = [
+    ...configured,
+    ...DEFAULT_TEMPLATE_RECORD_TYPES.filter((block) => !configured.some((existing) => existing.id === block.id))
+  ];
+  const template = templates.find((block) => block.id === recordTypeId || block.recordTypeId === recordTypeId) ?? null;
+  return {
+    template,
+    templateId: template?.id ?? null,
+    templateSourceType: template ? "record-type" : null
+  };
+}
+function firstDate(...values2) {
+  for (const value of values2) {
+    const normalized2 = String(value || "").trim();
+    if (normalized2) return normalized2;
+  }
+  return void 0;
+}
+function getTaskDateFact(task, role = "default") {
+  if (role === "scheduled") {
+    return { value: firstDate(task.scheduledAt, task.scheduledDate), source: "scheduled" };
+  }
+  if (role === "due") {
+    return { value: firstDate(task.dueAt, task.dueDate), source: "due" };
+  }
+  if (role === "completed") {
+    return { value: firstDate(task.completedAt, task.doneDate), source: "done" };
+  }
+  const candidates = [
+    ["scheduled", firstDate(task.scheduledAt, task.scheduledDate)],
+    ["due", firstDate(task.dueAt, task.dueDate)],
+    ["start", firstDate(task.startAt, task.startDate, task.startISO)],
+    ["created", firstDate(task.createdAt, task.createdDate)],
+    ["done", firstDate(task.completedAt, task.doneDate)],
+    ["end", firstDate(task.endAt, task.endISO)]
+  ];
+  for (const [source, value] of candidates) {
+    if (value) return { value, source };
+  }
+  return {};
+}
+function normalizeItemDates(it) {
+  if (it.recordType !== "task") {
+    if (it.date) {
+      it.dateSource = "block";
+      const t3 = Date.parse(it.date);
+      if (!isNaN(t3)) it.dateMs = t3;
+    }
+    return;
+  }
+  const fact = getTaskDateFact(it, "default");
+  if (fact.value) {
+    it.date = fact.value;
+    it.dateSource = fact.source;
+    const t3 = Date.parse(fact.value);
+    if (!isNaN(t3)) it.dateMs = t3;
+  }
+}
+function makeObsUri(ref, vaultName) {
+  if (!vaultName) {
+    return "#error-vault-not-provided";
+  }
+  let filePath = "";
+  let line2 = "";
+  const anyRef = ref;
+  if (anyRef?.source?.path) {
+    filePath = String(anyRef.source.path);
+    if (typeof anyRef.source.startLine === "number") line2 = String(anyRef.source.startLine);
+  } else if (anyRef?.file?.path) {
+    filePath = String(anyRef.file.path);
+    if (typeof anyRef.file.line === "number") line2 = String(anyRef.file.line);
+  }
+  if (!filePath) return "#error-record-location-unavailable";
+  const vault = encodeURIComponent(vaultName);
+  const qp = `vault=${vault}&filepath=${encodeURIComponent(filePath)}`;
+  return `obsidian://advanced-uri?${qp}${line2 ? "&line=" + line2 : ""}`;
+}
+function localCalendarDate(value) {
+  if (!value) return void 0;
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return void 0;
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
+  const contentLines = lines.slice(startIdx + 1, endIdx);
+  const parsed = decodeRecordContentLines(contentLines);
+  if (!parsed.recordId || !isStableRecordId(parsed.recordId)) return null;
+  if (!parsed.recordType) return null;
+  const isTask = parsed.recordType === "task";
+  const isTaskSeries = parsed.recordType === "task-series";
+  const isTaskSession = parsed.recordType === "task-session";
+  if (isTask && !["open", "done", "cancelled", "skipped"].includes(String(parsed.status || ""))) return null;
+  if (isTask && parsed.status === "skipped" && !parsed.seriesId) return null;
+  if (isTaskSeries && !["active", "stopped"].includes(String(parsed.status || ""))) return null;
+  const recurrenceInfo = isTaskSeries ? normalizeRecurrenceInfo({ unit: parsed.recurrenceUnit, interval: parsed.recurrenceInterval, anchor: parsed.recurrenceAnchor }) : null;
+  if (isTaskSeries && !recurrenceInfo) return null;
+  const sessionDuration = normalizeTaskSessionDurationMinutes(parsed.sessionDurationMinutes);
+  if (isTaskSession && (!parsed.taskId || !parsed.sessionStartedAt || !parsed.sessionEndedAt || sessionDuration == null || !parsed.sessionResult || !parsed.sessionSource)) return null;
+  const canonicalDate = isTask ? localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate || localCalendarDate(parsed.createdAt) || localCalendarDate(parsed.completedAt) || localCalendarDate(parsed.endAt) || parsed.date : localCalendarDate(parsed.sessionStartedAt) || parsed.date || localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate;
+  const schema = getRecordSchemaDefinition(parsed.recordType);
+  if (!schema) return null;
+  const item = {
+    id: parsed.recordId,
+    title: parsed.title || "",
+    content: parsed.content,
+    rawSource: lines.slice(startIdx, endIdx + 1).join("\n"),
+    editableText: parsed.content,
+    status: parsed.status,
+    tags: parsed.tags,
+    goalPath: parsed.goalPath,
+    recurrenceInfo: recurrenceInfo || void 0,
+    created: 0,
+    modified: 0,
+    extra: parsed.extra,
+    folder: parentFolder,
+    recordType: schema.recordType,
+    priority: parsed.priority,
+    importance: parsed.importance,
+    urgency: parsed.urgency,
+    createdAt: parsed.createdAt,
+    scheduledAt: parsed.scheduledAt,
+    startAt: parsed.startAt,
+    endAt: parsed.endAt,
+    dueAt: parsed.dueAt,
+    energyDemand: parsed.energyDemand,
+    brainDemand: parsed.brainDemand,
+    physicalDemand: parsed.physicalDemand,
+    availabilityContexts: parsed.availabilityContexts,
+    recoveryIntent: parsed.recoveryIntent,
+    scheduledDate: parsed.scheduledDate,
+    startDate: parsed.startDate,
+    dueDate: parsed.dueDate,
+    completedAt: parsed.completedAt,
+    cancelledAt: parsed.cancelledAt,
+    skippedAt: parsed.skippedAt,
+    seriesId: parsed.seriesId,
+    seriesStartDate: parsed.seriesStartDate,
+    currentTaskId: parsed.currentTaskId,
+    rolloverPolicy: parsed.rolloverPolicy,
+    taskId: parsed.taskId,
+    sessionStartedAt: parsed.sessionStartedAt,
+    sessionEndedAt: parsed.sessionEndedAt,
+    sessionDurationMinutes: sessionDuration ?? void 0,
+    sessionResult: parsed.sessionResult,
+    sessionSource: parsed.sessionSource,
+    suggestedDurationMinutes: parsed.suggestedDurationMinutes,
+    startEnergyRecordId: parsed.startEnergyRecordId,
+    endEnergyRecordId: parsed.endEnergyRecordId,
+    energyDelta: parsed.energyDelta,
+    brainDelta: parsed.brainDelta,
+    physicalDelta: parsed.physicalDelta,
+    ...parsed.recordType === "energy" && parsed.recordSubtype ? { recordSubtype: parsed.recordSubtype } : {},
+    doneDate: parsed.completedAt,
+    cancelledDate: parsed.cancelledAt,
+    date: canonicalDate
+  };
+  if (parsed.icon) item.icon = parsed.icon;
+  if (parsed.rating !== void 0) item.rating = parsed.rating;
+  if (parsed.image) item.image = parsed.image;
+  if (parsed.seriesId) item.extra["系列ID"] = parsed.seriesId;
+  if (parsed.expectedDurationMinutes !== void 0) {
+    item.expectedDurationMinutes = parsed.expectedDurationMinutes;
+  }
+  item.startISO = parsed.sessionStartedAt || (isTask ? parsed.scheduledAt || parsed.scheduledDate || parsed.startAt || parsed.startDate : void 0) || parsed.startAt || parsed.startDate || parsed.scheduledAt || parsed.scheduledDate || parsed.dueAt || parsed.dueDate || parsed.date;
+  item.endISO = parsed.sessionEndedAt || parsed.endAt || parsed.completedAt || parsed.cancelledAt || parsed.dueAt || parsed.dueDate || item.startISO;
+  if (item.startISO) item.startMs = Date.parse(item.startISO);
+  if (item.endISO) item.endMs = Date.parse(item.endISO);
+  if (item.period && item.date) item.periodCount = getPeriodCount(item.period, dayjs(item.date));
+  return item;
+}
+function isRecordSubmitSuccess(result, options = {}) {
+  if (result.status === "success") return true;
+  if (options.treatPartialSuccessAsSuccess && result.status === "partial_success") return true;
+  if (options.treatCancelledAsSuccess && result.status === "cancelled") return true;
+  return false;
+}
+function firstErrorCode(result) {
+  return String(result.errors?.[0]?.code || "");
+}
+function getRecordConflictRecoveryAdvice(code) {
+  switch (code) {
+    case "record_path_missing":
+      return "原文件可能已被移动或删除。请先重新扫描笔记库，再从最新视图重新打开这条记录。";
+    case "record_line_stale":
+      return "原记录所在行已变化。请重新扫描或打开原文确认位置，然后从最新记录重新编辑。";
+    case "record_block_boundary_invalid":
+      return "记录块的开始/结束边界已损坏。请打开原文修复边界标记后再保存。";
+    case "record_item_missing":
+      return "这条记录可能已被删除或内容变化过大。请重新扫描后确认是否仍然存在。";
+    case "record_locator_invalid":
+      return "记录定位信息无效。请从列表、时间线或搜索结果中的最新记录重新打开编辑。";
+    case "record_conflict":
+    default:
+      return "请重新扫描笔记库，并从最新视图重新打开这条记录后再操作。";
+  }
+}
+function readRecordSubmitMessage(result, fallback) {
+  const message = result.errors?.[0]?.message || result.feedback?.notice || fallback;
+  if (result.status === "conflict") {
+    const advice = getRecordConflictRecoveryAdvice(firstErrorCode(result));
+    return `记录冲突：${message}
+${advice}`;
+  }
+  return message;
+}
+function buildRecordSubmitFeedbackPresentation(result, fallbackErrorMessage = "操作失败") {
+  if (result.status === "success") {
+    return {
+      tone: "success",
+      message: result.feedback?.notice || "已保存",
+      shouldCloseModal: true
+    };
+  }
+  if (result.status === "partial_success") {
+    return {
+      tone: "warning",
+      message: result.feedback?.notice || result.errors?.[0]?.message || "已写入新位置，但旧记录可能需要手动清理",
+      shouldCloseModal: true
+    };
+  }
+  if (result.status === "cancelled") {
+    return {
+      tone: "error",
+      message: "",
+      shouldCloseModal: false
+    };
+  }
+  return {
+    tone: "error",
+    message: readRecordSubmitMessage(result, fallbackErrorMessage),
+    shouldCloseModal: false
+  };
+}
+function normalizePath(path) {
+  return normalizeHierarchyPathValue(path) || "";
+}
+function getLeafPath(path) {
+  return getHierarchyPathLeaf(path);
+}
+const DEFAULT_GOAL_SETTINGS = {
+  goals: [],
+  goalTemplates: [],
+  timePresetRevisions: []
+};
+const GOAL_CONTEXT_KEYS = /* @__PURE__ */ new Set(["goalPath", "目标", "目标路径"]);
+const GOAL_TEMPLATE_ICON_KEYS = /* @__PURE__ */ new Set(["icon", "图标"]);
+function hasHash(value) {
+  const text2 = String(value ?? "");
+  return text2.includes("#") || text2.includes("＃");
+}
+function assertGoal(goal) {
+  const raw = String(goal.path || "").trim();
+  if (hasHash(raw)) throw new Error(`目标路径无效（${raw}）：目标路径不能包含 #。`);
+  const normalized2 = normalizeGoalPath(raw);
+  if (!normalized2) throw new Error("目标无效：必须使用规范的斜杠分隔路径。");
+  if (goal.path !== normalized2) throw new Error(`目标路径无效：应为 ${normalized2}。`);
+  if (goal.timePresetPercent !== void 0) {
+    const percent = Number(goal.timePresetPercent);
+    if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
+      throw new Error(`目标 ${normalized2} 的时间预设百分比无效：必须在 0 到 100 之间。`);
+    }
+  }
+  if (goal.weeklyTargetMinutes !== void 0) {
+    const minutes = Number(goal.weeklyTargetMinutes);
+    if (!Number.isFinite(minutes) || minutes < 0) {
+      throw new Error(`目标 ${normalized2} 的每周目标分钟数无效：必须大于等于 0。`);
+    }
+  }
+}
+function assertTemplate(template, goalPaths) {
+  const goalPath = normalizeGoalPath(template.goalPath);
+  if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`目标模板引用了不存在的目标（${template.goalPath || "空"}）。`);
+  for (const key of Object.keys(template.defaultValues || {})) {
+    if (GOAL_CONTEXT_KEYS.has(key)) throw new Error(`目标模板 ${goalPath}/${template.recordTypeId} 不能保存目标上下文默认值（${key}）。`);
+    if (GOAL_TEMPLATE_ICON_KEYS.has(key)) throw new Error(`目标模板 ${goalPath}/${template.recordTypeId} 不能保存目标身份图标默认值（${key}）。`);
+  }
+  for (const field of template.fields || []) {
+    const semantic = String(field.semantic || "").trim();
+    const key = String(field.key || field.label || "").trim();
+    if (semantic === "goalPath" || GOAL_CONTEXT_KEYS.has(key)) {
+      throw new Error(`目标模板 ${goalPath}/${template.recordTypeId} 不能保存目标上下文字段（${key || semantic}）。`);
+    }
+    if ((semantic === "icon" || GOAL_TEMPLATE_ICON_KEYS.has(key)) && String(field.defaultValue ?? "").trim()) {
+      throw new Error(`目标模板 ${goalPath}/${template.recordTypeId} 不能保存图标字段默认值。`);
+    }
+  }
+}
+function assertCanonicalGoalSettings(goalSettings) {
+  const goals = goalSettings?.goals || [];
+  for (const goal of goals) assertGoal(goal);
+  const paths = new Set(goals.map((goal) => goal.path));
+  if (paths.size !== goals.length) throw new Error("检测到重复的目标路径。");
+  const templateKeys = /* @__PURE__ */ new Set();
+  for (const template of goalSettings?.goalTemplates || []) {
+    assertTemplate(template, paths);
+    const key = `${template.goalPath}::${template.recordTypeId}`;
+    if (templateKeys.has(key)) throw new Error(`检测到重复的目标模板（${key}）。`);
+    templateKeys.add(key);
+  }
+}
+function templateFieldTokenSources(field) {
+  if (!field) return [];
+  return [field.key, field.label, field.semantic, field.semanticType, field.role];
+}
+function normalizeFieldToken(value) {
+  return normalizeTextToken(value);
+}
+function normalizeFieldLabelToken(value) {
+  return compactText$1(value);
+}
+function getTemplateFieldLookupTokens(field) {
+  return templateFieldTokenSources(field).map(normalizeFieldToken).filter(Boolean);
+}
+function getTemplateFieldLabelTokens(field) {
+  return templateFieldTokenSources(field).map(normalizeFieldLabelToken).filter(Boolean);
+}
+function templateFieldMatchesAliases(field, aliases2) {
+  const lowerTokens = getTemplateFieldLookupTokens(field);
+  const labelTokens = getTemplateFieldLabelTokens(field);
+  const lowerAliases = aliases2.map(normalizeFieldToken);
+  return lowerTokens.some((token2) => lowerAliases.includes(token2)) || labelTokens.some((token2) => aliases2.includes(token2));
+}
+function templateFieldSemanticToken(field) {
+  return normalizeFieldToken(field?.semantic || field?.semanticType);
+}
+function isIconTemplateField(field) {
+  const key = normalizeFieldToken(field?.key);
+  const label = normalizeFieldLabelToken(field?.label);
+  const semantic = templateFieldSemanticToken(field);
+  return key === "icon" || key === "图标" || label === "图标" || semantic === "icon";
+}
+function normalizeGoalIcon(value) {
+  return String(value ?? "").trim();
+}
+function resolveGoalIcon(goal) {
+  return normalizeGoalIcon(goal?.icon);
+}
+function stripGoalTemplateIconDefaults(values2) {
+  const result = {};
+  for (const [key, value] of Object.entries(values2 || {})) {
+    if (key === "icon" || key === "图标") continue;
+    result[key] = value;
+  }
+  return Object.keys(result).length ? result : void 0;
+}
+function stripGoalTemplateIconFieldDefaults(fields) {
+  if (!fields?.length) return void 0;
+  return fields.map((field) => {
+    if (!isIconTemplateField(field)) return field;
+    const next2 = { ...field };
+    delete next2.defaultValue;
+    return next2;
+  });
+}
+function applyGoalIconToCaptureFields(fields, goal) {
+  const icon = resolveGoalIcon(goal);
+  if (!fields?.length || !icon) return fields;
+  return fields.map((field) => isIconTemplateField(field) ? { ...field, defaultValue: icon } : field);
+}
+const GOAL_FALLBACK_PALETTE = ["#8b5cf6", "#06b6d4", "#22c55e", "#f59e0b", "#ef4444", "#6366f1", "#14b8a6", "#f97316", "#a855f7", "#0ea5e9"];
+const UNASSIGNED_GOAL_COLOR = "#9ca3af";
+function stableGoalColor(seed) {
+  let hash2 = 0;
+  for (const ch of seed || "") hash2 = (hash2 << 5) - hash2 + ch.charCodeAt(0) | 0;
+  return GOAL_FALLBACK_PALETTE[Math.abs(hash2) % GOAL_FALLBACK_PALETTE.length] || GOAL_FALLBACK_PALETTE[0];
+}
+function normalizeGoalColorHex(value) {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (/^#[0-9a-f]{6}$/.test(raw)) return raw;
+  if (/^#[0-9a-f]{3}$/.test(raw)) return `#${raw.slice(1).split("").map((part) => part + part).join("")}`;
+  return null;
+}
+function resolveGoalColor(goal, fallbackPath = "") {
+  const explicit = normalizeGoalColorHex(goal?.color);
+  if (explicit) return explicit;
+  const path = normalizeGoalPath(String(goal?.path || fallbackPath || "").trim());
+  return path ? stableGoalColor(path) : UNASSIGNED_GOAL_COLOR;
+}
+function isPeriodAwareRecordType(recordTypeId) {
+  const id = String(recordTypeId || "").trim();
+  return id === "core.plan" || id === "core.review" || id === "plan" || id === "review";
+}
+function normalizePeriodPolicyGranularity(value) {
+  const text2 = String(value || "").trim().toLowerCase();
+  if (text2 === "week" || text2 === "month" || text2 === "quarter" || text2 === "year") return text2;
+  return "week";
+}
+function resolveTemplatePeriodPolicy(template) {
+  if (!template) return null;
+  const recordTypeId = template.recordTypeId || template.id || "";
+  if (!isPeriodAwareRecordType(recordTypeId)) return null;
+  const explicitPolicy = template.periodPolicy;
+  if (explicitPolicy && explicitPolicy.enabled !== false) {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(explicitPolicy.granularity) };
+  }
+  return { enabled: true, granularity: "week" };
+}
+function pad(value) {
+  return String(value).padStart(2, "0");
+}
+function ymd(date2) {
+  return `${date2.getFullYear()}-${pad(date2.getMonth() + 1)}-${pad(date2.getDate())}`;
+}
+function parseDate2(value) {
+  const text2 = String(value || "").trim();
+  const parsed = text2 ? /* @__PURE__ */ new Date(`${text2.slice(0, 10)}T00:00:00`) : /* @__PURE__ */ new Date();
+  if (!Number.isFinite(parsed.getTime())) return /* @__PURE__ */ new Date();
+  return parsed;
+}
+function addDays(date2, days) {
+  const next2 = new Date(date2);
+  next2.setDate(next2.getDate() + days);
+  return next2;
+}
+function startOfISOWeek(date2) {
+  const d2 = new Date(date2);
+  const day = d2.getDay() || 7;
+  d2.setDate(d2.getDate() - day + 1);
+  return d2;
+}
+function isoWeekInfo(date2) {
+  const d2 = new Date(Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate()));
+  const day = d2.getUTCDay() || 7;
+  d2.setUTCDate(d2.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d2.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((d2.getTime() - yearStart.getTime()) / 864e5 + 1) / 7);
+  return { year: d2.getUTCFullYear(), week };
+}
+function normalizePeriodGranularity(value) {
+  const text2 = String(value || "").trim().toLowerCase();
+  if (text2 === "day" || text2 === "week" || text2 === "month" || text2 === "quarter" || text2 === "year") return text2;
+  return "week";
+}
+function resolveDerivedPeriod(dateValue, granularityValue) {
+  const granularity = normalizePeriodGranularity(granularityValue);
+  const date2 = parseDate2(dateValue);
+  const year = date2.getFullYear();
+  if (granularity === "day") {
+    const day = ymd(date2);
+    return { id: day, label: day, granularity, startDate: day, endDate: day };
+  }
+  if (granularity === "week") {
+    const start22 = startOfISOWeek(date2);
+    const end22 = addDays(start22, 6);
+    const info = isoWeekInfo(date2);
+    const week = pad(info.week);
+    return { id: `${info.year}-W${week}`, label: `${info.year} 第 ${info.week} 周`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
+  }
+  if (granularity === "month") {
+    const start22 = new Date(year, date2.getMonth(), 1);
+    const end22 = new Date(year, date2.getMonth() + 1, 0);
+    return { id: `${year}-${pad(date2.getMonth() + 1)}`, label: `${year} 年 ${date2.getMonth() + 1} 月`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
+  }
+  if (granularity === "quarter") {
+    const quarter = Math.floor(date2.getMonth() / 3) + 1;
+    const start22 = new Date(year, (quarter - 1) * 3, 1);
+    const end22 = new Date(year, quarter * 3, 0);
+    return { id: `${year}-Q${quarter}`, label: `${year} 年第 ${quarter} 季度`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
+  }
+  const start2 = new Date(year, 0, 1);
+  const end2 = new Date(year, 11, 31);
+  return { id: `${year}`, label: `${year} 年`, granularity, startDate: ymd(start2), endDate: ymd(end2) };
+}
+const SYSTEM_RECORD_CONTEXT_FIELD_KEYS = [
+  "goalPath",
+  "目标",
+  "目标路径",
+  "rootGoal",
+  "leafGoal",
+  "recordType",
+  "recordTypeId",
+  "记录类型",
+  "templateId",
+  "模板ID",
+  "templateSourceType",
+  "模板来源",
+  "cycleId",
+  "周期ID",
+  "periodId",
+  "period",
+  "周期",
+  "周期粒度",
+  "goalGranularity"
+];
+const KEY_SET = new Set(SYSTEM_RECORD_CONTEXT_FIELD_KEYS);
+const SEMANTIC_SET = /* @__PURE__ */ new Set([
+  "goalPath",
+  "recordType",
+  "templateId",
+  "templateSourceType",
+  "cycleId",
+  "period"
+]);
+function isSystemRecordContextField(key, label, semantic) {
+  const normalizedKey = String(key || "").trim();
+  const normalizedLabel2 = String(label || "").trim();
+  const normalizedSemantic = String(semantic || "").trim();
+  return KEY_SET.has(normalizedKey) || KEY_SET.has(normalizedLabel2) || SEMANTIC_SET.has(normalizedSemantic);
+}
+function safeIdPart(value) {
+  return String(value || "").trim().replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-") || "default";
+}
+function canonicalGoalPath(value) {
+  return normalizeGoalPath(value) || "";
+}
+function normalizeTemplatePeriodPolicy(recordTypeId, raw) {
+  if (!isPeriodAwareRecordType(recordTypeId)) return void 0;
+  const policy = raw?.periodPolicy;
+  if (policy && policy.enabled !== false) {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
+  }
+  return { enabled: true, granularity: "week" };
+}
+function getGoalTemplateId(goalPath, recordTypeId) {
+  return `goal-template.${safeIdPart(canonicalGoalPath(goalPath))}.${safeIdPart(recordTypeId)}`;
+}
+function normalizeGoalTemplateStorageRow(row) {
+  const goalPath = canonicalGoalPath(row.goalPath);
+  return {
+    id: getGoalTemplateId(goalPath, row.recordTypeId),
+    goalPath,
+    recordTypeId: row.recordTypeId,
+    description: row.description,
+    periodPolicy: normalizeTemplatePeriodPolicy(row.recordTypeId, row),
+    enabled: row.enabled !== false,
+    fields: stripGoalTemplateIconFieldDefaults(row.fields),
+    targetFile: row.targetFile,
+    appendUnderHeader: row.appendUnderHeader,
+    defaultValues: stripGoalTemplateIconDefaults(row.defaultValues) || {},
+    requiredFields: row.requiredFields || []
+  };
+}
+function toGoalTemplateStorageRow(template) {
+  return {
+    goalPath: canonicalGoalPath(template.goalPath),
+    recordTypeId: template.recordTypeId,
+    description: template.description || void 0,
+    periodPolicy: normalizeTemplatePeriodPolicy(template.recordTypeId, template),
+    enabled: template.enabled !== false,
+    fields: stripGoalTemplateIconFieldDefaults(template.fields),
+    targetFile: template.targetFile || void 0,
+    appendUnderHeader: template.appendUnderHeader || void 0,
+    defaultValues: stripGoalTemplateIconDefaults(template.defaultValues),
+    requiredFields: template.requiredFields?.length ? template.requiredFields : void 0
+  };
+}
+function goalTemplateIdentityKey(template) {
+  return `${canonicalGoalPath(template.goalPath)}::${template.recordTypeId}`;
+}
+function getGoalTemplates(goalSettings) {
+  const result = [];
+  const indexByKey = /* @__PURE__ */ new Map();
+  for (const row of goalSettings?.goalTemplates || []) {
+    const template = normalizeGoalTemplateStorageRow(row);
+    const key = goalTemplateIdentityKey(template);
+    const existingIndex = indexByKey.get(key);
+    if (existingIndex === void 0) {
+      indexByKey.set(key, result.length);
+      result.push(template);
+    } else {
+      result[existingIndex] = template;
+    }
+  }
+  return result;
+}
+function findGoalTemplate(goalSettings, goal, recordTypeId) {
+  if (!goal) return null;
+  const path = canonicalGoalPath(goal.path);
+  if (!path) return null;
+  return getGoalTemplates(goalSettings).find(
+    (template) => template.enabled !== false && template.goalPath === path && template.recordTypeId === recordTypeId
+  ) || null;
+}
+function findDirectGoalTemplate(goalSettings, goalPath, recordTypeId) {
+  const path = canonicalGoalPath(goalPath);
+  return getGoalTemplates(goalSettings).find((template) => template.goalPath === path && template.recordTypeId === recordTypeId) || null;
+}
+function upsertGoalTemplateInSettings(goalSettings, template) {
+  const path = canonicalGoalPath(template.goalPath);
+  if (!path) throw new Error("GoalTemplate requires a canonical Goal path.");
+  const next2 = toGoalTemplateStorageRow({ ...template, goalPath: path, id: getGoalTemplateId(path, template.recordTypeId) });
+  const rows = [...goalSettings.goalTemplates || []];
+  const index = rows.findIndex((row) => canonicalGoalPath(row.goalPath) === path && row.recordTypeId === template.recordTypeId);
+  if (index >= 0) rows[index] = next2;
+  else rows.push(next2);
+  return { ...goalSettings, goalTemplates: rows };
+}
+function removeGoalTemplateFromSettings(goalSettings, goalPath, recordTypeId) {
+  const path = canonicalGoalPath(goalPath);
+  return {
+    ...goalSettings,
+    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => !(canonicalGoalPath(template.goalPath) === path && template.recordTypeId === recordTypeId))
+  };
+}
+function removeGoalTemplatesForGoal(goalSettings, goalPath) {
+  const path = canonicalGoalPath(goalPath);
+  return {
+    ...goalSettings,
+    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => canonicalGoalPath(template.goalPath) !== path)
+  };
+}
+function cleanupGoalTemplateStorage(goalSettings) {
+  const beforeRows = goalSettings.goalTemplates || [];
+  const afterRows = getGoalTemplates(goalSettings).map(toGoalTemplateStorageRow);
+  const beforeJson = JSON.stringify(beforeRows);
+  const afterJson = JSON.stringify(afterRows);
+  return {
+    goalSettings: { ...goalSettings, goalTemplates: afterRows },
+    summary: {
+      beforeCount: beforeRows.length,
+      afterCount: afterRows.length,
+      removedDuplicateCount: Math.max(0, beforeRows.length - afterRows.length),
+      changed: beforeJson !== afterJson
+    }
+  };
+}
+function isOptionLikeValue$1(value) {
+  return !!value && typeof value === "object" && ("value" in value || "label" in value);
+}
+function readOptionText$1(value) {
+  if (isOptionLikeValue$1(value)) {
+    const rawValue = value.value ?? value.label;
+    const rawLabel = value.label ?? value.value;
+    const optionValue = String(rawValue ?? "").trim();
+    const optionLabel = String(rawLabel ?? "").trim();
+    return {
+      value: optionValue || optionLabel,
+      label: optionLabel || optionValue
+    };
+  }
+  const text2 = String(value ?? "").trim();
+  return { value: text2, label: text2 };
+}
+function readComparableValues(value, options = {}) {
+  const text2 = readOptionText$1(value);
+  const rawValues = [text2.value, text2.label].map((entry) => String(entry ?? "").trim()).filter(Boolean);
+  const values2 = new Set(rawValues);
+  if (options.normalize) {
+    for (const raw of rawValues) {
+      const normalized2 = options.normalize(raw);
+      if (normalized2) {
+        values2.add(normalized2);
+        if (options.matchLeaf) {
+          values2.add(normalized2.split("/").filter(Boolean).pop() || normalized2);
+        }
+      }
+    }
+  }
+  return Array.from(values2);
+}
+function findMatchingOption(options, rawValue, matchOptions = {}) {
+  if (!Array.isArray(options) || options.length === 0) return void 0;
+  const rawComparable = new Set(readComparableValues(rawValue, matchOptions));
+  if (rawComparable.size === 0) return void 0;
+  return options.find((option) => {
+    const optionComparable = readComparableValues(option, matchOptions);
+    return optionComparable.some((entry) => rawComparable.has(entry));
+  });
+}
+function readOptionText(value) {
+  return readOptionText$1(value).value;
+}
+function getGoalTemplateDisplayName(template, _goal, fallback = "模板") {
+  const values2 = template?.defaultValues || {};
+  return compactText$1(
+    readOptionText(values2.name) || readOptionText(values2["名称"]) || readOptionText(values2["任务内容"]) || readOptionText(values2["内容"]) || readOptionText(values2.title) || fallback
+  );
+}
+const CONTEXT_FIELD_KEYS = /* @__PURE__ */ new Set([
+  "goalPath",
+  "目标",
+  "目标路径",
+  "rootGoal",
+  "leafGoal",
+  "templateId",
+  "模板ID",
+  "templateSourceType",
+  "模板来源"
+]);
+function isContextField(field) {
+  const source = field;
+  const semantic = compactText$1(source.semantic || source.semanticType);
+  const key = compactText$1(source.key || source.label);
+  return semantic === "goalPath" || CONTEXT_FIELD_KEYS.has(key);
+}
+function stripContextFields(fields) {
+  const result = (fields || []).filter((field) => !isContextField(field));
+  return stripGoalTemplateIconFieldDefaults(result);
+}
+function stableJson$1(value) {
+  const seen = /* @__PURE__ */ new WeakSet();
+  const normalize2 = (input) => {
+    if (input === void 0) return void 0;
+    if (input === null || typeof input !== "object") return input;
+    if (seen.has(input)) return "[Circular]";
+    seen.add(input);
+    if (Array.isArray(input)) return input.map(normalize2);
+    const out = {};
+    Object.keys(input).sort().forEach((key) => {
+      const normalized2 = normalize2(input[key]);
+      if (normalized2 !== void 0) out[key] = normalized2;
+    });
+    return out;
+  };
+  return JSON.stringify(normalize2(value));
+}
+function compactFieldForStructureCompare$1(field) {
+  const source = field;
+  const out = {};
+  Object.keys(source || {}).sort().forEach((key) => {
+    if (key === "id" || key === "defaultValue" || key === "required") return;
+    const value = source[key];
+    if (value === void 0 || value === null || value === "") return;
+    out[key] = value;
+  });
+  return out;
+}
+function fieldsHaveSameStructure$1(left2, right2) {
+  const normalize2 = (fields) => (fields || []).map(compactFieldForStructureCompare$1);
+  return stableJson$1(normalize2(left2)) === stableJson$1(normalize2(right2));
+}
+function deriveRequiredFields$1(fields) {
+  return (fields || []).filter((field) => field?.required === true).map((field) => compactText$1(field.key || field.label)).filter(Boolean);
+}
+function equalStringSet$1(left2, right2) {
+  const a2 = new Set((left2 || []).map(compactText$1).filter(Boolean));
+  const b2 = new Set((right2 || []).map(compactText$1).filter(Boolean));
+  if (a2.size !== b2.size) return false;
+  for (const value of a2) if (!b2.has(value)) return false;
+  return true;
+}
+function getFieldDefaultMap$1(fields) {
+  const result = {};
+  for (const field of fields || []) {
+    const key = compactText$1(field.key || field.label);
+    if (!key) continue;
+    const value = field.defaultValue;
+    if (value !== void 0 && value !== null && compactText$1(value) !== "") result[key] = compactText$1(value);
+  }
+  return result;
+}
+function compactDefaultValues(values2, baseFields) {
+  const baseDefaults = getFieldDefaultMap$1(baseFields);
+  const result = {};
+  Object.entries(stripGoalTemplateIconDefaults(values2) || {}).forEach(([rawKey, raw]) => {
+    const key = rawKey === "图标" ? "icon" : rawKey;
+    if (key === "icon") return;
+    if (CONTEXT_FIELD_KEYS.has(key)) return;
+    const value = compactText$1(raw);
+    if (!value) return;
+    if (isSystemRecordContextField(key)) return;
+    if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
+    result[key] = raw;
+  });
+  return Object.keys(result).length ? result : void 0;
+}
+function normalizePeriodPolicyForTemplate(template) {
+  if (!isPeriodAwareRecordType(template.recordTypeId)) return void 0;
+  const policy = template.periodPolicy;
+  if (policy && policy.enabled !== false) {
+    return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
+  }
+  return void 0;
+}
+function compactGoalTemplateForStorage(template, options = {}) {
+  const recordType = options.recordType || null;
+  const baseFields = recordType?.fields;
+  const next2 = { ...template, fields: stripContextFields(template.fields) };
+  next2.periodPolicy = normalizePeriodPolicyForTemplate(template);
+  if (recordType) {
+    if (fieldsHaveSameStructure$1(next2.fields, stripContextFields(baseFields))) next2.fields = void 0;
+    if (compactText$1(template.targetFile) === compactText$1(recordType.targetFile)) next2.targetFile = void 0;
+    if (compactText$1(template.appendUnderHeader) === compactText$1(recordType.appendUnderHeader)) next2.appendUnderHeader = void 0;
+    const explicitRequired = (template.requiredFields?.length ? template.requiredFields : deriveRequiredFields$1(template.fields)).filter((key) => !CONTEXT_FIELD_KEYS.has(compactText$1(key)));
+    const baseRequired = deriveRequiredFields$1(baseFields).filter((key) => !CONTEXT_FIELD_KEYS.has(compactText$1(key)));
+    next2.requiredFields = equalStringSet$1(explicitRequired, baseRequired) ? void 0 : explicitRequired;
+  } else if (next2.requiredFields && !next2.requiredFields.length) {
+    next2.requiredFields = void 0;
+  }
+  next2.defaultValues = compactDefaultValues(template.defaultValues, baseFields);
+  return next2;
+}
+function describeGoalTemplateStorageDiff(template) {
+  const parts = [];
+  if (template.fields?.length) parts.push("字段覆盖");
+  if (template.defaultValues && Object.keys(template.defaultValues).length) parts.push(`默认值 ${Object.keys(template.defaultValues).length}`);
+  if (template.targetFile) parts.push("文件覆盖");
+  if (template.appendUnderHeader) parts.push("标题覆盖");
+  if (template.requiredFields?.length) parts.push("必填覆盖");
+  if (template.periodPolicy) parts.push(`周期 ${template.periodPolicy.granularity}`);
+  return parts;
+}
+const UNASSIGNED_GOAL_KEY = "未归属目标";
+function normalizeItemGoalPath(value) {
+  return normalizeGoalPath(String(value ?? "").trim()) || "";
+}
+function findGoalByPath(goals = [], goalPath) {
+  const normalized2 = normalizeItemGoalPath(goalPath);
+  if (!normalized2) return null;
+  return goals.find((goal) => normalizeItemGoalPath(goal.path) === normalized2) || null;
+}
+function getItemGoalKey(item, _goals = []) {
+  return normalizeItemGoalPath(item.goalPath) || UNASSIGNED_GOAL_KEY;
+}
+function getItemRootGoalKey(item, goals = []) {
+  const path = getItemGoalKey(item, goals);
+  if (path === UNASSIGNED_GOAL_KEY) return path;
+  return splitGoalPath(path).rootGoal || path;
+}
+function buildGoalBuckets(items, goals = [], options = {}) {
+  const { includeUnassigned = true, includeKnownGoals = false, level = "path" } = options;
+  const normalizeBucketPath = (value) => {
+    const normalized2 = normalizeItemGoalPath(value);
+    if (!normalized2 || normalized2 === UNASSIGNED_GOAL_KEY) return UNASSIGNED_GOAL_KEY;
+    return level === "root" ? splitGoalPath(normalized2).rootGoal || normalized2 : normalized2;
+  };
+  const map = /* @__PURE__ */ new Map();
+  const addBucket = (goalPath, sourceGoal) => {
+    const key = normalizeBucketPath(goalPath);
+    if (!includeUnassigned && key === UNASSIGNED_GOAL_KEY) return;
+    if (map.has(key)) return;
+    const goal = sourceGoal || findGoalByPath(goals, key);
+    const label = key === UNASSIGNED_GOAL_KEY ? UNASSIGNED_GOAL_KEY : splitGoalPath(goal?.path || key).leafGoal || key;
+    const icon = key === UNASSIGNED_GOAL_KEY ? "•" : resolveGoalIcon(goal);
+    map.set(key, {
+      name: key,
+      alias: icon && icon !== "•" ? `${icon} ${label}` : label,
+      color: resolveGoalColor(goal, key),
+      files: [],
+      goalPath: key === UNASSIGNED_GOAL_KEY ? void 0 : key,
+      icon,
+      isUnassigned: key === UNASSIGNED_GOAL_KEY
+    });
+  };
+  if (includeKnownGoals) {
+    for (const goal of goals || []) {
+      const path = normalizeItemGoalPath(goal.path);
+      if (!path) continue;
+      const bucketPath = normalizeBucketPath(path);
+      const bucketGoal = level === "root" ? findGoalByPath(goals, bucketPath) : goal;
+      addBucket(bucketPath, bucketGoal);
+    }
+  }
+  for (const item of items || []) {
+    const path = level === "root" ? getItemRootGoalKey(item, goals) : getItemGoalKey(item, goals);
+    addBucket(path);
+  }
+  const order2 = createGoalOrderIndex(goals);
+  return Array.from(map.values()).sort((a2, b2) => {
+    if (a2.isUnassigned && !b2.isUnassigned) return 1;
+    if (!a2.isUnassigned && b2.isUnassigned) return -1;
+    const byGoal = order2.compareGoalPaths(a2.goalPath || a2.name, b2.goalPath || b2.name);
+    if (byGoal !== 0) return byGoal;
+    return (a2.alias || a2.name).localeCompare(b2.alias || b2.name, "zh-CN");
+  });
+}
+const NATURAL_DAY_MINUTES = 24 * 60;
+const NATURAL_WEEK_MINUTES = 7 * NATURAL_DAY_MINUTES;
+const TIME_BALANCE_TOLERANCE_RATIO = 0.1;
+function round$3(value, digits = 2) {
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+}
+function localDateKey$1(date2) {
+  const y2 = date2.getFullYear();
+  const m2 = String(date2.getMonth() + 1).padStart(2, "0");
+  const d2 = String(date2.getDate()).padStart(2, "0");
+  return `${y2}-${m2}-${d2}`;
+}
+function localDayOrdinal(date2) {
+  return Math.floor(Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate()) / 864e5);
+}
+function localClockMinutes(date2) {
+  return date2.getHours() * 60 + date2.getMinutes() + date2.getSeconds() / 60 + date2.getMilliseconds() / 6e4;
+}
+function dateAtLocalMidnight(date2) {
+  return new Date(date2.getFullYear(), date2.getMonth(), date2.getDate(), 0, 0, 0, 0);
+}
+function addLocalDays(date2, days) {
+  return new Date(date2.getFullYear(), date2.getMonth(), date2.getDate() + days, 0, 0, 0, 0);
+}
+function isGoalTimePresetEligible(goal) {
+  return goal.status !== "archived";
+}
+function normalizeGoalTimePresetPercent(value) {
+  if (value === null || value === void 0 || value === "") return null;
+  const number2 = Number(value);
+  if (!Number.isFinite(number2) || number2 < 0 || number2 > 100) return null;
+  return round$3(number2, 2);
+}
+function normalizeWeeklyTargetMinutes(value) {
+  if (value === null || value === void 0 || value === "") return null;
+  const number2 = Number(value);
+  if (!Number.isFinite(number2) || number2 < 0) return null;
+  return round$3(number2, 2);
+}
+function getGoalWeeklyTargetMinutes(goalPath, goals) {
+  const canonical = normalizeGoalPath(goalPath);
+  if (!canonical) return null;
+  const goal = (goals || []).find((candidate) => normalizeGoalPath(candidate.path) === canonical);
+  if (!goal || !isGoalTimePresetEligible(goal)) return null;
+  const parentPath2 = getParentGoalPath(canonical);
+  if (parentPath2 === null) {
+    const percent = normalizeGoalTimePresetPercent(goal.timePresetPercent);
+    return percent === null ? null : round$3(NATURAL_WEEK_MINUTES * percent / 100);
+  }
+  return normalizeWeeklyTargetMinutes(goal.weeklyTargetMinutes);
+}
+function weeklyTargetFromSnapshot(goalPath, entry) {
+  const canonical = normalizeGoalPath(goalPath);
+  if (!canonical || !entry) return null;
+  if (getParentGoalPath(canonical) === null) {
+    const percent = normalizeGoalTimePresetPercent(entry.timePresetPercent);
+    return percent === null ? null : round$3(NATURAL_WEEK_MINUTES * percent / 100);
+  }
+  return normalizeWeeklyTargetMinutes(entry.weeklyTargetMinutes);
+}
+function getGoalTimePresetWeekStartKey(date2 = /* @__PURE__ */ new Date()) {
+  const day = dateAtLocalMidnight(date2);
+  const dayOfWeek = day.getDay();
+  const deltaToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  return localDateKey$1(addLocalDays(day, deltaToMonday));
+}
+function buildGoalTimePresetSnapshot(goals) {
+  const out = {};
+  for (const goal of goals || []) {
+    if (!isGoalTimePresetEligible(goal)) continue;
+    const path = normalizeGoalPath(goal.path);
+    if (!path) continue;
+    const entry = {};
+    if (getParentGoalPath(path) === null) {
+      const percent = normalizeGoalTimePresetPercent(goal.timePresetPercent);
+      if (percent !== null) entry.timePresetPercent = percent;
+    } else {
+      const minutes = normalizeWeeklyTargetMinutes(goal.weeklyTargetMinutes);
+      if (minutes !== null) entry.weeklyTargetMinutes = minutes;
+    }
+    if (Object.keys(entry).length > 0) out[path] = entry;
+  }
+  return out;
+}
+function upsertGoalTimePresetRevision(revisions, goals, date2 = /* @__PURE__ */ new Date()) {
+  const effectiveWeekStart = getGoalTimePresetWeekStartKey(date2);
+  const nextRevision = {
+    effectiveWeekStart,
+    presets: buildGoalTimePresetSnapshot(goals)
+  };
+  const next2 = [...revisions || []].filter((revision) => revision.effectiveWeekStart !== effectiveWeekStart);
+  next2.push(nextRevision);
+  next2.sort((a2, b2) => a2.effectiveWeekStart.localeCompare(b2.effectiveWeekStart));
+  return next2;
+}
+function findEffectiveRevision(date2, revisions) {
+  const key = localDateKey$1(date2);
+  let found = null;
+  for (const revision of revisions || []) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(revision.effectiveWeekStart)) continue;
+    if (revision.effectiveWeekStart <= key && (!found || revision.effectiveWeekStart > found.effectiveWeekStart)) found = revision;
+  }
+  return found;
+}
+function resolveWeeklyTargetForDate(goalPath, goals, revisions, date2) {
+  const revision = findEffectiveRevision(date2, revisions);
+  if (revision) {
+    const canonicalGoalPath2 = normalizeGoalPath(goalPath);
+    const fromRevision = weeklyTargetFromSnapshot(goalPath, canonicalGoalPath2 ? revision.presets[canonicalGoalPath2] : void 0);
+    if (fromRevision !== null) return { minutes: fromRevision, historical: true, fallback: false };
+    return { minutes: getGoalWeeklyTargetMinutes(goalPath, goals), historical: false, fallback: true };
+  }
+  const current2 = getGoalWeeklyTargetMinutes(goalPath, goals);
+  const hasAnyHistory = (revisions || []).length > 0;
+  return { minutes: current2, historical: false, fallback: hasAnyHistory };
+}
+function getGoalTimePresetInfo(goalPath, goals) {
+  const canonical = normalizeGoalPath(goalPath);
+  if (!canonical) return null;
+  const goal = (goals || []).find((candidate) => normalizeGoalPath(candidate.path) === canonical);
+  if (!goal) return null;
+  const parentPath2 = getParentGoalPath(canonical);
+  const weeklyTargetMinutes = getGoalWeeklyTargetMinutes(canonical, goals);
+  const targetPercent = parentPath2 === null ? normalizeGoalTimePresetPercent(goal.timePresetPercent) : null;
+  const directChildren = (goals || []).filter((candidate) => isGoalTimePresetEligible(candidate) && getParentGoalPath(candidate.path) === canonical);
+  const directChildrenTargetMinutes = directChildren.reduce((sum, child) => sum + (getGoalWeeklyTargetMinutes(child.path, goals) || 0), 0);
+  const unallocatedMinutes = weeklyTargetMinutes === null ? 0 : Math.max(0, weeklyTargetMinutes - directChildrenTargetMinutes);
+  const overallocatedMinutes = weeklyTargetMinutes === null ? 0 : Math.max(0, directChildrenTargetMinutes - weeklyTargetMinutes);
+  return {
+    path: canonical,
+    parentPath: parentPath2,
+    targetPercent,
+    weeklyTargetMinutes,
+    directChildrenCount: directChildren.length,
+    directChildrenTargetMinutes: round$3(directChildrenTargetMinutes),
+    unallocatedMinutes: round$3(unallocatedMinutes),
+    overallocatedMinutes: round$3(overallocatedMinutes),
+    configured: weeklyTargetMinutes !== null
+  };
+}
+function getRootTimePresetTotals(goals) {
+  const configuredPercent = (goals || []).filter((goal) => isGoalTimePresetEligible(goal) && getParentGoalPath(goal.path) === null).reduce((sum, goal) => sum + (normalizeGoalTimePresetPercent(goal.timePresetPercent) || 0), 0);
+  const configuredMinutes = NATURAL_WEEK_MINUTES * configuredPercent / 100;
+  const reservePercent = Math.max(0, 100 - configuredPercent);
+  const overcommittedPercent = Math.max(0, configuredPercent - 100);
+  return {
+    configuredPercent: round$3(configuredPercent),
+    configuredMinutes: round$3(configuredMinutes),
+    reservePercent: round$3(reservePercent),
+    reserveMinutes: round$3(NATURAL_WEEK_MINUTES * reservePercent / 100),
+    overcommittedPercent: round$3(overcommittedPercent),
+    overcommittedMinutes: round$3(NATURAL_WEEK_MINUTES * overcommittedPercent / 100)
+  };
+}
+function getNaturalRangeMinutes(rangeStart, rangeEnd) {
+  const start2 = new Date(rangeStart);
+  const end2 = new Date(rangeEnd);
+  if (!Number.isFinite(start2.getTime()) || !Number.isFinite(end2.getTime()) || end2 < start2) return 0;
+  const dayDelta = localDayOrdinal(end2) - localDayOrdinal(start2);
+  const value = dayDelta * NATURAL_DAY_MINUTES + localClockMinutes(end2) - localClockMinutes(start2) + 1 / 6e4;
+  return Math.max(0, round$3(value, 4));
+}
+function resolveGoalTargetForRange(goalPath, goals, revisions, rangeStart, rangeEnd) {
+  const canonical = normalizeGoalPath(goalPath);
+  const naturalMinutes = getNaturalRangeMinutes(rangeStart, rangeEnd);
+  if (!canonical || naturalMinutes <= 0) {
+    return { minutes: null, source: "current", usedHistoricalPreset: false, usedCurrentFallback: false };
+  }
+  const startDay = dateAtLocalMidnight(rangeStart);
+  const endDay = dateAtLocalMidnight(rangeEnd);
+  let cursor2 = startDay;
+  let total = 0;
+  let hasConfiguredSegment = false;
+  let usedHistoricalPreset = false;
+  let usedCurrentFallback = false;
+  let usedPlainCurrent = false;
+  while (cursor2 <= endDay) {
+    const dayStart = cursor2;
+    const nextDay = addLocalDays(cursor2, 1);
+    const isFirst = localDateKey$1(cursor2) === localDateKey$1(rangeStart);
+    const isLast = localDateKey$1(cursor2) === localDateKey$1(rangeEnd);
+    const startMinute = isFirst ? localClockMinutes(rangeStart) : 0;
+    const endMinute = isLast ? localClockMinutes(rangeEnd) + 1 / 6e4 : NATURAL_DAY_MINUTES;
+    const segmentMinutes = Math.max(0, Math.min(NATURAL_DAY_MINUTES, endMinute) - Math.max(0, startMinute));
+    if (segmentMinutes > 0) {
+      const resolved = resolveWeeklyTargetForDate(canonical, goals, revisions, dayStart);
+      if (resolved.minutes !== null) {
+        hasConfiguredSegment = true;
+        total += resolved.minutes / NATURAL_WEEK_MINUTES * segmentMinutes;
+      }
+      if (resolved.historical) usedHistoricalPreset = true;
+      else if (resolved.fallback) usedCurrentFallback = true;
+      else usedPlainCurrent = true;
+    }
+    cursor2 = nextDay;
+  }
+  let source = "current";
+  if (usedHistoricalPreset && usedCurrentFallback) source = "mixed";
+  else if (usedHistoricalPreset && usedPlainCurrent) source = "mixed";
+  else if (usedHistoricalPreset) source = "historical";
+  else if (usedCurrentFallback) source = "current-fallback";
+  return {
+    minutes: hasConfiguredSegment ? round$3(total) : null,
+    source,
+    usedHistoricalPreset,
+    usedCurrentFallback
+  };
+}
+function roundValue(value, digits = 2) {
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+}
+function sessionOverlap(session, rangeStartMs, rangeEndExclusiveMs) {
+  if (!session) return { minutes: 0, interval: null };
+  const startedAtMs = Date.parse(session.sessionStartedAt);
+  const endedAtMs = Date.parse(session.sessionEndedAt);
+  if (!Number.isFinite(startedAtMs) || !Number.isFinite(endedAtMs) || endedAtMs <= startedAtMs) return { minutes: 0, interval: null };
+  const overlapStart = Math.max(startedAtMs, rangeStartMs);
+  const overlapEnd = Math.min(endedAtMs, rangeEndExclusiveMs);
+  if (overlapEnd <= overlapStart) return { minutes: 0, interval: null };
+  const recordedMinutes = Number(session.sessionDurationMinutes);
+  if (!Number.isFinite(recordedMinutes) || recordedMinutes <= 0) return { minutes: 0, interval: null };
+  const wallMs = endedAtMs - startedAtMs;
+  const overlapRatio = Math.min(1, Math.max(0, (overlapEnd - overlapStart) / wallMs));
+  return {
+    minutes: recordedMinutes * overlapRatio,
+    interval: { start: overlapStart, end: overlapEnd }
+  };
+}
+function unionIntervalMinutes(intervals) {
+  if (!intervals.length) return 0;
+  const ordered = intervals.filter((interval) => Number.isFinite(interval.start) && Number.isFinite(interval.end) && interval.end > interval.start).sort((a2, b2) => a2.start - b2.start || a2.end - b2.end);
+  if (!ordered.length) return 0;
+  let totalMs = 0;
+  let currentStart = ordered[0].start;
+  let currentEnd = ordered[0].end;
+  for (let i2 = 1; i2 < ordered.length; i2 += 1) {
+    const next2 = ordered[i2];
+    if (next2.start <= currentEnd) {
+      currentEnd = Math.max(currentEnd, next2.end);
+    } else {
+      totalMs += currentEnd - currentStart;
+      currentStart = next2.start;
+      currentEnd = next2.end;
+    }
+  }
+  totalMs += currentEnd - currentStart;
+  return totalMs / 6e4;
+}
+function asRangeBoundary(value, fallback) {
+  const ms = value instanceof Date ? value.getTime() : Number.NaN;
+  return Number.isFinite(ms) ? ms : fallback;
+}
+function resolveBalanceState(args) {
+  const { targetMinutes, actualMinutes, unknownMinutes, rangeHasStarted } = args;
+  if (targetMinutes === null) return "unconfigured";
+  if (!rangeHasStarted) return "pending";
+  const lower = targetMinutes * (1 - TIME_BALANCE_TOLERANCE_RATIO);
+  const upper = targetMinutes * (1 + TIME_BALANCE_TOLERANCE_RATIO);
+  if (actualMinutes > upper) return "high";
+  const maximumPossible = actualMinutes + Math.max(0, unknownMinutes);
+  if (maximumPossible < lower) return "low";
+  if (actualMinutes >= lower && actualMinutes <= upper && maximumPossible <= upper) return "balanced";
+  return "insufficient";
+}
+function buildGoalTimeAllocationSummary(args) {
+  const { records = [], goals = [], presetRevisions = [], rangeStart, rangeEnd } = args;
+  const rangeStartMs = asRangeBoundary(rangeStart, 0);
+  const rangeEndMs = asRangeBoundary(rangeEnd, rangeStartMs);
+  const rangeEndExclusiveMs = Math.max(rangeStartMs, rangeEndMs + 1);
+  const naturalMinutes = getNaturalRangeMinutes(rangeStart, rangeEnd);
+  const nowMs2 = Date.now();
+  const rangeHasStarted = nowMs2 >= rangeStartMs;
+  const comparisonEndExclusiveMs = rangeHasStarted ? Math.min(rangeEndExclusiveMs, nowMs2) : rangeStartMs;
+  const comparisonEnd = new Date(Math.max(rangeStartMs, comparisonEndExclusiveMs - 1));
+  const comparisonNaturalMinutes = rangeHasStarted ? getNaturalRangeMinutes(rangeStart, comparisonEnd) : 0;
+  const taskById = /* @__PURE__ */ new Map();
+  for (const record2 of records) {
+    if (record2?.recordType === "task" && record2.id) taskById.set(record2.id, record2);
+  }
+  const goalByPath = /* @__PURE__ */ new Map();
+  for (const goal of goals) {
+    const path = normalizeGoalPath(goal.path);
+    if (path && isGoalTimePresetEligible(goal)) goalByPath.set(path, goal);
+  }
+  const directMinutes = /* @__PURE__ */ new Map();
+  const rolledUpMinutes = /* @__PURE__ */ new Map();
+  const observationIntervals = [];
+  let trackedMinutes = 0;
+  let unallocatedMinutes = 0;
+  for (const record2 of records) {
+    const session = asTaskSessionRecord(record2);
+    if (!session) continue;
+    const overlap = sessionOverlap(session, rangeStartMs, comparisonEndExclusiveMs);
+    const minutes = overlap.minutes;
+    if (minutes <= 0) continue;
+    trackedMinutes += minutes;
+    if (overlap.interval) observationIntervals.push(overlap.interval);
+    const task = taskById.get(session.taskId);
+    const sessionGoalPath = normalizeGoalPath(session.goalPath);
+    const attributedGoalPath = sessionGoalPath || normalizeGoalPath(task?.goalPath);
+    if (!attributedGoalPath || !goalByPath.has(attributedGoalPath)) {
+      unallocatedMinutes += minutes;
+      continue;
+    }
+    directMinutes.set(attributedGoalPath, (directMinutes.get(attributedGoalPath) || 0) + minutes);
+    for (const candidate of getGoalPathCandidates(attributedGoalPath)) {
+      if (!goalByPath.has(candidate)) continue;
+      rolledUpMinutes.set(candidate, (rolledUpMinutes.get(candidate) || 0) + minutes);
+    }
+  }
+  const observationCoverageMinutes = Math.min(comparisonNaturalMinutes, unionIntervalMinutes(observationIntervals));
+  const unknownMinutes = Math.max(0, comparisonNaturalMinutes - observationCoverageMinutes);
+  const orderedGoals = sortGoalsBySettingsOrder(goals.filter(isGoalTimePresetEligible));
+  const rows = orderedGoals.map((goal) => {
+    const path = normalizeGoalPath(goal.path);
+    if (!path) return null;
+    const minutes = rolledUpMinutes.get(path) || 0;
+    const targetResolution = rangeHasStarted ? resolveGoalTargetForRange(path, goals, presetRevisions, rangeStart, comparisonEnd) : { minutes: null, source: "current" };
+    const targetMinutes = targetResolution.minutes;
+    if (minutes <= 0 && targetMinutes === null) return null;
+    const parentPath2 = getParentGoalPath(path);
+    const actualPercentOfNaturalTime = comparisonNaturalMinutes > 0 ? minutes / comparisonNaturalMinutes * 100 : 0;
+    const targetPercentOfNaturalTime = targetMinutes !== null && comparisonNaturalMinutes > 0 ? targetMinutes / comparisonNaturalMinutes * 100 : null;
+    const lowerBoundMinutes = targetMinutes === null ? null : targetMinutes * (1 - TIME_BALANCE_TOLERANCE_RATIO);
+    const upperBoundMinutes = targetMinutes === null ? null : targetMinutes * (1 + TIME_BALANCE_TOLERANCE_RATIO);
+    const differenceMinutes = targetMinutes === null ? null : minutes - targetMinutes;
+    const relativeDifferencePercent = targetMinutes !== null && targetMinutes > 0 ? differenceMinutes / targetMinutes * 100 : null;
+    return {
+      path,
+      label: getGoalLeaf(path) || path,
+      parentPath: parentPath2 && goalByPath.has(parentPath2) ? parentPath2 : null,
+      depth: path.split("/").filter(Boolean).length - 1,
+      ...goal.icon ? { icon: goal.icon } : null,
+      ...goal.color ? { color: goal.color } : null,
+      minutes: roundValue(minutes),
+      directMinutes: roundValue(directMinutes.get(path) || 0),
+      actualPercentOfNaturalTime: roundValue(actualPercentOfNaturalTime),
+      targetMinutes: targetMinutes === null ? null : roundValue(targetMinutes),
+      targetPercentOfNaturalTime: targetPercentOfNaturalTime === null ? null : roundValue(targetPercentOfNaturalTime),
+      targetSource: targetResolution.source,
+      lowerBoundMinutes: lowerBoundMinutes === null ? null : roundValue(lowerBoundMinutes),
+      upperBoundMinutes: upperBoundMinutes === null ? null : roundValue(upperBoundMinutes),
+      differenceMinutes: differenceMinutes === null ? null : roundValue(differenceMinutes),
+      relativeDifferencePercent: relativeDifferencePercent === null ? null : roundValue(relativeDifferencePercent),
+      balanceState: resolveBalanceState({
+        targetMinutes,
+        actualMinutes: minutes,
+        unknownMinutes,
+        rangeHasStarted
+      })
+    };
+  }).filter((row) => row !== null);
+  const rootRows = rows.filter((row) => row.parentPath === null);
+  const unallocatedPercentOfNaturalTime = comparisonNaturalMinutes > 0 ? unallocatedMinutes / comparisonNaturalMinutes * 100 : 0;
+  return {
+    naturalMinutes: roundValue(naturalMinutes),
+    comparisonNaturalMinutes: roundValue(comparisonNaturalMinutes),
+    trackedMinutes: roundValue(trackedMinutes),
+    observationCoverageMinutes: roundValue(observationCoverageMinutes),
+    unknownMinutes: roundValue(unknownMinutes),
+    unrecordedMinutes: roundValue(unknownMinutes),
+    unallocatedMinutes: roundValue(unallocatedMinutes),
+    unallocatedPercentOfNaturalTime: roundValue(unallocatedPercentOfNaturalTime),
+    rows,
+    rootRows,
+    hasConfiguredPreset: rows.some((row) => row.targetMinutes !== null),
+    toleranceRatio: TIME_BALANCE_TOLERANCE_RATIO
+  };
+}
+function defaultBucketAccessor(item) {
+  return getItemRootGoalKey(item);
+}
+function addItemToPeriod(data, categoryOrder, item, bucketAccessor) {
+  const bucketKey = (bucketAccessor || defaultBucketAccessor)(item);
+  if (!categoryOrder.includes(bucketKey)) return;
+  data.counts[bucketKey]++;
+  data.blocks.push(item);
+}
+function createPeriodData(categories) {
+  return {
+    counts: Object.fromEntries(categories.map((c2) => [c2.name, 0])),
+    blocks: []
+  };
+}
+function aggregateByDay(items, categories, targetDate, bucketAccessor) {
+  const data = createPeriodData(categories);
+  const categoryOrder = categories.map((c2) => c2.name);
+  items.forEach((item) => {
+    const itemDate2 = dayjs(item.date);
+    if (!itemDate2.isValid() || !itemDate2.isSame(targetDate, "day")) return;
+    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
+  });
+  return data;
+}
+function aggregateByWeek(items, categories, targetDate, usePeriod = false, bucketAccessor) {
+  const data = createPeriodData(categories);
+  const categoryOrder = categories.map((c2) => c2.name);
+  const weekStart = targetDate.startOf("isoWeek");
+  const weekEnd = targetDate.endOf("isoWeek");
+  items.forEach((item) => {
+    const itemDate2 = dayjs(item.date);
+    if (!itemDate2.isValid() || !itemDate2.isBetween(weekStart, weekEnd, "day", "[]")) return;
+    if (usePeriod) {
+      const itemPeriod = (readField(item, "period") || "").trim();
+      const shouldIncludeInWeek = itemPeriod === "" || itemPeriod === "周";
+      if (!shouldIncludeInWeek) return;
+    }
+    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
+  });
+  return data;
+}
+function aggregateByMonth(items, categories, targetDate, usePeriod = false, bucketAccessor) {
+  const data = createPeriodData(categories);
+  const categoryOrder = categories.map((c2) => c2.name);
+  items.forEach((item) => {
+    const itemDate2 = dayjs(item.date);
+    if (!itemDate2.isValid() || !itemDate2.isSame(targetDate, "month")) return;
+    if (usePeriod) {
+      const itemPeriod = readField(item, "period") || "";
+      if (itemPeriod !== "月") return;
+    }
+    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
+  });
+  return data;
+}
+function aggregateByQuarter(items, categories, targetDate, usePeriod = false, bucketAccessor) {
+  const data = createPeriodData(categories);
+  const categoryOrder = categories.map((c2) => c2.name);
+  items.forEach((item) => {
+    const itemDate2 = dayjs(item.date);
+    if (!itemDate2.isValid() || !itemDate2.isSame(targetDate, "quarter")) return;
+    if (usePeriod) {
+      const itemPeriod = readField(item, "period") || "";
+      if (itemPeriod !== "季") return;
+    }
+    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
+  });
+  return data;
+}
+function aggregateByYear(items, categories, targetDate, usePeriod = false, bucketAccessor) {
+  const data = createPeriodData(categories);
+  const categoryOrder = categories.map((c2) => c2.name);
+  items.forEach((item) => {
+    const itemDate2 = dayjs(item.date);
+    if (!itemDate2.isValid() || !itemDate2.isSame(targetDate, "year")) return;
+    if (usePeriod) {
+      const itemPeriod = readField(item, "period") || "";
+      if (itemPeriod !== "年") return;
+    }
+    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
+  });
+  return data;
+}
+function getMonthWeeksData(items, categories, targetMonth, usePeriod = false, bucketAccessor) {
+  const monthStart = targetMonth.startOf("month");
+  const monthEnd = targetMonth.endOf("month");
+  const weeksData = [];
+  let weekStart = monthStart.startOf("isoWeek");
+  while (weekStart.isBefore(monthEnd) || isSameIsoWeek(weekStart, monthEnd)) {
+    const weekEnd = weekStart.endOf("isoWeek");
+    const weekItems = items.filter((item) => {
+      const itemDate2 = dayjs(item.date);
+      return itemDate2.isBetween(weekStart, weekEnd, "day", "[]");
+    });
+    const data = aggregateByWeek(weekItems, categories, weekStart, usePeriod, bucketAccessor);
+    weeksData.push(data);
+    weekStart = weekStart.add(1, "week");
+  }
+  return weeksData;
+}
+function parseDuration(value) {
+  if (value === null || value === void 0 || value === "") return null;
+  const numeric = typeof value === "number" ? value : Number.parseInt(String(value), 10);
+  return Number.isFinite(numeric) && numeric >= 0 ? numeric : null;
+}
+function isClockValue(value) {
+  return timeToMinutes(value) !== null;
+}
+function isDateTimeValue(value) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}[T ]\d{1,2}:\d{2}/.test(value)) return false;
+  return dayjs(value).isValid();
+}
+function normalizeTimeValue(value) {
+  const text2 = String(value || "").trim();
+  if (!text2) return void 0;
+  return isClockValue(text2) || isDateTimeValue(text2) ? text2 : void 0;
+}
+function formatDateTimeLike(source, value) {
+  if (source.includes("T")) return value.format("YYYY-MM-DDTHH:mm");
+  return value.format("YYYY-MM-DD HH:mm");
+}
+function deriveDurationFromRange(startTime, endTime) {
+  const start2 = String(startTime || "").trim();
+  const end2 = String(endTime || "").trim();
+  if (isDateTimeValue(start2) && isDateTimeValue(end2)) {
+    const diff = dayjs(end2).diff(dayjs(start2), "minute");
+    return diff >= 0 ? diff : null;
+  }
+  const startMinutes = timeToMinutes(start2);
+  const endMinutes = timeToMinutes(end2);
+  if (startMinutes === null || endMinutes === null) return null;
+  let duration2 = endMinutes - startMinutes;
+  if (duration2 < 0) duration2 += 24 * 60;
+  return duration2;
+}
+function deriveEndFromStartAndDuration(startTime, duration2) {
+  const start2 = String(startTime || "").trim();
+  const normalizedDuration = parseDuration(duration2);
+  if (normalizedDuration === null) return null;
+  if (isDateTimeValue(start2)) {
+    return formatDateTimeLike(start2, dayjs(start2).add(normalizedDuration, "minute"));
+  }
+  const startMinutes = timeToMinutes(start2);
+  if (startMinutes === null) return null;
+  return minutesToTime(startMinutes + normalizedDuration) || null;
+}
+function deriveStartFromEndAndDuration(endTime, duration2) {
+  const end2 = String(endTime || "").trim();
+  const normalizedDuration = parseDuration(duration2);
+  if (normalizedDuration === null) return null;
+  if (isDateTimeValue(end2)) {
+    return formatDateTimeLike(end2, dayjs(end2).subtract(normalizedDuration, "minute"));
+  }
+  const endMinutes = timeToMinutes(end2);
+  if (endMinutes === null) return null;
+  return minutesToTime(endMinutes - normalizedDuration) || null;
+}
+function applyTaskTimePolicy(input) {
+  const startTime = normalizeTimeValue(input.startTime);
+  const endTime = normalizeTimeValue(input.endTime);
+  const duration2 = parseDuration(input.duration);
+  const direction = input.direction === "backward" ? "backward" : "forward";
+  const mode = input.mode ?? "finalize";
+  const lastChanged = input.lastChanged ?? null;
+  if (startTime && endTime && (mode === "finalize" || lastChanged !== "duration")) {
+    return {
+      startTime,
+      endTime,
+      duration: deriveDurationFromRange(startTime, endTime) ?? duration2 ?? void 0
+    };
+  }
+  if (direction === "backward") {
+    if (endTime && duration2 !== null && (mode === "finalize" || lastChanged !== "startTime")) {
+      return {
+        startTime: deriveStartFromEndAndDuration(endTime, duration2) ?? void 0,
+        endTime,
+        duration: duration2
+      };
+    }
+    if (startTime && duration2 !== null && mode === "finalize") {
+      return {
+        startTime,
+        endTime: deriveEndFromStartAndDuration(startTime, duration2) ?? void 0,
+        duration: duration2
+      };
+    }
+  }
+  if (startTime && duration2 !== null && (mode === "finalize" || lastChanged !== "endTime")) {
+    return {
+      startTime,
+      endTime: deriveEndFromStartAndDuration(startTime, duration2) ?? void 0,
+      duration: duration2
+    };
+  }
+  if (endTime && duration2 !== null && mode === "finalize") {
+    return {
+      startTime: deriveStartFromEndAndDuration(endTime, duration2) ?? void 0,
+      endTime,
+      duration: duration2
+    };
+  }
+  return {
+    startTime,
+    endTime,
+    duration: duration2 ?? void 0
+  };
+}
+function isItemDone(item) {
+  return isTaskRecord(item) && isTaskCompleted(item);
+}
+function formatTemplateValue(value) {
+  return formatFieldValueForTemplate(value);
+}
+function renderTemplate(templateString, data) {
+  return templateString.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_2, placeholder) => {
+    const key = placeholder.trim();
+    let result = "";
+    try {
+      if (key === "block") {
+        result = data.block?.name || "";
+      } else if (key === "theme") {
+        result = data.theme?.path || "";
+      } else if (key === "icon") {
+        result = data.theme?.icon || "";
+      } else if (key.startsWith("moment:")) {
+        const format = key.substring(7);
+        result = dayjs().format(format);
+      } else {
+        const keys = key.split(".");
+        const rootKey = keys[0];
+        if (!(rootKey in data)) {
+          return "";
+        }
+        let value = data[rootKey];
+        if (keys.length > 1) {
+          for (let i2 = 1; i2 < keys.length; i2++) {
+            if (value && typeof value === "object" && keys[i2] in value) {
+              value = value[keys[i2]];
+            } else {
+              value = "";
+              break;
+            }
+          }
+        }
+        result = formatTemplateValue(value);
+      }
+      return result;
+    } catch (e2) {
+      devError(`[ThinkPlugin] 解析模板变量 {{${key}}} 时发生错误:`, e2);
+      return `(解析错误: ${key})`;
+    }
+  });
+}
+function getTimelineGoalKey(task) {
+  return normalizeGoalPath(String(task.goalPath || "").trim()) || UNASSIGNED_GOAL_KEY;
+}
+function buildMonthlyAndWeeklySummary(timelineTasks, untrackedLabel) {
+  const data = [];
+  if (!timelineTasks?.length) return data;
+  const validTasks = timelineTasks.filter((task) => dayjs(task.doneDate).isValid());
+  if (!validTasks.length) return data;
+  const taskDates = validTasks.map((task) => dayjs(task.doneDate));
+  const minDate = taskDates.reduce((min2, d2) => d2.isBefore(min2) ? d2 : min2);
+  const maxDate = taskDates.reduce((max2, d2) => d2.isAfter(max2) ? d2 : max2);
+  let month = minDate.startOf("month");
+  const end2 = maxDate.endOf("month");
+  while (month.isBefore(end2) || month.isSame(end2, "month")) {
+    const monthStr = month.format("YYYY-MM");
+    const tasksInMonth = validTasks.filter((task) => dayjs(task.doneDate).format("YYYY-MM") === monthStr);
+    const monthlySummary = {};
+    let totalTrackedHoursInMonth = 0;
+    for (const task of tasksInMonth) {
+      const goalKey = getTimelineGoalKey(task);
+      const durationHours = Number(task.duration || 0) / 60;
+      monthlySummary[goalKey] = (monthlySummary[goalKey] || 0) + durationHours;
+      totalTrackedHoursInMonth += durationHours;
+    }
+    const daysInMonth = month.daysInMonth();
+    const untrackedHoursInMonth = Math.max(0, daysInMonth * 24 - totalTrackedHoursInMonth);
+    if (untrackedHoursInMonth > 0.01) monthlySummary[untrackedLabel] = untrackedHoursInMonth;
+    const weeklySummaries = Array.from({ length: 5 }).map((_2, index) => {
+      const weekStartDay = index * 7 + 1;
+      if (weekStartDay > daysInMonth) return null;
+      const weeklySummary = {};
+      let totalTrackedHoursInWeek = 0;
+      for (const task of tasksInMonth) {
+        const taskDay = dayjs(task.doneDate).date();
+        if (taskDay < weekStartDay || taskDay >= weekStartDay + 7) continue;
+        const goalKey = getTimelineGoalKey(task);
+        const durationHours = Number(task.duration || 0) / 60;
+        weeklySummary[goalKey] = (weeklySummary[goalKey] || 0) + durationHours;
+        totalTrackedHoursInWeek += durationHours;
+      }
+      if (totalTrackedHoursInWeek < 0.01) return null;
+      const daysInSlice = Math.min(7, daysInMonth - weekStartDay + 1);
+      const untrackedHours = Math.max(0, daysInSlice * 24 - totalTrackedHoursInWeek);
+      if (untrackedHours > 0.01) weeklySummary[untrackedLabel] = untrackedHours;
+      return { summary: weeklySummary, totalHours: daysInSlice * 24 };
+    });
+    data.push({ month: monthStr, monthlySummary, totalMonthHours: daysInMonth * 24, weeklySummaries });
+    month = month.add(1, "month");
+  }
+  return data;
+}
+function buildSummaryGoalHours(timelineTasks, dateRange, untrackedLabel) {
+  const viewStart = dayjs(dateRange[0]);
+  const viewEnd = dayjs(dateRange[1]);
+  const tasksInRange = timelineTasks.filter((task) => dayjs(task.doneDate).isBetween(viewStart, viewEnd, "day", "[]"));
+  const hours = {};
+  let totalTrackedHours = 0;
+  for (const task of tasksInRange) {
+    const goalKey = getTimelineGoalKey(task);
+    const durationHours = Number(task.duration || 0) / 60;
+    hours[goalKey] = (hours[goalKey] || 0) + durationHours;
+    totalTrackedHours += durationHours;
+  }
+  const dayCount = dayjs(dateRange[1]).diff(dayjs(dateRange[0]), "day") + 1;
+  const untrackedHours = Math.max(0, dayCount * 24 - totalTrackedHours);
+  if (untrackedHours > 0.01) hours[untrackedLabel] = untrackedHours;
+  return hours;
+}
+function buildDailyGoalHours(blocks, untrackedLabel) {
+  const hours = {};
+  let trackedHours = 0;
+  for (const block of blocks) {
+    const goalKey = getTimelineGoalKey(block);
+    const duration2 = (block.blockEndMinute - block.blockStartMinute) / 60;
+    hours[goalKey] = (hours[goalKey] || 0) + duration2;
+    trackedHours += duration2;
+  }
+  const untrackedHours = Math.max(0, 24 - trackedHours);
+  if (untrackedHours > 0.01) hours[untrackedLabel] = untrackedHours;
+  return { goalHours: hours, totalDayHours: Math.max(24, trackedHours) };
+}
+const DATE_FORMAT = "YYYY-MM-DD";
+function splitTaskIntoDayBlocks(task, dateRange) {
+  const blocks = [];
+  if (!task.doneDate) return [];
+  if (task.timelineSource === "task-point" || !task.timelineRange.end) {
+    const pointDate = dayjs(task.actualStartDate);
+    if (pointDate.isBefore(dateRange[0], "day") || pointDate.isAfter(dateRange[1], "day")) return [];
+    const minute = task.startMinute % 1440;
+    return [{
+      ...task,
+      day: pointDate.format(DATE_FORMAT),
+      blockStartMinute: minute,
+      blockEndMinute: minute,
+      isRangeStart: true,
+      isRangeEnd: true
+    }];
+  }
+  let currentDate = dayjs(task.actualStartDate);
+  let currentStartMinute = task.startMinute % 1440;
+  let remainingDuration = task.duration;
+  let elapsedDuration = 0;
+  while (remainingDuration > 0 && currentDate.isBefore(dateRange[1].add(1, "day"))) {
+    const dayStr = currentDate.format(DATE_FORMAT);
+    const minutesInDay = Math.min(1440 - currentStartMinute, remainingDuration);
+    const isRangeStart = elapsedDuration === 0;
+    const isRangeEnd = remainingDuration <= minutesInDay;
+    if (!currentDate.isBefore(dateRange[0], "day")) {
+      const blockStartMinute = currentStartMinute;
+      const blockEndMinute = Math.min(1440, currentStartMinute + remainingDuration);
+      if (blockStartMinute < blockEndMinute) {
+        blocks.push({
+          ...task,
+          day: dayStr,
+          blockStartMinute,
+          blockEndMinute,
+          isRangeStart,
+          isRangeEnd
+        });
+      }
+    }
+    remainingDuration -= minutesInDay;
+    elapsedDuration += minutesInDay;
+    currentStartMinute = 0;
+    currentDate = currentDate.add(1, "day");
+  }
+  return blocks;
+}
+const TIMELINE_DAY_START_MINUTE = 0;
+const TIMELINE_MINUTES_PER_DAY = 24 * 60;
+function timelineVisibleEndMinute(maxHours = 24) {
+  const normalizedHours = Number.isFinite(maxHours) ? Math.max(0, Math.min(24, maxHours)) : 24;
+  return Math.round(normalizedHours * 60);
+}
+function clampTimelineMinute(value, maxHours = 24) {
+  const visibleEnd = timelineVisibleEndMinute(maxHours);
+  if (visibleEnd <= 0) return TIMELINE_DAY_START_MINUTE;
+  if (!Number.isFinite(value)) return TIMELINE_DAY_START_MINUTE;
+  return Math.min(visibleEnd - 1, Math.max(TIMELINE_DAY_START_MINUTE, Math.floor(value)));
+}
+function clampTimelineBoundaryMinute(value, maxHours = 24) {
+  const visibleEnd = timelineVisibleEndMinute(maxHours);
+  if (visibleEnd <= 0) return TIMELINE_DAY_START_MINUTE;
+  if (!Number.isFinite(value)) return TIMELINE_DAY_START_MINUTE;
+  return Math.min(visibleEnd, Math.max(TIMELINE_DAY_START_MINUTE, Math.floor(value)));
+}
+function timelineMinuteFromOffset(offsetPx, hourHeight, maxHours = 24) {
+  if (!Number.isFinite(offsetPx) || !Number.isFinite(hourHeight) || hourHeight <= 0) {
+    return TIMELINE_DAY_START_MINUTE;
+  }
+  return clampTimelineMinute(Math.max(0, offsetPx) / hourHeight * 60, maxHours);
+}
+function timelineOffsetFromMinute(minute, hourHeight) {
+  if (!Number.isFinite(hourHeight) || hourHeight <= 0) return 0;
+  const normalizedMinute = Number.isFinite(minute) ? Math.max(TIMELINE_DAY_START_MINUTE, minute) : TIMELINE_DAY_START_MINUTE;
+  return normalizedMinute / 60 * hourHeight;
+}
+function timelineMinuteToLocalDateTime(day, minute) {
+  const normalizedDay = dayjs(day).startOf("day").format("YYYY-MM-DD");
+  const normalizedMinute = clampTimelineMinute(minute);
+  const hour = Math.floor(normalizedMinute / 60);
+  const minuteOfHour = normalizedMinute % 60;
+  return `${normalizedDay}T${String(hour).padStart(2, "0")}:${String(minuteOfHour).padStart(2, "0")}`;
+}
+function timelineBoundaryMinuteToLocalDateTime(day, minute, maxHours = 24) {
+  const normalizedMinute = clampTimelineBoundaryMinute(minute, maxHours);
+  const dayOffset = Math.floor(normalizedMinute / TIMELINE_MINUTES_PER_DAY);
+  const minuteOfDay = normalizedMinute % TIMELINE_MINUTES_PER_DAY;
+  const targetDay = dayjs(day).startOf("day").add(dayOffset, "day").format("YYYY-MM-DD");
+  const hour = Math.floor(minuteOfDay / 60);
+  const minuteOfHour = minuteOfDay % 60;
+  return `${targetDay}T${String(hour).padStart(2, "0")}:${String(minuteOfHour).padStart(2, "0")}`;
+}
+const TIMELINE_SNAP_MINUTES = 5;
+const TIMELINE_MIN_RANGE_MINUTES = 5;
+function normalizedStep(snapMinutes = TIMELINE_SNAP_MINUTES) {
+  return Math.max(1, Math.round(snapMinutes));
+}
+function normalizeDateTime$2(value) {
+  const raw = String(value || "").trim();
+  return /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(raw) ? raw.replace(" ", "T") : raw;
+}
+function dateTimeMs(value) {
+  if (!value) return null;
+  const ms = Date.parse(normalizeDateTime$2(value));
+  return Number.isFinite(ms) ? ms : null;
+}
+function formatLocalDateTime(value) {
+  return value.format("YYYY-MM-DDTHH:mm");
+}
+function shiftDateTime(value, minutes) {
+  const parsed = dayjs(normalizeDateTime$2(value));
+  if (!parsed.isValid()) return null;
+  return formatLocalDateTime(parsed.add(minutes, "minute"));
+}
+function roundedDurationMinutes(range) {
+  const startMs = dateTimeMs(range.start);
+  const endMs = dateTimeMs(range.end);
+  if (startMs == null || endMs == null || endMs < startMs) return 0;
+  return Math.round((endMs - startMs) / 6e4 * 100) / 100;
+}
+function snapTimelineBoundaryMinute(minute, maxHours = 24, snapMinutes = TIMELINE_SNAP_MINUTES) {
+  const step = normalizedStep(snapMinutes);
+  const snapped = Math.round(minute / step) * step;
+  return clampTimelineBoundaryMinute(snapped, maxHours);
+}
+function buildTimelineDragSelection(anchorMinute, currentMinute, maxHours, snapMinutes = TIMELINE_SNAP_MINUTES) {
+  const step = normalizedStep(snapMinutes);
+  const lower = clampTimelineMinute(Math.min(anchorMinute, currentMinute), maxHours);
+  const upper = clampTimelineMinute(Math.max(anchorMinute, currentMinute), maxHours);
+  let startMinute = clampTimelineBoundaryMinute(Math.floor(lower / step) * step, maxHours);
+  let endMinute = clampTimelineBoundaryMinute(Math.ceil(upper / step) * step, maxHours);
+  if (endMinute <= startMinute) endMinute = clampTimelineBoundaryMinute(startMinute + step, maxHours);
+  if (endMinute <= startMinute) startMinute = clampTimelineBoundaryMinute(endMinute - step, maxHours);
+  if (endMinute <= startMinute) return null;
+  return { startMinute, endMinute, durationMinutes: endMinute - startMinute };
+}
+function shiftTimelineLogicalRange(range, minutes) {
+  const start2 = shiftDateTime(range.start, minutes);
+  if (!start2) return null;
+  if (!range.end) return { start: start2 };
+  const end2 = shiftDateTime(range.end, minutes);
+  if (!end2) return null;
+  return { start: start2, end: end2 };
+}
+function resizeTimelineLogicalRange(range, boundary, day, minute, maxHours = 24, minDurationMinutes = TIMELINE_MIN_RANGE_MINUTES) {
+  if (!range.end) return null;
+  const startMs = dateTimeMs(range.start);
+  const endMs = dateTimeMs(range.end);
+  if (startMs == null || endMs == null || endMs <= startMs) return null;
+  const boundaryDateTime = timelineBoundaryMinuteToLocalDateTime(day, minute, maxHours);
+  const boundaryMs = dateTimeMs(boundaryDateTime);
+  if (boundaryMs == null) return null;
+  const minDurationMs = Math.max(1, minDurationMinutes) * 6e4;
+  if (boundary === "start") {
+    if (boundaryMs > endMs - minDurationMs) return null;
+    return { start: boundaryDateTime, end: range.end };
+  }
+  if (boundaryMs < startMs + minDurationMs) return null;
+  return { start: range.start, end: boundaryDateTime };
+}
+function projectTimelineLogicalRangeToDay(range, day) {
+  const dayStart = dayjs(day).startOf("day");
+  const dayEnd = dayStart.add(1, "day");
+  const start2 = dayjs(normalizeDateTime$2(range.start));
+  if (!start2.isValid()) return null;
+  if (!range.end) {
+    if (!start2.isSame(dayStart, "day")) return null;
+    const minute = start2.diff(dayStart, "minute", true);
+    return { blockStartMinute: minute, blockEndMinute: minute, durationMinutes: 0 };
+  }
+  const end2 = dayjs(normalizeDateTime$2(range.end));
+  if (!end2.isValid() || !end2.isAfter(start2)) return null;
+  if (!end2.isAfter(dayStart) || !start2.isBefore(dayEnd)) return null;
+  const visibleStart = start2.isAfter(dayStart) ? start2 : dayStart;
+  const visibleEnd = end2.isBefore(dayEnd) ? end2 : dayEnd;
+  const blockStartMinute = Math.max(0, visibleStart.diff(dayStart, "minute", true));
+  const blockEndMinute = Math.min(24 * 60, visibleEnd.diff(dayStart, "minute", true));
+  if (blockEndMinute <= blockStartMinute) return null;
+  return {
+    blockStartMinute,
+    blockEndMinute,
+    durationMinutes: roundedDurationMinutes(range)
+  };
+}
+function buildTimelineBlockGesturePreview(args) {
+  const {
+    block,
+    mode,
+    anchorMinute,
+    currentMinute,
+    maxHours,
+    snapMinutes = TIMELINE_SNAP_MINUTES,
+    minDurationMinutes = TIMELINE_MIN_RANGE_MINUTES
+  } = args;
+  const visibleEnd = timelineVisibleEndMinute(maxHours);
+  if (visibleEnd <= 0) return null;
+  let range = null;
+  if (mode === "move") {
+    const rawDelta = currentMinute - anchorMinute;
+    const snappedSliceStart = snapTimelineBoundaryMinute(block.blockStartMinute + rawDelta, maxHours, snapMinutes);
+    const deltaMinutes = snappedSliceStart - block.blockStartMinute;
+    range = shiftTimelineLogicalRange(block.timelineRange, deltaMinutes);
+  } else {
+    if (!block.timelineRange.end) return null;
+    const boundaryMinute = snapTimelineBoundaryMinute(currentMinute, maxHours, snapMinutes);
+    range = resizeTimelineLogicalRange(
+      block.timelineRange,
+      mode === "resize-start" ? "start" : "end",
+      block.day,
+      boundaryMinute,
+      maxHours,
+      minDurationMinutes
+    );
+  }
+  if (!range) return null;
+  const projected = projectTimelineLogicalRangeToDay(range, block.day);
+  if (!projected) return null;
+  return { range, ...projected };
+}
+function buildDailyViewData(timelineTasks, dateRange) {
+  const start2 = dayjs(dateRange[0]).startOf("day");
+  const end2 = dayjs(dateRange[1]).startOf("day");
+  const diff = Math.max(0, end2.diff(start2, "day"));
+  const dateRangeDays = Array.from({ length: diff + 1 }, (_2, i2) => start2.add(i2, "day"));
+  const map = {};
+  const range = [start2, end2];
+  dateRangeDays.forEach((d2) => {
+    map[d2.format("YYYY-MM-DD")] = [];
+  });
+  for (const task of timelineTasks) {
+    const blocks = splitTaskIntoDayBlocks(task, range);
+    for (const block of blocks) {
+      if (map[block.day]) map[block.day].push(block);
+    }
+  }
+  Object.values(map).forEach((dayBlocks) => {
+    dayBlocks.sort((a2, b2) => a2.blockStartMinute - b2.blockStartMinute);
+  });
+  return { dateRangeDays, blocksByDay: map };
+}
+function nowMs() {
+  try {
+    return performance.now();
+  } catch {
+    return Date.now();
+  }
+}
+function durationMs(start2) {
+  return nowMs() - start2;
+}
+function elapsedMs(start2) {
+  return `${durationMs(start2).toFixed(2)}ms`;
+}
+function throttle(fn3, wait = 250) {
+  let last = 0, timer = null;
+  return function(...args) {
+    const now2 = Date.now();
+    if (now2 - last >= wait) {
+      last = now2;
+      fn3.apply(this, args);
+    } else {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        last = Date.now();
+        fn3.apply(this, args);
+      }, wait - (now2 - last));
+    }
+  };
+}
+function uniqueNonEmpty(values2) {
+  return Array.from(new Set(values2.map((value) => String(value || "").trim()).filter(Boolean)));
+}
+function operationLabel(operation) {
+  switch (operation) {
+    case "delete":
+      return "删除";
+    case "complete":
+      return "完成";
+    case "task_session":
+      return "保存工作记录";
+    case "time_update":
+      return "更新时间";
+    case "create":
+      return "创建";
+    case "update":
+    default:
+      return "保存";
+  }
+}
+function getRecordRecoveryPaths(result, fallbackPath) {
+  return uniqueNonEmpty([
+    ...result.refresh?.scanPaths || [],
+    result.affectedPath,
+    fallbackPath
+  ]);
+}
+function buildRecordSubmitRecoveryPresentation(result, options = {}) {
+  if (!result || result.status !== "conflict") {
+    return {
+      shouldShow: false,
+      title: "",
+      message: "",
+      advice: "",
+      paths: [],
+      canOpenOriginal: false,
+      canRescan: false,
+      canRetry: false
+    };
+  }
+  const firstError = result.errors?.[0];
+  const paths = getRecordRecoveryPaths(result, options.fallbackPath);
+  return {
+    shouldShow: true,
+    title: `${operationLabel(result.operation)}遇到记录冲突`,
+    message: firstError?.message || result.feedback?.notice || "原记录位置可能已经变化，当前操作没有写入。",
+    advice: getRecordConflictRecoveryAdvice(firstError?.code || "record_conflict"),
+    paths,
+    canOpenOriginal: Boolean(options.canOpenOriginal),
+    canRescan: paths.length > 0,
+    canRetry: result.operation === "update" || result.operation === "delete" || result.operation === "time_update" || result.operation === "complete" || result.operation === "task_session"
+  };
+}
+const TIMELINE_KEY_HOURS = [3, 6, 9, 12];
+function timelineKeyHour(minute) {
+  const hour = minute / 60;
+  return TIMELINE_KEY_HOURS.find((candidate) => candidate === hour) ?? null;
+}
+const TIMELINE_TICK_STYLE = Object.freeze({
+  // Keep every rule on a full device pixel. Hierarchy is expressed through
+  // contrast and tick length instead of sub-pixel widths that blur on desktop
+  // and disappear on high-density mobile displays.
+  hour: { width: 1, opacity: 0.68 },
+  half: { width: 1, opacity: 0.42 },
+  quarter: { width: 1, opacity: 0.28 },
+  five: { width: 1, opacity: 0.18 }
+});
+const TIMELINE_SCALE_POLICY = Object.freeze({
+  // Desktop and touch share one semantic-density contract. The finest tick is
+  // admitted only when it has enough physical separation to remain readable.
+  fine: {
+    minimumTickGapPx: {
+      five: 10,
+      quarter: 10,
+      half: 14,
+      hour: 18
+    },
+    fallbackTickGapPx: 18,
+    minimumLabelGapPx: 44
+  },
+  compact: {
+    minimumTickGapPx: {
+      five: 10,
+      quarter: 10,
+      half: 14,
+      hour: 18
+    },
+    fallbackTickGapPx: 18,
+    minimumLabelGapPx: 44
+  }
+});
+const SEMANTIC_TICK_CANDIDATES = [
+  { step: 5, level: "five" },
+  { step: 15, level: "quarter" },
+  { step: 30, level: "half" },
+  { step: 60, level: "hour" }
+];
+const FALLBACK_TICK_STEPS = [120, 180, 240, 360, 720, 1440];
+const LABEL_STEPS = [60, 120, 180, 240, 360, 720, 1440];
+function resolveTickStep(pixelsPerMinute, densityMode) {
+  const policy = TIMELINE_SCALE_POLICY[densityMode];
+  for (const candidate of SEMANTIC_TICK_CANDIDATES) {
+    const requiredGap = policy.minimumTickGapPx[candidate.level];
+    if (candidate.step * pixelsPerMinute >= requiredGap) return candidate.step;
+  }
+  return FALLBACK_TICK_STEPS.find((step) => step * pixelsPerMinute >= policy.fallbackTickGapPx) ?? 1440;
+}
+function resolveLabelStep(pixelsPerMinute, tickStepMinutes, densityMode) {
+  const minimumLabelGap = TIMELINE_SCALE_POLICY[densityMode].minimumLabelGapPx;
+  return LABEL_STEPS.find((step) => step >= tickStepMinutes && step % tickStepMinutes === 0 && step * pixelsPerMinute >= minimumLabelGap) ?? 1440;
+}
+function resolveTickLevel(minute) {
+  if (minute % 60 === 0) return "hour";
+  if (minute % 30 === 0) return "half";
+  if (minute % 15 === 0) return "quarter";
+  return "five";
+}
+function formatClockMinute(minute) {
+  return `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
+}
+function buildTimelineScale(input) {
+  const hourHeight = Number.isFinite(input.hourHeight) ? Math.max(1, input.hourHeight) : 60;
+  const maximum = Number.isFinite(input.maxHours) ? Math.max(0, Math.min(24, input.maxHours)) * 60 : 1440;
+  const start2 = Number.isFinite(input.startMinute) ? Math.max(0, Math.min(maximum, input.startMinute)) : 0;
+  const end2 = Number.isFinite(input.endMinute) ? Math.max(start2, Math.min(maximum, input.endMinute)) : maximum;
+  const densityMode = input.densityMode ?? (input.coarsePointer ? "compact" : "fine");
+  const pixelsPerMinute = hourHeight / 60;
+  const tickStepMinutes = resolveTickStep(pixelsPerMinute, densityMode);
+  const gridStepMinutes = tickStepMinutes;
+  const labelStepMinutes = resolveLabelStep(pixelsPerMinute, tickStepMinutes, densityMode);
+  const tickPixelGap = tickStepMinutes * pixelsPerMinute;
+  const labelPixelGap = labelStepMinutes * pixelsPerMinute;
+  const ticks = [];
+  let lastLabelOffset = -Infinity;
+  const minimumLabelGap = TIMELINE_SCALE_POLICY[densityMode].minimumLabelGapPx;
+  for (let minute = Math.ceil(start2 / tickStepMinutes) * tickStepMinutes; minute <= end2; minute += tickStepMinutes) {
+    const level = resolveTickLevel(minute);
+    const offset2 = (minute - start2) * pixelsPerMinute;
+    const label = minute % labelStepMinutes === 0 && offset2 - lastLabelOffset >= minimumLabelGap ? formatClockMinute(minute) : void 0;
+    if (label) lastLabelOffset = offset2;
+    const style2 = TIMELINE_TICK_STYLE[level];
+    ticks.push({
+      minute,
+      offset: offset2,
+      level,
+      label,
+      strokeWidth: style2.width,
+      strokeOpacity: style2.opacity,
+      showInGrid: minute % gridStepMinutes === 0
+    });
+  }
+  for (const minute of TIMELINE_KEY_HOURS.map((hour) => hour * 60)) {
+    if (minute < start2 || minute > end2 || ticks.some((tick) => tick.minute === minute)) continue;
+    const style2 = TIMELINE_TICK_STYLE.hour;
+    ticks.push({
+      minute,
+      offset: (minute - start2) * pixelsPerMinute,
+      level: "hour",
+      strokeWidth: style2.width,
+      strokeOpacity: style2.opacity,
+      showInGrid: true
+    });
+  }
+  ticks.sort((a2, b2) => a2.minute - b2.minute);
+  return {
+    hourHeight,
+    height: (end2 - start2) * pixelsPerMinute,
+    densityMode,
+    tickStepMinutes,
+    gridStepMinutes,
+    labelStepMinutes,
+    tickPixelGap,
+    labelPixelGap,
+    minimumGap: tickPixelGap,
+    ticks
+  };
+}
+function logErrorEntryToConsole(entry) {
+  const timestamp2 = new Date(entry.timestamp).toLocaleString();
+  const prefix2 = `[ErrorHandler][${entry.type}][${timestamp2}]`;
+  devLog(prefix2);
+  devError("Message:", entry.message);
+  if (entry.context) {
+    devError("Context:", entry.context);
+  }
+  if (entry.stack) {
+    devError("Stack:", entry.stack);
+  }
+  if (entry.details) {
+    devError("Details:", entry.details);
+  }
+}
+function getUserFriendlyErrorMessage(type, error) {
+  const baseMessage = error.message;
+  switch (type) {
+    case ErrorType.NETWORK:
+      return `网络错误：${baseMessage}。请检查您的网络连接。`;
+    case ErrorType.VALIDATION:
+      return `数据验证失败：${baseMessage}`;
+    case ErrorType.PERMISSION:
+      return `权限不足：${baseMessage}。请检查文件访问权限。`;
+    case ErrorType.FILE_SYSTEM:
+      return `文件系统错误：${baseMessage}`;
+    case ErrorType.SERVICE:
+      return `服务错误：${baseMessage}`;
+    case ErrorType.PLUGIN:
+      return `插件错误：${baseMessage}`;
+    case ErrorType.UNKNOWN:
+    default:
+      return `发生错误：${baseMessage}`;
+  }
+}
+class ErrorHandler {
+  static instance;
+  errorLogs = [];
+  maxLogSize = 100;
+  constructor() {
+  }
+  /** 获取错误处理器实例 */
+  static getInstance() {
+    if (!ErrorHandler.instance) {
+      ErrorHandler.instance = new ErrorHandler();
+    }
+    return ErrorHandler.instance;
+  }
+  /** 处理错误 */
+  handle(error, context, options = {}) {
+    const {
+      showNotice = true,
+      logToConsole = true,
+      logToFile = false,
+      noticeTimeout = 5e3,
+      context: additionalContext,
+      uiPort
+    } = options;
+    const errorObj = error instanceof Error ? error : new Error(String(error));
+    const errorType = classifyError(errorObj);
+    const fullContext = additionalContext ? `${context} - ${additionalContext}` : context;
+    const logEntry = {
+      timestamp: Date.now(),
+      type: errorType,
+      message: errorObj.message,
+      context: fullContext,
+      stack: errorObj.stack,
+      details: error
+    };
+    this.addLogEntry(logEntry);
+    this.logRuntimeDiagnostic(error, errorObj, errorType, fullContext);
+    if (logToConsole) {
+      logErrorEntryToConsole(logEntry);
+    }
+    if (showNotice) {
+      this.showNotice(uiPort, getUserFriendlyErrorMessage(errorType, errorObj), noticeTimeout);
+    }
+  }
+  /** 获取错误日志 */
+  getErrorLogs(limit) {
+    if (limit) {
+      return this.errorLogs.slice(-limit);
+    }
+    return [...this.errorLogs];
+  }
+  /** 清除错误日志 */
+  clearLogs() {
+    this.errorLogs = [];
+  }
+  /** 获取错误统计 */
+  getErrorStats() {
+    const stats = {
+      [ErrorType.NETWORK]: 0,
+      [ErrorType.VALIDATION]: 0,
+      [ErrorType.PERMISSION]: 0,
+      [ErrorType.FILE_SYSTEM]: 0,
+      [ErrorType.SERVICE]: 0,
+      [ErrorType.PLUGIN]: 0,
+      [ErrorType.UNKNOWN]: 0
+    };
+    this.errorLogs.forEach((log) => {
+      stats[log.type]++;
+    });
+    return stats;
+  }
+  /** 安全执行异步函数，自动处理错误 */
+  async safeAsync(fn3, context, options) {
+    try {
+      return await fn3();
+    } catch (error) {
+      this.handle(error, context, options);
+      return null;
+    }
+  }
+  /** 安全执行同步函数，自动处理错误 */
+  safe(fn3, context, options) {
+    try {
+      return fn3();
+    } catch (error) {
+      this.handle(error, context, options);
+      return null;
+    }
+  }
+  showNotice(uiPort, message, timeout) {
+    uiPort?.notice(message, timeout);
+  }
+  addLogEntry(entry) {
+    this.errorLogs.push(entry);
+    if (this.errorLogs.length > this.maxLogSize) {
+      this.errorLogs.shift();
+    }
+  }
+  logRuntimeDiagnostic(rawError, errorObj, errorType, fullContext) {
+    try {
+      diagnosticError("[Think][ErrorHandler][RAW]", {
+        context: fullContext,
+        type: errorType,
+        message: errorObj.message,
+        stack: errorObj.stack,
+        raw: rawError
+      });
+    } catch {
+    }
+  }
+}
+const errorHandler = ErrorHandler.getInstance();
+async function safeAsync(fn3, context, options) {
+  return errorHandler.safeAsync(fn3, context, options);
+}
+const WARNING_MS = 1e3;
+const ERROR_MS = 5e3;
+const now = () => typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now();
+function startMeasure(name) {
+  const startedAt = now();
+  return () => {
+    const duration2 = now() - startedAt;
+    if (duration2 >= ERROR_MS) {
+      devError(`[Performance] SLOW: ${name} took ${duration2.toFixed(2)}ms`);
+    } else if (duration2 >= WARNING_MS) {
+      devWarn(`[Performance] Warning: ${name} took ${duration2.toFixed(2)}ms`);
+    }
+    return duration2;
+  };
+}
+const formatDuration = (computed, existing, mode = "preserve") => {
+  if (mode === "number") return computed;
+  if (mode === "string") return String(computed);
+  return typeof existing === "string" ? String(computed) : computed;
+};
+function computeLinkedTimeChanges(data, keys, lastChanged, options = {}) {
+  const startVal = data[keys.startKey];
+  const endVal = data[keys.endKey];
+  const durationVal = data[keys.durationKey];
+  const normalizedChanged = lastChanged === keys.startKey ? "startTime" : lastChanged === keys.endKey ? "endTime" : lastChanged === keys.durationKey ? "duration" : null;
+  const normalized2 = applyTaskTimePolicy({
+    startTime: startVal,
+    endTime: endVal,
+    duration: durationVal,
+    direction: options.direction,
+    lastChanged: normalizedChanged,
+    mode: "interactive"
+  });
+  const changes = {};
+  if (normalized2.startTime !== void 0 && normalized2.startTime !== startVal) {
+    changes[keys.startKey] = normalized2.startTime;
+  }
+  if (normalized2.endTime !== void 0 && normalized2.endTime !== endVal) {
+    changes[keys.endKey] = normalized2.endTime;
+  }
+  if (normalized2.duration !== void 0) {
+    const nextDuration = formatDuration(normalized2.duration, durationVal, options.durationOutput);
+    if (nextDuration !== durationVal) changes[keys.durationKey] = nextDuration;
+  }
+  return changes;
+}
+function finalizeLinkedTimeFields(data, keys, options = {}) {
+  const next2 = { ...data };
+  const durationVal = next2[keys.durationKey];
+  const normalized2 = applyTaskTimePolicy({
+    startTime: next2[keys.startKey],
+    endTime: next2[keys.endKey],
+    duration: durationVal,
+    mode: "finalize",
+    direction: options.direction
+  });
+  if (normalized2.startTime !== void 0) next2[keys.startKey] = normalized2.startTime;
+  if (normalized2.endTime !== void 0) next2[keys.endKey] = normalized2.endTime;
+  if (normalized2.duration !== void 0) {
+    next2[keys.durationKey] = formatDuration(normalized2.duration, durationVal, options.durationOutput);
+  }
+  return next2;
+}
+class CancelledError extends Error {
+  name = "CancelledError";
+  constructor(message = "Cancelled") {
+    super(message);
+  }
+}
+function createTakeLatest(label) {
+  let current2 = null;
+  let disposed2 = false;
+  const cancel = () => {
+    if (current2) {
+      try {
+        current2.abort();
+      } catch {
+      }
+      current2 = null;
+    }
+  };
+  const dispose = () => {
+    disposed2 = true;
+    cancel();
+  };
+  const run = async (task) => {
+    if (disposed2) throw new CancelledError(label ? `Disposed: ${label}` : "Disposed");
+    cancel();
+    const controller = new AbortController();
+    current2 = controller;
+    try {
+      return await task(controller.signal);
+    } catch (err) {
+      if (err?.name === "AbortError") {
+        throw new CancelledError(label ? `Aborted: ${label}` : "Aborted");
+      }
+      throw err;
+    } finally {
+      if (current2 === controller) current2 = null;
+    }
+  };
+  return {
+    run,
+    cancel,
+    dispose,
+    get signal() {
+      return current2?.signal ?? null;
+    }
+  };
+}
+function safeMatch(win, query) {
+  try {
+    return Boolean(win?.matchMedia?.(query).matches);
+  } catch {
+    return false;
+  }
+}
+function getRuntimeWindow() {
+  return typeof window === "undefined" ? void 0 : window;
+}
+function detectPlatform$1(userAgent, platform = "", maxTouchPoints = 0) {
+  if (/Android/i.test(userAgent)) return "android";
+  if (/iPhone|iPad|iPod/i.test(userAgent)) return "ios";
+  if (/Mac/i.test(platform) && maxTouchPoints > 1) return "ios";
+  return "desktop";
+}
+function detectViewport(width2) {
+  if (width2 <= 640) return "narrow";
+  if (width2 <= 1024) return "medium";
+  return "wide";
+}
+function detectThinkDeviceProfile(win = getRuntimeWindow()) {
+  const userAgent = String(win?.navigator?.userAgent || "");
+  const platformName = String(win?.navigator?.platform || "");
+  const maxTouchPoints = Number(win?.navigator?.maxTouchPoints || 0);
+  const viewportWidth = Math.max(0, Number(win?.innerWidth || 0));
+  const platform = detectPlatform$1(userAgent, platformName, maxTouchPoints);
+  const pointer = safeMatch(win, "(pointer: coarse)") || maxTouchPoints > 0 ? "coarse" : "fine";
+  const viewport2 = detectViewport(viewportWidth || 1024);
+  const isMobileLike = platform !== "desktop" || pointer === "coarse" || viewportWidth <= 820;
+  return {
+    platform,
+    pointer,
+    viewport: viewport2,
+    viewportWidth,
+    hasVisualViewport: Boolean(win?.visualViewport),
+    isMobileLike
+  };
+}
+function isThinkMobileLikeProfile(profile) {
+  return profile.isMobileLike;
+}
+function getThinkDeviceProfileAttributes(profile = detectThinkDeviceProfile()) {
+  return {
+    "data-think-platform": profile.platform,
+    "data-think-pointer": profile.pointer,
+    "data-think-viewport": profile.viewport,
+    "data-think-visual-viewport": profile.hasVisualViewport ? "true" : "false"
+  };
+}
+function applyThinkDeviceProfileAttributes(element, profile = detectThinkDeviceProfile(element.ownerDocument?.defaultView || void 0)) {
+  const attrs = getThinkDeviceProfileAttributes(profile);
+  Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
+  element.classList.toggle("think-os--mobile", profile.isMobileLike);
+  element.classList.toggle("think-os--desktop", !profile.isMobileLike);
+  element.classList.toggle("think-os--android", profile.platform === "android");
+  element.classList.toggle("think-os--ios", profile.platform === "ios");
+  return profile;
+}
+const MAX_LOG_BYTES = 2e6;
+const FLUSH_INTERVAL_MS = 15e3;
+const EVENT_LOOP_INTERVAL_MS = 2e3;
+const SCOPE_SELECTOR = ".think-os, .think-modal-host, .think-quick-input-modal, .think-whiteboard-workspace-view, .think-settings-workspace-view";
+const EVENT_TYPES = [
+  "click",
+  "dblclick",
+  "pointerup",
+  "input",
+  "change",
+  "compositionstart",
+  "compositionend",
+  "focusin",
+  "focusout",
+  "keydown",
+  "scroll",
+  "dragend",
+  "submit",
+  "paste"
+];
+function describeThinkControl(element) {
+  const control = element.closest('button, input, textarea, select, [role="button"], [role="tab"], [role="option"], [role="menuitem"], [role="switch"], [role="checkbox"], a, summary') || element;
+  const tag = control.tagName.toLowerCase();
+  const validClass = (node2) => Array.from(node2.classList).find((value) => /^think-[a-z0-9_-]{1,64}$/.test(value) || /^sv-[a-z0-9_-]{1,64}$/.test(value));
+  const className = validClass(control) || (control.parentElement ? validClass(control.parentElement) : void 0);
+  return `${tag}${className ? `.${className}` : ""}`;
+}
+function getThinkSurface(target) {
+  if (!(target instanceof Element)) return null;
+  const scope = target.closest(SCOPE_SELECTOR);
+  if (!scope) return null;
+  const inside = (selector) => Boolean(target.closest(selector));
+  if (inside(".think-quick-input-modal")) return "quickinput";
+  if (inside(".think-ai-chat-modal")) return "ai-chat";
+  if (inside(".think-ai-batch-confirm-modal")) return "ai-batch";
+  if (inside(".think-ai-prompt-modal")) return "ai-prompt";
+  if (inside(".think-checkin-modal-host")) return "checkin";
+  if (inside(".think-name-prompt-modal")) return "name-prompt";
+  if (inside(".think-whiteboard-workspace-view")) return "whiteboard";
+  if (inside(".think-settings-workspace-view, .think-os--settings")) return "settings";
+  if (inside(".think-floating-panel")) return "floating-panel";
+  if (inside(".think-os--layout")) return "dashboard";
+  return "think-ui";
+}
+function detectPlatform() {
+  const ua = navigator.userAgent || "";
+  if (/android/i.test(ua)) return "android";
+  if (/iphone|ipad|ipod/i.test(ua) || /macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return "ios";
+  if (/windows/i.test(ua)) return "windows";
+  if (/mac/i.test(ua)) return "macos";
+  if (/linux/i.test(ua)) return "linux";
+  return "other";
+}
+function summarizeThinkLatency(entries, kinds = ["response", "long-task", "lifecycle"]) {
+  const buckets = /* @__PURE__ */ new Map();
+  for (const item of entries) {
+    if (item.durationMs == null || !kinds.includes(item.kind)) continue;
+    const label = `${item.surface} / ${item.action}`;
+    const values2 = buckets.get(label) || [];
+    values2.push(item.durationMs);
+    buckets.set(label, values2);
+  }
+  return Array.from(buckets, ([action2, values2]) => {
+    values2.sort((a2, b2) => a2 - b2);
+    return { action: action2, count: values2.length, p95Ms: values2[Math.ceil(values2.length * 0.95) - 1], maxMs: values2[values2.length - 1] };
+  }).sort((a2, b2) => b2.p95Ms - a2.p95Ms).slice(0, 20);
+}
+let activeDiagnostics = null;
+function recordThinkDiagnostic(action2, durationMs2, outcome, surface = "quickinput") {
+  activeDiagnostics?.record("lifecycle", surface, action2, durationMs2, outcome);
+}
+async function traceThinkOperation(action2, operation, surface = "operations", successThresholdMs = 0) {
+  const startedAt = performance.now();
+  try {
+    const result = await operation();
+    const elapsed = performance.now() - startedAt;
+    if (elapsed >= successThresholdMs) recordThinkDiagnostic(action2, elapsed, "success", surface);
+    return result;
+  } catch (error) {
+    recordThinkDiagnostic(action2, performance.now() - startedAt, "failure", surface);
+    throw error;
+  }
+}
+class ThinkDiagnostics {
+  constructor(plugin) {
+    this.plugin = plugin;
+    const directory = plugin.manifest.dir || `${plugin.app.vault.configDir}/plugins/${plugin.manifest.id}`;
+    this.filePath = `${directory}/think-os-performance-${this.platform}.jsonl`;
+  }
+  plugin;
+  session = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  platform = detectPlatform();
+  filePath;
+  pending = [];
+  writeQueue = Promise.resolve();
+  flushInterval;
+  lagInterval;
+  observer;
+  lastScrollAt = 0;
+  lastInputAt = /* @__PURE__ */ new WeakMap();
+  lastWriteWarningAt = 0;
+  flushFailed = false;
+  lastLagTick = 0;
+  running = false;
+  start() {
+    if (this.running) return;
+    this.running = true;
+    activeDiagnostics = this;
+    for (const type of EVENT_TYPES) document.addEventListener(type, this.onInteraction, true);
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
+    this.plugin.registerEvent(this.plugin.app.workspace.on("active-leaf-change", (leaf) => {
+      const viewType = leaf?.view?.getViewType();
+      if (viewType === "think-os-settings-view") this.record("lifecycle", "settings", "activate");
+      else if (viewType === "think-os-whiteboard") this.record("lifecycle", "whiteboard", "activate");
+      else if (leaf?.view?.containerEl?.querySelector(".think-os--layout")) this.record("lifecycle", "dashboard", "activate");
+    }));
+    this.flushInterval = window.setInterval(() => {
+      void this.flush();
+    }, FLUSH_INTERVAL_MS);
+    this.lastLagTick = performance.now();
+    this.lagInterval = window.setInterval(() => {
+      const now2 = performance.now();
+      const elapsed = now2 - this.lastLagTick;
+      this.lastLagTick = now2;
+      if (document.visibilityState !== "visible" || elapsed > EVENT_LOOP_INTERVAL_MS * 4) return;
+      if (elapsed - EVENT_LOOP_INTERVAL_MS >= 180 && document.querySelector(SCOPE_SELECTOR)) {
+        this.record("long-task", "webview", "event-loop-delay", elapsed - EVENT_LOOP_INTERVAL_MS);
+      }
+    }, EVENT_LOOP_INTERVAL_MS);
+    if (typeof PerformanceObserver !== "undefined") {
+      try {
+        this.observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (entry.duration >= 50 && document.querySelector(SCOPE_SELECTOR)) {
+              this.record("long-task", "webview", "main-thread", entry.duration);
+            }
+          }
+        });
+        this.observer.observe({ entryTypes: ["longtask"] });
+      } catch {
+        this.observer?.disconnect();
+        this.observer = void 0;
+      }
+    }
+    this.record("lifecycle", "plugin", "start");
+  }
+  onVisibilityChange = () => {
+    this.lastLagTick = performance.now();
+    if (document.visibilityState === "hidden") void this.flush();
+  };
+  onInteraction = (event) => {
+    const surface = getThinkSurface(event.target);
+    if (!surface || !(event.target instanceof Element)) return;
+    if (event.type === "scroll") {
+      const now2 = performance.now();
+      if (now2 - this.lastScrollAt < 700) return;
+      this.lastScrollAt = now2;
+    }
+    if (event.type === "input") {
+      const now2 = performance.now();
+      if (now2 - (this.lastInputAt.get(event.target) ?? -Infinity) < 800) return;
+      this.lastInputAt.set(event.target, now2);
+    }
+    if (event.type === "keydown") {
+      const keyboard = event;
+      if (keyboard.repeat || !["Enter", "Escape", "Tab", "ArrowDown", "ArrowUp", " "].includes(keyboard.key)) return;
+    }
+    const action2 = `${event.type}:${describeThinkControl(event.target)}`;
+    this.record("interaction", surface, action2);
+    if (event.type !== "click" || typeof requestAnimationFrame !== "function") return;
+    const startedAt = performance.now();
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (this.running) this.record("response", surface, action2, performance.now() - startedAt);
+    }));
+  };
+  record(kind, surface, action2, durationMs2, outcome) {
+    if (!this.running) return;
+    const safe = (value) => /^[a-z][a-z0-9_.:-]{0,90}$/i.test(value) ? value : "unknown";
+    const entry = {
+      time: (/* @__PURE__ */ new Date()).toISOString(),
+      session: this.session,
+      platform: this.platform,
+      kind,
+      surface: safe(surface),
+      action: safe(action2)
+    };
+    if (typeof durationMs2 === "number" && Number.isFinite(durationMs2)) entry.durationMs = Math.max(0, Math.round(durationMs2));
+    if (outcome) entry.outcome = safe(outcome);
+    this.pending.push(entry);
+    if (this.pending.length > 2e3) this.pending.splice(0, this.pending.length - 2e3);
+  }
+  async flush() {
+    if (this.pending.length === 0) return this.writeQueue;
+    const batch = this.pending.splice(0);
+    const text2 = batch.map((entry) => JSON.stringify(entry)).join("\n") + "\n";
+    this.writeQueue = this.writeQueue.catch(() => void 0).then(async () => {
+      const adapter = this.plugin.app.vault.adapter;
+      const existing = await adapter.stat(this.filePath);
+      if (existing && existing.size + text2.length > MAX_LOG_BYTES) {
+        const previous = `${this.filePath}.old`;
+        if (await adapter.exists(previous)) await adapter.remove(previous);
+        await adapter.rename(this.filePath, previous);
+      }
+      const appendable = adapter;
+      if (!existing) {
+        await adapter.write(this.filePath, text2);
+      } else if (typeof appendable.append === "function" && await adapter.exists(this.filePath)) {
+        await appendable.append(this.filePath, text2);
+      } else {
+        const prior = await adapter.exists(this.filePath) ? await adapter.read(this.filePath) : "";
+        await adapter.write(this.filePath, prior + text2);
+      }
+      this.flushFailed = false;
+    }).catch((error) => {
+      this.flushFailed = true;
+      this.pending.unshift(...batch);
+      if (this.pending.length > 2e3) this.pending.splice(0, this.pending.length - 2e3);
+      if (Date.now() - this.lastWriteWarningAt >= 6e4) {
+        this.lastWriteWarningAt = Date.now();
+        diagnosticWarn("[Think OS diagnostics] Local diagnostic write failed", error);
+      }
+    });
+    return this.writeQueue;
+  }
+  async exportReport() {
+    this.record("lifecycle", "plugin", "export");
+    await this.flush();
+    if (this.flushFailed) throw new Error("设备本地诊断日志写入失败，请检查存储权限或剩余空间。");
+    const adapter = this.plugin.app.vault.adapter;
+    const previous = `${this.filePath}.old`;
+    const raw = `${await adapter.exists(previous) ? await adapter.read(previous) : ""}${await adapter.exists(this.filePath) ? await adapter.read(this.filePath) : ""}`;
+    const events2 = [];
+    for (const line2 of raw.split("\n")) {
+      if (!line2) continue;
+      try {
+        events2.push(JSON.parse(line2));
+      } catch {
+      }
+    }
+    const folder = "Think/diagnostics";
+    if (!await adapter.exists("Think")) await adapter.mkdir("Think");
+    if (!await adapter.exists(folder)) await adapter.mkdir(folder);
+    const timestamp2 = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+    const base = `${folder}/think-os-${timestamp2}`;
+    await adapter.write(`${base}.jsonl`, raw);
+    const counts = /* @__PURE__ */ new Map();
+    const failures = /* @__PURE__ */ new Map();
+    for (const entry of events2) {
+      counts.set(entry.surface, (counts.get(entry.surface) || 0) + 1);
+      if (["failure", "error", "http-error", "conflict"].includes(entry.outcome || "")) {
+        const key = `${entry.surface} / ${entry.action}`;
+        failures.set(key, (failures.get(key) || 0) + 1);
+      }
+    }
+    const lagMarks = events2.filter((entry) => entry.action === "lag.mark");
+    const markRows = lagMarks.map((mark) => {
+      const markTime = Date.parse(mark.time);
+      const nearby = events2.filter((entry) => entry.durationMs != null && Math.abs(Date.parse(entry.time) - markTime) <= 3e4).sort((a2, b2) => (b2.durationMs ?? 0) - (a2.durationMs ?? 0))[0];
+      const hint = nearby ? `${nearby.surface} / ${nearby.action} (${nearby.durationMs}ms)` : "未捕获耗时事件";
+      return `| ${new Date(mark.time).toLocaleString("zh-CN")} | ${hint} |`;
+    });
+    const latencyTable = (kinds) => [
+      "| 界面 / 操作 | 次数 | P95 (ms) | 最大 (ms) |",
+      "| --- | ---: | ---: | ---: |",
+      ...summarizeThinkLatency(events2, kinds).map(({ action: action2, count, p95Ms, maxMs }) => `| ${action2} | ${count} | ${p95Ms} | ${maxMs} |`)
+    ];
+    const lines = [
+      "# Think OS 本地操作与性能诊断",
+      "",
+      `- 设备：${this.platform}`,
+      `- 日志时间范围（设备本地）：${events2[0] ? new Date(events2[0].time).toLocaleString("zh-CN") : "无"} ~ ${events2.length ? new Date(events2[events2.length - 1].time).toLocaleString("zh-CN") : "无"}`,
+      `- 采集事件：${events2.length}（最多保留约 4 MB 滚动日志，可能不包含全部历史）`,
+      "- 只记录交互类型、平台、时刻、耗时、成功/失败；不包含输入文字、笔记、标题、路径、URL、坐标或录音。",
+      "- 输入与滚动事件被采样；点击到下两帧仅代表绘制机会，不代表业务完成。",
+      "- WebView 长任务 / 定时器漂移属于整页卡顿线索，不能直接归因到 Think OS。",
+      "- 本报告写入 Vault；若启用 Obsidian Sync 或其他同步，导出的文件可能随 Vault 同步。",
+      "",
+      "## 各功能区事件数量",
+      "",
+      "| 功能区 | 事件数 |",
+      "| --- | ---: |",
+      ...[...counts.entries()].sort((a2, b2) => b2[1] - a2[1]).map(([surface, count]) => `| ${surface} | ${count} |`),
+      "",
+      "## 业务操作耗时 Top 20（含保存、加载、网络、存储）",
+      "",
+      ...latencyTable(["lifecycle"]),
+      "",
+      "## 界面点击绘制延迟 Top 20",
+      "",
+      ...latencyTable(["response"]),
+      "",
+      "## WebView 卡顿信号 Top 20",
+      "",
+      ...latencyTable(["long-task"]),
+      "",
+      "## 失败操作",
+      "",
+      "| 功能区 / 操作 | 失败次数 |",
+      "| --- | ---: |",
+      ...[...failures.entries()].sort((a2, b2) => b2[1] - a2[1]).map(([action2, count]) => `| ${action2} | ${count} |`),
+      "",
+      "## 手动标记的卡顿",
+      "",
+      "标记发生在卡顿之后；附近 30 秒最慢事件只是线索，不代表因果关系。",
+      "",
+      "| 标记时间（设备本地） | 附近最慢的耗时事件 |",
+      "| --- | --- |",
+      ...markRows,
+      "",
+      `原始事件：[[${base}.jsonl]]`,
+      ""
+    ];
+    await adapter.write(`${base}.md`, lines.join("\n"));
+    new obsidian.Notice("Think OS 诊断已导出到 Think/diagnostics（报告与原始日志）");
+    return `${base}.md`;
+  }
+  stop() {
+    if (!this.running) return;
+    this.record("lifecycle", "plugin", "stop");
+    this.running = false;
+    if (activeDiagnostics === this) activeDiagnostics = null;
+    for (const type of EVENT_TYPES) document.removeEventListener(type, this.onInteraction, true);
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
+    if (this.flushInterval !== void 0) window.clearInterval(this.flushInterval);
+    if (this.lagInterval !== void 0) window.clearInterval(this.lagInterval);
+    this.observer?.disconnect();
+    void this.flush();
+  }
+}
+const GITHUB_OWNER = "jiangjiang3788";
+const GITHUB_REPO = "obsidian-sample-plugin-master";
+const GITHUB_BRANCH = "main";
+const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
+const DEV_BUILD_FILES = ["main.js", "styles.css", "manifest.json"];
+let installInProgress = false;
+function formatLocalGitHubTime(value) {
+  if (!value || !Number.isFinite(Date.parse(value))) return "暂不可用";
+  return new Date(value).toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+}
+function formatGitHubDevRestartNotice(info) {
+  const pushed = info.githubPushedAt ? `GitHub 推送时间（本地）：${formatLocalGitHubTime(info.githubPushedAt)}` : "GitHub 推送时间：暂未查到该版本对应的推送记录";
+  const committed = !info.githubPushedAt && info.githubCommitAt ? `
+Git 提交时间（非推送时间）：${formatLocalGitHubTime(info.githubCommitAt)}` : "";
+  return `Think OS 开发版下载完成
+版本：${info.remoteVersion}（${info.branch} · ${info.commitSha.slice(0, 7)}）
+${pushed}${committed}
+请完全退出并重新打开 Obsidian。`;
+}
+const OPTIONAL_PUSH_TIME_WAIT_MS = 1200;
+function errorText(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+function waitForPushTime(promise) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), OPTIONAL_PUSH_TIME_WAIT_MS);
+    void promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(null);
+      }
+    );
+  });
+}
+function isCommitSha(value) {
+  return typeof value === "string" && /^[0-9a-f]{40}$/i.test(value);
+}
+function validIsoTime(value) {
+  return typeof value === "string" && Number.isFinite(Date.parse(value)) ? new Date(value).toISOString() : null;
+}
+function rawFileUrl(file, revision) {
+  return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${revision}/${file}`;
+}
+class GitHubRequestError extends Error {
+  constructor(requestStage, httpStatus, message) {
+    super(message);
+    this.requestStage = requestStage;
+    this.httpStatus = httpStatus;
+    this.name = "GitHubRequestError";
+  }
+  requestStage;
+  httpStatus;
+}
+function responseHeader(response, name) {
+  return Object.entries(response.headers || {}).find(([key]) => key.toLowerCase() === name)?.[1];
+}
+function responseJson(response) {
+  if (typeof response.text === "string") return JSON.parse(response.text);
+  return response.json;
+}
+function describeHttpFailure(stage, operation, response) {
+  const status = response.status;
+  const remaining = responseHeader(response, "x-ratelimit-remaining");
+  const retryAfter = responseHeader(response, "retry-after");
+  const reset = Number(responseHeader(response, "x-ratelimit-reset"));
+  const resetTime = Number.isFinite(reset) && reset > 0 ? new Date(reset * 1e3).toLocaleString("zh-CN", { hour12: false }) : null;
+  let reason = "";
+  if (status === 403 || status === 429) {
+    if (remaining === "0") reason = resetTime ? `GitHub API 配额已用完，请在 ${resetTime} 后再试` : "GitHub API 配额已用完，请稍后重试";
+    else if (retryAfter) reason = `GitHub 要求等待 ${retryAfter} 秒后重试`;
+    else reason = "请求被拒绝，可能是访问限制、限流或网络代理问题";
+  } else if (status === 404) reason = "目标文件不存在或仓库未推送该构建产物";
+  let serverMessage = "";
+  try {
+    const message = responseJson(response)?.message;
+    if (typeof message === "string") serverMessage = message.replace(/\s+/g, " ").slice(0, 160);
+  } catch {
+  }
+  const extra = [reason, serverMessage].filter(Boolean).join("；");
+  return new GitHubRequestError(
+    stage,
+    status,
+    `${operation} 失败：HTTP ${status}${extra ? `（${extra}）` : ""}；尚未覆盖本地文件`
+  );
+}
+async function readGitHubHead() {
+  let response;
+  try {
+    response = await obsidian.requestUrl({
+      url: `${GITHUB_API}/commits/${GITHUB_BRANCH}`,
+      headers: { Accept: "application/vnd.github+json", "Cache-Control": "no-cache" },
+      throw: false
+    });
+  } catch (error) {
+    throw new GitHubRequestError(
+      "head",
+      null,
+      `获取 GitHub ${GITHUB_BRANCH} 最新提交失败（api.github.com）：${errorText(error)}；尚未覆盖本地文件`
+    );
+  }
+  if (response.status !== 200) {
+    throw describeHttpFailure("head", `获取 GitHub ${GITHUB_BRANCH} 最新提交（api.github.com）`, response);
+  }
+  let payload;
+  try {
+    payload = responseJson(response);
+  } catch {
+    throw new Error("GitHub 最新提交响应不是有效 JSON，已停止下载");
+  }
+  if (!isCommitSha(payload?.sha)) throw new Error("GitHub 未返回有效提交 SHA，已停止下载");
+  return { sha: payload.sha, committedAt: validIsoTime(payload?.commit?.committer?.date) };
+}
+function findGitHubRevisionPushTime(events2, sha) {
+  if (!Array.isArray(events2) || !isCommitSha(sha)) return null;
+  for (const event of events2) {
+    if (event?.type === "PushEvent" && event?.payload?.ref === `refs/heads/${GITHUB_BRANCH}` && event?.payload?.head === sha) {
+      return validIsoTime(event.created_at);
+    }
+  }
+  return null;
+}
+async function readGitHubPushTime(sha) {
+  try {
+    const response = await obsidian.requestUrl({
+      url: `${GITHUB_API}/events?per_page=100`,
+      headers: { Accept: "application/vnd.github+json" },
+      throw: false
+    });
+    if (response.status !== 200) return null;
+    return findGitHubRevisionPushTime(responseJson(response), sha);
+  } catch {
+    return null;
+  }
+}
+function assertDownloadedFile(file, text2) {
+  if (!text2.trim()) throw new Error(`${file} 内容为空`);
+  if (/^\s*<(?:!doctype|html)/i.test(text2)) throw new Error(`${file} 返回了网页内容，而不是插件文件`);
+  if (file === "main.js" && text2.length < 1e3) throw new Error("main.js 内容异常，已停止覆盖");
+  if (file === "styles.css" && text2.length < 100) throw new Error("styles.css 内容异常，已停止覆盖");
+}
+function parseAndValidateManifest(text2, expectedPluginId) {
+  let manifest;
+  try {
+    manifest = JSON.parse(text2);
+  } catch {
+    throw new Error("远端 manifest.json 不是有效 JSON");
+  }
+  if (manifest?.id !== expectedPluginId) {
+    throw new Error(`远端插件 ID 不匹配：${String(manifest?.id || "unknown")}`);
+  }
+  if (manifest?.main && manifest.main !== "main.js") {
+    throw new Error(`远端 manifest main 字段异常：${String(manifest.main)}`);
+  }
+  if (manifest?.styles && manifest.styles !== "styles.css") {
+    throw new Error(`远端 manifest styles 字段异常：${String(manifest.styles)}`);
+  }
+  if (typeof manifest.version !== "string" || !manifest.version.trim()) {
+    throw new Error("远端版本号缺失，已停止覆盖");
+  }
+  return { version: manifest.version.trim() };
+}
+async function readFileAtRevision(file, sha) {
+  let response;
+  try {
+    response = await obsidian.requestUrl({ url: rawFileUrl(file, sha), throw: false });
+  } catch (error) {
+    throw new GitHubRequestError(
+      "file",
+      null,
+      `下载 ${file}（${sha.slice(0, 7)}，raw.githubusercontent.com）失败：${errorText(error)}；尚未覆盖本地文件`
+    );
+  }
+  if (response.status !== 200) {
+    throw describeHttpFailure(
+      "file",
+      `下载 ${file}（${sha.slice(0, 7)}，raw.githubusercontent.com）`,
+      response
+    );
+  }
+  assertDownloadedFile(file, response.text);
+  return response.text;
+}
+async function downloadPinnedBuild(sha) {
+  const downloaded = {};
+  for (const file of DEV_BUILD_FILES) downloaded[file] = await readFileAtRevision(file, sha);
+  return downloaded;
+}
+async function infoAtHead(head, expectedPluginId) {
+  const manifestText = await readFileAtRevision("manifest.json", head.sha);
+  return {
+    remoteVersion: parseAndValidateManifest(manifestText, expectedPluginId).version,
+    branch: GITHUB_BRANCH,
+    githubPushedAt: null,
+    githubCommitAt: head.committedAt,
+    commitSha: head.sha
+  };
+}
+async function getGitHubDevBuildInfo(expectedPluginId) {
+  return traceThinkOperation("github.check", async () => infoAtHead(await readGitHubHead(), expectedPluginId), "updates");
+}
+async function readBackups(adapter, pluginDir) {
+  const entries = await Promise.all(DEV_BUILD_FILES.map(async (file) => {
+    const path = `${pluginDir}/${file}`;
+    return [file, await adapter.exists(path) ? await adapter.read(path) : null];
+  }));
+  const backups = Object.fromEntries(entries);
+  if (DEV_BUILD_FILES.some((file) => backups[file] === null) && !adapter.remove) {
+    throw new Error("本地插件文件缺失且存储不支持回滚删除，已停止覆盖");
+  }
+  return backups;
+}
+async function restoreBackups(adapter, dir, backups, touched) {
+  const errors = [];
+  for (const file of [...touched].reverse()) {
+    try {
+      const path = `${dir}/${file}`;
+      if (backups[file] === null) await adapter.remove(path);
+      else await adapter.write(path, backups[file]);
+    } catch {
+      errors.push(file);
+    }
+  }
+  return errors;
+}
+async function installPinnedFiles(adapter, dir, downloaded) {
+  const backups = await readBackups(adapter, dir);
+  const touched = [];
+  try {
+    for (const file of DEV_BUILD_FILES) {
+      touched.push(file);
+      const path = `${dir}/${file}`;
+      await adapter.write(path, downloaded[file]);
+      if (await adapter.read(path) !== downloaded[file]) {
+        throw new Error(`${file} 写入校验失败`);
+      }
+    }
+  } catch (error) {
+    const failed = await restoreBackups(adapter, dir, backups, touched);
+    const message = error instanceof Error ? error.message : String(error);
+    if (failed.length) throw new Error(`${message}；回滚 ${failed.join("、")} 失败，请从备份恢复`);
+    throw new Error(`${message}；已回滚到原版本`);
+  }
+}
+async function pullGitHubDevBuild(host, pinnedPreview) {
+  if (installInProgress) {
+    throw new Error("Think OS 开发版正在下载或安装，请勿重复操作");
+  }
+  installInProgress = true;
+  try {
+    return await traceThinkOperation("github.install", async () => {
+      const pinned = pinnedPreview != null;
+      if (pinned && !isCommitSha(pinnedPreview.commitSha)) {
+        throw new Error("已检查版本 SHA 无效，已停止下载");
+      }
+      const head = pinned ? { sha: pinnedPreview.commitSha, committedAt: pinnedPreview.githubCommitAt } : await readGitHubHead();
+      const downloaded = await downloadPinnedBuild(head.sha);
+      const manifest = parseAndValidateManifest(downloaded["manifest.json"], host.manifest.id);
+      if (pinned && manifest.version !== pinnedPreview.remoteVersion) {
+        throw new Error("已检查版本与下载的 manifest.json 不一致，未覆盖本地文件");
+      }
+      const pluginDir = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
+      await installPinnedFiles(host.app.vault.adapter, pluginDir, downloaded);
+      const pushTimePromise = pinnedPreview?.githubPushedAt ? Promise.resolve(pinnedPreview.githubPushedAt) : readGitHubPushTime(head.sha);
+      const githubPushedAt = await waitForPushTime(pushTimePromise);
+      const installed = {
+        remoteVersion: manifest.version,
+        branch: GITHUB_BRANCH,
+        githubCommitAt: head.committedAt,
+        githubPushedAt,
+        commitSha: head.sha
+      };
+      const warning = pinned ? "\n本次安装先前检查的 SHA，未验证它仍是 main 最新提交。" : "";
+      let notice = null;
+      try {
+        notice = new obsidian.Notice(formatGitHubDevRestartNotice(installed) + warning, 0);
+      } catch {
+      }
+      if (!githubPushedAt && notice) {
+        const successNotice = notice;
+        void pushTimePromise.then((latePushedAt) => {
+          if (!latePushedAt) return;
+          try {
+            successNotice.setMessage(formatGitHubDevRestartNotice({
+              ...installed,
+              githubPushedAt: latePushedAt
+            }) + warning);
+          } catch {
+          }
+        });
+      }
+      return installed;
+    }, "updates");
+  } finally {
+    installInProgress = false;
+  }
 }
 function ensureReflectMetadata() {
   if (typeof Reflect === "undefined") {
@@ -3122,549 +12345,6 @@ function currentImpl(value) {
 }
 var immer = new Immer2();
 var produce = immer.produce;
-const RECORD_SCHEMA_CONTRACT_VERSION = 2;
-function f$3(key, role, persistence, valueType, description, options = {}) {
-  return { key, role, persistence, valueType, description, ...options };
-}
-const ENVELOPE = [
-  f$3("记录ID", "identity", "target", "record-id", "稳定的记录标识；不会根据文件路径或行号推导。", { required: true, aliases: ["recordId", "id"] }),
-  f$3("记录类型", "identity", "target", "enum", "业务记录类型标识。", { required: true, aliases: ["recordType"] })
-];
-const GOAL = [
-  f$3("目标", "canonical-reference", "target", "string", "规范且可读的目标路径；路径本身就是目标标识。", { aliases: ["goalPath"] })
-];
-const DATE$1 = f$3("日期", "business-fact", "target", "date", "记录发生日期或业务日期。", { aliases: ["date"] });
-const CONTENT = f$3("内容", "business-fact", "target", "string", "用户填写的主要记录内容。", { aliases: ["content", "任务内容"] });
-const TAGS = f$3("标签", "business-fact", "target", "tags", "用户填写的标签；为空时省略。", { aliases: ["tags"] });
-const ICON = f$3("图标", "display-snapshot", "target", "string", "历史显示快照；后续规则决定是否可由显示样式替代。", { aliases: ["icon"] });
-const GENERIC_COMMON = [...ENVELOPE, ...GOAL, DATE$1];
-const THOUGHT_SCHEMA = {
-  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  recordType: "thought",
-  displayName: "思考",
-  family: "generic",
-  capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
-  recordFields: [...GENERIC_COMMON, TAGS, ICON, CONTENT]
-};
-const FEELING_SCHEMA = {
-  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  recordType: "feeling",
-  displayName: "感受",
-  family: "generic",
-  capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
-  recordFields: [...GENERIC_COMMON, TAGS, ICON, CONTENT]
-};
-const EVENT_SCHEMA = {
-  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  recordType: "event",
-  displayName: "事件",
-  family: "generic",
-  capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
-  recordFields: [...GENERIC_COMMON, TAGS, ICON, CONTENT]
-};
-const HABIT_SCHEMA = {
-  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  recordType: "habit",
-  displayName: "打卡",
-  family: "generic",
-  capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
-  recordFields: [
-    ...GENERIC_COMMON,
-    f$3("评分", "business-fact", "target", "number", "习惯打卡的评分或数值。", { aliases: ["rating"] }),
-    f$3("图片", "business-fact", "target", "string", "规范的图片或评分展示值。", { aliases: ["image"] }),
-    CONTENT
-  ]
-};
-function periodRecord(recordType, displayName) {
-  return {
-    contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-    recordType,
-    displayName,
-    family: "generic",
-    capabilities: { userVisible: true, goalBindable: true, dated: true, periodAware: true, customFields: true },
-    recordFields: [
-      ...GENERIC_COMMON,
-      f$3("周期粒度", "business-fact", "target", "enum", "唯一持久化的周期事实；周期标识和名称由“日期 + 周期粒度”推导。", { aliases: ["periodGranularity"], allowedValues: ["week", "month", "quarter", "year"] }),
-      ICON,
-      CONTENT
-    ]
-  };
-}
-const PLAN_SCHEMA = periodRecord("plan", "计划");
-const REVIEW_SCHEMA = periodRecord("review", "总结");
-function simpleGoalRecord(recordType, displayName) {
-  return {
-    contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-    recordType,
-    displayName,
-    family: "generic",
-    capabilities: { userVisible: true, goalBindable: true, dated: true, customFields: true },
-    recordFields: [...GENERIC_COMMON, ICON, CONTENT]
-  };
-}
-const BLOCKER_SCHEMA = simpleGoalRecord("blocker", "阻碍");
-const MILESTONE_SCHEMA = simpleGoalRecord("milestone", "里程碑");
-const TASK_DEMAND_FIELDS = [
-  f$3("优先级", "domain-fact", "target", "enum", "用户设置的任务优先级。", { aliases: ["priority"], allowedValues: ["lowest", "low", "medium", "high", "highest"] }),
-  f$3("重要程度", "domain-fact", "target", "enum", "艾森豪威尔重要程度分类；缺失表示未分类。", { aliases: ["importance"], allowedValues: ["important", "normal"] }),
-  f$3("紧急程度", "domain-fact", "target", "enum", "艾森豪威尔紧急程度分类；缺失表示未分类。", { aliases: ["urgency"], allowedValues: ["urgent", "normal"] }),
-  f$3("预计时长", "domain-fact", "target", "number", "用户设置的预计时长（分钟）。手工任务时间段缺少结束时间时可用它补全；多段计时历史仍以任务计时记录为准。", { aliases: ["expectedDurationMinutes"] }),
-  f$3("精力要求", "domain-fact", "target", "enum", "设置的综合精力要求。", { aliases: ["energyDemand"], allowedValues: ["low", "medium", "high"] }),
-  f$3("脑力要求", "domain-fact", "target", "enum", "设置的脑力要求。", { aliases: ["brainDemand"], allowedValues: ["low", "medium", "high"] }),
-  f$3("体力要求", "domain-fact", "target", "enum", "设置的体力要求。", { aliases: ["physicalDemand"], allowedValues: ["low", "medium", "high"] }),
-  f$3("可用场景", "domain-fact", "target", "string", "任务实际可执行的场景；为空或“任意”表示不限制。", { aliases: ["availabilityContexts"] }),
-  f$3("恢复意图", "domain-fact", "omit-default", "boolean", "任务明确以恢复精力为目的时启用。", { aliases: ["recoveryIntent"], defaultValue: false })
-];
-const TASK_SCHEMA = {
-  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  recordType: "task",
-  displayName: "任务",
-  family: "task-domain",
-  capabilities: { userVisible: true, goalBindable: true, dated: true, statusful: true, customFields: true },
-  recordFields: [
-    ...ENVELOPE,
-    f$3("状态", "domain-fact", "target", "enum", "任务生命周期状态。", { required: true, aliases: ["status"], allowedValues: ["open", "done", "cancelled", "skipped"] }),
-    f$3("创建于", "domain-fact", "target", "datetime", "任务创建时间。", { aliases: ["createdAt"] }),
-    ...GOAL,
-    f$3("系列ID", "canonical-reference", "target", "record-id", "可选的任务系列引用。", { aliases: ["seriesId"] }),
-    f$3("计划时间", "domain-fact", "target", "datetime", "计划执行时间。", { aliases: ["scheduledAt"] }),
-    f$3("开始时间", "domain-fact", "target", "datetime", "旧版或手工任务时间段的开始时间。新计划使用计划时间；实际执行使用任务计时记录。", { aliases: ["startAt"] }),
-    f$3("结束时间", "domain-fact", "target", "datetime", "旧版或手工任务时间段的结束时间。为兼容保留；实际执行使用任务计时记录。", { aliases: ["endAt"] }),
-    f$3("截止时间", "domain-fact", "target", "datetime", "截止时间。", { aliases: ["dueAt"] }),
-    f$3("计划日期", "domain-fact", "target", "date", "当前记录使用的仅日期计划执行信息。", { aliases: ["scheduledDate"] }),
-    f$3("开始日期", "domain-fact", "target", "date", "当前记录使用的仅日期开始信息。", { aliases: ["startDate"] }),
-    f$3("截止日期", "domain-fact", "target", "date", "当前记录使用的仅日期截止信息。", { aliases: ["dueDate"] }),
-    f$3("完成于", "domain-fact", "target", "datetime", "任务完成时间或日期。", { aliases: ["completedAt"] }),
-    f$3("取消于", "domain-fact", "target", "datetime", "任务取消时间或日期。", { aliases: ["cancelledAt"] }),
-    f$3("跳过于", "domain-fact", "target", "datetime", "重复任务本次跳过的时间或日期。", { aliases: ["skippedAt"] }),
-    ...TASK_DEMAND_FIELDS,
-    f$3("内容", "domain-fact", "target", "string", "任务意图或内容。", { aliases: ["content", "任务内容"] })
-  ]
-};
-const TASK_SERIES_SCHEMA = {
-  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  recordType: "task-series",
-  displayName: "任务系列",
-  family: "task-domain",
-  capabilities: { userVisible: false, goalBindable: true, dated: true, statusful: true },
-  recordFields: [
-    ...ENVELOPE,
-    f$3("状态", "domain-fact", "target", "enum", "任务系列生命周期状态。", { required: true, aliases: ["status"], allowedValues: ["active", "stopped"] }),
-    ...GOAL,
-    ...TASK_DEMAND_FIELDS,
-    f$3("重复单位", "domain-fact", "target", "enum", "结构化重复单位。", { required: true, aliases: ["recurrenceUnit"], allowedValues: ["day", "week", "month", "quarter", "year"] }),
-    f$3("重复间隔", "domain-fact", "target", "number", "结构化重复间隔。", { required: true, aliases: ["recurrenceInterval"], defaultValue: 1 }),
-    f$3("重复锚点", "domain-fact", "target", "enum", "结构化重复锚点。", { required: true, aliases: ["recurrenceAnchor"], allowedValues: ["scheduled", "start", "due", "completion"], defaultValue: "scheduled" }),
-    f$3("系列开始日期", "domain-fact", "target", "date", "系列锚点或开始日期。", { aliases: ["seriesStartDate"] }),
-    f$3("当前任务ID", "canonical-reference", "target", "record-id", "当前活动任务引用。", { aliases: ["currentTaskId"] }),
-    f$3("滚动策略", "domain-fact", "omit-default", "enum", "滚动策略；当前仅支持并默认使用延续策略。", { aliases: ["rolloverPolicy"], allowedValues: ["carry"], defaultValue: "carry" }),
-    f$3("内容", "domain-fact", "target", "string", "长期重复任务定义。", { aliases: ["content"] })
-  ]
-};
-const TASK_SESSION_SCHEMA = {
-  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  recordType: "task-session",
-  displayName: "任务工作块",
-  family: "internal-history",
-  capabilities: { userVisible: false, goalBindable: true, dated: true, executionHistory: true },
-  recordFields: [
-    ...ENVELOPE,
-    f$3("任务ID", "canonical-reference", "target", "record-id", "已执行任务的引用。", { required: true, aliases: ["taskId"] }),
-    f$3("系列ID", "canonical-reference", "target", "record-id", "可选的任务系列引用。", { aliases: ["seriesId"] }),
-    ...GOAL,
-    f$3("开始于", "domain-fact", "target", "datetime", "本次实际执行开始时间。", { required: true, aliases: ["sessionStartedAt"] }),
-    f$3("结束于", "domain-fact", "target", "datetime", "本次实际执行结束时间。", { required: true, aliases: ["sessionEndedAt"] }),
-    f$3("时长", "domain-fact", "target", "number", "本次实际执行时长（分钟）。", { required: true, aliases: ["sessionDurationMinutes"] }),
-    f$3("结果", "domain-fact", "target", "enum", "本次执行结果。", { required: true, aliases: ["sessionResult"], allowedValues: ["work-block-ended", "task-completed"] }),
-    f$3("来源", "measurement-provenance", "target", "enum", "实际执行记录来源。", { required: true, aliases: ["sessionSource"], allowedValues: ["timer", "energy-view", "timeline", "unknown"] }),
-    f$3("建议时长", "domain-fact", "target", "number", "执行时的建议时长快照。", { aliases: ["suggestedDurationMinutes"] }),
-    f$3("开始精力记录ID", "canonical-reference", "target", "record-id", "执行开始时的精力快照。", { aliases: ["startEnergyRecordId"] }),
-    f$3("结束精力记录ID", "canonical-reference", "target", "record-id", "执行结束后关联的精力快照。", { aliases: ["endEnergyRecordId"] }),
-    f$3("精力变化", "domain-fact", "target", "number", "关联的综合精力变化。", { aliases: ["energyDelta"] }),
-    f$3("脑力变化", "domain-fact", "target", "number", "关联的脑力变化。", { aliases: ["brainDelta"] }),
-    f$3("体力变化", "domain-fact", "target", "number", "关联的体力变化。", { aliases: ["physicalDelta"] })
-  ]
-};
-const ENERGY_SCHEMA = {
-  contractVersion: RECORD_SCHEMA_CONTRACT_VERSION,
-  recordType: "energy",
-  displayName: "精力",
-  family: "energy-domain",
-  capabilities: { userVisible: true, goalBindable: true, dated: true, subtypeAware: true, customFields: true },
-  recordFields: [
-    ...ENVELOPE,
-    f$3("记录子类型", "domain-fact", "target", "enum", "精力记录子类型。", { required: true, aliases: ["recordSubtype"], allowedValues: ["snapshot", "change", "recovery", "depletion", "stop"] }),
-    ...GOAL,
-    DATE$1,
-    f$3("时间", "business-fact", "target", "string", "已知时使用的精力观测时间。", { aliases: ["time"] }),
-    f$3("时段", "business-fact", "target", "string", "无法确定准确时间时使用的精力观测时段。", { aliases: ["period"] }),
-    f$3("精力值", "domain-fact", "target", "number", "规范的 0–100 综合精力分数。", { aliases: ["score"] }),
-    f$3("脑力精力", "domain-fact", "target", "number", "详细脑力分数。", { aliases: ["brainScore"] }),
-    f$3("体力精力", "domain-fact", "target", "number", "详细体力分数。", { aliases: ["physicalScore"] }),
-    f$3("综合算法", "measurement-provenance", "target", "string", "详细分数的综合算法。", { aliases: ["aggregateMethod"] }),
-    f$3("评分模式", "measurement-provenance", "target", "enum", "精力分数的记录方式。", { aliases: ["scoreMode"], allowedValues: ["quick", "detailed", "percent"] }),
-    f$3("记录方式", "measurement-provenance", "target", "enum", "实时记录或回顾补记。", { aliases: ["captureMode"], allowedValues: ["realtime", "retrospective"] }),
-    f$3("时间精度", "measurement-provenance", "target", "enum", "观测时间精度。", { aliases: ["timePrecision"], allowedValues: ["exact", "approximate", "period", "day"] }),
-    f$3("记录时间", "measurement-provenance", "target", "datetime", "可用时记录实际录入时间。", { aliases: ["recordedAt"] }),
-    f$3("来源", "measurement-provenance", "target", "string", "记录入口或来源。", { aliases: ["source"] })
-  ]
-};
-const TASK_STATUS_PRESENTATION$1 = {
-  open: { status: "open", label: "未完成", emoji: "⏳", className: "open" },
-  done: { status: "done", label: "已完成", emoji: "✅", className: "done" },
-  cancelled: { status: "cancelled", label: "已取消", emoji: "❌", className: "cancelled" },
-  skipped: { status: "skipped", label: "已跳过", emoji: "⏭️", className: "skipped" }
-};
-function isTaskRecord(item) {
-  return item?.recordType === "task";
-}
-function normalizeTaskStatus(value) {
-  const status = String(value || "").trim().toLowerCase();
-  return status === "open" || status === "done" || status === "cancelled" || status === "skipped" ? status : null;
-}
-function getTaskStatusPresentation(value) {
-  const status = normalizeTaskStatus(value) ?? "open";
-  return TASK_STATUS_PRESENTATION$1[status];
-}
-function getTaskStatus(item) {
-  if (!isTaskRecord(item)) return null;
-  return normalizeTaskStatus(item.status);
-}
-function isTaskCompleted(item) {
-  return getTaskStatus(item) === "done";
-}
-function isTaskOpen(item) {
-  return getTaskStatus(item) === "open";
-}
-function canTransitionTaskStatus(from2, command, options) {
-  if (command === "reopen") return from2 === "done" || from2 === "cancelled" || from2 === "skipped";
-  if (from2 !== "open") return false;
-  if (command === "skip") return options.recurring;
-  if (command === "cancel") return !options.recurring;
-  return command === "complete";
-}
-function nextTaskStatus(command) {
-  if (command === "complete") return "done";
-  if (command === "cancel") return "cancelled";
-  if (command === "skip") return "skipped";
-  return "open";
-}
-const RECORD_TYPE_IDS = {
-  TASK: "core.task",
-  PLAN: "core.plan",
-  REVIEW: "core.review",
-  THOUGHT: "core.thought",
-  FEELING: "core.feeling",
-  HABIT: "core.habit",
-  EVENT: "core.event",
-  BLOCKER: "core.blocker",
-  MILESTONE: "core.milestone",
-  ENERGY: "core.energy",
-  TASK_SERIES: "internal.task-series",
-  TASK_SESSION: "internal.task-session"
-};
-const dateField = { id: "core.field.date", key: "日期", label: "日期", type: "date", semantic: "date" };
-const iconField = { id: "core.field.icon", key: "icon", label: "图标", type: "text", semantic: "icon" };
-const contentField = { id: "core.field.content", key: "内容", label: "内容", type: "textarea", semantic: "body" };
-function define(contract, capture) {
-  return {
-    ...contract,
-    ...capture,
-    key: contract.recordType,
-    system: true,
-    version: 1
-  };
-}
-const TASK_FIELDS = [
-  { id: "core.task.status", key: "status", label: "状态", type: "singleSelect", semantic: "status", defaultValue: "open", autoSelectFirst: true, options: [
-    { value: "open", label: `${TASK_STATUS_PRESENTATION$1.open.emoji} ${TASK_STATUS_PRESENTATION$1.open.label}` },
-    { value: "done", label: `${TASK_STATUS_PRESENTATION$1.done.emoji} ${TASK_STATUS_PRESENTATION$1.done.label}` }
-  ] },
-  { id: "core.task.content", key: "任务内容", label: "内容", type: "text", semantic: "body" },
-  { id: "core.task.recurrenceUnit", key: "recurrenceUnit", label: "重复", type: "singleSelect", semantic: "recurrence", defaultValue: "none", autoSelectFirst: true, options: [
-    { value: "none", label: "不重复" },
-    { value: "day", label: "天" },
-    { value: "week", label: "周" },
-    { value: "month", label: "月" },
-    { value: "quarter", label: "季" },
-    { value: "year", label: "年" }
-  ] },
-  { id: "core.task.recurrenceInterval", key: "recurrenceInterval", label: "重复间隔", type: "number", min: 1, defaultValue: "1" },
-  // Task owns planning facts. Actual execution intervals belong to TaskSession;
-  // Timeline retrospective capture synthesizes its own execution-time fields.
-  { id: "core.task.scheduledAt", key: "scheduledAt", label: "计划时间", type: "datetime", semantic: "startTime" },
-  { id: "core.task.expectedDurationMinutes", key: "expectedDurationMinutes", label: "预计时长（分钟）", type: "number", semantic: "duration", min: 1 },
-  { id: "core.task.dueAt", key: "dueAt", label: "截止时间", type: "datetime" },
-  { id: "core.task.priority", key: "priority", label: "优先级", type: "singleSelect", autoSelectFirst: true, options: [
-    { value: "lowest", label: "最低" },
-    { value: "low", label: "低" },
-    { value: "medium", label: "中" },
-    { value: "high", label: "高" },
-    { value: "highest", label: "最高" }
-  ] },
-  { id: "core.task.importance", key: "importance", label: "重要程度", type: "singleSelect", options: [
-    { value: "important", label: "重要" },
-    { value: "normal", label: "普通" }
-  ] },
-  { id: "core.task.urgency", key: "urgency", label: "紧急程度", type: "singleSelect", options: [
-    { value: "urgent", label: "紧急" },
-    { value: "normal", label: "不紧急" }
-  ] },
-  { id: "core.task.energyDemand", key: "energyDemand", label: "精力要求", type: "singleSelect", autoSelectFirst: true, options: [
-    { value: "low", label: "低" },
-    { value: "medium", label: "中" },
-    { value: "high", label: "高" }
-  ] },
-  { id: "core.task.brainDemand", key: "brainDemand", label: "脑力要求", type: "singleSelect", autoSelectFirst: true, options: [
-    { value: "low", label: "低" },
-    { value: "medium", label: "中" },
-    { value: "high", label: "高" }
-  ] },
-  { id: "core.task.physicalDemand", key: "physicalDemand", label: "体力要求", type: "singleSelect", autoSelectFirst: true, options: [
-    { value: "low", label: "低" },
-    { value: "medium", label: "中" },
-    { value: "high", label: "高" }
-  ] },
-  { id: "core.task.availabilityContexts", key: "availabilityContexts", label: "可用场景", type: "multiSelect", options: [
-    { value: "any", label: "任意" },
-    { value: "work", label: "工作" },
-    { value: "home", label: "家" },
-    { value: "commute", label: "通勤" },
-    { value: "out", label: "外出" }
-  ] },
-  { id: "core.task.recoveryIntent", key: "recoveryIntent", label: "恢复意图", type: "boolean" }
-];
-const TASK_DEFINITION = define(TASK_SCHEMA, {
-  id: RECORD_TYPE_IDS.TASK,
-  name: "任务",
-  captureMode: "template",
-  recordTypeId: RECORD_TYPE_IDS.TASK,
-  description: "目标下的可执行任务。",
-  fields: TASK_FIELDS,
-  targetFile: "01/{{year}}/2-0其他.md",
-  appendUnderHeader: "## {{goalPath}}"
-});
-function genericTemplate(contract, input) {
-  return define(contract, {
-    id: input.id,
-    name: input.name,
-    captureMode: "template",
-    recordTypeId: input.id,
-    description: input.description,
-    fields: [contentField, dateField, ...input.extraFields || [], iconField],
-    periodPolicy: input.period ? { enabled: true, granularity: "week" } : void 0,
-    targetFile: input.targetFile,
-    appendUnderHeader: "## {{goalPath}}"
-  });
-}
-const PLAN_DEFINITION = genericTemplate(PLAN_SCHEMA, { id: RECORD_TYPE_IDS.PLAN, name: "计划", description: "目标周期计划。", targetFile: "01/{{year}}/计划.md", period: true });
-const REVIEW_DEFINITION = genericTemplate(REVIEW_SCHEMA, { id: RECORD_TYPE_IDS.REVIEW, name: "总结", description: "目标复盘总结。", targetFile: "01/{{year}}/总结.md", period: true });
-const THOUGHT_DEFINITION = genericTemplate(THOUGHT_SCHEMA, { id: RECORD_TYPE_IDS.THOUGHT, name: "思考", description: "目标相关思考。", targetFile: "01/{{year}}/闪念.md" });
-const FEELING_DEFINITION = genericTemplate(FEELING_SCHEMA, { id: RECORD_TYPE_IDS.FEELING, name: "感受", description: "目标相关的主观感受与体验。", targetFile: "01/{{year}}/闪念.md" });
-const HABIT_DEFINITION = genericTemplate(HABIT_SCHEMA, {
-  id: RECORD_TYPE_IDS.HABIT,
-  name: "打卡",
-  description: "目标习惯或进度打卡。",
-  targetFile: "01/{{year}}/打卡.md",
-  extraFields: [{ id: "core.habit.rating", key: "评分", label: "评分", type: "rating", semantic: "rating" }]
-});
-const EVENT_DEFINITION = genericTemplate(EVENT_SCHEMA, { id: RECORD_TYPE_IDS.EVENT, name: "事件", description: "目标相关事件与外部事实。", targetFile: "01/{{year}}/闪念.md" });
-const BLOCKER_DEFINITION = genericTemplate(BLOCKER_SCHEMA, { id: RECORD_TYPE_IDS.BLOCKER, name: "阻碍项", description: "目标推进过程中的阻碍和风险。", targetFile: "01/{{year}}/阻碍项.md" });
-const MILESTONE_DEFINITION = genericTemplate(MILESTONE_SCHEMA, { id: RECORD_TYPE_IDS.MILESTONE, name: "里程碑", description: "目标阶段成果和重要节点。", targetFile: "01/{{year}}/里程碑.md" });
-const ENERGY_DEFINITION = define(ENERGY_SCHEMA, {
-  id: RECORD_TYPE_IDS.ENERGY,
-  name: "精力",
-  captureMode: "direct",
-  description: "目标绑定的精力状态记录；不创建目标模板，使用直接采集协议。",
-  fields: [],
-  targetFile: "01/{{year}}/精力.md",
-  appendUnderHeader: "## {{goalPath}}"
-});
-const TASK_SERIES_DEFINITION = define(TASK_SERIES_SCHEMA, {
-  id: RECORD_TYPE_IDS.TASK_SERIES,
-  name: "任务系列",
-  captureMode: "internal",
-  description: "循环任务的长期领域定义。",
-  fields: [],
-  targetFile: ""
-});
-const TASK_SESSION_DEFINITION = define(TASK_SESSION_SCHEMA, {
-  id: RECORD_TYPE_IDS.TASK_SESSION,
-  name: "任务工作块",
-  captureMode: "internal",
-  description: "一次已发生的任务执行事实。",
-  fields: [],
-  targetFile: ""
-});
-const RECORD_SCHEMA_DEFINITIONS = [
-  TASK_DEFINITION,
-  HABIT_DEFINITION,
-  PLAN_DEFINITION,
-  REVIEW_DEFINITION,
-  THOUGHT_DEFINITION,
-  FEELING_DEFINITION,
-  EVENT_DEFINITION,
-  BLOCKER_DEFINITION,
-  MILESTONE_DEFINITION,
-  ENERGY_DEFINITION,
-  TASK_SERIES_DEFINITION,
-  TASK_SESSION_DEFINITION
-];
-function normalizeKey(value) {
-  return String(value ?? "").trim().toLocaleLowerCase();
-}
-const BY_RECORD_TYPE = new Map(
-  RECORD_SCHEMA_DEFINITIONS.map((schema) => [schema.recordType, schema])
-);
-const BY_TYPE_ID = new Map(
-  RECORD_SCHEMA_DEFINITIONS.map((schema) => [schema.id, schema])
-);
-const FIELD_INDEX = /* @__PURE__ */ new Map();
-for (const schema of RECORD_SCHEMA_DEFINITIONS) {
-  const index = /* @__PURE__ */ new Map();
-  for (const field of schema.recordFields) {
-    index.set(normalizeKey(field.key), field);
-    for (const alias of field.aliases || []) index.set(normalizeKey(alias), field);
-  }
-  FIELD_INDEX.set(schema.recordType, index);
-}
-function getRecordSchemaDefinition(recordType) {
-  const key = String(recordType || "").trim();
-  return BY_RECORD_TYPE.get(key) || null;
-}
-function requireRecordSchemaDefinition(recordType) {
-  const schema = getRecordSchemaDefinition(recordType);
-  if (!schema) throw new Error(`unknown_record_schema:${String(recordType || "")}`);
-  return schema;
-}
-function getRecordSchemaDefinitionById(typeId) {
-  return BY_TYPE_ID.get(String(typeId || "").trim()) || null;
-}
-function getRecordFieldContract(recordType, fieldKey) {
-  const schema = getRecordSchemaDefinition(recordType);
-  if (!schema) return null;
-  return FIELD_INDEX.get(schema.recordType)?.get(normalizeKey(fieldKey)) || null;
-}
-const RECORD_TYPE_PRESENTATION_ORDER = [
-  "task",
-  "energy",
-  "habit",
-  "event",
-  "feeling",
-  "thought",
-  "review",
-  "plan",
-  "blocker",
-  "milestone"
-];
-const RECORD_TYPE_ICONS = Object.freeze({
-  task: "✓",
-  energy: "⚡",
-  habit: "♥",
-  event: "◷",
-  feeling: "♡",
-  thought: "✦",
-  review: "≡",
-  plan: "◇",
-  blocker: "!",
-  milestone: "◆"
-});
-const RECORD_TYPE_PRESENTATION_REGISTRY = Object.freeze(
-  Object.fromEntries(
-    RECORD_TYPE_PRESENTATION_ORDER.map((recordType, index) => [
-      recordType,
-      {
-        order: (index + 1) * 10,
-        icon: RECORD_TYPE_ICONS[recordType],
-        colorToken: `--think-record-type-${recordType}`
-      }
-    ])
-  )
-);
-const ALIASES = /* @__PURE__ */ new Map();
-for (const schema of RECORD_SCHEMA_DEFINITIONS) {
-  const candidates = [schema.recordType, schema.id, schema.key, schema.name, schema.displayName];
-  for (const candidate of candidates) {
-    const key = String(candidate || "").trim().toLocaleLowerCase();
-    if (key) ALIASES.set(key, schema.recordType);
-  }
-}
-function toUserVisibleRecordType(recordType) {
-  if (recordType === "task-session" || recordType === "task-series") return "task";
-  return recordType;
-}
-function normalizeRecordTypePresentationKey(value) {
-  const raw = String(value ?? "").trim();
-  if (!raw) return "";
-  const direct = ALIASES.get(raw.toLocaleLowerCase());
-  if (direct) return toUserVisibleRecordType(direct);
-  const withoutNamespace = raw.replace(/^(?:core|internal)\./i, "").trim().toLocaleLowerCase();
-  const aliased = ALIASES.get(withoutNamespace) || withoutNamespace;
-  return toUserVisibleRecordType(aliased);
-}
-function getRecordTypePresentationOrder(value) {
-  const key = normalizeRecordTypePresentationKey(value);
-  return RECORD_TYPE_PRESENTATION_REGISTRY[key]?.order ?? Number.MAX_SAFE_INTEGER;
-}
-function getRecordTypePresentation(value) {
-  const recordType = normalizeRecordTypePresentationKey(value);
-  const schema = RECORD_SCHEMA_DEFINITIONS.find((candidate) => candidate.recordType === recordType);
-  const identity2 = RECORD_TYPE_PRESENTATION_REGISTRY[recordType];
-  return {
-    recordType,
-    label: schema?.name || schema?.displayName || recordType || "记录",
-    order: identity2?.order ?? Number.MAX_SAFE_INTEGER,
-    icon: identity2?.icon || "•",
-    colorToken: identity2?.colorToken || "--think-record-type-neutral"
-  };
-}
-function compareRecordTypeKeys(left2, right2) {
-  const leftKey = normalizeRecordTypePresentationKey(left2);
-  const rightKey = normalizeRecordTypePresentationKey(right2);
-  const leftOrder = getRecordTypePresentationOrder(leftKey);
-  const rightOrder = getRecordTypePresentationOrder(rightKey);
-  if (leftOrder !== rightOrder) return leftOrder - rightOrder;
-  return leftKey.localeCompare(rightKey, "zh-CN");
-}
-function sortRecordTypesByPresentation(items, getKey) {
-  return [...items].sort((left2, right2) => compareRecordTypeKeys(getKey(left2), getKey(right2)));
-}
-const DEFAULT_RECORD_TYPE_COLOR_HEX = Object.freeze({
-  task: "#4f7cff",
-  energy: "#d98b22",
-  habit: "#20a675",
-  event: "#e8783d",
-  feeling: "#c85f9e",
-  thought: "#8b68d8",
-  review: "#d65b74",
-  plan: "#547aa5",
-  blocker: "#c94f4f",
-  milestone: "#a98213"
-});
-function normalizeRecordTypeColorHex(value) {
-  const raw = String(value ?? "").trim().toLowerCase();
-  if (/^#[0-9a-f]{6}$/.test(raw)) return raw;
-  if (/^#[0-9a-f]{3}$/.test(raw)) {
-    return `#${raw.slice(1).split("").map((part) => part + part).join("")}`;
-  }
-  return null;
-}
-function normalizeRecordTypeColorOverrides(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  const source = value;
-  const out = {};
-  for (const recordType of RECORD_TYPE_PRESENTATION_ORDER) {
-    const color2 = normalizeRecordTypeColorHex(source[recordType]);
-    if (color2) out[recordType] = color2;
-  }
-  return out;
-}
-function buildRecordTypeColorCssVariables(overrides) {
-  const normalized2 = normalizeRecordTypeColorOverrides(overrides);
-  return Object.fromEntries(
-    RECORD_TYPE_PRESENTATION_ORDER.filter((recordType) => !!normalized2[recordType]).map((recordType) => [`--think-record-type-${recordType}`, normalized2[recordType]])
-  );
-}
 const DEFAULT_AI_SETTINGS = {
   enabled: false,
   provider: "openai_compat",
@@ -3691,15 +12371,6 @@ const CUSTOM_PROMPT_EXAMPLES = `【示例规则】
 3. 当我说"写文章"、"写作"时，使用任务记录类型，并优先匹配对应目标路径。
 4. 不要把目标、模板ID、周期ID写进 fieldValues；这些属于 target 或应用自动推导。
 5. 计划/总结的周期由应用根据预设 periodPolicy 和日期自动生成。`;
-const DEFAULT_GOAL_SETTINGS = {
-  goals: [],
-  goalTemplates: [],
-  timePresetRevisions: []
-};
-const ENERGY_QUICK_LEVELS = [20, 40, 60, 80, 100];
-const DEFAULT_ENERGY_SETTINGS = {
-  defaultGoalPath: ""
-};
 const DEFAULT_SETTINGS = {
   groups: [],
   viewInstances: [],
@@ -3713,4036 +12384,6 @@ const DEFAULT_SETTINGS = {
   goalTaskDefaultsSeedVersion: 0,
   recordTypeColors: {}
 };
-const ENERGY_QUICK_LEVEL_LABELS = {
-  20: "很低",
-  40: "偏低",
-  60: "一般",
-  80: "较高",
-  100: "充沛"
-};
-function normalizeEnergyScore(value) {
-  if (!Number.isFinite(value)) return 0;
-  return Math.round(Math.min(100, Math.max(0, value)));
-}
-function toEnergyQuickLevel(value) {
-  const score = normalizeEnergyScore(value);
-  return ENERGY_QUICK_LEVELS.reduce((best, candidate) => Math.abs(candidate - score) < Math.abs(best - score) ? candidate : best, ENERGY_QUICK_LEVELS[0]);
-}
-function isEnergyQuickLevel(value) {
-  return ENERGY_QUICK_LEVELS.includes(value);
-}
-function calculateDetailedEnergyScore(brainScore, physicalScore) {
-  const brain = normalizeEnergyScore(brainScore);
-  const physical = normalizeEnergyScore(physicalScore);
-  return normalizeEnergyScore((brain + physical) / 2);
-}
-const CROCKFORD$1 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-function encodeTime(time2, length2 = 10) {
-  let value = Math.max(0, Math.floor(time2));
-  let output = "";
-  for (let i2 = 0; i2 < length2; i2++) {
-    output = CROCKFORD$1[value % 32] + output;
-    value = Math.floor(value / 32);
-  }
-  return output;
-}
-function randomChars(length2) {
-  const values2 = new Uint8Array(length2);
-  const cryptoApi = globalThis.crypto;
-  if (cryptoApi?.getRandomValues) {
-    cryptoApi.getRandomValues(values2);
-  } else {
-    for (let i2 = 0; i2 < values2.length; i2++) values2[i2] = Math.floor(Math.random() * 256);
-  }
-  let output = "";
-  for (const value of values2) output += CROCKFORD$1[value % 32];
-  return output;
-}
-function recordIdPrefixForRecordType(recordType) {
-  switch (String(recordType || "").trim().toLowerCase()) {
-    case "task":
-      return "task";
-    case "task-series":
-      return "taskseries";
-    case "task-session":
-      return "tasksession";
-    case "energy":
-      return "energy";
-    default:
-      return "rec";
-  }
-}
-function createRecordId(recordType, now2 = Date.now()) {
-  const prefix2 = recordIdPrefixForRecordType(recordType);
-  return `${prefix2}.${encodeTime(now2)}${randomChars(16)}`;
-}
-function isStableRecordId(value) {
-  return /^(?:rec|task|taskseries|tasksession|energy)\.[0-9A-HJKMNP-TV-Z]{26}$/.test(String(value || "").trim());
-}
-var SECONDS_A_MINUTE = 60;
-var SECONDS_A_HOUR = SECONDS_A_MINUTE * 60;
-var SECONDS_A_DAY = SECONDS_A_HOUR * 24;
-var SECONDS_A_WEEK = SECONDS_A_DAY * 7;
-var MILLISECONDS_A_SECOND = 1e3;
-var MILLISECONDS_A_MINUTE = SECONDS_A_MINUTE * MILLISECONDS_A_SECOND;
-var MILLISECONDS_A_HOUR = SECONDS_A_HOUR * MILLISECONDS_A_SECOND;
-var MILLISECONDS_A_DAY = SECONDS_A_DAY * MILLISECONDS_A_SECOND;
-var MILLISECONDS_A_WEEK = SECONDS_A_WEEK * MILLISECONDS_A_SECOND;
-var MS$1 = "millisecond";
-var S$1 = "second";
-var MIN = "minute";
-var H$2 = "hour";
-var D$3 = "day";
-var W$2 = "week";
-var M$2 = "month";
-var Q$2 = "quarter";
-var Y$1 = "year";
-var DATE = "date";
-var FORMAT_DEFAULT = "YYYY-MM-DDTHH:mm:ssZ";
-var INVALID_DATE_STRING = "Invalid Date";
-var REGEX_PARSE = /^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/;
-var REGEX_FORMAT = /\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g;
-const en$1 = {
-  name: "en",
-  weekdays: "Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"),
-  months: "January_February_March_April_May_June_July_August_September_October_November_December".split("_"),
-  ordinal: function ordinal(n2) {
-    var s2 = ["th", "st", "nd", "rd"];
-    var v2 = n2 % 100;
-    return "[" + n2 + (s2[(v2 - 20) % 10] || s2[v2] || s2[0]) + "]";
-  }
-};
-var padStart = function padStart2(string2, length2, pad2) {
-  var s2 = String(string2);
-  if (!s2 || s2.length >= length2) return string2;
-  return "" + Array(length2 + 1 - s2.length).join(pad2) + string2;
-};
-var padZoneStr = function padZoneStr2(instance2) {
-  var negMinutes = -instance2.utcOffset();
-  var minutes = Math.abs(negMinutes);
-  var hourOffset = Math.floor(minutes / 60);
-  var minuteOffset = minutes % 60;
-  return (negMinutes <= 0 ? "+" : "-") + padStart(hourOffset, 2, "0") + ":" + padStart(minuteOffset, 2, "0");
-};
-var monthDiff = function monthDiff2(a2, b2) {
-  if (a2.date() < b2.date()) return -monthDiff2(b2, a2);
-  var wholeMonthDiff = (b2.year() - a2.year()) * 12 + (b2.month() - a2.month());
-  var anchor = a2.clone().add(wholeMonthDiff, M$2);
-  var c2 = b2 - anchor < 0;
-  var anchor2 = a2.clone().add(wholeMonthDiff + (c2 ? -1 : 1), M$2);
-  return +(-(wholeMonthDiff + (b2 - anchor) / (c2 ? anchor - anchor2 : anchor2 - anchor)) || 0);
-};
-var absFloor = function absFloor2(n2) {
-  return n2 < 0 ? Math.ceil(n2) || 0 : Math.floor(n2);
-};
-var prettyUnit = function prettyUnit2(u3) {
-  var special = {
-    M: M$2,
-    y: Y$1,
-    w: W$2,
-    d: D$3,
-    D: DATE,
-    h: H$2,
-    m: MIN,
-    s: S$1,
-    ms: MS$1,
-    Q: Q$2
-  };
-  return special[u3] || String(u3 || "").toLowerCase().replace(/s$/, "");
-};
-var isUndefined = function isUndefined2(s2) {
-  return s2 === void 0;
-};
-const U$2 = {
-  s: padStart,
-  z: padZoneStr,
-  m: monthDiff,
-  a: absFloor,
-  p: prettyUnit,
-  u: isUndefined
-};
-var L$2 = "en";
-var Ls = {};
-Ls[L$2] = en$1;
-var IS_DAYJS = "$isDayjsObject";
-var isDayjs = function isDayjs2(d2) {
-  return d2 instanceof Dayjs || !!(d2 && d2[IS_DAYJS]);
-};
-var parseLocale = function parseLocale2(preset, object2, isLocal) {
-  var l2;
-  if (!preset) return L$2;
-  if (typeof preset === "string") {
-    var presetLower = preset.toLowerCase();
-    if (Ls[presetLower]) {
-      l2 = presetLower;
-    }
-    if (object2) {
-      Ls[presetLower] = object2;
-      l2 = presetLower;
-    }
-    var presetSplit = preset.split("-");
-    if (!l2 && presetSplit.length > 1) {
-      return parseLocale2(presetSplit[0]);
-    }
-  } else {
-    var name = preset.name;
-    Ls[name] = preset;
-    l2 = name;
-  }
-  if (!isLocal && l2) L$2 = l2;
-  return l2 || !isLocal && L$2;
-};
-var dayjs = function dayjs2(date2, c2) {
-  if (isDayjs(date2)) {
-    return date2.clone();
-  }
-  var cfg = typeof c2 === "object" ? c2 : {};
-  cfg.date = date2;
-  cfg.args = arguments;
-  return new Dayjs(cfg);
-};
-var wrapper$1 = function wrapper(date2, instance2) {
-  return dayjs(date2, {
-    locale: instance2.$L,
-    utc: instance2.$u,
-    x: instance2.$x,
-    $offset: instance2.$offset
-    // todo: refactor; do not use this.$offset in you code
-  });
-};
-var Utils = U$2;
-Utils.l = parseLocale;
-Utils.i = isDayjs;
-Utils.w = wrapper$1;
-var parseDate$2 = function parseDate(cfg) {
-  var date2 = cfg.date, utc = cfg.utc;
-  if (date2 === null) return /* @__PURE__ */ new Date(NaN);
-  if (Utils.u(date2)) return /* @__PURE__ */ new Date();
-  if (date2 instanceof Date) return new Date(date2);
-  if (typeof date2 === "string" && !/Z$/i.test(date2)) {
-    var d2 = date2.match(REGEX_PARSE);
-    if (d2) {
-      var m2 = d2[2] - 1 || 0;
-      var ms = (d2[7] || "0").substring(0, 3);
-      if (utc) {
-        return new Date(Date.UTC(d2[1], m2, d2[3] || 1, d2[4] || 0, d2[5] || 0, d2[6] || 0, ms));
-      }
-      return new Date(d2[1], m2, d2[3] || 1, d2[4] || 0, d2[5] || 0, d2[6] || 0, ms);
-    }
-  }
-  return new Date(date2);
-};
-var Dayjs = /* @__PURE__ */ (function() {
-  function Dayjs2(cfg) {
-    this.$L = parseLocale(cfg.locale, null, true);
-    this.parse(cfg);
-    this.$x = this.$x || cfg.x || {};
-    this[IS_DAYJS] = true;
-  }
-  var _proto = Dayjs2.prototype;
-  _proto.parse = function parse2(cfg) {
-    this.$d = parseDate$2(cfg);
-    this.init();
-  };
-  _proto.init = function init() {
-    var $d = this.$d;
-    this.$y = $d.getFullYear();
-    this.$M = $d.getMonth();
-    this.$D = $d.getDate();
-    this.$W = $d.getDay();
-    this.$H = $d.getHours();
-    this.$m = $d.getMinutes();
-    this.$s = $d.getSeconds();
-    this.$ms = $d.getMilliseconds();
-  };
-  _proto.$utils = function $utils() {
-    return Utils;
-  };
-  _proto.isValid = function isValid() {
-    return !(this.$d.toString() === INVALID_DATE_STRING);
-  };
-  _proto.isSame = function isSame(that, units) {
-    var other = dayjs(that);
-    return this.startOf(units) <= other && other <= this.endOf(units);
-  };
-  _proto.isAfter = function isAfter(that, units) {
-    return dayjs(that) < this.startOf(units);
-  };
-  _proto.isBefore = function isBefore(that, units) {
-    return this.endOf(units) < dayjs(that);
-  };
-  _proto.$g = function $g(input, get, set2) {
-    if (Utils.u(input)) return this[get];
-    return this.set(set2, input);
-  };
-  _proto.unix = function unix() {
-    return Math.floor(this.valueOf() / 1e3);
-  };
-  _proto.valueOf = function valueOf() {
-    return this.$d.getTime();
-  };
-  _proto.startOf = function startOf(units, _startOf) {
-    var _this = this;
-    var isStartOf = !Utils.u(_startOf) ? _startOf : true;
-    var unit = Utils.p(units);
-    var instanceFactory = function instanceFactory2(d2, m2) {
-      var ins = Utils.w(_this.$u ? Date.UTC(_this.$y, m2, d2) : new Date(_this.$y, m2, d2), _this);
-      return isStartOf ? ins : ins.endOf(D$3);
-    };
-    var instanceFactorySet = function instanceFactorySet2(method, slice2) {
-      var argumentStart = [0, 0, 0, 0];
-      var argumentEnd = [23, 59, 59, 999];
-      return Utils.w(_this.toDate()[method].apply(
-        // eslint-disable-line prefer-spread
-        _this.toDate("s"),
-        (isStartOf ? argumentStart : argumentEnd).slice(slice2)
-      ), _this);
-    };
-    var $W = this.$W, $M = this.$M, $D = this.$D;
-    var utcPad = "set" + (this.$u ? "UTC" : "");
-    switch (unit) {
-      case Y$1:
-        return isStartOf ? instanceFactory(1, 0) : instanceFactory(31, 11);
-      case M$2:
-        return isStartOf ? instanceFactory(1, $M) : instanceFactory(0, $M + 1);
-      case W$2: {
-        var weekStart = this.$locale().weekStart || 0;
-        var gap2 = ($W < weekStart ? $W + 7 : $W) - weekStart;
-        return instanceFactory(isStartOf ? $D - gap2 : $D + (6 - gap2), $M);
-      }
-      case D$3:
-      case DATE:
-        return instanceFactorySet(utcPad + "Hours", 0);
-      case H$2:
-        return instanceFactorySet(utcPad + "Minutes", 1);
-      case MIN:
-        return instanceFactorySet(utcPad + "Seconds", 2);
-      case S$1:
-        return instanceFactorySet(utcPad + "Milliseconds", 3);
-      default:
-        return this.clone();
-    }
-  };
-  _proto.endOf = function endOf(arg2) {
-    return this.startOf(arg2, false);
-  };
-  _proto.$set = function $set(units, _int2) {
-    var _C$D$C$DATE$C$M$C$Y$C;
-    var unit = Utils.p(units);
-    var utcPad = "set" + (this.$u ? "UTC" : "");
-    var name = (_C$D$C$DATE$C$M$C$Y$C = {}, _C$D$C$DATE$C$M$C$Y$C[D$3] = utcPad + "Date", _C$D$C$DATE$C$M$C$Y$C[DATE] = utcPad + "Date", _C$D$C$DATE$C$M$C$Y$C[M$2] = utcPad + "Month", _C$D$C$DATE$C$M$C$Y$C[Y$1] = utcPad + "FullYear", _C$D$C$DATE$C$M$C$Y$C[H$2] = utcPad + "Hours", _C$D$C$DATE$C$M$C$Y$C[MIN] = utcPad + "Minutes", _C$D$C$DATE$C$M$C$Y$C[S$1] = utcPad + "Seconds", _C$D$C$DATE$C$M$C$Y$C[MS$1] = utcPad + "Milliseconds", _C$D$C$DATE$C$M$C$Y$C)[unit];
-    var arg2 = unit === D$3 ? this.$D + (_int2 - this.$W) : _int2;
-    if (unit === M$2 || unit === Y$1) {
-      var date2 = this.clone().set(DATE, 1);
-      date2.$d[name](arg2);
-      date2.init();
-      this.$d = date2.set(DATE, Math.min(this.$D, date2.daysInMonth())).$d;
-    } else if (name) this.$d[name](arg2);
-    this.init();
-    return this;
-  };
-  _proto.set = function set2(string2, _int2) {
-    return this.clone().$set(string2, _int2);
-  };
-  _proto.get = function get(unit) {
-    return this[Utils.p(unit)]();
-  };
-  _proto.add = function add2(number2, units) {
-    var _this2 = this, _C$MIN$C$H$C$S$unit;
-    number2 = Number(number2);
-    var unit = Utils.p(units);
-    var instanceFactorySet = function instanceFactorySet2(n2) {
-      var d2 = dayjs(_this2);
-      return Utils.w(d2.date(d2.date() + Math.round(n2 * number2)), _this2);
-    };
-    if (unit === M$2) {
-      return this.set(M$2, this.$M + number2);
-    }
-    if (unit === Y$1) {
-      return this.set(Y$1, this.$y + number2);
-    }
-    if (unit === D$3) {
-      return instanceFactorySet(1);
-    }
-    if (unit === W$2) {
-      return instanceFactorySet(7);
-    }
-    var step = (_C$MIN$C$H$C$S$unit = {}, _C$MIN$C$H$C$S$unit[MIN] = MILLISECONDS_A_MINUTE, _C$MIN$C$H$C$S$unit[H$2] = MILLISECONDS_A_HOUR, _C$MIN$C$H$C$S$unit[S$1] = MILLISECONDS_A_SECOND, _C$MIN$C$H$C$S$unit)[unit] || 1;
-    var nextTimeStamp = this.$d.getTime() + number2 * step;
-    return Utils.w(nextTimeStamp, this);
-  };
-  _proto.subtract = function subtract2(number2, string2) {
-    return this.add(number2 * -1, string2);
-  };
-  _proto.format = function format(formatStr) {
-    var _this3 = this;
-    var locale2 = this.$locale();
-    if (!this.isValid()) return locale2.invalidDate || INVALID_DATE_STRING;
-    var str = formatStr || FORMAT_DEFAULT;
-    var zoneStr = Utils.z(this);
-    var $H = this.$H, $m = this.$m, $M = this.$M;
-    var weekdays = locale2.weekdays, months = locale2.months, meridiem2 = locale2.meridiem;
-    var getShort = function getShort2(arr, index, full, length2) {
-      return arr && (arr[index] || arr(_this3, str)) || full[index].slice(0, length2);
-    };
-    var get$H = function get$H2(num) {
-      return Utils.s($H % 12 || 12, num, "0");
-    };
-    var meridiemFunc = meridiem2 || function(hour, minute, isLowercase) {
-      var m2 = hour < 12 ? "AM" : "PM";
-      return isLowercase ? m2.toLowerCase() : m2;
-    };
-    var matches = function matches2(match5) {
-      switch (match5) {
-        case "YY":
-          return String(_this3.$y).slice(-2);
-        case "YYYY":
-          return Utils.s(_this3.$y, 4, "0");
-        case "M":
-          return $M + 1;
-        case "MM":
-          return Utils.s($M + 1, 2, "0");
-        case "MMM":
-          return getShort(locale2.monthsShort, $M, months, 3);
-        case "MMMM":
-          return getShort(months, $M);
-        case "D":
-          return _this3.$D;
-        case "DD":
-          return Utils.s(_this3.$D, 2, "0");
-        case "d":
-          return String(_this3.$W);
-        case "dd":
-          return getShort(locale2.weekdaysMin, _this3.$W, weekdays, 2);
-        case "ddd":
-          return getShort(locale2.weekdaysShort, _this3.$W, weekdays, 3);
-        case "dddd":
-          return weekdays[_this3.$W];
-        case "H":
-          return String($H);
-        case "HH":
-          return Utils.s($H, 2, "0");
-        case "h":
-          return get$H(1);
-        case "hh":
-          return get$H(2);
-        case "a":
-          return meridiemFunc($H, $m, true);
-        case "A":
-          return meridiemFunc($H, $m, false);
-        case "m":
-          return String($m);
-        case "mm":
-          return Utils.s($m, 2, "0");
-        case "s":
-          return String(_this3.$s);
-        case "ss":
-          return Utils.s(_this3.$s, 2, "0");
-        case "SSS":
-          return Utils.s(_this3.$ms, 3, "0");
-        case "Z":
-          return zoneStr;
-      }
-      return null;
-    };
-    return str.replace(REGEX_FORMAT, function(match5, $1) {
-      return $1 || matches(match5) || zoneStr.replace(":", "");
-    });
-  };
-  _proto.utcOffset = function utcOffset() {
-    return -Math.round(this.$d.getTimezoneOffset() / 15) * 15;
-  };
-  _proto.diff = function diff(input, units, _float) {
-    var _this4 = this;
-    var unit = Utils.p(units);
-    var that = dayjs(input);
-    var zoneDelta = (that.utcOffset() - this.utcOffset()) * MILLISECONDS_A_MINUTE;
-    var diff2 = this - that;
-    var getMonth = function getMonth2() {
-      return Utils.m(_this4, that);
-    };
-    var result;
-    switch (unit) {
-      case Y$1:
-        result = getMonth() / 12;
-        break;
-      case M$2:
-        result = getMonth();
-        break;
-      case Q$2:
-        result = getMonth() / 3;
-        break;
-      case W$2:
-        result = (diff2 - zoneDelta) / MILLISECONDS_A_WEEK;
-        break;
-      case D$3:
-        result = (diff2 - zoneDelta) / MILLISECONDS_A_DAY;
-        break;
-      case H$2:
-        result = diff2 / MILLISECONDS_A_HOUR;
-        break;
-      case MIN:
-        result = diff2 / MILLISECONDS_A_MINUTE;
-        break;
-      case S$1:
-        result = diff2 / MILLISECONDS_A_SECOND;
-        break;
-      default:
-        result = diff2;
-        break;
-    }
-    return _float ? result : Utils.a(result);
-  };
-  _proto.daysInMonth = function daysInMonth() {
-    return this.endOf(M$2).$D;
-  };
-  _proto.$locale = function $locale() {
-    return Ls[this.$L];
-  };
-  _proto.locale = function locale2(preset, object2) {
-    if (!preset) return this.$L;
-    var that = this.clone();
-    var nextLocaleName = parseLocale(preset, object2, true);
-    if (nextLocaleName) that.$L = nextLocaleName;
-    return that;
-  };
-  _proto.clone = function clone2() {
-    return Utils.w(this.$d, this);
-  };
-  _proto.toDate = function toDate() {
-    return new Date(this.valueOf());
-  };
-  _proto.toJSON = function toJSON() {
-    return this.isValid() ? this.toISOString() : null;
-  };
-  _proto.toISOString = function toISOString() {
-    return this.$d.toISOString();
-  };
-  _proto.toString = function toString() {
-    return this.$d.toUTCString();
-  };
-  return Dayjs2;
-})();
-var proto = Dayjs.prototype;
-dayjs.prototype = proto;
-[["$ms", MS$1], ["$s", S$1], ["$m", MIN], ["$H", H$2], ["$W", D$3], ["$M", M$2], ["$y", Y$1], ["$D", DATE]].forEach(function(g2) {
-  proto[g2[1]] = function(input) {
-    return this.$g(input, g2[0], g2[1]);
-  };
-});
-dayjs.extend = function(plugin, option) {
-  if (!plugin.$i) {
-    plugin(option, Dayjs, dayjs);
-    plugin.$i = true;
-  }
-  return dayjs;
-};
-dayjs.locale = parseLocale;
-dayjs.isDayjs = isDayjs;
-dayjs.unix = function(timestamp2) {
-  return dayjs(timestamp2 * 1e3);
-};
-dayjs.en = Ls[L$2];
-dayjs.Ls = Ls;
-dayjs.p = {};
-var locale$1 = {
-  name: "zh-cn",
-  weekdays: "星期日_星期一_星期二_星期三_星期四_星期五_星期六".split("_"),
-  weekdaysShort: "周日_周一_周二_周三_周四_周五_周六".split("_"),
-  weekdaysMin: "日_一_二_三_四_五_六".split("_"),
-  months: "一月_二月_三月_四月_五月_六月_七月_八月_九月_十月_十一月_十二月".split("_"),
-  monthsShort: "1月_2月_3月_4月_5月_6月_7月_8月_9月_10月_11月_12月".split("_"),
-  ordinal: function ordinal2(number2, period) {
-    switch (period) {
-      case "W":
-        return number2 + "周";
-      default:
-        return number2 + "日";
-    }
-  },
-  weekStart: 1,
-  yearStart: 4,
-  formats: {
-    LT: "HH:mm",
-    LTS: "HH:mm:ss",
-    L: "YYYY/MM/DD",
-    LL: "YYYY年M月D日",
-    LLL: "YYYY年M月D日Ah点mm分",
-    LLLL: "YYYY年M月D日ddddAh点mm分",
-    l: "YYYY/M/D",
-    ll: "YYYY年M月D日",
-    lll: "YYYY年M月D日 HH:mm",
-    llll: "YYYY年M月D日dddd HH:mm"
-  },
-  relativeTime: {
-    future: "%s内",
-    past: "%s前",
-    s: "几秒",
-    m: "1 分钟",
-    mm: "%d 分钟",
-    h: "1 小时",
-    hh: "%d 小时",
-    d: "1 天",
-    dd: "%d 天",
-    M: "1 个月",
-    MM: "%d 个月",
-    y: "1 年",
-    yy: "%d 年"
-  },
-  meridiem: function meridiem(hour, minute) {
-    var hm = hour * 100 + minute;
-    if (hm < 600) {
-      return "凌晨";
-    } else if (hm < 900) {
-      return "早上";
-    } else if (hm < 1100) {
-      return "上午";
-    } else if (hm < 1300) {
-      return "中午";
-    } else if (hm < 1800) {
-      return "下午";
-    }
-    return "晚上";
-  }
-};
-dayjs.locale(locale$1, null, true);
-const quarterOfYear = (function(o2, c2) {
-  var proto2 = c2.prototype;
-  proto2.quarter = function(quarter) {
-    if (!this.$utils().u(quarter)) {
-      return this.month(this.month() % 3 + (quarter - 1) * 3);
-    }
-    return Math.ceil((this.month() + 1) / 3);
-  };
-  var oldAdd = proto2.add;
-  proto2.add = function(number2, units) {
-    number2 = Number(number2);
-    var unit = this.$utils().p(units);
-    if (unit === Q$2) {
-      return this.add(number2 * 3, M$2);
-    }
-    return oldAdd.bind(this)(number2, units);
-  };
-  var oldStartOf = proto2.startOf;
-  proto2.startOf = function(units, startOf) {
-    var utils = this.$utils();
-    var isStartOf = !utils.u(startOf) ? startOf : true;
-    var unit = utils.p(units);
-    if (unit === Q$2) {
-      var quarter = this.quarter() - 1;
-      return isStartOf ? this.month(quarter * 3).startOf(M$2).startOf(D$3) : this.month(quarter * 3 + 2).endOf(M$2).endOf(D$3);
-    }
-    return oldStartOf.bind(this)(units, startOf);
-  };
-});
-const weekOfYear = (function(o2, c2, d2) {
-  var proto2 = c2.prototype;
-  proto2.week = function(week) {
-    if (week === void 0) {
-      week = null;
-    }
-    if (week !== null) {
-      return this.add((week - this.week()) * 7, D$3);
-    }
-    var yearStart = this.$locale().yearStart || 1;
-    if (this.month() === 11 && this.date() > 25) {
-      var nextYearStartDay = d2(this).startOf(Y$1).add(1, Y$1).date(yearStart);
-      var thisEndOfWeek = d2(this).endOf(W$2);
-      if (nextYearStartDay.isBefore(thisEndOfWeek)) {
-        return 1;
-      }
-    }
-    var yearStartDay = d2(this).startOf(Y$1).date(yearStart);
-    var yearStartWeek = yearStartDay.startOf(W$2).subtract(1, MS$1);
-    var diffInWeek = this.diff(yearStartWeek, W$2, true);
-    if (diffInWeek < 0) {
-      return d2(this).startOf("week").week();
-    }
-    return Math.ceil(diffInWeek);
-  };
-  proto2.weeks = function(week) {
-    if (week === void 0) {
-      week = null;
-    }
-    return this.week(week);
-  };
-});
-var t$1 = function t(format) {
-  return format.replace(/(\[[^\]]+])|(MMMM|MM|DD|dddd)/g, function(_2, a2, b2) {
-    return a2 || b2.slice(1);
-  });
-};
-var englishFormats = {
-  LTS: "h:mm:ss A",
-  LT: "h:mm A",
-  L: "MM/DD/YYYY",
-  LL: "MMMM D, YYYY",
-  LLL: "MMMM D, YYYY h:mm A",
-  LLLL: "dddd, MMMM D, YYYY h:mm A"
-};
-var u$3 = function u(formatStr, formats) {
-  return formatStr.replace(/(\[[^\]]+])|(LTS?|l{1,4}|L{1,4})/g, function(_2, a2, b2) {
-    var B2 = b2 && b2.toUpperCase();
-    return a2 || formats[b2] || englishFormats[b2] || t$1(formats[B2]);
-  });
-};
-var formattingTokens = /(\[[^[]*\])|([-_:/.,()\s]+)|(A|a|Q|YYYY|YY?|ww?|MM?M?M?|Do|DD?|hh?|HH?|mm?|ss?|S{1,3}|z|ZZ?)/g;
-var match1 = /\d/;
-var match2 = /\d\d/;
-var match3 = /\d{3}/;
-var match4 = /\d{4}/;
-var match1to2 = /\d\d?/;
-var matchSigned = /[+-]?\d+/;
-var matchOffset = /[+-]\d\d:?(\d\d)?|Z/;
-var matchWord = /\d*[^-_:/,()\s\d]+/;
-var locale = {};
-var parseTwoDigitYear = function parseTwoDigitYear2(input) {
-  input = +input;
-  return input + (input > 68 ? 1900 : 2e3);
-};
-function offsetFromString(string2) {
-  if (!string2) return 0;
-  if (string2 === "Z") return 0;
-  var parts = string2.match(/([+-]|\d\d)/g);
-  var minutes = +(parts[1] * 60) + (+parts[2] || 0);
-  return minutes === 0 ? 0 : parts[0] === "+" ? -minutes : minutes;
-}
-var addInput = function addInput2(property) {
-  return function(input) {
-    this[property] = +input;
-  };
-};
-var zoneExpressions = [matchOffset, function(input) {
-  var zone = this.zone || (this.zone = {});
-  zone.offset = offsetFromString(input);
-}];
-var getLocalePart = function getLocalePart2(name) {
-  var part = locale[name];
-  return part && (part.indexOf ? part : part.s.concat(part.f));
-};
-var meridiemMatch = function meridiemMatch2(input, isLowerCase) {
-  var isAfternoon;
-  var _locale = locale, meridiem2 = _locale.meridiem;
-  if (!meridiem2) {
-    isAfternoon = input === (isLowerCase ? "pm" : "PM");
-  } else {
-    for (var i2 = 1; i2 <= 24; i2 += 1) {
-      if (input.indexOf(meridiem2(i2, 0, isLowerCase)) > -1) {
-        isAfternoon = i2 > 12;
-        break;
-      }
-    }
-  }
-  return isAfternoon;
-};
-var expressions = {
-  A: [matchWord, function(input) {
-    this.afternoon = meridiemMatch(input, false);
-  }],
-  a: [matchWord, function(input) {
-    this.afternoon = meridiemMatch(input, true);
-  }],
-  Q: [match1, function(input) {
-    this.month = (input - 1) * 3 + 1;
-  }],
-  S: [match1, function(input) {
-    this.milliseconds = +input * 100;
-  }],
-  SS: [match2, function(input) {
-    this.milliseconds = +input * 10;
-  }],
-  SSS: [match3, function(input) {
-    this.milliseconds = +input;
-  }],
-  s: [match1to2, addInput("seconds")],
-  ss: [match1to2, addInput("seconds")],
-  m: [match1to2, addInput("minutes")],
-  mm: [match1to2, addInput("minutes")],
-  H: [match1to2, addInput("hours")],
-  h: [match1to2, addInput("hours")],
-  HH: [match1to2, addInput("hours")],
-  hh: [match1to2, addInput("hours")],
-  D: [match1to2, addInput("day")],
-  DD: [match2, addInput("day")],
-  Do: [matchWord, function(input) {
-    var _locale2 = locale, ordinal4 = _locale2.ordinal;
-    var _input$match = input.match(/\d+/);
-    this.day = _input$match[0];
-    if (!ordinal4) return;
-    for (var i2 = 1; i2 <= 31; i2 += 1) {
-      if (ordinal4(i2).replace(/\[|\]/g, "") === input) {
-        this.day = i2;
-      }
-    }
-  }],
-  w: [match1to2, addInput("week")],
-  ww: [match2, addInput("week")],
-  M: [match1to2, addInput("month")],
-  MM: [match2, addInput("month")],
-  MMM: [matchWord, function(input) {
-    var months = getLocalePart("months");
-    var monthsShort = getLocalePart("monthsShort");
-    var matchIndex = (monthsShort || months.map(function(_2) {
-      return _2.slice(0, 3);
-    })).indexOf(input) + 1;
-    if (matchIndex < 1) {
-      throw new Error();
-    }
-    this.month = matchIndex % 12 || matchIndex;
-  }],
-  MMMM: [matchWord, function(input) {
-    var months = getLocalePart("months");
-    var matchIndex = months.indexOf(input) + 1;
-    if (matchIndex < 1) {
-      throw new Error();
-    }
-    this.month = matchIndex % 12 || matchIndex;
-  }],
-  Y: [matchSigned, addInput("year")],
-  YY: [match2, function(input) {
-    this.year = parseTwoDigitYear(input);
-  }],
-  YYYY: [match4, addInput("year")],
-  Z: zoneExpressions,
-  ZZ: zoneExpressions
-};
-function correctHours(time2) {
-  var afternoon = time2.afternoon;
-  if (afternoon !== void 0) {
-    var hours = time2.hours;
-    if (afternoon) {
-      if (hours < 12) {
-        time2.hours += 12;
-      }
-    } else if (hours === 12) {
-      time2.hours = 0;
-    }
-    delete time2.afternoon;
-  }
-}
-function makeParser(format) {
-  format = u$3(format, locale && locale.formats);
-  var array2 = format.match(formattingTokens);
-  var length2 = array2.length;
-  for (var i2 = 0; i2 < length2; i2 += 1) {
-    var token2 = array2[i2];
-    var parseTo = expressions[token2];
-    var regex = parseTo && parseTo[0];
-    var parser = parseTo && parseTo[1];
-    if (parser) {
-      array2[i2] = {
-        regex,
-        parser
-      };
-    } else {
-      array2[i2] = token2.replace(/^\[|\]$/g, "");
-    }
-  }
-  return function(input) {
-    var time2 = {};
-    for (var _i = 0, start2 = 0; _i < length2; _i += 1) {
-      var _token = array2[_i];
-      if (typeof _token === "string") {
-        start2 += _token.length;
-      } else {
-        var _regex2 = _token.regex, _parser = _token.parser;
-        var part = input.slice(start2);
-        var match5 = _regex2.exec(part);
-        var value = match5[0];
-        _parser.call(time2, value);
-        input = input.replace(value, "");
-      }
-    }
-    correctHours(time2);
-    return time2;
-  };
-}
-var parseFormattedInput = function parseFormattedInput2(input, format, utc, dayjs3) {
-  try {
-    if (["x", "X"].indexOf(format) > -1) return new Date((format === "X" ? 1e3 : 1) * input);
-    var parser = makeParser(format);
-    var _parser2 = parser(input), year = _parser2.year, month = _parser2.month, day = _parser2.day, hours = _parser2.hours, minutes = _parser2.minutes, seconds = _parser2.seconds, milliseconds = _parser2.milliseconds, zone = _parser2.zone, week = _parser2.week;
-    var now2 = /* @__PURE__ */ new Date();
-    var d2 = day || (!year && !month ? now2.getDate() : 1);
-    var y2 = year || now2.getFullYear();
-    var M2 = 0;
-    if (!(year && !month)) {
-      M2 = month > 0 ? month - 1 : now2.getMonth();
-    }
-    var h2 = hours || 0;
-    var m2 = minutes || 0;
-    var s2 = seconds || 0;
-    var ms = milliseconds || 0;
-    if (zone) {
-      return new Date(Date.UTC(y2, M2, d2, h2, m2, s2, ms + zone.offset * 60 * 1e3));
-    }
-    if (utc) {
-      return new Date(Date.UTC(y2, M2, d2, h2, m2, s2, ms));
-    }
-    var newDate;
-    newDate = new Date(y2, M2, d2, h2, m2, s2, ms);
-    if (week) {
-      newDate = dayjs3(newDate).week(week).toDate();
-    }
-    return newDate;
-  } catch (e2) {
-    return /* @__PURE__ */ new Date("");
-  }
-};
-const customParse = (function(o2, C2, d2) {
-  d2.p.customParseFormat = true;
-  if (o2 && o2.parseTwoDigitYear) {
-    parseTwoDigitYear = o2.parseTwoDigitYear;
-  }
-  var proto2 = C2.prototype;
-  var oldParse = proto2.parse;
-  proto2.parse = function(cfg) {
-    var date2 = cfg.date, utc = cfg.utc, args = cfg.args;
-    this.$u = utc;
-    var format = args[1];
-    if (typeof format === "string") {
-      var isStrictWithoutLocale = args[2] === true;
-      var isStrictWithLocale = args[3] === true;
-      var isStrict = isStrictWithoutLocale || isStrictWithLocale;
-      var pl = args[2];
-      if (isStrictWithLocale) {
-        pl = args[2];
-      }
-      locale = this.$locale();
-      if (!isStrictWithoutLocale && pl) {
-        locale = d2.Ls[pl];
-      }
-      this.$d = parseFormattedInput(date2, format, utc, d2);
-      this.init();
-      if (pl && pl !== true) this.$L = this.locale(pl).$L;
-      if (isStrict && date2 != this.format(format)) {
-        this.$d = /* @__PURE__ */ new Date("");
-      }
-      locale = {};
-    } else if (format instanceof Array) {
-      var len = format.length;
-      for (var i2 = 1; i2 <= len; i2 += 1) {
-        args[1] = format[i2 - 1];
-        var result = d2.apply(this, args);
-        if (result.isValid()) {
-          this.$d = result.$d;
-          this.$L = result.$L;
-          this.init();
-          break;
-        }
-        if (i2 === len) this.$d = /* @__PURE__ */ new Date("");
-      }
-    } else {
-      oldParse.call(this, cfg);
-    }
-  };
-});
-var isoWeekPrettyUnit = "isoweek";
-const isoWeek = (function(o2, c2, d2) {
-  var getYearFirstThursday = function getYearFirstThursday2(year, isUtc) {
-    var yearFirstDay = (isUtc ? d2.utc : d2)().year(year).startOf(Y$1);
-    var addDiffDays = 4 - yearFirstDay.isoWeekday();
-    if (yearFirstDay.isoWeekday() > 4) {
-      addDiffDays += 7;
-    }
-    return yearFirstDay.add(addDiffDays, D$3);
-  };
-  var getCurrentWeekThursday = function getCurrentWeekThursday2(ins) {
-    return ins.add(4 - ins.isoWeekday(), D$3);
-  };
-  var proto2 = c2.prototype;
-  proto2.isoWeekYear = function() {
-    var nowWeekThursday = getCurrentWeekThursday(this);
-    return nowWeekThursday.year();
-  };
-  proto2.isoWeek = function(week) {
-    if (!this.$utils().u(week)) {
-      return this.add((week - this.isoWeek()) * 7, D$3);
-    }
-    var nowWeekThursday = getCurrentWeekThursday(this);
-    var diffWeekThursday = getYearFirstThursday(this.isoWeekYear(), this.$u);
-    return nowWeekThursday.diff(diffWeekThursday, W$2) + 1;
-  };
-  proto2.isoWeekday = function(week) {
-    if (!this.$utils().u(week)) {
-      return this.day(this.day() % 7 ? week : week - 7);
-    }
-    return this.day() || 7;
-  };
-  var oldStartOf = proto2.startOf;
-  proto2.startOf = function(units, startOf) {
-    var utils = this.$utils();
-    var isStartOf = !utils.u(startOf) ? startOf : true;
-    var unit = utils.p(units);
-    if (unit === isoWeekPrettyUnit) {
-      return isStartOf ? this.date(this.date() - (this.isoWeekday() - 1)).startOf("day") : this.date(this.date() - 1 - (this.isoWeekday() - 1) + 7).endOf("day");
-    }
-    return oldStartOf.bind(this)(units, startOf);
-  };
-});
-const isSameOrBefore = (function(o2, c2) {
-  c2.prototype.isSameOrBefore = function(that, units) {
-    return this.isSame(that, units) || this.isBefore(that, units);
-  };
-});
-const isBetween = (function(o2, c2, d2) {
-  c2.prototype.isBetween = function(a2, b2, u3, i2) {
-    var dA = d2(a2);
-    var dB = d2(b2);
-    i2 = i2 || "()";
-    var dAi = i2[0] === "(";
-    var dBi = i2[1] === ")";
-    return (dAi ? this.isAfter(dA, u3) : !this.isBefore(dA, u3)) && (dBi ? this.isBefore(dB, u3) : !this.isAfter(dB, u3)) || (dAi ? this.isBefore(dA, u3) : !this.isAfter(dA, u3)) && (dBi ? this.isAfter(dB, u3) : !this.isBefore(dB, u3));
-  };
-});
-dayjs.extend(quarterOfYear);
-dayjs.extend(weekOfYear);
-dayjs.extend(customParse);
-dayjs.extend(isoWeek);
-dayjs.extend(isSameOrBefore);
-dayjs.extend(isBetween);
-dayjs.locale("zh-cn");
-function normalizeTimelineView(view) {
-  switch (view) {
-    case "年":
-    case "季":
-    case "月":
-    case "周":
-    case "天":
-      return view;
-    // Some parts of the UI may still use "日"; normalize it to "天".
-    case "日":
-      return "天";
-    default:
-      return "天";
-  }
-}
-function isoWeekKey(d2) {
-  return `${d2.isoWeekYear()}-W${String(d2.isoWeek()).padStart(2, "0")}`;
-}
-function isSameIsoWeek(a2, b2) {
-  return isoWeekKey(a2) === isoWeekKey(b2);
-}
-function rangeKeyForView(anchor, view) {
-  switch (view) {
-    case "年":
-      return anchor.format("YYYY");
-    case "季": {
-      return `${anchor.year()}-Q${anchor.quarter()}`;
-    }
-    case "月":
-      return anchor.format("YYYY-MM");
-    case "周": {
-      const isoYear = anchor.isoWeekYear();
-      const isoWeek2 = anchor.isoWeek();
-      return `${isoYear}-W${String(isoWeek2).padStart(2, "0")}`;
-    }
-    case "天":
-    default:
-      return anchor.format("YYYY-MM-DD");
-  }
-}
-function calculateTimelineRange(anchor, view) {
-  let start2;
-  let end2;
-  switch (view) {
-    case "年":
-      start2 = anchor.startOf("year");
-      end2 = anchor.endOf("year");
-      break;
-    case "季":
-      start2 = anchor.startOf("quarter");
-      end2 = anchor.endOf("quarter");
-      break;
-    case "月":
-      start2 = anchor.startOf("month");
-      end2 = anchor.endOf("month");
-      break;
-    case "周":
-      start2 = anchor.startOf("isoWeek");
-      end2 = anchor.endOf("isoWeek");
-      break;
-    case "天":
-    default:
-      start2 = anchor.startOf("day");
-      end2 = anchor.endOf("day");
-      break;
-  }
-  return {
-    view,
-    anchor,
-    start: start2,
-    end: end2,
-    key: rangeKeyForView(anchor, view)
-  };
-}
-function toIsoDateTuple(range) {
-  return [range.start.format("YYYY-MM-DD"), range.end.format("YYYY-MM-DD")];
-}
-const todayISO = () => dayjs().format("YYYY-MM-DD");
-function formatSecondsToHHMMSS(totalSeconds) {
-  if (isNaN(totalSeconds) || totalSeconds < 0) {
-    return "00:00:00";
-  }
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor(totalSeconds % 3600 / 60);
-  const seconds = Math.floor(totalSeconds % 60);
-  const pad2 = (num) => String(num).padStart(2, "0");
-  return `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
-}
-const timeToMinutes = (time2) => {
-  if (!time2 || !/^\d{1,2}:\d{2}$/.test(time2)) return null;
-  const [h2, m2] = time2.split(":").map(Number);
-  return h2 * 60 + m2;
-};
-const minutesToTime = (minutes) => {
-  if (isNaN(minutes) || minutes < 0) return "";
-  const h2 = Math.floor(minutes / 60) % 24;
-  const m2 = minutes % 60;
-  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
-};
-function normalizeDateStr(raw) {
-  const s2 = (raw || "").replace(/\//g, "-");
-  const d2 = dayjs(s2, ["YYYY-MM-DD", "YYYY-M-D", "YYYY/MM/DD", "YYYY/M/D"], true);
-  return d2.isValid() ? d2.format("YYYY-MM-DD") : s2;
-}
-const QTXT = ["一", "二", "三", "四"];
-function formatDateForView(d2, v2) {
-  switch (v2) {
-    case "年":
-      return d2.format("YYYY年");
-    case "季":
-      return `${d2.year()}年${QTXT[d2.quarter() - 1]}季度`;
-    case "月":
-      return d2.format("YYYY-MM");
-    case "周": {
-      const isoYear = d2.isoWeekYear();
-      const isoWeekNum = d2.isoWeek();
-      return `${isoYear}年第${isoWeekNum}周`;
-    }
-    default:
-      return d2.format("YYYY-MM-DD");
-  }
-}
-const getWeeksInYear = (year) => {
-  const endOfYear = dayjs().year(year).endOf("year");
-  return endOfYear.isoWeek() === 1 ? 52 : endOfYear.isoWeek();
-};
-function getPeriodCount(period, date2) {
-  if (!date2 || !date2.isValid()) {
-    return void 0;
-  }
-  switch (period) {
-    case "年":
-      return date2.year();
-    case "季":
-      return date2.quarter();
-    case "月":
-      return date2.month() + 1;
-    // dayjs month is 0-indexed
-    case "周":
-      return date2.isoWeek();
-    default:
-      return void 0;
-  }
-}
-const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
-function isImageLikeValue(value) {
-  const raw = String(value ?? "").trim();
-  return !!raw && (/^https?:\/\//i.test(raw) || /^!\[\[.+\]\]$/.test(raw) || IMAGE_EXT_RE.test(raw));
-}
-function normalizeImageValue(value) {
-  if (value && typeof value === "object" && "src" in value) {
-    const image = value;
-    const src2 = String(image.src || "").trim();
-    if (!src2) return void 0;
-    return {
-      src: src2,
-      kind: inferImageKind(src2),
-      alt: typeof image.alt === "string" ? image.alt : void 0,
-      caption: typeof image.caption === "string" ? image.caption : void 0
-    };
-  }
-  const raw = String(value ?? "").trim();
-  if (!raw) return void 0;
-  const wikilink = raw.match(/^!\[\[(.+?)\]\]$/);
-  const src = wikilink ? wikilink[1].trim() : raw;
-  return { src, kind: inferImageKind(raw) };
-}
-function inferImageKind(src) {
-  if (/^https?:\/\//i.test(src)) return "url";
-  if (/^!\[\[.+\]\]$/.test(src)) return "wikilink";
-  if (src.includes("/") || IMAGE_EXT_RE.test(src)) return "vault";
-  return "unknown";
-}
-function isImageFieldDefinition(def) {
-  return !!def && (def.valueType === "image" || def.inputType === "image" || def.inputType === "multiImage" || def.semantic === "image");
-}
-function normalizeSegment(value) {
-  return String(value ?? "").trim();
-}
-function normalizeHierarchyPathParts(value) {
-  if (Array.isArray(value)) return value.flatMap((entry) => normalizeHierarchyPathParts(entry));
-  return String(value ?? "").split("/").map(normalizeSegment).filter(Boolean);
-}
-function normalizeHierarchyPathValue(value) {
-  const parts = normalizeHierarchyPathParts(value);
-  return parts.length ? parts.join("/") : null;
-}
-function splitHierarchyPathValue(value) {
-  const parts = normalizeHierarchyPathParts(value);
-  const path = parts.length ? parts.join("/") : null;
-  return {
-    path,
-    parts,
-    root: parts[0] ?? null,
-    leaf: parts.length ? parts[parts.length - 1] : null
-  };
-}
-function getHierarchyPathLeaf(value) {
-  return splitHierarchyPathValue(value).leaf ?? "";
-}
-function normalizeHierarchyPath(value) {
-  return normalizeHierarchyPathValue(value) || void 0;
-}
-function splitHierarchyPath(value) {
-  const parts = splitHierarchyPathValue(value);
-  return {
-    path: parts.path || void 0,
-    parts: parts.parts,
-    root: parts.root || void 0,
-    leaf: parts.leaf || void 0
-  };
-}
-function normalizeTagPath(value) {
-  const raw = String(value ?? "").trim().replace(/^#+/, "");
-  if (!raw) return void 0;
-  const parts = raw.split("/").map((part) => part.trim()).filter(Boolean);
-  return parts.length ? parts.join("/") : void 0;
-}
-function normalizeTag(value) {
-  return normalizeTagPath(value);
-}
-function parseTagList(value) {
-  const rawValues = Array.isArray(value) ? value : String(value ?? "").split(/[,，]/);
-  const tags2 = rawValues.map(normalizeTag).filter((tag) => !!tag);
-  return Array.from(new Set(tags2));
-}
-function compactText$2(value) {
-  return String(value ?? "").trim();
-}
-function normalizeTextToken(value) {
-  return compactText$2(value).toLowerCase();
-}
-function containsTagMarker(value) {
-  return value.includes("#") || value.includes("＃");
-}
-function normalizeGoalPath(path) {
-  const normalized2 = splitHierarchyPathValue(path).path;
-  if (!normalized2 || containsTagMarker(normalized2)) return null;
-  return normalized2;
-}
-function requireGoalPath(path) {
-  const normalized2 = normalizeGoalPath(path);
-  if (!normalized2) throw new Error("目标路径无效：必须使用斜杠分隔，且不能包含 # 标记。");
-  return normalized2;
-}
-function splitGoalPath(path) {
-  const normalized2 = normalizeGoalPath(path);
-  const parts = splitHierarchyPathValue(normalized2);
-  return {
-    goalPath: parts.path,
-    rootGoal: parts.root,
-    leafGoal: parts.leaf
-  };
-}
-function getGoalPathCandidates(path) {
-  const normalized2 = normalizeGoalPath(path);
-  if (!normalized2) return [];
-  const parts = splitHierarchyPathValue(normalized2).parts;
-  const result = [];
-  for (let i2 = parts.length; i2 >= 1; i2 -= 1) result.push(parts.slice(0, i2).join("/"));
-  return result;
-}
-function getParentGoalPath(path) {
-  const normalized2 = normalizeGoalPath(path);
-  if (!normalized2) return null;
-  const parts = normalized2.split("/").filter(Boolean);
-  return parts.length > 1 ? parts.slice(0, -1).join("/") : null;
-}
-function getGoalLeaf(path) {
-  return splitGoalPath(path).leafGoal || "";
-}
-const DEFAULT_MULTI_SEPARATOR = ", ";
-function isFieldCodecMultiValue(def) {
-  const inputType = def?.inputType;
-  return def?.cardinality === "multi" || inputType === "multiSelect" || inputType === "multiPath" || inputType === "multiTag" || inputType === "multiImage";
-}
-function isFieldCodecPath(def) {
-  return def?.valueType === "path" || def?.inputType === "path" || def?.inputType === "multiPath" || def?.semantic === "goalPath";
-}
-function isFieldCodecTag(def) {
-  return def?.valueType === "tags" || def?.inputType === "tag" || def?.inputType === "multiTag" || def?.semantic === "tags";
-}
-function isFieldCodecImage(def) {
-  return def?.valueType === "image" || def?.inputType === "image" || def?.inputType === "multiImage" || def?.semantic === "image";
-}
-function splitMarkdownMultiValue(value) {
-  if (Array.isArray(value)) return value.flatMap(splitMarkdownMultiValue);
-  return String(value ?? "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
-}
-function decodeUnknownMarkdownKvValue(value) {
-  const raw = String(value ?? "").trim();
-  if (/^(true|false)$/i.test(raw)) return raw.toLowerCase() === "true";
-  if (raw !== "") {
-    const numeric = Number(raw);
-    if (!Number.isNaN(numeric)) return numeric;
-  }
-  return raw;
-}
-function decodeNumberValue(value) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  const raw = String(value ?? "").trim();
-  if (!raw) return void 0;
-  const numeric = Number(raw);
-  return Number.isNaN(numeric) ? void 0 : numeric;
-}
-function decodeBooleanValue(value) {
-  if (typeof value === "boolean") return value;
-  const raw = normalizeTextToken(value);
-  if (!raw) return void 0;
-  if (["true", "yes", "y", "1", "是"].includes(raw)) return true;
-  if (["false", "no", "n", "0", "否"].includes(raw)) return false;
-  return void 0;
-}
-function decodeImageValue(value) {
-  return normalizeImageValue(value);
-}
-function valueKind(def) {
-  return def?.valueType;
-}
-function semanticKind(def) {
-  return def?.semantic;
-}
-function decodeMarkdownFieldValue(value, def) {
-  if (value === void 0 || value === null) return void 0;
-  if (isFieldCodecMultiValue(def)) {
-    if (isFieldCodecTag(def)) return parseTagList(value);
-    if (isFieldCodecImage(def)) {
-      return splitMarkdownMultiValue(value).map(decodeImageValue).filter((img) => !!img);
-    }
-    if (isFieldCodecPath(def)) {
-      return splitMarkdownMultiValue(value).map(normalizeHierarchyPath).filter((path) => !!path);
-    }
-    return splitMarkdownMultiValue(value);
-  }
-  if (isFieldCodecTag(def)) return parseTagList(value);
-  if (isFieldCodecImage(def)) return decodeImageValue(value);
-  if (isFieldCodecPath(def)) {
-    if (semanticKind(def) === "goalPath") return normalizeGoalPath(String(value ?? "")) || void 0;
-    return normalizeHierarchyPath(value) || void 0;
-  }
-  if (valueKind(def) === "number" || semanticKind(def) === "duration" || semanticKind(def) === "rating") {
-    return decodeNumberValue(value);
-  }
-  if (valueKind(def) === "boolean") return decodeBooleanValue(value);
-  return decodeUnknownMarkdownKvValue(value);
-}
-function imageFieldValueToMarkdown(value, options = {}) {
-  const src = String(value.src || "").trim();
-  if (!src) return "";
-  if (options.embedWikiImages && value.kind === "wikilink") return `![[${src}]]`;
-  return src;
-}
-function encodeFieldValueForMarkdown(value, def, options = {}) {
-  if (value === void 0 || value === null) return "";
-  if (Array.isArray(value)) {
-    const separator = options.multiSeparator ?? DEFAULT_MULTI_SEPARATOR;
-    return value.map((item) => encodeFieldValueForMarkdown(item, { ...def, cardinality: "single" }, options)).map((part) => part.trim()).filter(Boolean).join(separator);
-  }
-  if (isFieldCodecImage(def) || value && typeof value === "object" && "src" in value) {
-    const image = normalizeImageValue(value);
-    return image ? imageFieldValueToMarkdown(image, options) : "";
-  }
-  if (value && typeof value === "object") {
-    const objectValue = value;
-    if ("value" in objectValue) return encodeFieldValueForMarkdown(objectValue.value, def, options);
-    if ("label" in objectValue) return String(objectValue.label ?? "").trim();
-  }
-  if (typeof value === "boolean") return value ? "true" : "false";
-  if (semanticKind(def) === "goalPath") {
-    const raw = String(value).trim();
-    if (!raw) return "";
-    const canonical = normalizeGoalPath(raw);
-    if (!canonical) throw new Error("目标路径无效：目标不是标签，不能包含 # 标记。");
-    return canonical;
-  }
-  return String(value).trim();
-}
-function formatFieldValueForTemplate(value, def) {
-  return encodeFieldValueForMarkdown(value, def, { multiSeparator: ", " });
-}
-const FIELD_CODEC_PRESETS = {
-  tags: { valueType: "tags", inputType: "multiTag", semantic: "tags", cardinality: "multi" },
-  goalPath: { valueType: "path", inputType: "hierarchicalSingleSelect", semantic: "goalPath", cardinality: "single", hierarchical: true },
-  image: { valueType: "image", inputType: "image", semantic: "image" },
-  number: { valueType: "number", inputType: "number" },
-  boolean: { valueType: "boolean", inputType: "boolean" },
-  text: { valueType: "string", inputType: "text" }
-};
-const TASK_FIELD_ORDER = [
-  ["状态", ["状态", "status"]],
-  ["目标", ["目标", "goalPath"]],
-  ["创建于", ["创建于", "createdAt"]],
-  ["开始时间", ["开始时间", "startAt"]],
-  ["结束时间", ["结束时间", "endAt"]],
-  ["优先级", ["优先级", "priority"]],
-  ["重要程度", ["重要程度", "importance"]],
-  ["紧急程度", ["紧急程度", "urgency"]],
-  ["预计时长", ["预计时长", "expectedDurationMinutes"]],
-  ["精力要求", ["精力要求", "energyDemand"]],
-  ["脑力要求", ["脑力要求", "brainDemand"]],
-  ["体力要求", ["体力要求", "physicalDemand"]],
-  ["可用场景", ["可用场景", "availabilityContexts"]],
-  ["恢复意图", ["恢复意图", "recoveryIntent"]],
-  ["计划时间", ["计划时间", "scheduledAt"]],
-  ["截止时间", ["截止时间", "dueAt"]],
-  ["计划日期", ["计划日期", "scheduledDate"]],
-  ["开始日期", ["开始日期", "startDate"]],
-  ["截止日期", ["截止日期", "dueDate"]],
-  ["完成于", ["完成于", "completedAt"]],
-  ["取消于", ["取消于", "cancelledAt"]],
-  ["跳过于", ["跳过于", "skippedAt"]],
-  ["系列ID", ["系列ID", "seriesId"]]
-];
-const TASK_SERIES_FIELD_ORDER = [
-  ["状态", ["状态", "status"]],
-  ["目标", ["目标", "goalPath"]],
-  ["优先级", ["优先级", "priority"]],
-  ["重要程度", ["重要程度", "importance"]],
-  ["紧急程度", ["紧急程度", "urgency"]],
-  ["预计时长", ["预计时长", "expectedDurationMinutes"]],
-  ["精力要求", ["精力要求", "energyDemand"]],
-  ["脑力要求", ["脑力要求", "brainDemand"]],
-  ["体力要求", ["体力要求", "physicalDemand"]],
-  ["可用场景", ["可用场景", "availabilityContexts"]],
-  ["恢复意图", ["恢复意图", "recoveryIntent"]],
-  ["重复单位", ["重复单位", "recurrenceUnit"]],
-  ["重复间隔", ["重复间隔", "recurrenceInterval"]],
-  ["重复锚点", ["重复锚点", "recurrenceAnchor"]],
-  ["系列开始日期", ["系列开始日期", "seriesStartDate"]],
-  ["当前任务ID", ["当前任务ID", "currentTaskId"]],
-  ["滚动策略", ["滚动策略", "rolloverPolicy"]]
-];
-function decodeMarkdownString(value, preset = FIELD_CODEC_PRESETS.text) {
-  const decoded = decodeMarkdownFieldValue(value, preset);
-  const encoded = encodeFieldValueForMarkdown(decoded, preset).trim();
-  return encoded || void 0;
-}
-function decodeMarkdownNumber(value) {
-  const decoded = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.number);
-  return typeof decoded === "number" && Number.isFinite(decoded) ? decoded : void 0;
-}
-function normalizeMetaKey(key) {
-  return String(key ?? "").trim().toLowerCase();
-}
-function unique$1(values2) {
-  return Array.from(new Set(values2.map((value) => value.trim()).filter(Boolean)));
-}
-function buildTitle(content, tags2) {
-  let title = "";
-  const trimmed = content.trim();
-  if (trimmed) title = trimmed.split(/\r?\n/)[0];
-  else if (tags2.length > 0) title = tags2.join(", ");
-  return title.replace(new RegExp("^(?:\\p{Extended_Pictographic}\\uFE0F?\\s*)+", "u"), "").trim().slice(0, 80);
-}
-function parseDate$1(value) {
-  const raw = value.trim();
-  if (!raw) return void 0;
-  return normalizeDateStr(raw) || raw;
-}
-function normalizeStoredDateTime(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return void 0;
-  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(raw)) return raw.replace(" ", "T");
-  return raw;
-}
-function formatRecordDateTimeForMarkdown(value) {
-  const raw = String(value ?? "").trim();
-  if (!raw) return "";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-  const naive = raw.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?$/);
-  if (naive) return `${naive[1]} ${naive[2]}`;
-  const parsed = new Date(raw);
-  if (!Number.isFinite(parsed.getTime())) return raw.replace("T", " ");
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
-  const hour = String(parsed.getHours()).padStart(2, "0");
-  const minute = String(parsed.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hour}:${minute}`;
-}
-const TASK_READABLE_DATETIME_LABELS = /* @__PURE__ */ new Set([
-  "创建于",
-  "计划时间",
-  "开始时间",
-  "结束时间",
-  "截止时间",
-  "完成于",
-  "取消于",
-  "跳过于"
-]);
-function decodeRecordContentLines(contentLines, _parentFolder) {
-  let date2;
-  const tags2 = [];
-  let goalPath;
-  const extra = {};
-  let content = "";
-  let contentStarted = false;
-  let icon;
-  let rating;
-  let image;
-  let recordType;
-  let recordSubtype;
-  let recordId;
-  let status;
-  let scheduledAt;
-  let startAt;
-  let endAt;
-  let dueAt;
-  let scheduledDate;
-  let startDate;
-  let dueDate;
-  let completedAt;
-  let cancelledAt;
-  let skippedAt;
-  let createdAt;
-  let priority;
-  let importance;
-  let urgency;
-  let expectedDurationMinutes;
-  let energyDemand;
-  let brainDemand;
-  let physicalDemand;
-  let availabilityContexts2;
-  let recoveryIntent;
-  let seriesId;
-  let recurrenceUnit;
-  let recurrenceInterval;
-  let recurrenceAnchor;
-  let seriesStartDate;
-  let currentTaskId;
-  let rolloverPolicy;
-  let taskId;
-  let sessionStartedAt;
-  let sessionEndedAt;
-  let sessionDurationMinutes;
-  let sessionResult;
-  let sessionSource;
-  let suggestedDurationMinutes;
-  let startEnergyRecordId;
-  let endEnergyRecordId;
-  let energyDelta;
-  let brainDelta;
-  let physicalDelta;
-  const envelopeRecordType = contentLines.map((rawLine) => rawLine.trim().match(/^([^:\r\n]{1,64})::\s*(.*)$/)).find((match5) => match5 && normalizeMetaKey(match5[1]) === "记录类型")?.[2]?.trim();
-  if (envelopeRecordType) recordType = envelopeRecordType;
-  const recordSchema = getRecordSchemaDefinition(recordType);
-  const supportsCustomFields = Boolean(recordSchema?.capabilities.customFields);
-  const supportsBody = Boolean(recordSchema && getRecordFieldContract(recordSchema.recordType, "内容"));
-  for (const rawLine of contentLines) {
-    if (contentStarted) {
-      content += (content ? "\n" : "") + rawLine;
-      continue;
-    }
-    const line2 = rawLine.trim();
-    const kv = line2.match(/^([^:\r\n]{1,64})::\s*(.*)$/);
-    if (kv) {
-      const rawKey = kv[1].trim();
-      const value = kv[2] || "";
-      const key = normalizeMetaKey(rawKey);
-      if (key === "记录id") recordId = value.trim() || void 0;
-      else if (key === "记录子类型") recordSubtype = value.trim() || void 0;
-      else if (key === "标签") tags2.push(...decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.tags));
-      else if (key === "系列id") seriesId = value.trim();
-      else if (key === "重复单位") {
-        const unit = value.trim().toLowerCase();
-        if (["day", "week", "month", "quarter", "year"].includes(unit)) recurrenceUnit = unit;
-      } else if (key === "重复间隔") {
-        const interval = Number.parseInt(value.trim(), 10);
-        if (Number.isInteger(interval) && interval > 0) recurrenceInterval = interval;
-      } else if (key === "重复锚点") {
-        const anchor = value.trim().toLowerCase();
-        if (["scheduled", "start", "due", "completion"].includes(anchor)) recurrenceAnchor = anchor;
-      } else if (key === "系列开始日期") seriesStartDate = parseDate$1(value);
-      else if (key === "当前任务id") currentTaskId = value.trim() || void 0;
-      else if (key === "滚动策略") {
-        if (value.trim().toLowerCase() === "carry") rolloverPolicy = "carry";
-      } else if (recordType === "task-session" && key === "任务id") taskId = value.trim() || void 0;
-      else if (recordType === "task-session" && key === "开始于") sessionStartedAt = normalizeStoredDateTime(value);
-      else if (recordType === "task-session" && key === "结束于") sessionEndedAt = normalizeStoredDateTime(value);
-      else if (recordType === "task-session" && key === "时长") sessionDurationMinutes = decodeMarkdownNumber(value);
-      else if (recordType === "task-session" && key === "结果") {
-        const result = value.trim().toLowerCase();
-        if (["work-block-ended", "task-completed"].includes(result)) sessionResult = result;
-      } else if (recordType === "task-session" && key === "来源") {
-        const source = value.trim().toLowerCase();
-        if (["timer", "energy-view", "timeline", "unknown"].includes(source)) sessionSource = source;
-      } else if (recordType === "task-session" && key === "建议时长") suggestedDurationMinutes = decodeMarkdownNumber(value);
-      else if (recordType === "task-session" && key === "开始精力记录id") startEnergyRecordId = value.trim() || void 0;
-      else if (recordType === "task-session" && key === "结束精力记录id") endEnergyRecordId = value.trim() || void 0;
-      else if (recordType === "task-session" && key === "精力变化") energyDelta = decodeMarkdownNumber(value);
-      else if (recordType === "task-session" && key === "脑力变化") brainDelta = decodeMarkdownNumber(value);
-      else if (recordType === "task-session" && key === "体力变化") physicalDelta = decodeMarkdownNumber(value);
-      else if (key === "记录类型") recordType = value.trim();
-      else if (key === "状态") status = value.trim().toLowerCase();
-      else if (key === "目标") goalPath = decodeMarkdownString(value, FIELD_CODEC_PRESETS.goalPath);
-      else if (key === "日期") date2 = parseDate$1(value);
-      else if (key === "计划时间") scheduledAt = normalizeStoredDateTime(value);
-      else if (key === "开始时间") startAt = normalizeStoredDateTime(value);
-      else if (key === "结束时间") endAt = normalizeStoredDateTime(value);
-      else if (key === "截止时间") dueAt = normalizeStoredDateTime(value);
-      else if (key === "计划日期") scheduledDate = parseDate$1(value);
-      else if (key === "开始日期") startDate = parseDate$1(value);
-      else if (key === "截止日期") dueDate = parseDate$1(value);
-      else if (key === "创建于") createdAt = normalizeStoredDateTime(value);
-      else if (key === "完成于") completedAt = normalizeStoredDateTime(value);
-      else if (key === "取消于") cancelledAt = normalizeStoredDateTime(value);
-      else if (key === "跳过于") skippedAt = normalizeStoredDateTime(value);
-      else if (key === "优先级") {
-        const p2 = value.trim().toLowerCase();
-        if (["lowest", "low", "medium", "high", "highest"].includes(p2)) priority = p2;
-      } else if (key === "重要程度") {
-        const candidate = value.trim().toLowerCase();
-        if (candidate === "important" || candidate === "normal") importance = candidate;
-      } else if (key === "紧急程度") {
-        const candidate = value.trim().toLowerCase();
-        if (candidate === "urgent" || candidate === "normal") urgency = candidate;
-      } else if (key === "预计时长") expectedDurationMinutes = decodeMarkdownNumber(value);
-      else if (key === "精力要求") energyDemand = value.trim().toLowerCase() || void 0;
-      else if (key === "脑力要求") brainDemand = value.trim().toLowerCase() || void 0;
-      else if (key === "体力要求") physicalDemand = value.trim().toLowerCase() || void 0;
-      else if (key === "可用场景") {
-        const allowed = /* @__PURE__ */ new Set(["any", "work", "home", "commute", "out"]);
-        const aliases2 = { "任意": "any", "工作": "work", "公司": "work", "家": "home", "居家": "home", "通勤": "commute", "外出": "out" };
-        const values2 = String(value || "").split(/[,，\n]/).map((part) => part.trim()).filter(Boolean).map((part) => aliases2[part] || part.toLowerCase()).filter((part) => allowed.has(part));
-        availabilityContexts2 = Array.from(new Set(values2));
-      } else if (key === "恢复意图") recoveryIntent = decodeMarkdownFieldValue(value, FIELD_CODEC_PRESETS.boolean);
-      else if (key === "评分") {
-        const decodedRating = decodeMarkdownNumber(value);
-        if (decodedRating !== void 0) rating = decodedRating;
-        else {
-          const visualRating = String(value || "").trim();
-          if (visualRating) {
-            extra[rawKey] = decodeUnknownMarkdownKvValue(visualRating);
-            if (!image) image = visualRating;
-          }
-        }
-      } else if (key === "图标") icon = value.trim();
-      else if (key === "图片") image = decodeMarkdownString(value, FIELD_CODEC_PRESETS.image);
-      else if (key === "内容") {
-        if (supportsBody) {
-          contentStarted = true;
-          content = value;
-        }
-      } else if (supportsCustomFields) extra[rawKey] = decodeUnknownMarkdownKvValue(value);
-    } else {
-      continue;
-    }
-  }
-  const finalTags = unique$1(tags2);
-  return {
-    recordId,
-    title: buildTitle(content, finalTags),
-    content: content.trim(),
-    status,
-    date: date2,
-    scheduledAt,
-    startAt,
-    endAt,
-    dueAt,
-    scheduledDate,
-    startDate,
-    dueDate,
-    completedAt,
-    cancelledAt,
-    skippedAt,
-    createdAt,
-    tags: finalTags,
-    goalPath,
-    recordType,
-    recordSubtype,
-    extra,
-    icon,
-    rating,
-    image,
-    priority,
-    importance,
-    urgency,
-    expectedDurationMinutes,
-    energyDemand,
-    brainDemand,
-    physicalDemand,
-    availabilityContexts: availabilityContexts2,
-    recoveryIntent,
-    seriesId,
-    recurrenceUnit,
-    recurrenceInterval,
-    recurrenceAnchor,
-    seriesStartDate,
-    currentTaskId,
-    rolloverPolicy,
-    taskId,
-    sessionStartedAt,
-    sessionEndedAt,
-    sessionDurationMinutes,
-    sessionResult,
-    sessionSource,
-    suggestedDurationMinutes,
-    startEnergyRecordId,
-    endEnergyRecordId,
-    energyDelta,
-    brainDelta,
-    physicalDelta
-  };
-}
-function markdownScalar(value) {
-  if (value == null) return "";
-  if (Array.isArray(value)) return value.map((v2) => String(v2).trim()).filter(Boolean).join(", ");
-  if (typeof value === "object") return "";
-  return String(value).trim();
-}
-const TASK_SESSION_FIELD_ORDER = [
-  ["任务ID", ["任务ID", "taskId"]],
-  ["系列ID", ["系列ID", "seriesId"]],
-  ["目标", ["目标", "goalPath"]],
-  ["开始于", ["开始于", "sessionStartedAt"]],
-  ["结束于", ["结束于", "sessionEndedAt"]],
-  ["时长", ["时长", "sessionDurationMinutes"]],
-  ["结果", ["结果", "sessionResult"]],
-  ["来源", ["来源", "sessionSource"]],
-  ["建议时长", ["建议时长", "suggestedDurationMinutes"]],
-  ["开始精力记录ID", ["开始精力记录ID", "startEnergyRecordId"]],
-  ["结束精力记录ID", ["结束精力记录ID", "endEnergyRecordId"]],
-  ["精力变化", ["精力变化", "energyDelta"]],
-  ["脑力变化", ["脑力变化", "brainDelta"]],
-  ["体力变化", ["体力变化", "physicalDelta"]]
-];
-function firstValue(fields, keys) {
-  for (const key of keys) {
-    const value = markdownScalar(fields[key]);
-    if (value) return value;
-  }
-  return "";
-}
-const BODY_FIELD_ALIASES = ["内容", "content", "正文", "title", "任务内容", "阻碍", "里程碑"];
-function bodyValue(fields) {
-  for (const key of BODY_FIELD_ALIASES) {
-    const value = fields[key];
-    if (value === void 0 || value === null) continue;
-    if (typeof value === "object") continue;
-    return String(value).replace(/\r\n/g, "\n").trim();
-  }
-  return "";
-}
-function emitBody(lines, body) {
-  if (!body) return;
-  const parts = body.split("\n");
-  lines.push(`内容:: ${parts.shift() || ""}`);
-  lines.push(...parts);
-}
-function encodeRecordBlock(document2) {
-  const fields = document2.fields || {};
-  const lines = ["<!-- start -->", `记录ID:: ${document2.recordId}`, `记录类型:: ${document2.recordType}`];
-  const emitted = /* @__PURE__ */ new Set();
-  if (document2.recordType === "task") {
-    for (const [label, keys] of TASK_FIELD_ORDER) {
-      let value = firstValue(fields, keys);
-      if (label === "状态" && !value) value = "open";
-      if (label === "创建于" && !value) value = (/* @__PURE__ */ new Date()).toISOString();
-      if (value && TASK_READABLE_DATETIME_LABELS.has(label)) value = formatRecordDateTimeForMarkdown(value);
-      if (value) {
-        lines.push(`${label}:: ${value}`);
-        keys.forEach((key) => emitted.add(key));
-      }
-    }
-    for (const [key, raw] of Object.entries(fields)) {
-      if (emitted.has(key) || BODY_FIELD_ALIASES.includes(key) || ["记录ID", "recordId", "id", "记录类型", "recordType"].includes(key)) continue;
-      const value = markdownScalar(raw);
-      if (value) lines.push(`${key}:: ${value}`);
-    }
-    emitBody(lines, bodyValue(fields));
-  } else if (document2.recordType === "task-session") {
-    for (const [label, keys] of TASK_SESSION_FIELD_ORDER) {
-      const value = firstValue(fields, keys);
-      if (value) lines.push(`${label}:: ${value}`);
-    }
-  } else if (document2.recordType === "task-series") {
-    for (const [label, keys] of TASK_SERIES_FIELD_ORDER) {
-      let value = firstValue(fields, keys);
-      if (label === "状态" && !value) value = "active";
-      if (label === "重复间隔" && !value) value = "1";
-      if (label === "重复锚点" && !value) value = "scheduled";
-      if (label === "滚动策略" && !value) value = "carry";
-      if (value) lines.push(`${label}:: ${value}`);
-    }
-    emitBody(lines, bodyValue(fields));
-  } else {
-    const schema = getRecordSchemaDefinition(document2.recordType);
-    const supportsBody = Boolean(schema && getRecordFieldContract(schema.recordType, "内容"));
-    for (const [key, raw] of Object.entries(fields)) {
-      if (supportsBody && BODY_FIELD_ALIASES.includes(key)) continue;
-      if (["记录ID", "recordId", "id", "记录类型", "recordType"].includes(key)) continue;
-      const value = markdownScalar(raw);
-      if (value) lines.push(`${key}:: ${value}`);
-    }
-    if (supportsBody) emitBody(lines, bodyValue(fields));
-  }
-  lines.push("<!-- end -->");
-  return lines.join("\n");
-}
-function encodeRecordDraft(input) {
-  return encodeRecordBlock({
-    recordId: input.recordId,
-    recordType: input.draft.recordType,
-    fields: input.draft.fields
-  });
-}
-const ENERGY_TARGET_FILE = "01/精力.md";
-const ENERGY_APPEND_UNDER_HEADER = "## {{goalPath}}";
-function clean$1(value) {
-  return String(value || "").trim();
-}
-function buildEnergySnapshotRecord(input) {
-  const captureMode2 = input.captureMode || "realtime";
-  const timePrecision = input.timePrecision || (input.time ? "exact" : input.period ? "period" : "day");
-  const isDetailed = input.scoreMode === "detailed";
-  const brainScore = isDetailed ? normalizeEnergyScore(input.brainScore) : void 0;
-  const physicalScore = isDetailed ? normalizeEnergyScore(input.physicalScore) : void 0;
-  const score = isDetailed ? calculateDetailedEnergyScore(input.brainScore, input.physicalScore) : normalizeEnergyScore(input.score);
-  return {
-    ...input,
-    recordId: createRecordId("energy"),
-    goalPath: clean$1(input.goalPath) || void 0,
-    time: clean$1(input.time) || void 0,
-    period: clean$1(input.period) || void 0,
-    recordedAt: clean$1(input.recordedAt) || void 0,
-    source: clean$1(input.source) || void 0,
-    recordType: "energy",
-    subtype: "snapshot",
-    score,
-    scoreMode: input.scoreMode || "quick",
-    captureMode: captureMode2,
-    timePrecision,
-    quickLevel: toEnergyQuickLevel(score),
-    brainScore,
-    physicalScore,
-    aggregateMethod: isDetailed ? "arithmetic-mean-v1" : void 0
-  };
-}
-function buildEnergySnapshotMarkdown(input) {
-  const record2 = "recordType" in input ? input : buildEnergySnapshotRecord(input);
-  return encodeRecordBlock({
-    recordId: record2.recordId,
-    recordType: "energy",
-    fields: {
-      "记录子类型": "snapshot",
-      "目标": record2.goalPath,
-      "日期": record2.date,
-      "时间": record2.time,
-      "时段": record2.period,
-      "精力值": record2.score,
-      "脑力精力": record2.brainScore,
-      "体力精力": record2.physicalScore,
-      "综合算法": record2.aggregateMethod,
-      "评分模式": record2.scoreMode,
-      "记录方式": record2.captureMode,
-      "时间精度": record2.timePrecision,
-      "记录时间": record2.recordedAt,
-      "来源": record2.source
-    }
-  });
-}
-const ENERGY_PROTOCOL_ACTION = "thinkos-energy";
-const ENERGY_PROTOCOL_VERSION = 1;
-function readInteger(raw) {
-  const text2 = String(raw ?? "").trim();
-  if (!/^-?\d+$/.test(text2)) return null;
-  const value = Number(text2);
-  return Number.isSafeInteger(value) ? value : null;
-}
-function parseEnergyProtocolParams(params) {
-  const version2 = readInteger(params.v);
-  if (version2 !== ENERGY_PROTOCOL_VERSION) {
-    return { ok: false, message: `不支持的精力快捷协议版本：${params.v || "缺失"}。` };
-  }
-  const mode = String(params.mode || "").trim();
-  if (mode === "quick") {
-    const score = readInteger(params.energy);
-    if (score == null || !isEnergyQuickLevel(score)) {
-      return { ok: false, message: "快捷精力只接受 20 / 40 / 60 / 80 / 100。" };
-    }
-    return { ok: true, payload: { version: 1, mode: "quick", score } };
-  }
-  if (mode === "detailed") {
-    const brainScore = readInteger(params.mental);
-    const physicalScore = readInteger(params.physical);
-    if (brainScore == null || brainScore < 0 || brainScore > 100) {
-      return { ok: false, message: "详细精力的脑力必须是 0–100 的整数。" };
-    }
-    if (physicalScore == null || physicalScore < 0 || physicalScore > 100) {
-      return { ok: false, message: "详细精力的体力必须是 0–100 的整数。" };
-    }
-    return {
-      ok: true,
-      payload: {
-        version: 1,
-        mode: "detailed",
-        brainScore: normalizeEnergyScore(brainScore),
-        physicalScore: normalizeEnergyScore(physicalScore)
-      }
-    };
-  }
-  return { ok: false, message: "精力快捷协议的模式只支持“快捷”或“详细”。" };
-}
-function resolveEnergyCaptureGoal(goals, defaultGoalPath) {
-  const available = goals.filter((goal) => goal.status !== "archived");
-  const preferredPath = String(defaultGoalPath || "").trim();
-  if (preferredPath) {
-    const preferred = available.find((goal) => goal.path === preferredPath);
-    if (preferred) return preferred;
-  }
-  return available.find((goal) => goal.status === "active") || available[0] || null;
-}
-function readNumber$1(value) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  const text2 = String(value ?? "").trim();
-  if (!text2) return void 0;
-  const parsed = Number(text2);
-  return Number.isFinite(parsed) ? parsed : void 0;
-}
-function readText$1(value) {
-  const text2 = String(value ?? "").trim();
-  return text2 || void 0;
-}
-function readScore(value) {
-  const parsed = readNumber$1(value);
-  if (parsed == null || parsed < 0 || parsed > 100) return void 0;
-  return Math.round(parsed);
-}
-function isEnergyItem(item) {
-  const block = String(item.recordType || item.extra?.["记录类型"] || "").replace(/^core\./i, "").trim().toLowerCase();
-  return block === "energy";
-}
-function readEnergyItemSnapshot(item) {
-  if (!isEnergyItem(item)) return null;
-  const extra = item.extra || {};
-  const score = readScore(extra["精力值"]);
-  if (score == null) return null;
-  const explicitQuick = readNumber$1(extra["精力档位"]);
-  const quickLevel = explicitQuick != null && isEnergyQuickLevel(explicitQuick) ? explicitQuick : toEnergyQuickLevel(score);
-  const modeText = readText$1(extra["评分模式"]);
-  const scoreMode = modeText === "quick" || modeText === "detailed" || modeText === "percent" ? modeText : void 0;
-  const captureText = readText$1(extra["记录方式"]);
-  const captureMode2 = captureText === "realtime" || captureText === "retrospective" ? captureText : void 0;
-  const precisionText = readText$1(extra["时间精度"]);
-  const timePrecision = precisionText === "exact" || precisionText === "approximate" || precisionText === "period" || precisionText === "day" ? precisionText : void 0;
-  return {
-    score,
-    quickLevel,
-    brainScore: readScore(extra["脑力精力"]),
-    physicalScore: readScore(extra["体力精力"]),
-    scoreMode,
-    captureMode: captureMode2,
-    timePrecision,
-    date: readText$1(item.date || extra["日期"]),
-    time: readText$1(item.startTime || extra["时间"]),
-    recordedAt: readText$1(extra["记录时间"]),
-    source: readText$1(extra["来源"])
-  };
-}
-function energySnapshotOccurrenceKey(snapshot) {
-  return `${snapshot.date || ""}T${snapshot.time || "00:00"}`;
-}
-const TASK_SESSION_RESULT_PRESENTATION = {
-  "work-block-ended": { result: "work-block-ended", label: "工作块已结束", emoji: "▶️", className: "open", status: "open" },
-  "task-completed": { result: "task-completed", label: "本次执行已完成任务", emoji: "✅", className: "done", status: "done" }
-};
-function getTaskSessionResultPresentation(value) {
-  const result = String(value || "").trim();
-  return TASK_SESSION_RESULT_PRESENTATION[result] || null;
-}
-function normalizeTaskSessionDurationMinutes(value) {
-  const number2 = Number(value);
-  if (!Number.isFinite(number2) || number2 < 0) return null;
-  return Math.round(number2 * 100) / 100;
-}
-function buildTaskSessionFields(task, input) {
-  const durationMinutes2 = normalizeTaskSessionDurationMinutes(input.durationMinutes);
-  if (durationMinutes2 == null || durationMinutes2 <= 0) throw new Error("task_session_duration_invalid");
-  if (!input.startedAt || !Number.isFinite(Date.parse(input.startedAt))) throw new Error("task_session_started_at_invalid");
-  if (!input.endedAt || !Number.isFinite(Date.parse(input.endedAt))) throw new Error("task_session_ended_at_invalid");
-  if (Date.parse(input.endedAt) < Date.parse(input.startedAt)) throw new Error("task_session_time_order_invalid");
-  if (!["work-block-ended", "task-completed"].includes(input.result)) throw new Error("task_session_result_invalid");
-  if (!["timer", "energy-view", "timeline", "unknown"].includes(input.source)) throw new Error("task_session_source_invalid");
-  return {
-    taskId: task.id,
-    seriesId: task.seriesId,
-    goalPath: task.goalPath,
-    sessionStartedAt: input.startedAt,
-    sessionEndedAt: input.endedAt,
-    sessionDurationMinutes: durationMinutes2,
-    sessionResult: input.result,
-    sessionSource: input.source,
-    suggestedDurationMinutes: input.suggestedDurationMinutes,
-    startEnergyRecordId: input.startEnergyRecordId
-  };
-}
-function asTaskSessionRecord(record2) {
-  if (!record2 || record2.recordType !== "task-session") return null;
-  const candidate = record2;
-  if (!candidate.taskId) return null;
-  if (!candidate.sessionStartedAt || !Number.isFinite(Date.parse(candidate.sessionStartedAt))) return null;
-  if (!candidate.sessionEndedAt || !Number.isFinite(Date.parse(candidate.sessionEndedAt))) return null;
-  if (normalizeTaskSessionDurationMinutes(candidate.sessionDurationMinutes) == null) return null;
-  if (!["work-block-ended", "task-completed"].includes(String(candidate.sessionResult || ""))) return null;
-  if (!["timer", "energy-view", "timeline", "unknown"].includes(String(candidate.sessionSource || ""))) return null;
-  return record2;
-}
-function localSessionDay(value) {
-  const date2 = new Date(value);
-  if (!Number.isFinite(date2.getTime())) return "";
-  return `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, "0")}-${String(date2.getDate()).padStart(2, "0")}`;
-}
-function recordedTaskMinutes(records, today) {
-  return records.reduce((sum, record2) => {
-    const session = asTaskSessionRecord(record2);
-    if (!session || localSessionDay(session.sessionStartedAt) !== today) return sum;
-    const duration2 = Number(session.sessionDurationMinutes);
-    if (!Number.isFinite(duration2) || duration2 <= 0) return sum;
-    return sum + Math.min(720, Math.max(0, duration2));
-  }, 0);
-}
-function buildEnergyActionPolicyContext(items, management, today) {
-  const dailyTaskMinutes = Math.round(recordedTaskMinutes(items, today));
-  const preserveGuardrail = management?.guardrails?.find((row) => row.key === "preserve-capacity" || row.key === "long-session");
-  const loadRisk = dailyTaskMinutes >= 180;
-  const preserveCapacityRisk = loadRisk || Boolean(preserveGuardrail);
-  let preserveCapacityReason;
-  if (dailyTaskMinutes >= 300) {
-    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}分钟，建议用更短工作块并到点收尾。`;
-  } else if (loadRisk) {
-    preserveCapacityReason = `今天已记录任务约 ${dailyTaskMinutes}分钟，这一块先设明确停止点，给后续留余量。`;
-  } else if (preserveGuardrail) {
-    preserveCapacityReason = "你的历史里已出现高能后持续过久的迹象，这一块先设明确停止点。";
-  }
-  return { dailyTaskMinutes, preserveCapacityRisk, preserveCapacityReason };
-}
-function baseCap(band) {
-  if (band === "recover") return 30;
-  if (band === "steady") return 45;
-  return 60;
-}
-function resolveEnergyActionTiming(candidate, band, policy) {
-  const requested = candidate.durationMinutes && candidate.durationMinutes > 0 ? candidate.durationMinutes : void 0;
-  let cap = baseCap(band);
-  const personalDepletion = Boolean(
-    candidate.historicalEffect && candidate.historicalEffect.sampleCount >= 3 && candidate.historicalEffect.meanDelta <= -8
-  );
-  if (personalDepletion) cap = Math.min(cap, 45);
-  if (policy?.preserveCapacityRisk && band !== "recover") cap = Math.min(cap, 45);
-  if ((policy?.dailyTaskMinutes || 0) >= 300 && band !== "recover") cap = Math.min(cap, 30);
-  if (personalDepletion && (policy?.dailyTaskMinutes || 0) >= 180 && band !== "recover") cap = Math.min(cap, 30);
-  const minutes = Math.max(1, Math.round(Math.min(requested ?? cap, cap)));
-  const preserveCapacity = band !== "recover" && Boolean(policy?.preserveCapacityRisk);
-  return {
-    minutes,
-    preserveCapacity,
-    stopReason: preserveCapacity ? policy?.preserveCapacityReason : void 0
-  };
-}
-const ENERGY_RECOMMENDATION_LOW_THRESHOLD = 40;
-const ENERGY_RECOMMENDATION_HIGH_THRESHOLD = 80;
-const DEFAULT_MAXIMUM = 3;
-const PERSONAL_SAMPLE_MINIMUM = 3;
-function clampScore(value) {
-  if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.min(100, Math.round(value)));
-}
-function bandFor(score, lowThreshold, highThreshold) {
-  if (score <= lowThreshold) return "recover";
-  if (score >= highThreshold) return "use-capacity";
-  return "steady";
-}
-function stateLabel$1(band) {
-  if (band === "recover") return "低精力";
-  if (band === "use-capacity") return "高精力";
-  return "可用精力";
-}
-function loadValue(load2) {
-  if (load2 === "low") return 25;
-  if (load2 === "medium") return 55;
-  if (load2 === "high") return 85;
-  return void 0;
-}
-function demandFit(available, load2) {
-  const demand = loadValue(load2);
-  if (demand == null) return 0;
-  const gap2 = available - demand;
-  let fit = 16 - Math.abs(gap2) * 0.38;
-  if (gap2 < -5) fit -= Math.min(24, Math.abs(gap2) * 0.55);
-  return Math.max(-30, Math.min(16, Math.round(fit * 10) / 10));
-}
-function effectEvidence(effect2) {
-  return effect2 && effect2.sampleCount >= PERSONAL_SAMPLE_MINIMUM ? "personal" : "metadata";
-}
-function historicalFit(effect2, band) {
-  if (!effect2 || effect2.sampleCount < PERSONAL_SAMPLE_MINIMUM) return 0;
-  const delta = Math.max(-40, Math.min(40, effect2.meanDelta));
-  if (band === "recover") return delta * 1.25;
-  if (band === "use-capacity") return delta >= 0 ? Math.min(6, delta * 0.15) : delta * 0.38;
-  return delta * 0.55;
-}
-function durationFit(duration2, band) {
-  if (duration2 == null || duration2 <= 0) return 0;
-  if (band === "recover") {
-    if (duration2 <= 5) return 8;
-    if (duration2 <= 20) return 10;
-    if (duration2 <= 35) return 6;
-    if (duration2 <= 60) return -4;
-    return -14;
-  }
-  if (band === "use-capacity") {
-    if (duration2 <= 5) return -5;
-    if (duration2 <= 20) return 0;
-    if (duration2 <= 60) return 8;
-    if (duration2 <= 120) return 10;
-    return 2;
-  }
-  if (duration2 <= 5) return 1;
-  if (duration2 <= 45) return 6;
-  if (duration2 <= 75) return 2;
-  return -5;
-}
-function energyOpportunityFit(candidate, brain, physical, band) {
-  const brainFit = demandFit(brain, candidate.brainLoad);
-  const physicalFit = demandFit(physical, candidate.physicalLoad);
-  let score = brainFit + physicalFit;
-  if (band === "use-capacity") {
-    if (candidate.brainLoad === "high" && brain >= 80) score += 12;
-    if (candidate.physicalLoad === "high" && physical >= 80) score += 8;
-    if (!candidate.brainLoad && !candidate.physicalLoad) score -= 3;
-    if (candidate.brainLoad === "low" && candidate.physicalLoad !== "high") score -= 6;
-  } else if (band === "recover") {
-    if (candidate.brainLoad === "high") score -= 18;
-    if (candidate.physicalLoad === "high" && physical <= 45) score -= 18;
-    if (candidate.brainLoad === "low") score += 5;
-    if (candidate.physicalLoad === "low") score += 3;
-  }
-  return score;
-}
-function valueFit(value, band) {
-  if (band === "use-capacity") return (value - 50) * 0.9;
-  if (band === "steady") return (value - 50) * 0.3;
-  return (value - 50) * 0.1;
-}
-function opportunityCostPenalty(candidate, value, band) {
-  if (band !== "use-capacity") return 0;
-  const duration2 = candidate.durationMinutes;
-  const micro = duration2 != null && duration2 <= 5;
-  const lowDemand = candidate.brainLoad === "low" && candidate.physicalLoad !== "high";
-  if (candidate.recoveryIntent) return -18;
-  if (micro && value < 75) return -12;
-  if (lowDemand && value < 70) return -8;
-  return 0;
-}
-function candidateScore(candidate, context, band) {
-  const overall = clampScore(context.score);
-  const brain = context.brainScore == null ? overall : clampScore(context.brainScore);
-  const physical = context.physicalScore == null ? overall : clampScore(context.physicalScore);
-  const value = candidate.valueScore == null ? 50 : clampScore(candidate.valueScore);
-  let score = 50;
-  score += valueFit(value, band);
-  score += energyOpportunityFit(candidate, brain, physical, band);
-  score += durationFit(candidate.durationMinutes, band);
-  score += historicalFit(candidate.historicalEffect, band);
-  score += opportunityCostPenalty(candidate, value, band);
-  if (band === "recover" && candidate.recoveryIntent) score += 30;
-  if (band === "steady" && candidate.recoveryIntent) score += 5;
-  return Math.round(score * 10) / 10;
-}
-function signed$1(value) {
-  const rounded = Math.round(value);
-  return `${rounded > 0 ? "+" : ""}${rounded}`;
-}
-function loadLabel(load2) {
-  if (load2 === "high") return "高";
-  if (load2 === "medium") return "中";
-  if (load2 === "low") return "低";
-  return "";
-}
-function reasonFor(candidate, band, duration2) {
-  const parts = [];
-  if (band === "use-capacity") parts.push("当前高精力窗口");
-  else if (band === "recover") parts.push("当前低精力窗口");
-  else parts.push("当前精力可用");
-  if (candidate.valueScore != null && candidate.valueScore >= 75) parts.push("高价值/紧急");
-  if (candidate.brainLoad) parts.push(`${loadLabel(candidate.brainLoad)}脑力`);
-  if (candidate.physicalLoad) parts.push(`${loadLabel(candidate.physicalLoad)}体力`);
-  if (candidate.recoveryIntent) parts.push("恢复项");
-  parts.push(`建议 ${duration2}分钟`);
-  const effect2 = candidate.historicalEffect;
-  if (effect2 && effect2.sampleCount >= PERSONAL_SAMPLE_MINIMUM) {
-    parts.push(`个人历史 ${signed$1(effect2.meanDelta)} · 样本数 ${effect2.sampleCount}`);
-  }
-  return parts.join(" · ");
-}
-function buildEnergyActionRecommendations(context, candidates) {
-  const lowThreshold = Math.max(0, Math.min(80, Math.round(context.lowThreshold ?? ENERGY_RECOMMENDATION_LOW_THRESHOLD)));
-  const highThreshold = Math.max(lowThreshold + 1, Math.min(100, Math.round(context.highThreshold ?? ENERGY_RECOMMENDATION_HIGH_THRESHOLD)));
-  const maximum = Math.max(1, Math.min(500, Math.floor(context.maximumRecommendations ?? DEFAULT_MAXIMUM)));
-  const score = clampScore(context.score);
-  const band = bandFor(score, lowThreshold, highThreshold);
-  const normalizedContext = { ...context, score };
-  const ranked = candidates.filter((candidate) => !!candidate.id && !!candidate.title.trim()).map((candidate) => {
-    const timing = resolveEnergyActionTiming(candidate, band, context.actionPolicy);
-    const duration2 = timing.minutes;
-    return {
-      candidate,
-      band,
-      fitScore: candidateScore(candidate, normalizedContext, band),
-      evidence: effectEvidence(candidate.historicalEffect),
-      reason: reasonFor(candidate, band, duration2),
-      suggestedDurationMinutes: duration2,
-      preserveCapacity: timing.preserveCapacity,
-      stopReason: timing.stopReason
-    };
-  }).sort((left2, right2) => right2.fitScore - left2.fitScore || (right2.candidate.valueScore || 0) - (left2.candidate.valueScore || 0) || left2.candidate.title.localeCompare(right2.candidate.title, "zh-CN")).slice(0, maximum).map((row, index) => ({ ...row, rank: index + 1 }));
-  return {
-    band,
-    stateLabel: stateLabel$1(band),
-    recommendations: ranked,
-    consideredCount: candidates.length
-  };
-}
-const RECURRENCE_UNITS = /* @__PURE__ */ new Set(["day", "week", "month", "quarter", "year"]);
-const RECURRENCE_ANCHORS = /* @__PURE__ */ new Set(["scheduled", "start", "due", "completion"]);
-function normalizeRecurrenceInfo(value) {
-  if (!value) return null;
-  const unit = String(value.unit || "").trim().toLowerCase();
-  const anchor = String(value.anchor || "").trim().toLowerCase();
-  const interval = Number(value.interval);
-  if (!RECURRENCE_UNITS.has(unit)) return null;
-  if (!RECURRENCE_ANCHORS.has(anchor)) return null;
-  if (!Number.isInteger(interval) || interval < 1) return null;
-  return { unit, interval, anchor };
-}
-function getTaskRecurrenceInfo(item) {
-  return normalizeRecurrenceInfo(item.recurrenceInfo);
-}
-function isTaskRecurring(item) {
-  return Boolean(String(item.seriesId || "").trim());
-}
-function formatTaskRecurrence(info) {
-  const recurrence = normalizeRecurrenceInfo(info);
-  if (!recurrence) return "";
-  const interval = recurrence.interval === 1 ? "" : `${recurrence.interval} `;
-  return `every ${interval}${recurrence.unit}${recurrence.interval === 1 ? "" : "s"}`;
-}
-function addRecurrenceToDate(baseDateISO, recurrence) {
-  const normalizedBase = normalizeDateStr(baseDateISO) || baseDateISO;
-  const base = dayjs(normalizedBase, ["YYYY-MM-DD", "YYYY/MM/DD"]);
-  if (!base.isValid()) throw new Error(`task_recurrence_invalid_base_date:${baseDateISO}`);
-  const next2 = recurrence.unit === "quarter" ? base.add(recurrence.interval * 3, "month") : base.add(recurrence.interval, recurrence.unit);
-  return next2.format("YYYY-MM-DD");
-}
-function addRecurrenceToDateTime(baseValue, recurrence) {
-  const raw = String(baseValue || "").trim();
-  if (!raw) return raw;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return addRecurrenceToDate(raw, recurrence);
-  const base = dayjs(raw.replace(" ", "T"));
-  if (!base.isValid()) throw new Error(`task_recurrence_invalid_base_datetime:${baseValue}`);
-  const next2 = recurrence.unit === "quarter" ? base.add(recurrence.interval * 3, "month") : base.add(recurrence.interval, recurrence.unit);
-  return next2.format("YYYY-MM-DDTHH:mm");
-}
-function firstTime(...values2) {
-  return values2.find((value) => Boolean(String(value || "").trim()));
-}
-function getTaskRecurrenceBaseDate(task, recurrence, completedAtISO) {
-  const completion = String(completedAtISO || "").trim();
-  if (recurrence.anchor === "completion") return completion;
-  if (recurrence.anchor === "start") return firstTime(task.startAt, task.startDate, task.scheduledAt, task.scheduledDate, task.dueAt, task.dueDate) || completion;
-  if (recurrence.anchor === "due") return firstTime(task.dueAt, task.dueDate, task.startAt, task.startDate, task.scheduledAt, task.scheduledDate) || completion;
-  return firstTime(task.scheduledAt, task.scheduledDate, task.startAt, task.startDate, task.dueAt, task.dueDate) || completion;
-}
-function buildNextOccurrenceDates(task, recurrence, completedAtISO) {
-  const base = getTaskRecurrenceBaseDate(task, recurrence, completedAtISO);
-  const nextAnchor = addRecurrenceToDateTime(base, recurrence);
-  const result = {};
-  const shift = (value) => value ? addRecurrenceToDateTime(value, recurrence) : void 0;
-  if (recurrence.anchor === "scheduled") {
-    if (task.scheduledAt) result.scheduledAt = nextAnchor;
-    else result.scheduledDate = nextAnchor.slice(0, 10);
-  } else {
-    result.scheduledAt = shift(task.scheduledAt);
-    result.scheduledDate = shift(task.scheduledDate)?.slice(0, 10);
-  }
-  if (recurrence.anchor === "start") result.startAt = nextAnchor;
-  else {
-    result.startAt = shift(task.startAt);
-    result.startDate = shift(task.startDate)?.slice(0, 10);
-  }
-  if (recurrence.anchor === "due") {
-    if (task.dueAt) result.dueAt = nextAnchor;
-    else result.dueDate = nextAnchor.slice(0, 10);
-  } else {
-    result.dueAt = shift(task.dueAt);
-    result.dueDate = shift(task.dueDate)?.slice(0, 10);
-  }
-  if (recurrence.anchor === "completion" && !result.scheduledAt && !result.scheduledDate && !result.startAt && !result.startDate && !result.dueAt && !result.dueDate) result.scheduledAt = nextAnchor;
-  return result;
-}
-const DEFAULT_HIGH_BEFORE_GAP = 60;
-const DEFAULT_HIGH_AFTER_GAP = 30;
-const DEFAULT_MINIMUM_TREND_SAMPLES = 3;
-const DEFAULT_SUPPORTED_TREND_SAMPLES = 5;
-function readEffectText(value) {
-  const text2 = String(value ?? "").trim();
-  return text2 || void 0;
-}
-function effectAbsoluteMinute(date2, time2) {
-  const stamp = Date.parse(`${date2}T${time2.length === 5 ? `${time2}:00` : time2}`);
-  return Number.isFinite(stamp) ? stamp / 6e4 : void 0;
-}
-function localDateTimeFromMs(stamp) {
-  const value = new Date(stamp);
-  const date2 = `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
-  const time2 = `${String(value.getHours()).padStart(2, "0")}:${String(value.getMinutes()).padStart(2, "0")}`;
-  return { date: date2, time: time2 };
-}
-function resolveEffectActivityInterval(item, byId) {
-  const session = asTaskSessionRecord(item);
-  if (!session) return null;
-  const startMs = Date.parse(session.sessionStartedAt);
-  const endMs = Date.parse(session.sessionEndedAt);
-  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return null;
-  const task = byId.get(session.taskId);
-  const activityItem = task ? {
-    ...task,
-    id: session.id,
-    goalPath: session.goalPath || task.goalPath,
-    duration: session.sessionDurationMinutes
-  } : session;
-  const start2 = localDateTimeFromMs(startMs);
-  const end2 = localDateTimeFromMs(endMs);
-  return {
-    item: activityItem,
-    startAbsolute: startMs / 6e4,
-    endAbsolute: endMs / 6e4,
-    startDate: start2.date,
-    startTime: start2.time,
-    endDate: end2.date,
-    endTime: end2.time,
-    durationMinutes: Math.max(1, Math.round(session.sessionDurationMinutes))
-  };
-}
-function readEffectEnergyPoint(item) {
-  if (!isEnergyItem(item)) return null;
-  const snapshot = readEnergyItemSnapshot(item);
-  if (!snapshot?.date || !snapshot.time) return null;
-  const absoluteMinute2 = effectAbsoluteMinute(snapshot.date, snapshot.time);
-  if (absoluteMinute2 == null) return null;
-  return {
-    itemId: item.id,
-    date: snapshot.date,
-    time: snapshot.time,
-    score: snapshot.score,
-    brainScore: snapshot.brainScore,
-    physicalScore: snapshot.physicalScore,
-    item,
-    absoluteMinute: absoluteMinute2
-  };
-}
-function activityTitle(item) {
-  return readEffectText(item.title) || readEffectText(item.content) || "未命名任务";
-}
-function classifyEnergyActivity(item) {
-  const text2 = [item.title, item.content, item.goalPath].map((value) => String(value || "")).join(" ");
-  if (/代码|编码|编程|开发|插件|debug|调试/i.test(text2)) return "代码 / 开发";
-  if (/会议|开会|沟通|讨论|同步/.test(text2)) return "会议 / 沟通";
-  if (/读书|阅读|看书|学习|课程/.test(text2)) return "阅读 / 学习";
-  if (/写作|记录|总结|复盘|笔记/.test(text2)) return "写作 / 记录";
-  if (/午睡|睡觉|睡眠|补觉/.test(text2)) return "睡眠 / 午睡";
-  if (/运动|锻炼|健身|跑步|散步|八段锦|瑜伽|骑行|游泳/.test(text2)) return "运动 / 活动";
-  if (/手机|抖音|短视频|刷视频|刷手机/.test(text2)) return "手机 / 短视频";
-  if (/吃饭|早餐|午饭|晚饭|餐|做饭/.test(text2)) return "饮食";
-  if (/孩子|陪娃|陪.*玩|家庭|家人/.test(text2)) return "家庭 / 陪伴";
-  if (/家务|打扫|收拾|整理/.test(text2)) return "家务 / 整理";
-  return activityTitle(item).slice(0, 24);
-}
-function effectGoalLabel(item) {
-  return readEffectText(item.goalPath) || "未分目标";
-}
-function effectDurationBucket(durationMinutes2) {
-  if (durationMinutes2 < 30) return "<30分钟";
-  if (durationMinutes2 < 60) return "30–59分钟";
-  if (durationMinutes2 < 90) return "60–89分钟";
-  if (durationMinutes2 < 120) return "90–119分钟";
-  return "≥120分钟";
-}
-function effectConfidence(beforeGap, afterGap, options) {
-  return beforeGap <= options.highBeforeGapMinutes && afterGap <= options.highAfterGapMinutes ? "high" : "medium";
-}
-function medianEffect(values2) {
-  const sorted = [...values2].sort((left2, right2) => left2 - right2);
-  const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
-}
-function meanEffect(values2) {
-  return values2.reduce((sum, value) => sum + value, 0) / Math.max(1, values2.length);
-}
-function roundedEffect(value) {
-  return Math.round(value * 10) / 10;
-}
-function aggregateEffectRows(samples, dimension, keyOf2, minimumTrendSamples, supportedTrendSamples) {
-  const groups = /* @__PURE__ */ new Map();
-  for (const sample of samples) {
-    const key = keyOf2(sample);
-    const bucket = groups.get(key) || [];
-    bucket.push(sample);
-    groups.set(key, bucket);
-  }
-  return [...groups.entries()].map(([key, rows]) => {
-    const deltas = rows.map((row) => row.deltaScore);
-    const brainDeltas = rows.map((row) => row.deltaBrain).filter((value) => value != null);
-    const physicalDeltas = rows.map((row) => row.deltaPhysical).filter((value) => value != null);
-    const meanDelta = meanEffect(deltas);
-    const medianDelta = medianEffect(deltas);
-    const evidence = rows.length < minimumTrendSamples ? "insufficient" : rows.length < supportedTrendSamples ? "exploratory" : "supported";
-    let trend = "insufficient";
-    if (evidence !== "insufficient") {
-      if (meanDelta >= 8 && medianDelta >= 5) trend = "recovery";
-      else if (meanDelta <= -8 && medianDelta <= -5) trend = "depletion";
-      else trend = "mixed";
-    }
-    return {
-      dimension,
-      key,
-      label: key,
-      sampleCount: rows.length,
-      meanDelta: roundedEffect(meanDelta),
-      medianDelta: roundedEffect(medianDelta),
-      meanBrainDelta: brainDeltas.length ? roundedEffect(meanEffect(brainDeltas)) : void 0,
-      meanPhysicalDelta: physicalDeltas.length ? roundedEffect(meanEffect(physicalDeltas)) : void 0,
-      meanDurationMinutes: roundedEffect(meanEffect(rows.map((row) => row.durationMinutes))),
-      positiveCount: rows.filter((row) => row.deltaScore >= 5).length,
-      negativeCount: rows.filter((row) => row.deltaScore <= -5).length,
-      neutralCount: rows.filter((row) => Math.abs(row.deltaScore) < 5).length,
-      trend,
-      evidence
-    };
-  }).sort((left2, right2) => {
-    if (left2.sampleCount !== right2.sampleCount) return right2.sampleCount - left2.sampleCount;
-    return Math.abs(right2.meanDelta) - Math.abs(left2.meanDelta);
-  });
-}
-function buildEnergyEffects(items, options = {}) {
-  const highBeforeGapMinutes = Math.max(1, options.highBeforeGapMinutes ?? DEFAULT_HIGH_BEFORE_GAP);
-  const highAfterGapMinutes = Math.max(1, options.highAfterGapMinutes ?? DEFAULT_HIGH_AFTER_GAP);
-  const minimumTrendSamples = Math.max(2, options.minimumTrendSamples ?? DEFAULT_MINIMUM_TREND_SAMPLES);
-  const supportedTrendSamples = Math.max(minimumTrendSamples, options.supportedTrendSamples ?? DEFAULT_SUPPORTED_TREND_SAMPLES);
-  const byId = new Map(items.map((item) => [item.id, item]));
-  const pointById = /* @__PURE__ */ new Map();
-  for (const item of items) {
-    const point = readEffectEnergyPoint(item);
-    if (point) pointById.set(point.itemId, point);
-  }
-  const intervals = items.map((item) => resolveEffectActivityInterval(item, byId)).filter((interval) => !!interval).sort((left2, right2) => left2.startAbsolute - right2.startAbsolute);
-  if (intervals.length === 0) return null;
-  const samples = [];
-  for (const record2 of items) {
-    const session = asTaskSessionRecord(record2);
-    if (!session?.startEnergyRecordId || !session.endEnergyRecordId) continue;
-    const interval = resolveEffectActivityInterval(record2, byId);
-    if (!interval) continue;
-    const before = pointById.get(session.startEnergyRecordId);
-    const after = pointById.get(session.endEnergyRecordId);
-    if (!before || !after || before.itemId === after.itemId) continue;
-    const beforeGapMinutes = Math.max(0, Math.round(interval.startAbsolute - before.absoluteMinute));
-    const afterGapMinutes = Math.max(0, Math.round(after.absoluteMinute - interval.endAbsolute));
-    const deltaScore = typeof session.energyDelta === "number" ? session.energyDelta : after.score - before.score;
-    const deltaBrain = typeof session.brainDelta === "number" ? session.brainDelta : before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : void 0;
-    const deltaPhysical = typeof session.physicalDelta === "number" ? session.physicalDelta : before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : void 0;
-    samples.push({
-      activityItemId: session.id,
-      activityTitle: activityTitle(interval.item),
-      activityLabel: classifyEnergyActivity(interval.item),
-      goalLabel: effectGoalLabel(interval.item),
-      durationBucket: effectDurationBucket(interval.durationMinutes),
-      durationMinutes: interval.durationMinutes,
-      startDate: interval.startDate,
-      startTime: interval.startTime,
-      endDate: interval.endDate,
-      endTime: interval.endTime,
-      before,
-      after,
-      beforeGapMinutes,
-      afterGapMinutes,
-      deltaScore,
-      deltaBrain,
-      deltaPhysical,
-      confidence: effectConfidence(beforeGapMinutes, afterGapMinutes, { highBeforeGapMinutes, highAfterGapMinutes }),
-      item: interval.item
-    });
-  }
-  return {
-    eligibleActivityCount: intervals.length,
-    pairedActivityCount: samples.length,
-    highConfidencePairCount: samples.filter((sample) => sample.confidence === "high").length,
-    mediumConfidencePairCount: samples.filter((sample) => sample.confidence === "medium").length,
-    excludedActivityCount: intervals.length - samples.length,
-    samples,
-    byActivity: aggregateEffectRows(samples, "activity", (sample) => sample.activityLabel, minimumTrendSamples, supportedTrendSamples),
-    byGoal: aggregateEffectRows(samples, "goal", (sample) => sample.goalLabel, minimumTrendSamples, supportedTrendSamples),
-    byDuration: aggregateEffectRows(samples, "duration", (sample) => sample.durationBucket, minimumTrendSamples, supportedTrendSamples)
-  };
-}
-function text$4(value) {
-  return String(value ?? "").trim();
-}
-function bool(value) {
-  if (typeof value === "boolean") return value;
-  const raw = text$4(value).toLowerCase();
-  if (!raw) return void 0;
-  if (["true", "1", "yes", "y", "是", "启用"].includes(raw)) return true;
-  if (["false", "0", "no", "n", "否", "禁用"].includes(raw)) return false;
-  return void 0;
-}
-function number$2(value) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  const raw = text$4(value);
-  if (!raw) return void 0;
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) ? parsed : void 0;
-}
-function normalizedBlock(item) {
-  return text$4(item.recordType || item.extra?.["记录类型"]).replace(/^core\./i, "").toLowerCase();
-}
-function sourceFor(item) {
-  const block = normalizedBlock(item);
-  if (block === "task") return "task";
-  if (block === "plan") return "plan";
-  if (block === "habit") return "habit";
-  return null;
-}
-function load(value) {
-  const raw = text$4(value).toLowerCase();
-  if (!raw) return void 0;
-  if (["low", "低", "轻", "轻量"].includes(raw)) return "low";
-  if (["medium", "mid", "中", "中等"].includes(raw)) return "medium";
-  if (["high", "高", "重", "高负荷"].includes(raw)) return "high";
-  return void 0;
-}
-const CONTEXT_ALIASES = {
-  any: "any",
-  "任意": "any",
-  work: "work",
-  "工作": "work",
-  "公司": "work",
-  home: "home",
-  "家": "home",
-  "居家": "home",
-  commute: "commute",
-  "通勤": "commute",
-  out: "out",
-  "外出": "out"
-};
-function availabilityContexts(value) {
-  const rows = Array.isArray(value) ? value : String(value ?? "").split(/[,，\n]/);
-  const normalized2 = rows.map((row) => CONTEXT_ALIASES[text$4(row)] || CONTEXT_ALIASES[text$4(row).toLowerCase()]).filter((row) => !!row);
-  return Array.from(new Set(normalized2));
-}
-function contextAllowed(item, currentContext) {
-  if (!currentContext || currentContext === "any") return true;
-  const contexts = availabilityContexts(item.availabilityContexts);
-  if (contexts.length === 0 || contexts.includes("any")) return true;
-  return contexts.includes(currentContext);
-}
-function median$2(values2) {
-  const sorted = values2.filter((value2) => Number.isFinite(value2) && value2 > 0).sort((a2, b2) => a2 - b2);
-  if (sorted.length < 2) return void 0;
-  const middle = Math.floor(sorted.length / 2);
-  const value = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
-  return Math.max(1, Math.min(240, Math.round(value)));
-}
-function historyDurationMaps(records) {
-  const taskRows = /* @__PURE__ */ new Map();
-  const seriesRows = /* @__PURE__ */ new Map();
-  const byId = new Map(records.map((record2) => [record2.id, record2]));
-  for (const record2 of records) {
-    const session = asTaskSessionRecord(record2);
-    if (!session) continue;
-    const duration2 = number$2(session.sessionDurationMinutes);
-    if (!duration2 || duration2 <= 0) continue;
-    taskRows.set(session.taskId, [...taskRows.get(session.taskId) || [], duration2]);
-    const task = byId.get(session.taskId);
-    const seriesId = text$4(session.seriesId || task?.seriesId);
-    if (seriesId) seriesRows.set(seriesId, [...seriesRows.get(seriesId) || [], duration2]);
-  }
-  const build = (rows) => new Map([...rows].flatMap(([key, values2]) => {
-    const value = median$2(values2);
-    return value == null ? [] : [[key, value]];
-  }));
-  return { byTaskId: build(taskRows), bySeriesId: build(seriesRows) };
-}
-function inferredDuration(item, history) {
-  const direct = number$2(item.expectedDurationMinutes);
-  if (direct != null && direct > 0) return Math.max(1, Math.min(240, Math.round(direct)));
-  const seriesId = text$4(item.seriesId);
-  if (seriesId) {
-    const seriesDuration = history.bySeriesId.get(seriesId);
-    if (seriesDuration != null) return seriesDuration;
-  }
-  return history.byTaskId.get(item.id);
-}
-function priorityValue(item) {
-  const map = {
-    lowest: 20,
-    low: 35,
-    medium: 55,
-    high: 75,
-    highest: 95
-  };
-  return map[item.priority || ""] ?? 50;
-}
-function parseDayDiff(value, today) {
-  if (!value || !today) return null;
-  const valueMs = Date.parse(`${value}T12:00:00`);
-  const todayMs = Date.parse(`${today}T12:00:00`);
-  if (!Number.isFinite(valueMs) || !Number.isFinite(todayMs)) return null;
-  return Math.round((valueMs - todayMs) / 864e5);
-}
-function dueBonus(item, today) {
-  const due = text$4(item.dueDate).slice(0, 10);
-  const days = parseDayDiff(due, today);
-  if (days == null) return 0;
-  if (days < -30) return 0;
-  if (days < 0) return 18;
-  if (days <= 1) return 14;
-  if (days <= 3) return 8;
-  if (days <= 7) return 3;
-  return 0;
-}
-function scheduleBonus(item, today) {
-  const date2 = text$4(item.scheduledDate || item.startDate).slice(0, 10);
-  const diff = parseDayDiff(date2, today);
-  return diff === 0 ? 8 : 0;
-}
-function futureTask(item, today) {
-  const date2 = text$4(item.startDate || item.scheduledDate).slice(0, 10);
-  const diff = parseDayDiff(date2, today);
-  return diff != null && diff > 0;
-}
-function candidateTitle(item) {
-  return text$4(item.content || item.editableText || item.title).slice(0, 120);
-}
-function normalizedLabel(value) {
-  return value.trim().toLowerCase().replace(/\s+/g, " ");
-}
-function exclusionReason(item, source, today, options) {
-  const explicit = bool(item.extra?.["可推荐"] ?? item.extra?.["recommendable"]);
-  if (explicit === false) return "explicitly-disabled";
-  if (source === "task") {
-    if (!isTaskOpen(item)) return "not-open-task";
-    if (isTaskRecurring(item) && !options.includeRecurringTasks && explicit !== true) return "recurring-task";
-    if (futureTask(item, today) && options.includeFutureTasks !== true) return "future-task";
-    if (!contextAllowed(item, options.currentContext)) return "context-unavailable";
-    return null;
-  }
-  if (source === "habit") {
-    if (options.includeHabits === true && explicit === true && !item.doneDate && !item.cancelledDate) return null;
-    return "habit-not-opted-in";
-  }
-  if (source === "plan") {
-    if (options.includePlans === true && explicit === true && !item.doneDate && !item.cancelledDate) return null;
-    return "plan-not-opted-in";
-  }
-  return "not-action-source";
-}
-function incrementReason(diagnostics, reason) {
-  diagnostics.excludedByReason[reason] = (diagnostics.excludedByReason[reason] || 0) + 1;
-}
-function personalEffectFor(candidate, management) {
-  if (!management) return void 0;
-  const title = normalizedLabel(candidate.title);
-  const goal = normalizedLabel(candidate.goalPath || "");
-  const rows = [...management.recoveryCandidates, ...management.cautionCandidates];
-  const row = rows.find((entry) => normalizedLabel(entry.label) === title) || (goal ? rows.find((entry) => normalizedLabel(entry.label) === goal) : void 0);
-  if (!row || row.sampleCount < 3) return void 0;
-  return {
-    meanDelta: row.meanDelta,
-    sampleCount: row.sampleCount,
-    meanBrainDelta: row.meanBrainDelta,
-    meanPhysicalDelta: row.meanPhysicalDelta
-  };
-}
-function buildEnergyActionCandidateResult(items, options = {}) {
-  const today = options.today || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-  const maximum = Math.max(1, Math.min(1e3, Math.floor(options.maximumCandidates ?? 500)));
-  const history = historyDurationMaps(options.historyRecords || items);
-  const candidates = [];
-  const seen = /* @__PURE__ */ new Set();
-  const diagnostics = {
-    totalItems: items.length,
-    taskItems: 0,
-    openTasks: 0,
-    recurringOpenTasks: 0,
-    futureOpenTasks: 0,
-    contextUnavailableTasks: 0,
-    eligibleTasks: 0,
-    eligiblePlans: 0,
-    eligibleHabits: 0,
-    candidateCount: 0,
-    excludedByReason: {}
-  };
-  for (const item of items) {
-    const source = sourceFor(item);
-    if (!source) {
-      incrementReason(diagnostics, "not-action-source");
-      continue;
-    }
-    if (source === "task") {
-      diagnostics.taskItems += 1;
-      if (isTaskOpen(item)) {
-        diagnostics.openTasks += 1;
-        if (isTaskRecurring(item)) diagnostics.recurringOpenTasks += 1;
-        if (futureTask(item, today)) diagnostics.futureOpenTasks += 1;
-        if (!contextAllowed(item, options.currentContext)) diagnostics.contextUnavailableTasks += 1;
-      }
-    }
-    const reason = exclusionReason(item, source, today, options);
-    if (reason) {
-      incrementReason(diagnostics, reason);
-      continue;
-    }
-    const title = candidateTitle(item);
-    if (!title) {
-      incrementReason(diagnostics, "missing-title");
-      continue;
-    }
-    if (source === "task") diagnostics.eligibleTasks += 1;
-    if (source === "plan") diagnostics.eligiblePlans += 1;
-    if (source === "habit") diagnostics.eligibleHabits += 1;
-    const dedupeKey = source === "task" && item.seriesId ? `series:${item.seriesId}` : `${source}:${item.id}`;
-    if (seen.has(dedupeKey)) continue;
-    seen.add(dedupeKey);
-    const sharedLoad = load(item.energyDemand);
-    const valueScore = Math.max(0, Math.min(100, priorityValue(item) + dueBonus(item, today) + scheduleBonus(item, today)));
-    const contexts = availabilityContexts(item.availabilityContexts);
-    candidates.push({
-      id: item.id,
-      title,
-      source,
-      goalPath: item.goalPath,
-      seriesId: item.seriesId,
-      activityLabel: classifyEnergyActivity(item),
-      durationMinutes: inferredDuration(item, history),
-      brainLoad: load(item.brainDemand) || sharedLoad,
-      physicalLoad: load(item.physicalDemand) || sharedLoad,
-      valueScore,
-      availabilityContexts: contexts.length ? contexts : void 0,
-      recoveryIntent: item.recoveryIntent === true
-    });
-  }
-  const sorted = candidates.sort((left2, right2) => (right2.valueScore || 0) - (left2.valueScore || 0) || left2.title.localeCompare(right2.title, "zh-CN")).slice(0, maximum);
-  diagnostics.candidateCount = sorted.length;
-  return { candidates: sorted, diagnostics };
-}
-function attachEnergyRecommendationEvidence(candidates, management) {
-  return candidates.map((candidate) => {
-    if (candidate.historicalEffect) return candidate;
-    const historicalEffect = personalEffectFor(candidate, management);
-    return historicalEffect ? { ...candidate, historicalEffect } : candidate;
-  });
-}
-function text$3(value) {
-  return String(value ?? "").trim();
-}
-function normalized(value) {
-  return text$3(value).toLowerCase().replace(/\s+/g, " ");
-}
-function finiteNumber$1(value) {
-  const n2 = Number(value);
-  return Number.isFinite(n2) ? n2 : void 0;
-}
-function mean(values2) {
-  const finite = values2.filter(Number.isFinite);
-  if (!finite.length) return void 0;
-  return Math.round(finite.reduce((sum, value) => sum + value, 0) / finite.length * 10) / 10;
-}
-function median$1(values2) {
-  const finite = values2.filter((value2) => Number.isFinite(value2) && value2 > 0).sort((a2, b2) => a2 - b2);
-  if (!finite.length) return void 0;
-  const middle = Math.floor(finite.length / 2);
-  const value = finite.length % 2 ? finite[middle] : (finite[middle - 1] + finite[middle]) / 2;
-  return Math.round(value);
-}
-function aggregate(rows, keyOf2) {
-  const grouped = /* @__PURE__ */ new Map();
-  for (const row of rows) {
-    const key = normalized(keyOf2(row));
-    if (!key) continue;
-    grouped.set(key, [...grouped.get(key) || [], row]);
-  }
-  return new Map([...grouped.entries()].map(([key, group]) => [key, {
-    meanDelta: mean(group.map((row) => row.delta)) || 0,
-    sampleCount: group.length,
-    meanBrainDelta: mean(group.flatMap((row) => row.brainDelta == null ? [] : [row.brainDelta])),
-    meanPhysicalDelta: mean(group.flatMap((row) => row.physicalDelta == null ? [] : [row.physicalDelta])),
-    typicalDurationMinutes: median$1(group.flatMap((row) => row.durationMinutes == null ? [] : [row.durationMinutes])),
-    origin: "recommendation-feedback"
-  }]));
-}
-function buildFeedbackRows(items) {
-  const byId = new Map(items.map((item) => [item.id, item]));
-  const rows = [];
-  for (const item of items) {
-    const session = asTaskSessionRecord(item);
-    if (!session || !session.endEnergyRecordId) continue;
-    const delta = finiteNumber$1(session.energyDelta);
-    if (delta == null) continue;
-    const task = byId.get(session.taskId);
-    const goalPath = text$3(session.goalPath || task?.goalPath) || void 0;
-    const activity = task ? classifyEnergyActivity(task) : goalPath || "未分类活动";
-    rows.push({
-      taskId: session.taskId,
-      seriesId: session.seriesId || task?.seriesId,
-      activity,
-      goalPath,
-      delta,
-      brainDelta: finiteNumber$1(session.brainDelta),
-      physicalDelta: finiteNumber$1(session.physicalDelta),
-      durationMinutes: finiteNumber$1(session.sessionDurationMinutes)
-    });
-  }
-  return rows;
-}
-function recoveryEntries(effects, trend) {
-  return [...effects.entries()].flatMap(([key, effect2]) => {
-    if (effect2.sampleCount < 3) return [];
-    if (trend === "recovery" && effect2.meanDelta < 8) return [];
-    if (trend === "depletion" && effect2.meanDelta > -8) return [];
-    return [{ ...effect2, key, label: key, typicalDurationMinutes: effect2.typicalDurationMinutes }];
-  }).sort((left2, right2) => Math.abs(right2.meanDelta) - Math.abs(left2.meanDelta) || right2.sampleCount - left2.sampleCount);
-}
-function buildEnergyRecommendationLearning(items) {
-  const rows = buildFeedbackRows(items);
-  const byTaskId = aggregate(rows, (row) => row.taskId);
-  const bySeriesId = aggregate(rows.filter((row) => !!row.seriesId), (row) => row.seriesId || "");
-  const byActivity = aggregate(rows, (row) => row.activity);
-  const byGoal = aggregate(rows.filter((row) => !!row.goalPath), (row) => row.goalPath || "");
-  return {
-    feedbackSampleCount: rows.length,
-    pairedActivityCount: rows.length,
-    byTaskId,
-    bySeriesId,
-    byActivity,
-    byGoal,
-    recoveryActivities: recoveryEntries(byActivity, "recovery"),
-    depletionActivities: recoveryEntries(byActivity, "depletion")
-  };
-}
-function attachEnergyRecommendationLearning(candidates, learning) {
-  return candidates.map((candidate) => {
-    const taskEffect = learning.byTaskId.get(normalized(candidate.id));
-    const seriesEffect = candidate.seriesId ? learning.bySeriesId.get(normalized(candidate.seriesId)) : void 0;
-    const goalEffect = candidate.goalPath ? learning.byGoal.get(normalized(candidate.goalPath)) : void 0;
-    const activityEffect = candidate.activityLabel ? learning.byActivity.get(normalized(candidate.activityLabel)) : void 0;
-    const historicalEffect = taskEffect && taskEffect.sampleCount >= 3 ? taskEffect : seriesEffect && seriesEffect.sampleCount >= 3 ? seriesEffect : goalEffect && goalEffect.sampleCount >= 3 ? goalEffect : activityEffect && activityEffect.sampleCount >= 3 ? activityEffect : void 0;
-    return historicalEffect ? { ...candidate, historicalEffect } : candidate;
-  });
-}
-function ordinal3(value) {
-  const match5 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match5) return void 0;
-  const stamp = Date.UTC(Number(match5[1]), Number(match5[2]) - 1, Number(match5[3]));
-  const date2 = new Date(stamp);
-  if (date2.toISOString().slice(0, 10) !== value) return void 0;
-  return Math.floor(stamp / 864e5);
-}
-function ratio(value, total) {
-  if (total <= 0) return 0;
-  return Math.round(value / total * 1e3) / 1e3;
-}
-function pct(value) {
-  return Math.round(value * 100);
-}
-function buildEnergyDataQuality(items, options) {
-  const start2 = ordinal3(options.startDate);
-  const end2 = ordinal3(options.endDate);
-  const totalDays = start2 == null || end2 == null || end2 < start2 ? 0 : end2 - start2 + 1;
-  const snapshots = items.filter(isEnergyItem).map((item) => ({ item, snapshot: readEnergyItemSnapshot(item) })).filter((row) => !!row.snapshot).filter(({ snapshot }) => {
-    if (!snapshot.date) return false;
-    const value = ordinal3(snapshot.date);
-    return start2 != null && end2 != null && value != null && value >= start2 && value <= end2;
-  });
-  const sampledDays = new Set(snapshots.map(({ snapshot }) => snapshot.date).filter(Boolean)).size;
-  const realtimeSamples = snapshots.filter(({ snapshot }) => snapshot.captureMode !== "retrospective").length;
-  const retrospectiveSamples = snapshots.filter(({ snapshot }) => snapshot.captureMode === "retrospective").length;
-  const exactTimeSamples = snapshots.filter(({ snapshot }) => {
-    if (snapshot.timePrecision === "exact") return true;
-    return !snapshot.timePrecision && snapshot.captureMode !== "retrospective" && Boolean(snapshot.time);
-  }).length;
-  const approximateTimeSamples = snapshots.length - exactTimeSamples;
-  const detailedSamples = snapshots.filter(({ snapshot }) => snapshot.brainScore != null && snapshot.physicalScore != null).length;
-  const effects = buildEnergyEffects(options.effectRecords || items);
-  const coverageRatio = ratio(sampledDays, totalDays);
-  const realtimeRatio = ratio(realtimeSamples, snapshots.length);
-  const exactRatio = ratio(exactTimeSamples, snapshots.length);
-  const pairedActivityCount = effects?.pairedActivityCount || 0;
-  const highConfidencePairCount = effects?.highConfidencePairCount || 0;
-  const mediumConfidencePairCount = effects?.mediumConfidencePairCount || 0;
-  let level = "limited";
-  if (sampledDays >= Math.min(7, Math.max(4, Math.ceil(totalDays * 0.6))) && snapshots.length >= 8 && coverageRatio >= 0.6 && exactRatio >= 0.6) {
-    level = "strong";
-  } else if (sampledDays >= Math.min(3, Math.max(2, totalDays)) && snapshots.length >= 4) {
-    level = "usable";
-  }
-  const gaps = [];
-  if (sampledDays < Math.min(3, totalDays || 3)) gaps.push(`只有 ${sampledDays}/${totalDays || "—"} 天有记录`);
-  else if (coverageRatio < 0.5) gaps.push(`覆盖率 ${pct(coverageRatio)}%`);
-  if (snapshots.length > 0 && realtimeRatio < 0.5) gaps.push(`实时记录仅 ${pct(realtimeRatio)}%`);
-  if (snapshots.length > 0 && exactRatio < 0.5) gaps.push(`精确时间仅 ${pct(exactRatio)}%`);
-  if (pairedActivityCount < 3) gaps.push(`活动前后有效配对 ${pairedActivityCount}`);
-  const levelLabel = level === "strong" ? "较可靠" : level === "usable" ? "可观察" : "数据不足";
-  const message = level === "strong" ? `本周期 ${sampledDays}/${totalDays} 天有记录（${pct(coverageRatio)}%），可以形成观察性模式；仍不把时间邻近关系当因果。` : level === "usable" ? `本周期 ${sampledDays}/${totalDays} 天有记录（${pct(coverageRatio)}%）；可以看趋势，但个人规律仍需更多重复样本。` : `本周期 ${sampledDays}/${totalDays || "—"} 天有记录；先把地图当作状态记录，不强行形成规律。`;
-  return {
-    level,
-    levelLabel,
-    totalDays,
-    sampledDays,
-    coverageRatio,
-    sampleCount: snapshots.length,
-    realtimeSamples,
-    retrospectiveSamples,
-    exactTimeSamples,
-    approximateTimeSamples,
-    detailedSamples,
-    pairedActivityCount,
-    highConfidencePairCount,
-    mediumConfidencePairCount,
-    message,
-    gaps
-  };
-}
-const GOAL_CONTEXT_KEYS = /* @__PURE__ */ new Set(["goalPath", "目标", "目标路径"]);
-const GOAL_TEMPLATE_ICON_KEYS = /* @__PURE__ */ new Set(["icon", "图标"]);
-function hasHash(value) {
-  const text2 = String(value ?? "");
-  return text2.includes("#") || text2.includes("＃");
-}
-function assertGoal(goal) {
-  const raw = String(goal.path || "").trim();
-  if (hasHash(raw)) throw new Error(`目标路径无效（${raw}）：目标路径不能包含 #。`);
-  const normalized2 = normalizeGoalPath(raw);
-  if (!normalized2) throw new Error("目标无效：必须使用规范的斜杠分隔路径。");
-  if (goal.path !== normalized2) throw new Error(`目标路径无效：应为 ${normalized2}。`);
-  if (goal.timePresetPercent !== void 0) {
-    const percent = Number(goal.timePresetPercent);
-    if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
-      throw new Error(`目标 ${normalized2} 的时间预设百分比无效：必须在 0 到 100 之间。`);
-    }
-  }
-  if (goal.weeklyTargetMinutes !== void 0) {
-    const minutes = Number(goal.weeklyTargetMinutes);
-    if (!Number.isFinite(minutes) || minutes < 0) {
-      throw new Error(`目标 ${normalized2} 的每周目标分钟数无效：必须大于等于 0。`);
-    }
-  }
-}
-function assertTemplate(template, goalPaths) {
-  const goalPath = normalizeGoalPath(template.goalPath);
-  if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`目标模板引用了不存在的目标（${template.goalPath || "空"}）。`);
-  for (const key of Object.keys(template.defaultValues || {})) {
-    if (GOAL_CONTEXT_KEYS.has(key)) throw new Error(`目标模板 ${goalPath}/${template.recordTypeId} 不能保存目标上下文默认值（${key}）。`);
-    if (GOAL_TEMPLATE_ICON_KEYS.has(key)) throw new Error(`目标模板 ${goalPath}/${template.recordTypeId} 不能保存目标身份图标默认值（${key}）。`);
-  }
-  for (const field of template.fields || []) {
-    const semantic = String(field.semantic || "").trim();
-    const key = String(field.key || field.label || "").trim();
-    if (semantic === "goalPath" || GOAL_CONTEXT_KEYS.has(key)) {
-      throw new Error(`目标模板 ${goalPath}/${template.recordTypeId} 不能保存目标上下文字段（${key || semantic}）。`);
-    }
-    if ((semantic === "icon" || GOAL_TEMPLATE_ICON_KEYS.has(key)) && String(field.defaultValue ?? "").trim()) {
-      throw new Error(`目标模板 ${goalPath}/${template.recordTypeId} 不能保存图标字段默认值。`);
-    }
-  }
-}
-function assertCanonicalGoalSettings(goalSettings) {
-  const goals = goalSettings?.goals || [];
-  for (const goal of goals) assertGoal(goal);
-  const paths = new Set(goals.map((goal) => goal.path));
-  if (paths.size !== goals.length) throw new Error("检测到重复的目标路径。");
-  const templateKeys = /* @__PURE__ */ new Set();
-  for (const template of goalSettings?.goalTemplates || []) {
-    assertTemplate(template, paths);
-    const key = `${template.goalPath}::${template.recordTypeId}`;
-    if (templateKeys.has(key)) throw new Error(`检测到重复的目标模板（${key}）。`);
-    templateKeys.add(key);
-  }
-}
-function templateFieldTokenSources(field) {
-  if (!field) return [];
-  return [field.key, field.label, field.semantic, field.semanticType, field.role];
-}
-function normalizeFieldToken(value) {
-  return normalizeTextToken(value);
-}
-function normalizeFieldLabelToken(value) {
-  return compactText$2(value);
-}
-function getTemplateFieldLookupTokens(field) {
-  return templateFieldTokenSources(field).map(normalizeFieldToken).filter(Boolean);
-}
-function getTemplateFieldLabelTokens(field) {
-  return templateFieldTokenSources(field).map(normalizeFieldLabelToken).filter(Boolean);
-}
-function templateFieldMatchesAliases(field, aliases2) {
-  const lowerTokens = getTemplateFieldLookupTokens(field);
-  const labelTokens = getTemplateFieldLabelTokens(field);
-  const lowerAliases = aliases2.map(normalizeFieldToken);
-  return lowerTokens.some((token2) => lowerAliases.includes(token2)) || labelTokens.some((token2) => aliases2.includes(token2));
-}
-function templateFieldSemanticToken(field) {
-  return normalizeFieldToken(field?.semantic || field?.semanticType);
-}
-function isIconTemplateField(field) {
-  const key = normalizeFieldToken(field?.key);
-  const label = normalizeFieldLabelToken(field?.label);
-  const semantic = templateFieldSemanticToken(field);
-  return key === "icon" || key === "图标" || label === "图标" || semantic === "icon";
-}
-function normalizeGoalIcon(value) {
-  return String(value ?? "").trim();
-}
-function resolveGoalIcon(goal) {
-  return normalizeGoalIcon(goal?.icon);
-}
-function stripGoalTemplateIconDefaults(values2) {
-  const result = {};
-  for (const [key, value] of Object.entries(values2 || {})) {
-    if (key === "icon" || key === "图标") continue;
-    result[key] = value;
-  }
-  return Object.keys(result).length ? result : void 0;
-}
-function stripGoalTemplateIconFieldDefaults(fields) {
-  if (!fields?.length) return void 0;
-  return fields.map((field) => {
-    if (!isIconTemplateField(field)) return field;
-    const next2 = { ...field };
-    delete next2.defaultValue;
-    return next2;
-  });
-}
-function applyGoalIconToCaptureFields(fields, goal) {
-  const icon = resolveGoalIcon(goal);
-  if (!fields?.length || !icon) return fields;
-  return fields.map((field) => isIconTemplateField(field) ? { ...field, defaultValue: icon } : field);
-}
-const GOAL_FALLBACK_PALETTE = ["#8b5cf6", "#06b6d4", "#22c55e", "#f59e0b", "#ef4444", "#6366f1", "#14b8a6", "#f97316", "#a855f7", "#0ea5e9"];
-const UNASSIGNED_GOAL_COLOR = "#9ca3af";
-function stableGoalColor(seed) {
-  let hash2 = 0;
-  for (const ch of seed || "") hash2 = (hash2 << 5) - hash2 + ch.charCodeAt(0) | 0;
-  return GOAL_FALLBACK_PALETTE[Math.abs(hash2) % GOAL_FALLBACK_PALETTE.length] || GOAL_FALLBACK_PALETTE[0];
-}
-function normalizeGoalColorHex(value) {
-  const raw = String(value ?? "").trim().toLowerCase();
-  if (/^#[0-9a-f]{6}$/.test(raw)) return raw;
-  if (/^#[0-9a-f]{3}$/.test(raw)) return `#${raw.slice(1).split("").map((part) => part + part).join("")}`;
-  return null;
-}
-function resolveGoalColor(goal, fallbackPath = "") {
-  const explicit = normalizeGoalColorHex(goal?.color);
-  if (explicit) return explicit;
-  const path = normalizeGoalPath(String(goal?.path || fallbackPath || "").trim());
-  return path ? stableGoalColor(path) : UNASSIGNED_GOAL_COLOR;
-}
-const ENERGY_RECORD_TYPE_ID = RECORD_TYPE_IDS.ENERGY;
-const DEFAULT_RECORD_TYPES = Object.freeze(
-  sortRecordTypesByPresentation(
-    RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.capabilities.userVisible && definition.captureMode !== "internal"),
-    (definition) => definition.recordType
-  )
-);
-const DEFAULT_TEMPLATE_RECORD_TYPES = Object.freeze(
-  sortRecordTypesByPresentation(
-    RECORD_SCHEMA_DEFINITIONS.filter(
-      (definition) => definition.capabilities.userVisible && definition.captureMode === "template" && typeof definition.recordTypeId === "string"
-    ),
-    (definition) => definition.recordType
-  )
-);
-function getEffectiveRecordTypes() {
-  return [...DEFAULT_RECORD_TYPES];
-}
-function getTemplateRecordTypes() {
-  return [...DEFAULT_TEMPLATE_RECORD_TYPES];
-}
-function getRecordTypeById(recordTypeId) {
-  const id = String(recordTypeId || "").trim();
-  return DEFAULT_RECORD_TYPES.find((item) => item.id === id) || null;
-}
-function getTemplateRecordTypeById(recordTypeId) {
-  const id = String(recordTypeId || "").trim();
-  return DEFAULT_TEMPLATE_RECORD_TYPES.find((item) => item.id === id) || null;
-}
-function buildRecordTypeInputSettings() {
-  return { recordTypes: [...DEFAULT_TEMPLATE_RECORD_TYPES] };
-}
-const UNKNOWN_GOAL_RANK = Number.MAX_SAFE_INTEGER - 1e3;
-const UNASSIGNED_GOAL_RANK = Number.MAX_SAFE_INTEGER;
-function finiteNumber(value, fallback) {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : fallback;
-}
-function normalizeOrderPath(value) {
-  return splitGoalPath(String(value ?? "")).goalPath || "";
-}
-function leafGoalLabel(value) {
-  const parsed = splitGoalPath(String(value ?? ""));
-  return parsed.leafGoal || parsed.goalPath || "";
-}
-function getGoalOrderPath(goal) {
-  if (!goal) return "";
-  return normalizeOrderPath(goal.path);
-}
-function getGoalOrderLabel(goal) {
-  if (!goal) return "";
-  return leafGoalLabel(goal.path);
-}
-function createGoalOrderIndex(goals = []) {
-  const rawDescriptors = (goals || []).map((goal, originalIndex) => {
-    const path = getGoalOrderPath(goal);
-    const parts = path.split("/").filter(Boolean);
-    return {
-      path,
-      parentPath: parts.slice(0, -1).join("/"),
-      order: finiteNumber(goal.sortOrder, originalIndex),
-      originalIndex
-    };
-  }).filter((entry) => Boolean(entry.path));
-  const descriptorByPath = /* @__PURE__ */ new Map();
-  for (const entry of rawDescriptors) {
-    if (!descriptorByPath.has(entry.path)) descriptorByPath.set(entry.path, entry);
-  }
-  const childrenByParent = /* @__PURE__ */ new Map();
-  const rootEntries = [];
-  for (const entry of descriptorByPath.values()) {
-    if (!entry.parentPath || !descriptorByPath.has(entry.parentPath)) {
-      rootEntries.push(entry);
-      continue;
-    }
-    const siblings = childrenByParent.get(entry.parentPath) || [];
-    siblings.push(entry);
-    childrenByParent.set(entry.parentPath, siblings);
-  }
-  const sortSiblings = (items) => items.sort((left2, right2) => {
-    if (left2.order !== right2.order) return left2.order - right2.order;
-    if (left2.originalIndex !== right2.originalIndex) return left2.originalIndex - right2.originalIndex;
-    return left2.path.localeCompare(right2.path, "zh-CN");
-  });
-  sortSiblings(rootEntries);
-  childrenByParent.forEach(sortSiblings);
-  const descriptors = [];
-  const visit = (entry) => {
-    descriptors.push(entry);
-    for (const child of childrenByParent.get(entry.path) || []) visit(child);
-  };
-  rootEntries.forEach(visit);
-  const byPath = /* @__PURE__ */ new Map();
-  const originalIndexByPath = /* @__PURE__ */ new Map();
-  const orderedPaths = [];
-  descriptors.forEach((entry, index) => {
-    byPath.set(entry.path, index);
-    originalIndexByPath.set(entry.path, entry.originalIndex);
-    orderedPaths.push(entry.path);
-  });
-  const rankOfPath = (path) => {
-    const normalized2 = normalizeOrderPath(path || "");
-    if (!normalized2 || normalized2 === "未归属目标") return UNASSIGNED_GOAL_RANK;
-    const known = byPath.get(normalized2);
-    return known === void 0 ? UNKNOWN_GOAL_RANK : known;
-  };
-  const compareGoalPaths = (left2, right2) => {
-    const leftPath = normalizeOrderPath(left2 || "");
-    const rightPath = normalizeOrderPath(right2 || "");
-    const leftRank = rankOfPath(leftPath);
-    const rightRank = rankOfPath(rightPath);
-    if (leftRank !== rightRank) return leftRank - rightRank;
-    return leftPath.localeCompare(rightPath, "zh-CN");
-  };
-  const compareGoals = (left2, right2) => {
-    const byPathOrder = compareGoalPaths(getGoalOrderPath(left2), getGoalOrderPath(right2));
-    if (byPathOrder !== 0) return byPathOrder;
-    return left2.path.localeCompare(right2.path, "zh-CN");
-  };
-  return { byPath, originalIndexByPath, orderedPaths, rankOfPath, compareGoalPaths, compareGoals };
-}
-function sortGoalsBySettingsOrder(goals = []) {
-  const order2 = createGoalOrderIndex(goals);
-  return [...goals].sort(order2.compareGoals);
-}
-function isPeriodAwareRecordType(recordTypeId) {
-  const id = String(recordTypeId || "").trim();
-  return id === "core.plan" || id === "core.review" || id === "plan" || id === "review";
-}
-function normalizePeriodPolicyGranularity(value) {
-  const text2 = String(value || "").trim().toLowerCase();
-  if (text2 === "week" || text2 === "month" || text2 === "quarter" || text2 === "year") return text2;
-  return "week";
-}
-function resolveTemplatePeriodPolicy(template) {
-  if (!template) return null;
-  const recordTypeId = template.recordTypeId || template.id || "";
-  if (!isPeriodAwareRecordType(recordTypeId)) return null;
-  const explicitPolicy = template.periodPolicy;
-  if (explicitPolicy && explicitPolicy.enabled !== false) {
-    return { enabled: true, granularity: normalizePeriodPolicyGranularity(explicitPolicy.granularity) };
-  }
-  return { enabled: true, granularity: "week" };
-}
-function pad(value) {
-  return String(value).padStart(2, "0");
-}
-function ymd(date2) {
-  return `${date2.getFullYear()}-${pad(date2.getMonth() + 1)}-${pad(date2.getDate())}`;
-}
-function parseDate2(value) {
-  const text2 = String(value || "").trim();
-  const parsed = text2 ? /* @__PURE__ */ new Date(`${text2.slice(0, 10)}T00:00:00`) : /* @__PURE__ */ new Date();
-  if (!Number.isFinite(parsed.getTime())) return /* @__PURE__ */ new Date();
-  return parsed;
-}
-function addDays(date2, days) {
-  const next2 = new Date(date2);
-  next2.setDate(next2.getDate() + days);
-  return next2;
-}
-function startOfISOWeek(date2) {
-  const d2 = new Date(date2);
-  const day = d2.getDay() || 7;
-  d2.setDate(d2.getDate() - day + 1);
-  return d2;
-}
-function isoWeekInfo(date2) {
-  const d2 = new Date(Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate()));
-  const day = d2.getUTCDay() || 7;
-  d2.setUTCDate(d2.getUTCDate() + 4 - day);
-  const yearStart = new Date(Date.UTC(d2.getUTCFullYear(), 0, 1));
-  const week = Math.ceil(((d2.getTime() - yearStart.getTime()) / 864e5 + 1) / 7);
-  return { year: d2.getUTCFullYear(), week };
-}
-function normalizePeriodGranularity(value) {
-  const text2 = String(value || "").trim().toLowerCase();
-  if (text2 === "day" || text2 === "week" || text2 === "month" || text2 === "quarter" || text2 === "year") return text2;
-  return "week";
-}
-function resolveDerivedPeriod(dateValue, granularityValue) {
-  const granularity = normalizePeriodGranularity(granularityValue);
-  const date2 = parseDate2(dateValue);
-  const year = date2.getFullYear();
-  if (granularity === "day") {
-    const day = ymd(date2);
-    return { id: day, label: day, granularity, startDate: day, endDate: day };
-  }
-  if (granularity === "week") {
-    const start22 = startOfISOWeek(date2);
-    const end22 = addDays(start22, 6);
-    const info = isoWeekInfo(date2);
-    const week = pad(info.week);
-    return { id: `${info.year}-W${week}`, label: `${info.year} 第 ${info.week} 周`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
-  }
-  if (granularity === "month") {
-    const start22 = new Date(year, date2.getMonth(), 1);
-    const end22 = new Date(year, date2.getMonth() + 1, 0);
-    return { id: `${year}-${pad(date2.getMonth() + 1)}`, label: `${year} 年 ${date2.getMonth() + 1} 月`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
-  }
-  if (granularity === "quarter") {
-    const quarter = Math.floor(date2.getMonth() / 3) + 1;
-    const start22 = new Date(year, (quarter - 1) * 3, 1);
-    const end22 = new Date(year, quarter * 3, 0);
-    return { id: `${year}-Q${quarter}`, label: `${year} 年第 ${quarter} 季度`, granularity, startDate: ymd(start22), endDate: ymd(end22) };
-  }
-  const start2 = new Date(year, 0, 1);
-  const end2 = new Date(year, 11, 31);
-  return { id: `${year}`, label: `${year} 年`, granularity, startDate: ymd(start2), endDate: ymd(end2) };
-}
-const SYSTEM_RECORD_CONTEXT_FIELD_KEYS = [
-  "goalPath",
-  "目标",
-  "目标路径",
-  "rootGoal",
-  "leafGoal",
-  "recordType",
-  "recordTypeId",
-  "记录类型",
-  "templateId",
-  "模板ID",
-  "templateSourceType",
-  "模板来源",
-  "cycleId",
-  "周期ID",
-  "periodId",
-  "period",
-  "周期",
-  "周期粒度",
-  "goalGranularity"
-];
-const KEY_SET = new Set(SYSTEM_RECORD_CONTEXT_FIELD_KEYS);
-const SEMANTIC_SET = /* @__PURE__ */ new Set([
-  "goalPath",
-  "recordType",
-  "templateId",
-  "templateSourceType",
-  "cycleId",
-  "period"
-]);
-function isSystemRecordContextField(key, label, semantic) {
-  const normalizedKey = String(key || "").trim();
-  const normalizedLabel2 = String(label || "").trim();
-  const normalizedSemantic = String(semantic || "").trim();
-  return KEY_SET.has(normalizedKey) || KEY_SET.has(normalizedLabel2) || SEMANTIC_SET.has(normalizedSemantic);
-}
-function safeIdPart(value) {
-  return String(value || "").trim().replace(/\s+/g, "-").replace(/[^a-z0-9_.:\-/\u4e00-\u9fff]/gi, "-") || "default";
-}
-function canonicalGoalPath(value) {
-  return normalizeGoalPath(value) || "";
-}
-function normalizeTemplatePeriodPolicy(recordTypeId, raw) {
-  if (!isPeriodAwareRecordType(recordTypeId)) return void 0;
-  const policy = raw?.periodPolicy;
-  if (policy && policy.enabled !== false) {
-    return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
-  }
-  return { enabled: true, granularity: "week" };
-}
-function getGoalTemplateId(goalPath, recordTypeId) {
-  return `goal-template.${safeIdPart(canonicalGoalPath(goalPath))}.${safeIdPart(recordTypeId)}`;
-}
-function normalizeGoalTemplateStorageRow(row) {
-  const goalPath = canonicalGoalPath(row.goalPath);
-  return {
-    id: getGoalTemplateId(goalPath, row.recordTypeId),
-    goalPath,
-    recordTypeId: row.recordTypeId,
-    description: row.description,
-    periodPolicy: normalizeTemplatePeriodPolicy(row.recordTypeId, row),
-    enabled: row.enabled !== false,
-    fields: stripGoalTemplateIconFieldDefaults(row.fields),
-    targetFile: row.targetFile,
-    appendUnderHeader: row.appendUnderHeader,
-    defaultValues: stripGoalTemplateIconDefaults(row.defaultValues) || {},
-    requiredFields: row.requiredFields || []
-  };
-}
-function toGoalTemplateStorageRow(template) {
-  return {
-    goalPath: canonicalGoalPath(template.goalPath),
-    recordTypeId: template.recordTypeId,
-    description: template.description || void 0,
-    periodPolicy: normalizeTemplatePeriodPolicy(template.recordTypeId, template),
-    enabled: template.enabled !== false,
-    fields: stripGoalTemplateIconFieldDefaults(template.fields),
-    targetFile: template.targetFile || void 0,
-    appendUnderHeader: template.appendUnderHeader || void 0,
-    defaultValues: stripGoalTemplateIconDefaults(template.defaultValues),
-    requiredFields: template.requiredFields?.length ? template.requiredFields : void 0
-  };
-}
-function goalTemplateIdentityKey(template) {
-  return `${canonicalGoalPath(template.goalPath)}::${template.recordTypeId}`;
-}
-function getGoalTemplates(goalSettings) {
-  const result = [];
-  const indexByKey = /* @__PURE__ */ new Map();
-  for (const row of goalSettings?.goalTemplates || []) {
-    const template = normalizeGoalTemplateStorageRow(row);
-    const key = goalTemplateIdentityKey(template);
-    const existingIndex = indexByKey.get(key);
-    if (existingIndex === void 0) {
-      indexByKey.set(key, result.length);
-      result.push(template);
-    } else {
-      result[existingIndex] = template;
-    }
-  }
-  return result;
-}
-function findGoalTemplate(goalSettings, goal, recordTypeId) {
-  if (!goal) return null;
-  const path = canonicalGoalPath(goal.path);
-  if (!path) return null;
-  return getGoalTemplates(goalSettings).find(
-    (template) => template.enabled !== false && template.goalPath === path && template.recordTypeId === recordTypeId
-  ) || null;
-}
-function findDirectGoalTemplate(goalSettings, goalPath, recordTypeId) {
-  const path = canonicalGoalPath(goalPath);
-  return getGoalTemplates(goalSettings).find((template) => template.goalPath === path && template.recordTypeId === recordTypeId) || null;
-}
-function upsertGoalTemplateInSettings(goalSettings, template) {
-  const path = canonicalGoalPath(template.goalPath);
-  if (!path) throw new Error("GoalTemplate requires a canonical Goal path.");
-  const next2 = toGoalTemplateStorageRow({ ...template, goalPath: path, id: getGoalTemplateId(path, template.recordTypeId) });
-  const rows = [...goalSettings.goalTemplates || []];
-  const index = rows.findIndex((row) => canonicalGoalPath(row.goalPath) === path && row.recordTypeId === template.recordTypeId);
-  if (index >= 0) rows[index] = next2;
-  else rows.push(next2);
-  return { ...goalSettings, goalTemplates: rows };
-}
-function removeGoalTemplateFromSettings(goalSettings, goalPath, recordTypeId) {
-  const path = canonicalGoalPath(goalPath);
-  return {
-    ...goalSettings,
-    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => !(canonicalGoalPath(template.goalPath) === path && template.recordTypeId === recordTypeId))
-  };
-}
-function removeGoalTemplatesForGoal(goalSettings, goalPath) {
-  const path = canonicalGoalPath(goalPath);
-  return {
-    ...goalSettings,
-    goalTemplates: (goalSettings.goalTemplates || []).filter((template) => canonicalGoalPath(template.goalPath) !== path)
-  };
-}
-function cleanupGoalTemplateStorage(goalSettings) {
-  const beforeRows = goalSettings.goalTemplates || [];
-  const afterRows = getGoalTemplates(goalSettings).map(toGoalTemplateStorageRow);
-  const beforeJson = JSON.stringify(beforeRows);
-  const afterJson = JSON.stringify(afterRows);
-  return {
-    goalSettings: { ...goalSettings, goalTemplates: afterRows },
-    summary: {
-      beforeCount: beforeRows.length,
-      afterCount: afterRows.length,
-      removedDuplicateCount: Math.max(0, beforeRows.length - afterRows.length),
-      changed: beforeJson !== afterJson
-    }
-  };
-}
-function isOptionLikeValue$1(value) {
-  return !!value && typeof value === "object" && ("value" in value || "label" in value);
-}
-function readOptionText$1(value) {
-  if (isOptionLikeValue$1(value)) {
-    const rawValue = value.value ?? value.label;
-    const rawLabel = value.label ?? value.value;
-    const optionValue = String(rawValue ?? "").trim();
-    const optionLabel = String(rawLabel ?? "").trim();
-    return {
-      value: optionValue || optionLabel,
-      label: optionLabel || optionValue
-    };
-  }
-  const text2 = String(value ?? "").trim();
-  return { value: text2, label: text2 };
-}
-function readComparableValues(value, options = {}) {
-  const text2 = readOptionText$1(value);
-  const rawValues = [text2.value, text2.label].map((entry) => String(entry ?? "").trim()).filter(Boolean);
-  const values2 = new Set(rawValues);
-  if (options.normalize) {
-    for (const raw of rawValues) {
-      const normalized2 = options.normalize(raw);
-      if (normalized2) {
-        values2.add(normalized2);
-        if (options.matchLeaf) {
-          values2.add(normalized2.split("/").filter(Boolean).pop() || normalized2);
-        }
-      }
-    }
-  }
-  return Array.from(values2);
-}
-function findMatchingOption(options, rawValue, matchOptions = {}) {
-  if (!Array.isArray(options) || options.length === 0) return void 0;
-  const rawComparable = new Set(readComparableValues(rawValue, matchOptions));
-  if (rawComparable.size === 0) return void 0;
-  return options.find((option) => {
-    const optionComparable = readComparableValues(option, matchOptions);
-    return optionComparable.some((entry) => rawComparable.has(entry));
-  });
-}
-function readOptionText(value) {
-  return readOptionText$1(value).value;
-}
-function getGoalTemplateDisplayName(template, _goal, fallback = "模板") {
-  const values2 = template?.defaultValues || {};
-  return compactText$2(
-    readOptionText(values2.name) || readOptionText(values2["名称"]) || readOptionText(values2["任务内容"]) || readOptionText(values2["内容"]) || readOptionText(values2.title) || fallback
-  );
-}
-const CONTEXT_FIELD_KEYS = /* @__PURE__ */ new Set([
-  "goalPath",
-  "目标",
-  "目标路径",
-  "rootGoal",
-  "leafGoal",
-  "templateId",
-  "模板ID",
-  "templateSourceType",
-  "模板来源"
-]);
-function isContextField(field) {
-  const source = field;
-  const semantic = compactText$2(source.semantic || source.semanticType);
-  const key = compactText$2(source.key || source.label);
-  return semantic === "goalPath" || CONTEXT_FIELD_KEYS.has(key);
-}
-function stripContextFields(fields) {
-  const result = (fields || []).filter((field) => !isContextField(field));
-  return stripGoalTemplateIconFieldDefaults(result);
-}
-function stableJson$1(value) {
-  const seen = /* @__PURE__ */ new WeakSet();
-  const normalize2 = (input) => {
-    if (input === void 0) return void 0;
-    if (input === null || typeof input !== "object") return input;
-    if (seen.has(input)) return "[Circular]";
-    seen.add(input);
-    if (Array.isArray(input)) return input.map(normalize2);
-    const out = {};
-    Object.keys(input).sort().forEach((key) => {
-      const normalized2 = normalize2(input[key]);
-      if (normalized2 !== void 0) out[key] = normalized2;
-    });
-    return out;
-  };
-  return JSON.stringify(normalize2(value));
-}
-function compactFieldForStructureCompare$1(field) {
-  const source = field;
-  const out = {};
-  Object.keys(source || {}).sort().forEach((key) => {
-    if (key === "id" || key === "defaultValue" || key === "required") return;
-    const value = source[key];
-    if (value === void 0 || value === null || value === "") return;
-    out[key] = value;
-  });
-  return out;
-}
-function fieldsHaveSameStructure$1(left2, right2) {
-  const normalize2 = (fields) => (fields || []).map(compactFieldForStructureCompare$1);
-  return stableJson$1(normalize2(left2)) === stableJson$1(normalize2(right2));
-}
-function deriveRequiredFields$1(fields) {
-  return (fields || []).filter((field) => field?.required === true).map((field) => compactText$2(field.key || field.label)).filter(Boolean);
-}
-function equalStringSet$1(left2, right2) {
-  const a2 = new Set((left2 || []).map(compactText$2).filter(Boolean));
-  const b2 = new Set((right2 || []).map(compactText$2).filter(Boolean));
-  if (a2.size !== b2.size) return false;
-  for (const value of a2) if (!b2.has(value)) return false;
-  return true;
-}
-function getFieldDefaultMap$1(fields) {
-  const result = {};
-  for (const field of fields || []) {
-    const key = compactText$2(field.key || field.label);
-    if (!key) continue;
-    const value = field.defaultValue;
-    if (value !== void 0 && value !== null && compactText$2(value) !== "") result[key] = compactText$2(value);
-  }
-  return result;
-}
-function compactDefaultValues(values2, baseFields) {
-  const baseDefaults = getFieldDefaultMap$1(baseFields);
-  const result = {};
-  Object.entries(stripGoalTemplateIconDefaults(values2) || {}).forEach(([rawKey, raw]) => {
-    const key = rawKey === "图标" ? "icon" : rawKey;
-    if (key === "icon") return;
-    if (CONTEXT_FIELD_KEYS.has(key)) return;
-    const value = compactText$2(raw);
-    if (!value) return;
-    if (isSystemRecordContextField(key)) return;
-    if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
-    result[key] = raw;
-  });
-  return Object.keys(result).length ? result : void 0;
-}
-function normalizePeriodPolicyForTemplate(template) {
-  if (!isPeriodAwareRecordType(template.recordTypeId)) return void 0;
-  const policy = template.periodPolicy;
-  if (policy && policy.enabled !== false) {
-    return { enabled: true, granularity: normalizePeriodPolicyGranularity(policy.granularity) };
-  }
-  return void 0;
-}
-function compactGoalTemplateForStorage(template, options = {}) {
-  const recordType = options.recordType || null;
-  const baseFields = recordType?.fields;
-  const next2 = { ...template, fields: stripContextFields(template.fields) };
-  next2.periodPolicy = normalizePeriodPolicyForTemplate(template);
-  if (recordType) {
-    if (fieldsHaveSameStructure$1(next2.fields, stripContextFields(baseFields))) next2.fields = void 0;
-    if (compactText$2(template.targetFile) === compactText$2(recordType.targetFile)) next2.targetFile = void 0;
-    if (compactText$2(template.appendUnderHeader) === compactText$2(recordType.appendUnderHeader)) next2.appendUnderHeader = void 0;
-    const explicitRequired = (template.requiredFields?.length ? template.requiredFields : deriveRequiredFields$1(template.fields)).filter((key) => !CONTEXT_FIELD_KEYS.has(compactText$2(key)));
-    const baseRequired = deriveRequiredFields$1(baseFields).filter((key) => !CONTEXT_FIELD_KEYS.has(compactText$2(key)));
-    next2.requiredFields = equalStringSet$1(explicitRequired, baseRequired) ? void 0 : explicitRequired;
-  } else if (next2.requiredFields && !next2.requiredFields.length) {
-    next2.requiredFields = void 0;
-  }
-  next2.defaultValues = compactDefaultValues(template.defaultValues, baseFields);
-  return next2;
-}
-function describeGoalTemplateStorageDiff(template) {
-  const parts = [];
-  if (template.fields?.length) parts.push("字段覆盖");
-  if (template.defaultValues && Object.keys(template.defaultValues).length) parts.push(`默认值 ${Object.keys(template.defaultValues).length}`);
-  if (template.targetFile) parts.push("文件覆盖");
-  if (template.appendUnderHeader) parts.push("标题覆盖");
-  if (template.requiredFields?.length) parts.push("必填覆盖");
-  if (template.periodPolicy) parts.push(`周期 ${template.periodPolicy.granularity}`);
-  return parts;
-}
-const UNASSIGNED_GOAL_KEY = "未归属目标";
-function normalizeItemGoalPath(value) {
-  return normalizeGoalPath(String(value ?? "").trim()) || "";
-}
-function findGoalByPath(goals = [], goalPath) {
-  const normalized2 = normalizeItemGoalPath(goalPath);
-  if (!normalized2) return null;
-  return goals.find((goal) => normalizeItemGoalPath(goal.path) === normalized2) || null;
-}
-function getItemGoalKey(item, _goals = []) {
-  return normalizeItemGoalPath(item.goalPath) || UNASSIGNED_GOAL_KEY;
-}
-function getItemRootGoalKey(item, goals = []) {
-  const path = getItemGoalKey(item, goals);
-  if (path === UNASSIGNED_GOAL_KEY) return path;
-  return splitGoalPath(path).rootGoal || path;
-}
-function buildGoalBuckets(items, goals = [], options = {}) {
-  const { includeUnassigned = true, includeKnownGoals = false, level = "path" } = options;
-  const normalizeBucketPath = (value) => {
-    const normalized2 = normalizeItemGoalPath(value);
-    if (!normalized2 || normalized2 === UNASSIGNED_GOAL_KEY) return UNASSIGNED_GOAL_KEY;
-    return level === "root" ? splitGoalPath(normalized2).rootGoal || normalized2 : normalized2;
-  };
-  const map = /* @__PURE__ */ new Map();
-  const addBucket = (goalPath, sourceGoal) => {
-    const key = normalizeBucketPath(goalPath);
-    if (!includeUnassigned && key === UNASSIGNED_GOAL_KEY) return;
-    if (map.has(key)) return;
-    const goal = sourceGoal || findGoalByPath(goals, key);
-    const label = key === UNASSIGNED_GOAL_KEY ? UNASSIGNED_GOAL_KEY : splitGoalPath(goal?.path || key).leafGoal || key;
-    const icon = key === UNASSIGNED_GOAL_KEY ? "•" : resolveGoalIcon(goal);
-    map.set(key, {
-      name: key,
-      alias: icon && icon !== "•" ? `${icon} ${label}` : label,
-      color: resolveGoalColor(goal, key),
-      files: [],
-      goalPath: key === UNASSIGNED_GOAL_KEY ? void 0 : key,
-      icon,
-      isUnassigned: key === UNASSIGNED_GOAL_KEY
-    });
-  };
-  if (includeKnownGoals) {
-    for (const goal of goals || []) {
-      const path = normalizeItemGoalPath(goal.path);
-      if (!path) continue;
-      const bucketPath = normalizeBucketPath(path);
-      const bucketGoal = level === "root" ? findGoalByPath(goals, bucketPath) : goal;
-      addBucket(bucketPath, bucketGoal);
-    }
-  }
-  for (const item of items || []) {
-    const path = level === "root" ? getItemRootGoalKey(item, goals) : getItemGoalKey(item, goals);
-    addBucket(path);
-  }
-  const order2 = createGoalOrderIndex(goals);
-  return Array.from(map.values()).sort((a2, b2) => {
-    if (a2.isUnassigned && !b2.isUnassigned) return 1;
-    if (!a2.isUnassigned && b2.isUnassigned) return -1;
-    const byGoal = order2.compareGoalPaths(a2.goalPath || a2.name, b2.goalPath || b2.name);
-    if (byGoal !== 0) return byGoal;
-    return (a2.alias || a2.name).localeCompare(b2.alias || b2.name, "zh-CN");
-  });
-}
-const NATURAL_DAY_MINUTES = 24 * 60;
-const NATURAL_WEEK_MINUTES = 7 * NATURAL_DAY_MINUTES;
-const TIME_BALANCE_TOLERANCE_RATIO = 0.1;
-function round$3(value, digits = 2) {
-  const factor = 10 ** digits;
-  return Math.round(value * factor) / factor;
-}
-function localDateKey$1(date2) {
-  const y2 = date2.getFullYear();
-  const m2 = String(date2.getMonth() + 1).padStart(2, "0");
-  const d2 = String(date2.getDate()).padStart(2, "0");
-  return `${y2}-${m2}-${d2}`;
-}
-function localDayOrdinal(date2) {
-  return Math.floor(Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate()) / 864e5);
-}
-function localClockMinutes(date2) {
-  return date2.getHours() * 60 + date2.getMinutes() + date2.getSeconds() / 60 + date2.getMilliseconds() / 6e4;
-}
-function dateAtLocalMidnight(date2) {
-  return new Date(date2.getFullYear(), date2.getMonth(), date2.getDate(), 0, 0, 0, 0);
-}
-function addLocalDays(date2, days) {
-  return new Date(date2.getFullYear(), date2.getMonth(), date2.getDate() + days, 0, 0, 0, 0);
-}
-function isGoalTimePresetEligible(goal) {
-  return goal.status !== "archived";
-}
-function normalizeGoalTimePresetPercent(value) {
-  if (value === null || value === void 0 || value === "") return null;
-  const number2 = Number(value);
-  if (!Number.isFinite(number2) || number2 < 0 || number2 > 100) return null;
-  return round$3(number2, 2);
-}
-function normalizeWeeklyTargetMinutes(value) {
-  if (value === null || value === void 0 || value === "") return null;
-  const number2 = Number(value);
-  if (!Number.isFinite(number2) || number2 < 0) return null;
-  return round$3(number2, 2);
-}
-function getGoalWeeklyTargetMinutes(goalPath, goals) {
-  const canonical = normalizeGoalPath(goalPath);
-  if (!canonical) return null;
-  const goal = (goals || []).find((candidate) => normalizeGoalPath(candidate.path) === canonical);
-  if (!goal || !isGoalTimePresetEligible(goal)) return null;
-  const parentPath2 = getParentGoalPath(canonical);
-  if (parentPath2 === null) {
-    const percent = normalizeGoalTimePresetPercent(goal.timePresetPercent);
-    return percent === null ? null : round$3(NATURAL_WEEK_MINUTES * percent / 100);
-  }
-  return normalizeWeeklyTargetMinutes(goal.weeklyTargetMinutes);
-}
-function weeklyTargetFromSnapshot(goalPath, entry) {
-  const canonical = normalizeGoalPath(goalPath);
-  if (!canonical || !entry) return null;
-  if (getParentGoalPath(canonical) === null) {
-    const percent = normalizeGoalTimePresetPercent(entry.timePresetPercent);
-    return percent === null ? null : round$3(NATURAL_WEEK_MINUTES * percent / 100);
-  }
-  return normalizeWeeklyTargetMinutes(entry.weeklyTargetMinutes);
-}
-function getGoalTimePresetWeekStartKey(date2 = /* @__PURE__ */ new Date()) {
-  const day = dateAtLocalMidnight(date2);
-  const dayOfWeek = day.getDay();
-  const deltaToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  return localDateKey$1(addLocalDays(day, deltaToMonday));
-}
-function buildGoalTimePresetSnapshot(goals) {
-  const out = {};
-  for (const goal of goals || []) {
-    if (!isGoalTimePresetEligible(goal)) continue;
-    const path = normalizeGoalPath(goal.path);
-    if (!path) continue;
-    const entry = {};
-    if (getParentGoalPath(path) === null) {
-      const percent = normalizeGoalTimePresetPercent(goal.timePresetPercent);
-      if (percent !== null) entry.timePresetPercent = percent;
-    } else {
-      const minutes = normalizeWeeklyTargetMinutes(goal.weeklyTargetMinutes);
-      if (minutes !== null) entry.weeklyTargetMinutes = minutes;
-    }
-    if (Object.keys(entry).length > 0) out[path] = entry;
-  }
-  return out;
-}
-function upsertGoalTimePresetRevision(revisions, goals, date2 = /* @__PURE__ */ new Date()) {
-  const effectiveWeekStart = getGoalTimePresetWeekStartKey(date2);
-  const nextRevision = {
-    effectiveWeekStart,
-    presets: buildGoalTimePresetSnapshot(goals)
-  };
-  const next2 = [...revisions || []].filter((revision) => revision.effectiveWeekStart !== effectiveWeekStart);
-  next2.push(nextRevision);
-  next2.sort((a2, b2) => a2.effectiveWeekStart.localeCompare(b2.effectiveWeekStart));
-  return next2;
-}
-function findEffectiveRevision(date2, revisions) {
-  const key = localDateKey$1(date2);
-  let found = null;
-  for (const revision of revisions || []) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(revision.effectiveWeekStart)) continue;
-    if (revision.effectiveWeekStart <= key && (!found || revision.effectiveWeekStart > found.effectiveWeekStart)) found = revision;
-  }
-  return found;
-}
-function resolveWeeklyTargetForDate(goalPath, goals, revisions, date2) {
-  const revision = findEffectiveRevision(date2, revisions);
-  if (revision) {
-    const canonicalGoalPath2 = normalizeGoalPath(goalPath);
-    const fromRevision = weeklyTargetFromSnapshot(goalPath, canonicalGoalPath2 ? revision.presets[canonicalGoalPath2] : void 0);
-    if (fromRevision !== null) return { minutes: fromRevision, historical: true, fallback: false };
-    return { minutes: getGoalWeeklyTargetMinutes(goalPath, goals), historical: false, fallback: true };
-  }
-  const current2 = getGoalWeeklyTargetMinutes(goalPath, goals);
-  const hasAnyHistory = (revisions || []).length > 0;
-  return { minutes: current2, historical: false, fallback: hasAnyHistory };
-}
-function getGoalTimePresetInfo(goalPath, goals) {
-  const canonical = normalizeGoalPath(goalPath);
-  if (!canonical) return null;
-  const goal = (goals || []).find((candidate) => normalizeGoalPath(candidate.path) === canonical);
-  if (!goal) return null;
-  const parentPath2 = getParentGoalPath(canonical);
-  const weeklyTargetMinutes = getGoalWeeklyTargetMinutes(canonical, goals);
-  const targetPercent = parentPath2 === null ? normalizeGoalTimePresetPercent(goal.timePresetPercent) : null;
-  const directChildren = (goals || []).filter((candidate) => isGoalTimePresetEligible(candidate) && getParentGoalPath(candidate.path) === canonical);
-  const directChildrenTargetMinutes = directChildren.reduce((sum, child) => sum + (getGoalWeeklyTargetMinutes(child.path, goals) || 0), 0);
-  const unallocatedMinutes = weeklyTargetMinutes === null ? 0 : Math.max(0, weeklyTargetMinutes - directChildrenTargetMinutes);
-  const overallocatedMinutes = weeklyTargetMinutes === null ? 0 : Math.max(0, directChildrenTargetMinutes - weeklyTargetMinutes);
-  return {
-    path: canonical,
-    parentPath: parentPath2,
-    targetPercent,
-    weeklyTargetMinutes,
-    directChildrenCount: directChildren.length,
-    directChildrenTargetMinutes: round$3(directChildrenTargetMinutes),
-    unallocatedMinutes: round$3(unallocatedMinutes),
-    overallocatedMinutes: round$3(overallocatedMinutes),
-    configured: weeklyTargetMinutes !== null
-  };
-}
-function getRootTimePresetTotals(goals) {
-  const configuredPercent = (goals || []).filter((goal) => isGoalTimePresetEligible(goal) && getParentGoalPath(goal.path) === null).reduce((sum, goal) => sum + (normalizeGoalTimePresetPercent(goal.timePresetPercent) || 0), 0);
-  const configuredMinutes = NATURAL_WEEK_MINUTES * configuredPercent / 100;
-  const reservePercent = Math.max(0, 100 - configuredPercent);
-  const overcommittedPercent = Math.max(0, configuredPercent - 100);
-  return {
-    configuredPercent: round$3(configuredPercent),
-    configuredMinutes: round$3(configuredMinutes),
-    reservePercent: round$3(reservePercent),
-    reserveMinutes: round$3(NATURAL_WEEK_MINUTES * reservePercent / 100),
-    overcommittedPercent: round$3(overcommittedPercent),
-    overcommittedMinutes: round$3(NATURAL_WEEK_MINUTES * overcommittedPercent / 100)
-  };
-}
-function getNaturalRangeMinutes(rangeStart, rangeEnd) {
-  const start2 = new Date(rangeStart);
-  const end2 = new Date(rangeEnd);
-  if (!Number.isFinite(start2.getTime()) || !Number.isFinite(end2.getTime()) || end2 < start2) return 0;
-  const dayDelta = localDayOrdinal(end2) - localDayOrdinal(start2);
-  const value = dayDelta * NATURAL_DAY_MINUTES + localClockMinutes(end2) - localClockMinutes(start2) + 1 / 6e4;
-  return Math.max(0, round$3(value, 4));
-}
-function resolveGoalTargetForRange(goalPath, goals, revisions, rangeStart, rangeEnd) {
-  const canonical = normalizeGoalPath(goalPath);
-  const naturalMinutes = getNaturalRangeMinutes(rangeStart, rangeEnd);
-  if (!canonical || naturalMinutes <= 0) {
-    return { minutes: null, source: "current", usedHistoricalPreset: false, usedCurrentFallback: false };
-  }
-  const startDay = dateAtLocalMidnight(rangeStart);
-  const endDay = dateAtLocalMidnight(rangeEnd);
-  let cursor2 = startDay;
-  let total = 0;
-  let hasConfiguredSegment = false;
-  let usedHistoricalPreset = false;
-  let usedCurrentFallback = false;
-  let usedPlainCurrent = false;
-  while (cursor2 <= endDay) {
-    const dayStart = cursor2;
-    const nextDay = addLocalDays(cursor2, 1);
-    const isFirst = localDateKey$1(cursor2) === localDateKey$1(rangeStart);
-    const isLast = localDateKey$1(cursor2) === localDateKey$1(rangeEnd);
-    const startMinute = isFirst ? localClockMinutes(rangeStart) : 0;
-    const endMinute = isLast ? localClockMinutes(rangeEnd) + 1 / 6e4 : NATURAL_DAY_MINUTES;
-    const segmentMinutes = Math.max(0, Math.min(NATURAL_DAY_MINUTES, endMinute) - Math.max(0, startMinute));
-    if (segmentMinutes > 0) {
-      const resolved = resolveWeeklyTargetForDate(canonical, goals, revisions, dayStart);
-      if (resolved.minutes !== null) {
-        hasConfiguredSegment = true;
-        total += resolved.minutes / NATURAL_WEEK_MINUTES * segmentMinutes;
-      }
-      if (resolved.historical) usedHistoricalPreset = true;
-      else if (resolved.fallback) usedCurrentFallback = true;
-      else usedPlainCurrent = true;
-    }
-    cursor2 = nextDay;
-  }
-  let source = "current";
-  if (usedHistoricalPreset && usedCurrentFallback) source = "mixed";
-  else if (usedHistoricalPreset && usedPlainCurrent) source = "mixed";
-  else if (usedHistoricalPreset) source = "historical";
-  else if (usedCurrentFallback) source = "current-fallback";
-  return {
-    minutes: hasConfiguredSegment ? round$3(total) : null,
-    source,
-    usedHistoricalPreset,
-    usedCurrentFallback
-  };
-}
-function roundValue(value, digits = 2) {
-  const factor = 10 ** digits;
-  return Math.round(value * factor) / factor;
-}
-function sessionOverlap(session, rangeStartMs, rangeEndExclusiveMs) {
-  if (!session) return { minutes: 0, interval: null };
-  const startedAtMs = Date.parse(session.sessionStartedAt);
-  const endedAtMs = Date.parse(session.sessionEndedAt);
-  if (!Number.isFinite(startedAtMs) || !Number.isFinite(endedAtMs) || endedAtMs <= startedAtMs) return { minutes: 0, interval: null };
-  const overlapStart = Math.max(startedAtMs, rangeStartMs);
-  const overlapEnd = Math.min(endedAtMs, rangeEndExclusiveMs);
-  if (overlapEnd <= overlapStart) return { minutes: 0, interval: null };
-  const recordedMinutes = Number(session.sessionDurationMinutes);
-  if (!Number.isFinite(recordedMinutes) || recordedMinutes <= 0) return { minutes: 0, interval: null };
-  const wallMs = endedAtMs - startedAtMs;
-  const overlapRatio = Math.min(1, Math.max(0, (overlapEnd - overlapStart) / wallMs));
-  return {
-    minutes: recordedMinutes * overlapRatio,
-    interval: { start: overlapStart, end: overlapEnd }
-  };
-}
-function unionIntervalMinutes(intervals) {
-  if (!intervals.length) return 0;
-  const ordered = intervals.filter((interval) => Number.isFinite(interval.start) && Number.isFinite(interval.end) && interval.end > interval.start).sort((a2, b2) => a2.start - b2.start || a2.end - b2.end);
-  if (!ordered.length) return 0;
-  let totalMs = 0;
-  let currentStart = ordered[0].start;
-  let currentEnd = ordered[0].end;
-  for (let i2 = 1; i2 < ordered.length; i2 += 1) {
-    const next2 = ordered[i2];
-    if (next2.start <= currentEnd) {
-      currentEnd = Math.max(currentEnd, next2.end);
-    } else {
-      totalMs += currentEnd - currentStart;
-      currentStart = next2.start;
-      currentEnd = next2.end;
-    }
-  }
-  totalMs += currentEnd - currentStart;
-  return totalMs / 6e4;
-}
-function asRangeBoundary(value, fallback) {
-  const ms = value instanceof Date ? value.getTime() : Number.NaN;
-  return Number.isFinite(ms) ? ms : fallback;
-}
-function resolveBalanceState(args) {
-  const { targetMinutes, actualMinutes, unknownMinutes, rangeHasStarted } = args;
-  if (targetMinutes === null) return "unconfigured";
-  if (!rangeHasStarted) return "pending";
-  const lower = targetMinutes * (1 - TIME_BALANCE_TOLERANCE_RATIO);
-  const upper = targetMinutes * (1 + TIME_BALANCE_TOLERANCE_RATIO);
-  if (actualMinutes > upper) return "high";
-  const maximumPossible = actualMinutes + Math.max(0, unknownMinutes);
-  if (maximumPossible < lower) return "low";
-  if (actualMinutes >= lower && actualMinutes <= upper && maximumPossible <= upper) return "balanced";
-  return "insufficient";
-}
-function buildGoalTimeAllocationSummary(args) {
-  const { records = [], goals = [], presetRevisions = [], rangeStart, rangeEnd } = args;
-  const rangeStartMs = asRangeBoundary(rangeStart, 0);
-  const rangeEndMs = asRangeBoundary(rangeEnd, rangeStartMs);
-  const rangeEndExclusiveMs = Math.max(rangeStartMs, rangeEndMs + 1);
-  const naturalMinutes = getNaturalRangeMinutes(rangeStart, rangeEnd);
-  const nowMs2 = Date.now();
-  const rangeHasStarted = nowMs2 >= rangeStartMs;
-  const comparisonEndExclusiveMs = rangeHasStarted ? Math.min(rangeEndExclusiveMs, nowMs2) : rangeStartMs;
-  const comparisonEnd = new Date(Math.max(rangeStartMs, comparisonEndExclusiveMs - 1));
-  const comparisonNaturalMinutes = rangeHasStarted ? getNaturalRangeMinutes(rangeStart, comparisonEnd) : 0;
-  const taskById = /* @__PURE__ */ new Map();
-  for (const record2 of records) {
-    if (record2?.recordType === "task" && record2.id) taskById.set(record2.id, record2);
-  }
-  const goalByPath = /* @__PURE__ */ new Map();
-  for (const goal of goals) {
-    const path = normalizeGoalPath(goal.path);
-    if (path && isGoalTimePresetEligible(goal)) goalByPath.set(path, goal);
-  }
-  const directMinutes = /* @__PURE__ */ new Map();
-  const rolledUpMinutes = /* @__PURE__ */ new Map();
-  const observationIntervals = [];
-  let trackedMinutes = 0;
-  let unallocatedMinutes = 0;
-  for (const record2 of records) {
-    const session = asTaskSessionRecord(record2);
-    if (!session) continue;
-    const overlap = sessionOverlap(session, rangeStartMs, comparisonEndExclusiveMs);
-    const minutes = overlap.minutes;
-    if (minutes <= 0) continue;
-    trackedMinutes += minutes;
-    if (overlap.interval) observationIntervals.push(overlap.interval);
-    const task = taskById.get(session.taskId);
-    const sessionGoalPath = normalizeGoalPath(session.goalPath);
-    const attributedGoalPath = sessionGoalPath || normalizeGoalPath(task?.goalPath);
-    if (!attributedGoalPath || !goalByPath.has(attributedGoalPath)) {
-      unallocatedMinutes += minutes;
-      continue;
-    }
-    directMinutes.set(attributedGoalPath, (directMinutes.get(attributedGoalPath) || 0) + minutes);
-    for (const candidate of getGoalPathCandidates(attributedGoalPath)) {
-      if (!goalByPath.has(candidate)) continue;
-      rolledUpMinutes.set(candidate, (rolledUpMinutes.get(candidate) || 0) + minutes);
-    }
-  }
-  const observationCoverageMinutes = Math.min(comparisonNaturalMinutes, unionIntervalMinutes(observationIntervals));
-  const unknownMinutes = Math.max(0, comparisonNaturalMinutes - observationCoverageMinutes);
-  const orderedGoals = sortGoalsBySettingsOrder(goals.filter(isGoalTimePresetEligible));
-  const rows = orderedGoals.map((goal) => {
-    const path = normalizeGoalPath(goal.path);
-    if (!path) return null;
-    const minutes = rolledUpMinutes.get(path) || 0;
-    const targetResolution = rangeHasStarted ? resolveGoalTargetForRange(path, goals, presetRevisions, rangeStart, comparisonEnd) : { minutes: null, source: "current" };
-    const targetMinutes = targetResolution.minutes;
-    if (minutes <= 0 && targetMinutes === null) return null;
-    const parentPath2 = getParentGoalPath(path);
-    const actualPercentOfNaturalTime = comparisonNaturalMinutes > 0 ? minutes / comparisonNaturalMinutes * 100 : 0;
-    const targetPercentOfNaturalTime = targetMinutes !== null && comparisonNaturalMinutes > 0 ? targetMinutes / comparisonNaturalMinutes * 100 : null;
-    const lowerBoundMinutes = targetMinutes === null ? null : targetMinutes * (1 - TIME_BALANCE_TOLERANCE_RATIO);
-    const upperBoundMinutes = targetMinutes === null ? null : targetMinutes * (1 + TIME_BALANCE_TOLERANCE_RATIO);
-    const differenceMinutes = targetMinutes === null ? null : minutes - targetMinutes;
-    const relativeDifferencePercent = targetMinutes !== null && targetMinutes > 0 ? differenceMinutes / targetMinutes * 100 : null;
-    return {
-      path,
-      label: getGoalLeaf(path) || path,
-      parentPath: parentPath2 && goalByPath.has(parentPath2) ? parentPath2 : null,
-      depth: path.split("/").filter(Boolean).length - 1,
-      ...goal.icon ? { icon: goal.icon } : null,
-      ...goal.color ? { color: goal.color } : null,
-      minutes: roundValue(minutes),
-      directMinutes: roundValue(directMinutes.get(path) || 0),
-      actualPercentOfNaturalTime: roundValue(actualPercentOfNaturalTime),
-      targetMinutes: targetMinutes === null ? null : roundValue(targetMinutes),
-      targetPercentOfNaturalTime: targetPercentOfNaturalTime === null ? null : roundValue(targetPercentOfNaturalTime),
-      targetSource: targetResolution.source,
-      lowerBoundMinutes: lowerBoundMinutes === null ? null : roundValue(lowerBoundMinutes),
-      upperBoundMinutes: upperBoundMinutes === null ? null : roundValue(upperBoundMinutes),
-      differenceMinutes: differenceMinutes === null ? null : roundValue(differenceMinutes),
-      relativeDifferencePercent: relativeDifferencePercent === null ? null : roundValue(relativeDifferencePercent),
-      balanceState: resolveBalanceState({
-        targetMinutes,
-        actualMinutes: minutes,
-        unknownMinutes,
-        rangeHasStarted
-      })
-    };
-  }).filter((row) => row !== null);
-  const rootRows = rows.filter((row) => row.parentPath === null);
-  const unallocatedPercentOfNaturalTime = comparisonNaturalMinutes > 0 ? unallocatedMinutes / comparisonNaturalMinutes * 100 : 0;
-  return {
-    naturalMinutes: roundValue(naturalMinutes),
-    comparisonNaturalMinutes: roundValue(comparisonNaturalMinutes),
-    trackedMinutes: roundValue(trackedMinutes),
-    observationCoverageMinutes: roundValue(observationCoverageMinutes),
-    unknownMinutes: roundValue(unknownMinutes),
-    unrecordedMinutes: roundValue(unknownMinutes),
-    unallocatedMinutes: roundValue(unallocatedMinutes),
-    unallocatedPercentOfNaturalTime: roundValue(unallocatedPercentOfNaturalTime),
-    rows,
-    rootRows,
-    hasConfiguredPreset: rows.some((row) => row.targetMinutes !== null),
-    toleranceRatio: TIME_BALANCE_TOLERANCE_RATIO
-  };
-}
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -8155,35 +12796,6 @@ function setupCoreContainer(app) {
 function toRecordViewItem(record2) {
   return record2;
 }
-function nowMs() {
-  try {
-    return performance.now();
-  } catch {
-    return Date.now();
-  }
-}
-function durationMs(start2) {
-  return nowMs() - start2;
-}
-function elapsedMs(start2) {
-  return `${durationMs(start2).toFixed(2)}ms`;
-}
-function throttle(fn3, wait = 250) {
-  let last = 0, timer = null;
-  return function(...args) {
-    const now2 = Date.now();
-    if (now2 - last >= wait) {
-      last = now2;
-      fn3.apply(this, args);
-    } else {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        last = Date.now();
-        fn3.apply(this, args);
-      }, wait - (now2 - last));
-    }
-  };
-}
 const METADATA_PORT_TOKEN = "MetadataPort";
 const FILESTAT_PORT_TOKEN = "FileStatPort";
 const CURRENT_CACHE_SCHEMA_VERSION = 17;
@@ -8424,149 +13036,6 @@ class DataStoreCache {
     return { schemaVersion: CURRENT_CACHE_SCHEMA_VERSION, files: {} };
   }
 }
-function localCalendarDate(value) {
-  if (!value) return void 0;
-  const parsed = new Date(value);
-  if (!Number.isFinite(parsed.getTime())) return void 0;
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-function parseRecordBlock(filePath, lines, startIdx, endIdx, parentFolder) {
-  const contentLines = lines.slice(startIdx + 1, endIdx);
-  const parsed = decodeRecordContentLines(contentLines);
-  if (!parsed.recordId || !isStableRecordId(parsed.recordId)) return null;
-  if (!parsed.recordType) return null;
-  const isTask = parsed.recordType === "task";
-  const isTaskSeries = parsed.recordType === "task-series";
-  const isTaskSession = parsed.recordType === "task-session";
-  if (isTask && !["open", "done", "cancelled", "skipped"].includes(String(parsed.status || ""))) return null;
-  if (isTask && parsed.status === "skipped" && !parsed.seriesId) return null;
-  if (isTaskSeries && !["active", "stopped"].includes(String(parsed.status || ""))) return null;
-  const recurrenceInfo = isTaskSeries ? normalizeRecurrenceInfo({ unit: parsed.recurrenceUnit, interval: parsed.recurrenceInterval, anchor: parsed.recurrenceAnchor }) : null;
-  if (isTaskSeries && !recurrenceInfo) return null;
-  const sessionDuration = normalizeTaskSessionDurationMinutes(parsed.sessionDurationMinutes);
-  if (isTaskSession && (!parsed.taskId || !parsed.sessionStartedAt || !parsed.sessionEndedAt || sessionDuration == null || !parsed.sessionResult || !parsed.sessionSource)) return null;
-  const canonicalDate = isTask ? localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate || localCalendarDate(parsed.createdAt) || localCalendarDate(parsed.completedAt) || localCalendarDate(parsed.endAt) || parsed.date : localCalendarDate(parsed.sessionStartedAt) || parsed.date || localCalendarDate(parsed.scheduledAt) || parsed.scheduledDate || localCalendarDate(parsed.dueAt) || parsed.dueDate || localCalendarDate(parsed.startAt) || parsed.startDate;
-  const schema = getRecordSchemaDefinition(parsed.recordType);
-  if (!schema) return null;
-  const item = {
-    id: parsed.recordId,
-    title: parsed.title || "",
-    content: parsed.content,
-    rawSource: lines.slice(startIdx, endIdx + 1).join("\n"),
-    editableText: parsed.content,
-    status: parsed.status,
-    tags: parsed.tags,
-    goalPath: parsed.goalPath,
-    recurrenceInfo: recurrenceInfo || void 0,
-    created: 0,
-    modified: 0,
-    extra: parsed.extra,
-    folder: parentFolder,
-    recordType: schema.recordType,
-    priority: parsed.priority,
-    importance: parsed.importance,
-    urgency: parsed.urgency,
-    createdAt: parsed.createdAt,
-    scheduledAt: parsed.scheduledAt,
-    startAt: parsed.startAt,
-    endAt: parsed.endAt,
-    dueAt: parsed.dueAt,
-    energyDemand: parsed.energyDemand,
-    brainDemand: parsed.brainDemand,
-    physicalDemand: parsed.physicalDemand,
-    availabilityContexts: parsed.availabilityContexts,
-    recoveryIntent: parsed.recoveryIntent,
-    scheduledDate: parsed.scheduledDate,
-    startDate: parsed.startDate,
-    dueDate: parsed.dueDate,
-    completedAt: parsed.completedAt,
-    cancelledAt: parsed.cancelledAt,
-    skippedAt: parsed.skippedAt,
-    seriesId: parsed.seriesId,
-    seriesStartDate: parsed.seriesStartDate,
-    currentTaskId: parsed.currentTaskId,
-    rolloverPolicy: parsed.rolloverPolicy,
-    taskId: parsed.taskId,
-    sessionStartedAt: parsed.sessionStartedAt,
-    sessionEndedAt: parsed.sessionEndedAt,
-    sessionDurationMinutes: sessionDuration ?? void 0,
-    sessionResult: parsed.sessionResult,
-    sessionSource: parsed.sessionSource,
-    suggestedDurationMinutes: parsed.suggestedDurationMinutes,
-    startEnergyRecordId: parsed.startEnergyRecordId,
-    endEnergyRecordId: parsed.endEnergyRecordId,
-    energyDelta: parsed.energyDelta,
-    brainDelta: parsed.brainDelta,
-    physicalDelta: parsed.physicalDelta,
-    ...parsed.recordType === "energy" && parsed.recordSubtype ? { recordSubtype: parsed.recordSubtype } : {},
-    doneDate: parsed.completedAt,
-    cancelledDate: parsed.cancelledAt,
-    date: canonicalDate
-  };
-  if (parsed.icon) item.icon = parsed.icon;
-  if (parsed.rating !== void 0) item.rating = parsed.rating;
-  if (parsed.image) item.image = parsed.image;
-  if (parsed.seriesId) item.extra["系列ID"] = parsed.seriesId;
-  if (parsed.expectedDurationMinutes !== void 0) {
-    item.expectedDurationMinutes = parsed.expectedDurationMinutes;
-  }
-  item.startISO = parsed.sessionStartedAt || (isTask ? parsed.scheduledAt || parsed.scheduledDate || parsed.startAt || parsed.startDate : void 0) || parsed.startAt || parsed.startDate || parsed.scheduledAt || parsed.scheduledDate || parsed.dueAt || parsed.dueDate || parsed.date;
-  item.endISO = parsed.sessionEndedAt || parsed.endAt || parsed.completedAt || parsed.cancelledAt || parsed.dueAt || parsed.dueDate || item.startISO;
-  if (item.startISO) item.startMs = Date.parse(item.startISO);
-  if (item.endISO) item.endMs = Date.parse(item.endISO);
-  if (item.period && item.date) item.periodCount = getPeriodCount(item.period, dayjs(item.date));
-  return item;
-}
-function firstDate(...values2) {
-  for (const value of values2) {
-    const normalized2 = String(value || "").trim();
-    if (normalized2) return normalized2;
-  }
-  return void 0;
-}
-function getTaskDateFact(task, role = "default") {
-  if (role === "scheduled") {
-    return { value: firstDate(task.scheduledAt, task.scheduledDate), source: "scheduled" };
-  }
-  if (role === "due") {
-    return { value: firstDate(task.dueAt, task.dueDate), source: "due" };
-  }
-  if (role === "completed") {
-    return { value: firstDate(task.completedAt, task.doneDate), source: "done" };
-  }
-  const candidates = [
-    ["scheduled", firstDate(task.scheduledAt, task.scheduledDate)],
-    ["due", firstDate(task.dueAt, task.dueDate)],
-    ["start", firstDate(task.startAt, task.startDate, task.startISO)],
-    ["created", firstDate(task.createdAt, task.createdDate)],
-    ["done", firstDate(task.completedAt, task.doneDate)],
-    ["end", firstDate(task.endAt, task.endISO)]
-  ];
-  for (const [source, value] of candidates) {
-    if (value) return { value, source };
-  }
-  return {};
-}
-function normalizeItemDates(it) {
-  if (it.recordType !== "task") {
-    if (it.date) {
-      it.dateSource = "block";
-      const t3 = Date.parse(it.date);
-      if (!isNaN(t3)) it.dateMs = t3;
-    }
-    return;
-  }
-  const fact = getTaskDateFact(it, "default");
-  if (fact.value) {
-    it.date = fact.value;
-    it.dateSource = fact.source;
-    const t3 = Date.parse(fact.value);
-    if (!isNaN(t3)) it.dateMs = t3;
-  }
-}
 function unique(values2) {
   return Array.from(new Set(values2.map((value) => String(value ?? "").trim()).filter(Boolean)));
 }
@@ -8710,1000 +13179,6 @@ class DataStoreFileScanner {
     item.source = { path: filePath, startLine: line2, endLine, modified: stat.mtime };
     if (item.file) item.file.line = line2;
   }
-}
-const FIELD_CATEGORY_LABELS = {
-  core: "核心字段",
-  file: "文件字段",
-  custom: "自定义字段"
-};
-const FIELD_CATEGORY_ORDER = ["core", "file", "custom"];
-const text$2 = (partial2) => ({
-  valueType: "string",
-  ...partial2
-});
-const FIELD_REGISTRY = {
-  // --- 核心字段 ---
-  id: text$2({ key: "id", label: "记录标识", category: "core", source: "item", semantic: "id", description: "内部记录标识" }),
-  title: text$2({ key: "title", label: "标题", category: "core", source: "item", semantic: "title", inputType: "text", description: "记录的真实标题；为空时保持为空，不承担类型特定兜底。" }),
-  primaryText: text$2({ key: "primaryText", label: "主显示值", category: "core", source: "derived", semantic: "title", description: "按记录类型派生的主要识别值；只用于展示，不写回标题或笔记文档。" }),
-  content: text$2({ key: "content", label: "内容", category: "core", source: "item", semantic: "body", inputType: "textarea", description: "记录正文；任务与其他记录统一为用户正文，不包含存储层元数据" }),
-  editableText: text$2({ key: "editableText", label: "可编辑正文", category: "core", source: "item", semantic: "body", inputType: "textarea", hiddenByDefault: true, description: "编辑态正文真源" }),
-  rawSource: text$2({ key: "rawSource", label: "原始源文本", category: "core", source: "item", semantic: "body", hiddenByDefault: true }),
-  fullData: text$2({ key: "fullData", label: "完整数据", category: "core", source: "derived", semantic: "body", inputType: "textarea", aliases: ["完整数据", "原始数据", "源数据", "完整源文本", "原始源文本", "rawsource", "rawData", "sourceText", "fullData", "originalData"], description: "原始完整记录块，仅用于调试或导出，不作为业务语义真源。" }),
-  // --- 内置核心业务字段 ---
-  tags: { key: "tags", label: "标签", valueType: "tags", inputType: "multiTag", category: "core", source: "item", semantic: "tags", cardinality: "multi", hierarchical: true, aliases: ["标签", "tags"], description: "多值层级标签，例如 项目/插件、地点/家", formatter: (v2) => Array.isArray(v2) ? v2.join(", ") : String(v2 ?? "") },
-  goalPath: text$2({ key: "goalPath", label: "目标", valueType: "path", inputType: "hierarchicalSingleSelect", category: "core", source: "item", semantic: "goalPath", hierarchical: true, aliases: ["目标", "目标路径", "goalPath"], description: "单值目标路径；目标是独立实体，不使用标签语义。" }),
-  rootGoal: text$2({ key: "rootGoal", label: "根目标", valueType: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["根目标"] }),
-  leafGoal: text$2({ key: "leafGoal", label: "叶目标", valueType: "path", category: "core", source: "derived", semantic: "goalPath", hierarchical: true, aliases: ["叶目标"] }),
-  cycleId: text$2({ key: "cycleId", label: "周期标识", category: "core", source: "item", semantic: "cycleId", inputType: "text", aliases: ["周期ID", "cycleId"] }),
-  "period.id": text$2({ key: "period.id", label: "周期标识", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期ID", "periodId"] }),
-  "period.label": text$2({ key: "period.label", label: "周期", category: "core", source: "derived", semantic: "period", inputType: "text", aliases: ["周期", "periodLabel"] }),
-  "period.granularity": text$2({ key: "period.granularity", label: "周期粒度", category: "core", source: "derived", semantic: "period", inputType: "text", hiddenByDefault: true, aliases: ["周期粒度", "periodGranularity"] }),
-  recordType: text$2({
-    key: "recordType",
-    label: "记录类型",
-    category: "core",
-    source: "item",
-    semantic: "recordType",
-    inputType: "singleSelect",
-    options: RECORD_SCHEMA_DEFINITIONS.filter((definition) => definition.capabilities.userVisible).map((definition) => ({ value: definition.recordType, label: definition.name || definition.displayName || definition.recordType })),
-    aliases: ["记录类型", "recordType"],
-    formatter: (value) => {
-      const raw = String(value ?? "").trim();
-      if (!raw) return "";
-      const canonical = raw.replace(/^(?:core|internal)\./, "");
-      const recordType = getRecordSchemaDefinition(canonical);
-      return recordType?.name || recordType?.displayName || raw;
-    }
-  }),
-  recordSubtype: text$2({ key: "recordSubtype", label: "记录子类型", category: "core", source: "item", semantic: "recordSubtype", inputType: "singleSelect", aliases: ["记录子类型", "recordSubtype"], description: "领域内部子类型；当前由精力记录使用。" }),
-  status: text$2({ key: "status", label: "状态", category: "core", source: "item", semantic: "status", inputType: "singleSelect", aliases: ["状态", "status"], description: "实体显式状态；任务使用未完成、已完成、已取消、已跳过四种状态。" }),
-  cadence: text$2({ key: "cadence", label: "任务周期", category: "core", source: "derived", semantic: "recurrence", inputType: "singleSelect", aliases: ["任务周期", "cadence"], description: "由任务系列的结构化重复规则派生：日常、每日、每周、每月、每季度、每年。" }),
-  date: { key: "date", label: "日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["日期", "date"], description: "记录的主要日期" },
-  priority: text$2({ key: "priority", label: "优先级", category: "core", source: "item", semantic: "priority" }),
-  importance: text$2({ key: "importance", label: "重要程度", category: "core", source: "item", semantic: "none", inputType: "singleSelect", aliases: ["重要程度", "importance"], options: [
-    { value: "important", label: "重要" },
-    { value: "normal", label: "普通" }
-  ] }),
-  urgency: text$2({ key: "urgency", label: "紧急程度", category: "core", source: "item", semantic: "none", inputType: "singleSelect", aliases: ["紧急程度", "urgency"], options: [
-    { value: "urgent", label: "紧急" },
-    { value: "normal", label: "不紧急" }
-  ] }),
-  icon: { key: "icon", label: "图标", valueType: "icon", inputType: "text", category: "core", source: "item", semantic: "icon" },
-  recurrence: text$2({ key: "recurrence", label: "重复规则", category: "core", source: "derived", semantic: "recurrence", description: "任务系列结构化重复规则的只读展示结果。" }),
-  period: text$2({ key: "period", label: "字段粒度", category: "core", source: "item", semantic: "period", inputType: "singleSelect", description: "时间粒度：年/季/月/周/天" }),
-  startTime: { key: "startTime", label: "开始时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "startTime", aliases: ["时间", "time", "start"] },
-  endTime: { key: "endTime", label: "结束时间", valueType: "time", inputType: "time", category: "core", source: "item", semantic: "endTime", aliases: ["结束", "end"] },
-  expectedDurationMinutes: { key: "expectedDurationMinutes", label: "预计时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["预计时长", "expectedDurationMinutes"], description: "任务的用户声明时长；可与开始时间组成手工时间段，存在任务计时记录时仍优先使用计时历史。" },
-  scheduledAt: { key: "scheduledAt", label: "计划时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["计划时间", "scheduledAt"] },
-  startAt: { key: "startAt", label: "开始时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["开始时间", "startAt"] },
-  endAt: { key: "endAt", label: "结束时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["结束时间", "endAt"] },
-  dueAt: { key: "dueAt", label: "截止时间", valueType: "datetime", inputType: "datetime", category: "core", source: "item", semantic: "date", aliases: ["截止时间", "dueAt"] },
-  scheduledDate: { key: "scheduledDate", label: "计划日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["计划日期", "scheduledDate"] },
-  startDate: { key: "startDate", label: "开始日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["开始日期", "startDate"] },
-  dueDate: { key: "dueDate", label: "截止日期", valueType: "date", inputType: "date", category: "core", source: "item", semantic: "date", aliases: ["截止日期", "dueDate"] },
-  completedAt: text$2({ key: "completedAt", label: "完成时间", category: "core", source: "item", semantic: "date", aliases: ["完成于", "completedAt"] }),
-  createdAt: text$2({ key: "createdAt", label: "创建时间", category: "core", source: "item", semantic: "date", aliases: ["创建于", "createdAt"], hiddenByDefault: true }),
-  energyDemand: text$2({ key: "energyDemand", label: "精力要求", category: "core", source: "item", semantic: "none", aliases: ["精力要求", "energyDemand"] }),
-  brainDemand: text$2({ key: "brainDemand", label: "脑力要求", category: "core", source: "item", semantic: "none", aliases: ["脑力要求", "brainDemand"] }),
-  physicalDemand: text$2({ key: "physicalDemand", label: "体力要求", category: "core", source: "item", semantic: "none", aliases: ["体力要求", "physicalDemand"] }),
-  availabilityContexts: { key: "availabilityContexts", label: "可用场景", valueType: "tags", inputType: "multiSelect", category: "core", source: "item", semantic: "none", cardinality: "multi", aliases: ["可用场景", "availabilityContexts"], options: [
-    { value: "any", label: "任意" },
-    { value: "work", label: "工作" },
-    { value: "home", label: "家" },
-    { value: "commute", label: "通勤" },
-    { value: "out", label: "外出" }
-  ], description: "任务实际可执行的场景；留空或任意表示不限制。" },
-  recoveryIntent: { key: "recoveryIntent", label: "恢复意图", valueType: "boolean", inputType: "boolean", category: "core", source: "item", semantic: "none", aliases: ["恢复意图", "recoveryIntent"], description: "标记散步、休息等主动恢复类任务。" },
-  duration: { key: "duration", label: "时长", valueType: "number", inputType: "number", category: "core", source: "item", semantic: "duration", aliases: ["时长", "duration"], hiddenByDefault: true, description: "通用视图时长结果；任务声明时长使用预计时长字段，多段执行时长来自任务计时记录。" },
-  rating: { key: "rating", label: "评分", valueType: "number", inputType: "rating", category: "core", source: "item", semantic: "rating", aliases: ["评分", "rating"] },
-  image: { key: "image", label: "图片", valueType: "image", inputType: "image", category: "core", source: "item", semantic: "image", aliases: ["图片", "image"], description: "通用图片字段" },
-  // --- 分类派生 ---
-  // --- 文件字段 ---
-  "file.path": text$2({ key: "file.path", label: "文件路径", category: "file", source: "file", semantic: "filePath", aliases: ["文件路径", "filepath", "filePath", "path"] }),
-  "file.basename": text$2({ key: "file.basename", label: "文件名", category: "file", source: "file", semantic: "fileName", aliases: ["文件名", "filename", "basename"] }),
-  "file.name": text$2({ key: "file.name", label: "文件名", category: "file", source: "file", semantic: "fileName", hiddenByDefault: true }),
-  "file.folder": text$2({ key: "file.folder", label: "文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["文件夹"] }),
-  folder: text$2({ key: "folder", label: "父文件夹", category: "file", source: "file", semantic: "fileFolder", aliases: ["父文件夹"] }),
-  header: text$2({ key: "header", label: "所在标题/章节", category: "file", source: "file", semantic: "heading", aliases: ["所在标题", "所在章节"], description: "笔记文档所在章节，只表示文件位置，不参与目标归属" }),
-  // --- 时间/统计派生 ---
-  startISO: { key: "startISO", label: "开始日期", valueType: "date", category: "core", source: "derived", semantic: "date" },
-  endISO: { key: "endISO", label: "结束日期", valueType: "date", category: "core", source: "derived", semantic: "date" },
-  periodCount: { key: "periodCount", label: "粒度序号", valueType: "number", category: "core", source: "derived", semantic: "period" },
-  displayCount: { key: "displayCount", label: "显示次数", valueType: "number", category: "core", source: "item" },
-  levelCount: { key: "levelCount", label: "等级次数", valueType: "number", category: "core", source: "item" },
-  countForLevel: { key: "countForLevel", label: "计入等级", valueType: "boolean", category: "core", source: "item" },
-  manuallyEdited: { key: "manuallyEdited", label: "手动编辑", valueType: "boolean", category: "core", source: "item" }
-};
-const VIEW_FIELD_PICKER_KEYS = /* @__PURE__ */ new Set([
-  "title",
-  "primaryText",
-  "content",
-  "tags",
-  "goalPath",
-  "rootGoal",
-  "leafGoal",
-  "recordType",
-  "recordSubtype",
-  "status",
-  "cadence",
-  "date",
-  "scheduledAt",
-  "startAt",
-  "endAt",
-  "dueAt",
-  "scheduledDate",
-  "startDate",
-  "dueDate",
-  "completedAt",
-  "priority",
-  "importance",
-  "urgency",
-  "expectedDurationMinutes",
-  "energyDemand",
-  "brainDemand",
-  "physicalDemand",
-  "availabilityContexts",
-  "recoveryIntent",
-  "rating",
-  "image",
-  "icon",
-  "period.label",
-  "recurrence",
-  "file.path",
-  "file.basename",
-  "file.folder",
-  "header"
-]);
-const FIELD_PICKER_KEY_ORDER = new Map(
-  Array.from(VIEW_FIELD_PICKER_KEYS).map((key, index) => [String(key), index])
-);
-function getFieldPickerKeyRank(key) {
-  return FIELD_PICKER_KEY_ORDER.get(key) ?? Number.MAX_SAFE_INTEGER;
-}
-function compareFieldDefinitionsForPicker(a2, b2) {
-  const aCategory = FIELD_CATEGORY_ORDER.includes(a2.category) ? a2.category : "custom";
-  const bCategory = FIELD_CATEGORY_ORDER.includes(b2.category) ? b2.category : "custom";
-  const byCategory = FIELD_CATEGORY_ORDER.indexOf(aCategory) - FIELD_CATEGORY_ORDER.indexOf(bCategory);
-  if (byCategory !== 0) return byCategory;
-  const byRank = getFieldPickerKeyRank(a2.key) - getFieldPickerKeyRank(b2.key);
-  if (byRank !== 0 && Number.isFinite(byRank)) return byRank;
-  return a2.label.localeCompare(b2.label, "zh-CN");
-}
-const HIDDEN_EXTRA_ALIAS_KEYS = [
-  "正文",
-  "内容",
-  "任务内容",
-  "记录内容",
-  "editableText"
-];
-const HIDDEN_EXTRA_ALIAS_SET$1 = new Set(HIDDEN_EXTRA_ALIAS_KEYS);
-function isVisibleExtraField(_item, key) {
-  return !HIDDEN_EXTRA_ALIAS_SET$1.has(key);
-}
-function inferExtraFieldType(value) {
-  if (typeof value === "number") return "number";
-  if (typeof value === "boolean") return "boolean";
-  if (isImageLikeValue(value)) return "image";
-  return "string";
-}
-function getAvailableFields(items) {
-  const allFields = /* @__PURE__ */ new Map();
-  const registeredLabels = /* @__PURE__ */ new Set();
-  Object.values(FIELD_REGISTRY).forEach((def) => {
-    registeredLabels.add(def.label);
-    registeredLabels.add(def.key);
-    (def.aliases || []).forEach((alias) => registeredLabels.add(alias));
-    if (def.hiddenByDefault || !VIEW_FIELD_PICKER_KEYS.has(def.key)) return;
-    allFields.set(def.key, def);
-  });
-  items.forEach((it) => {
-    Object.keys(it.extra || {}).forEach((key) => {
-      if (!isVisibleExtraField(it, key)) return;
-      if (!key || key.length > 64 || /[\r\n:：]/.test(key)) return;
-      if (registeredLabels.has(key)) return;
-      const fullKey = "extra." + key;
-      if (!allFields.has(fullKey)) {
-        const value = it.extra[key];
-        const inferredType = inferExtraFieldType(value);
-        allFields.set(fullKey, {
-          key: fullKey,
-          label: key,
-          valueType: inferredType,
-          inputType: inferredType === "image" ? "image" : inferredType === "boolean" ? "boolean" : inferredType === "number" ? "number" : "text",
-          semantic: inferredType === "image" ? "image" : "none",
-          category: "custom",
-          source: "extra",
-          cardinality: "single",
-          description: "从笔记文档中未知键值对解析出的自定义字段"
-        });
-      }
-    });
-  });
-  return Array.from(allFields.values()).sort(compareFieldDefinitionsForPicker);
-}
-function getFieldCategory(key) {
-  const def = getFieldDefinition(key);
-  if (!def) {
-    if (key.startsWith("file.")) return "file";
-    return "custom";
-  }
-  return FIELD_CATEGORY_ORDER.includes(def.category) ? def.category : "custom";
-}
-function getFieldCategoryLabel(key) {
-  return FIELD_CATEGORY_LABELS[getFieldCategory(key)];
-}
-function getFieldPickerOptions(fields) {
-  const seen = /* @__PURE__ */ new Set();
-  const options = [];
-  for (const field of fields || []) {
-    const value = getCanonicalFieldKey(field);
-    if (!value || seen.has(value)) continue;
-    seen.add(value);
-    const def = getFieldDefinition(value);
-    const category = def?.category && FIELD_CATEGORY_ORDER.includes(def.category) ? def.category : "custom";
-    options.push({
-      value,
-      label: def?.label || getFieldLabel(value),
-      category,
-      group: FIELD_CATEGORY_LABELS[category],
-      description: def?.description
-    });
-  }
-  return options.sort((a2, b2) => {
-    const byCategory = FIELD_CATEGORY_ORDER.indexOf(a2.category) - FIELD_CATEGORY_ORDER.indexOf(b2.category);
-    if (byCategory !== 0) return byCategory;
-    const byRank = getFieldPickerKeyRank(a2.value) - getFieldPickerKeyRank(b2.value);
-    if (byRank !== 0 && Number.isFinite(byRank)) return byRank;
-    return a2.label.localeCompare(b2.label, "zh-CN");
-  });
-}
-const FIELD_ALIAS_MAP = {};
-for (const def of Object.values(FIELD_REGISTRY)) {
-  FIELD_ALIAS_MAP[def.key] = def.key;
-  FIELD_ALIAS_MAP[def.label] = def.key;
-  (def.aliases || []).forEach((alias) => {
-    FIELD_ALIAS_MAP[alias] = def.key;
-  });
-}
-function getCanonicalFieldKey(key) {
-  const raw = String(key || "").trim();
-  if (!raw) return raw;
-  if (raw.startsWith("extra.") || raw.startsWith("file.")) return raw;
-  return FIELD_ALIAS_MAP[raw] || raw;
-}
-function getFieldDefinition(key) {
-  const canonical = getCanonicalFieldKey(key);
-  if (FIELD_REGISTRY[canonical]) return FIELD_REGISTRY[canonical];
-  if (canonical.startsWith("extra.")) {
-    const label = canonical.slice(6);
-    return { key: canonical, label, valueType: "custom", inputType: "text", semantic: "none", category: "custom", source: "extra" };
-  }
-  return void 0;
-}
-const FIELD_LABEL_ALIASES = {
-  filename: "文件名",
-  basename: "文件名",
-  filepath: "文件路径",
-  filePath: "文件路径",
-  path: "路径"
-};
-function getFieldLabel(key) {
-  const def = getFieldDefinition(key);
-  if (def) return def.label;
-  if (FIELD_LABEL_ALIASES[key]) return FIELD_LABEL_ALIASES[key];
-  if (key.startsWith("extra.")) return key.slice(6);
-  if (key.startsWith("file.")) {
-    const tail = key.slice(5);
-    return FIELD_LABEL_ALIASES[tail] || `文件.${tail}`;
-  }
-  return key;
-}
-function formatFieldValue$1(field, value, item) {
-  if (value === null || value === void 0) return "";
-  const def = getFieldDefinition(field);
-  if (def?.formatter) return def.formatter(value, item);
-  const formatOne = (entry) => {
-    const raw = String(entry ?? "");
-    const option = def?.options?.find((candidate) => candidate.value === raw);
-    return option?.label || raw;
-  };
-  return Array.isArray(value) ? value.map(formatOne).join(", ") : formatOne(value);
-}
-const TASK_CADENCE_ORDER = ["routine", "day", "week", "month", "quarter", "year"];
-const TASK_CADENCE_META = {
-  routine: { label: "日常任务", emoji: "🌿" },
-  day: { label: "天任务", emoji: "☀️" },
-  week: { label: "周任务", emoji: "📅" },
-  month: { label: "月任务", emoji: "🗓️" },
-  quarter: { label: "季任务", emoji: "🍂" },
-  year: { label: "年任务", emoji: "🧭" }
-};
-function getTaskCadence(item) {
-  const recurrence = getTaskRecurrenceInfo(item);
-  if (!recurrence) return "routine";
-  if (recurrence.unit === "day") return "day";
-  if (recurrence.unit === "week") return "week";
-  if (recurrence.unit === "year") return "year";
-  if (recurrence.unit === "quarter") return "quarter";
-  return "month";
-}
-function isUnknownRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function asUnknownRecord(value) {
-  return isUnknownRecord(value) ? value : void 0;
-}
-function readUnknown(record2, key) {
-  return record2?.[key];
-}
-function readString$1(record2, key) {
-  const value = readUnknown(record2, key);
-  return typeof value === "string" ? value : void 0;
-}
-function readTrimmedString(record2, key) {
-  const value = readString$1(record2, key)?.trim();
-  return value ? value : void 0;
-}
-function readNumber(record2, key) {
-  const value = readUnknown(record2, key);
-  return typeof value === "number" && Number.isFinite(value) ? value : void 0;
-}
-function readStringArray(record2, key) {
-  const value = readUnknown(record2, key);
-  if (!Array.isArray(value)) return [];
-  return value.filter((item) => typeof item === "string");
-}
-function readRecordArray(record2, key) {
-  const value = readUnknown(record2, key);
-  if (!Array.isArray(value)) return [];
-  return value.filter(isUnknownRecord);
-}
-function readFirstString(record2, keys) {
-  for (const key of keys) {
-    const value = readTrimmedString(record2, key);
-    if (value) return value;
-  }
-  return void 0;
-}
-function compact(value) {
-  return String(value ?? "").replace(/\s+/g, " ").trim();
-}
-function fallbackLabel(item) {
-  return getRecordTypePresentation(item.recordType).label;
-}
-function genericPrimary(item) {
-  return compact(item.content) || fallbackLabel(item);
-}
-const energyPrimary = (item) => {
-  const snapshot = readEnergyItemSnapshot(item);
-  if (snapshot) return `精力 ${snapshot.score}`;
-  return compact(item.content) || "精力";
-};
-const habitPrimary = (item) => {
-  const content = compact(item.content);
-  if (content) return content;
-  if (item.rating != null && Number.isFinite(Number(item.rating))) return `打卡 · 评分 ${item.rating}`;
-  return "打卡";
-};
-const taskSessionPrimary = (item) => {
-  const content = compact(item.content);
-  if (content) return content;
-  if (item.sessionDurationMinutes != null && Number.isFinite(Number(item.sessionDurationMinutes))) {
-    return `任务工作块 · ${item.sessionDurationMinutes} 分钟`;
-  }
-  return "任务工作块";
-};
-const PRIMARY_TEXT_RESOLVERS = {
-  task: genericPrimary,
-  "task-session": taskSessionPrimary,
-  "task-series": genericPrimary,
-  energy: energyPrimary,
-  habit: habitPrimary,
-  event: genericPrimary,
-  feeling: genericPrimary,
-  thought: genericPrimary,
-  review: genericPrimary,
-  plan: genericPrimary,
-  blocker: genericPrimary,
-  milestone: genericPrimary
-};
-function getRecordPrimaryText(item) {
-  const title = compact(item.title);
-  if (title) return title;
-  const recordType = normalizeRecordTypePresentationKey(item.recordType);
-  const resolver = PRIMARY_TEXT_RESOLVERS[recordType];
-  return resolver ? resolver(item) : genericPrimary(item);
-}
-function normalizeFieldKey(field) {
-  return getCanonicalFieldKey(field);
-}
-function readFileField(item, field) {
-  const file = item.file;
-  const fileRecord = asUnknownRecord(file);
-  const key = field.slice("file.".length);
-  if (key === "name" || key === "basename") {
-    return file?.basename ?? item.fileName ?? item.filename;
-  }
-  if (key === "folder") {
-    return file?.folder ?? item.folder;
-  }
-  return readUnknown(fileRecord, key);
-}
-function readImageField(item) {
-  return normalizeImageValue(item.image ?? item.extra?.["图片"] ?? item.extra?.["image"]);
-}
-function readCanonicalField(item, canonicalField) {
-  if (canonicalField.startsWith("extra.")) {
-    return item.extra?.[canonicalField.slice("extra.".length)];
-  }
-  if (canonicalField.startsWith("file.")) {
-    return readFileField(item, canonicalField);
-  }
-  if (canonicalField === "primaryText") return getRecordPrimaryText(item);
-  if (canonicalField === "goalPath") {
-    return splitHierarchyPath(item.goalPath).path;
-  }
-  if (canonicalField === "rootGoal") {
-    return item.rootGoal || splitHierarchyPath(item.goalPath).root;
-  }
-  if (canonicalField === "leafGoal") {
-    return item.leafGoal || splitHierarchyPath(item.goalPath).leaf;
-  }
-  if (canonicalField === "status") return item.status;
-  if (canonicalField === "cadence") return item.recordType === "task" ? getTaskCadence(item) : void 0;
-  if (canonicalField === "recurrence") return formatTaskRecurrence(item.recurrenceInfo);
-  if (canonicalField === "period.id") {
-    return readFirstString(asUnknownRecord(item), ["cycleId", "periodId"]);
-  }
-  if (canonicalField === "period.label") {
-    return readFirstString(asUnknownRecord(item), ["period", "周期"]);
-  }
-  if (canonicalField === "period.granularity") {
-    return readFirstString(asUnknownRecord(item), ["periodGranularity", "goalGranularity"]);
-  }
-  if (canonicalField === "tags") {
-    return parseTagList(item.tags || []);
-  }
-  if (canonicalField === "fullData") {
-    return item.rawSource || item.fullData || item.content || "";
-  }
-  if (canonicalField === "image") {
-    return readImageField(item);
-  }
-  if (canonicalField === "time") {
-    return item.startTime;
-  }
-  if (canonicalField === "filename" || canonicalField === "fileName") {
-    return item.file?.basename ?? item.fileName ?? item.filename;
-  }
-  return readUnknown(asUnknownRecord(item), canonicalField);
-}
-function resolveFieldValue(item, field) {
-  const canonicalField = normalizeFieldKey(field);
-  const def = getFieldDefinition(canonicalField);
-  let value = readCanonicalField(item, canonicalField);
-  if (value === void 0) {
-    const injectedFields = asUnknownRecord(readUnknown(asUnknownRecord(item), "fields"));
-    value = readUnknown(injectedFields, canonicalField);
-    if (value === void 0 && field !== canonicalField) value = readUnknown(injectedFields, field);
-  }
-  const source = def?.source || "unknown";
-  return {
-    requestedField: field,
-    field: canonicalField,
-    value,
-    source,
-    derived: source === "derived"
-  };
-}
-function readFieldValue(item, field) {
-  return resolveFieldValue(item, field).value;
-}
-function getAllFields(items) {
-  return getAvailableFields(items).map((field) => field.key);
-}
-function readField(item, field) {
-  return readFieldValue(item, field);
-}
-function coerceForCompare(v2) {
-  if (v2 === null || v2 === void 0) return null;
-  if (typeof v2 === "number") return v2;
-  const s2 = String(v2).trim();
-  const isDateLike = /^\d{4}-\d{1,2}-\d{1,2}/.test(s2) || /^\d{4}\/\d{1,2}\/\d{1,2}/.test(s2);
-  if (isDateLike) {
-    const ts = Date.parse(s2.replace(/\//g, "-"));
-    if (!Number.isNaN(ts)) return ts;
-  }
-  const n2 = Number(s2);
-  if (!Number.isNaN(n2) && /\d/.test(s2) && !/[^\d.\-+eE]/.test(s2)) return n2;
-  return s2;
-}
-function cmpMixed(a2, b2) {
-  if (a2 == null && b2 == null) return 0;
-  if (a2 == null) return 1;
-  if (b2 == null) return -1;
-  const A2 = coerceForCompare(a2);
-  const B2 = coerceForCompare(b2);
-  if (typeof A2 === "number" && typeof B2 === "number") return A2 - B2;
-  return String(a2).localeCompare(String(b2), "zh");
-}
-function filterByRules(items, rules = []) {
-  if (!rules.length) return items;
-  return items.filter((item) => {
-    if (rules.length === 0) return true;
-    if (rules.length === 1) return matchRule(item, rules[0]);
-    let result = matchRule(item, rules[0]);
-    for (let i2 = 1; i2 < rules.length; i2++) {
-      const currentRule = rules[i2];
-      const previousRule = rules[i2 - 1];
-      const logic = previousRule.logic || "and";
-      if (logic === "and") {
-        result = result && matchRule(item, currentRule);
-      } else if (logic === "or") {
-        result = result || matchRule(item, currentRule);
-      }
-    }
-    return result;
-  });
-}
-function isEmptyValue$1(value) {
-  if (value === null || value === void 0) return true;
-  if (Array.isArray(value)) return value.length === 0;
-  return String(value).trim() === "";
-}
-function normalizeListValue(value) {
-  if (Array.isArray(value)) return value;
-  if (value === null || value === void 0) return [];
-  return String(value).split(/[,，\n]/).map((part) => part.trim()).filter(Boolean);
-}
-function normalizeBetweenValue(value) {
-  if (Array.isArray(value) && value.length >= 2) return [value[0], value[1]];
-  if (value === null || value === void 0) return null;
-  const text2 = String(value).trim();
-  if (!text2) return null;
-  const parts = text2.split(/\s*(?:~|～|至|到|\.\.|,|，)\s*/).filter(Boolean);
-  if (parts.length < 2) return null;
-  return [parts[0], parts[1]];
-}
-function matchRule(item, rule) {
-  const canonicalField = normalizeFieldKey(rule.field);
-  const itemRecord = asUnknownRecord(item);
-  let v1 = readField(item, canonicalField);
-  let v2 = rule.value;
-  if (rule.op === "empty") return isEmptyValue$1(v1);
-  if (rule.op === "notEmpty") return !isEmptyValue$1(v1);
-  if (canonicalField === "title") {
-    v1 = readString$1(itemRecord, "titleLower") ?? String(v1 ?? "").toLowerCase();
-    v2 = String(v2 ?? "").toLowerCase();
-  } else if (canonicalField === "content") {
-    v1 = readString$1(itemRecord, "contentLower") ?? String(v1 ?? "").toLowerCase();
-    v2 = String(v2 ?? "").toLowerCase();
-  } else if (["goalPath", "rootGoal", "leafGoal"].includes(canonicalField)) {
-    v1 = String(v1 ?? "").toLowerCase();
-    if (rule.op === "in" || rule.op === "notIn") {
-      v2 = normalizeListValue(v2).map((value) => String(value ?? "").toLowerCase());
-    } else {
-      v2 = String(v2 ?? "").toLowerCase();
-    }
-  } else if (canonicalField === "fullData") {
-    v1 = readString$1(itemRecord, "fullDataLower") ?? String(v1 ?? "").toLowerCase();
-    v2 = String(v2 ?? "").toLowerCase();
-  } else if (canonicalField === "tags") {
-    const listLower = readStringArray(itemRecord, "tagsLower").length ? readStringArray(itemRecord, "tagsLower") : Array.isArray(v1) ? v1.map((x2) => String(x2).toLowerCase()) : [];
-    const needle = String(v2 ?? "").toLowerCase();
-    if (rule.op === "includes" || rule.op === "=") {
-      return listLower.includes(needle);
-    }
-    if (rule.op === "!=") {
-      return !listLower.includes(needle);
-    }
-    if (rule.op === "in" || rule.op === "notIn") {
-      const needles = normalizeListValue(v2).map((x2) => String(x2).toLowerCase());
-      const matched = needles.some((needleValue) => listLower.includes(needleValue));
-      return rule.op === "in" ? matched : !matched;
-    }
-    v1 = listLower.join(",");
-    v2 = needle;
-  }
-  switch (rule.op) {
-    case "=":
-      return cmpMixed(v1, v2) === 0;
-    case "!=":
-      return cmpMixed(v1, v2) !== 0;
-    case "includes":
-      return Array.isArray(v1) ? v1.some((x2) => String(x2).includes(String(v2))) : String(v1).includes(String(v2));
-    case "regex":
-      try {
-        return new RegExp(String(v2)).test(String(v1));
-      } catch {
-        return false;
-      }
-    case ">":
-      return cmpMixed(v1, v2) > 0;
-    case "<":
-      return cmpMixed(v1, v2) < 0;
-    case "in": {
-      const values2 = Array.isArray(v2) ? v2 : normalizeListValue(v2);
-      return values2.some((value) => cmpMixed(v1, value) === 0);
-    }
-    case "notIn": {
-      const values2 = Array.isArray(v2) ? v2 : normalizeListValue(v2);
-      return !values2.some((value) => cmpMixed(v1, value) === 0);
-    }
-    case "between": {
-      const range = normalizeBetweenValue(v2);
-      if (!range) return false;
-      const [minValue, maxValue] = range;
-      return cmpMixed(v1, minValue) >= 0 && cmpMixed(v1, maxValue) <= 0;
-    }
-    default:
-      return false;
-  }
-}
-function sortItems(items, rules = []) {
-  if (!rules.length) return items;
-  return [...items].sort((a2, b2) => {
-    for (const r2 of rules) {
-      const canonicalField = normalizeFieldKey(r2.field);
-      const av = readField(a2, canonicalField);
-      const bv = readField(b2, canonicalField);
-      if (av == null && bv == null) continue;
-      if (av == null) return r2.dir === "asc" ? 1 : -1;
-      if (bv == null) return r2.dir === "asc" ? -1 : 1;
-      const cmp = cmpMixed(av, bv);
-      if (cmp !== 0) return r2.dir === "asc" ? cmp : -cmp;
-    }
-    return 0;
-  });
-}
-function filterByKeyword(items, kw) {
-  if (!kw.trim()) return items;
-  const s2 = kw.trim().toLowerCase();
-  return items.filter((it) => {
-    const itemRecord = asUnknownRecord(it);
-    const titleLower = readString$1(itemRecord, "titleLower") ?? (it.title || "").toLowerCase();
-    const contentLower = readString$1(itemRecord, "contentLower") ?? (it.content || "").toLowerCase();
-    const fullDataLower = readString$1(itemRecord, "fullDataLower") ?? (it.fullData || it.rawSource || "").toLowerCase();
-    const tagsLower = (it.tags || []).join(" ").toLowerCase();
-    const semanticText = [it.goalPath, it.recordType, it.status].filter(Boolean).join(" ").toLowerCase();
-    return (titleLower + " " + contentLower + " " + fullDataLower + " " + tagsLower + " " + semanticText).includes(s2);
-  });
-}
-function filterByPeriod(items, period) {
-  if (!period) {
-    return items;
-  }
-  return items.filter((item) => {
-    const itemPeriod = readField(item, "period");
-    return itemPeriod == null || itemPeriod === "" || itemPeriod === period;
-  });
-}
-const CODEBLOCK_LANG = "think";
-const EMPTY_LABEL = "无日期";
-const LOCAL_STORAGE_KEYS = {
-  SETTINGS_TABS: "think-settings-active-tab"
-};
-const DEFAULT_NAMES = {
-  NEW_LAYOUT: "新布局"
-};
-function isGoalOrderField(field) {
-  const canonical = getCanonicalFieldKey(String(field || "").trim());
-  return ["goalPath", "rootGoal", "leafGoal"].includes(canonical);
-}
-function isRecordTypeOrderField(field) {
-  const canonical = getCanonicalFieldKey(String(field || "").trim());
-  return canonical === "recordType";
-}
-function normalizeText(value) {
-  if (value === null || value === void 0) return "";
-  return String(value).trim();
-}
-function firstText$1(value) {
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const candidate = firstText$1(item);
-      if (candidate) return candidate;
-    }
-    return "";
-  }
-  const text2 = normalizeText(value);
-  if (!text2) return "";
-  return text2.split(/[,，\n]/).map((part) => part.trim()).filter(Boolean)[0] || "";
-}
-function normalizeGoalComparable(value) {
-  const text2 = firstText$1(value);
-  if (!text2) return "";
-  return splitGoalPath(text2).goalPath || "";
-}
-function resolveGoalFieldComparable(field, rawValue, context) {
-  getCanonicalFieldKey(String(field || "").trim());
-  return normalizeGoalComparable(rawValue);
-}
-function compareFieldValuesByViewOrder(field, left2, right2, context) {
-  if (isGoalOrderField(field)) {
-    const goalOrder = createGoalOrderIndex(context?.goals || []);
-    const leftGoal = resolveGoalFieldComparable(field, left2);
-    const rightGoal = resolveGoalFieldComparable(field, right2);
-    const byGoal = goalOrder.compareGoalPaths(leftGoal, rightGoal);
-    if (byGoal !== 0) return byGoal;
-    return leftGoal.localeCompare(rightGoal, "zh-CN");
-  }
-  if (isRecordTypeOrderField(field)) {
-    return compareRecordTypeKeys(left2, right2);
-  }
-  return String(left2 ?? "").localeCompare(String(right2 ?? ""), "zh-CN");
-}
-function readOrderedFieldValue(item, field, context) {
-  const canonical = getCanonicalFieldKey(String(field || "").trim());
-  if (isGoalOrderField(canonical)) {
-    return item.goalPath || readField(item, canonical) || readField(item, "goalPath");
-  }
-  return readField(item, canonical);
-}
-function findFirstGoalOrderField(fields = []) {
-  for (const field of fields || []) {
-    if (isGoalOrderField(field)) return getCanonicalFieldKey(field);
-  }
-  return null;
-}
-function orderItemsByDisplayedGoalField(items = [], displayFields = [], context) {
-  const goalField = findFirstGoalOrderField(displayFields);
-  if (!goalField) return items;
-  const originalIndex = /* @__PURE__ */ new Map();
-  items.forEach((item, index) => originalIndex.set(item, index));
-  return [...items].sort((left2, right2) => {
-    const byGoal = compareFieldValuesByViewOrder(
-      goalField,
-      readOrderedFieldValue(left2, goalField),
-      readOrderedFieldValue(right2, goalField),
-      context
-    );
-    if (byGoal !== 0) return byGoal;
-    return (originalIndex.get(left2) ?? 0) - (originalIndex.get(right2) ?? 0);
-  });
-}
-function normalizeGroupKeys(value, defaultLabel) {
-  if (Array.isArray(value)) {
-    const keys = value.map((v2) => String(v2 ?? "").trim()).filter(Boolean);
-    return keys.length ? Array.from(new Set(keys)) : [defaultLabel];
-  }
-  const text2 = String(value ?? "").trim();
-  return text2 ? [text2] : [defaultLabel];
-}
-function formatGroupLabel(field, key) {
-  return formatFieldValue$1(field, key) || key;
-}
-function groupItemsByField(items, groupField, defaultLabel = "(未分类)") {
-  const grouped = {};
-  for (const item of items) {
-    const keys = normalizeGroupKeys(readField(item, groupField), defaultLabel);
-    for (const key of keys) {
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(item);
-    }
-  }
-  return grouped;
-}
-function getSortedGroupKeys(grouped, field, context) {
-  const keys = Object.keys(grouped);
-  if (field && (isGoalOrderField(field) || isRecordTypeOrderField(field))) {
-    return keys.sort((a2, b2) => compareFieldValuesByViewOrder(field, a2, b2, context));
-  }
-  return keys.sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
-}
-function groupItemsByFields(items, fields, context) {
-  if (!fields || fields.length === 0) {
-    return [{
-      key: "__all__",
-      label: "__all__",
-      field: "__all__",
-      items
-    }];
-  }
-  const groupLevel = (levelItems, level) => {
-    const field = fields[level];
-    const grouped = groupItemsByField(levelItems, field);
-    const keys = getSortedGroupKeys(grouped, field, context);
-    return keys.map((key) => {
-      const bucket = grouped[key];
-      if (level === fields.length - 1) {
-        return {
-          key,
-          label: formatGroupLabel(field, key),
-          field,
-          items: bucket
-        };
-      } else {
-        return {
-          key,
-          label: formatGroupLabel(field, key),
-          field,
-          children: groupLevel(bucket, level + 1)
-        };
-      }
-    });
-  };
-  return groupLevel(items, 0);
-}
-function buildTableMatrix(items, rowField, colField, context) {
-  const rowVals = /* @__PURE__ */ new Set();
-  const colVals = /* @__PURE__ */ new Set();
-  const matrix = {};
-  items.forEach((item) => {
-    const rows = normalizeGroupKeys(readField(item, rowField), EMPTY_LABEL);
-    const cols = normalizeGroupKeys(readField(item, colField), EMPTY_LABEL);
-    rows.forEach((r2) => {
-      cols.forEach((c2) => {
-        rowVals.add(r2);
-        colVals.add(c2);
-        if (!matrix[r2]) matrix[r2] = {};
-        if (!matrix[r2][c2]) matrix[r2][c2] = [];
-        matrix[r2][c2].push(item);
-      });
-    });
-  });
-  const sortedRows = Array.from(rowVals).sort((a2, b2) => compareFieldValuesByViewOrder(rowField, a2, b2, context));
-  const sortedCols = Array.from(colVals).sort((a2, b2) => compareFieldValuesByViewOrder(colField, a2, b2, context));
-  return { matrix, sortedRows, sortedCols };
-}
-const VIEW_DATE_ROLES = [
-  "default",
-  "task-scheduled",
-  "task-due",
-  "task-completed",
-  "task-actual"
-];
-function normalizeViewDateRole(value) {
-  const normalized2 = String(value || "").trim();
-  return VIEW_DATE_ROLES.includes(normalized2) ? normalized2 : void 0;
-}
-function isClosedTask(item) {
-  if (item.recordType !== "task") return false;
-  return item.status === "done" || item.status === "cancelled" || item.status === "skipped";
-}
-function isOpenTask(item) {
-  return item.recordType === "task" && !isClosedTask(item);
-}
-function itemGranularity(item) {
-  return String(readField(item, "period") || "天");
-}
-function isWithinDayRange(value, range) {
-  if (!value) return false;
-  const parsed = dayjs(value);
-  if (!parsed.isValid()) return false;
-  const [start2, end2] = toIsoDateTuple({
-    start: dayjs(range[0]).startOf("day"),
-    end: dayjs(range[1]).endOf("day")
-  });
-  const valueMs = parsed.valueOf();
-  return valueMs >= dayjs(start2).startOf("day").valueOf() && valueMs <= dayjs(end2).endOf("day").valueOf();
-}
-function isWithinMinuteRange(value, range) {
-  if (!value) return false;
-  const parsed = dayjs(value);
-  if (!parsed.isValid()) return false;
-  const startMs = dayjs(range[0]).valueOf();
-  const endMs = dayjs(range[1]).valueOf();
-  const valueMs = parsed.valueOf();
-  return valueMs >= startMs && valueMs <= endMs;
-}
-function readDateConstraintValue(item, constraint) {
-  const role = constraint.role || "default";
-  if (role === "task-scheduled") {
-    return item.recordType === "task" ? item.scheduledAt ?? item.scheduledDate : void 0;
-  }
-  if (role === "task-due") {
-    return item.recordType === "task" ? item.dueAt ?? item.dueDate : void 0;
-  }
-  if (role === "task-completed") {
-    return item.recordType === "task" ? item.completedAt ?? item.doneDate : void 0;
-  }
-  if (role === "task-actual") {
-    return item.recordType === "task-session" ? item.sessionStartedAt : void 0;
-  }
-  return readField(item, constraint.field || "date");
-}
-function applyStrictDateConstraint(items, constraint) {
-  const inRange2 = constraint.precision === "minute" ? isWithinMinuteRange : isWithinDayRange;
-  return items.filter((item) => inRange2(readDateConstraintValue(item, constraint), constraint.range));
-}
-function applyOverviewDateConstraint(items, constraint) {
-  const contextDate = dayjs(constraint.range[1]);
-  const field = constraint.field || "date";
-  return items.filter((item) => {
-    if (field === "date" && isOpenTask(item)) return true;
-    const rawDate = readDateConstraintValue(item, constraint);
-    if (!rawDate) return field === "date" ? !isClosedTask(item) : false;
-    const itemDate2 = dayjs(rawDate);
-    if (!itemDate2.isValid()) return field === "date" ? !isClosedTask(item) : false;
-    if (constraint.useFieldGranularity) {
-      switch (itemGranularity(item)) {
-        case "年":
-          return itemDate2.isSame(contextDate, "year");
-        case "季":
-          return itemDate2.isSame(contextDate, "quarter");
-        case "月":
-          return itemDate2.isSame(contextDate, "month");
-        case "周":
-          return isSameIsoWeek(itemDate2, contextDate);
-        default:
-          return isWithinDayRange(rawDate, constraint.range);
-      }
-    }
-    return isWithinDayRange(rawDate, constraint.range);
-  });
-}
-function applyStandardDateConstraint(items, constraint) {
-  const field = constraint.field || "date";
-  if (field !== "date") return applyStrictDateConstraint(items, { ...constraint });
-  let result = items;
-  const period = constraint.periodValue ?? (constraint.useFieldGranularity ? constraint.granularity : void 0);
-  if (period != null && String(period).trim()) result = filterByPeriod(result, String(period));
-  return result.filter((item) => {
-    if (isOpenTask(item)) return true;
-    const rawDate = readDateConstraintValue(item, constraint);
-    if (!rawDate) return !isClosedTask(item);
-    const parsed = dayjs(rawDate);
-    if (!parsed.isValid()) return !isClosedTask(item);
-    return isWithinDayRange(rawDate, constraint.range);
-  });
-}
-function applyDateConstraint(items, constraint) {
-  if (!constraint) return items;
-  const explicitRole = (constraint.role || "default") !== "default";
-  const mode = explicitRole ? "strict" : constraint.mode || (constraint.field && constraint.field !== "date" ? "strict" : "standard");
-  if (mode === "overview") return applyOverviewDateConstraint(items, constraint);
-  if (mode === "strict") return applyStrictDateConstraint(items, constraint);
-  return applyStandardDateConstraint(items, constraint);
-}
-const dateConstraintCache = /* @__PURE__ */ new WeakMap();
-const MAX_DATE_CACHE_ENTRIES_PER_SNAPSHOT = 48;
-function buildDateConstraintCacheKey(constraint) {
-  const [start2, end2] = constraint.range;
-  return JSON.stringify({
-    start: start2?.getTime?.() ?? Number(start2),
-    end: end2?.getTime?.() ?? Number(end2),
-    field: constraint.field || "date",
-    mode: constraint.mode || "",
-    granularity: constraint.granularity || "",
-    useFieldGranularity: !!constraint.useFieldGranularity,
-    periodValue: constraint.periodValue == null ? "" : String(constraint.periodValue),
-    precision: constraint.precision || "day",
-    role: constraint.role || "default"
-  });
-}
-function applyDateConstraintCached(items, constraint) {
-  if (!constraint) return items;
-  let byConstraint = dateConstraintCache.get(items);
-  if (!byConstraint) {
-    byConstraint = /* @__PURE__ */ new Map();
-    dateConstraintCache.set(items, byConstraint);
-  }
-  const key = buildDateConstraintCacheKey(constraint);
-  const cached2 = byConstraint.get(key);
-  if (cached2) return cached2;
-  const filtered = applyDateConstraint(items, constraint);
-  byConstraint.set(key, filtered);
-  if (byConstraint.size > MAX_DATE_CACHE_ENTRIES_PER_SNAPSHOT) {
-    const oldestKey = byConstraint.keys().next().value;
-    if (oldestKey) byConstraint.delete(oldestKey);
-  }
-  return filtered;
-}
-function executeRecordQuery(items, spec = {}) {
-  let result = applyDateConstraintCached(items, spec.date);
-  for (const group of spec.filterGroups || []) {
-    if (group.length) result = filterByRules(result, [...group]);
-  }
-  if (spec.keyword) result = filterByKeyword(result, spec.keyword);
-  if (spec.sort?.length) result = sortItems(result, [...spec.sort]);
-  const groupFields = (spec.groupBy || []).filter(Boolean);
-  const groupTree = groupFields.length ? groupItemsByFields(result, [...groupFields], spec.groupContext) : null;
-  return { items: result, groupTree };
-}
-function queryRecordItems(items, spec = {}) {
-  return executeRecordQuery(items, spec).items;
 }
 function asTaskRecord(record2) {
   if (!record2 || record2.recordType !== "task") return null;
@@ -10261,49 +13736,6 @@ function resolveRecordBlockRangeById(lines, recordId, expectedStartIndex) {
     throw createRecordConflictError("record_id_duplicate", `记录标识 ${recordId} 在同一文件中重复，无法安全判断要修改哪一条记录。`);
   }
   throw createRecordConflictError("record_item_missing", `找不到记录标识 ${recordId} 对应的记录块。`);
-}
-function formatTemplateValue(value) {
-  return formatFieldValueForTemplate(value);
-}
-function renderTemplate(templateString, data) {
-  return templateString.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_2, placeholder) => {
-    const key = placeholder.trim();
-    let result = "";
-    try {
-      if (key === "block") {
-        result = data.block?.name || "";
-      } else if (key === "theme") {
-        result = data.theme?.path || "";
-      } else if (key === "icon") {
-        result = data.theme?.icon || "";
-      } else if (key.startsWith("moment:")) {
-        const format = key.substring(7);
-        result = dayjs().format(format);
-      } else {
-        const keys = key.split(".");
-        const rootKey = keys[0];
-        if (!(rootKey in data)) {
-          return "";
-        }
-        let value = data[rootKey];
-        if (keys.length > 1) {
-          for (let i2 = 1; i2 < keys.length; i2++) {
-            if (value && typeof value === "object" && keys[i2] in value) {
-              value = value[keys[i2]];
-            } else {
-              value = "";
-              break;
-            }
-          }
-        }
-        result = formatTemplateValue(value);
-      }
-      return result;
-    } catch (e2) {
-      devError(`[ThinkPlugin] 解析模板变量 {{${key}}} 时发生错误:`, e2);
-      return `(解析错误: ${key})`;
-    }
-  });
 }
 const CORE_FIELD_GUIDE_KEYS = [
   "title",
@@ -11155,7 +14587,7 @@ function readCompletedExecutionContext(context) {
 function isTimelineCompletedExecutionContext(context) {
   return readCompletedExecutionContext(context)?.kind === "timeline_create";
 }
-function normalizeDateTime$2(value) {
+function normalizeDateTime$1(value) {
   const raw = readString(value).replace(" ", "T");
   if (!raw) return null;
   const ms = Date.parse(raw);
@@ -11169,8 +14601,8 @@ function buildTimelineCompletedExecutionSessionInput(input) {
   const captureContext = readCompletedExecutionContext(input.context);
   if (!captureContext) return null;
   if (captureContext.kind !== "timeline_create" && readString(input.taskFields.status).toLowerCase() !== "done") return null;
-  const started = normalizeDateTime$2(input.taskFields.startAt);
-  const ended = normalizeDateTime$2(input.taskFields.endAt);
+  const started = normalizeDateTime$1(input.taskFields.startAt);
+  const ended = normalizeDateTime$1(input.taskFields.endAt);
   if (!started || !ended || ended.ms <= started.ms) return null;
   const duration2 = durationMinutes(started.ms, ended.ms);
   if (!Number.isFinite(duration2) || duration2 <= 0) return null;
@@ -12501,45 +15933,6 @@ class TaskTimeMutation {
     return updated;
   }
 }
-const TASK_QUADRANT_PRESENTATION = {
-  q1: { quadrant: "q1", emoji: "🔥", label: "紧急且重要", shortLabel: "紧急重要" },
-  q2: { quadrant: "q2", emoji: "🎯", label: "重要但不紧急", shortLabel: "重要不紧急" },
-  q3: { quadrant: "q3", emoji: "⚡", label: "紧急但不重要", shortLabel: "紧急不重要" },
-  q4: { quadrant: "q4", emoji: "🌿", label: "不紧急且不重要", shortLabel: "不紧急不重要" },
-  unclassified: { quadrant: "unclassified", emoji: "📥", label: "未分类", shortLabel: "未分类" }
-};
-function normalizeTaskImportance(value) {
-  const normalized2 = String(value ?? "").trim().toLowerCase();
-  return normalized2 === "important" || normalized2 === "normal" ? normalized2 : null;
-}
-function normalizeTaskUrgency(value) {
-  const normalized2 = String(value ?? "").trim().toLowerCase();
-  return normalized2 === "urgent" || normalized2 === "normal" ? normalized2 : null;
-}
-function deriveEisenhowerQuadrant(task) {
-  if (!task || task.recordType !== "task") return "unclassified";
-  const importance = normalizeTaskImportance(task.importance);
-  const urgency = normalizeTaskUrgency(task.urgency);
-  if (!importance || !urgency) return "unclassified";
-  if (importance === "important" && urgency === "urgent") return "q1";
-  if (importance === "important" && urgency === "normal") return "q2";
-  if (importance === "normal" && urgency === "urgent") return "q3";
-  return "q4";
-}
-function taskClassificationForQuadrant(quadrant) {
-  switch (quadrant) {
-    case "q1":
-      return { importance: "important", urgency: "urgent" };
-    case "q2":
-      return { importance: "important", urgency: "normal" };
-    case "q3":
-      return { importance: "normal", urgency: "urgent" };
-    case "q4":
-      return { importance: "normal", urgency: "normal" };
-    default:
-      return { importance: null, urgency: null };
-  }
-}
 class TaskQuadrantMutation {
   constructor(repository) {
     this.repository = repository;
@@ -13150,19 +16543,6 @@ TimerStateService = __decorateClass$9([
   singleton(),
   __decorateParam$8(0, inject(VAULT_PORT_TOKEN))
 ], TimerStateService);
-function getEffectiveTemplate(settings, recordTypeId) {
-  const configured = settings.recordTypes || [];
-  const templates = [
-    ...configured,
-    ...DEFAULT_TEMPLATE_RECORD_TYPES.filter((block) => !configured.some((existing) => existing.id === block.id))
-  ];
-  const template = templates.find((block) => block.id === recordTypeId || block.recordTypeId === recordTypeId) ?? null;
-  return {
-    template,
-    templateId: template?.id ?? null,
-    templateSourceType: template ? "record-type" : null
-  };
-}
 const AI_TASK_STATUS_ALIASES = {
   "已完成": "done",
   "完成": "done",
@@ -18559,9 +21939,6 @@ function superRefine(fn3, params) {
 const ZodIssueCode = {
   custom: "custom"
 };
-function generateId(prefix2 = "id") {
-  return `${prefix2}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
-}
 var __getOwnPropDesc$8 = Object.getOwnPropertyDescriptor;
 var __decorateClass$8 = (decorators, target, key, kind) => {
   var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$8(target, key) : target;
@@ -18862,7 +22239,7 @@ function readSearchResultText(sr, key) {
   return normalizeRetrievalText(readUnknown(getSearchResultRecord(sr), key));
 }
 function readSearchResultNumber(sr, key) {
-  return readNumber(getSearchResultRecord(sr), key);
+  return readNumber$1(getSearchResultRecord(sr), key);
 }
 function tokenizeRetrievalText(text2) {
   if (!text2) return [];
@@ -19388,2979 +22765,6 @@ AiChatService = __decorateClass$6([
 const MODAL_PORT_TOKEN = "ModalPort";
 const EVENTS_PORT_TOKEN = "EventsPort";
 const MESSAGE_RENDER_PORT_TOKEN = /* @__PURE__ */ Symbol("MessageRenderPort");
-let enabled = false;
-function setDevConsoleStackEnabled(v2) {
-  enabled = !!v2;
-}
-function isDevConsoleStackEnabled() {
-  return enabled;
-}
-function emit(level, args) {
-  if (!isDevConsoleStackEnabled()) return;
-  try {
-    const method = console[level];
-    if (typeof method === "function") {
-      method.apply(console, args);
-    }
-  } catch {
-  }
-}
-function diagnosticLog(...args) {
-  emit("log", args);
-}
-function diagnosticWarn(...args) {
-  emit("warn", args);
-}
-function diagnosticError(...args) {
-  emit("error", args);
-}
-function diagnosticTrace(...args) {
-  emit("trace", args);
-}
-var ErrorType = /* @__PURE__ */ ((ErrorType2) => {
-  ErrorType2["NETWORK"] = "NETWORK";
-  ErrorType2["VALIDATION"] = "VALIDATION";
-  ErrorType2["PERMISSION"] = "PERMISSION";
-  ErrorType2["FILE_SYSTEM"] = "FILE_SYSTEM";
-  ErrorType2["SERVICE"] = "SERVICE";
-  ErrorType2["PLUGIN"] = "PLUGIN";
-  ErrorType2["UNKNOWN"] = "UNKNOWN";
-  return ErrorType2;
-})(ErrorType || {});
-class BaseError extends Error {
-  type;
-  timestamp;
-  context;
-  constructor(message, type = ErrorType.UNKNOWN, context) {
-    super(message);
-    this.name = this.constructor.name;
-    this.type = type;
-    this.timestamp = Date.now();
-    this.context = context;
-    const ErrorWithCaptureStack = Error;
-    ErrorWithCaptureStack.captureStackTrace?.(this, this.constructor);
-  }
-}
-class NetworkError extends BaseError {
-  constructor(message, context) {
-    super(message, ErrorType.NETWORK, context);
-  }
-}
-class ValidationError extends BaseError {
-  constructor(message, context) {
-    super(message, ErrorType.VALIDATION, context);
-  }
-}
-class PermissionError extends BaseError {
-  constructor(message, context) {
-    super(message, ErrorType.PERMISSION, context);
-  }
-}
-class FileSystemError extends BaseError {
-  constructor(message, context) {
-    super(message, ErrorType.FILE_SYSTEM, context);
-  }
-}
-class ServiceError extends BaseError {
-  constructor(message, context) {
-    super(message, ErrorType.SERVICE, context);
-  }
-}
-class PluginError extends BaseError {
-  constructor(message, context) {
-    super(message, ErrorType.PLUGIN, context);
-  }
-}
-function classifyError(error) {
-  if (error instanceof NetworkError) return ErrorType.NETWORK;
-  if (error instanceof ValidationError) return ErrorType.VALIDATION;
-  if (error instanceof PermissionError) return ErrorType.PERMISSION;
-  if (error instanceof FileSystemError) return ErrorType.FILE_SYSTEM;
-  if (error instanceof ServiceError) return ErrorType.SERVICE;
-  if (error instanceof PluginError) return ErrorType.PLUGIN;
-  const message = error.message.toLowerCase();
-  if (message.includes("network") || message.includes("fetch") || message.includes("timeout")) {
-    return ErrorType.NETWORK;
-  }
-  if (message.includes("permission") || message.includes("access denied")) {
-    return ErrorType.PERMISSION;
-  }
-  if (message.includes("file") || message.includes("path") || message.includes("directory")) {
-    return ErrorType.FILE_SYSTEM;
-  }
-  if (message.includes("invalid") || message.includes("validation")) {
-    return ErrorType.VALIDATION;
-  }
-  return ErrorType.UNKNOWN;
-}
-function moveItemInArray(array2, id, direction) {
-  const next2 = [...array2];
-  const item = next2.find((candidate) => candidate.id === id);
-  if (!item) return next2;
-  const siblings = next2.filter((candidate) => candidate.parentId === item.parentId);
-  const index = siblings.findIndex((candidate) => candidate.id === id);
-  const target = direction === "up" ? index - 1 : index + 1;
-  if (index < 0 || target < 0 || target >= siblings.length) return next2;
-  const from2 = next2.findIndex((candidate) => candidate.id === id);
-  const to = next2.findIndex((candidate) => candidate.id === siblings[target].id);
-  if (from2 < 0 || to < 0) return next2;
-  const [moved2] = next2.splice(from2, 1);
-  next2.splice(to, 0, moved2);
-  return next2;
-}
-function arrayMove$1(array2, from2, to) {
-  const next2 = [...array2];
-  const [moved2] = next2.splice(from2, 1);
-  next2.splice(to, 0, moved2);
-  return next2;
-}
-const BLOCK_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  view: "BlockView",
-  title: "块视图",
-  collapsed: false,
-  fields: [],
-  group: "recordType"
-};
-const ENERGY_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  windowDays: 7,
-  recentSampleLimit: 5,
-  maxGoals: 3,
-  goalPath: "",
-  showTimeline: true,
-  showContext: true,
-  showEffects: true,
-  analysisWindowDays: 30,
-  showPatterns: true,
-  showManagement: true,
-  currentContext: "any"
-};
-const EISENHOWER_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  showUnclassified: true
-};
-const EVENT_TIMELINE_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  timeField: "date",
-  titleField: "primaryText",
-  contentField: "content",
-  groupByDay: true,
-  showWeekday: true,
-  maxContentLength: 160,
-  fields: ["primaryText", "date"],
-  groupFields: []
-};
-const EXCEL_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  view: "ExcelView",
-  title: "数据表格",
-  collapsed: false,
-  fields: []
-};
-const HEATMAP_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  displayMode: "habit",
-  recordScope: "source",
-  sourceRecordTypeId: "",
-  goalPaths: [],
-  maxDailyChecks: 10,
-  allowManualEdit: true
-};
-const PROGRESS_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  mode: "goal",
-  metric: "recordCount",
-  statusFilter: ["active", "paused"],
-  basePoints: 1,
-  levelStep: 20,
-  includedRecordTypes: [],
-  ratingBonusThreshold: 4,
-  ratingBonusPoints: 1,
-  showGoalBreakdown: true,
-  showRecordTypeBreakdown: true,
-  topN: 5
-};
-const STATISTICS_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  groupBy: "goal",
-  metric: "recordCount",
-  chartType: "bar",
-  goalPath: "",
-  topN: 10,
-  categories: [],
-  displayMode: "smart",
-  minVisibleHeight: 15,
-  usePeriodField: false
-};
-const TABLE_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  view: "TableView",
-  title: "表格视图",
-  collapsed: false,
-  rowField: "recordType",
-  colField: "date"
-};
-const TIMELINE_VIEW_DEFAULT_CONFIG = {
-  dateRole: "default",
-  defaultHourHeight: 50,
-  MAX_HOURS_PER_DAY: 24,
-  UNTRACKED_LABEL: "未记录"
-};
-const BLOCK_EXPORT_DEFAULT_CONFIG = {
-  strategy: "records"
-};
-const TABLE_EXPORT_CONFIG = {
-  strategy: "records"
-};
-const EXCEL_EXPORT_CONFIG = {
-  strategy: "table"
-};
-const TIMELINE_EXPORT_CONFIG = {
-  strategy: "timeline",
-  taskSessionMode: "expanded",
-  taskSessionScope: "range"
-};
-const EVENT_TIMELINE_EXPORT_CONFIG = {
-  strategy: "event-timeline"
-};
-const STATISTICS_EXPORT_CONFIG = {
-  strategy: "statistics"
-};
-const HEATMAP_EXPORT_CONFIG = {
-  strategy: "heatmap"
-};
-const PROGRESS_EXPORT_CONFIG = {
-  strategy: "progress"
-};
-const ENERGY_EXPORT_CONFIG = {
-  strategy: "energy"
-};
-const EISENHOWER_EXPORT_CONFIG = {
-  strategy: "eisenhower"
-};
-const VIEW_DEFINITIONS = {
-  BlockView: {
-    label: "块视图",
-    defaultConfig: BLOCK_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 480, freeformHeight: 340, deferredMinHeight: 420 },
-    capabilities: { headerCreate: false, export: true },
-    exportConfig: BLOCK_EXPORT_DEFAULT_CONFIG
-  },
-  TableView: {
-    label: "表格",
-    defaultConfig: TABLE_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 680, freeformHeight: 420, deferredMinHeight: 420 },
-    capabilities: { headerCreate: false, export: true },
-    exportConfig: TABLE_EXPORT_CONFIG
-  },
-  ExcelView: {
-    label: "数据表格",
-    defaultConfig: EXCEL_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 760, freeformHeight: 460, deferredMinHeight: 420 },
-    capabilities: { headerCreate: false, export: true },
-    exportConfig: EXCEL_EXPORT_CONFIG
-  },
-  TimelineView: {
-    label: "时间轴",
-    defaultConfig: TIMELINE_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 680, freeformHeight: 420, deferredMinHeight: 520 },
-    capabilities: { headerCreate: true, export: true },
-    exportConfig: TIMELINE_EXPORT_CONFIG
-  },
-  StatisticsView: {
-    label: "统计",
-    defaultConfig: STATISTICS_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 440, freeformHeight: 340, deferredMinHeight: 320 },
-    capabilities: { headerCreate: true, export: true },
-    exportConfig: STATISTICS_EXPORT_CONFIG
-  },
-  HeatmapView: {
-    label: "打卡",
-    defaultConfig: HEATMAP_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 520, freeformHeight: 360, deferredMinHeight: 360 },
-    capabilities: { headerCreate: true, export: true },
-    exportConfig: HEATMAP_EXPORT_CONFIG
-  },
-  EventTimelineView: {
-    label: "事件时间线",
-    defaultConfig: EVENT_TIMELINE_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 680, freeformHeight: 420, deferredMinHeight: 420 },
-    capabilities: { headerCreate: false, export: true },
-    exportConfig: EVENT_TIMELINE_EXPORT_CONFIG
-  },
-  ProgressView: {
-    label: "成长",
-    defaultConfig: PROGRESS_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 480, freeformHeight: 360, deferredMinHeight: 360 },
-    capabilities: { headerCreate: false, export: true },
-    exportConfig: PROGRESS_EXPORT_CONFIG
-  },
-  EnergyView: {
-    label: "精力",
-    defaultConfig: ENERGY_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 720, freeformHeight: 620, deferredMinHeight: 440 },
-    capabilities: { headerCreate: true, export: true },
-    exportConfig: ENERGY_EXPORT_CONFIG
-  },
-  EisenhowerView: {
-    label: "四象限",
-    defaultConfig: EISENHOWER_VIEW_DEFAULT_CONFIG,
-    layout: { freeformWidth: 760, freeformHeight: 560, deferredMinHeight: 480 },
-    capabilities: { headerCreate: false, export: true },
-    exportConfig: EISENHOWER_EXPORT_CONFIG
-  }
-};
-const VIEW_OPTIONS = Object.freeze(
-  Object.keys(VIEW_DEFINITIONS)
-);
-Object.freeze(
-  Object.fromEntries(
-    VIEW_OPTIONS.map((viewType) => [viewType, VIEW_DEFINITIONS[viewType].defaultConfig])
-  )
-);
-function isRegisteredViewName(value) {
-  return Object.prototype.hasOwnProperty.call(VIEW_DEFINITIONS, value);
-}
-function getViewDefinition(viewType) {
-  if (!isRegisteredViewName(viewType)) return void 0;
-  return VIEW_DEFINITIONS[viewType];
-}
-function getViewLabel(viewType) {
-  const fallback = viewType.replace(/View$/, "") || viewType;
-  return getViewDefinition(viewType)?.label ?? fallback;
-}
-function getViewDefaultConfig(viewType) {
-  return getViewDefinition(viewType)?.defaultConfig;
-}
-function getViewExportConfig(viewType) {
-  return getViewDefinition(viewType)?.exportConfig;
-}
-function viewHasCapability(viewType, capability) {
-  return getViewDefinition(viewType)?.capabilities[capability] === true;
-}
-const TECHNICAL_FIELDS = /* @__PURE__ */ new Set([
-  "id",
-  "seriesId",
-  "taskId",
-  "currentTaskId",
-  "cycleId",
-  "fullData",
-  "rawSource",
-  "created",
-  "modified",
-  "file",
-  "source",
-  "filename",
-  "fileName",
-  "folder",
-  "header",
-  "startEnergyRecordId",
-  "endEnergyRecordId"
-]);
-const INTERNAL_RECORD_TYPES = /* @__PURE__ */ new Set(["task-session", "task-series"]);
-const RECORD_PROFILE_FIELDS = {
-  habit: ["goalPath", "date", "rating", "image", "content"],
-  plan: ["goalPath", "date", "period", "content"],
-  review: ["goalPath", "date", "period", "content"],
-  thought: ["goalPath", "date", "content"],
-  feeling: ["goalPath", "date", "content"],
-  event: ["goalPath", "date", "content"],
-  blocker: ["goalPath", "date", "content"],
-  milestone: ["goalPath", "date", "content"],
-  energy: ["goalPath", "date"]
-};
-const TASK_STATUS_PRESENTATION = {
-  open: { emoji: "⏳", label: "未完成" },
-  done: { emoji: "✅", label: "已完成" },
-  cancelled: { emoji: "🚫", label: "已取消" },
-  skipped: { emoji: "⏭️", label: "已跳过" },
-  unknown: { emoji: "•", label: "未知" }
-};
-const QUADRANT_LABELS = {
-  q1: "重要且紧急",
-  q2: "重要不紧急",
-  q3: "不重要但紧急",
-  q4: "不重要不紧急",
-  unclassified: "未分类"
-};
-function getExportConfig(viewType) {
-  return getViewExportConfig(viewType) || BLOCK_EXPORT_DEFAULT_CONFIG;
-}
-function compactText$1(value) {
-  return String(value ?? "").replace(/\s+/g, " ").trim();
-}
-function formatNumber(value) {
-  return Number.isInteger(value) ? String(value) : String(Math.round(value * 100) / 100);
-}
-function formatMinutes(value) {
-  return `${formatNumber(value)} 分钟`;
-}
-function formatDateTime$1(value) {
-  const text2 = String(value ?? "").trim();
-  if (!text2) return "";
-  const iso = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?$/.exec(text2);
-  return iso ? `${iso[1]} ${iso[2]}` : text2;
-}
-function dateOnly(value) {
-  const text2 = String(value ?? "").trim();
-  const match5 = /^(\d{4}-\d{2}-\d{2})/.exec(text2);
-  return match5?.[1] || text2;
-}
-function localDateText(value) {
-  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
-}
-function isEmpty$3(value) {
-  return value === void 0 || value === null || value === "" || Array.isArray(value) && value.length === 0;
-}
-function fieldLabel(field) {
-  const canonical = normalizeFieldKey(field);
-  return getFieldDefinition(canonical)?.label || field;
-}
-function formatStatus(value) {
-  const key = String(value ?? "").trim();
-  return TASK_STATUS_PRESENTATION[key]?.label || key;
-}
-function formatFieldValue(field, rawValue) {
-  const canonical = normalizeFieldKey(field);
-  if (canonical === "recordType") return getRecordTypePresentation(rawValue).label;
-  if (canonical === "status") return formatStatus(rawValue);
-  if (canonical === "primaryText") return compactText$1(rawValue);
-  if (Array.isArray(rawValue)) return rawValue.map(compactText$1).filter(Boolean).join("、");
-  if (/At$/.test(canonical) || ["date", "scheduledDate", "startDate", "dueDate", "doneDate", "cancelledDate"].includes(canonical)) {
-    return formatDateTime$1(rawValue);
-  }
-  return String(rawValue);
-}
-function imageDisplay(value) {
-  const text2 = String(value ?? "").trim();
-  if (!text2) return "";
-  const isEmojiOnly = /^[\p{Emoji}\p{Emoji_Presentation}\p{Extended_Pictographic}\s]*$/u.test(text2) && text2.length <= 8 && !text2.includes(".");
-  if (isEmojiOnly || text2.startsWith("![[") || text2.startsWith("![")) return text2;
-  return `![[${text2}]]`;
-}
-function pushField(lines, label, value, field) {
-  if (isEmpty$3(value)) return;
-  if (field === "image") {
-    const display2 = imageDisplay(value);
-    if (display2) lines.push(`  - ${label}：${display2}`);
-    return;
-  }
-  const display = field ? formatFieldValue(field, value) : String(value);
-  if (!display) return;
-  if (field === "content" && display.includes("\n")) {
-    lines.push(`  - ${label}：`);
-    for (const row of display.split(/\r?\n/).map((line2) => line2.trim()).filter(Boolean)) lines.push(`    - ${row}`);
-    return;
-  }
-  lines.push(`  - ${label}：${display}`);
-}
-function timestamp$1(value) {
-  const text2 = String(value ?? "").trim();
-  if (!text2) return null;
-  const ms = Date.parse(text2);
-  return Number.isFinite(ms) ? ms : null;
-}
-function overlapsRange(startValue, endValue, dateRange) {
-  if (!dateRange) return true;
-  const start2 = timestamp$1(startValue);
-  if (start2 == null) return false;
-  const end2 = timestamp$1(endValue) ?? start2;
-  return end2 >= dateRange[0].getTime() && start2 <= dateRange[1].getTime();
-}
-function inRange(value, dateRange) {
-  if (!dateRange) return true;
-  const ms = timestamp$1(value);
-  return ms != null && ms >= dateRange[0].getTime() && ms <= dateRange[1].getTime();
-}
-function sessionMap(records) {
-  const result = /* @__PURE__ */ new Map();
-  for (const record2 of records) {
-    if (record2.recordType !== "task-session") continue;
-    const taskId = String(record2.taskId || "").trim();
-    if (!taskId) continue;
-    const rows = result.get(taskId) || [];
-    rows.push(record2);
-    result.set(taskId, rows);
-  }
-  for (const rows of result.values()) rows.sort((a2, b2) => String(a2.sessionStartedAt || "").localeCompare(String(b2.sessionStartedAt || "")));
-  return result;
-}
-function resolveGroupFields(request, config2) {
-  const view = request.viewInstance;
-  if (view?.viewType === "TableView") {
-    const rowField = String(view.viewConfig?.rowField || "").trim();
-    const colField = String(view.viewConfig?.colField || "").trim();
-    return Array.from(new Set([rowField, colField].filter(Boolean)));
-  }
-  if (view?.groupFields?.length) return view.groupFields.filter(Boolean);
-  if (view?.group) return [view.group];
-  return config2.defaultGroupFields || [];
-}
-function createExportRuntimeContext(request) {
-  const config2 = request.config || getExportConfig(request.viewInstance?.viewType || "BlockView");
-  const relatedRecords = request.relatedRecords || request.items;
-  const userVisibleTypes = new Set(request.items.filter((item) => !INTERNAL_RECORD_TYPES.has(item.recordType)).map((item) => getRecordTypePresentation(item.recordType).recordType));
-  return {
-    request,
-    config: config2,
-    relatedRecords,
-    sessionsByTask: sessionMap(relatedRecords),
-    recordTypeCount: userVisibleTypes.size,
-    groupFields: resolveGroupFields(request, config2)
-  };
-}
-function filteredTaskSessions(item, ctx) {
-  const sessions = ctx.sessionsByTask.get(item.id) || [];
-  if (ctx.config.taskSessionScope !== "range" || !ctx.request.dateRange) return sessions;
-  return sessions.filter((session) => overlapsRange(session.sessionStartedAt, session.sessionEndedAt, ctx.request.dateRange));
-}
-function durationWithinExportScope(startValue, endValue, fallbackMinutes, ctx) {
-  const start2 = timestamp$1(startValue);
-  let end2 = timestamp$1(endValue);
-  const fallback = Number(fallbackMinutes);
-  const hasFallback = Number.isFinite(fallback) && fallback > 0;
-  if (start2 != null && end2 == null && hasFallback) end2 = start2 + fallback * 6e4;
-  if (start2 != null && end2 != null && end2 >= start2) {
-    if (ctx.config.taskSessionScope === "range" && ctx.request.dateRange) {
-      const scopedStart = Math.max(start2, ctx.request.dateRange[0].getTime());
-      const scopedEnd = Math.min(end2, ctx.request.dateRange[1].getTime());
-      if (scopedEnd <= scopedStart) return null;
-      return (scopedEnd - scopedStart) / 6e4;
-    }
-    return (end2 - start2) / 6e4;
-  }
-  return hasFallback ? fallback : null;
-}
-function taskActualDuration(item, ctx) {
-  const allSessions = ctx.sessionsByTask.get(item.id) || [];
-  const sessions = filteredTaskSessions(item, ctx).map((session) => durationWithinExportScope(
-    session.sessionStartedAt,
-    session.sessionEndedAt,
-    session.sessionDurationMinutes,
-    ctx
-  )).filter((minutes) => minutes != null && Number.isFinite(minutes) && minutes > 0);
-  if (sessions.length > 0) {
-    return { minutes: Math.round(sessions.reduce((sum, minutes) => sum + minutes, 0) * 100) / 100, sessionCount: sessions.length };
-  }
-  if (allSessions.length > 0) return { minutes: null, sessionCount: 0 };
-  const legacyMinutes = durationWithinExportScope(item.startAt, item.endAt, null, ctx);
-  if (legacyMinutes != null && legacyMinutes > 0) {
-    return { minutes: Math.round(legacyMinutes * 100) / 100, sessionCount: 0 };
-  }
-  return { minutes: null, sessionCount: 0 };
-}
-function viewExtraFields(item, ctx, alreadyUsed) {
-  const result = [];
-  for (const rawField of ctx.request.viewInstance?.fields || []) {
-    const field = normalizeFieldKey(rawField);
-    if (!field || ["primaryText", "title"].includes(field) || TECHNICAL_FIELDS.has(field) || alreadyUsed.has(field)) continue;
-    if (item.recordType === "task" && ["status", "expectedDurationMinutes", "goalPath", "completedAt", "cancelledAt", "skippedAt"].includes(field)) continue;
-    alreadyUsed.add(field);
-    result.push(field);
-  }
-  return result;
-}
-function resolveMainText(item, ctx) {
-  const view = ctx.request.viewInstance;
-  if (view?.viewType === "EventTimelineView") {
-    const titleField = String(view.viewConfig?.titleField || "primaryText");
-    const text2 = compactText$1(readField(item, titleField));
-    if (text2) return text2;
-  }
-  return compactText$1(getRecordPrimaryText(item)) || getRecordTypePresentation(item.recordType).label;
-}
-function rootGoal(item) {
-  return compactText$1(item.rootGoal) || compactText$1(item.goalPath).split("/").filter(Boolean)[0] || "未分类";
-}
-function itemDate(item) {
-  return dateOnly(item.date || item.completedAt || item.doneDate || item.startAt || item.scheduledAt || item.createdDate || "");
-}
-const DEFAULT_RECENT_WINDOW_MINUTES = 120;
-const DEFAULT_RELIABLE_WINDOW_MINUTES = 60;
-const DEFAULT_MAX_NEARBY_ACTIVITIES = 3;
-function readText(value) {
-  const text2 = String(value ?? "").trim();
-  return text2 || void 0;
-}
-function normalizeRecordType(item) {
-  return String(item.recordType || item.extra?.["记录类型"] || "").replace(/^core\./i, "").trim().toLowerCase();
-}
-function isHabitLike(item) {
-  return normalizeRecordType(item) === "habit";
-}
-function matchesEnergyGoal(energyItem, candidate) {
-  const energyGoalPath = String(energyItem.goalPath || "").trim();
-  if (!energyGoalPath) return true;
-  return String(candidate.goalPath || "").trim() === energyGoalPath;
-}
-function occurrenceDate(item) {
-  if (item.recordType === "task-session" && item.sessionStartedAt) {
-    const value = new Date(item.sessionStartedAt);
-    if (Number.isFinite(value.getTime())) {
-      return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
-    }
-  }
-  return readText(item.date) || readText(item.doneDate) || readText(item.startDate) || readText(item.scheduledDate) || readText(item.dueDate) || readText(item.createdDate) || readText(item.extra?.["日期"]);
-}
-function parseTimeMinutes(time2) {
-  const match5 = readText(time2)?.match(/^(\d{1,2}):(\d{2})$/);
-  if (!match5) return void 0;
-  const hour = Number(match5[1]);
-  const minute = Number(match5[2]);
-  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return void 0;
-  return hour * 60 + minute;
-}
-function dateOrdinal$1(date2) {
-  const match5 = date2.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match5) return void 0;
-  return Math.floor(Date.UTC(Number(match5[1]), Number(match5[2]) - 1, Number(match5[3])) / 864e5);
-}
-function absoluteMinute(date2, time2) {
-  const ordinal4 = dateOrdinal$1(date2);
-  const minutes = parseTimeMinutes(time2);
-  if (ordinal4 == null || minutes == null) return void 0;
-  return ordinal4 * 1440 + minutes;
-}
-function localSessionParts$1(value) {
-  const parsed = new Date(value);
-  if (!Number.isFinite(parsed.getTime())) return null;
-  return {
-    date: `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`,
-    time: `${String(parsed.getHours()).padStart(2, "0")}:${String(parsed.getMinutes()).padStart(2, "0")}`
-  };
-}
-function resolveActivityInterval(record2, byId) {
-  const session = asTaskSessionRecord(record2);
-  if (!session) return null;
-  const task = byId.get(session.taskId);
-  if (!task || task.recordType !== "task") return null;
-  const start2 = localSessionParts$1(session.sessionStartedAt);
-  const end2 = localSessionParts$1(session.sessionEndedAt);
-  if (!start2 || !end2) return null;
-  const startAbsolute = absoluteMinute(start2.date, start2.time);
-  const endAbsoluteRaw = absoluteMinute(end2.date, end2.time);
-  if (startAbsolute == null || endAbsoluteRaw == null) return null;
-  const duration2 = Number(session.sessionDurationMinutes);
-  if (!Number.isFinite(duration2) || duration2 < 0) return null;
-  const endAbsolute = Math.max(endAbsoluteRaw, startAbsolute + duration2);
-  return {
-    session,
-    task,
-    startAbsolute,
-    endAbsolute,
-    startDate: start2.date,
-    startTime: start2.time,
-    endDate: end2.date,
-    endTime: end2.time,
-    durationMinutes: Math.round(duration2)
-  };
-}
-function activityConfidence(relation, gapMinutes) {
-  if (gapMinutes <= 15) return "high";
-  if (gapMinutes <= 60) return "medium";
-  return "low";
-}
-function buildActivityContext(record2, byId, energyItemId, energyAbsolute, recentWindowMinutes) {
-  const interval = resolveActivityInterval(record2, byId);
-  if (!interval) return null;
-  const session = asTaskSessionRecord(record2);
-  const directStart = session.startEnergyRecordId === energyItemId;
-  const directEnd = session.endEnergyRecordId === energyItemId;
-  if (directStart || energyAbsolute >= interval.startAbsolute && energyAbsolute <= interval.endAbsolute) {
-    return {
-      itemId: session.id,
-      title: interval.task.content || interval.task.title || "未命名任务",
-      relation: "active",
-      confidence: "high",
-      gapMinutes: 0,
-      durationMinutes: interval.durationMinutes,
-      startDate: interval.startDate,
-      startTime: interval.startTime,
-      endDate: interval.endDate,
-      endTime: interval.endTime,
-      item: interval.task
-    };
-  }
-  const gapMinutes = directEnd ? 0 : Math.round(energyAbsolute - interval.endAbsolute);
-  if (gapMinutes < 0 || gapMinutes > recentWindowMinutes) return null;
-  return {
-    itemId: session.id,
-    title: interval.task.content || interval.task.title || "未命名任务",
-    relation: "recent",
-    confidence: directEnd ? "high" : activityConfidence("recent", gapMinutes),
-    gapMinutes,
-    durationMinutes: interval.durationMinutes,
-    startDate: interval.startDate,
-    startTime: interval.startTime,
-    endDate: interval.endDate,
-    endTime: interval.endTime,
-    item: interval.task
-  };
-}
-function activityRank(activity) {
-  const relationRank = activity.relation === "active" ? 0 : 1;
-  const confidenceRank = activity.confidence === "high" ? 0 : activity.confidence === "medium" ? 1 : 2;
-  return relationRank * 1e6 + confidenceRank * 1e5 + activity.gapMinutes;
-}
-function classifyDailySignal(item) {
-  if (!isHabitLike(item)) return null;
-  const text2 = [item.title, item.content, item.goalPath].map((value) => String(value || "")).join(" ");
-  if (/睡眠|睡觉|睡醒/.test(text2)) return "sleep";
-  if (/身体|体力|身体状态/.test(text2)) return "body";
-  if (/运动|锻炼|健身|跑步|散步|八段锦|瑜伽|骑行|游泳/.test(text2)) return "exercise";
-  return null;
-}
-function dailySignalLabel(kind) {
-  if (kind === "sleep") return "睡眠";
-  if (kind === "body") return "身体";
-  return "运动";
-}
-function dailySignalValue(item) {
-  if (typeof item.rating === "number") return item.rating;
-  const extra = item.extra || {};
-  for (const key of ["评分", "分数", "值", "状态"]) {
-    const value = extra[key];
-    if (typeof value === "number" || typeof value === "string" && value.trim()) return value;
-  }
-  return void 0;
-}
-function buildDailySignals(energyItem, items, date2) {
-  const byKind = /* @__PURE__ */ new Map();
-  for (const item of items) {
-    if (item.id === energyItem.id || !matchesEnergyGoal(energyItem, item)) continue;
-    if (occurrenceDate(item) !== date2) continue;
-    const kind = classifyDailySignal(item);
-    if (!kind || byKind.has(kind)) continue;
-    byKind.set(kind, {
-      itemId: item.id,
-      kind,
-      label: dailySignalLabel(kind),
-      value: dailySignalValue(item),
-      item
-    });
-  }
-  return ["sleep", "body", "exercise"].map((kind) => byKind.get(kind)).filter((row) => !!row);
-}
-function resolveEnergyContext(energyItem, items, options = {}) {
-  const snapshot = readEnergyItemSnapshot(energyItem);
-  if (!snapshot?.date || !snapshot.time) return null;
-  const energyAbsolute = absoluteMinute(snapshot.date, snapshot.time);
-  if (energyAbsolute == null) return null;
-  const recentWindowMinutes = Math.max(0, options.recentWindowMinutes ?? DEFAULT_RECENT_WINDOW_MINUTES);
-  const reliableWindowMinutes = Math.max(0, options.reliableWindowMinutes ?? DEFAULT_RELIABLE_WINDOW_MINUTES);
-  const maxNearbyActivities = Math.max(1, options.maxNearbyActivities ?? DEFAULT_MAX_NEARBY_ACTIVITIES);
-  const byId = new Map(items.map((item) => [item.id, item]));
-  const nearbyActivities = items.filter((item) => item.id !== energyItem.id && item.recordType === "task-session").map((item) => buildActivityContext(item, byId, energyItem.id, energyAbsolute, recentWindowMinutes)).filter((row) => !!row).sort((left2, right2) => activityRank(left2) - activityRank(right2)).slice(0, maxNearbyActivities);
-  const primaryActivity = nearbyActivities.find((activity) => activity.relation === "active" || activity.gapMinutes <= reliableWindowMinutes);
-  const dailySignals = buildDailySignals(energyItem, items, snapshot.date);
-  return { primaryActivity, nearbyActivities, dailySignals };
-}
-function patternText(value) {
-  const text2 = String(value ?? "").trim();
-  return text2 || void 0;
-}
-function patternNumber(value) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  const text2 = patternText(value);
-  if (!text2) return void 0;
-  const parsed = Number(text2);
-  return Number.isFinite(parsed) ? parsed : void 0;
-}
-function patternDateOrdinal(value) {
-  const match5 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match5) return void 0;
-  const year = Number(match5[1]);
-  const month = Number(match5[2]);
-  const day = Number(match5[3]);
-  const stamp = Date.UTC(year, month - 1, day);
-  const date2 = new Date(stamp);
-  if (date2.getUTCFullYear() !== year || date2.getUTCMonth() !== month - 1 || date2.getUTCDate() !== day) return void 0;
-  return Math.floor(stamp / 864e5);
-}
-function patternDateFromOrdinal(ordinal4) {
-  return new Date(ordinal4 * 864e5).toISOString().slice(0, 10);
-}
-function patternTimeMinutes(value) {
-  const match5 = patternText(value)?.match(/^(\d{1,2}):(\d{2})$/);
-  if (!match5) return void 0;
-  const hour = Number(match5[1]);
-  const minute = Number(match5[2]);
-  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return void 0;
-  return hour * 60 + minute;
-}
-function patternFormatTime(absoluteMinute2) {
-  const minuteOfDay = (Math.round(absoluteMinute2) % 1440 + 1440) % 1440;
-  return `${String(Math.floor(minuteOfDay / 60)).padStart(2, "0")}:${String(minuteOfDay % 60).padStart(2, "0")}`;
-}
-function patternAbsoluteMinute(date2, time2) {
-  const ordinal4 = patternDateOrdinal(date2);
-  const minute = patternTimeMinutes(time2);
-  return ordinal4 == null || minute == null ? void 0 : ordinal4 * 1440 + minute;
-}
-function localSessionParts(value) {
-  const parsed = new Date(value);
-  if (!Number.isFinite(parsed.getTime())) return null;
-  return {
-    date: `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`,
-    time: `${String(parsed.getHours()).padStart(2, "0")}:${String(parsed.getMinutes()).padStart(2, "0")}`
-  };
-}
-function resolvePatternActivity(item) {
-  const session = asTaskSessionRecord(item);
-  if (!session) return null;
-  const start2 = localSessionParts(session.sessionStartedAt);
-  const end2 = localSessionParts(session.sessionEndedAt);
-  if (!start2 || !end2) return null;
-  const startAbsolute = patternAbsoluteMinute(start2.date, start2.time);
-  const endAbsoluteRaw = patternAbsoluteMinute(end2.date, end2.time);
-  if (startAbsolute == null || endAbsoluteRaw == null) return null;
-  const duration2 = patternNumber(session.sessionDurationMinutes);
-  if (duration2 == null || duration2 < 0) return null;
-  const endAbsolute = Math.max(endAbsoluteRaw, startAbsolute + duration2);
-  if (endAbsolute <= startAbsolute) return null;
-  return { item: session, startAbsolute, endAbsolute, durationMinutes: Math.round(duration2) };
-}
-function patternEvidence(count) {
-  if (count >= 5) return "supported";
-  if (count >= 3) return "exploratory";
-  return "insufficient";
-}
-function patternMean(values2) {
-  if (!values2.length) return void 0;
-  return Math.round(values2.reduce((sum, value) => sum + value, 0) / values2.length * 10) / 10;
-}
-function patternMedian(values2) {
-  if (!values2.length) return void 0;
-  const sorted = [...values2].sort((a2, b2) => a2 - b2);
-  const middle = Math.floor(sorted.length / 2);
-  const raw = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
-  return Math.round(raw * 10) / 10;
-}
-function patternTrend(values2) {
-  if (values2.length < 3) return "insufficient";
-  const avg = patternMean(values2) ?? 0;
-  const med = patternMedian(values2) ?? 0;
-  if (avg >= 5 && med >= 3) return "up";
-  if (avg <= -5 && med <= -3) return "down";
-  if (Math.abs(avg) < 5 && Math.abs(med) < 5) return "stable";
-  return "mixed";
-}
-function mergePatternSessions(intervals, gapMinutes) {
-  const sessions = [];
-  for (const interval of [...intervals].sort((a2, b2) => a2.startAbsolute - b2.startAbsolute)) {
-    const current2 = sessions[sessions.length - 1];
-    if (!current2 || interval.startAbsolute > current2.endAbsolute + gapMinutes) {
-      sessions.push({ startAbsolute: interval.startAbsolute, endAbsolute: interval.endAbsolute, durationMinutes: interval.durationMinutes, items: [interval.item] });
-      continue;
-    }
-    current2.endAbsolute = Math.max(current2.endAbsolute, interval.endAbsolute);
-    current2.durationMinutes = Math.round(current2.endAbsolute - current2.startAbsolute);
-    current2.items.push(interval.item);
-  }
-  return sessions;
-}
-const DAYPARTS = [
-  { key: "night", label: "深夜 00–06", startHour: 0, endHour: 6 },
-  { key: "morning", label: "早晨 06–10", startHour: 6, endHour: 10 },
-  { key: "midday", label: "上午 10–14", startHour: 10, endHour: 14 },
-  { key: "afternoon", label: "下午 14–18", startHour: 14, endHour: 18 },
-  { key: "evening", label: "晚上 18–22", startHour: 18, endHour: 22 },
-  { key: "late", label: "夜间 22–24", startHour: 22, endHour: 24 }
-];
-const LAG_WINDOWS = [
-  { key: "6h", label: "+6 小时", lagHours: 6, toleranceMinutes: 90 },
-  { key: "12h", label: "+12 小时", lagHours: 12, toleranceMinutes: 120 },
-  { key: "24h", label: "+24 小时", lagHours: 24, toleranceMinutes: 180 }
-];
-const SESSION_BUCKETS = [
-  { key: "lt30", label: "<30分钟", minMinutes: 0, maxMinutes: 29 },
-  { key: "30-59", label: "30–59分钟", minMinutes: 30, maxMinutes: 59 },
-  { key: "60-89", label: "60–89分钟", minMinutes: 60, maxMinutes: 89 },
-  { key: "90-119", label: "90–119分钟", minMinutes: 90, maxMinutes: 119 },
-  { key: "ge120", label: "≥120分钟", minMinutes: 120 }
-];
-function readPoints(items) {
-  const points = [];
-  for (const item of items) {
-    if (!isEnergyItem(item)) continue;
-    const snapshot = readEnergyItemSnapshot(item);
-    if (!snapshot?.date || !snapshot.time) continue;
-    const absolute = patternAbsoluteMinute(snapshot.date, snapshot.time);
-    const minuteOfDay = patternTimeMinutes(snapshot.time);
-    if (absolute == null || minuteOfDay == null) continue;
-    points.push({ itemId: item.id, date: snapshot.date, time: snapshot.time, absoluteMinute: absolute, minuteOfDay, score: snapshot.score, brainScore: snapshot.brainScore, physicalScore: snapshot.physicalScore, item });
-  }
-  return points.sort((a2, b2) => a2.absoluteMinute - b2.absoluteMinute);
-}
-function buildDayparts(points) {
-  return DAYPARTS.map((bucket) => {
-    const selected = points.filter((point) => point.minuteOfDay >= bucket.startHour * 60 && point.minuteOfDay < bucket.endHour * 60);
-    const brain = selected.flatMap((point) => point.brainScore == null ? [] : [point.brainScore]);
-    const physical = selected.flatMap((point) => point.physicalScore == null ? [] : [point.physicalScore]);
-    return {
-      ...bucket,
-      sampleCount: selected.length,
-      meanScore: patternMean(selected.map((point) => point.score)),
-      medianScore: patternMedian(selected.map((point) => point.score)),
-      meanBrainScore: patternMean(brain),
-      meanPhysicalScore: patternMean(physical),
-      evidence: patternEvidence(selected.length)
-    };
-  });
-}
-function nearestPoint(points, desired, tolerance, after) {
-  let best;
-  let bestGap = Number.POSITIVE_INFINITY;
-  for (const point of points) {
-    if (point.absoluteMinute <= after) continue;
-    const gap2 = Math.abs(point.absoluteMinute - desired);
-    if (gap2 <= tolerance && gap2 < bestGap) {
-      best = point;
-      bestGap = gap2;
-    }
-  }
-  return best;
-}
-function buildLag(points, windowStart) {
-  return LAG_WINDOWS.map((window2) => {
-    const deltas = [];
-    const brain = [];
-    const physical = [];
-    for (const baseline of points) {
-      if (baseline.absoluteMinute < windowStart) continue;
-      const target = nearestPoint(points, baseline.absoluteMinute + window2.lagHours * 60, window2.toleranceMinutes, baseline.absoluteMinute);
-      if (!target) continue;
-      deltas.push(target.score - baseline.score);
-      if (baseline.brainScore != null && target.brainScore != null) brain.push(target.brainScore - baseline.brainScore);
-      if (baseline.physicalScore != null && target.physicalScore != null) physical.push(target.physicalScore - baseline.physicalScore);
-    }
-    return {
-      ...window2,
-      sampleCount: deltas.length,
-      meanDelta: patternMean(deltas),
-      medianDelta: patternMedian(deltas),
-      meanBrainDelta: patternMean(brain),
-      meanPhysicalDelta: patternMean(physical),
-      trend: patternTrend(deltas),
-      evidence: patternEvidence(deltas.length)
-    };
-  });
-}
-function pairSession(session, pointById) {
-  const first2 = asTaskSessionRecord(session.items[0]);
-  const last = asTaskSessionRecord(session.items[session.items.length - 1]);
-  if (!first2?.startEnergyRecordId || !last?.endEnergyRecordId) return null;
-  const before = pointById.get(first2.startEnergyRecordId);
-  const after = pointById.get(last.endEnergyRecordId);
-  if (!before || !after || before.itemId === after.itemId) return null;
-  return {
-    session,
-    before,
-    after,
-    deltaScore: after.score - before.score,
-    deltaBrain: before.brainScore != null && after.brainScore != null ? after.brainScore - before.brainScore : void 0,
-    deltaPhysical: before.physicalScore != null && after.physicalScore != null ? after.physicalScore - before.physicalScore : void 0
-  };
-}
-function inBucket(session, bucket) {
-  return session.durationMinutes >= bucket.minMinutes && (!("maxMinutes" in bucket) || session.durationMinutes <= bucket.maxMinutes);
-}
-function buildContinuousWork(sessions, pairs) {
-  return SESSION_BUCKETS.map((bucket) => {
-    const bucketSessions = sessions.filter((session) => inBucket(session, bucket));
-    const bucketPairs = pairs.filter((pair) => inBucket(pair.session, bucket));
-    const deltas = bucketPairs.map((pair) => pair.deltaScore);
-    return {
-      ...bucket,
-      sessionCount: bucketSessions.length,
-      pairedSessionCount: bucketPairs.length,
-      meanDelta: patternMean(deltas),
-      medianDelta: patternMedian(deltas),
-      meanBrainDelta: patternMean(bucketPairs.flatMap((pair) => pair.deltaBrain == null ? [] : [pair.deltaBrain])),
-      meanPhysicalDelta: patternMean(bucketPairs.flatMap((pair) => pair.deltaPhysical == null ? [] : [pair.deltaPhysical])),
-      trend: patternTrend(deltas),
-      evidence: patternEvidence(bucketPairs.length)
-    };
-  });
-}
-function buildStopProxy(points, sessions, windowStart, threshold, workStartWindow, longMinutes, lateNightHour) {
-  const highPoints = points.filter((point) => point.absoluteMinute >= windowStart && point.score >= threshold);
-  const samples = [];
-  for (const point of highPoints) {
-    const session = sessions.find((candidate) => candidate.endAbsolute > point.absoluteMinute && (candidate.startAbsolute <= point.absoluteMinute || candidate.startAbsolute - point.absoluteMinute <= workStartWindow));
-    if (!session) continue;
-    const stopLatencyMinutes = Math.max(0, Math.round(session.endAbsolute - point.absoluteMinute));
-    const crossesMidnight = Math.floor(session.endAbsolute / 1440) > Math.floor(session.startAbsolute / 1440);
-    const endMinuteOfDay = (session.endAbsolute % 1440 + 1440) % 1440;
-    samples.push({
-      energyItemId: point.itemId,
-      date: point.date,
-      time: point.time,
-      score: point.score,
-      sessionDurationMinutes: Math.round(session.durationMinutes),
-      stopLatencyMinutes,
-      sessionStartTime: patternFormatTime(session.startAbsolute),
-      sessionEndTime: patternFormatTime(session.endAbsolute),
-      crossesMidnight,
-      lateNight: crossesMidnight || endMinuteOfDay >= lateNightHour * 60
-    });
-  }
-  const longCount = samples.filter((sample) => sample.stopLatencyMinutes >= longMinutes).length;
-  const lateCount = samples.filter((sample) => sample.lateNight).length;
-  return {
-    highEnergySampleCount: highPoints.length,
-    followedByWorkCount: samples.length,
-    longContinuationCount: longCount,
-    lateNightCount: lateCount,
-    meanSessionDurationMinutes: patternMean(samples.map((sample) => sample.sessionDurationMinutes)),
-    meanStopLatencyMinutes: patternMean(samples.map((sample) => sample.stopLatencyMinutes)),
-    longContinuationRatio: samples.length ? longCount / samples.length : void 0,
-    lateNightRatio: samples.length ? lateCount / samples.length : void 0,
-    evidence: patternEvidence(samples.length),
-    recentSamples: [...samples].sort((a2, b2) => `${b2.date} ${b2.time}`.localeCompare(`${a2.date} ${a2.time}`)).slice(0, 5)
-  };
-}
-function buildEnergyPatterns(items, options = {}) {
-  const points = readPoints(items);
-  const activityRecords = options.activityRecords || items;
-  if (!points.length) return null;
-  const analysisWindowDays = Math.max(7, Math.min(90, Math.floor(options.analysisWindowDays ?? 30)));
-  const sessionGapMinutes = Math.max(0, Math.min(60, Math.floor(options.sessionGapMinutes ?? 15)));
-  const highThreshold = Math.max(60, Math.min(100, Math.floor(options.highEnergyThreshold ?? 80)));
-  const workStartWindow = Math.max(0, Math.min(180, Math.floor(options.highEnergyWorkStartWindowMinutes ?? 60)));
-  const longMinutes = Math.max(30, Math.min(360, Math.floor(options.longContinuationMinutes ?? 120)));
-  const lateNightHour = Math.max(20, Math.min(23, Math.floor(options.lateNightHour ?? 23)));
-  const endOrdinal = Math.floor(points[points.length - 1].absoluteMinute / 1440);
-  const startOrdinal = endOrdinal - analysisWindowDays + 1;
-  const windowStart = startOrdinal * 1440;
-  const visiblePoints = points.filter((point) => point.absoluteMinute >= windowStart);
-  const intervals = activityRecords.map(resolvePatternActivity).filter((value) => !!value).filter((interval) => interval.endAbsolute >= windowStart);
-  const sessions = mergePatternSessions(intervals, sessionGapMinutes);
-  const evidencePoints = readPoints(activityRecords);
-  const pointById = new Map([...points, ...evidencePoints].map((point) => [point.itemId, point]));
-  const pairs = sessions.map((session) => pairSession(session, pointById)).filter((value) => !!value);
-  return {
-    analysisWindowDays,
-    startDate: patternDateFromOrdinal(startOrdinal),
-    endDate: patternDateFromOrdinal(endOrdinal),
-    energySampleCount: visiblePoints.length,
-    dayparts: buildDayparts(visiblePoints),
-    lag: buildLag(points, windowStart),
-    continuousWork: buildContinuousWork(sessions, pairs),
-    continuousSessionCount: sessions.length,
-    pairedContinuousSessionCount: pairs.length,
-    stopProxy: buildStopProxy(points, sessions, windowStart, highThreshold, workStartWindow, longMinutes, lateNightHour)
-  };
-}
-const DEFAULT_MAXIMUM_CANDIDATES = 3;
-const DEFAULT_MINIMUM_PERSONAL_SAMPLES = 3;
-const DEFAULT_HIGH_ENERGY_THRESHOLD = 80;
-const DEFAULT_DIMENSION_GAP = 15;
-function occurrenceKey(item) {
-  const snapshot = readEnergyItemSnapshot(item);
-  if (!snapshot) return "";
-  return `${snapshot.date || ""}T${snapshot.time || "00:00"}`;
-}
-function latestEnergyItem(items) {
-  return items.filter(isEnergyItem).filter((item) => !!readEnergyItemSnapshot(item)).sort((left2, right2) => occurrenceKey(right2).localeCompare(occurrenceKey(left2)))[0];
-}
-function stateFor(score, highThreshold) {
-  if (score <= 40) return "low";
-  if (score <= 60) return "guarded";
-  if (score < highThreshold) return "available";
-  return "high";
-}
-function stateLabel(state) {
-  if (state === "low") return "低精力";
-  if (state === "guarded") return "需要节制";
-  if (state === "available") return "可用精力";
-  return "高精力";
-}
-function dimensionFocus(brain, physical, gap2) {
-  if (brain == null || physical == null) return "balanced";
-  if (physical - brain >= gap2) return "brain-low";
-  if (brain - physical >= gap2) return "physical-low";
-  return "balanced";
-}
-function dimensionLabel(focus, brain, physical) {
-  if (focus === "brain-low") return `脑力明显低于体力（脑 ${brain} / 体 ${physical}）`;
-  if (focus === "physical-low") return `体力明显低于脑力（脑 ${brain} / 体 ${physical}）`;
-  if (brain != null && physical != null) return `脑体较均衡（脑 ${brain} / 体 ${physical}）`;
-  return void 0;
-}
-function latestState(items, highThreshold, dimensionGap) {
-  const item = latestEnergyItem(items);
-  if (!item) return null;
-  const snapshot = readEnergyItemSnapshot(item);
-  if (!snapshot) return null;
-  const state = stateFor(snapshot.score, highThreshold);
-  const focus = dimensionFocus(snapshot.brainScore, snapshot.physicalScore, dimensionGap);
-  return {
-    itemId: item.id,
-    score: snapshot.score,
-    brainScore: snapshot.brainScore,
-    physicalScore: snapshot.physicalScore,
-    date: snapshot.date,
-    time: snapshot.time,
-    state,
-    stateLabel: stateLabel(state),
-    dimensionFocus: focus,
-    dimensionLabel: dimensionLabel(focus, snapshot.brainScore, snapshot.physicalScore)
-  };
-}
-function evidenceWeight(value) {
-  if (value === "supported") return 2;
-  if (value === "exploratory") return 1;
-  return 0;
-}
-function focusBonus(row, focus, trend) {
-  const sign = trend === "recovery" ? 1 : -1;
-  if (focus === "brain-low" && row.meanBrainDelta != null) return Math.max(0, sign * row.meanBrainDelta) / 4;
-  if (focus === "physical-low" && row.meanPhysicalDelta != null) return Math.max(0, sign * row.meanPhysicalDelta) / 4;
-  return 0;
-}
-function candidateReason(row, focus) {
-  const parts = [`综合平均 ${row.meanDelta > 0 ? "+" : ""}${row.meanDelta}`];
-  if (focus === "brain-low" && row.meanBrainDelta != null) parts.push(`脑力 ${row.meanBrainDelta > 0 ? "+" : ""}${row.meanBrainDelta}`);
-  if (focus === "physical-low" && row.meanPhysicalDelta != null) parts.push(`体力 ${row.meanPhysicalDelta > 0 ? "+" : ""}${row.meanPhysicalDelta}`);
-  parts.push(`样本数 ${row.sampleCount}`);
-  return parts.join(" · ");
-}
-function selectCandidates(rows, trend, focus, limit, minimumSamples) {
-  return rows.filter((row) => row.trend === trend && row.sampleCount >= minimumSamples && row.evidence !== "insufficient").sort((left2, right2) => {
-    const evidenceDelta = evidenceWeight(right2.evidence) - evidenceWeight(left2.evidence);
-    if (evidenceDelta) return evidenceDelta;
-    const leftMagnitude = Math.abs(left2.meanDelta) + focusBonus(left2, focus, trend);
-    const rightMagnitude = Math.abs(right2.meanDelta) + focusBonus(right2, focus, trend);
-    if (rightMagnitude !== leftMagnitude) return rightMagnitude - leftMagnitude;
-    return right2.sampleCount - left2.sampleCount;
-  }).slice(0, limit).map((row) => ({
-    key: row.key,
-    label: row.label,
-    sampleCount: row.sampleCount,
-    meanDelta: row.meanDelta,
-    medianDelta: row.medianDelta,
-    meanBrainDelta: row.meanBrainDelta,
-    meanPhysicalDelta: row.meanPhysicalDelta,
-    evidence: row.evidence,
-    reason: candidateReason(row, focus)
-  }));
-}
-function buildGuardrails(items, evidenceRecords, analysisWindowDays, highThreshold) {
-  const patterns = buildEnergyPatterns(items, { activityRecords: evidenceRecords, analysisWindowDays, highEnergyThreshold: highThreshold });
-  if (!patterns) return [];
-  const rows = [];
-  const stop = patterns.stopProxy;
-  if (stop.followedByWorkCount >= 3 && stop.evidence !== "insufficient") {
-    const longRatio = stop.longContinuationRatio || 0;
-    const lateRatio = stop.lateNightRatio || 0;
-    if (longRatio >= 0.5 || lateRatio >= 0.4) {
-      const details = [
-        `高能后进入/处于工作，样本数 ${stop.followedByWorkCount}`,
-        `≥120分钟 ${Math.round(longRatio * 100)}%`,
-        `深夜延续 ${Math.round(lateRatio * 100)}%`
-      ];
-      rows.push({
-        key: "preserve-capacity",
-        level: "caution",
-        title: "高能时也要预先设停止点",
-        detail: details.join(" · "),
-        sampleCount: stop.followedByWorkCount,
-        evidence: stop.evidence
-      });
-    }
-  }
-  const longBucket = patterns.continuousWork.find((row) => row.key === "ge120");
-  if (longBucket && longBucket.pairedSessionCount >= 3 && longBucket.meanDelta != null && longBucket.meanDelta <= -8) {
-    rows.push({
-      key: "long-session",
-      level: "caution",
-      title: "长连续工作是当前值得防守的区间",
-      detail: `≥120分钟前后综合平均 ${longBucket.meanDelta > 0 ? "+" : ""}${longBucket.meanDelta} · 可配对样本数 ${longBucket.pairedSessionCount}`,
-      sampleCount: longBucket.pairedSessionCount,
-      evidence: longBucket.evidence
-    });
-  }
-  return rows;
-}
-function managementHeadline(latest2) {
-  if (latest2.state === "low") return "当前先考虑恢复，不必把低能状态硬撑成高负荷时段";
-  if (latest2.state === "guarded") return "当前有一定可用精力，但更适合控制负荷和工作长度";
-  if (latest2.state === "available") return "当前精力可用，优先把它用在高价值事项，同时观察消耗边界";
-  return "当前处于高精力，重点不是继续加码，而是把力量用在重要事项并保留停止能力";
-}
-function managementGuidance(latest2, recoveryCount, cautionCount) {
-  if (latest2.dimensionFocus === "brain-low") return recoveryCount ? "脑力低于体力：优先参考对脑力恢复更友好的个人候选。" : "脑力低于体力，但个人恢复样本还不够，先记录而不是猜。";
-  if (latest2.dimensionFocus === "physical-low") return recoveryCount ? "体力低于脑力：优先参考对体力恢复更友好的个人候选。" : "体力低于脑力，但个人恢复样本还不够，先记录而不是猜。";
-  if (latest2.state === "low" || latest2.state === "guarded") return recoveryCount ? "下面只列你的历史数据里重复出现的恢复候选；它们是观察关联，不是因果处方。" : "当前没有达到最小样本门槛的个人恢复候选。";
-  return cautionCount ? "高能不等于无限可用；下面的消耗候选和停止护栏用于帮助你保存力量。" : "目前没有足够个人样本形成明确消耗候选，保持观察即可。";
-}
-function buildEnergyManagement(items, options = {}) {
-  const maximumCandidates = Math.max(1, Math.min(5, Math.floor(options.maximumCandidates ?? DEFAULT_MAXIMUM_CANDIDATES)));
-  const minimumPersonalSamples = Math.max(3, Math.min(10, Math.floor(options.minimumPersonalSamples ?? DEFAULT_MINIMUM_PERSONAL_SAMPLES)));
-  const highThreshold = Math.max(60, Math.min(100, Math.floor(options.highEnergyThreshold ?? DEFAULT_HIGH_ENERGY_THRESHOLD)));
-  const dimensionGap = Math.max(5, Math.min(50, Math.floor(options.dimensionGapThreshold ?? DEFAULT_DIMENSION_GAP)));
-  const analysisWindowDays = Math.max(7, Math.min(90, Math.floor(options.analysisWindowDays ?? 30)));
-  const latest2 = latestState(items, highThreshold, dimensionGap);
-  if (!latest2) return null;
-  const evidenceRecords = options.evidenceRecords || items;
-  const effects = buildEnergyEffects(evidenceRecords);
-  const activityRows = effects?.byActivity || [];
-  const recoveryCandidates = selectCandidates(activityRows, "recovery", latest2.dimensionFocus, maximumCandidates, minimumPersonalSamples);
-  const cautionCandidates = selectCandidates(activityRows, "depletion", latest2.dimensionFocus, maximumCandidates, minimumPersonalSamples);
-  const guardrails = buildGuardrails(items, evidenceRecords, analysisWindowDays, highThreshold);
-  const pairedActivityCount = effects?.pairedActivityCount || 0;
-  const sufficient = recoveryCandidates.length > 0 || cautionCandidates.length > 0 || guardrails.length > 0;
-  return {
-    latest: latest2,
-    headline: managementHeadline(latest2),
-    guidance: managementGuidance(latest2, recoveryCandidates.length, cautionCandidates.length),
-    recoveryCandidates,
-    cautionCandidates,
-    guardrails,
-    readiness: {
-      pairedActivityCount,
-      recoveryCandidateCount: recoveryCandidates.length,
-      depletionCandidateCount: cautionCandidates.length,
-      stopProxySampleCount: guardrails.find((row) => row.key === "preserve-capacity")?.sampleCount || 0,
-      sufficientForPersonalSuggestions: sufficient,
-      message: sufficient ? `已有 ${pairedActivityCount} 个活动前后可配对样本；只展示达到 N≥${minimumPersonalSamples} 的个人候选。` : `目前只有 ${pairedActivityCount} 个活动前后可配对样本，尚没有达到 N≥${minimumPersonalSamples} 且方向稳定的个人候选。`
-    },
-    disclaimer: "个人历史关联，仅用于自我观察与安排，不代表因果、医学判断或必须执行的建议。"
-  };
-}
-function dateOrdinal(value) {
-  const match5 = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match5) return void 0;
-  const year = Number(match5[1]);
-  const month = Number(match5[2]);
-  const day = Number(match5[3]);
-  const stamp = Date.UTC(year, month - 1, day);
-  const date2 = new Date(stamp);
-  if (date2.getUTCFullYear() !== year || date2.getUTCMonth() !== month - 1 || date2.getUTCDate() !== day) return void 0;
-  return Math.floor(stamp / 864e5);
-}
-function dateFromOrdinal(value) {
-  return new Date(value * 864e5).toISOString().slice(0, 10);
-}
-function timeMinutes(value) {
-  const match5 = value.match(/^(\d{1,2}):(\d{2})$/);
-  if (!match5) return void 0;
-  const hour = Number(match5[1]);
-  const minute = Number(match5[2]);
-  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return void 0;
-  return hour * 60 + minute;
-}
-function captureMode(value) {
-  return String(value || "").trim() === "retrospective" ? "retrospective" : "realtime";
-}
-function roundMean(values2) {
-  if (!values2.length) return void 0;
-  return Math.round(values2.reduce((sum, value) => sum + value, 0) / values2.length * 10) / 10;
-}
-function readSample(item) {
-  if (!isEnergyItem(item)) return null;
-  const snapshot = readEnergyItemSnapshot(item);
-  if (!snapshot?.date || !snapshot.time) return null;
-  const ordinal4 = dateOrdinal(snapshot.date);
-  const minuteOfDay = timeMinutes(snapshot.time);
-  if (ordinal4 == null || minuteOfDay == null) return null;
-  return {
-    itemId: item.id,
-    date: snapshot.date,
-    time: snapshot.time,
-    minuteOfDay,
-    score: snapshot.score,
-    brainScore: snapshot.brainScore,
-    physicalScore: snapshot.physicalScore,
-    scoreMode: snapshot.scoreMode,
-    captureMode: captureMode(snapshot.captureMode),
-    item
-  };
-}
-function periodMode(currentView) {
-  if (currentView === "天") return "day-horizontal";
-  if (currentView === "周" || currentView === "月") return "date-time";
-  return "daily-dots";
-}
-function buildEnergyPeriod(items, options) {
-  const startOrdinal = dateOrdinal(options.startDate);
-  const endOrdinal = dateOrdinal(options.endDate);
-  if (startOrdinal == null || endOrdinal == null || endOrdinal < startOrdinal) return null;
-  const samples = items.map(readSample).filter((sample) => !!sample).filter((sample) => {
-    const ordinal4 = dateOrdinal(sample.date);
-    return ordinal4 != null && ordinal4 >= startOrdinal && ordinal4 <= endOrdinal;
-  }).sort((left2, right2) => left2.date.localeCompare(right2.date) || left2.minuteOfDay - right2.minuteOfDay);
-  const byDate = /* @__PURE__ */ new Map();
-  for (const sample of samples) {
-    const rows = byDate.get(sample.date) || [];
-    rows.push(sample);
-    byDate.set(sample.date, rows);
-  }
-  const days = [];
-  for (let ordinal4 = startOrdinal; ordinal4 <= endOrdinal; ordinal4 += 1) {
-    const date2 = dateFromOrdinal(ordinal4);
-    const daySamples = byDate.get(date2) || [];
-    days.push({
-      date: date2,
-      sampled: daySamples.length > 0,
-      samples: daySamples,
-      dailyScore: roundMean(daySamples.map((row) => row.score)),
-      dailyBrainScore: roundMean(daySamples.map((row) => row.brainScore).filter((value) => value != null)),
-      dailyPhysicalScore: roundMean(daySamples.map((row) => row.physicalScore).filter((value) => value != null))
-    });
-  }
-  const sampledDays = days.filter((day) => day.sampled).length;
-  return {
-    currentView: options.currentView,
-    mode: periodMode(options.currentView),
-    startDate: options.startDate,
-    endDate: options.endDate,
-    days,
-    sampledDays,
-    missingDays: days.length - sampledDays,
-    totalSamples: samples.length
-  };
-}
-function isGroupedBy(ctx, field) {
-  const canonical = normalizeFieldKey(field);
-  return ctx.groupFields.some((groupField) => normalizeFieldKey(groupField) === canonical);
-}
-function viewExplicitlyShows(ctx, field) {
-  const canonical = normalizeFieldKey(field);
-  return (ctx.request.viewInstance?.fields || []).some((viewField) => normalizeFieldKey(viewField) === canonical);
-}
-function renderTask(item, ctx) {
-  const status = getTaskStatus(item) || "unknown";
-  const statusPresentation = TASK_STATUS_PRESENTATION[status] || TASK_STATUS_PRESENTATION.unknown;
-  const lines = [`- ${statusPresentation.emoji} ${resolveMainText(item, ctx) || "未命名任务"}`];
-  const used = /* @__PURE__ */ new Set(["primaryText", "title", "content", "status"]);
-  if (!isGroupedBy(ctx, "goalPath")) pushField(lines, "目标", item.goalPath, "goalPath");
-  used.add("goalPath");
-  const actual = taskActualDuration(item, ctx);
-  if (actual.minutes != null && actual.minutes > 0) {
-    const label = ctx.config.taskSessionScope === "range" ? "本期实际时长" : "实际时长";
-    const countSuffix = actual.sessionCount > 1 ? `（${actual.sessionCount} 次执行）` : "";
-    pushField(lines, label, `${formatMinutes(actual.minutes)}${countSuffix}`);
-  }
-  const expected = Number(item.expectedDurationMinutes);
-  if (Number.isFinite(expected) && expected > 0) {
-    pushField(lines, "预计时长", formatMinutes(expected));
-    used.add("expectedDurationMinutes");
-  }
-  if (status === "done") {
-    pushField(lines, "完成", formatDateTime$1(item.completedAt || item.doneDate));
-    used.add("completedAt");
-    used.add("doneDate");
-  } else if (status === "cancelled") {
-    pushField(lines, "取消", formatDateTime$1(item.cancelledAt || item.cancelledDate));
-    used.add("cancelledAt");
-    used.add("cancelledDate");
-  } else if (status === "skipped") {
-    pushField(lines, "跳过", formatDateTime$1(item.skippedAt));
-    used.add("skippedAt");
-  } else {
-    pushField(lines, "计划时间", formatDateTime$1(item.scheduledAt));
-    pushField(lines, "计划日期", formatDateTime$1(item.scheduledDate));
-    pushField(lines, "开始日期", formatDateTime$1(item.startDate));
-    pushField(lines, "截止时间", formatDateTime$1(item.dueAt));
-    pushField(lines, "截止日期", formatDateTime$1(item.dueDate));
-    for (const field of ["scheduledAt", "scheduledDate", "startDate", "dueAt", "dueDate"]) used.add(field);
-  }
-  if (item.priority && !isGroupedBy(ctx, "priority") && (status === "open" || viewExplicitlyShows(ctx, "priority"))) {
-    pushField(lines, "优先级", item.priority, "priority");
-    used.add("priority");
-  }
-  for (const field of viewExtraFields(item, ctx, used)) {
-    if (isGroupedBy(ctx, field)) continue;
-    const value = readField(item, field);
-    if (isEmpty$3(value) || field === "content" && compactText$1(value) === resolveMainText(item, ctx)) continue;
-    pushField(lines, fieldLabel(field), value, field);
-  }
-  if (ctx.config.taskSessionMode === "expanded") {
-    const sessions = filteredTaskSessions(item, ctx).filter((session) => Number(session.sessionDurationMinutes) > 0);
-    if (sessions.length > 0) {
-      lines.push("  - 执行：");
-      for (const session of sessions) {
-        const start2 = formatDateTime$1(session.sessionStartedAt);
-        const end2 = formatDateTime$1(session.sessionEndedAt);
-        const sameDay = dateOnly(start2) && dateOnly(start2) === dateOnly(end2);
-        const range = sameDay ? `${start2.slice(11)}–${end2.slice(11)}` : `${start2}–${end2}`;
-        lines.push(`    - ${range} · ${formatMinutes(Number(session.sessionDurationMinutes))}`);
-      }
-    }
-  }
-  return lines;
-}
-function renderEnergyRecord(item, ctx) {
-  const lines = [`- ${resolveMainText(item, ctx)}`];
-  const snapshot = readEnergyItemSnapshot(item);
-  if (!isGroupedBy(ctx, "goalPath")) pushField(lines, "目标", item.goalPath, "goalPath");
-  if (!snapshot) {
-    if (!isGroupedBy(ctx, "date")) pushField(lines, "日期", item.date, "date");
-    return lines;
-  }
-  if (!isGroupedBy(ctx, "date") && (snapshot.date || snapshot.time)) {
-    pushField(lines, "时间", `${snapshot.date || ""}${snapshot.time ? ` ${snapshot.time}` : ""}`.trim());
-  }
-  pushField(lines, "精力", snapshot.score);
-  pushField(lines, "脑力", snapshot.brainScore);
-  pushField(lines, "体力", snapshot.physicalScore);
-  return lines;
-}
-function renderGenericRecord(item, ctx, forceType = false) {
-  if (item.recordType === "task") return renderTask(item, ctx);
-  if (item.recordType === "energy") return renderEnergyRecord(item, ctx);
-  const lines = [`- ${resolveMainText(item, ctx)}`];
-  const used = /* @__PURE__ */ new Set(["primaryText", "title"]);
-  const groupedByRecordType = ctx.groupFields.some((field) => normalizeFieldKey(field) === "recordType");
-  if ((forceType || ctx.recordTypeCount > 1) && !groupedByRecordType) pushField(lines, "类型", getRecordTypePresentation(item.recordType).label);
-  for (const field of RECORD_PROFILE_FIELDS[item.recordType] || ["goalPath", "date", "content"]) {
-    used.add(field);
-    if (isGroupedBy(ctx, field)) continue;
-    const value = readField(item, field);
-    if (isEmpty$3(value) || field === "content" && compactText$1(value) === resolveMainText(item, ctx)) continue;
-    pushField(lines, fieldLabel(field), value, field);
-  }
-  for (const field of viewExtraFields(item, ctx, used)) {
-    if (isGroupedBy(ctx, field)) continue;
-    const value = readField(item, field);
-    if (isEmpty$3(value) || field === "content" && compactText$1(value) === resolveMainText(item, ctx)) continue;
-    pushField(lines, fieldLabel(field), value, field);
-  }
-  return lines;
-}
-function headingLabel(node2) {
-  return normalizeFieldKey(node2.field) === "recordType" ? getRecordTypePresentation(node2.key).label : node2.label || node2.key || "未分类";
-}
-function appendGroupTree(lines, nodes, ctx, level = 0) {
-  for (const node2 of nodes) {
-    if (node2.field !== "__all__") {
-      lines.push(`${"#".repeat(Math.min(6, level + 2))} ${headingLabel(node2)}`, "");
-    }
-    if (node2.children?.length) appendGroupTree(lines, node2.children, ctx, level + 1);
-    if (node2.items?.length) {
-      for (const item of node2.items) if (!INTERNAL_RECORD_TYPES.has(item.recordType)) lines.push(...renderGenericRecord(item, ctx));
-      lines.push("");
-    }
-  }
-}
-function titleLines(ctx) {
-  const title = compactText$1(ctx.request.viewInstance?.title);
-  return title ? [`# ${title}`, ""] : [];
-}
-function exportRecordList(ctx, inputItems = ctx.request.items, groupFields = ctx.groupFields) {
-  const items = inputItems.filter((item) => !INTERNAL_RECORD_TYPES.has(item.recordType));
-  const lines = titleLines(ctx);
-  if (!items.length) return lines.concat(["没有可导出的记录"]).join("\n").trim();
-  if (!groupFields.length) {
-    for (const item of items) lines.push(...renderGenericRecord(item, ctx));
-  } else {
-    appendGroupTree(lines, groupItemsByFields(items, groupFields, { goals: ctx.request.goals }), ctx);
-  }
-  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
-}
-function escapeTable(value) {
-  return compactText$1(value).replace(/\|/g, "\\|");
-}
-function tableCell(item, field, ctx) {
-  if (field === "primaryText") return escapeTable(resolveMainText(item, ctx));
-  if (field === "__actualDuration") {
-    if (item.recordType !== "task") return "";
-    const actual = taskActualDuration(item, ctx);
-    return actual.minutes != null && actual.minutes > 0 ? escapeTable(formatMinutes(actual.minutes)) : "";
-  }
-  if (field === "__expectedDuration") {
-    const expected = Number(item.expectedDurationMinutes);
-    return item.recordType === "task" && Number.isFinite(expected) && expected > 0 ? escapeTable(formatMinutes(expected)) : "";
-  }
-  const value = readField(item, field);
-  return isEmpty$3(value) ? "" : escapeTable(formatFieldValue(field, value));
-}
-function exportMarkdownTable(ctx) {
-  const items = ctx.request.items.filter((item) => !INTERNAL_RECORD_TYPES.has(item.recordType));
-  const lines = titleLines(ctx);
-  if (!items.length) return lines.concat(["没有可导出的记录"]).join("\n").trim();
-  const configured = (ctx.request.viewInstance?.fields || []).map(normalizeFieldKey).filter((field) => field && !TECHNICAL_FIELDS.has(field));
-  const columns = Array.from(/* @__PURE__ */ new Set(["primaryText", ...configured.filter((field) => !["title", "primaryText"].includes(field))]));
-  if (columns.length === 1) columns.push("recordType", "goalPath", "date");
-  if (items.some((item) => item.recordType === "task")) columns.push("__actualDuration", "__expectedDuration");
-  const uniqueColumns = Array.from(new Set(columns));
-  const labels = uniqueColumns.map((field) => field === "__actualDuration" ? "实际时长" : field === "__expectedDuration" ? "预计时长" : fieldLabel(field));
-  lines.push(`| ${labels.join(" | ")} |`, `| ${labels.map(() => "---").join(" | ")} |`);
-  for (const item of items) lines.push(`| ${uniqueColumns.map((field) => tableCell(item, field, ctx)).join(" | ")} |`);
-  return lines.join("\n").trim();
-}
-function statisticMetricMatch(item, metric) {
-  if (metric === "taskCount") return item.recordType === "task";
-  if (metric === "doneTaskCount") return item.recordType === "task" && getTaskStatus(item) === "done";
-  if (metric === "habitCount") return item.recordType === "habit";
-  if (metric === "blockerCount") return item.recordType === "blocker";
-  if (metric === "milestoneCount") return item.recordType === "milestone";
-  return !INTERNAL_RECORD_TYPES.has(item.recordType);
-}
-function exportStatistics(ctx) {
-  const metric = String(ctx.request.viewInstance?.viewConfig?.metric || "recordCount");
-  const labels = {
-    recordCount: "记录数",
-    taskCount: "任务数",
-    doneTaskCount: "已完成任务",
-    habitCount: "打卡数",
-    blockerCount: "阻碍项",
-    milestoneCount: "里程碑"
-  };
-  const filtered = ctx.request.items.filter((item) => statisticMetricMatch(item, metric));
-  const counts = /* @__PURE__ */ new Map();
-  for (const item of filtered) counts.set(rootGoal(item), (counts.get(rootGoal(item)) || 0) + 1);
-  const topN = Math.max(0, Number(ctx.request.viewInstance?.viewConfig?.topN) || 0);
-  let rows = [...counts.entries()].sort((a2, b2) => b2[1] - a2[1] || a2[0].localeCompare(b2[0], "zh-CN"));
-  if (topN > 0) rows = rows.slice(0, topN);
-  const lines = titleLines(ctx);
-  lines.push(`- 指标：${labels[metric] || metric}`, `- 总计：${filtered.length}`);
-  if (rows.length) {
-    lines.push("", "## 分目标");
-    for (const [goal, count] of rows) lines.push(`- ${goal}：${count}`);
-  }
-  return lines.join("\n").trim();
-}
-function exportHeatmap(ctx) {
-  const lines = titleLines(ctx);
-  const configuredGoals = new Set((ctx.request.viewInstance?.viewConfig?.goalPaths || []).map((value) => String(value || "").trim()).filter(Boolean));
-  const sourceType = String(ctx.request.viewInstance?.viewConfig?.sourceRecordTypeId || "").replace(/^core\./, "").trim();
-  const byGoal = /* @__PURE__ */ new Map();
-  for (const item of ctx.request.items.filter((row) => !INTERNAL_RECORD_TYPES.has(row.recordType))) {
-    if (sourceType && item.recordType !== sourceType) continue;
-    const rawGoal = compactText$1(item.goalPath);
-    if (configuredGoals.size > 0 && !configuredGoals.has(rawGoal)) continue;
-    const goal = rawGoal || "未分类";
-    const rows = byGoal.get(goal) || [];
-    rows.push(item);
-    byGoal.set(goal, rows);
-  }
-  const configuredGoalOrder = (ctx.request.viewInstance?.viewConfig?.goalPaths || []).map(String);
-  const orderedGoals = [...byGoal.keys()].sort((a2, b2) => {
-    const ai = configuredGoalOrder.indexOf(a2);
-    const bi = configuredGoalOrder.indexOf(b2);
-    if (ai >= 0 || bi >= 0) return (ai < 0 ? Number.MAX_SAFE_INTEGER : ai) - (bi < 0 ? Number.MAX_SAFE_INTEGER : bi);
-    return a2.localeCompare(b2, "zh-CN");
-  });
-  for (const goal of orderedGoals) {
-    lines.push(`## ${goal}`, "");
-    const byDate = /* @__PURE__ */ new Map();
-    for (const item of byGoal.get(goal) || []) {
-      const date2 = itemDate(item) || "未标日期";
-      const rows = byDate.get(date2) || [];
-      rows.push(item);
-      byDate.set(date2, rows);
-    }
-    for (const [date2, rows] of [...byDate.entries()].sort((a2, b2) => a2[0].localeCompare(b2[0]))) {
-      const ratings = rows.map((row) => row.rating).filter((value) => value != null).map(String);
-      const images = rows.map((row) => imageDisplay(row.image)).filter(Boolean);
-      const parts = [`${rows.length} 次`];
-      if (ratings.length) parts.push(`评分 ${ratings.join("、")}`);
-      if (images.length) parts.push(images.join(" "));
-      lines.push(`- ${date2}：${parts.join(" · ")}`);
-    }
-    lines.push("");
-  }
-  if (!orderedGoals.length) lines.push("没有可导出的打卡记录");
-  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
-}
-function exportProgress(ctx) {
-  const lines = titleLines(ctx);
-  const byGoal = /* @__PURE__ */ new Map();
-  for (const item of ctx.request.items.filter((row) => !INTERNAL_RECORD_TYPES.has(row.recordType))) {
-    const goal = rootGoal(item);
-    const rows = byGoal.get(goal) || [];
-    rows.push(item);
-    byGoal.set(goal, rows);
-  }
-  lines.push(`- 目标数：${byGoal.size}`, `- 记录数：${ctx.request.items.filter((item) => !INTERNAL_RECORD_TYPES.has(item.recordType)).length}`);
-  for (const [goal, rows] of [...byGoal.entries()].sort((a2, b2) => b2[1].length - a2[1].length || a2[0].localeCompare(b2[0], "zh-CN"))) {
-    lines.push("", `## ${goal}`);
-    const typeCounts = /* @__PURE__ */ new Map();
-    for (const item of rows) {
-      const label = getRecordTypePresentation(item.recordType).label;
-      typeCounts.set(label, (typeCounts.get(label) || 0) + 1);
-    }
-    const doneTasks = rows.filter((item) => item.recordType === "task" && getTaskStatus(item) === "done").length;
-    lines.push(`- 记录：${rows.length}`);
-    if (doneTasks) lines.push(`- 已完成任务：${doneTasks}`);
-    lines.push(`- 类型：${[...typeCounts.entries()].map(([label, count]) => `${label} ${count}`).join("、")}`);
-  }
-  return lines.join("\n").trim();
-}
-function energyOccurrence(item) {
-  const snapshot = readEnergyItemSnapshot(item);
-  return snapshot ? `${snapshot.date || ""}T${snapshot.time || ""}` : "";
-}
-function exportEnergy(ctx) {
-  const requestedGoal = compactText$1(ctx.request.viewInstance?.viewConfig?.goalPath);
-  const energyItems = ctx.request.items.filter((item) => {
-    if (item.recordType !== "energy" || requestedGoal && compactText$1(item.goalPath) !== requestedGoal) return false;
-    const snapshot = readEnergyItemSnapshot(item);
-    if (!snapshot) return false;
-    if (!ctx.request.dateRange) return true;
-    return inRange(`${snapshot.date || ""}T${snapshot.time || "00:00"}`, ctx.request.dateRange) || (snapshot.date ? localDateText(ctx.request.dateRange[0]) <= snapshot.date && snapshot.date <= localDateText(ctx.request.dateRange[1]) : false);
-  });
-  const lines = titleLines(ctx);
-  if (!energyItems.length) return lines.concat(["没有可导出的精力记录"]).join("\n").trim();
-  const byGoal = /* @__PURE__ */ new Map();
-  for (const item of energyItems) {
-    const goal = compactText$1(item.goalPath) || "未分类";
-    const rows = byGoal.get(goal) || [];
-    rows.push(item);
-    byGoal.set(goal, rows);
-  }
-  lines.push(`- 样本数：${energyItems.length}`);
-  for (const [goal, rows] of [...byGoal.entries()].sort((a2, b2) => a2[0].localeCompare(b2[0], "zh-CN"))) {
-    const snapshots = [...rows].sort((a2, b2) => energyOccurrence(b2).localeCompare(energyOccurrence(a2))).map(readEnergyItemSnapshot).filter((value) => !!value);
-    const latest2 = snapshots[0];
-    const average = snapshots.reduce((sum, row) => sum + row.score, 0) / snapshots.length;
-    lines.push("", `## ${goal}`, `- 样本：${snapshots.length}`, `- 平均精力：${formatNumber(Math.round(average * 10) / 10)}`);
-    if (latest2) lines.push(`- 最近：${latest2.score} · ${`${latest2.date || ""} ${latest2.time || ""}`.trim()}`);
-    const recent = snapshots.slice(0, 5).map((row) => `${row.date || ""}${row.time ? ` ${row.time}` : ""}=${row.score}`.trim());
-    if (recent.length) lines.push(`- 最近记录：${recent.join("；")}`);
-  }
-  return lines.join("\n").trim();
-}
-function exportEisenhower(ctx) {
-  const lines = titleLines(ctx);
-  const columns = /* @__PURE__ */ new Map([["q1", []], ["q2", []], ["q3", []], ["q4", []], ["unclassified", []]]);
-  for (const item of ctx.request.items) {
-    if (item.recordType !== "task" || getTaskStatus(item) !== "open") continue;
-    columns.get(deriveEisenhowerQuadrant(item))?.push(item);
-  }
-  let any = false;
-  for (const key of ["q1", "q2", "q3", "q4", "unclassified"]) {
-    const rows = columns.get(key) || [];
-    if (!rows.length) continue;
-    any = true;
-    lines.push(`## ${QUADRANT_LABELS[key]}`, "");
-    for (const item of rows) lines.push(...renderTask(item, ctx));
-    lines.push("");
-  }
-  if (!any) lines.push("没有未完成任务");
-  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
-}
-function eventTimelineItems(ctx) {
-  const timeField = String(ctx.request.viewInstance?.viewConfig?.timeField || "date");
-  const rows = ctx.request.items.filter((item) => {
-    const value = readField(item, timeField);
-    return ctx.request.dateRange ? inRange(value, ctx.request.dateRange) : value != null && value !== "";
-  });
-  return [...rows].sort((left2, right2) => String(readField(left2, timeField) || "").localeCompare(String(readField(right2, timeField) || "")));
-}
-function exportEventTimeline(ctx) {
-  const rows = eventTimelineItems(ctx);
-  if (ctx.groupFields.length) return exportRecordList(ctx, rows, ctx.groupFields);
-  if (ctx.request.viewInstance?.viewConfig?.groupByDay !== false) {
-    const timeField = String(ctx.request.viewInstance?.viewConfig?.timeField || "date");
-    const lines = titleLines(ctx);
-    const byDay = /* @__PURE__ */ new Map();
-    for (const item of rows) {
-      const day = dateOnly(readField(item, timeField)) || "未标日期";
-      const bucket = byDay.get(day) || [];
-      bucket.push(item);
-      byDay.set(day, bucket);
-    }
-    for (const [day, bucket] of byDay) {
-      lines.push(`## ${day}`, "");
-      for (const item of bucket) lines.push(...renderGenericRecord(item, ctx));
-      lines.push("");
-    }
-    return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
-  }
-  return exportRecordList(ctx, rows, []);
-}
-function taskRelevantToTimeline(item, ctx) {
-  if (item.recordType !== "task") return false;
-  if (!ctx.request.dateRange) return true;
-  const sessions = (ctx.sessionsByTask.get(item.id) || []).filter((session) => overlapsRange(session.sessionStartedAt, session.sessionEndedAt, ctx.request.dateRange));
-  return sessions.length > 0 || overlapsRange(item.startAt, item.endAt, ctx.request.dateRange) || inRange(item.scheduledAt, ctx.request.dateRange) || inRange(item.startAt, ctx.request.dateRange);
-}
-function timelineSortKey(item, ctx) {
-  const firstSession = filteredTaskSessions(item, ctx)[0]?.sessionStartedAt;
-  return String(firstSession || item.startAt || item.scheduledAt || item.completedAt || item.date || "9999");
-}
-function exportTimeline(ctx) {
-  const tasks = ctx.request.items.filter((item) => taskRelevantToTimeline(item, ctx)).sort((a2, b2) => timelineSortKey(a2, ctx).localeCompare(timelineSortKey(b2, ctx)));
-  const lines = titleLines(ctx);
-  if (!tasks.length) return lines.concat(["没有当前时间范围内的任务"]).join("\n").trim();
-  const byDay = /* @__PURE__ */ new Map();
-  for (const task of tasks) {
-    const day = dateOnly(timelineSortKey(task, ctx)) || "未标日期";
-    const rows = byDay.get(day) || [];
-    rows.push(task);
-    byDay.set(day, rows);
-  }
-  for (const [day, rows] of byDay) {
-    lines.push(`## ${day}`, "");
-    for (const task of rows) lines.push(...renderTask(task, ctx));
-    lines.push("");
-  }
-  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
-}
-function getExportConfigByViewType(viewType) {
-  return getExportConfig(viewType);
-}
-function exportViewToMarkdown(request) {
-  const ctx = createExportRuntimeContext(request);
-  switch (ctx.config.strategy) {
-    case "table":
-      return exportMarkdownTable(ctx);
-    case "timeline":
-      return exportTimeline(ctx);
-    case "event-timeline":
-      return exportEventTimeline(ctx);
-    case "statistics":
-      return exportStatistics(ctx);
-    case "heatmap":
-      return exportHeatmap(ctx);
-    case "progress":
-      return exportProgress(ctx);
-    case "energy":
-      return exportEnergy(ctx);
-    case "eisenhower":
-      return exportEisenhower(ctx);
-    case "records":
-    default:
-      return exportRecordList(ctx);
-  }
-}
-function collectGoalPathsForHeatmap(params) {
-  const { items, dataSource, sourceRecordType } = params;
-  const filteredItems = queryRecordItems(items, { filterGroups: [dataSource.filters || []] });
-  const paths = /* @__PURE__ */ new Set();
-  filteredItems.forEach((item) => {
-    const itemRecordTypeId = item.recordType ? `core.${String(item.recordType).replace(/^core\./, "")}` : "";
-    const sourceRecordTypeId = sourceRecordType.recordTypeId || sourceRecordType.id;
-    const goalPath = String(item.goalPath || item.extra?.["目标"] || "").trim();
-    if (itemRecordTypeId === sourceRecordTypeId && goalPath) paths.add(goalPath);
-  });
-  return Array.from(paths).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
-}
-function getEffectiveLevelCount(item) {
-  if (item.levelCount !== void 0) return item.levelCount;
-  if (item.countForLevel === false) return 0;
-  return item.displayCount || 1;
-}
-function getEffectiveDisplayCount(item) {
-  return item.displayCount || 1;
-}
-const isImagePath = (value) => {
-  return /\.(png|svg|jpg|jpeg|gif|webp|avif)(?:[?#].*)?$/i.test(value.trim());
-};
-const isHexColor = (value) => {
-  return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value);
-};
-function getEffectiveHeatmapTemplate(settings, recordTypeId) {
-  return settings.recordTypes.find((block) => block.id === recordTypeId || block.recordTypeId === recordTypeId) ?? null;
-}
-function buildRatingMapping(inputSettings, recordTypeId) {
-  const effectiveTemplate = getEffectiveHeatmapTemplate(inputSettings, recordTypeId);
-  const ratingField = effectiveTemplate?.fields.find((field) => field.type === "rating");
-  return new Map(
-    ratingField?.options?.filter((option) => option.value).map((option) => [option.label || "", option.value]) || []
-  );
-}
-class RatingMappingCache {
-  cache = /* @__PURE__ */ new Map();
-  lastSettings = null;
-  clear() {
-    this.cache.clear();
-  }
-  get(inputSettings, recordTypeId, goalPath) {
-    if (this.lastSettings !== inputSettings) {
-      this.clear();
-      this.lastSettings = inputSettings;
-    }
-    const cacheKey = `${recordTypeId}:${goalPath || "default"}`;
-    const cached2 = this.cache.get(cacheKey);
-    if (cached2) return cached2;
-    const mapping = buildRatingMapping(inputSettings, recordTypeId);
-    this.cache.set(cacheKey, mapping);
-    return mapping;
-  }
-}
-function firstNonEmptyText$1(...values2) {
-  for (const value of values2) {
-    if (Array.isArray(value)) {
-      const nested2 = firstNonEmptyText$1(...value);
-      if (nested2) return nested2;
-      continue;
-    }
-    if (value && typeof value === "object") {
-      const objectValue = value;
-      const nested2 = firstNonEmptyText$1(objectValue.value, objectValue.label, objectValue.src, objectValue.path, objectValue.title);
-      if (nested2) return nested2;
-      continue;
-    }
-    if (value === void 0 || value === null) continue;
-    const text2 = String(value).trim();
-    if (text2) return text2;
-  }
-  return "";
-}
-function readExtra(item, key) {
-  return item?.extra?.[key];
-}
-function buildHeatmapRatingMapping(options, fallbackMapping) {
-  const mapping = new Map(fallbackMapping || []);
-  for (const option of options || []) {
-    const value = firstNonEmptyText$1(option?.value, option);
-    const label = firstNonEmptyText$1(option?.label, option?.value, option);
-    if (!value && !label) continue;
-    if (label) mapping.set(label, value || label);
-    if (value) mapping.set(value, value);
-  }
-  return mapping;
-}
-function readHeatmapRatingText(item) {
-  if (!item) return "";
-  return firstNonEmptyText$1(
-    item.rating,
-    readExtra(item, "评分"),
-    readExtra(item, "rating")
-  );
-}
-function readHeatmapVisualText(item) {
-  if (!item) return "";
-  return firstNonEmptyText$1(
-    item.image,
-    readExtra(item, "图片"),
-    readExtra(item, "image")
-  );
-}
-function getHeatmapItemVisualValue(item, ratingMapping) {
-  if (!item) return null;
-  const directVisual = readHeatmapVisualText(item);
-  if (directVisual) return directVisual;
-  const rating = readHeatmapRatingText(item);
-  if (!rating) return null;
-  return ratingMapping?.get(rating) || rating;
-}
-function getLatestHeatmapVisualValue(items, ratingMapping) {
-  if (!items || !items.length) return null;
-  const latestItemWithValue = [...items].reverse().find((item) => !!getHeatmapItemVisualValue(item, ratingMapping));
-  return getHeatmapItemVisualValue(latestItemWithValue, ratingMapping);
-}
-function makeObsUri(ref, vaultName) {
-  if (!vaultName) {
-    return "#error-vault-not-provided";
-  }
-  let filePath = "";
-  let line2 = "";
-  const anyRef = ref;
-  if (anyRef?.source?.path) {
-    filePath = String(anyRef.source.path);
-    if (typeof anyRef.source.startLine === "number") line2 = String(anyRef.source.startLine);
-  } else if (anyRef?.file?.path) {
-    filePath = String(anyRef.file.path);
-    if (typeof anyRef.file.line === "number") line2 = String(anyRef.file.line);
-  }
-  if (!filePath) return "#error-record-location-unavailable";
-  const vault = encodeURIComponent(vaultName);
-  const qp = `vault=${vault}&filepath=${encodeURIComponent(filePath)}`;
-  return `obsidian://advanced-uri?${qp}${line2 ? "&line=" + line2 : ""}`;
-}
-function isRecordSubmitSuccess(result, options = {}) {
-  if (result.status === "success") return true;
-  if (options.treatPartialSuccessAsSuccess && result.status === "partial_success") return true;
-  if (options.treatCancelledAsSuccess && result.status === "cancelled") return true;
-  return false;
-}
-function firstErrorCode(result) {
-  return String(result.errors?.[0]?.code || "");
-}
-function getRecordConflictRecoveryAdvice(code) {
-  switch (code) {
-    case "record_path_missing":
-      return "原文件可能已被移动或删除。请先重新扫描笔记库，再从最新视图重新打开这条记录。";
-    case "record_line_stale":
-      return "原记录所在行已变化。请重新扫描或打开原文确认位置，然后从最新记录重新编辑。";
-    case "record_block_boundary_invalid":
-      return "记录块的开始/结束边界已损坏。请打开原文修复边界标记后再保存。";
-    case "record_item_missing":
-      return "这条记录可能已被删除或内容变化过大。请重新扫描后确认是否仍然存在。";
-    case "record_locator_invalid":
-      return "记录定位信息无效。请从列表、时间线或搜索结果中的最新记录重新打开编辑。";
-    case "record_conflict":
-    default:
-      return "请重新扫描笔记库，并从最新视图重新打开这条记录后再操作。";
-  }
-}
-function readRecordSubmitMessage(result, fallback) {
-  const message = result.errors?.[0]?.message || result.feedback?.notice || fallback;
-  if (result.status === "conflict") {
-    const advice = getRecordConflictRecoveryAdvice(firstErrorCode(result));
-    return `记录冲突：${message}
-${advice}`;
-  }
-  return message;
-}
-function buildRecordSubmitFeedbackPresentation(result, fallbackErrorMessage = "操作失败") {
-  if (result.status === "success") {
-    return {
-      tone: "success",
-      message: result.feedback?.notice || "已保存",
-      shouldCloseModal: true
-    };
-  }
-  if (result.status === "partial_success") {
-    return {
-      tone: "warning",
-      message: result.feedback?.notice || result.errors?.[0]?.message || "已写入新位置，但旧记录可能需要手动清理",
-      shouldCloseModal: true
-    };
-  }
-  if (result.status === "cancelled") {
-    return {
-      tone: "error",
-      message: "",
-      shouldCloseModal: false
-    };
-  }
-  return {
-    tone: "error",
-    message: readRecordSubmitMessage(result, fallbackErrorMessage),
-    shouldCloseModal: false
-  };
-}
-function normalizePath(path) {
-  return normalizeHierarchyPathValue(path) || "";
-}
-function getLeafPath(path) {
-  return getHierarchyPathLeaf(path);
-}
-function defaultBucketAccessor(item) {
-  return getItemRootGoalKey(item);
-}
-function addItemToPeriod(data, categoryOrder, item, bucketAccessor) {
-  const bucketKey = (bucketAccessor || defaultBucketAccessor)(item);
-  if (!categoryOrder.includes(bucketKey)) return;
-  data.counts[bucketKey]++;
-  data.blocks.push(item);
-}
-function createPeriodData(categories) {
-  return {
-    counts: Object.fromEntries(categories.map((c2) => [c2.name, 0])),
-    blocks: []
-  };
-}
-function aggregateByDay(items, categories, targetDate, bucketAccessor) {
-  const data = createPeriodData(categories);
-  const categoryOrder = categories.map((c2) => c2.name);
-  items.forEach((item) => {
-    const itemDate2 = dayjs(item.date);
-    if (!itemDate2.isValid() || !itemDate2.isSame(targetDate, "day")) return;
-    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
-  });
-  return data;
-}
-function aggregateByWeek(items, categories, targetDate, usePeriod = false, bucketAccessor) {
-  const data = createPeriodData(categories);
-  const categoryOrder = categories.map((c2) => c2.name);
-  const weekStart = targetDate.startOf("isoWeek");
-  const weekEnd = targetDate.endOf("isoWeek");
-  items.forEach((item) => {
-    const itemDate2 = dayjs(item.date);
-    if (!itemDate2.isValid() || !itemDate2.isBetween(weekStart, weekEnd, "day", "[]")) return;
-    if (usePeriod) {
-      const itemPeriod = (readField(item, "period") || "").trim();
-      const shouldIncludeInWeek = itemPeriod === "" || itemPeriod === "周";
-      if (!shouldIncludeInWeek) return;
-    }
-    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
-  });
-  return data;
-}
-function aggregateByMonth(items, categories, targetDate, usePeriod = false, bucketAccessor) {
-  const data = createPeriodData(categories);
-  const categoryOrder = categories.map((c2) => c2.name);
-  items.forEach((item) => {
-    const itemDate2 = dayjs(item.date);
-    if (!itemDate2.isValid() || !itemDate2.isSame(targetDate, "month")) return;
-    if (usePeriod) {
-      const itemPeriod = readField(item, "period") || "";
-      if (itemPeriod !== "月") return;
-    }
-    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
-  });
-  return data;
-}
-function aggregateByQuarter(items, categories, targetDate, usePeriod = false, bucketAccessor) {
-  const data = createPeriodData(categories);
-  const categoryOrder = categories.map((c2) => c2.name);
-  items.forEach((item) => {
-    const itemDate2 = dayjs(item.date);
-    if (!itemDate2.isValid() || !itemDate2.isSame(targetDate, "quarter")) return;
-    if (usePeriod) {
-      const itemPeriod = readField(item, "period") || "";
-      if (itemPeriod !== "季") return;
-    }
-    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
-  });
-  return data;
-}
-function aggregateByYear(items, categories, targetDate, usePeriod = false, bucketAccessor) {
-  const data = createPeriodData(categories);
-  const categoryOrder = categories.map((c2) => c2.name);
-  items.forEach((item) => {
-    const itemDate2 = dayjs(item.date);
-    if (!itemDate2.isValid() || !itemDate2.isSame(targetDate, "year")) return;
-    if (usePeriod) {
-      const itemPeriod = readField(item, "period") || "";
-      if (itemPeriod !== "年") return;
-    }
-    addItemToPeriod(data, categoryOrder, item, bucketAccessor);
-  });
-  return data;
-}
-function getMonthWeeksData(items, categories, targetMonth, usePeriod = false, bucketAccessor) {
-  const monthStart = targetMonth.startOf("month");
-  const monthEnd = targetMonth.endOf("month");
-  const weeksData = [];
-  let weekStart = monthStart.startOf("isoWeek");
-  while (weekStart.isBefore(monthEnd) || isSameIsoWeek(weekStart, monthEnd)) {
-    const weekEnd = weekStart.endOf("isoWeek");
-    const weekItems = items.filter((item) => {
-      const itemDate2 = dayjs(item.date);
-      return itemDate2.isBetween(weekStart, weekEnd, "day", "[]");
-    });
-    const data = aggregateByWeek(weekItems, categories, weekStart, usePeriod, bucketAccessor);
-    weeksData.push(data);
-    weekStart = weekStart.add(1, "week");
-  }
-  return weeksData;
-}
-function parseDuration(value) {
-  if (value === null || value === void 0 || value === "") return null;
-  const numeric = typeof value === "number" ? value : Number.parseInt(String(value), 10);
-  return Number.isFinite(numeric) && numeric >= 0 ? numeric : null;
-}
-function isClockValue(value) {
-  return timeToMinutes(value) !== null;
-}
-function isDateTimeValue(value) {
-  if (!value || !/^\d{4}-\d{2}-\d{2}[T ]\d{1,2}:\d{2}/.test(value)) return false;
-  return dayjs(value).isValid();
-}
-function normalizeTimeValue(value) {
-  const text2 = String(value || "").trim();
-  if (!text2) return void 0;
-  return isClockValue(text2) || isDateTimeValue(text2) ? text2 : void 0;
-}
-function formatDateTimeLike(source, value) {
-  if (source.includes("T")) return value.format("YYYY-MM-DDTHH:mm");
-  return value.format("YYYY-MM-DD HH:mm");
-}
-function deriveDurationFromRange(startTime, endTime) {
-  const start2 = String(startTime || "").trim();
-  const end2 = String(endTime || "").trim();
-  if (isDateTimeValue(start2) && isDateTimeValue(end2)) {
-    const diff = dayjs(end2).diff(dayjs(start2), "minute");
-    return diff >= 0 ? diff : null;
-  }
-  const startMinutes = timeToMinutes(start2);
-  const endMinutes = timeToMinutes(end2);
-  if (startMinutes === null || endMinutes === null) return null;
-  let duration2 = endMinutes - startMinutes;
-  if (duration2 < 0) duration2 += 24 * 60;
-  return duration2;
-}
-function deriveEndFromStartAndDuration(startTime, duration2) {
-  const start2 = String(startTime || "").trim();
-  const normalizedDuration = parseDuration(duration2);
-  if (normalizedDuration === null) return null;
-  if (isDateTimeValue(start2)) {
-    return formatDateTimeLike(start2, dayjs(start2).add(normalizedDuration, "minute"));
-  }
-  const startMinutes = timeToMinutes(start2);
-  if (startMinutes === null) return null;
-  return minutesToTime(startMinutes + normalizedDuration) || null;
-}
-function deriveStartFromEndAndDuration(endTime, duration2) {
-  const end2 = String(endTime || "").trim();
-  const normalizedDuration = parseDuration(duration2);
-  if (normalizedDuration === null) return null;
-  if (isDateTimeValue(end2)) {
-    return formatDateTimeLike(end2, dayjs(end2).subtract(normalizedDuration, "minute"));
-  }
-  const endMinutes = timeToMinutes(end2);
-  if (endMinutes === null) return null;
-  return minutesToTime(endMinutes - normalizedDuration) || null;
-}
-function applyTaskTimePolicy(input) {
-  const startTime = normalizeTimeValue(input.startTime);
-  const endTime = normalizeTimeValue(input.endTime);
-  const duration2 = parseDuration(input.duration);
-  const direction = input.direction === "backward" ? "backward" : "forward";
-  const mode = input.mode ?? "finalize";
-  const lastChanged = input.lastChanged ?? null;
-  if (startTime && endTime && (mode === "finalize" || lastChanged !== "duration")) {
-    return {
-      startTime,
-      endTime,
-      duration: deriveDurationFromRange(startTime, endTime) ?? duration2 ?? void 0
-    };
-  }
-  if (direction === "backward") {
-    if (endTime && duration2 !== null && (mode === "finalize" || lastChanged !== "startTime")) {
-      return {
-        startTime: deriveStartFromEndAndDuration(endTime, duration2) ?? void 0,
-        endTime,
-        duration: duration2
-      };
-    }
-    if (startTime && duration2 !== null && mode === "finalize") {
-      return {
-        startTime,
-        endTime: deriveEndFromStartAndDuration(startTime, duration2) ?? void 0,
-        duration: duration2
-      };
-    }
-  }
-  if (startTime && duration2 !== null && (mode === "finalize" || lastChanged !== "endTime")) {
-    return {
-      startTime,
-      endTime: deriveEndFromStartAndDuration(startTime, duration2) ?? void 0,
-      duration: duration2
-    };
-  }
-  if (endTime && duration2 !== null && mode === "finalize") {
-    return {
-      startTime: deriveStartFromEndAndDuration(endTime, duration2) ?? void 0,
-      endTime,
-      duration: duration2
-    };
-  }
-  return {
-    startTime,
-    endTime,
-    duration: duration2 ?? void 0
-  };
-}
-function isItemDone(item) {
-  return isTaskRecord(item) && isTaskCompleted(item);
-}
-function getTimelineGoalKey(task) {
-  return normalizeGoalPath(String(task.goalPath || "").trim()) || UNASSIGNED_GOAL_KEY;
-}
-function buildMonthlyAndWeeklySummary(timelineTasks, untrackedLabel) {
-  const data = [];
-  if (!timelineTasks?.length) return data;
-  const validTasks = timelineTasks.filter((task) => dayjs(task.doneDate).isValid());
-  if (!validTasks.length) return data;
-  const taskDates = validTasks.map((task) => dayjs(task.doneDate));
-  const minDate = taskDates.reduce((min2, d2) => d2.isBefore(min2) ? d2 : min2);
-  const maxDate = taskDates.reduce((max2, d2) => d2.isAfter(max2) ? d2 : max2);
-  let month = minDate.startOf("month");
-  const end2 = maxDate.endOf("month");
-  while (month.isBefore(end2) || month.isSame(end2, "month")) {
-    const monthStr = month.format("YYYY-MM");
-    const tasksInMonth = validTasks.filter((task) => dayjs(task.doneDate).format("YYYY-MM") === monthStr);
-    const monthlySummary = {};
-    let totalTrackedHoursInMonth = 0;
-    for (const task of tasksInMonth) {
-      const goalKey = getTimelineGoalKey(task);
-      const durationHours = Number(task.duration || 0) / 60;
-      monthlySummary[goalKey] = (monthlySummary[goalKey] || 0) + durationHours;
-      totalTrackedHoursInMonth += durationHours;
-    }
-    const daysInMonth = month.daysInMonth();
-    const untrackedHoursInMonth = Math.max(0, daysInMonth * 24 - totalTrackedHoursInMonth);
-    if (untrackedHoursInMonth > 0.01) monthlySummary[untrackedLabel] = untrackedHoursInMonth;
-    const weeklySummaries = Array.from({ length: 5 }).map((_2, index) => {
-      const weekStartDay = index * 7 + 1;
-      if (weekStartDay > daysInMonth) return null;
-      const weeklySummary = {};
-      let totalTrackedHoursInWeek = 0;
-      for (const task of tasksInMonth) {
-        const taskDay = dayjs(task.doneDate).date();
-        if (taskDay < weekStartDay || taskDay >= weekStartDay + 7) continue;
-        const goalKey = getTimelineGoalKey(task);
-        const durationHours = Number(task.duration || 0) / 60;
-        weeklySummary[goalKey] = (weeklySummary[goalKey] || 0) + durationHours;
-        totalTrackedHoursInWeek += durationHours;
-      }
-      if (totalTrackedHoursInWeek < 0.01) return null;
-      const daysInSlice = Math.min(7, daysInMonth - weekStartDay + 1);
-      const untrackedHours = Math.max(0, daysInSlice * 24 - totalTrackedHoursInWeek);
-      if (untrackedHours > 0.01) weeklySummary[untrackedLabel] = untrackedHours;
-      return { summary: weeklySummary, totalHours: daysInSlice * 24 };
-    });
-    data.push({ month: monthStr, monthlySummary, totalMonthHours: daysInMonth * 24, weeklySummaries });
-    month = month.add(1, "month");
-  }
-  return data;
-}
-function buildSummaryGoalHours(timelineTasks, dateRange, untrackedLabel) {
-  const viewStart = dayjs(dateRange[0]);
-  const viewEnd = dayjs(dateRange[1]);
-  const tasksInRange = timelineTasks.filter((task) => dayjs(task.doneDate).isBetween(viewStart, viewEnd, "day", "[]"));
-  const hours = {};
-  let totalTrackedHours = 0;
-  for (const task of tasksInRange) {
-    const goalKey = getTimelineGoalKey(task);
-    const durationHours = Number(task.duration || 0) / 60;
-    hours[goalKey] = (hours[goalKey] || 0) + durationHours;
-    totalTrackedHours += durationHours;
-  }
-  const dayCount = dayjs(dateRange[1]).diff(dayjs(dateRange[0]), "day") + 1;
-  const untrackedHours = Math.max(0, dayCount * 24 - totalTrackedHours);
-  if (untrackedHours > 0.01) hours[untrackedLabel] = untrackedHours;
-  return hours;
-}
-function buildDailyGoalHours(blocks, untrackedLabel) {
-  const hours = {};
-  let trackedHours = 0;
-  for (const block of blocks) {
-    const goalKey = getTimelineGoalKey(block);
-    const duration2 = (block.blockEndMinute - block.blockStartMinute) / 60;
-    hours[goalKey] = (hours[goalKey] || 0) + duration2;
-    trackedHours += duration2;
-  }
-  const untrackedHours = Math.max(0, 24 - trackedHours);
-  if (untrackedHours > 0.01) hours[untrackedLabel] = untrackedHours;
-  return { goalHours: hours, totalDayHours: Math.max(24, trackedHours) };
-}
-const DATE_FORMAT = "YYYY-MM-DD";
-function splitTaskIntoDayBlocks(task, dateRange) {
-  const blocks = [];
-  if (!task.doneDate) return [];
-  if (task.timelineSource === "task-point" || !task.timelineRange.end) {
-    const pointDate = dayjs(task.actualStartDate);
-    if (pointDate.isBefore(dateRange[0], "day") || pointDate.isAfter(dateRange[1], "day")) return [];
-    const minute = task.startMinute % 1440;
-    return [{
-      ...task,
-      day: pointDate.format(DATE_FORMAT),
-      blockStartMinute: minute,
-      blockEndMinute: minute,
-      isRangeStart: true,
-      isRangeEnd: true
-    }];
-  }
-  let currentDate = dayjs(task.actualStartDate);
-  let currentStartMinute = task.startMinute % 1440;
-  let remainingDuration = task.duration;
-  let elapsedDuration = 0;
-  while (remainingDuration > 0 && currentDate.isBefore(dateRange[1].add(1, "day"))) {
-    const dayStr = currentDate.format(DATE_FORMAT);
-    const minutesInDay = Math.min(1440 - currentStartMinute, remainingDuration);
-    const isRangeStart = elapsedDuration === 0;
-    const isRangeEnd = remainingDuration <= minutesInDay;
-    if (!currentDate.isBefore(dateRange[0], "day")) {
-      const blockStartMinute = currentStartMinute;
-      const blockEndMinute = Math.min(1440, currentStartMinute + remainingDuration);
-      if (blockStartMinute < blockEndMinute) {
-        blocks.push({
-          ...task,
-          day: dayStr,
-          blockStartMinute,
-          blockEndMinute,
-          isRangeStart,
-          isRangeEnd
-        });
-      }
-    }
-    remainingDuration -= minutesInDay;
-    elapsedDuration += minutesInDay;
-    currentStartMinute = 0;
-    currentDate = currentDate.add(1, "day");
-  }
-  return blocks;
-}
-const TIMELINE_DAY_START_MINUTE = 0;
-const TIMELINE_MINUTES_PER_DAY = 24 * 60;
-function timelineVisibleEndMinute(maxHours = 24) {
-  const normalizedHours = Number.isFinite(maxHours) ? Math.max(0, Math.min(24, maxHours)) : 24;
-  return Math.round(normalizedHours * 60);
-}
-function clampTimelineMinute(value, maxHours = 24) {
-  const visibleEnd = timelineVisibleEndMinute(maxHours);
-  if (visibleEnd <= 0) return TIMELINE_DAY_START_MINUTE;
-  if (!Number.isFinite(value)) return TIMELINE_DAY_START_MINUTE;
-  return Math.min(visibleEnd - 1, Math.max(TIMELINE_DAY_START_MINUTE, Math.floor(value)));
-}
-function clampTimelineBoundaryMinute(value, maxHours = 24) {
-  const visibleEnd = timelineVisibleEndMinute(maxHours);
-  if (visibleEnd <= 0) return TIMELINE_DAY_START_MINUTE;
-  if (!Number.isFinite(value)) return TIMELINE_DAY_START_MINUTE;
-  return Math.min(visibleEnd, Math.max(TIMELINE_DAY_START_MINUTE, Math.floor(value)));
-}
-function timelineMinuteFromOffset(offsetPx, hourHeight, maxHours = 24) {
-  if (!Number.isFinite(offsetPx) || !Number.isFinite(hourHeight) || hourHeight <= 0) {
-    return TIMELINE_DAY_START_MINUTE;
-  }
-  return clampTimelineMinute(Math.max(0, offsetPx) / hourHeight * 60, maxHours);
-}
-function timelineOffsetFromMinute(minute, hourHeight) {
-  if (!Number.isFinite(hourHeight) || hourHeight <= 0) return 0;
-  const normalizedMinute = Number.isFinite(minute) ? Math.max(TIMELINE_DAY_START_MINUTE, minute) : TIMELINE_DAY_START_MINUTE;
-  return normalizedMinute / 60 * hourHeight;
-}
-function timelineMinuteToLocalDateTime(day, minute) {
-  const normalizedDay = dayjs(day).startOf("day").format("YYYY-MM-DD");
-  const normalizedMinute = clampTimelineMinute(minute);
-  const hour = Math.floor(normalizedMinute / 60);
-  const minuteOfHour = normalizedMinute % 60;
-  return `${normalizedDay}T${String(hour).padStart(2, "0")}:${String(minuteOfHour).padStart(2, "0")}`;
-}
-function timelineBoundaryMinuteToLocalDateTime(day, minute, maxHours = 24) {
-  const normalizedMinute = clampTimelineBoundaryMinute(minute, maxHours);
-  const dayOffset = Math.floor(normalizedMinute / TIMELINE_MINUTES_PER_DAY);
-  const minuteOfDay = normalizedMinute % TIMELINE_MINUTES_PER_DAY;
-  const targetDay = dayjs(day).startOf("day").add(dayOffset, "day").format("YYYY-MM-DD");
-  const hour = Math.floor(minuteOfDay / 60);
-  const minuteOfHour = minuteOfDay % 60;
-  return `${targetDay}T${String(hour).padStart(2, "0")}:${String(minuteOfHour).padStart(2, "0")}`;
-}
-const TIMELINE_SNAP_MINUTES = 5;
-const TIMELINE_MIN_RANGE_MINUTES = 5;
-function normalizedStep(snapMinutes = TIMELINE_SNAP_MINUTES) {
-  return Math.max(1, Math.round(snapMinutes));
-}
-function normalizeDateTime$1(value) {
-  const raw = String(value || "").trim();
-  return /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(raw) ? raw.replace(" ", "T") : raw;
-}
-function dateTimeMs(value) {
-  if (!value) return null;
-  const ms = Date.parse(normalizeDateTime$1(value));
-  return Number.isFinite(ms) ? ms : null;
-}
-function formatLocalDateTime(value) {
-  return value.format("YYYY-MM-DDTHH:mm");
-}
-function shiftDateTime(value, minutes) {
-  const parsed = dayjs(normalizeDateTime$1(value));
-  if (!parsed.isValid()) return null;
-  return formatLocalDateTime(parsed.add(minutes, "minute"));
-}
-function roundedDurationMinutes(range) {
-  const startMs = dateTimeMs(range.start);
-  const endMs = dateTimeMs(range.end);
-  if (startMs == null || endMs == null || endMs < startMs) return 0;
-  return Math.round((endMs - startMs) / 6e4 * 100) / 100;
-}
-function snapTimelineBoundaryMinute(minute, maxHours = 24, snapMinutes = TIMELINE_SNAP_MINUTES) {
-  const step = normalizedStep(snapMinutes);
-  const snapped = Math.round(minute / step) * step;
-  return clampTimelineBoundaryMinute(snapped, maxHours);
-}
-function buildTimelineDragSelection(anchorMinute, currentMinute, maxHours, snapMinutes = TIMELINE_SNAP_MINUTES) {
-  const step = normalizedStep(snapMinutes);
-  const lower = clampTimelineMinute(Math.min(anchorMinute, currentMinute), maxHours);
-  const upper = clampTimelineMinute(Math.max(anchorMinute, currentMinute), maxHours);
-  let startMinute = clampTimelineBoundaryMinute(Math.floor(lower / step) * step, maxHours);
-  let endMinute = clampTimelineBoundaryMinute(Math.ceil(upper / step) * step, maxHours);
-  if (endMinute <= startMinute) endMinute = clampTimelineBoundaryMinute(startMinute + step, maxHours);
-  if (endMinute <= startMinute) startMinute = clampTimelineBoundaryMinute(endMinute - step, maxHours);
-  if (endMinute <= startMinute) return null;
-  return { startMinute, endMinute, durationMinutes: endMinute - startMinute };
-}
-function shiftTimelineLogicalRange(range, minutes) {
-  const start2 = shiftDateTime(range.start, minutes);
-  if (!start2) return null;
-  if (!range.end) return { start: start2 };
-  const end2 = shiftDateTime(range.end, minutes);
-  if (!end2) return null;
-  return { start: start2, end: end2 };
-}
-function resizeTimelineLogicalRange(range, boundary, day, minute, maxHours = 24, minDurationMinutes = TIMELINE_MIN_RANGE_MINUTES) {
-  if (!range.end) return null;
-  const startMs = dateTimeMs(range.start);
-  const endMs = dateTimeMs(range.end);
-  if (startMs == null || endMs == null || endMs <= startMs) return null;
-  const boundaryDateTime = timelineBoundaryMinuteToLocalDateTime(day, minute, maxHours);
-  const boundaryMs = dateTimeMs(boundaryDateTime);
-  if (boundaryMs == null) return null;
-  const minDurationMs = Math.max(1, minDurationMinutes) * 6e4;
-  if (boundary === "start") {
-    if (boundaryMs > endMs - minDurationMs) return null;
-    return { start: boundaryDateTime, end: range.end };
-  }
-  if (boundaryMs < startMs + minDurationMs) return null;
-  return { start: range.start, end: boundaryDateTime };
-}
-function projectTimelineLogicalRangeToDay(range, day) {
-  const dayStart = dayjs(day).startOf("day");
-  const dayEnd = dayStart.add(1, "day");
-  const start2 = dayjs(normalizeDateTime$1(range.start));
-  if (!start2.isValid()) return null;
-  if (!range.end) {
-    if (!start2.isSame(dayStart, "day")) return null;
-    const minute = start2.diff(dayStart, "minute", true);
-    return { blockStartMinute: minute, blockEndMinute: minute, durationMinutes: 0 };
-  }
-  const end2 = dayjs(normalizeDateTime$1(range.end));
-  if (!end2.isValid() || !end2.isAfter(start2)) return null;
-  if (!end2.isAfter(dayStart) || !start2.isBefore(dayEnd)) return null;
-  const visibleStart = start2.isAfter(dayStart) ? start2 : dayStart;
-  const visibleEnd = end2.isBefore(dayEnd) ? end2 : dayEnd;
-  const blockStartMinute = Math.max(0, visibleStart.diff(dayStart, "minute", true));
-  const blockEndMinute = Math.min(24 * 60, visibleEnd.diff(dayStart, "minute", true));
-  if (blockEndMinute <= blockStartMinute) return null;
-  return {
-    blockStartMinute,
-    blockEndMinute,
-    durationMinutes: roundedDurationMinutes(range)
-  };
-}
-function buildTimelineBlockGesturePreview(args) {
-  const {
-    block,
-    mode,
-    anchorMinute,
-    currentMinute,
-    maxHours,
-    snapMinutes = TIMELINE_SNAP_MINUTES,
-    minDurationMinutes = TIMELINE_MIN_RANGE_MINUTES
-  } = args;
-  const visibleEnd = timelineVisibleEndMinute(maxHours);
-  if (visibleEnd <= 0) return null;
-  let range = null;
-  if (mode === "move") {
-    const rawDelta = currentMinute - anchorMinute;
-    const snappedSliceStart = snapTimelineBoundaryMinute(block.blockStartMinute + rawDelta, maxHours, snapMinutes);
-    const deltaMinutes = snappedSliceStart - block.blockStartMinute;
-    range = shiftTimelineLogicalRange(block.timelineRange, deltaMinutes);
-  } else {
-    if (!block.timelineRange.end) return null;
-    const boundaryMinute = snapTimelineBoundaryMinute(currentMinute, maxHours, snapMinutes);
-    range = resizeTimelineLogicalRange(
-      block.timelineRange,
-      mode === "resize-start" ? "start" : "end",
-      block.day,
-      boundaryMinute,
-      maxHours,
-      minDurationMinutes
-    );
-  }
-  if (!range) return null;
-  const projected = projectTimelineLogicalRangeToDay(range, block.day);
-  if (!projected) return null;
-  return { range, ...projected };
-}
-function buildDailyViewData(timelineTasks, dateRange) {
-  const start2 = dayjs(dateRange[0]).startOf("day");
-  const end2 = dayjs(dateRange[1]).startOf("day");
-  const diff = Math.max(0, end2.diff(start2, "day"));
-  const dateRangeDays = Array.from({ length: diff + 1 }, (_2, i2) => start2.add(i2, "day"));
-  const map = {};
-  const range = [start2, end2];
-  dateRangeDays.forEach((d2) => {
-    map[d2.format("YYYY-MM-DD")] = [];
-  });
-  for (const task of timelineTasks) {
-    const blocks = splitTaskIntoDayBlocks(task, range);
-    for (const block of blocks) {
-      if (map[block.day]) map[block.day].push(block);
-    }
-  }
-  Object.values(map).forEach((dayBlocks) => {
-    dayBlocks.sort((a2, b2) => a2.blockStartMinute - b2.blockStartMinute);
-  });
-  return { dateRangeDays, blocksByDay: map };
-}
-function uniqueNonEmpty(values2) {
-  return Array.from(new Set(values2.map((value) => String(value || "").trim()).filter(Boolean)));
-}
-function operationLabel(operation) {
-  switch (operation) {
-    case "delete":
-      return "删除";
-    case "complete":
-      return "完成";
-    case "task_session":
-      return "保存工作记录";
-    case "time_update":
-      return "更新时间";
-    case "create":
-      return "创建";
-    case "update":
-    default:
-      return "保存";
-  }
-}
-function getRecordRecoveryPaths(result, fallbackPath) {
-  return uniqueNonEmpty([
-    ...result.refresh?.scanPaths || [],
-    result.affectedPath,
-    fallbackPath
-  ]);
-}
-function buildRecordSubmitRecoveryPresentation(result, options = {}) {
-  if (!result || result.status !== "conflict") {
-    return {
-      shouldShow: false,
-      title: "",
-      message: "",
-      advice: "",
-      paths: [],
-      canOpenOriginal: false,
-      canRescan: false,
-      canRetry: false
-    };
-  }
-  const firstError = result.errors?.[0];
-  const paths = getRecordRecoveryPaths(result, options.fallbackPath);
-  return {
-    shouldShow: true,
-    title: `${operationLabel(result.operation)}遇到记录冲突`,
-    message: firstError?.message || result.feedback?.notice || "原记录位置可能已经变化，当前操作没有写入。",
-    advice: getRecordConflictRecoveryAdvice(firstError?.code || "record_conflict"),
-    paths,
-    canOpenOriginal: Boolean(options.canOpenOriginal),
-    canRescan: paths.length > 0,
-    canRetry: result.operation === "update" || result.operation === "delete" || result.operation === "time_update" || result.operation === "complete" || result.operation === "task_session"
-  };
-}
-const TIMELINE_KEY_HOURS = [3, 6, 9, 12];
-function timelineKeyHour(minute) {
-  const hour = minute / 60;
-  return TIMELINE_KEY_HOURS.find((candidate) => candidate === hour) ?? null;
-}
-const TIMELINE_TICK_STYLE = Object.freeze({
-  // Keep every rule on a full device pixel. Hierarchy is expressed through
-  // contrast and tick length instead of sub-pixel widths that blur on desktop
-  // and disappear on high-density mobile displays.
-  hour: { width: 1, opacity: 0.68 },
-  half: { width: 1, opacity: 0.42 },
-  quarter: { width: 1, opacity: 0.28 },
-  five: { width: 1, opacity: 0.18 }
-});
-const TIMELINE_SCALE_POLICY = Object.freeze({
-  // Desktop and touch share one semantic-density contract. The finest tick is
-  // admitted only when it has enough physical separation to remain readable.
-  fine: {
-    minimumTickGapPx: {
-      five: 10,
-      quarter: 10,
-      half: 14,
-      hour: 18
-    },
-    fallbackTickGapPx: 18,
-    minimumLabelGapPx: 44
-  },
-  compact: {
-    minimumTickGapPx: {
-      five: 10,
-      quarter: 10,
-      half: 14,
-      hour: 18
-    },
-    fallbackTickGapPx: 18,
-    minimumLabelGapPx: 44
-  }
-});
-const SEMANTIC_TICK_CANDIDATES = [
-  { step: 5, level: "five" },
-  { step: 15, level: "quarter" },
-  { step: 30, level: "half" },
-  { step: 60, level: "hour" }
-];
-const FALLBACK_TICK_STEPS = [120, 180, 240, 360, 720, 1440];
-const LABEL_STEPS = [60, 120, 180, 240, 360, 720, 1440];
-function resolveTickStep(pixelsPerMinute, densityMode) {
-  const policy = TIMELINE_SCALE_POLICY[densityMode];
-  for (const candidate of SEMANTIC_TICK_CANDIDATES) {
-    const requiredGap = policy.minimumTickGapPx[candidate.level];
-    if (candidate.step * pixelsPerMinute >= requiredGap) return candidate.step;
-  }
-  return FALLBACK_TICK_STEPS.find((step) => step * pixelsPerMinute >= policy.fallbackTickGapPx) ?? 1440;
-}
-function resolveLabelStep(pixelsPerMinute, tickStepMinutes, densityMode) {
-  const minimumLabelGap = TIMELINE_SCALE_POLICY[densityMode].minimumLabelGapPx;
-  return LABEL_STEPS.find((step) => step >= tickStepMinutes && step % tickStepMinutes === 0 && step * pixelsPerMinute >= minimumLabelGap) ?? 1440;
-}
-function resolveTickLevel(minute) {
-  if (minute % 60 === 0) return "hour";
-  if (minute % 30 === 0) return "half";
-  if (minute % 15 === 0) return "quarter";
-  return "five";
-}
-function formatClockMinute(minute) {
-  return `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
-}
-function buildTimelineScale(input) {
-  const hourHeight = Number.isFinite(input.hourHeight) ? Math.max(1, input.hourHeight) : 60;
-  const maximum = Number.isFinite(input.maxHours) ? Math.max(0, Math.min(24, input.maxHours)) * 60 : 1440;
-  const start2 = Number.isFinite(input.startMinute) ? Math.max(0, Math.min(maximum, input.startMinute)) : 0;
-  const end2 = Number.isFinite(input.endMinute) ? Math.max(start2, Math.min(maximum, input.endMinute)) : maximum;
-  const densityMode = input.densityMode ?? (input.coarsePointer ? "compact" : "fine");
-  const pixelsPerMinute = hourHeight / 60;
-  const tickStepMinutes = resolveTickStep(pixelsPerMinute, densityMode);
-  const gridStepMinutes = tickStepMinutes;
-  const labelStepMinutes = resolveLabelStep(pixelsPerMinute, tickStepMinutes, densityMode);
-  const tickPixelGap = tickStepMinutes * pixelsPerMinute;
-  const labelPixelGap = labelStepMinutes * pixelsPerMinute;
-  const ticks = [];
-  let lastLabelOffset = -Infinity;
-  const minimumLabelGap = TIMELINE_SCALE_POLICY[densityMode].minimumLabelGapPx;
-  for (let minute = Math.ceil(start2 / tickStepMinutes) * tickStepMinutes; minute <= end2; minute += tickStepMinutes) {
-    const level = resolveTickLevel(minute);
-    const offset2 = (minute - start2) * pixelsPerMinute;
-    const label = minute % labelStepMinutes === 0 && offset2 - lastLabelOffset >= minimumLabelGap ? formatClockMinute(minute) : void 0;
-    if (label) lastLabelOffset = offset2;
-    const style2 = TIMELINE_TICK_STYLE[level];
-    ticks.push({
-      minute,
-      offset: offset2,
-      level,
-      label,
-      strokeWidth: style2.width,
-      strokeOpacity: style2.opacity,
-      showInGrid: minute % gridStepMinutes === 0
-    });
-  }
-  for (const minute of TIMELINE_KEY_HOURS.map((hour) => hour * 60)) {
-    if (minute < start2 || minute > end2 || ticks.some((tick) => tick.minute === minute)) continue;
-    const style2 = TIMELINE_TICK_STYLE.hour;
-    ticks.push({
-      minute,
-      offset: (minute - start2) * pixelsPerMinute,
-      level: "hour",
-      strokeWidth: style2.width,
-      strokeOpacity: style2.opacity,
-      showInGrid: true
-    });
-  }
-  ticks.sort((a2, b2) => a2.minute - b2.minute);
-  return {
-    hourHeight,
-    height: (end2 - start2) * pixelsPerMinute,
-    densityMode,
-    tickStepMinutes,
-    gridStepMinutes,
-    labelStepMinutes,
-    tickPixelGap,
-    labelPixelGap,
-    minimumGap: tickPixelGap,
-    ticks
-  };
-}
-function logErrorEntryToConsole(entry) {
-  const timestamp2 = new Date(entry.timestamp).toLocaleString();
-  const prefix2 = `[ErrorHandler][${entry.type}][${timestamp2}]`;
-  devLog(prefix2);
-  devError("Message:", entry.message);
-  if (entry.context) {
-    devError("Context:", entry.context);
-  }
-  if (entry.stack) {
-    devError("Stack:", entry.stack);
-  }
-  if (entry.details) {
-    devError("Details:", entry.details);
-  }
-}
-function getUserFriendlyErrorMessage(type, error) {
-  const baseMessage = error.message;
-  switch (type) {
-    case ErrorType.NETWORK:
-      return `网络错误：${baseMessage}。请检查您的网络连接。`;
-    case ErrorType.VALIDATION:
-      return `数据验证失败：${baseMessage}`;
-    case ErrorType.PERMISSION:
-      return `权限不足：${baseMessage}。请检查文件访问权限。`;
-    case ErrorType.FILE_SYSTEM:
-      return `文件系统错误：${baseMessage}`;
-    case ErrorType.SERVICE:
-      return `服务错误：${baseMessage}`;
-    case ErrorType.PLUGIN:
-      return `插件错误：${baseMessage}`;
-    case ErrorType.UNKNOWN:
-    default:
-      return `发生错误：${baseMessage}`;
-  }
-}
-class ErrorHandler {
-  static instance;
-  errorLogs = [];
-  maxLogSize = 100;
-  constructor() {
-  }
-  /** 获取错误处理器实例 */
-  static getInstance() {
-    if (!ErrorHandler.instance) {
-      ErrorHandler.instance = new ErrorHandler();
-    }
-    return ErrorHandler.instance;
-  }
-  /** 处理错误 */
-  handle(error, context, options = {}) {
-    const {
-      showNotice = true,
-      logToConsole = true,
-      logToFile = false,
-      noticeTimeout = 5e3,
-      context: additionalContext,
-      uiPort
-    } = options;
-    const errorObj = error instanceof Error ? error : new Error(String(error));
-    const errorType = classifyError(errorObj);
-    const fullContext = additionalContext ? `${context} - ${additionalContext}` : context;
-    const logEntry = {
-      timestamp: Date.now(),
-      type: errorType,
-      message: errorObj.message,
-      context: fullContext,
-      stack: errorObj.stack,
-      details: error
-    };
-    this.addLogEntry(logEntry);
-    this.logRuntimeDiagnostic(error, errorObj, errorType, fullContext);
-    if (logToConsole) {
-      logErrorEntryToConsole(logEntry);
-    }
-    if (showNotice) {
-      this.showNotice(uiPort, getUserFriendlyErrorMessage(errorType, errorObj), noticeTimeout);
-    }
-  }
-  /** 获取错误日志 */
-  getErrorLogs(limit) {
-    if (limit) {
-      return this.errorLogs.slice(-limit);
-    }
-    return [...this.errorLogs];
-  }
-  /** 清除错误日志 */
-  clearLogs() {
-    this.errorLogs = [];
-  }
-  /** 获取错误统计 */
-  getErrorStats() {
-    const stats = {
-      [ErrorType.NETWORK]: 0,
-      [ErrorType.VALIDATION]: 0,
-      [ErrorType.PERMISSION]: 0,
-      [ErrorType.FILE_SYSTEM]: 0,
-      [ErrorType.SERVICE]: 0,
-      [ErrorType.PLUGIN]: 0,
-      [ErrorType.UNKNOWN]: 0
-    };
-    this.errorLogs.forEach((log) => {
-      stats[log.type]++;
-    });
-    return stats;
-  }
-  /** 安全执行异步函数，自动处理错误 */
-  async safeAsync(fn3, context, options) {
-    try {
-      return await fn3();
-    } catch (error) {
-      this.handle(error, context, options);
-      return null;
-    }
-  }
-  /** 安全执行同步函数，自动处理错误 */
-  safe(fn3, context, options) {
-    try {
-      return fn3();
-    } catch (error) {
-      this.handle(error, context, options);
-      return null;
-    }
-  }
-  showNotice(uiPort, message, timeout) {
-    uiPort?.notice(message, timeout);
-  }
-  addLogEntry(entry) {
-    this.errorLogs.push(entry);
-    if (this.errorLogs.length > this.maxLogSize) {
-      this.errorLogs.shift();
-    }
-  }
-  logRuntimeDiagnostic(rawError, errorObj, errorType, fullContext) {
-    try {
-      diagnosticError("[Think][ErrorHandler][RAW]", {
-        context: fullContext,
-        type: errorType,
-        message: errorObj.message,
-        stack: errorObj.stack,
-        raw: rawError
-      });
-    } catch {
-    }
-  }
-}
-const errorHandler = ErrorHandler.getInstance();
-async function safeAsync(fn3, context, options) {
-  return errorHandler.safeAsync(fn3, context, options);
-}
-const WARNING_MS = 1e3;
-const ERROR_MS = 5e3;
-const now = () => typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now();
-function startMeasure(name) {
-  const startedAt = now();
-  return () => {
-    const duration2 = now() - startedAt;
-    if (duration2 >= ERROR_MS) {
-      devError(`[Performance] SLOW: ${name} took ${duration2.toFixed(2)}ms`);
-    } else if (duration2 >= WARNING_MS) {
-      devWarn(`[Performance] Warning: ${name} took ${duration2.toFixed(2)}ms`);
-    }
-    return duration2;
-  };
-}
-const formatDuration = (computed, existing, mode = "preserve") => {
-  if (mode === "number") return computed;
-  if (mode === "string") return String(computed);
-  return typeof existing === "string" ? String(computed) : computed;
-};
-function computeLinkedTimeChanges(data, keys, lastChanged, options = {}) {
-  const startVal = data[keys.startKey];
-  const endVal = data[keys.endKey];
-  const durationVal = data[keys.durationKey];
-  const normalizedChanged = lastChanged === keys.startKey ? "startTime" : lastChanged === keys.endKey ? "endTime" : lastChanged === keys.durationKey ? "duration" : null;
-  const normalized2 = applyTaskTimePolicy({
-    startTime: startVal,
-    endTime: endVal,
-    duration: durationVal,
-    direction: options.direction,
-    lastChanged: normalizedChanged,
-    mode: "interactive"
-  });
-  const changes = {};
-  if (normalized2.startTime !== void 0 && normalized2.startTime !== startVal) {
-    changes[keys.startKey] = normalized2.startTime;
-  }
-  if (normalized2.endTime !== void 0 && normalized2.endTime !== endVal) {
-    changes[keys.endKey] = normalized2.endTime;
-  }
-  if (normalized2.duration !== void 0) {
-    const nextDuration = formatDuration(normalized2.duration, durationVal, options.durationOutput);
-    if (nextDuration !== durationVal) changes[keys.durationKey] = nextDuration;
-  }
-  return changes;
-}
-function finalizeLinkedTimeFields(data, keys, options = {}) {
-  const next2 = { ...data };
-  const durationVal = next2[keys.durationKey];
-  const normalized2 = applyTaskTimePolicy({
-    startTime: next2[keys.startKey],
-    endTime: next2[keys.endKey],
-    duration: durationVal,
-    mode: "finalize",
-    direction: options.direction
-  });
-  if (normalized2.startTime !== void 0) next2[keys.startKey] = normalized2.startTime;
-  if (normalized2.endTime !== void 0) next2[keys.endKey] = normalized2.endTime;
-  if (normalized2.duration !== void 0) {
-    next2[keys.durationKey] = formatDuration(normalized2.duration, durationVal, options.durationOutput);
-  }
-  return next2;
-}
-class CancelledError extends Error {
-  name = "CancelledError";
-  constructor(message = "Cancelled") {
-    super(message);
-  }
-}
-function createTakeLatest(label) {
-  let current2 = null;
-  let disposed2 = false;
-  const cancel = () => {
-    if (current2) {
-      try {
-        current2.abort();
-      } catch {
-      }
-      current2 = null;
-    }
-  };
-  const dispose = () => {
-    disposed2 = true;
-    cancel();
-  };
-  const run = async (task) => {
-    if (disposed2) throw new CancelledError(label ? `Disposed: ${label}` : "Disposed");
-    cancel();
-    const controller = new AbortController();
-    current2 = controller;
-    try {
-      return await task(controller.signal);
-    } catch (err) {
-      if (err?.name === "AbortError") {
-        throw new CancelledError(label ? `Aborted: ${label}` : "Aborted");
-      }
-      throw err;
-    } finally {
-      if (current2 === controller) current2 = null;
-    }
-  };
-  return {
-    run,
-    cancel,
-    dispose,
-    get signal() {
-      return current2?.signal ?? null;
-    }
-  };
-}
-function safeMatch(win, query) {
-  try {
-    return Boolean(win?.matchMedia?.(query).matches);
-  } catch {
-    return false;
-  }
-}
-function getRuntimeWindow() {
-  return typeof window === "undefined" ? void 0 : window;
-}
-function detectPlatform(userAgent, platform = "", maxTouchPoints = 0) {
-  if (/Android/i.test(userAgent)) return "android";
-  if (/iPhone|iPad|iPod/i.test(userAgent)) return "ios";
-  if (/Mac/i.test(platform) && maxTouchPoints > 1) return "ios";
-  return "desktop";
-}
-function detectViewport(width2) {
-  if (width2 <= 640) return "narrow";
-  if (width2 <= 1024) return "medium";
-  return "wide";
-}
-function detectThinkDeviceProfile(win = getRuntimeWindow()) {
-  const userAgent = String(win?.navigator?.userAgent || "");
-  const platformName = String(win?.navigator?.platform || "");
-  const maxTouchPoints = Number(win?.navigator?.maxTouchPoints || 0);
-  const viewportWidth = Math.max(0, Number(win?.innerWidth || 0));
-  const platform = detectPlatform(userAgent, platformName, maxTouchPoints);
-  const pointer = safeMatch(win, "(pointer: coarse)") || maxTouchPoints > 0 ? "coarse" : "fine";
-  const viewport2 = detectViewport(viewportWidth || 1024);
-  const isMobileLike = platform !== "desktop" || pointer === "coarse" || viewportWidth <= 820;
-  return {
-    platform,
-    pointer,
-    viewport: viewport2,
-    viewportWidth,
-    hasVisualViewport: Boolean(win?.visualViewport),
-    isMobileLike
-  };
-}
-function isThinkMobileLikeProfile(profile) {
-  return profile.isMobileLike;
-}
-function getThinkDeviceProfileAttributes(profile = detectThinkDeviceProfile()) {
-  return {
-    "data-think-platform": profile.platform,
-    "data-think-pointer": profile.pointer,
-    "data-think-viewport": profile.viewport,
-    "data-think-visual-viewport": profile.hasVisualViewport ? "true" : "false"
-  };
-}
-function applyThinkDeviceProfileAttributes(element, profile = detectThinkDeviceProfile(element.ownerDocument?.defaultView || void 0)) {
-  const attrs = getThinkDeviceProfileAttributes(profile);
-  Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
-  element.classList.toggle("think-os--mobile", profile.isMobileLike);
-  element.classList.toggle("think-os--desktop", !profile.isMobileLike);
-  element.classList.toggle("think-os--android", profile.platform === "android");
-  element.classList.toggle("think-os--ios", profile.platform === "ios");
-  return profile;
-}
 class Disposables {
   tasks = [];
   add(nameOrDispose, disposeMaybe) {
@@ -48990,7 +49394,7 @@ function applyQuickInputTimeDirectionChange(input) {
 }
 function getOrderedGoalIndex(goal, originalIndex) {
   if (!goal) return Number.MAX_SAFE_INTEGER;
-  const order2 = readNumber(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
+  const order2 = readNumber$1(asUnknownRecord(goal), "sortOrder") ?? Number.NaN;
   return Number.isFinite(order2) ? order2 : originalIndex.get(goal.path) ?? Number.MAX_SAFE_INTEGER;
 }
 function getGoalByDisplayPath(goals, path) {
@@ -50683,7 +51087,12 @@ function prepareThinkModal(modal, ...classes) {
     modal.modalEl.addClass(className);
   }
   applyThinkDeviceProfileAttributes(modal.modalEl);
+  const surface = getThinkSurface(modal.modalEl);
+  if (surface && surface !== "quickinput") recordThinkDiagnostic("modal.open", void 0, void 0, surface);
   return modal.contentEl;
+}
+function recordThinkModalClose(modal) {
+  recordThinkDiagnostic("modal.close", void 0, void 0, getThinkSurface(modal.modalEl) || "think-ui");
 }
 function renderModalContent(containerEl, children) {
   nn(k$2(ThinkMuiThemeProvider, null, children), containerEl);
@@ -51838,6 +52247,7 @@ class AiTextPromptModal extends obsidian.Modal {
     ));
   }
   onClose() {
+    recordThinkModalClose(this);
     this.cleanupBackdropCloseGuard?.();
     this.cleanupBackdropCloseGuard = null;
     this.resolvePromise?.(null);
@@ -52636,6 +53046,7 @@ class AiBatchConfirmModal extends obsidian.Modal {
     );
   }
   onClose() {
+    recordThinkModalClose(this);
     this.cleanupBackdropCloseGuard?.();
     this.cleanupBackdropCloseGuard = null;
     if (!this.resolved && this.resolvePromise) {
@@ -68503,17 +68914,31 @@ function asAbortSignal(signal) {
 class ObsidianAiHttpTransport {
   async request(url, init) {
     const signal = asAbortSignal(init.signal);
-    throwIfAborted(signal);
-    const response = await raceWithAbort(
-      obsidian.requestUrl({
-        url,
-        method: String(init.method ?? "GET"),
-        headers: normalizeRequestHeaders(init.headers),
-        body: normalizeRequestBody(init.body)
-      }),
-      signal
-    );
+    const startedAt = performance.now();
+    let response;
+    try {
+      throwIfAborted(signal);
+      response = await raceWithAbort(
+        obsidian.requestUrl({
+          url,
+          method: String(init.method ?? "GET"),
+          headers: normalizeRequestHeaders(init.headers),
+          body: normalizeRequestBody(init.body)
+        }),
+        signal
+      );
+    } catch (error) {
+      const outcome = signal?.aborted ? "cancelled" : "failure";
+      recordThinkDiagnostic("http.request", performance.now() - startedAt, outcome, "ai");
+      throw error;
+    }
     const status = response.status ?? 200;
+    recordThinkDiagnostic(
+      "http.request",
+      performance.now() - startedAt,
+      status >= 200 && status < 300 ? "success" : "http-error",
+      "ai"
+    );
     const text2 = typeof response.text === "string" ? response.text : "";
     const headers = makeHeadersLike(response.headers);
     const responseRecord = response;
@@ -68768,6 +69193,7 @@ class NamePromptModal extends obsidian.Modal {
     ));
   }
   onClose() {
+    recordThinkModalClose(this);
     this.resolvePromise?.(null);
     this.resolvePromise = null;
     unmountModalContent(this.contentEl);
@@ -69414,6 +69840,7 @@ class AiChatModal extends obsidian.Modal {
     );
   }
   onClose() {
+    recordThinkModalClose(this);
     if (this.keydownStopper) {
       this.contentEl.removeEventListener("keydown", this.keydownStopper);
       this.keydownStopper = void 0;
@@ -69525,6 +69952,7 @@ class CheckinManagerModal extends obsidian.Modal {
     ));
   }
   onClose() {
+    recordThinkModalClose(this);
     unmountModalContent(this.contentEl);
   }
 }
@@ -69668,58 +70096,64 @@ let ObsidianVaultPort = class {
     return this.app.vault.getMarkdownFiles().map((f2) => f2.path);
   }
   async readFile(path) {
-    this.assertActive("readFile", path);
-    const af = this.app.vault.getAbstractFileByPath(path);
-    if (af instanceof obsidian.TFile) {
-      return await this.app.vault.read(af);
-    }
-    if (af instanceof obsidian.TFolder) {
-      throw new Error(`路径冲突：${path} 是文件夹，不能作为缺失文件处理。`);
-    }
-    const existsOnDisk = await this.app.vault.adapter.exists(path);
-    if (!existsOnDisk) return null;
-    return await this.app.vault.adapter.read(path);
+    return traceThinkOperation("vault.read", async () => {
+      this.assertActive("readFile", path);
+      const af = this.app.vault.getAbstractFileByPath(path);
+      if (af instanceof obsidian.TFile) {
+        return await this.app.vault.read(af);
+      }
+      if (af instanceof obsidian.TFolder) {
+        throw new Error(`路径冲突：${path} 是文件夹，不能作为缺失文件处理。`);
+      }
+      const existsOnDisk = await this.app.vault.adapter.exists(path);
+      if (!existsOnDisk) return null;
+      return await this.app.vault.adapter.read(path);
+    }, "storage", 80);
   }
   async writeFile(path, content) {
-    this.assertActive("writeFile", path);
-    await this.ensureFolderFor(path);
-    const af = this.app.vault.getAbstractFileByPath(path);
-    if (af instanceof obsidian.TFile) {
-      await this.app.vault.modify(af, content);
-      return;
-    }
-    if (af instanceof obsidian.TFolder) {
-      throw new Error(`路径冲突："${path}" 是文件夹，无法写入文件。`);
-    }
-    if (await this.app.vault.adapter.exists(path)) {
-      await this.app.vault.adapter.write(path, content);
-      return;
-    }
-    try {
-      await this.app.vault.create(path, content);
-    } catch (e2) {
-      const recheck = this.app.vault.getAbstractFileByPath(path);
-      if (recheck instanceof obsidian.TFile) {
-        await this.app.vault.modify(recheck, content);
+    return traceThinkOperation("vault.write", async () => {
+      this.assertActive("writeFile", path);
+      await this.ensureFolderFor(path);
+      const af = this.app.vault.getAbstractFileByPath(path);
+      if (af instanceof obsidian.TFile) {
+        await this.app.vault.modify(af, content);
         return;
       }
-      if (recheck instanceof obsidian.TFolder) {
+      if (af instanceof obsidian.TFolder) {
         throw new Error(`路径冲突："${path}" 是文件夹，无法写入文件。`);
       }
-      devError(`[ObsidianVaultPort] create file failed: ${path}`, e2);
-      throw e2;
-    }
+      if (await this.app.vault.adapter.exists(path)) {
+        await this.app.vault.adapter.write(path, content);
+        return;
+      }
+      try {
+        await this.app.vault.create(path, content);
+      } catch (e2) {
+        const recheck = this.app.vault.getAbstractFileByPath(path);
+        if (recheck instanceof obsidian.TFile) {
+          await this.app.vault.modify(recheck, content);
+          return;
+        }
+        if (recheck instanceof obsidian.TFolder) {
+          throw new Error(`路径冲突："${path}" 是文件夹，无法写入文件。`);
+        }
+        devError(`[ObsidianVaultPort] create file failed: ${path}`, e2);
+        throw e2;
+      }
+    }, "storage");
   }
   async deleteFile(path) {
-    this.assertActive("deleteFile", path);
-    const af = this.app.vault.getAbstractFileByPath(path);
-    if (af instanceof obsidian.TFile) {
-      await this.app.vault.delete(af);
-      return;
-    }
-    if (!(af instanceof obsidian.TFolder) && await this.app.vault.adapter.exists(path)) {
-      await this.app.vault.adapter.remove(path);
-    }
+    return traceThinkOperation("vault.delete", async () => {
+      this.assertActive("deleteFile", path);
+      const af = this.app.vault.getAbstractFileByPath(path);
+      if (af instanceof obsidian.TFile) {
+        await this.app.vault.delete(af);
+        return;
+      }
+      if (!(af instanceof obsidian.TFolder) && await this.app.vault.adapter.exists(path)) {
+        await this.app.vault.adapter.remove(path);
+      }
+    }, "storage");
   }
   // ------------------------------
   // Helpers
@@ -70960,7 +71394,7 @@ const presetGranularityOptions = [
   { value: "year", label: "年" }
 ];
 function deriveRequiredFields(fields) {
-  return (fields || []).filter((field) => field.required === true).map((field) => compactText$2(field.key || field.label)).filter(Boolean);
+  return (fields || []).filter((field) => field.required === true).map((field) => compactText$1(field.key || field.label)).filter(Boolean);
 }
 function stableJson(value) {
   const seen = /* @__PURE__ */ new WeakSet();
@@ -70968,11 +71402,11 @@ function stableJson(value) {
     if (input === void 0) return void 0;
     if (input === null) return null;
     if (typeof input === "string" || typeof input === "number" || typeof input === "boolean") return input;
-    if (typeof input !== "object") return compactText$2(input);
+    if (typeof input !== "object") return compactText$1(input);
     if (seen.has(input)) return "[Circular]";
     seen.add(input);
     if (Array.isArray(input)) return input.map(normalize2).filter((item) => item !== void 0);
-    if (!isUnknownRecord(input)) return compactText$2(input);
+    if (!isUnknownRecord(input)) return compactText$1(input);
     const out = {};
     Object.keys(input).sort().forEach((key) => {
       const value2 = normalize2(input[key]);
@@ -70998,8 +71432,8 @@ function fieldsHaveSameStructure(left2, right2) {
   return stableJson(normalize2(left2)) === stableJson(normalize2(right2));
 }
 function equalStringSet(left2, right2) {
-  const a2 = new Set(left2.map(compactText$2).filter(Boolean));
-  const b2 = new Set(right2.map(compactText$2).filter(Boolean));
+  const a2 = new Set(left2.map(compactText$1).filter(Boolean));
+  const b2 = new Set(right2.map(compactText$1).filter(Boolean));
   if (a2.size !== b2.size) return false;
   for (const value of a2) if (!b2.has(value)) return false;
   return true;
@@ -71007,18 +71441,18 @@ function equalStringSet(left2, right2) {
 function getFieldDefaultMap(fields) {
   const result = {};
   for (const field of fields || []) {
-    const key = compactText$2(field.key || field.label);
+    const key = compactText$1(field.key || field.label);
     if (!key) continue;
     const value = field.defaultValue;
-    if (value !== void 0 && value !== null && compactText$2(value) !== "") result[key] = compactText$2(value);
+    if (value !== void 0 && value !== null && compactText$1(value) !== "") result[key] = compactText$1(value);
   }
   return result;
 }
 function applyGoalTemplateDefaultValuesToFields(fields, defaultValues) {
   const defaults = defaultValues || {};
   return (fields || []).map((field) => {
-    const key = compactText$2(field.key || field.label);
-    const label = compactText$2(field.label);
+    const key = compactText$1(field.key || field.label);
+    const label = compactText$1(field.label);
     const hasKey = key && Object.prototype.hasOwnProperty.call(defaults, key);
     const hasLabel = label && Object.prototype.hasOwnProperty.call(defaults, label);
     if (!hasKey && !hasLabel) return field;
@@ -71029,10 +71463,10 @@ function applyGoalTemplateDefaultValuesToFields(fields, defaultValues) {
 function collectGoalTemplateDefaultValuesFromFields(fields) {
   const result = {};
   for (const field of fields || []) {
-    const key = compactText$2(field.key || field.label);
+    const key = compactText$1(field.key || field.label);
     if (!key) continue;
     const raw = field.defaultValue;
-    if (raw === void 0 || raw === null || compactText$2(raw) === "") continue;
+    if (raw === void 0 || raw === null || compactText$1(raw) === "") continue;
     result[key] = isTemplateMultiValueField(field) ? templateFieldValueToArray(raw) : raw;
   }
   return result;
@@ -71105,7 +71539,7 @@ function cleanDefaultValuesOverride(draft, block) {
   Object.entries(fieldDefaults).forEach(([key, raw]) => {
     if (key === "icon" || key === "图标") return;
     if (FORBIDDEN_CONTEXT_KEYS.has(key) || isSystemRecordContextField(key)) return;
-    const value = compactText$2(raw);
+    const value = compactText$1(raw);
     if (!value) return;
     if (baseDefaults[key] !== void 0 && baseDefaults[key] === value) return;
     result[key] = raw;
@@ -71125,10 +71559,10 @@ function buildTemplatePatchFromDraft(params) {
   const baseRequiredFields = deriveRequiredFields(baseFields || []);
   const sameFields = fieldsHaveSameStructure(draftFields, baseFields);
   const sameRequired = equalStringSet(requiredFields, baseRequiredFields);
-  const targetFile = compactText$2(draft.targetFile);
-  const appendUnderHeader2 = compactText$2(draft.appendUnderHeader);
-  const baseTargetFile = compactText$2(block.targetFile);
-  const baseAppendUnderHeader = compactText$2(block.appendUnderHeader);
+  const targetFile = compactText$1(draft.targetFile);
+  const appendUnderHeader2 = compactText$1(draft.appendUnderHeader);
+  const baseTargetFile = compactText$1(block.targetFile);
+  const baseAppendUnderHeader = compactText$1(block.appendUnderHeader);
   const rawPatch = {
     id: getGoalTemplateId(goalPath, block.id),
     goalPath,
@@ -72425,302 +72859,6 @@ function SettingsRoot({
     ] })
   ] }) });
 }
-const GITHUB_OWNER = "jiangjiang3788";
-const GITHUB_REPO = "obsidian-sample-plugin-master";
-const GITHUB_BRANCH = "main";
-const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
-const DEV_BUILD_FILES = ["main.js", "styles.css", "manifest.json"];
-function formatLocalGitHubTime(value) {
-  if (!value || !Number.isFinite(Date.parse(value))) return "暂不可用";
-  return new Date(value).toLocaleString("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  });
-}
-function formatGitHubDevRestartNotice(info) {
-  const pushed = info.githubPushedAt ? `GitHub 推送时间（本地）：${formatLocalGitHubTime(info.githubPushedAt)}` : "GitHub 推送时间：暂未查到该版本对应的推送记录";
-  const committed = !info.githubPushedAt && info.githubCommitAt ? `
-Git 提交时间（非推送时间）：${formatLocalGitHubTime(info.githubCommitAt)}` : "";
-  return `Think OS 开发版下载完成
-版本：${info.remoteVersion}（${info.branch} · ${info.commitSha.slice(0, 7)}）
-${pushed}${committed}
-请完全退出并重新打开 Obsidian。`;
-}
-const OPTIONAL_PUSH_TIME_WAIT_MS = 1200;
-function errorText(error) {
-  return error instanceof Error ? error.message : String(error);
-}
-function waitForPushTime(promise) {
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => resolve(null), OPTIONAL_PUSH_TIME_WAIT_MS);
-    void promise.then(
-      (value) => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      () => {
-        clearTimeout(timer);
-        resolve(null);
-      }
-    );
-  });
-}
-function isCommitSha(value) {
-  return typeof value === "string" && /^[0-9a-f]{40}$/i.test(value);
-}
-function validIsoTime(value) {
-  return typeof value === "string" && Number.isFinite(Date.parse(value)) ? new Date(value).toISOString() : null;
-}
-function rawFileUrl(file, revision) {
-  return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${revision}/${file}`;
-}
-class GitHubRequestError extends Error {
-  constructor(requestStage, httpStatus, message) {
-    super(message);
-    this.requestStage = requestStage;
-    this.httpStatus = httpStatus;
-    this.name = "GitHubRequestError";
-  }
-  requestStage;
-  httpStatus;
-}
-function responseHeader(response, name) {
-  return Object.entries(response.headers || {}).find(([key]) => key.toLowerCase() === name)?.[1];
-}
-function responseJson(response) {
-  if (typeof response.text === "string") return JSON.parse(response.text);
-  return response.json;
-}
-function describeHttpFailure(stage, operation, response) {
-  const status = response.status;
-  const remaining = responseHeader(response, "x-ratelimit-remaining");
-  const retryAfter = responseHeader(response, "retry-after");
-  const reset = Number(responseHeader(response, "x-ratelimit-reset"));
-  const resetTime = Number.isFinite(reset) && reset > 0 ? new Date(reset * 1e3).toLocaleString("zh-CN", { hour12: false }) : null;
-  let reason = "";
-  if (status === 403 || status === 429) {
-    if (remaining === "0") reason = resetTime ? `GitHub API 配额已用完，请在 ${resetTime} 后再试` : "GitHub API 配额已用完，请稍后重试";
-    else if (retryAfter) reason = `GitHub 要求等待 ${retryAfter} 秒后重试`;
-    else reason = "请求被拒绝，可能是访问限制、限流或网络代理问题";
-  } else if (status === 404) reason = "目标文件不存在或仓库未推送该构建产物";
-  let serverMessage = "";
-  try {
-    const message = responseJson(response)?.message;
-    if (typeof message === "string") serverMessage = message.replace(/\s+/g, " ").slice(0, 160);
-  } catch {
-  }
-  const extra = [reason, serverMessage].filter(Boolean).join("；");
-  return new GitHubRequestError(
-    stage,
-    status,
-    `${operation} 失败：HTTP ${status}${extra ? `（${extra}）` : ""}；尚未覆盖本地文件`
-  );
-}
-async function readGitHubHead() {
-  let response;
-  try {
-    response = await obsidian.requestUrl({
-      url: `${GITHUB_API}/commits/${GITHUB_BRANCH}`,
-      headers: { Accept: "application/vnd.github+json", "Cache-Control": "no-cache" },
-      throw: false
-    });
-  } catch (error) {
-    throw new GitHubRequestError(
-      "head",
-      null,
-      `获取 GitHub ${GITHUB_BRANCH} 最新提交失败（api.github.com）：${errorText(error)}；尚未覆盖本地文件`
-    );
-  }
-  if (response.status !== 200) {
-    throw describeHttpFailure("head", `获取 GitHub ${GITHUB_BRANCH} 最新提交（api.github.com）`, response);
-  }
-  let payload;
-  try {
-    payload = responseJson(response);
-  } catch {
-    throw new Error("GitHub 最新提交响应不是有效 JSON，已停止下载");
-  }
-  if (!isCommitSha(payload?.sha)) throw new Error("GitHub 未返回有效提交 SHA，已停止下载");
-  return { sha: payload.sha, committedAt: validIsoTime(payload?.commit?.committer?.date) };
-}
-function findGitHubRevisionPushTime(events2, sha) {
-  if (!Array.isArray(events2) || !isCommitSha(sha)) return null;
-  for (const event of events2) {
-    if (event?.type === "PushEvent" && event?.payload?.ref === `refs/heads/${GITHUB_BRANCH}` && event?.payload?.head === sha) {
-      return validIsoTime(event.created_at);
-    }
-  }
-  return null;
-}
-async function readGitHubPushTime(sha) {
-  try {
-    const response = await obsidian.requestUrl({
-      url: `${GITHUB_API}/events?per_page=100`,
-      headers: { Accept: "application/vnd.github+json" },
-      throw: false
-    });
-    if (response.status !== 200) return null;
-    return findGitHubRevisionPushTime(responseJson(response), sha);
-  } catch {
-    return null;
-  }
-}
-function assertDownloadedFile(file, text2) {
-  if (!text2.trim()) throw new Error(`${file} 内容为空`);
-  if (/^\s*<(?:!doctype|html)/i.test(text2)) throw new Error(`${file} 返回了网页内容，而不是插件文件`);
-  if (file === "main.js" && text2.length < 1e3) throw new Error("main.js 内容异常，已停止覆盖");
-  if (file === "styles.css" && text2.length < 100) throw new Error("styles.css 内容异常，已停止覆盖");
-}
-function parseAndValidateManifest(text2, expectedPluginId) {
-  let manifest;
-  try {
-    manifest = JSON.parse(text2);
-  } catch {
-    throw new Error("远端 manifest.json 不是有效 JSON");
-  }
-  if (manifest?.id !== expectedPluginId) {
-    throw new Error(`远端插件 ID 不匹配：${String(manifest?.id || "unknown")}`);
-  }
-  if (manifest?.main && manifest.main !== "main.js") {
-    throw new Error(`远端 manifest main 字段异常：${String(manifest.main)}`);
-  }
-  if (manifest?.styles && manifest.styles !== "styles.css") {
-    throw new Error(`远端 manifest styles 字段异常：${String(manifest.styles)}`);
-  }
-  if (typeof manifest.version !== "string" || !manifest.version.trim()) {
-    throw new Error("远端版本号缺失，已停止覆盖");
-  }
-  return { version: manifest.version.trim() };
-}
-async function readFileAtRevision(file, sha) {
-  let response;
-  try {
-    response = await obsidian.requestUrl({ url: rawFileUrl(file, sha), throw: false });
-  } catch (error) {
-    throw new GitHubRequestError(
-      "file",
-      null,
-      `下载 ${file}（${sha.slice(0, 7)}，raw.githubusercontent.com）失败：${errorText(error)}；尚未覆盖本地文件`
-    );
-  }
-  if (response.status !== 200) {
-    throw describeHttpFailure(
-      "file",
-      `下载 ${file}（${sha.slice(0, 7)}，raw.githubusercontent.com）`,
-      response
-    );
-  }
-  assertDownloadedFile(file, response.text);
-  return response.text;
-}
-async function downloadPinnedBuild(sha) {
-  const downloaded = {};
-  for (const file of DEV_BUILD_FILES) downloaded[file] = await readFileAtRevision(file, sha);
-  return downloaded;
-}
-async function infoAtHead(head, expectedPluginId) {
-  const manifestText = await readFileAtRevision("manifest.json", head.sha);
-  return {
-    remoteVersion: parseAndValidateManifest(manifestText, expectedPluginId).version,
-    branch: GITHUB_BRANCH,
-    githubPushedAt: null,
-    githubCommitAt: head.committedAt,
-    commitSha: head.sha
-  };
-}
-async function getGitHubDevBuildInfo(expectedPluginId) {
-  return infoAtHead(await readGitHubHead(), expectedPluginId);
-}
-async function readBackups(adapter, pluginDir) {
-  const entries = await Promise.all(DEV_BUILD_FILES.map(async (file) => {
-    const path = `${pluginDir}/${file}`;
-    return [file, await adapter.exists(path) ? await adapter.read(path) : null];
-  }));
-  const backups = Object.fromEntries(entries);
-  if (DEV_BUILD_FILES.some((file) => backups[file] === null) && !adapter.remove) {
-    throw new Error("本地插件文件缺失且存储不支持回滚删除，已停止覆盖");
-  }
-  return backups;
-}
-async function restoreBackups(adapter, dir, backups, touched) {
-  const errors = [];
-  for (const file of [...touched].reverse()) {
-    try {
-      const path = `${dir}/${file}`;
-      if (backups[file] === null) await adapter.remove(path);
-      else await adapter.write(path, backups[file]);
-    } catch {
-      errors.push(file);
-    }
-  }
-  return errors;
-}
-async function installPinnedFiles(adapter, dir, downloaded) {
-  const backups = await readBackups(adapter, dir);
-  const touched = [];
-  try {
-    for (const file of DEV_BUILD_FILES) {
-      touched.push(file);
-      const path = `${dir}/${file}`;
-      await adapter.write(path, downloaded[file]);
-      if (await adapter.read(path) !== downloaded[file]) {
-        throw new Error(`${file} 写入校验失败`);
-      }
-    }
-  } catch (error) {
-    const failed = await restoreBackups(adapter, dir, backups, touched);
-    const message = error instanceof Error ? error.message : String(error);
-    if (failed.length) throw new Error(`${message}；回滚 ${failed.join("、")} 失败，请从备份恢复`);
-    throw new Error(`${message}；已回滚到原版本`);
-  }
-}
-async function pullGitHubDevBuild(host, pinnedPreview) {
-  const pinned = pinnedPreview != null;
-  if (pinned && !isCommitSha(pinnedPreview.commitSha)) {
-    throw new Error("已检查版本 SHA 无效，已停止下载");
-  }
-  const head = pinned ? { sha: pinnedPreview.commitSha, committedAt: pinnedPreview.githubCommitAt } : await readGitHubHead();
-  const downloaded = await downloadPinnedBuild(head.sha);
-  const manifest = parseAndValidateManifest(downloaded["manifest.json"], host.manifest.id);
-  if (pinned && manifest.version !== pinnedPreview.remoteVersion) {
-    throw new Error("已检查版本与下载的 manifest.json 不一致，未覆盖本地文件");
-  }
-  const pluginDir = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
-  await installPinnedFiles(host.app.vault.adapter, pluginDir, downloaded);
-  const pushTimePromise = pinnedPreview?.githubPushedAt ? Promise.resolve(pinnedPreview.githubPushedAt) : readGitHubPushTime(head.sha);
-  const githubPushedAt = await waitForPushTime(pushTimePromise);
-  const installed = {
-    remoteVersion: manifest.version,
-    branch: GITHUB_BRANCH,
-    githubCommitAt: head.committedAt,
-    githubPushedAt,
-    commitSha: head.sha
-  };
-  const warning = pinned ? "\n本次安装先前检查的 SHA，未验证它仍是 main 最新提交。" : "";
-  let notice = null;
-  try {
-    notice = new obsidian.Notice(formatGitHubDevRestartNotice(installed) + warning, 0);
-  } catch {
-  }
-  if (!githubPushedAt && notice) {
-    const successNotice = notice;
-    void pushTimePromise.then((latePushedAt) => {
-      if (!latePushedAt) return;
-      try {
-        successNotice.setMessage(formatGitHubDevRestartNotice({
-          ...installed,
-          githubPushedAt: latePushedAt
-        }) + warning);
-      } catch {
-      }
-    });
-  }
-  return installed;
-}
 const THINK_SETTINGS_VIEW_TYPE = "think-os-settings-view";
 class ThinkSettingsView extends obsidian.ItemView {
   constructor(leaf, plugin) {
@@ -72804,6 +72942,7 @@ class SettingsTab extends obsidian.PluginSettingTab {
   id;
   services;
   display() {
+    const startedAt = performance.now();
     const { containerEl } = this;
     containerEl.empty();
     mountWithServices(
@@ -72823,8 +72962,10 @@ class SettingsTab extends obsidian.PluginSettingTab {
       ),
       this.services
     );
+    recordThinkDiagnostic("settings.launcher-open", performance.now() - startedAt, void 0, "settings");
   }
   hide() {
+    recordThinkDiagnostic("settings.launcher-close", void 0, void 0, "settings");
     unmountPreact(this.containerEl);
   }
 }
@@ -78714,6 +78855,26 @@ class ThinkPlugin extends obsidian.Plugin {
   }
   registerCommands() {
     this.addCommand({
+      id: "think-update-github-dev-build",
+      name: "更新：从 GitHub 下载并安装最新开发版",
+      callback: async () => {
+        new obsidian.Notice("Think OS：正在检查 GitHub 最新开发版并下载…", 4e3);
+        try {
+          await pullGitHubDevBuild(this);
+        } catch (error) {
+          new obsidian.Notice(`Think OS 更新失败：${error instanceof Error ? error.message : String(error)}`, 1e4);
+        }
+      }
+    });
+    this.addCommand({
+      id: "think-mark-performance-lag",
+      name: "诊断：标记刚才发生的一次卡顿",
+      callback: () => {
+        this.diagnostics?.record("lifecycle", "plugin", "lag.mark");
+        new obsidian.Notice("已标记卡顿；稍后导出诊断报告即可查看标记前后的事件。");
+      }
+    });
+    this.addCommand({
       id: "think-export-performance-diagnostics",
       name: "诊断：导出操作与卡顿报告（不含输入内容）",
       callback: async () => {
@@ -78730,7 +78891,7 @@ class ThinkPlugin extends obsidian.Plugin {
       callback: async () => {
         try {
           new obsidian.Notice("思考系统：正在重建索引...", 3e3);
-          await this.serviceManager.dataStore.clearCacheAndRescan("full");
+          await traceThinkOperation("index.rebuild", () => this.serviceManager.dataStore.clearCacheAndRescan("full"), "commands");
           new obsidian.Notice("思考系统：索引重建完成", 3e3);
         } catch (e2) {
           new obsidian.Notice(`思考系统：索引重建失败 - ${e2?.message || e2}`, 5e3);
@@ -78741,6 +78902,7 @@ class ThinkPlugin extends obsidian.Plugin {
       id: "think-open-ai-chat",
       name: "打开智能助手对话",
       callback: () => {
+        recordThinkDiagnostic("ai.open", void 0, void 0, "commands");
         this.capabilities.ai.openChat();
       }
     });
@@ -78754,7 +78916,7 @@ class ThinkPlugin extends obsidian.Plugin {
           ctaText: "开始"
         });
         if (!taskId) return;
-        await this.capabilities.timer.startOrResume(taskId.trim());
+        await traceThinkOperation("timer.start-resume", () => this.capabilities.timer.startOrResume(taskId.trim()), "timer");
       }
     });
     this.addCommand({
@@ -78767,7 +78929,7 @@ class ThinkPlugin extends obsidian.Plugin {
           new obsidian.Notice("没有找到可停止的计时器");
           return;
         }
-        await this.capabilities.timer.stopAndApply(active.id);
+        await traceThinkOperation("timer.stop-apply", () => this.capabilities.timer.stopAndApply(active.id), "timer");
       }
     });
   }
