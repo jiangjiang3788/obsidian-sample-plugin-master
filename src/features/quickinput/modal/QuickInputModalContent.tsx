@@ -7,6 +7,7 @@ import type { QuickInputEnergyCaptureRequest } from '../editor/QuickInputEditorM
 import { buildRecordSubmitFeedbackPresentation, dayjs } from '@core/utils/public';
 import type { RecordInputSource, RecordSubmitResult } from '@core/recordInput/public';
 import { QuickInputEditor, type QuickInputEditorState } from '../editor';
+import { readLatestQuickInputTextFields } from '../editor/fields/inputEvents';
 import { QuickInputConflictRecoveryPanel } from './QuickInputConflictRecoveryPanel';
 import { QuickInputModalFooter } from './QuickInputModalFooter';
 import { QuickInputModalHeader } from './QuickInputModalHeader';
@@ -35,6 +36,8 @@ export interface QuickInputModalContentProps {
   onSubmitSuccess?: (result: RecordSubmitResult, draft: QuickInputSaveData) => void | Promise<void>;
   showNotice: ShowQuickInputNotice;
   onOutsideClickCloseChange?: (enabled: boolean) => void;
+  onDiagnostic?: (action: string, durationMs: number, outcome: string) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 export function QuickInputModalContent({
   getResourcePath,
@@ -50,6 +53,8 @@ export function QuickInputModalContent({
   onSubmitSuccess,
   showNotice,
   onOutsideClickCloseChange,
+  onDiagnostic,
+  onDirtyChange,
 }: QuickInputModalContentProps) {
   const useCases = useUseCases();
   const dataStore = useDataStore();
@@ -87,6 +92,7 @@ export function QuickInputModalContent({
     templateSourceType: null,
   });
   const editorStateRef = useRef<QuickInputEditorState | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const isMobileLike = useMemo(() => isMobileLikeEnvironment(), []);
   const editIdentity = `${mode}:${editItem?.id ?? ''}`;
   const previousEditIdentityRef = useRef(editIdentity);
@@ -138,7 +144,23 @@ export function QuickInputModalContent({
     handleOriginalPointerClick,
     handleOriginalTouchEnd,
   } = useQuickInputOriginalNavigation({ mode, editItem, vaultName, showNotice });
-  const getCurrentState = useCallback(() => editorStateRef.current || editorState, [editorState]);
+  const getCurrentState = useCallback(() => {
+    const state = editorStateRef.current || editorState;
+    const latest = readLatestQuickInputTextFields(panelRef.current, state.formData);
+    if (!latest.changedKeys.length) return state;
+    // One final native-DOM reconciliation at the submission boundary covers
+    // WebViews which delay their last dictated input/change notification.
+    const reconciled: QuickInputEditorState = {
+      ...state,
+      formData: latest.formData,
+      fieldSources: {
+        ...state.fieldSources,
+        ...Object.fromEntries(latest.changedKeys.map((key) => [key, 'user' as const])),
+      },
+    };
+    editorStateRef.current = reconciled;
+    return reconciled;
+  }, [editorState]);
   const {
     pendingAction,
     isBusy,
@@ -164,11 +186,13 @@ export function QuickInputModalContent({
     isMobileLike,
     showNotice,
     taskSeriesEditIntent,
+    onDiagnostic,
   });
   const handleEditorStateChange = useCallback((state: QuickInputEditorState) => {
     editorStateRef.current = state;
     setEditorState(state);
-  }, []);
+    onDirtyChange?.(Object.values(state.fieldSources || {}).includes('user'));
+  }, [onDirtyChange]);
   const handleSkipRecurringTask = useCallback(async () => {
     const itemId = String(editItem?.id || '').trim();
     if (!itemId || isSkippingRecurringTask) return;
@@ -266,7 +290,7 @@ export function QuickInputModalContent({
     }
   }, [dataStore, isRescanningRecoveryPaths, recovery.paths, showNotice]);
   return (
-    <div class={`think-modal think-modal--quick-input${continuation ? '' : ' think-modal--quick-input-layout-stable'}`}>
+    <div ref={panelRef} class={`think-modal think-modal--quick-input${continuation ? '' : ' think-modal--quick-input-layout-stable'}`}>
       <QuickInputModalHeader
         operationMode={operationMode}
         currentRecordTypeName={currentRecordTypeName}

@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { App, Modal } from 'obsidian';
+import { App, Modal, Notice } from 'obsidian';
 
 import {
   createServices,
@@ -21,6 +21,7 @@ import { getRecordTypeById } from '@core/recordTypes/public';
 import { prepareThinkModal } from './modalPreact';
 import { setupQuickInputKeyboardDetection } from './quickInputKeyboard';
 import { showQuickInputNotice } from './quickInputNotice';
+import { recordThinkDiagnostic } from '../ThinkDiagnostics';
 
 interface QuickInputEditOptions {
   mode?: 'create' | 'edit';
@@ -43,7 +44,9 @@ export class QuickInputModal extends Modal {
   private services: Services;
   private cleanupKeyboardDetection: (() => void) | null = null;
   private cleanupOutsideClickGuard: (() => void) | null = null;
+  private outsideClickGuardTimer: number | null = null;
   private outsideClickCloseEnabled = false;
+  private hasUnsavedDraft = false;
 
   constructor(
     app: App,
@@ -81,6 +84,10 @@ export class QuickInputModal extends Modal {
     // even when a voice keyboard or another command repeats the action later.
     if (QuickInputModal.activeModal && QuickInputModal.activeModal !== this
       && QuickInputModal.activeModal.getOpenSignature() === signature) return;
+    if (QuickInputModal.activeModal?.hasUnsavedDraft) {
+      new Notice('快捷输入中还有未保存的文字，请先保存或取消当前记录。');
+      return;
+    }
     if (signature === QuickInputModal.lastOpenSignature && now - QuickInputModal.lastOpenAt < 450) {
       return;
     }
@@ -116,6 +123,7 @@ export class QuickInputModal extends Modal {
   }
 
   onOpen() {
+    const openedAt = performance.now();
     const unavailable = this.getCreateAvailabilityFailure();
     if (unavailable) {
       this.services.uiPort.notice(unavailable);
@@ -154,6 +162,8 @@ export class QuickInputModal extends Modal {
         vaultName={getVaultName(this.app)}
         onSubmitSuccess={this.options?.onSubmitSuccess}
         showNotice={showQuickInputNotice}
+        onDiagnostic={(action, durationMs, outcome) => recordThinkDiagnostic(action, durationMs, outcome)}
+        onDirtyChange={(dirty) => { this.hasUnsavedDraft = dirty; }}
         onOutsideClickCloseChange={(enabled) => { this.outsideClickCloseEnabled = enabled; }}
       />,
       this.services,
@@ -161,18 +171,39 @@ export class QuickInputModal extends Modal {
 
     // ✅ 方法二：强制拦截遮罩层点击（所有版本通用，双保险）
     // 使用 setTimeout 确保 DOM 已完全挂载
-    setTimeout(() => {
+    this.outsideClickGuardTimer = window.setTimeout(() => {
+      this.outsideClickGuardTimer = null;
+      if (QuickInputModal.activeModal !== this) return;
       const bg = this.modalEl.closest('.modal-container')?.querySelector('.modal-bg');
       if (bg) {
+        let dismissedKeyboardOnPointerDown = false;
+        const handleOutsidePointerDown = (event: Event) => {
+          dismissedKeyboardOnPointerDown = false;
+          const active = document.activeElement;
+          if (!(active instanceof HTMLElement) || !this.contentEl.contains(active)) return;
+          if (!['INPUT', 'TEXTAREA'].includes(active.tagName) && !active.isContentEditable) return;
+          dismissedKeyboardOnPointerDown = true;
+          event.stopPropagation();
+          active.blur(); // commit IME; a backdrop tap must not abandon the draft
+        };
         const handleOutsideClick = (e: Event) => {
           e.stopPropagation();
           e.preventDefault();
+          if (dismissedKeyboardOnPointerDown) {
+            dismissedKeyboardOnPointerDown = false;
+            return;
+          }
           if (this.outsideClickCloseEnabled) this.close();
         };
+        bg.addEventListener('pointerdown', handleOutsidePointerDown, true);
         bg.addEventListener('click', handleOutsideClick, true);
-        this.cleanupOutsideClickGuard = () => bg.removeEventListener('click', handleOutsideClick, true);
+        this.cleanupOutsideClickGuard = () => {
+          bg.removeEventListener('pointerdown', handleOutsidePointerDown, true);
+          bg.removeEventListener('click', handleOutsideClick, true);
+        };
       }
     }, 0);
+    recordThinkDiagnostic('quickinput.open', performance.now() - openedAt);
   }
 
   private setupKeyboardDetection() {
@@ -183,13 +214,17 @@ export class QuickInputModal extends Modal {
   }
 
   onClose() {
+    recordThinkDiagnostic('quickinput.close');
     try {
+      if (this.outsideClickGuardTimer !== null) window.clearTimeout(this.outsideClickGuardTimer);
       this.cleanupOutsideClickGuard?.();
       this.cleanupKeyboardDetection?.();
     } finally {
       this.cleanupOutsideClickGuard = null;
+      this.outsideClickGuardTimer = null;
       this.cleanupKeyboardDetection = null;
       this.outsideClickCloseEnabled = false;
+      this.hasUnsavedDraft = false;
       if (QuickInputModal.activeModal === this) {
         QuickInputModal.activeModal = null;
       }

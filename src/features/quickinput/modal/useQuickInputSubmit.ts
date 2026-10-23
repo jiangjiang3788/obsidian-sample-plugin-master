@@ -46,6 +46,7 @@ export interface QuickInputSubmitControllerParams {
   isMobileLike: boolean;
   showNotice: ShowQuickInputNotice;
   taskSeriesEditIntent?: TaskSeriesEditIntent | null;
+  onDiagnostic?: (action: string, durationMs: number, outcome: string) => void;
 }
 
 export interface QuickInputSubmitController {
@@ -96,6 +97,7 @@ export function useQuickInputSubmitController({
   isMobileLike,
   showNotice,
   taskSeriesEditIntent,
+  onDiagnostic,
 }: QuickInputSubmitControllerParams): QuickInputSubmitController {
   const [pendingAction, setPendingAction] = useState<QuickInputPendingAction>(null);
   const [lastConflictResult, setLastConflictResult] = useState<RecordSubmitResult | null>(null);
@@ -137,12 +139,16 @@ export function useQuickInputSubmitController({
     if (submitTriggeredRef.current || pendingActionRef.current) return;
     if (!confirmConvertOperation(operationMode)) return;
     submitTriggeredRef.current = true;
+    const startedAt = performance.now();
+    let outcome = 'error';
 
     if (onSave && operationMode === 'create') {
       try {
         onSave(buildCreateDraft());
+        outcome = 'success';
         closeModal();
       } finally {
+        onDiagnostic?.('quickinput.submit.create', performance.now() - startedAt, outcome);
         resetSubmitGateSoon();
       }
       return;
@@ -182,6 +188,7 @@ export function useQuickInputSubmitController({
       });
 
       const feedbackResult = withOperationSuccessNotice(result, operationMode);
+      outcome = feedbackResult.status;
       rememberConflict(feedbackResult);
       const continuation = (feedbackResult.status === 'success' || feedbackResult.status === 'partial_success') && operationMode === 'create'
         ? feedbackResult.followUp?.continuation
@@ -234,6 +241,7 @@ export function useQuickInputSubmitController({
         showNotice(error?.message || getQuickInputFailureMessage(operationMode));
       }
     } finally {
+      onDiagnostic?.(`quickinput.submit.${operationMode}`, performance.now() - startedAt, outcome);
       pendingActionRef.current = null;
       setPendingAction(null);
       resetSubmitGateSoon();
@@ -255,6 +263,7 @@ export function useQuickInputSubmitController({
     source,
     useCases,
     taskSeriesEditIntent,
+    onDiagnostic,
   ]);
 
   const handleDelete = useCallback(async () => {

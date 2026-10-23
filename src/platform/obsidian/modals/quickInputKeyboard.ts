@@ -40,6 +40,22 @@ function isKeyboardInput(el: EventTarget | null): el is HTMLElement {
   return el.isContentEditable;
 }
 
+/** A blank-space tap changes focus, never the Record draft or Modal lifecycle. */
+export function shouldDismissQuickInputKeyboard(
+  target: EventTarget | null,
+  active: Element | null,
+  host: HTMLElement,
+): active is HTMLElement {
+  if (!isKeyboardInput(active) || !host.contains(active)) return false;
+  if (!(target instanceof Element) || !host.contains(target)) return false;
+  // A tap on a real control should keep its normal action (and any IME commit).
+  return !target.closest([
+    'input', 'textarea', 'select', 'button', 'a', 'label', 'summary',
+    '[contenteditable]', '[role="button"]', '[role="option"]', '[role="tab"]',
+    '[role="textbox"]', '[role="combobox"]', '[tabindex]:not([tabindex="-1"])',
+  ].join(','));
+}
+
 export function setupQuickInputKeyboardDetection(host: KeyboardDetectionHost): () => void {
   const { contentEl, modalEl } = host;
   let baselineViewportHeight = window.visualViewport?.height || window.innerHeight;
@@ -170,6 +186,12 @@ export function setupQuickInputKeyboardDetection(host: KeyboardDetectionHost): (
   };
 
   const handleFocusOut = () => scheduleTimeout(() => updateKeyboardState(), 60);
+  const dismissOnBlankPointer = (event: PointerEvent) => {
+    if (!shouldDismissQuickInputKeyboard(event.target, document.activeElement, modalEl)) return;
+    // Focusout/compositionend commit the final dictated text to the same draft.
+    // Do not preventDefault: that could suppress a WebKit IME commit.
+    (document.activeElement as HTMLElement).blur();
+  };
   const handleInput = (event: Event) => {
     if (isKeyboardInput(event.target)) scheduleVisibility();
   };
@@ -190,6 +212,7 @@ export function setupQuickInputKeyboardDetection(host: KeyboardDetectionHost): (
   }, 500);
 
   contentEl.addEventListener('focusin', handleFocusIn);
+  modalEl.addEventListener('pointerdown', dismissOnBlankPointer, true);
   contentEl.addEventListener('focusout', handleFocusOut);
   contentEl.addEventListener('input', handleInput, true);
   contentEl.addEventListener('compositionend', handleCompositionEnd, true);
@@ -206,6 +229,7 @@ export function setupQuickInputKeyboardDetection(host: KeyboardDetectionHost): (
   return () => {
     disposed = true;
     contentEl.removeEventListener('focusin', handleFocusIn);
+    modalEl.removeEventListener('pointerdown', dismissOnBlankPointer, true);
     contentEl.removeEventListener('focusout', handleFocusOut);
     contentEl.removeEventListener('input', handleInput, true);
     contentEl.removeEventListener('compositionend', handleCompositionEnd, true);

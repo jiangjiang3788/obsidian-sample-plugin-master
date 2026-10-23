@@ -19,16 +19,21 @@ export function QuickInputTextAreaValueFieldRenderer({
   const multiline = isTemplateMultiValueField(field);
   const displayValue = Array.isArray(value) ? value.join('\n') : String(value ?? '');
   const minHeight = dense ? 78 : 96;
+  const commitNativeValue = (event: Event) => onUpdate(field.key, readInputValue(event));
   return (
     <QuickInputFieldFrame label={field.label || field.key} required={field.required} textarea>
       <textarea
         className={dense ? 'think-native-input think-native-input--textarea think-qif-textarea think-qif-textarea--short is-dense' : 'think-native-input think-native-input--textarea think-qif-textarea think-qif-textarea--short'}
         value={displayValue}
+        data-quick-input-field-key={field.key}
         rows={dense ? 3 : 4}
         onInput={(event) => {
-          onUpdate(field.key, readInputValue(event));
+          commitNativeValue(event);
           setTextareaAutoHeight(event.currentTarget as HTMLTextAreaElement, minHeight);
         }}
+        onChange={commitNativeValue}
+        onCompositionEnd={commitNativeValue}
+        onBlur={commitNativeValue}
         onKeyDown={(event) => {
           event.stopPropagation();
           if (shouldSubmitShortcutEnter(event, isMobileLike)) {
@@ -55,13 +60,18 @@ export function QuickInputNativeFieldRenderer({
   const inputType = field.type === 'textarea' ? 'textarea' : field.type || 'text';
   const minHeight = dense ? 96 : 118;
   const shouldAutoFocus = autoFocusContent && getTemplateFieldSemantic(field) === 'body';
+  const commitNativeValue = (event: Event) => onUpdate(field.key, readInputValue(event));
   const commonProps = {
     className: inputType === 'textarea' ? (dense ? 'think-native-input think-native-input--textarea think-qif-textarea is-dense' : 'think-native-input think-native-input--textarea think-qif-textarea') : 'think-native-input',
     value: String(value || ''),
+    'data-quick-input-field-key': field.key,
     onInput: (event: Event) => {
-      onUpdate(field.key, readInputValue(event));
+      commitNativeValue(event);
       if (inputType === 'textarea') setTextareaAutoHeight(event.currentTarget as HTMLTextAreaElement, minHeight);
     },
+    onChange: commitNativeValue,
+    onCompositionEnd: commitNativeValue,
+    onBlur: commitNativeValue,
     onKeyDown: (event: KeyboardEvent) => {
       event.stopPropagation();
       if (inputType === 'textarea') {

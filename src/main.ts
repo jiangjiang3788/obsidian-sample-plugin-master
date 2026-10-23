@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import { assertSettingsLocationSafe } from '@/platform/obsidian/settingsLocationGuard';
+import { ThinkDiagnostics } from '@/platform/obsidian/ThinkDiagnostics';
 
 import { ensureReflectMetadata } from '@core/bootstrap/public';
 
@@ -56,6 +57,7 @@ export default class ThinkPlugin extends Plugin {
     private serviceManager!: ServiceManager;
     private capabilities!: Capabilities;
     private modalPort?: ModalPort;
+    private diagnostics?: ThinkDiagnostics;
 
     /**
      * [主流程] 插件启动入口
@@ -67,6 +69,8 @@ export default class ThinkPlugin extends Plugin {
     async onload(): Promise<void> {
         // Hot reload may preserve module state; every new plugin lifecycle must reactivate Vault IO.
         markActive();
+        this.diagnostics = new ThinkDiagnostics(this);
+        this.diagnostics.start();
         devLog('[ThinkPlugin][BOOT] onload entered');
         const stopMeasure = startMeasure('ThinkPlugin.onload');
 
@@ -130,6 +134,7 @@ export default class ThinkPlugin extends Plugin {
 
                 devLog('[ThinkPlugin][BOOT] after registerCommands');
                 const totalTime = stopMeasure();
+                this.diagnostics?.record('lifecycle', 'plugin', 'bootstrap', totalTime, 'success');
                 devLog(`[Think Plugin] 核心功能已加载完成 (总耗时: ${totalTime.toFixed(2)}ms)`);
             },
             'ThinkPlugin.onload',
@@ -144,6 +149,18 @@ export default class ThinkPlugin extends Plugin {
     private registerCommands(): void {
         // [恢复工具] 清空索引缓存并重新全量扫描
         // 主要用于修复：升级/重构后 cache 不一致导致 items=0 的情况。
+
+        this.addCommand({
+            id: 'think-export-performance-diagnostics',
+            name: '诊断：导出操作与卡顿报告（不含输入内容）',
+            callback: async () => {
+                try {
+                    await this.diagnostics?.exportReport();
+                } catch (error: unknown) {
+                    new Notice(`导出 Think OS 诊断失败：${error instanceof Error ? error.message : '未知错误'}`);
+                }
+            },
+        });
 
         this.addCommand({
             id: 'think-rebuild-index',
@@ -200,6 +217,7 @@ export default class ThinkPlugin extends Plugin {
     }
 
     onunload(): void {
+        this.diagnostics?.stop();
         this.serviceManager?.cleanup();
         resetDefaultAiHttpTransportFactory();
         // ServiceManager owns normal DI cleanup. Keep a fallback for failed partial bootstrap.

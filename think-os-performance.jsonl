@@ -1,0 +1,8 @@
+{"time":"2026-10-23T10:12:39.140Z","session":"mvkt9y5z-flxkui","platform":"windows","kind":"lifecycle","surface":"plugin","action":"start"}
+{"time":"2026-10-23T10:12:39.241Z","session":"mvkt9y5z-flxkui","platform":"windows","kind":"lifecycle","surface":"plugin","action":"bootstrap","durationMs":100,"outcome":"success"}
+{"time":"2026-10-23T10:12:44.379Z","session":"mvkt9y5z-flxkui","platform":"windows","kind":"long-task","surface":"webview","action":"main-thread","durationMs":83}
+{"time":"2026-10-23T10:12:45.394Z","session":"mvkt9y5z-flxkui","platform":"windows","kind":"long-task","surface":"webview","action":"main-thread","durationMs":719}
+{"time":"2026-10-23T10:12:46.803Z","session":"mvkt9y5z-flxkui","platform":"windows","kind":"interaction","surface":"dashboard","action":"scroll:div.think-viz-surface"}
+{"time":"2026-10-23T10:12:49.697Z","session":"mvkt9y5z-flxkui","platform":"windows","kind":"lifecycle","surface":"dashboard","action":"activate"}
+{"time":"2026-10-23T10:12:49.773Z","session":"mvkt9y5z-flxkui","platform":"windows","kind":"lifecycle","surface":"dashboard","action":"activate"}
+{"time":"2026-10-23T10:12:50.331Z","session":"mvkt9y5z-flxkui","platform":"windows","kind":"long-task","surface":"webview","action":"main-thread","durationMs":372}

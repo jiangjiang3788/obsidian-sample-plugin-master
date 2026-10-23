@@ -7,6 +7,7 @@ import type { PluginHost } from '@core/ports/public';
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { SettingsRoot } from './SettingsRoot';
 import { getGitHubDevBuildInfo, pullGitHubDevBuild } from './GitHubDevUpdater';
+import { recordThinkDiagnostic } from './ThinkDiagnostics';
 
 export const THINK_SETTINGS_VIEW_TYPE = 'think-os-settings-view';
 
@@ -31,6 +32,7 @@ export class ThinkSettingsView extends ItemView {
     }
 
     async onOpen(): Promise<void> {
+        const startedAt = performance.now();
         this.contentEl.empty();
         this.contentEl.addClass('think-settings-workspace-view');
         mountWithServices(
@@ -44,9 +46,11 @@ export class ThinkSettingsView extends ItemView {
             />,
             this.services,
         );
+        recordThinkDiagnostic('settings.open', performance.now() - startedAt, undefined, 'settings');
     }
 
     async onClose(): Promise<void> {
+        recordThinkDiagnostic('settings.close', undefined, undefined, 'settings');
         unmountPreact(this.contentEl);
         this.contentEl.empty();
     }

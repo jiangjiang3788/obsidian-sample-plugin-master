@@ -2008,6 +2008,238 @@ async function assertSettingsLocationSafe(app, pluginDirectory) {
     throw new Error(`settings_location_conflict: 当前读取 ${canonical}，但仅发现 ${legacy}。已停止初始化，原文件未改动。请备份两处文件并使用只读诊断确认，再显式导入；不要创建空配置。`);
   }
 }
+const MAX_LOG_BYTES = 1e6;
+const FLUSH_INTERVAL_MS = 15e3;
+const SCOPE_SELECTOR = ".think-quick-input-modal, .think-whiteboard-workspace-view, .think-settings-workspace-view, .think-os";
+function describeThinkControl(element) {
+  const control = element.closest('button, input, textarea, select, [role="button"], [role="tab"], [role="option"]') || element;
+  const tag = control.tagName.toLowerCase();
+  const className = Array.from(control.classList).find((value) => /^think-[a-z0-9_-]{1,64}$/.test(value));
+  return `${tag}${className ? `.${className}` : ""}`;
+}
+function getThinkSurface(target) {
+  if (!(target instanceof Element)) return null;
+  const scope = target.closest(SCOPE_SELECTOR);
+  if (!scope) return null;
+  if (scope.matches(".think-quick-input-modal")) return "quickinput";
+  if (scope.matches(".think-whiteboard-workspace-view") || scope.closest(".think-whiteboard-workspace-view")) return "whiteboard";
+  if (scope.matches(".think-settings-workspace-view, .think-os--settings") || scope.closest(".think-settings-workspace-view")) return "settings";
+  if (scope.matches(".think-os--layout") || scope.closest(".think-os--layout")) return "dashboard";
+  if (scope.matches(".think-floating-panel") || scope.closest(".think-floating-panel")) return "floating-panel";
+  return "think-ui";
+}
+function detectPlatform$1() {
+  const ua = navigator.userAgent || "";
+  if (/android/i.test(ua)) return "android";
+  if (/iphone|ipad|ipod/i.test(ua) || /macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return "ios";
+  if (/windows/i.test(ua)) return "windows";
+  if (/mac/i.test(ua)) return "macos";
+  if (/linux/i.test(ua)) return "linux";
+  return "other";
+}
+function summarizeThinkLatency(entries) {
+  const buckets = /* @__PURE__ */ new Map();
+  for (const item of entries) {
+    if (item.durationMs == null || !["response", "long-task", "lifecycle"].includes(item.kind)) continue;
+    const label = `${item.surface} / ${item.action}`;
+    const values2 = buckets.get(label) || [];
+    values2.push(item.durationMs);
+    buckets.set(label, values2);
+  }
+  return Array.from(buckets, ([action2, values2]) => {
+    values2.sort((a2, b2) => a2 - b2);
+    return { action: action2, count: values2.length, p95Ms: values2[Math.ceil(values2.length * 0.95) - 1], maxMs: values2[values2.length - 1] };
+  }).sort((a2, b2) => b2.p95Ms - a2.p95Ms).slice(0, 20);
+}
+let activeDiagnostics = null;
+function recordThinkDiagnostic(action2, durationMs2, outcome, surface = "quickinput") {
+  activeDiagnostics?.record("lifecycle", surface, action2, durationMs2, outcome);
+}
+class ThinkDiagnostics {
+  constructor(plugin) {
+    this.plugin = plugin;
+    const directory = plugin.manifest.dir || `${plugin.app.vault.configDir}/plugins/${plugin.manifest.id}`;
+    this.filePath = `${directory}/think-os-performance.jsonl`;
+  }
+  plugin;
+  session = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  platform = detectPlatform$1();
+  filePath;
+  pending = [];
+  writeQueue = Promise.resolve();
+  interval;
+  observer;
+  lastScrollAt = 0;
+  lastWriteWarningAt = 0;
+  running = false;
+  start() {
+    if (this.running) return;
+    this.running = true;
+    activeDiagnostics = this;
+    document.addEventListener("click", this.onInteraction, true);
+    document.addEventListener("input", this.onInteraction, true);
+    document.addEventListener("change", this.onInteraction, true);
+    document.addEventListener("compositionstart", this.onInteraction, true);
+    document.addEventListener("compositionend", this.onInteraction, true);
+    document.addEventListener("focusin", this.onInteraction, true);
+    document.addEventListener("keydown", this.onInteraction, true);
+    document.addEventListener("scroll", this.onInteraction, true);
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
+    this.plugin.registerEvent(this.plugin.app.workspace.on("active-leaf-change", (leaf) => {
+      const viewType = leaf?.view?.getViewType();
+      if (viewType === "think-os-settings-view") this.record("lifecycle", "settings", "activate");
+      else if (viewType === "think-os-whiteboard") this.record("lifecycle", "whiteboard", "activate");
+      else if (leaf?.view?.containerEl?.querySelector(".think-os--layout")) this.record("lifecycle", "dashboard", "activate");
+    }));
+    this.interval = window.setInterval(() => {
+      void this.flush();
+    }, FLUSH_INTERVAL_MS);
+    if (typeof PerformanceObserver !== "undefined") {
+      try {
+        this.observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (entry.duration < 50) continue;
+            const active = document.activeElement;
+            if (getThinkSurface(active) || document.querySelector(".think-quick-input-modal, .think-os--layout, .think-settings-workspace-view, .think-whiteboard-workspace-view")) {
+              this.record("long-task", "webview", "main-thread", entry.duration);
+            }
+          }
+        });
+        this.observer.observe({ entryTypes: ["longtask"] });
+      } catch {
+        this.observer?.disconnect();
+        this.observer = void 0;
+      }
+    }
+    this.record("lifecycle", "plugin", "start");
+  }
+  onVisibilityChange = () => {
+    if (document.visibilityState === "hidden") void this.flush();
+  };
+  onInteraction = (event) => {
+    const surface = getThinkSurface(event.target);
+    if (!surface || !(event.target instanceof Element)) return;
+    if (event.type === "scroll") {
+      const now2 = Date.now();
+      if (now2 - this.lastScrollAt < 700) return;
+      this.lastScrollAt = now2;
+    }
+    if (event.type === "keydown") {
+      const keyboard = event;
+      if (keyboard.repeat || !["Enter", "Escape", "Tab", "ArrowDown", "ArrowUp", " "].includes(keyboard.key)) return;
+    }
+    const action2 = `${event.type}:${describeThinkControl(event.target)}`;
+    this.record("interaction", surface, action2);
+    if (event.type !== "click" || typeof requestAnimationFrame !== "function") return;
+    const start2 = performance.now();
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (this.running) this.record("response", surface, action2, performance.now() - start2);
+    }));
+  };
+  record(kind, surface, action2, durationMs2, outcome) {
+    if (!this.running) return;
+    const safe = (value) => /^[a-z0-9_.:/ -]{1,110}$/i.test(value) ? value : "unknown";
+    const entry = {
+      time: (/* @__PURE__ */ new Date()).toISOString(),
+      session: this.session,
+      platform: this.platform,
+      kind,
+      surface: safe(surface),
+      action: safe(action2)
+    };
+    if (typeof durationMs2 === "number" && Number.isFinite(durationMs2)) entry.durationMs = Math.round(durationMs2);
+    if (outcome) entry.outcome = safe(outcome);
+    this.pending.push(entry);
+    if (this.pending.length > 2e3) this.pending.splice(0, this.pending.length - 2e3);
+  }
+  async flush() {
+    if (this.pending.length === 0) return this.writeQueue;
+    const batch = this.pending.splice(0);
+    const text2 = batch.map((entry) => JSON.stringify(entry)).join("\n") + "\n";
+    this.writeQueue = this.writeQueue.catch(() => void 0).then(async () => {
+      const adapter = this.plugin.app.vault.adapter;
+      const existing = await adapter.stat(this.filePath);
+      if (existing && existing.size + text2.length > MAX_LOG_BYTES) {
+        const previous = `${this.filePath}.old`;
+        if (await adapter.exists(previous)) await adapter.remove(previous);
+        await adapter.rename(this.filePath, previous);
+      }
+      const appendable = adapter;
+      if (!existing) {
+        await adapter.write(this.filePath, text2);
+      } else if (typeof appendable.append === "function" && await adapter.exists(this.filePath)) {
+        await appendable.append(this.filePath, text2);
+      } else {
+        const prior = await adapter.exists(this.filePath) ? await adapter.read(this.filePath) : "";
+        await adapter.write(this.filePath, prior + text2);
+      }
+    }).catch((error) => {
+      this.pending.unshift(...batch);
+      if (this.pending.length > 2e3) this.pending.splice(0, this.pending.length - 2e3);
+      if (Date.now() - this.lastWriteWarningAt >= 6e4) {
+        this.lastWriteWarningAt = Date.now();
+        console.warn("[Think OS diagnostics] Local diagnostic write failed", error);
+      }
+    });
+    return this.writeQueue;
+  }
+  async exportReport() {
+    this.record("lifecycle", "plugin", "export");
+    await this.flush();
+    const adapter = this.plugin.app.vault.adapter;
+    const previous = `${this.filePath}.old`;
+    const raw = `${await adapter.exists(previous) ? await adapter.read(previous) : ""}${await adapter.exists(this.filePath) ? await adapter.read(this.filePath) : ""}`;
+    const events2 = [];
+    for (const line2 of raw.split("\n")) {
+      if (!line2) continue;
+      try {
+        events2.push(JSON.parse(line2));
+      } catch {
+      }
+    }
+    const folder = "Think/diagnostics";
+    if (!await adapter.exists("Think")) await adapter.mkdir("Think");
+    if (!await adapter.exists(folder)) await adapter.mkdir(folder);
+    const timestamp2 = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+    const base = `${folder}/think-os-${timestamp2}`;
+    await adapter.write(`${base}.jsonl`, raw);
+    const rows = summarizeThinkLatency(events2);
+    const lines = [
+      "# Think OS 本地性能诊断",
+      "",
+      `- 设备：${this.platform}`,
+      `- 采集事件：${events2.length}（最近约 2 MB，日志滚动覆盖）`,
+      "- 只包含界面操作和时间；不包含笔记、语音、输入文字或文件路径。",
+      "- 点击响应：点击到下两帧的耗时，并不等于数据保存完成。",
+      "- 主线程长任务：WebView 全局耗时，不一定由 Think OS 引起。",
+      "",
+      "## 响应耗时 Top 20",
+      "",
+      "| 界面 / 操作 | 次数 | P95 (ms) | 最大 (ms) |",
+      "| --- | ---: | ---: | ---: |",
+      ...rows.map(({ action: action2, count, p95Ms, maxMs }) => `| ${action2} | ${count} | ${p95Ms} | ${maxMs} |`),
+      "",
+      `原始事件：[[${base}.jsonl]]`,
+      ""
+    ];
+    await adapter.write(`${base}.md`, lines.join("\n"));
+    new obsidian.Notice("Think OS 诊断已导出到 Think/diagnostics（报告与原始日志）");
+    return `${base}.md`;
+  }
+  stop() {
+    if (!this.running) return;
+    this.record("lifecycle", "plugin", "stop");
+    this.running = false;
+    if (activeDiagnostics === this) activeDiagnostics = null;
+    for (const type of ["click", "input", "change", "compositionstart", "compositionend", "focusin", "keydown", "scroll"]) {
+      document.removeEventListener(type, this.onInteraction, true);
+    }
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
+    if (this.interval !== void 0) window.clearInterval(this.interval);
+    this.observer?.disconnect();
+    void this.flush();
+  }
+}
 const DEFAULT_ACTION_META = {
   action: "unknown",
   source: "unknown"
@@ -47188,6 +47420,24 @@ function QuickInputHierarchyFieldRenderer({
 function readInputValue$1(event) {
   return String(event.currentTarget?.value ?? "");
 }
+function readLatestQuickInputTextFields(root, formData) {
+  if (!root) return { formData, changedKeys: [] };
+  let next2 = formData;
+  const changedKeys = [];
+  const controls = root.querySelectorAll(
+    'textarea[data-quick-input-field-key], input[type="text"][data-quick-input-field-key]'
+  );
+  controls.forEach((control) => {
+    const key = control.getAttribute("data-quick-input-field-key");
+    if (!key) return;
+    const storedValue = Array.isArray(next2[key]) ? next2[key].join("\n") : String(next2[key] ?? "");
+    if (control.value === storedValue) return;
+    if (next2 === formData) next2 = { ...formData };
+    next2[key] = control.value;
+    changedKeys.push(key);
+  });
+  return { formData: next2, changedKeys };
+}
 const pendingTextAreaResizes = /* @__PURE__ */ new WeakSet();
 function setTextareaAutoHeight(el, minHeight2) {
   if (!el || pendingTextAreaResizes.has(el)) return;
@@ -47538,16 +47788,21 @@ function QuickInputTextAreaValueFieldRenderer({
   const multiline = isTemplateMultiValueField(field);
   const displayValue = Array.isArray(value) ? value.join("\n") : String(value ?? "");
   const minHeight2 = dense ? 78 : 96;
+  const commitNativeValue = (event) => onUpdate(field.key, readInputValue$1(event));
   return /* @__PURE__ */ u2(QuickInputFieldFrame, { label: field.label || field.key, required: field.required, textarea: true, children: /* @__PURE__ */ u2(
     "textarea",
     {
       className: dense ? "think-native-input think-native-input--textarea think-qif-textarea think-qif-textarea--short is-dense" : "think-native-input think-native-input--textarea think-qif-textarea think-qif-textarea--short",
       value: displayValue,
+      "data-quick-input-field-key": field.key,
       rows: dense ? 3 : 4,
       onInput: (event) => {
-        onUpdate(field.key, readInputValue$1(event));
+        commitNativeValue(event);
         setTextareaAutoHeight(event.currentTarget, minHeight2);
       },
+      onChange: commitNativeValue,
+      onCompositionEnd: commitNativeValue,
+      onBlur: commitNativeValue,
       onKeyDown: (event) => {
         event.stopPropagation();
         if (shouldSubmitShortcutEnter(event, isMobileLike)) {
@@ -47572,13 +47827,18 @@ function QuickInputNativeFieldRenderer({
   const inputType = field.type === "textarea" ? "textarea" : field.type || "text";
   const minHeight2 = dense ? 96 : 118;
   const shouldAutoFocus = autoFocusContent && getTemplateFieldSemantic(field) === "body";
+  const commitNativeValue = (event) => onUpdate(field.key, readInputValue$1(event));
   const commonProps = {
     className: inputType === "textarea" ? dense ? "think-native-input think-native-input--textarea think-qif-textarea is-dense" : "think-native-input think-native-input--textarea think-qif-textarea" : "think-native-input",
     value: String(value || ""),
+    "data-quick-input-field-key": field.key,
     onInput: (event) => {
-      onUpdate(field.key, readInputValue$1(event));
+      commitNativeValue(event);
       if (inputType === "textarea") setTextareaAutoHeight(event.currentTarget, minHeight2);
     },
+    onChange: commitNativeValue,
+    onCompositionEnd: commitNativeValue,
+    onBlur: commitNativeValue,
     onKeyDown: (event) => {
       event.stopPropagation();
       if (inputType === "textarea") {
@@ -49127,9 +49387,8 @@ function QuickInputEditor({
   const initialFieldSource = recordInputMode === "create" ? "context" : "edit_backfill";
   const recordInputModeRef = A$1(recordInputMode);
   const resetIdentityRef = A$1({ initialRecordTypeId, context });
-  const [session, dispatchSession] = h(
-    reduceRecordInputSession,
-    initializeRecordInputSession({
+  const [session, setSession] = d(
+    () => initializeRecordInputSession({
       mode: recordInputMode,
       initialRecordTypeId,
       initialFormData: initialFormData ?? EMPTY_FORM_DATA,
@@ -49137,6 +49396,14 @@ function QuickInputEditor({
       initialSelection: deriveQuickInputInitialSelection(initialFormData, context)
     })
   );
+  const liveSessionRef = A$1(session);
+  liveSessionRef.current = session;
+  const applySession = (action2) => {
+    const next2 = reduceRecordInputSession(liveSessionRef.current, action2);
+    liveSessionRef.current = next2;
+    setSession(next2);
+    return next2;
+  };
   const {
     currentRecordTypeId,
     selectedGoalPath,
@@ -49150,7 +49417,7 @@ function QuickInputEditor({
     resetIdentityRef.current = { initialRecordTypeId, context };
     const modeForReset = recordInputModeRef.current;
     const sourceForReset = modeForReset === "create" ? "context" : "edit_backfill";
-    dispatchSession({
+    applySession({
       type: "reset",
       payload: {
         mode: modeForReset,
@@ -49163,7 +49430,7 @@ function QuickInputEditor({
   }, [initialRecordTypeId, context]);
   y(() => {
     recordInputModeRef.current = recordInputMode;
-    dispatchSession({ type: "setMode", mode: recordInputMode });
+    applySession({ type: "setMode", mode: recordInputMode });
   }, [recordInputMode]);
   const recordTypes = T$1(() => {
     if (recordInputMode !== "create") return getEffectiveRecordTypes();
@@ -49242,7 +49509,7 @@ function QuickInputEditor({
     if (!selectedPath) return;
     const stillVisible = goalOptions.some((option) => option.value === selectedPath);
     if (stillVisible) return;
-    dispatchSession({ type: "clearGoalContext" });
+    applySession({ type: "clearGoalContext" });
   }, [goalOptions, selectedGoal?.path, selectedGoalPath]);
   const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
   const currentGoalTitle = currentGoalPath ? currentGoalPath.split("/").filter(Boolean).pop() || currentGoalPath : null;
@@ -49272,8 +49539,8 @@ function QuickInputEditor({
     const hydrated = hydrateQuickInputTemplateDefaults({
       template,
       context,
-      current: formData,
-      fieldSources,
+      current: liveSessionRef.current.formData,
+      fieldSources: liveSessionRef.current.fieldSources,
       selectedGoal,
       currentGoalPath,
       currentGoalTitle,
@@ -49281,7 +49548,7 @@ function QuickInputEditor({
       timeDirection
     });
     if (!hydrated.changed) return;
-    dispatchSession({
+    applySession({
       type: "hydrateDefaults",
       formData: hydrated.formData,
       fieldSources: hydrated.fieldSources
@@ -49303,16 +49570,20 @@ function QuickInputEditor({
     fieldSources: sourceOverride
   });
   y(() => {
-    onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
+    const latest2 = liveSessionRef.current;
+    onStateChange?.(makeEditorState(latest2.formData, latest2.timeDirection, latest2.fieldSources));
   }, [currentRecordTypeId, effectiveRecordTypeId, selectedGoalPath, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, formData, timeDirection, template, displayTemplateId, displayTemplateSourceType, fieldSources]);
   const handleUpdateField = (key, value, isOptionObject2 = false) => {
-    const updated = applyQuickInputFieldUpdate({ formData, fieldSources, key, value, isOptionObject: isOptionObject2, timeDirection });
-    dispatchSession({
+    const latest2 = liveSessionRef.current;
+    if (!isOptionObject2 && latest2.formData[key] === value) return;
+    const updated = applyQuickInputFieldUpdate({ formData: latest2.formData, fieldSources: latest2.fieldSources, key, value, isOptionObject: isOptionObject2, timeDirection: latest2.timeDirection });
+    const next2 = applySession({
       type: "updateDraft",
       formData: updated.formData,
       fieldSources: updated.fieldSources,
       selectedGoalPath: updated.nextGoalPath !== void 0 ? updated.nextGoalPath : void 0
     });
+    onStateChange?.(makeEditorState(next2.formData, next2.timeDirection, next2.fieldSources));
   };
   const handleTimeDirectionChange = (nextDirection) => {
     const isTaskTimeForm = String(displayEffectiveRecordTypeId || currentRecordTypeId || "").replace(/^core\./, "") === "task";
@@ -49322,7 +49593,7 @@ function QuickInputEditor({
       nextDirection,
       timeFieldSet: isTaskTimeForm ? "task" : "legacy"
     });
-    dispatchSession({
+    applySession({
       type: "changeTimeDirection",
       timeDirection: updated.timeDirection,
       formData: updated.formData,
@@ -49331,11 +49602,11 @@ function QuickInputEditor({
   };
   const handleRecordTypeChange = (newRecordTypeId) => {
     if (newRecordTypeId === currentRecordTypeId || newRecordTypeId === currentEffectiveRecordTypeIdForTemplates) return;
-    dispatchSession({ type: "switchRecordType", recordTypeId: newRecordTypeId });
+    applySession({ type: "switchRecordType", recordTypeId: newRecordTypeId });
   };
   const handleSelectGoal = (option, source = "hierarchy") => {
     if (!option || !option.value) {
-      dispatchSession({ type: "clearGoalContext" });
+      applySession({ type: "clearGoalContext" });
       return;
     }
     const nextSelection = applyQuickInputGoalSelection({ formData, fieldSources, option });
@@ -49370,7 +49641,7 @@ function QuickInputEditor({
         }
       }
     }
-    dispatchSession({
+    applySession({
       type: "selectGoal",
       goalPath: nextSelection.goalPath,
       formData: nextFormData,
@@ -49761,7 +50032,8 @@ function useQuickInputSubmitController({
   livePersistencePlan,
   isMobileLike,
   showNotice,
-  taskSeriesEditIntent
+  taskSeriesEditIntent,
+  onDiagnostic
 }) {
   const [pendingAction, setPendingAction] = d(null);
   const [lastConflictResult, setLastConflictResult] = d(null);
@@ -49796,11 +50068,15 @@ function useQuickInputSubmitController({
     if (submitTriggeredRef.current || pendingActionRef.current) return;
     if (!confirmConvertOperation(operationMode)) return;
     submitTriggeredRef.current = true;
+    const startedAt = performance.now();
+    let outcome = "error";
     if (onSave && operationMode === "create") {
       try {
         onSave(buildCreateDraft());
+        outcome = "success";
         closeModal();
       } finally {
+        onDiagnostic?.("quickinput.submit.create", performance.now() - startedAt, outcome);
         resetSubmitGateSoon();
       }
       return;
@@ -49835,6 +50111,7 @@ function useQuickInputSubmitController({
         }));
       });
       const feedbackResult = withOperationSuccessNotice(result, operationMode);
+      outcome = feedbackResult.status;
       rememberConflict(feedbackResult);
       const continuation = (feedbackResult.status === "success" || feedbackResult.status === "partial_success") && operationMode === "create" ? feedbackResult.followUp?.continuation : void 0;
       const actionableContinuation = onContinuation ? continuation : void 0;
@@ -49874,6 +50151,7 @@ function useQuickInputSubmitController({
         showNotice(error?.message || getQuickInputFailureMessage(operationMode));
       }
     } finally {
+      onDiagnostic?.(`quickinput.submit.${operationMode}`, performance.now() - startedAt, outcome);
       pendingActionRef.current = null;
       setPendingAction(null);
       resetSubmitGateSoon();
@@ -49894,7 +50172,8 @@ function useQuickInputSubmitController({
     resetSubmitGateSoon,
     source,
     useCases,
-    taskSeriesEditIntent
+    taskSeriesEditIntent,
+    onDiagnostic
   ]);
   const handleDelete = q$1(async () => {
     if (pendingActionRef.current) return;
@@ -50087,7 +50366,9 @@ function QuickInputModalContent({
   vaultName,
   onSubmitSuccess,
   showNotice,
-  onOutsideClickCloseChange
+  onOutsideClickCloseChange,
+  onDiagnostic,
+  onDirtyChange
 }) {
   const useCases = useUseCases();
   const dataStore = useDataStore();
@@ -50125,6 +50406,7 @@ function QuickInputModalContent({
     templateSourceType: null
   });
   const editorStateRef = A$1(null);
+  const panelRef = A$1(null);
   const isMobileLike = T$1(() => isMobileLikeEnvironment(), []);
   const editIdentity = `${mode}:${editItem?.id ?? ""}`;
   const previousEditIdentityRef = A$1(editIdentity);
@@ -50166,7 +50448,21 @@ function QuickInputModalContent({
     handleOriginalPointerClick,
     handleOriginalTouchEnd
   } = useQuickInputOriginalNavigation({ mode, editItem, vaultName, showNotice });
-  const getCurrentState = q$1(() => editorStateRef.current || editorState, [editorState]);
+  const getCurrentState = q$1(() => {
+    const state = editorStateRef.current || editorState;
+    const latest2 = readLatestQuickInputTextFields(panelRef.current, state.formData);
+    if (!latest2.changedKeys.length) return state;
+    const reconciled = {
+      ...state,
+      formData: latest2.formData,
+      fieldSources: {
+        ...state.fieldSources,
+        ...Object.fromEntries(latest2.changedKeys.map((key) => [key, "user"]))
+      }
+    };
+    editorStateRef.current = reconciled;
+    return reconciled;
+  }, [editorState]);
   const {
     pendingAction,
     isBusy,
@@ -50191,12 +50487,14 @@ function QuickInputModalContent({
     livePersistencePlan,
     isMobileLike,
     showNotice,
-    taskSeriesEditIntent
+    taskSeriesEditIntent,
+    onDiagnostic
   });
   const handleEditorStateChange = q$1((state) => {
     editorStateRef.current = state;
     setEditorState(state);
-  }, []);
+    onDirtyChange?.(Object.values(state.fieldSources || {}).includes("user"));
+  }, [onDirtyChange]);
   const handleSkipRecurringTask = q$1(async () => {
     const itemId = String(editItem?.id || "").trim();
     if (!itemId || isSkippingRecurringTask) return;
@@ -50289,7 +50587,7 @@ function QuickInputModalContent({
       setIsRescanningRecoveryPaths(false);
     }
   }, [dataStore, isRescanningRecoveryPaths, recovery.paths, showNotice]);
-  return /* @__PURE__ */ u2("div", { class: `think-modal think-modal--quick-input${continuation ? "" : " think-modal--quick-input-layout-stable"}`, children: [
+  return /* @__PURE__ */ u2("div", { ref: panelRef, class: `think-modal think-modal--quick-input${continuation ? "" : " think-modal--quick-input-layout-stable"}`, children: [
     /* @__PURE__ */ u2(
       QuickInputModalHeader,
       {
@@ -50417,6 +50715,26 @@ function isKeyboardInput(el) {
   if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") return true;
   return el.isContentEditable;
 }
+function shouldDismissQuickInputKeyboard(target, active, host) {
+  if (!isKeyboardInput(active) || !host.contains(active)) return false;
+  if (!(target instanceof Element) || !host.contains(target)) return false;
+  return !target.closest([
+    "input",
+    "textarea",
+    "select",
+    "button",
+    "a",
+    "label",
+    "summary",
+    "[contenteditable]",
+    '[role="button"]',
+    '[role="option"]',
+    '[role="tab"]',
+    '[role="textbox"]',
+    '[role="combobox"]',
+    '[tabindex]:not([tabindex="-1"])'
+  ].join(","));
+}
 function setupQuickInputKeyboardDetection(host) {
   const { contentEl, modalEl } = host;
   let baselineViewportHeight = window.visualViewport?.height || window.innerHeight;
@@ -50518,6 +50836,10 @@ function setupQuickInputKeyboardDetection(host) {
     scheduleTimeout(() => updateKeyboardState(), 540);
   };
   const handleFocusOut = () => scheduleTimeout(() => updateKeyboardState(), 60);
+  const dismissOnBlankPointer = (event) => {
+    if (!shouldDismissQuickInputKeyboard(event.target, document.activeElement, modalEl)) return;
+    document.activeElement.blur();
+  };
   const handleInput = (event) => {
     if (isKeyboardInput(event.target)) scheduleVisibility();
   };
@@ -50536,6 +50858,7 @@ function setupQuickInputKeyboardDetection(host) {
     updateKeyboardState();
   }, 500);
   contentEl.addEventListener("focusin", handleFocusIn);
+  modalEl.addEventListener("pointerdown", dismissOnBlankPointer, true);
   contentEl.addEventListener("focusout", handleFocusOut);
   contentEl.addEventListener("input", handleInput, true);
   contentEl.addEventListener("compositionend", handleCompositionEnd, true);
@@ -50550,6 +50873,7 @@ function setupQuickInputKeyboardDetection(host) {
   return () => {
     disposed2 = true;
     contentEl.removeEventListener("focusin", handleFocusIn);
+    modalEl.removeEventListener("pointerdown", dismissOnBlankPointer, true);
     contentEl.removeEventListener("focusout", handleFocusOut);
     contentEl.removeEventListener("input", handleInput, true);
     contentEl.removeEventListener("compositionend", handleCompositionEnd, true);
@@ -50610,7 +50934,9 @@ class QuickInputModal extends obsidian.Modal {
   services;
   cleanupKeyboardDetection = null;
   cleanupOutsideClickGuard = null;
+  outsideClickGuardTimer = null;
   outsideClickCloseEnabled = false;
+  hasUnsavedDraft = false;
   getOpenSignature() {
     const context = this.context || {};
     return [
@@ -50630,6 +50956,10 @@ class QuickInputModal extends obsidian.Modal {
     const now2 = Date.now();
     const signature = this.getOpenSignature();
     if (QuickInputModal.activeModal && QuickInputModal.activeModal !== this && QuickInputModal.activeModal.getOpenSignature() === signature) return;
+    if (QuickInputModal.activeModal?.hasUnsavedDraft) {
+      new obsidian.Notice("快捷输入中还有未保存的文字，请先保存或取消当前记录。");
+      return;
+    }
     if (signature === QuickInputModal.lastOpenSignature && now2 - QuickInputModal.lastOpenAt < 450) {
       return;
     }
@@ -50657,6 +50987,7 @@ class QuickInputModal extends obsidian.Modal {
     return this.outsideClickCloseEnabled;
   }
   onOpen() {
+    const openedAt = performance.now();
     const unavailable = this.getCreateAvailabilityFailure();
     if (unavailable) {
       this.services.uiPort.notice(unavailable);
@@ -50694,6 +51025,10 @@ class QuickInputModal extends obsidian.Modal {
           vaultName: getVaultName(this.app),
           onSubmitSuccess: this.options?.onSubmitSuccess,
           showNotice: showQuickInputNotice,
+          onDiagnostic: (action2, durationMs2, outcome) => recordThinkDiagnostic(action2, durationMs2, outcome),
+          onDirtyChange: (dirty) => {
+            this.hasUnsavedDraft = dirty;
+          },
           onOutsideClickCloseChange: (enabled2) => {
             this.outsideClickCloseEnabled = enabled2;
           }
@@ -50701,18 +51036,39 @@ class QuickInputModal extends obsidian.Modal {
       ),
       this.services
     );
-    setTimeout(() => {
+    this.outsideClickGuardTimer = window.setTimeout(() => {
+      this.outsideClickGuardTimer = null;
+      if (QuickInputModal.activeModal !== this) return;
       const bg = this.modalEl.closest(".modal-container")?.querySelector(".modal-bg");
       if (bg) {
+        let dismissedKeyboardOnPointerDown = false;
+        const handleOutsidePointerDown = (event) => {
+          dismissedKeyboardOnPointerDown = false;
+          const active = document.activeElement;
+          if (!(active instanceof HTMLElement) || !this.contentEl.contains(active)) return;
+          if (!["INPUT", "TEXTAREA"].includes(active.tagName) && !active.isContentEditable) return;
+          dismissedKeyboardOnPointerDown = true;
+          event.stopPropagation();
+          active.blur();
+        };
         const handleOutsideClick = (e2) => {
           e2.stopPropagation();
           e2.preventDefault();
+          if (dismissedKeyboardOnPointerDown) {
+            dismissedKeyboardOnPointerDown = false;
+            return;
+          }
           if (this.outsideClickCloseEnabled) this.close();
         };
+        bg.addEventListener("pointerdown", handleOutsidePointerDown, true);
         bg.addEventListener("click", handleOutsideClick, true);
-        this.cleanupOutsideClickGuard = () => bg.removeEventListener("click", handleOutsideClick, true);
+        this.cleanupOutsideClickGuard = () => {
+          bg.removeEventListener("pointerdown", handleOutsidePointerDown, true);
+          bg.removeEventListener("click", handleOutsideClick, true);
+        };
       }
     }, 0);
+    recordThinkDiagnostic("quickinput.open", performance.now() - openedAt);
   }
   setupKeyboardDetection() {
     this.cleanupKeyboardDetection = setupQuickInputKeyboardDetection({
@@ -50721,13 +51077,17 @@ class QuickInputModal extends obsidian.Modal {
     });
   }
   onClose() {
+    recordThinkDiagnostic("quickinput.close");
     try {
+      if (this.outsideClickGuardTimer !== null) window.clearTimeout(this.outsideClickGuardTimer);
       this.cleanupOutsideClickGuard?.();
       this.cleanupKeyboardDetection?.();
     } finally {
       this.cleanupOutsideClickGuard = null;
+      this.outsideClickGuardTimer = null;
       this.cleanupKeyboardDetection = null;
       this.outsideClickCloseEnabled = false;
+      this.hasUnsavedDraft = false;
       if (QuickInputModal.activeModal === this) {
         QuickInputModal.activeModal = null;
       }
@@ -72380,6 +72740,7 @@ class ThinkSettingsView extends obsidian.ItemView {
     return "layout-dashboard";
   }
   async onOpen() {
+    const startedAt = performance.now();
     this.contentEl.empty();
     this.contentEl.addClass("think-settings-workspace-view");
     mountWithServices(
@@ -72396,8 +72757,10 @@ class ThinkSettingsView extends obsidian.ItemView {
       ),
       this.services
     );
+    recordThinkDiagnostic("settings.open", performance.now() - startedAt, void 0, "settings");
   }
   async onClose() {
+    recordThinkDiagnostic("settings.close", void 0, void 0, "settings");
     unmountPreact(this.contentEl);
     this.contentEl.empty();
   }
@@ -77314,11 +77677,14 @@ class ThinkWhiteboardView extends obsidian.ItemView {
     return "panels-top-left";
   }
   async onOpen() {
+    const startedAt = performance.now();
     this.contentEl.empty();
     this.contentEl.addClass("think-whiteboard-workspace-view");
     mountWithServices(this.contentEl, /* @__PURE__ */ u2(WhiteboardRoot, { app: this.plugin.app }), this.services);
+    recordThinkDiagnostic("whiteboard.open", performance.now() - startedAt, void 0, "whiteboard");
   }
   async onClose() {
+    recordThinkDiagnostic("whiteboard.close", void 0, void 0, "whiteboard");
     unmountPreact(this.contentEl);
     this.contentEl.empty();
   }
@@ -78284,6 +78650,7 @@ class ThinkPlugin extends obsidian.Plugin {
   serviceManager;
   capabilities;
   modalPort;
+  diagnostics;
   /**
    * [主流程] 插件启动入口
    * 1. 注册 DI / 平台适配器
@@ -78293,6 +78660,8 @@ class ThinkPlugin extends obsidian.Plugin {
    */
   async onload() {
     markActive();
+    this.diagnostics = new ThinkDiagnostics(this);
+    this.diagnostics.start();
     devLog("[ThinkPlugin][BOOT] onload entered");
     const stopMeasure = startMeasure("ThinkPlugin.onload");
     await safeAsync(
@@ -78332,6 +78701,7 @@ class ThinkPlugin extends obsidian.Plugin {
         this.registerCommands();
         devLog("[ThinkPlugin][BOOT] after registerCommands");
         const totalTime = stopMeasure();
+        this.diagnostics?.record("lifecycle", "plugin", "bootstrap", totalTime, "success");
         devLog(`[Think Plugin] 核心功能已加载完成 (总耗时: ${totalTime.toFixed(2)}ms)`);
       },
       "ThinkPlugin.onload",
@@ -78343,6 +78713,17 @@ class ThinkPlugin extends obsidian.Plugin {
     );
   }
   registerCommands() {
+    this.addCommand({
+      id: "think-export-performance-diagnostics",
+      name: "诊断：导出操作与卡顿报告（不含输入内容）",
+      callback: async () => {
+        try {
+          await this.diagnostics?.exportReport();
+        } catch (error) {
+          new obsidian.Notice(`导出 Think OS 诊断失败：${error instanceof Error ? error.message : "未知错误"}`);
+        }
+      }
+    });
     this.addCommand({
       id: "think-rebuild-index",
       name: "重建索引（清空缓存并重新扫描）",
@@ -78391,6 +78772,7 @@ class ThinkPlugin extends obsidian.Plugin {
     });
   }
   onunload() {
+    this.diagnostics?.stop();
     this.serviceManager?.cleanup();
     resetDefaultAiHttpTransportFactory();
     if (!this.serviceManager) instance.clearInstances();

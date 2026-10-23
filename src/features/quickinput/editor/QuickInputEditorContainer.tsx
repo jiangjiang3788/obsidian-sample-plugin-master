@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from 'preact';
-import { useEffect, useMemo, useReducer, useRef } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 
 import { selectSettings, useDataStore, useSelector } from '@/app/public';
 import { dayjs } from '@core/utils/public';
@@ -8,6 +8,7 @@ import { getTemplateFieldSemantic } from '@core/fields/public';
 import { getEffectiveRecordTypes, ENERGY_RECORD_TYPE_ID } from '@core/recordTypes/public';
 import { normalizeGoalPath, resolveDerivedPeriod, resolveTemplatePeriodPolicy } from '@core/goal/public';
 import { getCreateAvailableRecordTypes, initializeRecordInputSession, reduceRecordInputSession, resolveRecordGoalPath } from '@core/recordInput/public';
+import type { RecordInputSessionAction } from '@core/recordInput/public';
 import { QuickInputEditorView } from './QuickInputEditorView';
 import { resolveQuickInputRecordTypeRuntime, shouldRequireDirectGoalTemplateForQuickInput } from './quickInputRecordTypeModel';
 import { EnergyQuickCapturePanel } from './components/EnergyQuickCapturePanel';
@@ -64,8 +65,7 @@ export function QuickInputEditor({
   // Initialization already uses these props in useReducer. A second reset in
   // the first passive effect can erase text entered while the modal is opening.
   const resetIdentityRef = useRef({ initialRecordTypeId, context });
-  const [session, dispatchSession] = useReducer(
-    reduceRecordInputSession,
+  const [session, setSession] = useState(() =>
     initializeRecordInputSession({
       mode: recordInputMode,
       initialRecordTypeId,
@@ -74,6 +74,17 @@ export function QuickInputEditor({
       initialSelection: deriveQuickInputInitialSelection(initialFormData, context),
     }),
   );
+
+  // The reducer is the only draft owner. Apply it exactly once per event and
+  // publish the same revision synchronously to avoid stale IME/save reads.
+  const liveSessionRef = useRef(session);
+  liveSessionRef.current = session;
+  const applySession = (action: RecordInputSessionAction) => {
+    const next = reduceRecordInputSession(liveSessionRef.current, action);
+    liveSessionRef.current = next;
+    setSession(next);
+    return next;
+  };
 
   const {
     currentRecordTypeId,
@@ -90,7 +101,7 @@ export function QuickInputEditor({
     resetIdentityRef.current = { initialRecordTypeId, context };
     const modeForReset = recordInputModeRef.current;
     const sourceForReset = modeForReset === 'create' ? 'context' : 'edit_backfill';
-    dispatchSession({
+    applySession({
       type: 'reset',
       payload: {
         mode: modeForReset,
@@ -104,7 +115,7 @@ export function QuickInputEditor({
 
   useEffect(() => {
     recordInputModeRef.current = recordInputMode;
-    dispatchSession({ type: 'setMode', mode: recordInputMode });
+    applySession({ type: 'setMode', mode: recordInputMode });
   }, [recordInputMode]);
 
   const recordTypes = useMemo(() => {
@@ -212,7 +223,7 @@ export function QuickInputEditor({
     if (!selectedPath) return;
     const stillVisible = goalOptions.some((option) => option.value === selectedPath);
     if (stillVisible) return;
-    dispatchSession({ type: 'clearGoalContext' });
+    applySession({ type: 'clearGoalContext' });
   }, [goalOptions, selectedGoal?.path, selectedGoalPath]);
 
   const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
@@ -251,8 +262,8 @@ export function QuickInputEditor({
     const hydrated = hydrateQuickInputTemplateDefaults({
       template,
       context,
-      current: formData,
-      fieldSources,
+      current: liveSessionRef.current.formData,
+      fieldSources: liveSessionRef.current.fieldSources,
       selectedGoal,
       currentGoalPath,
       currentGoalTitle,
@@ -260,7 +271,7 @@ export function QuickInputEditor({
       timeDirection,
     });
     if (!hydrated.changed) return;
-    dispatchSession({
+    applySession({
       type: 'hydrateDefaults',
       formData: hydrated.formData,
       fieldSources: hydrated.fieldSources,
@@ -287,17 +298,23 @@ export function QuickInputEditor({
   });
 
   useEffect(() => {
-    onStateChange?.(makeEditorState(formData, timeDirection, fieldSources));
+    const latest = liveSessionRef.current;
+    onStateChange?.(makeEditorState(latest.formData, latest.timeDirection, latest.fieldSources));
   }, [currentRecordTypeId, effectiveRecordTypeId, selectedGoalPath, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, formData, timeDirection, template, displayTemplateId, displayTemplateSourceType, fieldSources]);
 
   const handleUpdateField = (key: string, value: any, isOptionObject = false) => {
-    const updated = applyQuickInputFieldUpdate({ formData, fieldSources, key, value, isOptionObject, timeDirection });
-    dispatchSession({
+    const latest = liveSessionRef.current;
+    if (!isOptionObject && latest.formData[key] === value) return;
+    const updated = applyQuickInputFieldUpdate({ formData: latest.formData, fieldSources: latest.fieldSources, key, value, isOptionObject, timeDirection: latest.timeDirection });
+    const next = applySession({
       type: 'updateDraft',
       formData: updated.formData,
       fieldSources: updated.fieldSources,
       selectedGoalPath: updated.nextGoalPath !== undefined ? updated.nextGoalPath : undefined,
     });
+    // Publish in this event turn. Save must not wait for a passive effect,
+    // particularly when iOS dictation commits on blur immediately before tap.
+    onStateChange?.(makeEditorState(next.formData, next.timeDirection, next.fieldSources));
   };
 
   const handleTimeDirectionChange = (nextDirection: TimeDirection) => {
@@ -308,7 +325,7 @@ export function QuickInputEditor({
       nextDirection,
       timeFieldSet: isTaskTimeForm ? 'task' : 'legacy',
     });
-    dispatchSession({
+    applySession({
       type: 'changeTimeDirection',
       timeDirection: updated.timeDirection,
       formData: updated.formData,
@@ -318,7 +335,7 @@ export function QuickInputEditor({
 
   const handleRecordTypeChange = (newRecordTypeId: string) => {
     if (newRecordTypeId === currentRecordTypeId || newRecordTypeId === currentEffectiveRecordTypeIdForTemplates) return;
-    dispatchSession({ type: 'switchRecordType', recordTypeId: newRecordTypeId });
+    applySession({ type: 'switchRecordType', recordTypeId: newRecordTypeId });
   };
 
   const handleSelectGoal = (
@@ -326,7 +343,7 @@ export function QuickInputEditor({
     source: 'hierarchy' | 'recent' = 'hierarchy',
   ) => {
     if (!option || !option.value) {
-      dispatchSession({ type: 'clearGoalContext' });
+      applySession({ type: 'clearGoalContext' });
       return;
     }
 
@@ -367,7 +384,7 @@ export function QuickInputEditor({
       }
     }
 
-    dispatchSession({
+    applySession({
       type: 'selectGoal',
       goalPath: nextSelection.goalPath,
       formData: nextFormData,

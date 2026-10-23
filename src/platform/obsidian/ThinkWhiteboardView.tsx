@@ -5,6 +5,7 @@ import type { WorkspaceLeaf } from 'obsidian';
 import type { PluginHost } from '@core/ports/public';
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { WhiteboardRoot } from '@features/whiteboard/public';
+import { recordThinkDiagnostic } from './ThinkDiagnostics';
 
 export const THINK_WHITEBOARD_VIEW_TYPE = 'think-os-whiteboard';
 
@@ -21,12 +22,15 @@ export class ThinkWhiteboardView extends ItemView {
   getIcon(): string { return 'panels-top-left'; }
 
   async onOpen(): Promise<void> {
+    const startedAt = performance.now();
     this.contentEl.empty();
     this.contentEl.addClass('think-whiteboard-workspace-view');
     mountWithServices(this.contentEl, <WhiteboardRoot app={this.plugin.app} />, this.services);
+    recordThinkDiagnostic('whiteboard.open', performance.now() - startedAt, undefined, 'whiteboard');
   }
 
   async onClose(): Promise<void> {
+    recordThinkDiagnostic('whiteboard.close', undefined, undefined, 'whiteboard');
     unmountPreact(this.contentEl);
     this.contentEl.empty();
   }
