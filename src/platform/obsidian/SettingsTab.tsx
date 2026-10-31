@@ -5,10 +5,12 @@ import { PluginSettingTab, App, Notice } from 'obsidian';
 import type { PluginHost } from '@core/ports/public';
 import { ThinkButton } from '@shared/ui/public';
 import { DevBuildUpdateControl, type DevBuildMeta } from '@features/settings/components/DevBuildUpdateControl';
+import { VikaReleaseUpdateControl, type VikaUpdateActions } from '@features/settings/components/VikaReleaseUpdateControl';
 import { getThinkDeviceProfileAttributes } from '@shared/utils/public';
 import { SettingsRoot } from './SettingsRoot';
 import { openThinkSettingsWorkspaceView } from './ThinkSettingsView';
 import { getGitHubDevBuildInfo, pullGitHubDevBuild } from './GitHubDevUpdater';
+import { vikaSettingsActions } from './VikaReleaseUpdater';
 import { recordThinkDiagnostic } from './ThinkDiagnostics';
 
 function SettingsLauncher({
@@ -16,17 +18,20 @@ function SettingsLauncher({
     onPullDevBuild,
     onInspectDevBuild,
     currentVersion,
+    vika,
 }: {
     onOpenWorkspace: () => void;
     onPullDevBuild: (preview?: DevBuildMeta | null) => Promise<DevBuildMeta>;
     onInspectDevBuild: () => Promise<DevBuildMeta>;
     currentVersion?: string;
+    vika: VikaUpdateActions;
 }) {
     const deviceProfileAttrs = getThinkDeviceProfileAttributes();
     return (
         <section className="think-os think-os--settings think-setting-root think-setting-root--launcher" {...deviceProfileAttrs}>
                 <h2 className="think-settings-launcher__title">思考系统控制台</h2>
                 <ThinkButton variant="primary" size="sm" onClick={onOpenWorkspace}>打开 思考系统控制台</ThinkButton>
+                <VikaReleaseUpdateControl actions={vika} />
                 <DevBuildUpdateControl currentVersion={currentVersion} onPullDevBuild={onPullDevBuild} onInspectDevBuild={onInspectDevBuild} />
         </section>
     );
@@ -50,6 +55,7 @@ export class SettingsTab extends PluginSettingTab {
             containerEl,
             <SettingsLauncher
                 currentVersion={this.plugin.manifest.version}
+                vika={vikaSettingsActions(this.plugin)}
                 onInspectDevBuild={() => getGitHubDevBuildInfo(this.plugin.manifest.id)}
                 onPullDevBuild={(preview) => pullGitHubDevBuild(this.plugin, preview)}
                 onOpenWorkspace={() => {

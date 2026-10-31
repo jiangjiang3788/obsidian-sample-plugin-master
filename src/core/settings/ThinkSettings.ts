@@ -8,6 +8,8 @@ import type { Group, Layout, ViewInstance } from '@/core/view/ViewConfig';
 import type { RecordTypeColorOverrides } from '@/core/recordTypes/color';
 
 export interface ThinkSettings {
+  /** Local Vika credential; persisted in canonical Think/data.json, never in the plugin package. */
+  vikaApiToken?: string;
   groups: Group[];
   viewInstances: ViewInstance[];
   layouts: Layout[];

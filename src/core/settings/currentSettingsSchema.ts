@@ -193,6 +193,7 @@ export function toCurrentThinkSettings(rawValue: unknown): ThinkSettings {
   // are intentionally not spread into runtime settings and cannot be re-persisted.
   const current: ThinkSettings = {
     ...DEFAULT_SETTINGS,
+    vikaApiToken: typeof raw.vikaApiToken === 'string' ? raw.vikaApiToken : '',
     groups: Array.isArray(partial.groups) ? partial.groups : [],
     viewInstances: sanitizedViews.viewInstances,
     layouts: sanitizedViews.layouts,

@@ -10,16 +10,19 @@ import {
 import { ThinkCheckbox } from '@shared/ui/public';
 import { RecordTypeColorSettingsSection } from './RecordTypeColorSettingsSection';
 import { DevBuildUpdateControl, type DevBuildMeta } from '../components/DevBuildUpdateControl';
+import { VikaReleaseUpdateControl, type VikaUpdateActions } from '../components/VikaReleaseUpdateControl';
 
 /** 通用设置：模块开关。Record Type 颜色设置在 1.6.0 Presentation Convergence 引入。 */
 export function GeneralSettings({
   currentVersion,
   onPullDevBuild,
   onInspectDevBuild,
+  vika,
 }: {
   currentVersion?: string;
   onPullDevBuild?: (preview?: DevBuildMeta | null) => Promise<DevBuildMeta>;
   onInspectDevBuild?: () => Promise<DevBuildMeta>;
+  vika?: VikaUpdateActions;
 } = {}) {
   const floatingTimerEnabled = useSelector(selectFloatingTimerEnabled);
   const devConsoleStackEnabled = useSelector(selectDevConsoleStackEnabled);
@@ -31,6 +34,7 @@ export function GeneralSettings({
       {onPullDevBuild ? (
         <section className="think-settings-section">
           <h2 className="think-settings-section__title">开发版更新</h2>
+          {vika ? <VikaReleaseUpdateControl actions={vika} /> : null}
           <DevBuildUpdateControl currentVersion={currentVersion} onPullDevBuild={onPullDevBuild} onInspectDevBuild={onInspectDevBuild} />
         </section>
       ) : null}

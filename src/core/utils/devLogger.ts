@@ -267,6 +267,11 @@ export function logSettingsWrite(
     if (m.debugStack) {
         emit('trace', ['[SETTINGS_WRITE stack]'], 'settings');
     }
-    emit('log', ['before:', safeStringify(before)], 'settings');
-    emit('log', ['after :', safeStringify(after)], 'settings');
+    // A user's Vika token lives in Think/data.json by choice; never echo it in debug logs.
+    const maskCredential = (value: unknown): unknown => value && typeof value === 'object'
+      ? { ...value, ...(typeof (value as { vikaApiToken?: unknown }).vikaApiToken === 'string'
+        ? { vikaApiToken: '[REDACTED]' } : {}) }
+      : value;
+    emit('log', ['before:', safeStringify(maskCredential(before))], 'settings');
+    emit('log', ['after :', safeStringify(maskCredential(after))], 'settings');
 }

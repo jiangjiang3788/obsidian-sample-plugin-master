@@ -1,25 +1,11 @@
-import { Notice, normalizePath, requestUrl } from 'obsidian';
+import { Notice, requestUrl } from 'obsidian';
+import { DEV_BUILD_FILES, installDevBuild, withDevBuildLock, type DevBuildFile, type DevBuildHost } from './DevBuildFiles';
 import { traceThinkOperation } from './ThinkDiagnostics';
 
 const GITHUB_OWNER = 'jiangjiang3788';
 const GITHUB_REPO = 'obsidian-sample-plugin-master';
 const GITHUB_BRANCH = 'main';
 const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
-const DEV_BUILD_FILES = ['main.js', 'styles.css', 'manifest.json'] as const;
-type DevBuildFile = (typeof DEV_BUILD_FILES)[number];
-
-// Both the settings UI and the command palette call this updater. Their
-// writes must not interleave: a rollback from one update could otherwise
-// overwrite the other update's successfully installed files.
-let installInProgress = false;
-
-interface VaultAdapterLike {
-  exists(path: string): Promise<boolean>;
-  read(path: string): Promise<string>;
-  write(path: string, data: string): Promise<void>;
-  remove?(path: string): Promise<void>;
-}
-
 /** A pinned GitHub revision, with push time only when verifiable. */
 export interface GitHubDevBuildInfo {
   remoteVersion: string;
@@ -53,10 +39,7 @@ export function formatGitHubDevRestartNotice(info: GitHubDevUpdateResult): strin
   return `Think OS 开发版下载完成\n版本：${info.remoteVersion}（${info.branch} · ${info.commitSha.slice(0, 7)}）\n${pushed}${committed}\n请完全退出并重新打开 Obsidian。`;
 }
 
-export interface GitHubDevUpdaterHost {
-  app: { vault: { configDir: string; adapter: VaultAdapterLike } };
-  manifest: { id: string };
-}
+export interface GitHubDevUpdaterHost extends DevBuildHost {}
 
 type GitHubHead = { sha: string; committedAt: string | null };
 
@@ -262,59 +245,6 @@ export async function getGitHubDevBuildInfo(expectedPluginId: string): Promise<G
   return traceThinkOperation('github.check', async () => infoAtHead(await readGitHubHead(), expectedPluginId), 'updates');
 }
 
-type Backups = Record<DevBuildFile, string | null>;
-
-async function readBackups(adapter: VaultAdapterLike, pluginDir: string): Promise<Backups> {
-  const entries = await Promise.all(DEV_BUILD_FILES.map(async (file) => {
-    const path = `${pluginDir}/${file}`;
-    return [file, await adapter.exists(path) ? await adapter.read(path) : null] as const;
-  }));
-  const backups = Object.fromEntries(entries) as Backups;
-  if (DEV_BUILD_FILES.some((file) => backups[file] === null) && !adapter.remove) {
-    throw new Error('本地插件文件缺失且存储不支持回滚删除，已停止覆盖');
-  }
-  return backups;
-}
-
-async function restoreBackups(
-  adapter: VaultAdapterLike, dir: string, backups: Backups, touched: DevBuildFile[],
-): Promise<string[]> {
-  const errors: string[] = [];
-  for (const file of [...touched].reverse()) {
-    try {
-      const path = `${dir}/${file}`;
-      if (backups[file] === null) await adapter.remove!(path);
-      else await adapter.write(path, backups[file]!);
-    } catch { errors.push(file); }
-  }
-  return errors;
-}
-
-/** Download+validate -> backup -> write+readback -> manifest LAST.
- * A failing write is included in the rollback list because adapters can leave
- * a partially written file before rejecting their Promise. */
-async function installPinnedFiles(
-  adapter: VaultAdapterLike, dir: string, downloaded: Record<DevBuildFile, string>,
-): Promise<void> {
-  const backups = await readBackups(adapter, dir);
-  const touched: DevBuildFile[] = [];
-  try {
-    for (const file of DEV_BUILD_FILES) {
-      touched.push(file);
-      const path = `${dir}/${file}`;
-      await adapter.write(path, downloaded[file]);
-      if (await adapter.read(path) !== downloaded[file]) {
-        throw new Error(`${file} 写入校验失败`);
-      }
-    }
-  } catch (error) {
-    const failed = await restoreBackups(adapter, dir, backups, touched);
-    const message = error instanceof Error ? error.message : String(error);
-    if (failed.length) throw new Error(`${message}；回滚 ${failed.join('、')} 失败，请从备份恢复`);
-    throw new Error(`${message}；已回滚到原版本`);
-  }
-}
-
 /** Normal update always rechecks main. Supplying a pinned preview explicitly
  * means "install this inspected SHA" (only from the separately labelled UI
  * fallback), never "this is the latest main". */
@@ -322,12 +252,7 @@ export async function pullGitHubDevBuild(
   host: GitHubDevUpdaterHost,
   pinnedPreview?: GitHubDevBuildInfo | null,
 ): Promise<GitHubDevUpdateResult> {
-  if (installInProgress) {
-    throw new Error('Think OS 开发版正在下载或安装，请勿重复操作');
-  }
-  installInProgress = true;
-  try {
-    return await traceThinkOperation('github.install', async () => {
+  return withDevBuildLock(() => traceThinkOperation('github.install', async () => {
       const pinned = pinnedPreview != null;
       if (pinned && !isCommitSha(pinnedPreview.commitSha)) {
         throw new Error('已检查版本 SHA 无效，已停止下载');
@@ -340,8 +265,7 @@ export async function pullGitHubDevBuild(
       if (pinned && manifest.version !== pinnedPreview.remoteVersion) {
         throw new Error('已检查版本与下载的 manifest.json 不一致，未覆盖本地文件');
       }
-      const pluginDir = normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
-      await installPinnedFiles(host.app.vault.adapter, pluginDir, downloaded);
+      await installDevBuild(host, downloaded);
 
       // Delay the optional API call until all files have been committed successfully.
       // It may fail or be rate limited; neither case invalidates the update.
@@ -373,8 +297,5 @@ export async function pullGitHubDevBuild(
         });
       }
       return installed;
-    }, 'updates');
-  } finally {
-    installInProgress = false;
-  }
+    }, 'updates'));
 }
