@@ -8,6 +8,8 @@
   overflow-x: auto;
   max-width: 100%;
   overscroll-behavior-x: contain;
+  /* Native vertical momentum; horizontal swipes use a JS axis lock. */
+  touch-action: pan-y;
   color: var(--think-text-primary);
   /* Timeline cells are interaction targets, never selectable article text. */
   user-select: none;
@@ -15,15 +17,14 @@
   -webkit-touch-callout: none;
 }
 
-/* A horizontal-only overflow element computes overflow-y:auto in WebKit.
- * Without a bounded height it can swallow vertical swipes without actually
- * scrolling. Give touch devices a real native two-axis scroller instead. */
+/* Provide a bounded vertical scroll region; axis-locked horizontal motion
+ * is separate, so a vertical swipe never drifts between day columns. */
 @media (hover: none) and (pointer: coarse) {
   .timeline-view-wrapper {
     max-height: 68vh;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x pan-y;
+    touch-action: pan-y;
   }
   @supports (height: 100dvh) {
     .timeline-view-wrapper { max-height: 68dvh; }
@@ -36,7 +37,7 @@ body.is-mobile .timeline-view-wrapper {
   max-height: 68vh;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
 }
 @supports (height: 100dvh) {
   body.is-mobile .timeline-view-wrapper { max-height: 68dvh; }
@@ -87,10 +88,9 @@ body.is-mobile .timeline-view-wrapper {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  /* Native one-finger scrolling remains enabled. A capturing, non-passive
-   * TouchEvent listener handles ONLY actual two-finger pinch zoom on WebKit.
-   * Long-press editing has exclusive ownership of one-finger range drags. */
-  touch-action: pan-x pan-y;
+  /* Vertical pan remains native; horizontal pan is axis-locked on the host.
+   * Long-press time editing owns the gesture after arming. */
+  touch-action: pan-y;
 }
 
 .day-column-body--touch-select-armed {
@@ -427,7 +427,7 @@ body.is-mobile .timeline-view-wrapper {
  * Native pan/pinch remains available before the long-press gesture is armed. */
 .timeline-task-block[data-timeline-editable="true"] {
   cursor: grab;
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -452,9 +452,9 @@ body.is-mobile .timeline-view-wrapper {
   position: absolute;
   inset-inline: 3px;
   z-index: calc(var(--think-z-raised) + 3);
-  height: 8px;
+  height: 12px;
   cursor: ns-resize;
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
 }
 
 .timeline-task-resize-handle::after {
@@ -470,9 +470,9 @@ body.is-mobile .timeline-view-wrapper {
   transition: opacity var(--think-duration-fast) var(--think-ease-standard);
 }
 
-.timeline-task-resize-handle--start { top: -3px; }
+.timeline-task-resize-handle--start { top: -5px; }
 .timeline-task-resize-handle--start::after { top: 3px; }
-.timeline-task-resize-handle--end { bottom: -3px; }
+.timeline-task-resize-handle--end { bottom: -5px; }
 .timeline-task-resize-handle--end::after { bottom: 3px; }
 
 .timeline-task-block:hover .timeline-task-resize-handle::after,
@@ -630,9 +630,14 @@ body.is-mobile .timeline-view-wrapper {
 .think-time-grid__label.is-last { transform: translateY(-100%); }
 
 
-/* Mobile editing follows a Calendar-style model: browsing first, controls after intent. */
+/* Desktop: show real boundary grips on hover/focus; touch: only after
+ * tapping to select or a deliberate long press. Never hide all desktop grips. */
 .timeline-task-block--edit-mode .timeline-task-resize-handle {
   display: block;
+}
+@media (hover: hover) and (pointer: fine) {
+  .timeline-task-block:hover .timeline-task-resize-handle,
+  .timeline-task-block:focus-within .timeline-task-resize-handle { display: block; }
 }
 
 .timeline-task-block:not(.timeline-task-block--edit-mode) .task-buttons {

@@ -91,6 +91,23 @@ describe('Timeline touch scope: pinch and edit are mutually exclusive', () => {
     expect(gesture.end(point())).toBeNull();
   });
 
+  it('exposes armed long-press state to axis lock, but not pending taps', () => {
+    const gesture = new TimelineTouchGesture(jest.fn());
+    const scope = new TimelineTouchScope();
+    scope.register({
+      pending: () => gesture.pending,
+      armed: () => gesture.armed,
+      dragging: () => gesture.dragging,
+      cancel: () => gesture.cancel(),
+    });
+    gesture.start(point(), 'move');
+    expect(scope.hasArmedEdit()).toBe(false);
+    jest.advanceTimersByTime(TIMELINE_TOUCH_POLICY.longPressMs);
+    expect(scope.hasArmedEdit()).toBe(true);
+    gesture.end(point());
+    expect(scope.hasArmedEdit()).toBe(false);
+  });
+
   it('an established time-range drag cancels on second finger WITHOUT turning into zoom', () => {
     const gesture = new TimelineTouchGesture(jest.fn());
     const scope = new TimelineTouchScope();

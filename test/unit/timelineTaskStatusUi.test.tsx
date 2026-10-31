@@ -147,6 +147,8 @@ describe('Timeline task lifecycle status UI', () => {
     expect(block?.getAttribute('title')).toContain('本次执行已完成任务');
 
     (block as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onOpenRecord).not.toHaveBeenCalled();
+    (block as HTMLElement).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     expect(onOpenRecord).toHaveBeenCalledWith(expect.objectContaining({ id: 'task-reopened' }));
 
     (block as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true, ctrlKey: true }));

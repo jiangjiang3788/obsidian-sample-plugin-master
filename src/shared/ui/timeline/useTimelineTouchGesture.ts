@@ -23,6 +23,7 @@ export function useTimelineTouchGesture<Mode extends string>(
     return scope.register({
       pending: () => controller.pending,
       dragging: () => controller.dragging,
+      armed: () => controller.armed,
       cancel: () => {
         const wasActive = controller.pending;
         controller.cancel();

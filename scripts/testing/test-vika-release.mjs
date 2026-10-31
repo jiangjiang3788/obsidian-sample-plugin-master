@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/** Direct 3-file Vika update: mocked network, real TypeScript updater and filesystem installer. */
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -10,104 +9,108 @@ import { webcrypto } from 'node:crypto';
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const temp = mkdtempSync(join(tmpdir(), 'vika-plain-files-'));
+const temp = mkdtempSync(join(tmpdir(), 'vika-slim-updater-'));
 try {
-  const dist = join(temp, 'compiled'); mkdirSync(dist);
-  for (const name of ['DevBuildInstaller', 'DevBuildFingerprint', 'VikaReleaseUpdater']) {
-    const source = readFileSync(join(root, `src/platform/obsidian/${name}.ts`), 'utf8');
-    const compiled = ts.transpileModule(source, { fileName: `${name}.ts`, compilerOptions: {
+  for (const name of ['DevBuildFiles', 'VikaUpdater']) {
+    const file = join(root, `src/platform/obsidian/${name}.ts`);
+    const js = ts.transpileModule(readFileSync(file, 'utf8'), { fileName: file, compilerOptions: {
       module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true,
     }, reportDiagnostics: true });
-    assert.equal(compiled.diagnostics?.filter(d => d.category === ts.DiagnosticCategory.Error).length, 0);
-    writeFileSync(join(dist, `${name}.js`), compiled.outputText);
+    assert.equal(js.diagnostics?.filter(d => d.category === ts.DiagnosticCategory.Error).length, 0);
+    writeFileSync(join(temp, `${name}.js`), js.outputText);
   }
-  writeFileSync(join(dist, 'ThinkDiagnostics.js'), 'exports.traceThinkOperation = async (_name, cb) => cb();');
-  mkdirSync(join(dist, 'node_modules/obsidian'), { recursive: true });
-  writeFileSync(join(dist, 'node_modules/obsidian/index.js'), `
-exports.normalizePath = path => path;
-exports.Notice = class { constructor(text){global.__vikaNotice = text;} };
-exports.requestUrl = async options => global.__vikaHttp(options);`);
-  mkdirSync(join(dist, 'node_modules/tsyringe'), { recursive: true });
-  writeFileSync(join(dist, 'node_modules/tsyringe/index.js'), 'exports.container = { resolve: () => global.__vikaRepo };');
-  mkdirSync(join(dist, 'node_modules/@core/services'), { recursive: true });
-  writeFileSync(join(dist, 'node_modules/@core/services/public.js'), 'exports.SettingsRepository = class {};');
+  writeFileSync(join(temp, 'ThinkDiagnostics.js'), 'exports.traceThinkOperation = async (_name, fn) => fn();');
+  mkdirSync(join(temp, 'node_modules/obsidian'), { recursive: true });
+  writeFileSync(join(temp, 'node_modules/obsidian/index.js'), `
+exports.normalizePath = p => p;
+exports.Notice = class { constructor(value){ global.__vikaNotice=value; } setMessage(value){global.__vikaNotice=value;} };
+exports.requestUrl = async opts => global.__vikaHttp(opts);
+exports.Modal = class { constructor(){this.modalEl={addClass: name => global.__vikaModalClass=name};this.contentEl={createEl:()=>{},empty:()=>{}};} open(){this.onOpen();} close(){this.onClose();} };
+exports.Setting = class {
+  constructor(){ } setName(){return this;}
+  addText(cb){cb({inputEl:{},setPlaceholder(){return this;},onChange(fn){global.__vikaEnterToken=fn; return this;}});return this;}
+  addButton(cb){cb({setButtonText(){return this;},setCta(){return this;},onClick(fn){global.__vikaSaveToken=fn;return this;}});return this;}
+};`);
+  mkdirSync(join(temp, 'node_modules/tsyringe'), { recursive: true });
+  writeFileSync(join(temp, 'node_modules/tsyringe/index.js'), 'exports.container = { resolve: () => global.__vikaRepo };');
+  mkdirSync(join(temp, 'node_modules/@core/services'), { recursive: true });
+  writeFileSync(join(temp, 'node_modules/@core/services/public.js'), 'exports.SettingsRepository = class {};');
   if (!globalThis.crypto) globalThis.crypto = webcrypto;
-  const { contentBuildId } = require(join(dist, 'DevBuildFingerprint.js'));
-  const { installDevBuild, withDevBuildInstallLock } = require(join(dist, 'DevBuildInstaller.js'));
-  const { inspectVikaBuild, pullVikaBuild, saveVikaCredential, hasVikaCredential } = require(join(dist, 'VikaReleaseUpdater.js'));
-
+  const { buildFingerprint, installDevBuild, withDevBuildLock } = require(join(temp, 'DevBuildFiles.js'));
+  const { updateFromVika, openVikaTokenDialog } = require(join(temp, 'VikaUpdater.js'));
   const manifest = JSON.stringify({ id: 'think-os', version: '1.18.2', main: 'main.js', styles: 'styles.css' });
+  const main = 'console.log("new");'.repeat(130);
   const oldMain = 'console.log("old");'.repeat(130);
-  const newMain = 'console.log("new");'.repeat(130);
-  const oldCss = '.think-os{color:red}'.repeat(30);
-  const newCss = '.think-os{color:blue}'.repeat(30);
-  const cloud = { 'main.js': newMain, 'styles.css': newCss, 'manifest.json': manifest };
-  const id = await contentBuildId(cloud);
-  assert.notEqual(id, await contentBuildId({ ...cloud, 'main.js': oldMain }), 'main.js change triggers update');
-  assert.notEqual(id, await contentBuildId({ ...cloud, 'styles.css': oldCss }), 'CSS change triggers update');
-  let tokenSettings = { vikaApiToken: '', goalSettings: { goals: ['must-remain'] } };
-  global.__vikaRepo = { getSettings: () => tokenSettings, update: async callback => { callback(tokenSettings); } };
-  await saveVikaCredential('  MOCK-TOKEN  ');
-  assert.equal(hasVikaCredential(), true);
-  assert.equal(tokenSettings.vikaApiToken, 'MOCK-TOKEN');
-  assert.deepEqual(tokenSettings.goalSettings, { goals: ['must-remain'] }, 'other Think/data.json values retained');
-
+  const css = '.think-os { color: blue; }'.repeat(30);
+  const oldCss = '.think-os { color: red; }'.repeat(30);
+  const cloud = { 'main.js': main, 'styles.css': css, 'manifest.json': manifest };
+  const id = await buildFingerprint(cloud);
+  assert.notEqual(id, await buildFingerprint({ ...cloud, 'main.js': oldMain }));
+  assert.notEqual(id, await buildFingerprint({ ...cloud, 'styles.css': oldCss }));
+  let settingsData = { vikaApiToken: 'MOCK-TOKEN', goals: ['keep'] };
+  global.__vikaRepo = { getSettings: () => settingsData, update: async update => update(settingsData) };
+  openVikaTokenDialog({});
+  global.__vikaEnterToken('MOCK-NEW-TOKEN');
+  await global.__vikaSaveToken();
+  assert.equal(settingsData.vikaApiToken, 'MOCK-NEW-TOKEN');
+  assert.equal(global.__vikaModalClass, 'think-vika-token-modal');
+  assert.equal(global.__vikaNotice, undefined, 'token saved without success toast');
+  assert.deepEqual(settingsData.goals, ['keep'], 'token save preserves other data');
+  settingsData.vikaApiToken = 'MOCK-TOKEN';
   let row = { recordId: 'recT1234', fields: {
     '版本号': '1.18.2', '构建ID': id, '上传时间': 1793450000000,
     ...Object.fromEntries(Object.entries(cloud).map(([name, text]) => [name, [{
-      name, token: 'space/' + name, url: `https://s1.vika.cn/space/${name}`, size: Buffer.byteLength(text),
+      token:'space/'+name, url:`https://s1.vika.cn/space/${name}`, size:Buffer.byteLength(text),
     }]])),
   }};
-  let fileRequests = 0;
-  let corrupt = null;
-  global.__vikaHttp = async (opts) => {
+  let downloads = 0;
+  global.__vikaHttp = async opts => {
     const url = new URL(opts.url);
     if (url.hostname === 'vika.cn') {
       assert.equal(opts.headers.Authorization, 'Bearer MOCK-TOKEN');
-      return { status: 200, text: JSON.stringify({ code: 200, success: true, data: { records: [row] } }) };
+      return { status:200, text:JSON.stringify({code:200,success:true,data:{records:[row]}}) };
     }
     assert.equal(url.hostname, 's1.vika.cn');
-    assert.equal(opts.headers?.Authorization, undefined, 'no token passed to attachment CDN');
-    fileRequests++;
-    const name = decodeURIComponent(url.pathname.slice('/space/'.length));
-    const buffer = Buffer.from(corrupt === name ? cloud[name].replace('new', 'xxx') : cloud[name]);
-    return { status: 200, arrayBuffer: buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) };
+    assert.equal(opts.headers?.Authorization, undefined);
+    downloads++;
+    const name = url.pathname.slice('/space/'.length);
+    const bytes = Buffer.from(cloud[name]);
+    return { status:200, arrayBuffer:bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) };
   };
   const disk = new Map([
-    ['.obsidian/plugins/think-os/main.js', oldMain],
-    ['.obsidian/plugins/think-os/styles.css', oldCss],
-    ['.obsidian/plugins/think-os/manifest.json', manifest],
+    ['.obsidian/plugins/think-os/main.js',oldMain],
+    ['.obsidian/plugins/think-os/styles.css',oldCss],
+    ['.obsidian/plugins/think-os/manifest.json',manifest],
   ]);
   const adapter = {
-    exists: async p => disk.has(p), read: async p => disk.get(p),
-    write: async (p, value) => { disk.set(p, value); }, remove: async p => { disk.delete(p); },
+    exists:async p => disk.has(p), read:async p => disk.get(p),
+    write:async (p,t) => {disk.set(p,t);}, remove:async p => {disk.delete(p);},
   };
-  const host = { manifest: { id: 'think-os' }, app: { vault: { configDir: '.obsidian', adapter } } };
-  assert.equal((await inspectVikaBuild(host)).isNewBuild, true, 'changed JS/CSS update even if manifest version same');
-  assert.equal((await pullVikaBuild(host)).isNewBuild, true);
-  for (const [name, text] of Object.entries(cloud)) assert.equal(disk.get(`.obsidian/plugins/think-os/${name}`), text);
-  assert.equal(fileRequests, 3, 'download exactly three attachments');
-  assert.match(global.__vikaNotice, /完全退出/);
-  assert.equal((await inspectVikaBuild(host)).isNewBuild, false);
-  assert.equal((await pullVikaBuild(host)).isNewBuild, false);
-  assert.equal(fileRequests, 3, 'identical build skipped');
-
-  const failingAdapter = { ...adapter, write: async (p, value) => {
-    disk.set(p, value);
-    if (p.endsWith('styles.css') && value.includes('green')) throw new Error('disk full');
+  const host = { app:{vault:{configDir:'.obsidian',adapter}}, manifest:{id:'think-os'} };
+  assert.equal(await updateFromVika(host), true);
+  assert.equal(downloads, 3);
+  for (const [name,text] of Object.entries(cloud)) assert.equal(disk.get(`.obsidian/plugins/think-os/${name}`), text);
+  assert.equal(global.__vikaNotice, undefined, 'successful update does not show routine notices');
+  assert.equal(await updateFromVika(host), false);
+  assert.equal(downloads, 3, 'same files skip download even when version unchanged');
+  const altered = { ...cloud, 'main.js': main + '\n// modified' };
+  row = { ...row, fields: { ...row.fields, '构建ID': await buildFingerprint(altered) } };
+  await assert.rejects(updateFromVika(host), /云端文件校验失败/);
+  assert.equal(disk.get('.obsidian/plugins/think-os/main.js'), main);
+  const failureAdapter = { ...adapter, write:async (p,t) => {
+    disk.set(p,t); if (p.endsWith('styles.css') && t.includes('green')) throw Error('disk full');
   }};
-  await assert.rejects(installDevBuild({ ...host, app: { vault: { configDir: '.obsidian', adapter: failingAdapter } } }, {
-    ...cloud, 'main.js': newMain + '//change', 'styles.css': newCss.replace('blue', 'green'),
+  await assert.rejects(installDevBuild({ ...host, app:{vault:{configDir:'.obsidian', adapter:failureAdapter}} }, {
+    ...cloud, 'main.js':main+'//another', 'styles.css':css.replace(/blue/g,'green'),
   }), /已回滚/);
-  assert.equal(disk.get('.obsidian/plugins/think-os/main.js'), newMain, 'rollback restores old main.js');
-  assert.equal(disk.get('.obsidian/plugins/think-os/styles.css'), newCss, 'rollback restores old CSS');
-  await withDevBuildInstallLock(async () => {
-    await assert.rejects(withDevBuildInstallLock(async () => undefined), /正在下载或安装/);
-  });
-
-  const altered = { ...cloud, 'main.js': newMain + '\n// changed again' };
-  row = { ...row, fields: { ...row.fields, '构建ID': await contentBuildId(altered) } };
-  await assert.rejects(pullVikaBuild(host), /内容指纹不一致/);
-  assert.equal(disk.get('.obsidian/plugins/think-os/main.js'), newMain, 'invalid content cannot overwrite local');
-  console.log('PASS: 3 independent files + Think/data.json settings + same manifest version + skip + hash + rollback + lock');
-} finally { rmSync(temp, { recursive: true, force: true }); }
+  assert.equal(disk.get('.obsidian/plugins/think-os/main.js'), main);
+  assert.equal(disk.get('.obsidian/plugins/think-os/styles.css'), css);
+  await withDevBuildLock(async()=>assert.rejects(withDevBuildLock(async()=>undefined), /正在下载或安装/));
+  const control = readFileSync(join(root, 'src/features/settings/components/VikaUpdateControl.tsx'), 'utf8');
+  const entry = readFileSync(join(root, 'src/main.ts'), 'utf8');
+  assert(control.includes('维格表（Vika）更新'));
+  assert(!control.includes('GitHub'));
+  assert(!entry.includes('think-vika-update') && !entry.includes('think-vika-save-token'));
+  assert(!entry.includes('think-update-github-dev-build'));
+  console.log('PASS: Vika-only UI, no updater commands, token modal, hashes and rollback');
+} finally { rmSync(temp, { recursive:true, force:true }); }

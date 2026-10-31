@@ -17,7 +17,6 @@ const changedSources = [
   'src/platform/obsidian/ThinkDiagnostics.ts',
   'src/platform/obsidian/ObsidianVaultPort.ts',
   'src/platform/obsidian/ObsidianAiHttpTransport.ts',
-  'src/platform/obsidian/GitHubDevUpdater.ts',
   'src/platform/obsidian/modals/modalPreact.ts',
   'src/platform/obsidian/modals/CheckinManagerModal.tsx',
   'src/platform/obsidian/modals/AiTextPromptModal.tsx',

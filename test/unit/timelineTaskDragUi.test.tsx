@@ -122,11 +122,95 @@ describe('Timeline pointer gesture UI', () => {
     });
     expect(onOpenRecord).not.toHaveBeenCalled();
 
-    // The suppression is short-lived and Timeline's normal "click = edit" contract
-    // remains intact after the drag gesture has finished.
+    // A later single click only selects; explicit desktop double-click edits.
     nowSpy.mockReturnValue(1_351);
     await act(async () => {
       task.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(onOpenRecord).not.toHaveBeenCalled();
+    await act(async () => {
+      task.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    });
+    expect(onOpenRecord).toHaveBeenCalledTimes(1);
+  });
+
+  it('has both mouse resize grips before any click and commits start/end boundary drags', async () => {
+    const onUpdateTimelineRange = jest.fn().mockResolvedValue(undefined);
+    await act(async () => render(
+      <DayColumnBody
+        day="2026-08-26"
+        blocks={[taskBlock('task-resize')]}
+        hourHeight={60}
+        colorMap={{}}
+        maxHours={24}
+        onColumnClick={() => undefined}
+        onUpdateTimelineRange={onUpdateTimelineRange}
+      />, host,
+    ));
+    const column = host.querySelector('.day-column-body') as HTMLElement;
+    const task = host.querySelector('.timeline-task-block') as HTMLElement;
+    Object.defineProperty(column, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({ top: 0, left: 0, right: 100, bottom: 1440 }),
+    });
+    const startGrip = task.querySelector('.timeline-task-resize-handle--start') as HTMLElement;
+    const endGrip = task.querySelector('.timeline-task-resize-handle--end') as HTMLElement;
+    expect(startGrip).toBeTruthy();
+    expect(endGrip).toBeTruthy();
+    await act(async () => {
+      startGrip.dispatchEvent(pointerEvent('pointerdown', 60));
+      task.dispatchEvent(pointerEvent('pointermove', 75));
+      task.dispatchEvent(pointerEvent('pointerup', 75));
+    });
+    expect(onUpdateTimelineRange).toHaveBeenCalledWith({
+      target: { kind: 'task-range', recordId: 'task-resize' },
+      range: { start: '2026-08-26T01:15', end: '2026-08-26T01:30' },
+    });
+    await act(async () => {
+      endGrip.dispatchEvent(pointerEvent('pointerdown', 90));
+      task.dispatchEvent(pointerEvent('pointermove', 120));
+      task.dispatchEvent(pointerEvent('pointerup', 120));
+    });
+    expect(onUpdateTimelineRange).toHaveBeenCalledWith({
+      target: { kind: 'task-range', recordId: 'task-resize' },
+      range: { start: '2026-08-26T01:00', end: '2026-08-26T02:00' },
+    });
+    expect(onUpdateTimelineRange).toHaveBeenCalledTimes(2);
+  });
+
+  it('touch single-tap selects; two short taps edit exactly once without opening on swipe', async () => {
+    const onOpenRecord = jest.fn();
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(2_000);
+    await act(async () => render(
+      <DayColumnBody
+        day="2026-08-26"
+        blocks={[taskBlock('task-double-tap')]}
+        hourHeight={60}
+        colorMap={{}}
+        maxHours={24}
+        onColumnClick={() => undefined}
+        onOpenRecord={onOpenRecord}
+      />, host,
+    ));
+    const column = host.querySelector('.day-column-body') as HTMLElement;
+    const task = host.querySelector('.timeline-task-block') as HTMLElement;
+    Object.defineProperty(column, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({ top: 0, left: 0, right: 100, bottom: 1440 }),
+    });
+    await act(async () => {
+      task.dispatchEvent(touchEvent('touchstart', 70, 24));
+      task.dispatchEvent(touchEvent('touchend', 70, 24));
+      task.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(task.classList.contains('timeline-task-block--edit-mode')).toBe(true);
+    expect(onOpenRecord).not.toHaveBeenCalled();
+    nowSpy.mockReturnValue(2_180);
+    await act(async () => {
+      task.dispatchEvent(touchEvent('touchstart', 71, 26));
+      task.dispatchEvent(touchEvent('touchend', 71, 26));
+      task.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      task.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     });
     expect(onOpenRecord).toHaveBeenCalledTimes(1);
   });

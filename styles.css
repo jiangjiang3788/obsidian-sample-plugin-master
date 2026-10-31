@@ -1636,6 +1636,19 @@
   }
 }
 
+@media (max-width: 720px) {
+  .think-os.think-setting-root .think-settings-workspace { grid-template-columns: minmax(0, 1fr); }
+  .think-os.think-setting-root .think-settings-workspace__content { border-left: 0; }
+  .think-os.think-setting-root .think-settings-workspace__rail { position: static; padding: 0 0 var(--think-rhythm-related); }
+  .think-os.think-setting-root .think-settings-navigation--primary { display: flex; overflow-x: auto; }
+  .think-os.think-setting-root .think-settings-navigation--primary .think-settings-navigation__item { width: auto; flex: 0 0 auto; }
+  .think-os.think-setting-root .think-settings-navigation--primary .think-settings-navigation__item.is-active::before {
+    inset: auto var(--think-space-2) 0;
+    width: auto;
+    height: 2px;
+  }
+}
+
 /*
  * Shared rhythm and boundary contract.
  *
@@ -7002,6 +7015,8 @@ body.theme-dark .heatmap-cell.empty {
   overflow-x: auto;
   max-width: 100%;
   overscroll-behavior-x: contain;
+  /* Native vertical momentum; horizontal swipes use a JS axis lock. */
+  touch-action: pan-y;
   color: var(--think-text-primary);
   /* Timeline cells are interaction targets, never selectable article text. */
   user-select: none;
@@ -7009,16 +7024,15 @@ body.theme-dark .heatmap-cell.empty {
   -webkit-touch-callout: none;
 }
 
-/* A horizontal-only overflow element computes overflow-y:auto in WebKit.
- * Without a bounded height it can swallow vertical swipes without actually
- * scrolling. Give touch devices a real native two-axis scroller instead. */
+/* Provide a bounded vertical scroll region; axis-locked horizontal motion
+ * is separate, so a vertical swipe never drifts between day columns. */
 
 @media (hover: none) and (pointer: coarse) {
   .timeline-view-wrapper {
     max-height: 68vh;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x pan-y;
+    touch-action: pan-y;
   }
   @supports (height: 100dvh) {
     .timeline-view-wrapper { max-height: 68dvh; }
@@ -7032,7 +7046,7 @@ body.is-mobile .timeline-view-wrapper {
   max-height: 68vh;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
 }
 
 @supports (height: 100dvh) {
@@ -7082,10 +7096,9 @@ body.is-mobile .timeline-view-wrapper {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  /* Native one-finger scrolling remains enabled. A capturing, non-passive
-   * TouchEvent listener handles ONLY actual two-finger pinch zoom on WebKit.
-   * Long-press editing has exclusive ownership of one-finger range drags. */
-  touch-action: pan-x pan-y;
+  /* Vertical pan remains native; horizontal pan is axis-locked on the host.
+   * Long-press time editing owns the gesture after arming. */
+  touch-action: pan-y;
 }
 
 .day-column-body--touch-select-armed {
@@ -7431,7 +7444,7 @@ body.is-mobile .timeline-view-wrapper {
 
 .timeline-task-block[data-timeline-editable="true"] {
   cursor: grab;
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -7456,9 +7469,9 @@ body.is-mobile .timeline-view-wrapper {
   position: absolute;
   inset-inline: 3px;
   z-index: calc(var(--think-z-raised) + 3);
-  height: 8px;
+  height: 12px;
   cursor: ns-resize;
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
 }
 
 .timeline-task-resize-handle::after {
@@ -7474,11 +7487,11 @@ body.is-mobile .timeline-view-wrapper {
   transition: opacity var(--think-duration-fast) var(--think-ease-standard);
 }
 
-.timeline-task-resize-handle--start { top: -3px; }
+.timeline-task-resize-handle--start { top: -5px; }
 
 .timeline-task-resize-handle--start::after { top: 3px; }
 
-.timeline-task-resize-handle--end { bottom: -3px; }
+.timeline-task-resize-handle--end { bottom: -5px; }
 
 .timeline-task-resize-handle--end::after { bottom: 3px; }
 
@@ -7655,10 +7668,16 @@ body.is-mobile .timeline-view-wrapper {
 
 .think-time-grid__label.is-last { transform: translateY(-100%); }
 
-/* Mobile editing follows a Calendar-style model: browsing first, controls after intent. */
+/* Desktop: show real boundary grips on hover/focus; touch: only after
+ * tapping to select or a deliberate long press. Never hide all desktop grips. */
 
 .timeline-task-block--edit-mode .timeline-task-resize-handle {
   display: block;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .timeline-task-block:hover .timeline-task-resize-handle,
+  .timeline-task-block:focus-within .timeline-task-resize-handle { display: block; }
 }
 
 .timeline-task-block:not(.timeline-task-block--edit-mode) .task-buttons {
@@ -11378,6 +11397,41 @@ body.excel-view-is-resizing-column * {
   .modal.think-modal-host--medium,
   .modal.think-modal-host--large,
   .modal.think-modal-host--wide { width: calc(100vw - 16px); max-width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+}
+
+.modal.think-vika-token-modal { max-width: min(440px, calc(100vw - 24px)); }
+
+.modal.think-vika-token-modal .modal-content { min-width: 0; overflow-x: hidden; }
+
+.modal.think-vika-token-modal .setting-item { display: flex; flex-direction: column; align-items: stretch; gap: var(--size-4-2, 8px); min-width: 0; }
+
+.modal.think-vika-token-modal .setting-item-info,
+.modal.think-vika-token-modal .setting-item-control { flex: 0 1 auto; width: 100%; min-width: 0; }
+
+.modal.think-vika-token-modal .setting-item-control { display: flex; justify-content: flex-start; }
+
+.modal.think-vika-token-modal input[type="password"] {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-height: var(--input-height, 36px);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--input-radius, var(--radius-s));
+  background: var(--background-modifier-form-field, var(--background-primary));
+  color: var(--text-normal);
+  box-shadow: none;
+}
+
+.modal.think-vika-token-modal input[type="password"]:focus-visible {
+  border-color: var(--background-modifier-border-focus, var(--interactive-accent));
+  outline: 1px solid var(--interactive-accent);
+  outline-offset: 1px;
+}
+
+.modal.think-vika-token-modal .setting-item-control button { width: 100%; }
+
+@media (max-width: 600px) {
+  .modal.think-vika-token-modal input[type="password"] { font-size: max(16px, var(--font-ui-medium, 16px)); }
 }
 
 /* Quick Input: Obsidian modal is the only surface; nested Think structure stays flat. */

@@ -6,8 +6,7 @@ import type { WorkspaceLeaf } from 'obsidian';
 import type { PluginHost } from '@core/ports/public';
 import { createServices, type Services, mountWithServices, unmountPreact } from '@/app/public';
 import { SettingsRoot } from './SettingsRoot';
-import { getGitHubDevBuildInfo, pullGitHubDevBuild } from './GitHubDevUpdater';
-import { vikaSettingsActions } from './VikaReleaseUpdater';
+import { openVikaTokenDialog, updateFromVika } from './VikaUpdater';
 import { recordThinkDiagnostic } from './ThinkDiagnostics';
 
 export const THINK_SETTINGS_VIEW_TYPE = 'think-os-settings-view';
@@ -41,10 +40,10 @@ export class ThinkSettingsView extends ItemView {
             <SettingsRoot
                 app={this.plugin.app}
                 variant="workspace"
-                currentVersion={this.plugin.manifest.version}
-                vika={vikaSettingsActions(this.plugin)}
-                onInspectDevBuild={() => getGitHubDevBuildInfo(this.plugin.manifest.id)}
-                onPullDevBuild={(preview) => pullGitHubDevBuild(this.plugin, preview)}
+                vika={{
+                    configureToken: () => openVikaTokenDialog(this.plugin.app),
+                    update: () => updateFromVika(this.plugin),
+                }}
             />,
             this.services,
         );

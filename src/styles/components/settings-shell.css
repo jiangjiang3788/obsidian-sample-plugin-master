@@ -181,3 +181,16 @@
     padding: var(--think-rhythm-group) var(--think-rhythm-related);
   }
 }
+
+@media (max-width: 720px) {
+  .think-os.think-setting-root .think-settings-workspace { grid-template-columns: minmax(0, 1fr); }
+  .think-os.think-setting-root .think-settings-workspace__content { border-left: 0; }
+  .think-os.think-setting-root .think-settings-workspace__rail { position: static; padding: 0 0 var(--think-rhythm-related); }
+  .think-os.think-setting-root .think-settings-navigation--primary { display: flex; overflow-x: auto; }
+  .think-os.think-setting-root .think-settings-navigation--primary .think-settings-navigation__item { width: auto; flex: 0 0 auto; }
+  .think-os.think-setting-root .think-settings-navigation--primary .think-settings-navigation__item.is-active::before {
+    inset: auto var(--think-space-2) 0;
+    width: auto;
+    height: 2px;
+  }
+}

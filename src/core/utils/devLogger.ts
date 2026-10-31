@@ -267,7 +267,6 @@ export function logSettingsWrite(
     if (m.debugStack) {
         emit('trace', ['[SETTINGS_WRITE stack]'], 'settings');
     }
-    // A user's Vika token lives in Think/data.json by choice; never echo it in debug logs.
     const maskCredential = (value: unknown): unknown => value && typeof value === 'object'
       ? { ...value, ...(typeof (value as { vikaApiToken?: unknown }).vikaApiToken === 'string'
         ? { vikaApiToken: '[REDACTED]' } : {}) }

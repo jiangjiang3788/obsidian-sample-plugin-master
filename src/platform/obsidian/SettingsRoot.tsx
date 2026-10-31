@@ -5,8 +5,7 @@ import { getThinkDeviceProfileAttributes } from '@shared/utils/public';
 import { useLocalStorage } from '@shared/hooks/public';
 import { LOCAL_STORAGE_KEYS } from '@core/types/public';
 
-import type { DevBuildMeta } from '@features/settings/components/DevBuildUpdateControl';
-import type { VikaUpdateActions } from '@features/settings/components/VikaReleaseUpdateControl';
+import type { VikaUpdateActions } from '@features/settings/components/VikaUpdateControl';
 import { SettingsNavigation } from '@features/settings/components/SettingsNavigation';
 import { LayoutSettings } from '@features/settings/tabs/LayoutSettings';
 import { GeneralSettings } from '@features/settings/tabs/GeneralSettings';
@@ -46,17 +45,11 @@ function clampTabIndex(value: unknown): number {
 export function SettingsRoot({
     app,
     variant = 'workspace',
-    currentVersion,
-    onPullDevBuild,
-    onInspectDevBuild,
     vika,
 }: {
     app: App;
     variant?: 'settings-tab' | 'workspace';
-    currentVersion?: string;
-    onPullDevBuild?: (preview?: DevBuildMeta | null) => Promise<DevBuildMeta>;
-    onInspectDevBuild?: () => Promise<DevBuildMeta>;
-    vika?: VikaUpdateActions;
+    vika: VikaUpdateActions;
 }) {
     const deviceProfileAttrs = getThinkDeviceProfileAttributes();
     const [storedTabIndex, setStoredTabIndex] = useLocalStorage(SETTINGS_TABS_NO_QUICK_INPUT_KEY, 0);
@@ -78,7 +71,7 @@ export function SettingsRoot({
                 <main className="think-settings-workspace__content">
                     <TabPanel value={tabIndex} index={0}><DataManagementSettings /></TabPanel>
                     <TabPanel value={tabIndex} index={1}><LayoutSettings app={app} /></TabPanel>
-                    <TabPanel value={tabIndex} index={2}><GeneralSettings vika={vika} currentVersion={currentVersion} onPullDevBuild={onPullDevBuild} onInspectDevBuild={onInspectDevBuild} /></TabPanel>
+                    <TabPanel value={tabIndex} index={2}><GeneralSettings vika={vika} /></TabPanel>
                     <TabPanel value={tabIndex} index={3}><AiSettings /></TabPanel>
                 </main>
             </div>

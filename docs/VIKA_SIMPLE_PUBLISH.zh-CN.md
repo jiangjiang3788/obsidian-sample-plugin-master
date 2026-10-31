@@ -1,43 +1,38 @@
-# Think OS · 维格表发布，最简操作
+# Think OS 维格表更新
 
-不使用 GitHub Release、ZIP、Quicker，也不会在上传时偷偷重新构建。
+本地构建三个文件，维格表分别保存附件；不使用 ZIP 或 GitHub Release。
 
-## 首次使用（只做一次）
+## 发布
 
-1. 把此工程修改版合并到原始 Think OS 1.18.2 源码；在工程目录打开终端，运行 `npm ci`、`npm run build`。
-2. 把构建所得根目录的 `main.js`、`styles.css`、`manifest.json` 和源码提交、推送到原 GitHub 仓库的 `main` 分支（只用于过渡一次）。
-3. 旧版 Obsidian 使用原来的 GitHub 更新按钮下载安装，**完全重启 Obsidian**。
-4. 在 Obsidian 使用命令面板（Ctrl/Cmd+P），运行 **维格表：设置 API 令牌**，粘贴新令牌并保存。它会写进原有 Vault 的 `Think/data.json`，不会清空原有数据。
+在插件源码目录执行：
 
-## 每次发布到维格表
-
-在源码工程目录中：
-
-```bash
+```powershell
 npm run build
-npm run 检查:维格
 npm run 发布:维格
 ```
 
-如果你已自己构建或改过编译后的文件，**只运行最后一条命令即可**。它读取工程根目录三个现有文件，不再构建或生成 ZIP。`检查:维格` 只做本地检查，不上传。
+如果三个文件已经构建好，只需执行第二条命令。命令无报错退出就是发布成功，不打印正常运行日志。
 
-脚本会从你的 `Think/data.json` 取令牌，逐个上传三个文件到固定维格表，自动创建缺失的列，登记一条带有 **上传时间** 和 **构建ID** 的记录。同样的构建不会重复上传。只要 JS/CSS 变化，即使 manifest 版本号相同也会生成新构建ID。
-
-如果源码文件夹不在 Obsidian Vault 内，脚本可能找不到 Vault 里的 `Think/data.json`，这时使用：
+脚本会优先从当前插件所在 Obsidian 仓库的 `Think/data.json` 读取 `vikaApiToken`。源码不在仓库目录时，运行：
 
 ```powershell
-npm run 发布:维格 -- --data "D:\ObsidianVault\Think\data.json"
+npm run 发布:维格 -- --data "G:\vikahz\Think\data.json"
 ```
 
-把示例路径替换为你真实的 Vault 位置。以后在同一个终端设置 `THINK_DATA_JSON` 环境变量，也可以直接运行 `npm run 发布:维格`。
+仅在排查字段或接口问题时使用只读诊断：
 
-## 下载更新
+```powershell
+npm run 发布:维格 -- --diagnose
+```
 
-在另一台已完成过渡安装的 Obsidian 里，打开命令面板，选择 **维格表：下载并安装最新构建**，成功后完全退出并重启。新设备先运行 **维格表：设置 API 令牌**。
+## 下载
 
-## 注意事项
+Obsidian → 设置 → 第三方插件 → Think OS，或进入 Think OS 控制台 → 通用 → 云端更新。
 
-- API 令牌明文保存在 `Think/data.json`，如果同步 Vault 也可能同步过去。不要把该文件提交到 GitHub，也不要在日志中复制令牌。原对话中暴露过的令牌建议先撤销并换新。
-- 只修改 `manifest.json` 但未构建也可以发布，只要三个文件仍然是正确且匹配的插件文件。
-- 附件下载链接会变化；插件更新时会重新向维格表请求链接，下载校验未通过就不会覆盖本地文件。
-- V1 仅在本地模拟 API 及安装器测试过，未进行真实维格表上传、完整 npm 构建和 Obsidian 实机验证。
+在「维格表（Vika）更新」界面设置令牌并点击「从维格表下载最新构建」。不需要命令面板，不包含 GitHub 更新入口。
+
+同一个 `manifest.json` 版本号下，`main.js` 或 `styles.css` 只要发生变化也会识别为新构建。下载安装完成时按提示完全重启 Obsidian。下载、校验或写入失败时不会保留不完整文件。
+
+令牌存于 `Think/data.json`，不得提交到公开仓库。iOS、Android、桌面端使用同一下载界面，令牌输入框边框颜色继承 Obsidian 主题。
+
+首次安装或替换旧插件时，本地运行 `npm run build`，把生成的 `main.js`、`styles.css` 和 `manifest.json` 放进 Obsidian 的 Think OS 插件目录；重启生效后以后使用 Vika 更新即可。

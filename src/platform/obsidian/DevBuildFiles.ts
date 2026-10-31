@@ -1,4 +1,3 @@
-/** Shared by GitHub and Vika: file validation, stable build fingerprint, safe install. */
 import { normalizePath } from 'obsidian';
 
 export const DEV_BUILD_FILES = ['main.js', 'styles.css', 'manifest.json'] as const;
@@ -23,7 +22,6 @@ export async function withDevBuildLock<T>(work: () => Promise<T>): Promise<T> {
   finally { installing = false; }
 }
 
-/** Same hash format as publish-vika.mjs, regardless of manifest version. */
 export async function buildFingerprint(files: DevBuildContents): Promise<string> {
   if (!globalThis.crypto?.subtle) throw new Error('当前 Obsidian 无法进行 SHA-256 校验');
   const encoder = new TextEncoder();
@@ -58,7 +56,6 @@ export function validateDevBuild(files: DevBuildContents, expectedId: string): s
   return manifest.version.trim();
 }
 
-/** Only replace after all files have been checked. Restore partial writes on failure. */
 export async function installDevBuild(host: DevBuildHost, files: DevBuildContents): Promise<void> {
   validateDevBuild(files, host.manifest.id);
   const adapter = host.app.vault.adapter;
@@ -74,7 +71,7 @@ export async function installDevBuild(host: DevBuildHost, files: DevBuildContent
   const touched: DevBuildFile[] = [];
   try {
     for (const name of DEV_BUILD_FILES) {
-      touched.push(name); // also revert a write that partially succeeds then rejects
+      touched.push(name);
       const path = `${dir}/${name}`;
       await adapter.write(path, files[name]);
       if (await adapter.read(path) !== files[name]) throw new Error(`${name} 写入校验失败`);

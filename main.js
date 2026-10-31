@@ -1870,12 +1870,12 @@ class DurableJsonStore {
   queues = /* @__PURE__ */ new Map();
   observed = /* @__PURE__ */ new Map();
   queue(path) {
-    let queue2 = this.queues.get(path);
-    if (!queue2) {
-      queue2 = new SerialTaskQueue();
-      this.queues.set(path, queue2);
+    let queue = this.queues.get(path);
+    if (!queue) {
+      queue = new SerialTaskQueue();
+      this.queues.set(path, queue);
     }
-    return queue2;
+    return queue;
   }
   async readChecked(path) {
     const text2 = await this.files.readFile(path);
@@ -2051,8 +2051,8 @@ class BaseError extends Error {
   type;
   timestamp;
   context;
-  constructor(message2, type = ErrorType.UNKNOWN, context) {
-    super(message2);
+  constructor(message, type = ErrorType.UNKNOWN, context) {
+    super(message);
     this.name = this.constructor.name;
     this.type = type;
     this.timestamp = Date.now();
@@ -2062,33 +2062,33 @@ class BaseError extends Error {
   }
 }
 class NetworkError extends BaseError {
-  constructor(message2, context) {
-    super(message2, ErrorType.NETWORK, context);
+  constructor(message, context) {
+    super(message, ErrorType.NETWORK, context);
   }
 }
 class ValidationError extends BaseError {
-  constructor(message2, context) {
-    super(message2, ErrorType.VALIDATION, context);
+  constructor(message, context) {
+    super(message, ErrorType.VALIDATION, context);
   }
 }
 class PermissionError extends BaseError {
-  constructor(message2, context) {
-    super(message2, ErrorType.PERMISSION, context);
+  constructor(message, context) {
+    super(message, ErrorType.PERMISSION, context);
   }
 }
 class FileSystemError extends BaseError {
-  constructor(message2, context) {
-    super(message2, ErrorType.FILE_SYSTEM, context);
+  constructor(message, context) {
+    super(message, ErrorType.FILE_SYSTEM, context);
   }
 }
 class ServiceError extends BaseError {
-  constructor(message2, context) {
-    super(message2, ErrorType.SERVICE, context);
+  constructor(message, context) {
+    super(message, ErrorType.SERVICE, context);
   }
 }
 class PluginError extends BaseError {
-  constructor(message2, context) {
-    super(message2, ErrorType.PLUGIN, context);
+  constructor(message, context) {
+    super(message, ErrorType.PLUGIN, context);
   }
 }
 function classifyError(error) {
@@ -2098,17 +2098,17 @@ function classifyError(error) {
   if (error instanceof FileSystemError) return ErrorType.FILE_SYSTEM;
   if (error instanceof ServiceError) return ErrorType.SERVICE;
   if (error instanceof PluginError) return ErrorType.PLUGIN;
-  const message2 = error.message.toLowerCase();
-  if (message2.includes("network") || message2.includes("fetch") || message2.includes("timeout")) {
+  const message = error.message.toLowerCase();
+  if (message.includes("network") || message.includes("fetch") || message.includes("timeout")) {
     return ErrorType.NETWORK;
   }
-  if (message2.includes("permission") || message2.includes("access denied")) {
+  if (message.includes("permission") || message.includes("access denied")) {
     return ErrorType.PERMISSION;
   }
-  if (message2.includes("file") || message2.includes("path") || message2.includes("directory")) {
+  if (message.includes("file") || message.includes("path") || message.includes("directory")) {
     return ErrorType.FILE_SYSTEM;
   }
-  if (message2.includes("invalid") || message2.includes("validation")) {
+  if (message.includes("invalid") || message.includes("validation")) {
     return ErrorType.VALIDATION;
   }
   return ErrorType.UNKNOWN;
@@ -6765,7 +6765,7 @@ function buildEnergyDataQuality(items, options) {
   if (snapshots.length > 0 && exactRatio < 0.5) gaps.push(`精确时间仅 ${pct(exactRatio)}%`);
   if (pairedActivityCount < 3) gaps.push(`活动前后有效配对 ${pairedActivityCount}`);
   const levelLabel = level === "strong" ? "较可靠" : level === "usable" ? "可观察" : "数据不足";
-  const message2 = level === "strong" ? `本周期 ${sampledDays}/${totalDays} 天有记录（${pct(coverageRatio)}%），可以形成观察性模式；仍不把时间邻近关系当因果。` : level === "usable" ? `本周期 ${sampledDays}/${totalDays} 天有记录（${pct(coverageRatio)}%）；可以看趋势，但个人规律仍需更多重复样本。` : `本周期 ${sampledDays}/${totalDays || "—"} 天有记录；先把地图当作状态记录，不强行形成规律。`;
+  const message = level === "strong" ? `本周期 ${sampledDays}/${totalDays} 天有记录（${pct(coverageRatio)}%），可以形成观察性模式；仍不把时间邻近关系当因果。` : level === "usable" ? `本周期 ${sampledDays}/${totalDays} 天有记录（${pct(coverageRatio)}%）；可以看趋势，但个人规律仍需更多重复样本。` : `本周期 ${sampledDays}/${totalDays || "—"} 天有记录；先把地图当作状态记录，不强行形成规律。`;
   return {
     level,
     levelLabel,
@@ -6781,7 +6781,7 @@ function buildEnergyDataQuality(items, options) {
     pairedActivityCount,
     highConfidencePairCount,
     mediumConfidencePairCount,
-    message: message2,
+    message,
     gaps
   };
 }
@@ -8595,8 +8595,8 @@ const isImagePath = (value) => {
 const isHexColor = (value) => {
   return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value);
 };
-function getEffectiveHeatmapTemplate(settings2, recordTypeId) {
-  return settings2.recordTypes.find((block) => block.id === recordTypeId || block.recordTypeId === recordTypeId) ?? null;
+function getEffectiveHeatmapTemplate(settings, recordTypeId) {
+  return settings.recordTypes.find((block) => block.id === recordTypeId || block.recordTypeId === recordTypeId) ?? null;
 }
 function buildRatingMapping(inputSettings, recordTypeId) {
   const effectiveTemplate = getEffectiveHeatmapTemplate(inputSettings, recordTypeId);
@@ -8686,8 +8686,8 @@ function getLatestHeatmapVisualValue(items, ratingMapping) {
   const latestItemWithValue = [...items].reverse().find((item) => !!getHeatmapItemVisualValue(item, ratingMapping));
   return getHeatmapItemVisualValue(latestItemWithValue, ratingMapping);
 }
-function getEffectiveTemplate(settings2, recordTypeId) {
-  const configured = settings2.recordTypes || [];
+function getEffectiveTemplate(settings, recordTypeId) {
+  const configured = settings.recordTypes || [];
   const templates = [
     ...configured,
     ...DEFAULT_TEMPLATE_RECORD_TYPES.filter((block) => !configured.some((existing) => existing.id === block.id))
@@ -8888,13 +8888,13 @@ function getRecordConflictRecoveryAdvice(code) {
   }
 }
 function readRecordSubmitMessage(result, fallback) {
-  const message2 = result.errors?.[0]?.message || result.feedback?.notice || fallback;
+  const message = result.errors?.[0]?.message || result.feedback?.notice || fallback;
   if (result.status === "conflict") {
     const advice = getRecordConflictRecoveryAdvice(firstErrorCode(result));
-    return `记录冲突：${message2}
+    return `记录冲突：${message}
 ${advice}`;
   }
-  return message2;
+  return message;
 }
 function buildRecordSubmitFeedbackPresentation(result, fallbackErrorMessage = "操作失败") {
   if (result.status === "success") {
@@ -10822,8 +10822,8 @@ class ErrorHandler {
       return null;
     }
   }
-  showNotice(uiPort, message2, timeout) {
-    uiPort?.notice(message2, timeout);
+  showNotice(uiPort, message, timeout) {
+    uiPort?.notice(message, timeout);
   }
   addLogEntry(entry) {
     this.errorLogs.push(entry);
@@ -10913,8 +10913,8 @@ function finalizeLinkedTimeFields(data, keys, options = {}) {
 }
 class CancelledError extends Error {
   name = "CancelledError";
-  constructor(message2 = "Cancelled") {
-    super(message2);
+  constructor(message = "Cancelled") {
+    super(message);
   }
 }
 function createTakeLatest(label) {
@@ -11346,343 +11346,1147 @@ class ThinkDiagnostics {
     void this.flush();
   }
 }
-const DEV_BUILD_FILES$1 = ["main.js", "styles.css", "manifest.json"];
-let installing = false;
-async function withDevBuildLock(work) {
-  if (installing) throw new Error("Think OS 开发版正在下载或安装，请勿重复操作");
-  installing = true;
-  try {
-    return await work();
-  } finally {
-    installing = false;
+function ensureReflectMetadata() {
+  if (typeof Reflect === "undefined") {
+    devError("[ThinkPlugin] Reflect 对象未定义!");
+    throw new Error("Reflect object is not available");
+  }
+  if (typeof Reflect.getOwnMetadata !== "function") {
+    devError("[ThinkPlugin] Reflect.getOwnMetadata 方法不可用!");
+    devLog("[ThinkPlugin] 可用的 Reflect 方法:", Object.getOwnPropertyNames(Reflect));
+    throw new Error("Reflect.getOwnMetadata is not a function - reflect-metadata polyfill not properly loaded");
   }
 }
-async function buildFingerprint(files) {
-  if (!globalThis.crypto?.subtle) throw new Error("当前 Obsidian 无法进行 SHA-256 校验");
-  const encoder = new TextEncoder();
-  const parts = [encoder.encode("think-os-build-v1\0")];
-  for (const name of DEV_BUILD_FILES$1) {
-    const bytes = encoder.encode(files[name]);
-    parts.push(encoder.encode(`${name}\0${bytes.byteLength}\0`), bytes, encoder.encode("\0"));
-  }
-  const all = new Uint8Array(parts.reduce((total, bytes) => total + bytes.byteLength, 0));
-  let offset2 = 0;
-  for (const part of parts) {
-    all.set(part, offset2);
-    offset2 += part.byteLength;
-  }
-  const digest = await crypto.subtle.digest("SHA-256", all);
-  return Array.from(new Uint8Array(digest), (n2) => n2.toString(16).padStart(2, "0")).join("");
-}
-function validateDevBuild$1(files, expectedId) {
-  for (const name of DEV_BUILD_FILES$1) {
-    const text2 = files[name];
-    if (typeof text2 !== "string" || !text2.trim()) throw new Error(`${name} 内容为空`);
-    if (/^\s*<(?:!doctype|html)/i.test(text2)) throw new Error(`${name} 返回了网页内容`);
-  }
-  if (files["main.js"].length < 1e3 || files["styles.css"].length < 100) {
-    throw new Error("下载的插件文件大小异常，已停止覆盖");
-  }
-  let manifest;
-  try {
-    manifest = JSON.parse(files["manifest.json"]);
-  } catch {
-    throw new Error("远端 manifest.json 不是有效 JSON");
-  }
-  if (manifest.id !== expectedId) throw new Error(`远端插件 ID 不匹配：${String(manifest.id || "unknown")}`);
-  if (manifest.main && manifest.main !== "main.js") throw new Error("manifest.json main 字段异常");
-  if (manifest.styles && manifest.styles !== "styles.css") throw new Error("manifest.json styles 字段异常");
-  if (typeof manifest.version !== "string" || !manifest.version.trim()) throw new Error("manifest.json 版本号缺失");
-  return manifest.version.trim();
-}
-async function installDevBuild$1(host, files) {
-  validateDevBuild$1(files, host.manifest.id);
-  const adapter = host.app.vault.adapter;
-  const dir = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
-  const backups = {};
-  for (const name of DEV_BUILD_FILES$1) {
-    const path = `${dir}/${name}`;
-    backups[name] = await adapter.exists(path) ? await adapter.read(path) : null;
-  }
-  if (DEV_BUILD_FILES$1.some((name) => backups[name] === null) && !adapter.remove) {
-    throw new Error("本地文件缺失，当前存储不支持回滚删除，已停止更新");
-  }
-  const touched = [];
-  try {
-    for (const name of DEV_BUILD_FILES$1) {
-      touched.push(name);
-      const path = `${dir}/${name}`;
-      await adapter.write(path, files[name]);
-      if (await adapter.read(path) !== files[name]) throw new Error(`${name} 写入校验失败`);
-    }
-  } catch (error) {
-    const rollbackFailed = [];
-    for (const name of touched.reverse()) {
-      const path = `${dir}/${name}`;
-      try {
-        if (backups[name] === null) await adapter.remove(path);
-        else await adapter.write(path, backups[name]);
-      } catch {
-        rollbackFailed.push(name);
-      }
-    }
-    const reason = error instanceof Error ? error.message : String(error);
-    if (rollbackFailed.length) throw new Error(`${reason}；回滚 ${rollbackFailed.join("、")} 失败，请手动恢复备份`);
-    throw new Error(`${reason}；已回滚到原版本`);
-  }
-}
-const GITHUB_OWNER = "jiangjiang3788";
-const GITHUB_REPO = "obsidian-sample-plugin-master";
-const GITHUB_BRANCH = "main";
-const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
-function formatLocalGitHubTime(value) {
-  if (!value || !Number.isFinite(Date.parse(value))) return "暂不可用";
-  return new Date(value).toLocaleString("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  });
-}
-function formatGitHubDevRestartNotice(info) {
-  const pushed = info.githubPushedAt ? `GitHub 推送时间（本地）：${formatLocalGitHubTime(info.githubPushedAt)}` : "GitHub 推送时间：暂未查到该版本对应的推送记录";
-  const committed = !info.githubPushedAt && info.githubCommitAt ? `
-Git 提交时间（非推送时间）：${formatLocalGitHubTime(info.githubCommitAt)}` : "";
-  return `Think OS 开发版下载完成
-版本：${info.remoteVersion}（${info.branch} · ${info.commitSha.slice(0, 7)}）
-${pushed}${committed}
-请完全退出并重新打开 Obsidian。`;
-}
-const OPTIONAL_PUSH_TIME_WAIT_MS = 1200;
-function errorText(error) {
-  return error instanceof Error ? error.message : String(error);
-}
-function waitForPushTime(promise) {
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => resolve(null), OPTIONAL_PUSH_TIME_WAIT_MS);
-    void promise.then(
-      (value) => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      () => {
-        clearTimeout(timer);
-        resolve(null);
-      }
-    );
-  });
-}
-function isCommitSha(value) {
-  return typeof value === "string" && /^[0-9a-f]{40}$/i.test(value);
-}
-function validIsoTime(value) {
-  return typeof value === "string" && Number.isFinite(Date.parse(value)) ? new Date(value).toISOString() : null;
-}
-function rawFileUrl(file, revision) {
-  return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${revision}/${file}`;
-}
-class GitHubRequestError extends Error {
-  constructor(requestStage, httpStatus, message2) {
-    super(message2);
-    this.requestStage = requestStage;
-    this.httpStatus = httpStatus;
-    this.name = "GitHubRequestError";
-  }
-  requestStage;
-  httpStatus;
-}
-function responseHeader(response, name) {
-  return Object.entries(response.headers || {}).find(([key]) => key.toLowerCase() === name)?.[1];
-}
-function responseJson(response) {
-  if (typeof response.text === "string") return JSON.parse(response.text);
-  return response.json;
-}
-function describeHttpFailure(stage, operation, response) {
-  const status = response.status;
-  const remaining = responseHeader(response, "x-ratelimit-remaining");
-  const retryAfter = responseHeader(response, "retry-after");
-  const reset = Number(responseHeader(response, "x-ratelimit-reset"));
-  const resetTime = Number.isFinite(reset) && reset > 0 ? new Date(reset * 1e3).toLocaleString("zh-CN", { hour12: false }) : null;
-  let reason = "";
-  if (status === 403 || status === 429) {
-    if (remaining === "0") reason = resetTime ? `GitHub API 配额已用完，请在 ${resetTime} 后再试` : "GitHub API 配额已用完，请稍后重试";
-    else if (retryAfter) reason = `GitHub 要求等待 ${retryAfter} 秒后重试`;
-    else reason = "请求被拒绝，可能是访问限制、限流或网络代理问题";
-  } else if (status === 404) reason = "目标文件不存在或仓库未推送该构建产物";
-  let serverMessage = "";
-  try {
-    const message2 = responseJson(response)?.message;
-    if (typeof message2 === "string") serverMessage = message2.replace(/\s+/g, " ").slice(0, 160);
-  } catch {
-  }
-  const extra = [reason, serverMessage].filter(Boolean).join("；");
-  return new GitHubRequestError(
-    stage,
-    status,
-    `${operation} 失败：HTTP ${status}${extra ? `（${extra}）` : ""}；尚未覆盖本地文件`
+const AppToken = "App";
+const SettingsProviderToken = "SettingsProvider";
+var NOTHING = /* @__PURE__ */ Symbol.for("immer-nothing");
+var DRAFTABLE = /* @__PURE__ */ Symbol.for("immer-draftable");
+var DRAFT_STATE = /* @__PURE__ */ Symbol.for("immer-state");
+function die(error, ...args) {
+  throw new Error(
+    `[Immer] minified error nr: ${error}. Full error at: https://bit.ly/3cXEKWf`
   );
 }
-async function readGitHubHead() {
-  let response;
-  try {
-    response = await obsidian.requestUrl({
-      url: `${GITHUB_API}/commits/${GITHUB_BRANCH}`,
-      headers: { Accept: "application/vnd.github+json", "Cache-Control": "no-cache" },
-      throw: false
-    });
-  } catch (error) {
-    throw new GitHubRequestError(
-      "head",
-      null,
-      `获取 GitHub ${GITHUB_BRANCH} 最新提交失败（api.github.com）：${errorText(error)}；尚未覆盖本地文件`
-    );
-  }
-  if (response.status !== 200) {
-    throw describeHttpFailure("head", `获取 GitHub ${GITHUB_BRANCH} 最新提交（api.github.com）`, response);
-  }
-  let payload;
-  try {
-    payload = responseJson(response);
-  } catch {
-    throw new Error("GitHub 最新提交响应不是有效 JSON，已停止下载");
-  }
-  if (!isCommitSha(payload?.sha)) throw new Error("GitHub 未返回有效提交 SHA，已停止下载");
-  return { sha: payload.sha, committedAt: validIsoTime(payload?.commit?.committer?.date) };
+var getPrototypeOf = Object.getPrototypeOf;
+function isDraft(value) {
+  return !!value && !!value[DRAFT_STATE];
 }
-function findGitHubRevisionPushTime(events2, sha) {
-  if (!Array.isArray(events2) || !isCommitSha(sha)) return null;
-  for (const event of events2) {
-    if (event?.type === "PushEvent" && event?.payload?.ref === `refs/heads/${GITHUB_BRANCH}` && event?.payload?.head === sha) {
-      return validIsoTime(event.created_at);
+function isDraftable(value) {
+  if (!value)
+    return false;
+  return isPlainObject$2(value) || Array.isArray(value) || !!value[DRAFTABLE] || !!value.constructor?.[DRAFTABLE] || isMap(value) || isSet(value);
+}
+var objectCtorString = Object.prototype.constructor.toString();
+var cachedCtorStrings = /* @__PURE__ */ new WeakMap();
+function isPlainObject$2(value) {
+  if (!value || typeof value !== "object")
+    return false;
+  const proto2 = Object.getPrototypeOf(value);
+  if (proto2 === null || proto2 === Object.prototype)
+    return true;
+  const Ctor = Object.hasOwnProperty.call(proto2, "constructor") && proto2.constructor;
+  if (Ctor === Object)
+    return true;
+  if (typeof Ctor !== "function")
+    return false;
+  let ctorString = cachedCtorStrings.get(Ctor);
+  if (ctorString === void 0) {
+    ctorString = Function.toString.call(Ctor);
+    cachedCtorStrings.set(Ctor, ctorString);
+  }
+  return ctorString === objectCtorString;
+}
+function each(obj, iter, strict = true) {
+  if (getArchtype(obj) === 0) {
+    const keys = strict ? Reflect.ownKeys(obj) : Object.keys(obj);
+    keys.forEach((key) => {
+      iter(key, obj[key], obj);
+    });
+  } else {
+    obj.forEach((entry, index) => iter(index, entry, obj));
+  }
+}
+function getArchtype(thing) {
+  const state = thing[DRAFT_STATE];
+  return state ? state.type_ : Array.isArray(thing) ? 1 : isMap(thing) ? 2 : isSet(thing) ? 3 : 0;
+}
+function has(thing, prop) {
+  return getArchtype(thing) === 2 ? thing.has(prop) : Object.prototype.hasOwnProperty.call(thing, prop);
+}
+function set(thing, propOrOldValue, value) {
+  const t3 = getArchtype(thing);
+  if (t3 === 2)
+    thing.set(propOrOldValue, value);
+  else if (t3 === 3) {
+    thing.add(value);
+  } else
+    thing[propOrOldValue] = value;
+}
+function is(x2, y2) {
+  if (x2 === y2) {
+    return x2 !== 0 || 1 / x2 === 1 / y2;
+  } else {
+    return x2 !== x2 && y2 !== y2;
+  }
+}
+function isMap(target) {
+  return target instanceof Map;
+}
+function isSet(target) {
+  return target instanceof Set;
+}
+function latest$1(state) {
+  return state.copy_ || state.base_;
+}
+function shallowCopy(base, strict) {
+  if (isMap(base)) {
+    return new Map(base);
+  }
+  if (isSet(base)) {
+    return new Set(base);
+  }
+  if (Array.isArray(base))
+    return Array.prototype.slice.call(base);
+  const isPlain = isPlainObject$2(base);
+  if (strict === true || strict === "class_only" && !isPlain) {
+    const descriptors = Object.getOwnPropertyDescriptors(base);
+    delete descriptors[DRAFT_STATE];
+    let keys = Reflect.ownKeys(descriptors);
+    for (let i2 = 0; i2 < keys.length; i2++) {
+      const key = keys[i2];
+      const desc = descriptors[key];
+      if (desc.writable === false) {
+        desc.writable = true;
+        desc.configurable = true;
+      }
+      if (desc.get || desc.set)
+        descriptors[key] = {
+          configurable: true,
+          writable: true,
+          // could live with !!desc.set as well here...
+          enumerable: desc.enumerable,
+          value: base[key]
+        };
     }
+    return Object.create(getPrototypeOf(base), descriptors);
+  } else {
+    const proto2 = getPrototypeOf(base);
+    if (proto2 !== null && isPlain) {
+      return { ...base };
+    }
+    const obj = Object.create(proto2);
+    return Object.assign(obj, base);
   }
-  return null;
 }
-async function readGitHubPushTime(sha) {
-  try {
-    const response = await obsidian.requestUrl({
-      url: `${GITHUB_API}/events?per_page=100`,
-      headers: { Accept: "application/vnd.github+json" },
-      throw: false
+function freeze(obj, deep = false) {
+  if (isFrozen(obj) || isDraft(obj) || !isDraftable(obj))
+    return obj;
+  if (getArchtype(obj) > 1) {
+    Object.defineProperties(obj, {
+      set: dontMutateMethodOverride,
+      add: dontMutateMethodOverride,
+      clear: dontMutateMethodOverride,
+      delete: dontMutateMethodOverride
     });
-    if (response.status !== 200) return null;
-    return findGitHubRevisionPushTime(responseJson(response), sha);
-  } catch {
-    return null;
   }
+  Object.freeze(obj);
+  if (deep)
+    Object.values(obj).forEach((value) => freeze(value, true));
+  return obj;
 }
-function assertDownloadedFile(file, text2) {
-  if (!text2.trim()) throw new Error(`${file} 内容为空`);
-  if (/^\s*<(?:!doctype|html)/i.test(text2)) throw new Error(`${file} 返回了网页内容，而不是插件文件`);
-  if (file === "main.js" && text2.length < 1e3) throw new Error("main.js 内容异常，已停止覆盖");
-  if (file === "styles.css" && text2.length < 100) throw new Error("styles.css 内容异常，已停止覆盖");
+function dontMutateFrozenCollections() {
+  die(2);
 }
-function parseAndValidateManifest(text2, expectedPluginId) {
-  let manifest;
-  try {
-    manifest = JSON.parse(text2);
-  } catch {
-    throw new Error("远端 manifest.json 不是有效 JSON");
-  }
-  if (manifest?.id !== expectedPluginId) {
-    throw new Error(`远端插件 ID 不匹配：${String(manifest?.id || "unknown")}`);
-  }
-  if (manifest?.main && manifest.main !== "main.js") {
-    throw new Error(`远端 manifest main 字段异常：${String(manifest.main)}`);
-  }
-  if (manifest?.styles && manifest.styles !== "styles.css") {
-    throw new Error(`远端 manifest styles 字段异常：${String(manifest.styles)}`);
-  }
-  if (typeof manifest.version !== "string" || !manifest.version.trim()) {
-    throw new Error("远端版本号缺失，已停止覆盖");
-  }
-  return { version: manifest.version.trim() };
+var dontMutateMethodOverride = {
+  value: dontMutateFrozenCollections
+};
+function isFrozen(obj) {
+  if (obj === null || typeof obj !== "object")
+    return true;
+  return Object.isFrozen(obj);
 }
-async function readFileAtRevision(file, sha) {
-  let response;
-  try {
-    response = await obsidian.requestUrl({ url: rawFileUrl(file, sha), throw: false });
-  } catch (error) {
-    throw new GitHubRequestError(
-      "file",
-      null,
-      `下载 ${file}（${sha.slice(0, 7)}，raw.githubusercontent.com）失败：${errorText(error)}；尚未覆盖本地文件`
-    );
+var plugins = {};
+function getPlugin(pluginKey) {
+  const plugin = plugins[pluginKey];
+  if (!plugin) {
+    die(0, pluginKey);
   }
-  if (response.status !== 200) {
-    throw describeHttpFailure(
-      "file",
-      `下载 ${file}（${sha.slice(0, 7)}，raw.githubusercontent.com）`,
-      response
-    );
-  }
-  assertDownloadedFile(file, response.text);
-  return response.text;
+  return plugin;
 }
-async function downloadPinnedBuild(sha) {
-  const downloaded = {};
-  for (const file of DEV_BUILD_FILES$1) downloaded[file] = await readFileAtRevision(file, sha);
-  return downloaded;
+var currentScope;
+function getCurrentScope() {
+  return currentScope;
 }
-async function infoAtHead(head, expectedPluginId) {
-  const manifestText = await readFileAtRevision("manifest.json", head.sha);
+function createScope(parent_, immer_) {
   return {
-    remoteVersion: parseAndValidateManifest(manifestText, expectedPluginId).version,
-    branch: GITHUB_BRANCH,
-    githubPushedAt: null,
-    githubCommitAt: head.committedAt,
-    commitSha: head.sha
+    drafts_: [],
+    parent_,
+    immer_,
+    // Whenever the modified draft contains a draft from another scope, we
+    // need to prevent auto-freezing so the unowned draft can be finalized.
+    canAutoFreeze_: true,
+    unfinalizedDrafts_: 0
   };
 }
-async function getGitHubDevBuildInfo(expectedPluginId) {
-  return traceThinkOperation("github.check", async () => infoAtHead(await readGitHubHead(), expectedPluginId), "updates");
+function usePatchesInScope(scope, patchListener) {
+  if (patchListener) {
+    getPlugin("Patches");
+    scope.patches_ = [];
+    scope.inversePatches_ = [];
+    scope.patchListener_ = patchListener;
+  }
 }
-async function pullGitHubDevBuild(host, pinnedPreview) {
-  return withDevBuildLock(() => traceThinkOperation("github.install", async () => {
-    const pinned2 = pinnedPreview != null;
-    if (pinned2 && !isCommitSha(pinnedPreview.commitSha)) {
-      throw new Error("已检查版本 SHA 无效，已停止下载");
+function revokeScope(scope) {
+  leaveScope(scope);
+  scope.drafts_.forEach(revokeDraft);
+  scope.drafts_ = null;
+}
+function leaveScope(scope) {
+  if (scope === currentScope) {
+    currentScope = scope.parent_;
+  }
+}
+function enterScope(immer2) {
+  return currentScope = createScope(currentScope, immer2);
+}
+function revokeDraft(draft) {
+  const state = draft[DRAFT_STATE];
+  if (state.type_ === 0 || state.type_ === 1)
+    state.revoke_();
+  else
+    state.revoked_ = true;
+}
+function processResult(result, scope) {
+  scope.unfinalizedDrafts_ = scope.drafts_.length;
+  const baseDraft = scope.drafts_[0];
+  const isReplaced = result !== void 0 && result !== baseDraft;
+  if (isReplaced) {
+    if (baseDraft[DRAFT_STATE].modified_) {
+      revokeScope(scope);
+      die(4);
     }
-    const head = pinned2 ? { sha: pinnedPreview.commitSha, committedAt: pinnedPreview.githubCommitAt } : await readGitHubHead();
-    const downloaded = await downloadPinnedBuild(head.sha);
-    const manifest = parseAndValidateManifest(downloaded["manifest.json"], host.manifest.id);
-    if (pinned2 && manifest.version !== pinnedPreview.remoteVersion) {
-      throw new Error("已检查版本与下载的 manifest.json 不一致，未覆盖本地文件");
+    if (isDraftable(result)) {
+      result = finalize$1(scope, result);
+      if (!scope.parent_)
+        maybeFreeze(scope, result);
     }
-    await installDevBuild$1(host, downloaded);
-    const pushTimePromise = pinnedPreview?.githubPushedAt ? Promise.resolve(pinnedPreview.githubPushedAt) : readGitHubPushTime(head.sha);
-    const githubPushedAt = await waitForPushTime(pushTimePromise);
-    const installed = {
-      remoteVersion: manifest.version,
-      branch: GITHUB_BRANCH,
-      githubCommitAt: head.committedAt,
-      githubPushedAt,
-      commitSha: head.sha
+    if (scope.patches_) {
+      getPlugin("Patches").generateReplacementPatches_(
+        baseDraft[DRAFT_STATE].base_,
+        result,
+        scope.patches_,
+        scope.inversePatches_
+      );
+    }
+  } else {
+    result = finalize$1(scope, baseDraft, []);
+  }
+  revokeScope(scope);
+  if (scope.patches_) {
+    scope.patchListener_(scope.patches_, scope.inversePatches_);
+  }
+  return result !== NOTHING ? result : void 0;
+}
+function finalize$1(rootScope, value, path) {
+  if (isFrozen(value))
+    return value;
+  const useStrictIteration = rootScope.immer_.shouldUseStrictIteration();
+  const state = value[DRAFT_STATE];
+  if (!state) {
+    each(
+      value,
+      (key, childValue) => finalizeProperty(rootScope, state, value, key, childValue, path),
+      useStrictIteration
+    );
+    return value;
+  }
+  if (state.scope_ !== rootScope)
+    return value;
+  if (!state.modified_) {
+    maybeFreeze(rootScope, state.base_, true);
+    return state.base_;
+  }
+  if (!state.finalized_) {
+    state.finalized_ = true;
+    state.scope_.unfinalizedDrafts_--;
+    const result = state.copy_;
+    let resultEach = result;
+    let isSet2 = false;
+    if (state.type_ === 3) {
+      resultEach = new Set(result);
+      result.clear();
+      isSet2 = true;
+    }
+    each(
+      resultEach,
+      (key, childValue) => finalizeProperty(
+        rootScope,
+        state,
+        result,
+        key,
+        childValue,
+        path,
+        isSet2
+      ),
+      useStrictIteration
+    );
+    maybeFreeze(rootScope, result, false);
+    if (path && rootScope.patches_) {
+      getPlugin("Patches").generatePatches_(
+        state,
+        path,
+        rootScope.patches_,
+        rootScope.inversePatches_
+      );
+    }
+  }
+  return state.copy_;
+}
+function finalizeProperty(rootScope, parentState, targetObject, prop, childValue, rootPath2, targetIsSet) {
+  if (childValue == null) {
+    return;
+  }
+  if (typeof childValue !== "object" && !targetIsSet) {
+    return;
+  }
+  const childIsFrozen = isFrozen(childValue);
+  if (childIsFrozen && !targetIsSet) {
+    return;
+  }
+  if (isDraft(childValue)) {
+    const path = rootPath2 && parentState && parentState.type_ !== 3 && // Set objects are atomic since they have no keys.
+    !has(parentState.assigned_, prop) ? rootPath2.concat(prop) : void 0;
+    const res = finalize$1(rootScope, childValue, path);
+    set(targetObject, prop, res);
+    if (isDraft(res)) {
+      rootScope.canAutoFreeze_ = false;
+    } else
+      return;
+  } else if (targetIsSet) {
+    targetObject.add(childValue);
+  }
+  if (isDraftable(childValue) && !childIsFrozen) {
+    if (!rootScope.immer_.autoFreeze_ && rootScope.unfinalizedDrafts_ < 1) {
+      return;
+    }
+    if (parentState && parentState.base_ && parentState.base_[prop] === childValue && childIsFrozen) {
+      return;
+    }
+    finalize$1(rootScope, childValue);
+    if ((!parentState || !parentState.scope_.parent_) && typeof prop !== "symbol" && (isMap(targetObject) ? targetObject.has(prop) : Object.prototype.propertyIsEnumerable.call(targetObject, prop)))
+      maybeFreeze(rootScope, childValue);
+  }
+}
+function maybeFreeze(scope, value, deep = false) {
+  if (!scope.parent_ && scope.immer_.autoFreeze_ && scope.canAutoFreeze_) {
+    freeze(value, deep);
+  }
+}
+function createProxyProxy(base, parent) {
+  const isArray = Array.isArray(base);
+  const state = {
+    type_: isArray ? 1 : 0,
+    // Track which produce call this is associated with.
+    scope_: parent ? parent.scope_ : getCurrentScope(),
+    // True for both shallow and deep changes.
+    modified_: false,
+    // Used during finalization.
+    finalized_: false,
+    // Track which properties have been assigned (true) or deleted (false).
+    assigned_: {},
+    // The parent draft state.
+    parent_: parent,
+    // The base state.
+    base_: base,
+    // The base proxy.
+    draft_: null,
+    // set below
+    // The base copy with any updated values.
+    copy_: null,
+    // Called by the `produce` function.
+    revoke_: null,
+    isManual_: false
+  };
+  let target = state;
+  let traps = objectTraps;
+  if (isArray) {
+    target = [state];
+    traps = arrayTraps;
+  }
+  const { revoke, proxy } = Proxy.revocable(target, traps);
+  state.draft_ = proxy;
+  state.revoke_ = revoke;
+  return proxy;
+}
+var objectTraps = {
+  get(state, prop) {
+    if (prop === DRAFT_STATE)
+      return state;
+    const source = latest$1(state);
+    if (!has(source, prop)) {
+      return readPropFromProto(state, source, prop);
+    }
+    const value = source[prop];
+    if (state.finalized_ || !isDraftable(value)) {
+      return value;
+    }
+    if (value === peek$1(state.base_, prop)) {
+      prepareCopy(state);
+      return state.copy_[prop] = createProxy(value, state);
+    }
+    return value;
+  },
+  has(state, prop) {
+    return prop in latest$1(state);
+  },
+  ownKeys(state) {
+    return Reflect.ownKeys(latest$1(state));
+  },
+  set(state, prop, value) {
+    const desc = getDescriptorFromProto(latest$1(state), prop);
+    if (desc?.set) {
+      desc.set.call(state.draft_, value);
+      return true;
+    }
+    if (!state.modified_) {
+      const current2 = peek$1(latest$1(state), prop);
+      const currentState = current2?.[DRAFT_STATE];
+      if (currentState && currentState.base_ === value) {
+        state.copy_[prop] = value;
+        state.assigned_[prop] = false;
+        return true;
+      }
+      if (is(value, current2) && (value !== void 0 || has(state.base_, prop)))
+        return true;
+      prepareCopy(state);
+      markChanged(state);
+    }
+    if (state.copy_[prop] === value && // special case: handle new props with value 'undefined'
+    (value !== void 0 || prop in state.copy_) || // special case: NaN
+    Number.isNaN(value) && Number.isNaN(state.copy_[prop]))
+      return true;
+    state.copy_[prop] = value;
+    state.assigned_[prop] = true;
+    return true;
+  },
+  deleteProperty(state, prop) {
+    if (peek$1(state.base_, prop) !== void 0 || prop in state.base_) {
+      state.assigned_[prop] = false;
+      prepareCopy(state);
+      markChanged(state);
+    } else {
+      delete state.assigned_[prop];
+    }
+    if (state.copy_) {
+      delete state.copy_[prop];
+    }
+    return true;
+  },
+  // Note: We never coerce `desc.value` into an Immer draft, because we can't make
+  // the same guarantee in ES5 mode.
+  getOwnPropertyDescriptor(state, prop) {
+    const owner = latest$1(state);
+    const desc = Reflect.getOwnPropertyDescriptor(owner, prop);
+    if (!desc)
+      return desc;
+    return {
+      writable: true,
+      configurable: state.type_ !== 1 || prop !== "length",
+      enumerable: desc.enumerable,
+      value: owner[prop]
     };
-    const warning = pinned2 ? "\n本次安装先前检查的 SHA，未验证它仍是 main 最新提交。" : "";
-    let notice = null;
+  },
+  defineProperty() {
+    die(11);
+  },
+  getPrototypeOf(state) {
+    return getPrototypeOf(state.base_);
+  },
+  setPrototypeOf() {
+    die(12);
+  }
+};
+var arrayTraps = {};
+each(objectTraps, (key, fn3) => {
+  arrayTraps[key] = function() {
+    arguments[0] = arguments[0][0];
+    return fn3.apply(this, arguments);
+  };
+});
+arrayTraps.deleteProperty = function(state, prop) {
+  return arrayTraps.set.call(this, state, prop, void 0);
+};
+arrayTraps.set = function(state, prop, value) {
+  return objectTraps.set.call(this, state[0], prop, value, state[0]);
+};
+function peek$1(draft, prop) {
+  const state = draft[DRAFT_STATE];
+  const source = state ? latest$1(state) : draft;
+  return source[prop];
+}
+function readPropFromProto(state, source, prop) {
+  const desc = getDescriptorFromProto(source, prop);
+  return desc ? `value` in desc ? desc.value : (
+    // This is a very special case, if the prop is a getter defined by the
+    // prototype, we should invoke it with the draft as context!
+    desc.get?.call(state.draft_)
+  ) : void 0;
+}
+function getDescriptorFromProto(source, prop) {
+  if (!(prop in source))
+    return void 0;
+  let proto2 = getPrototypeOf(source);
+  while (proto2) {
+    const desc = Object.getOwnPropertyDescriptor(proto2, prop);
+    if (desc)
+      return desc;
+    proto2 = getPrototypeOf(proto2);
+  }
+  return void 0;
+}
+function markChanged(state) {
+  if (!state.modified_) {
+    state.modified_ = true;
+    if (state.parent_) {
+      markChanged(state.parent_);
+    }
+  }
+}
+function prepareCopy(state) {
+  if (!state.copy_) {
+    state.copy_ = shallowCopy(
+      state.base_,
+      state.scope_.immer_.useStrictShallowCopy_
+    );
+  }
+}
+var Immer2 = class {
+  constructor(config2) {
+    this.autoFreeze_ = true;
+    this.useStrictShallowCopy_ = false;
+    this.useStrictIteration_ = true;
+    this.produce = (base, recipe, patchListener) => {
+      if (typeof base === "function" && typeof recipe !== "function") {
+        const defaultBase = recipe;
+        recipe = base;
+        const self2 = this;
+        return function curriedProduce(base2 = defaultBase, ...args) {
+          return self2.produce(base2, (draft) => recipe.call(this, draft, ...args));
+        };
+      }
+      if (typeof recipe !== "function")
+        die(6);
+      if (patchListener !== void 0 && typeof patchListener !== "function")
+        die(7);
+      let result;
+      if (isDraftable(base)) {
+        const scope = enterScope(this);
+        const proxy = createProxy(base, void 0);
+        let hasError = true;
+        try {
+          result = recipe(proxy);
+          hasError = false;
+        } finally {
+          if (hasError)
+            revokeScope(scope);
+          else
+            leaveScope(scope);
+        }
+        usePatchesInScope(scope, patchListener);
+        return processResult(result, scope);
+      } else if (!base || typeof base !== "object") {
+        result = recipe(base);
+        if (result === void 0)
+          result = base;
+        if (result === NOTHING)
+          result = void 0;
+        if (this.autoFreeze_)
+          freeze(result, true);
+        if (patchListener) {
+          const p2 = [];
+          const ip = [];
+          getPlugin("Patches").generateReplacementPatches_(base, result, p2, ip);
+          patchListener(p2, ip);
+        }
+        return result;
+      } else
+        die(1, base);
+    };
+    this.produceWithPatches = (base, recipe) => {
+      if (typeof base === "function") {
+        return (state, ...args) => this.produceWithPatches(state, (draft) => base(draft, ...args));
+      }
+      let patches, inversePatches;
+      const result = this.produce(base, recipe, (p2, ip) => {
+        patches = p2;
+        inversePatches = ip;
+      });
+      return [result, patches, inversePatches];
+    };
+    if (typeof config2?.autoFreeze === "boolean")
+      this.setAutoFreeze(config2.autoFreeze);
+    if (typeof config2?.useStrictShallowCopy === "boolean")
+      this.setUseStrictShallowCopy(config2.useStrictShallowCopy);
+    if (typeof config2?.useStrictIteration === "boolean")
+      this.setUseStrictIteration(config2.useStrictIteration);
+  }
+  createDraft(base) {
+    if (!isDraftable(base))
+      die(8);
+    if (isDraft(base))
+      base = current(base);
+    const scope = enterScope(this);
+    const proxy = createProxy(base, void 0);
+    proxy[DRAFT_STATE].isManual_ = true;
+    leaveScope(scope);
+    return proxy;
+  }
+  finishDraft(draft, patchListener) {
+    const state = draft && draft[DRAFT_STATE];
+    if (!state || !state.isManual_)
+      die(9);
+    const { scope_: scope } = state;
+    usePatchesInScope(scope, patchListener);
+    return processResult(void 0, scope);
+  }
+  /**
+   * Pass true to automatically freeze all copies created by Immer.
+   *
+   * By default, auto-freezing is enabled.
+   */
+  setAutoFreeze(value) {
+    this.autoFreeze_ = value;
+  }
+  /**
+   * Pass true to enable strict shallow copy.
+   *
+   * By default, immer does not copy the object descriptors such as getter, setter and non-enumrable properties.
+   */
+  setUseStrictShallowCopy(value) {
+    this.useStrictShallowCopy_ = value;
+  }
+  /**
+   * Pass false to use faster iteration that skips non-enumerable properties
+   * but still handles symbols for compatibility.
+   *
+   * By default, strict iteration is enabled (includes all own properties).
+   */
+  setUseStrictIteration(value) {
+    this.useStrictIteration_ = value;
+  }
+  shouldUseStrictIteration() {
+    return this.useStrictIteration_;
+  }
+  applyPatches(base, patches) {
+    let i2;
+    for (i2 = patches.length - 1; i2 >= 0; i2--) {
+      const patch = patches[i2];
+      if (patch.path.length === 0 && patch.op === "replace") {
+        base = patch.value;
+        break;
+      }
+    }
+    if (i2 > -1) {
+      patches = patches.slice(i2 + 1);
+    }
+    const applyPatchesImpl = getPlugin("Patches").applyPatches_;
+    if (isDraft(base)) {
+      return applyPatchesImpl(base, patches);
+    }
+    return this.produce(
+      base,
+      (draft) => applyPatchesImpl(draft, patches)
+    );
+  }
+};
+function createProxy(value, parent) {
+  const draft = isMap(value) ? getPlugin("MapSet").proxyMap_(value, parent) : isSet(value) ? getPlugin("MapSet").proxySet_(value, parent) : createProxyProxy(value, parent);
+  const scope = parent ? parent.scope_ : getCurrentScope();
+  scope.drafts_.push(draft);
+  return draft;
+}
+function current(value) {
+  if (!isDraft(value))
+    die(10, value);
+  return currentImpl(value);
+}
+function currentImpl(value) {
+  if (!isDraftable(value) || isFrozen(value))
+    return value;
+  const state = value[DRAFT_STATE];
+  let copy2;
+  let strict = true;
+  if (state) {
+    if (!state.modified_)
+      return state.base_;
+    state.finalized_ = true;
+    copy2 = shallowCopy(value, state.scope_.immer_.useStrictShallowCopy_);
+    strict = state.scope_.immer_.shouldUseStrictIteration();
+  } else {
+    copy2 = shallowCopy(value, true);
+  }
+  each(
+    copy2,
+    (key, childValue) => {
+      set(copy2, key, currentImpl(childValue));
+    },
+    strict
+  );
+  if (state) {
+    state.finalized_ = false;
+  }
+  return copy2;
+}
+var immer = new Immer2();
+var produce = immer.produce;
+const DEFAULT_AI_SETTINGS = {
+  enabled: false,
+  provider: "openai_compat",
+  // 安全默认值：不预置任何第三方 endpoint / model / key，避免误请求或泄露。
+  apiEndpoint: "",
+  apiKey: "",
+  // 默认不把密钥写入 Think/data.json；用户明确打开后才保存。
+  persistApiKey: false,
+  model: "",
+  temperature: 0.7,
+  maxTokens: 4096,
+  requestTimeoutMs: 3e4,
+  enabledRecordTypeIds: [],
+  allowMultipleResults: false,
+  maxResults: 10,
+  confirmMode: "batch",
+  preloadConfigOnStartup: false,
+  configCacheTTLSeconds: 300,
+  customPrompt: ""
+};
+const CUSTOM_PROMPT_EXAMPLES = `【示例规则】
+1. 优先选择已有目标，再选择记录类型；一个目标 × Record Type 最多只有一个字段预设。
+2. 当我说"心情"、"开心"、"难过"等情绪词时，优先匹配最接近的完整目标路径。
+3. 当我说"写文章"、"写作"时，使用任务记录类型，并优先匹配对应目标路径。
+4. 不要把目标、模板ID、周期ID写进 fieldValues；这些属于 target 或应用自动推导。
+5. 计划/总结的周期由应用根据预设 periodPolicy 和日期自动生成。`;
+const DEFAULT_SETTINGS = {
+  groups: [],
+  viewInstances: [],
+  layouts: [],
+  goalSettings: DEFAULT_GOAL_SETTINGS,
+  energySettings: DEFAULT_ENERGY_SETTINGS,
+  floatingTimerEnabled: true,
+  aiSettings: DEFAULT_AI_SETTINGS,
+  devConsoleStackEnabled: false,
+  recentGoalPaths: [],
+  goalTaskDefaultsSeedVersion: 0,
+  recordTypeColors: {}
+};
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+const RETIRED_CATEGORY_FIELDS = /* @__PURE__ */ new Set(["categoryKey", "categoryPath", "baseCategory", "rootCategory", "leafCategory", "分类", "分类路径"]);
+function isRetiredTemplateField(field, keepRecordSubtype) {
+  const key = String(field.key ?? "").trim();
+  const semantic = String(field.semantic ?? field.semanticType ?? "").trim();
+  if (RETIRED_CATEGORY_FIELDS.has(key) || semantic === "categoryPath") return true;
+  if (!keepRecordSubtype && (key === "记录子类型" || key === "recordSubtype" || semantic === "recordSubtype")) return true;
+  return false;
+}
+function hydrateGoalOnlySettings(value) {
+  const raw = isRecord(value) ? value : {};
+  const rawGoals = Array.isArray(raw.goals) ? raw.goals : [];
+  const goals = rawGoals.map((entry) => {
+    if (!isRecord(entry)) throw new Error("目标数据无效：应为对象。");
+    const path = normalizeGoalPath(String(entry.path ?? ""));
+    if (!path) throw new Error("目标数据无效：缺少路径。");
+    return {
+      path,
+      description: typeof entry.description === "string" ? entry.description : void 0,
+      status: ["active", "paused", "completed", "archived"].includes(String(entry.status)) ? entry.status : "active",
+      metrics: Array.isArray(entry.metrics) ? entry.metrics : [],
+      createdAt: typeof entry.createdAt === "string" ? entry.createdAt : "",
+      updatedAt: typeof entry.updatedAt === "string" ? entry.updatedAt : "",
+      ...typeof entry.icon === "string" ? { icon: entry.icon } : null,
+      ...normalizeGoalColorHex(entry.color) ? { color: normalizeGoalColorHex(entry.color) } : null,
+      ...typeof entry.sortOrder === "number" ? { sortOrder: entry.sortOrder } : null,
+      ...typeof entry.timePresetPercent === "number" ? { timePresetPercent: entry.timePresetPercent } : null,
+      ...typeof entry.weeklyTargetMinutes === "number" ? { weeklyTargetMinutes: entry.weeklyTargetMinutes } : null
+    };
+  });
+  const goalPaths = new Set(goals.map((goal) => goal.path));
+  const rawTemplates = Array.isArray(raw.goalTemplates) ? raw.goalTemplates : [];
+  const goalTemplates = rawTemplates.map((entry) => {
+    if (!isRecord(entry)) throw new Error("目标模板数据无效：应为对象。");
+    const goalPath = normalizeGoalPath(String(entry.goalPath ?? ""));
+    const recordTypeId = String(entry.recordTypeId ?? "").trim();
+    if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`目标模板引用了不存在的目标路径（${goalPath || "空"}）。`);
+    if (!recordTypeId) throw new Error(`目标模板 ${goalPath} 缺少记录类型标识。`);
+    const recordSchema = getRecordSchemaDefinitionById(recordTypeId);
+    if (!recordSchema || recordSchema.captureMode !== "template") {
+      throw new Error(`目标模板 ${goalPath} 引用了当前版本不支持的记录类型（${recordTypeId}）。请先完成 1.5.0 离线数据收敛。`);
+    }
+    const keepRecordSubtype = recordSchema.recordType === "energy";
+    const fields = stripGoalTemplateIconFieldDefaults(Array.isArray(entry.fields) ? entry.fields.filter((field) => {
+      if (!isRecord(field)) return false;
+      if (field.semantic === "goalPath" || field.key === "goalPath" || field.key === "目标") return false;
+      return !isRetiredTemplateField(field, keepRecordSubtype);
+    }) : void 0);
+    const defaults = stripGoalTemplateIconDefaults(isRecord(entry.defaultValues) ? { ...entry.defaultValues } : void 0);
+    if (defaults) {
+      delete defaults.goalPath;
+      delete defaults["目标"];
+      for (const key of RETIRED_CATEGORY_FIELDS) delete defaults[key];
+      if (!keepRecordSubtype) {
+        delete defaults.recordSubtype;
+        delete defaults["记录子类型"];
+      }
+    }
+    return {
+      goalPath,
+      recordTypeId,
+      description: typeof entry.description === "string" ? entry.description : void 0,
+      enabled: entry.enabled !== false,
+      periodPolicy: isRecord(entry.periodPolicy) ? entry.periodPolicy : void 0,
+      fields,
+      targetFile: typeof entry.targetFile === "string" ? entry.targetFile : void 0,
+      appendUnderHeader: typeof entry.appendUnderHeader === "string" ? entry.appendUnderHeader : void 0,
+      defaultValues: defaults && Object.keys(defaults).length ? defaults : void 0,
+      requiredFields: Array.isArray(entry.requiredFields) ? entry.requiredFields.map(String).filter((key) => !RETIRED_CATEGORY_FIELDS.has(key) && (keepRecordSubtype || key !== "记录子类型" && key !== "recordSubtype")) : void 0
+    };
+  });
+  const rawRevisions = Array.isArray(raw.timePresetRevisions) ? raw.timePresetRevisions : [];
+  const timePresetRevisions = rawRevisions.map((entry) => {
+    if (!isRecord(entry)) throw new Error("Invalid timePresetRevision: expected object.");
+    const effectiveWeekStart = String(entry.effectiveWeekStart ?? "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(effectiveWeekStart)) throw new Error("Invalid timePresetRevision effectiveWeekStart.");
+    const rawPresets = isRecord(entry.presets) ? entry.presets : {};
+    const presets = {};
+    for (const [rawPath, rawPreset] of Object.entries(rawPresets)) {
+      const path = normalizeGoalPath(rawPath);
+      if (!path || !isRecord(rawPreset)) continue;
+      const preset = {};
+      if (typeof rawPreset.timePresetPercent === "number") preset.timePresetPercent = rawPreset.timePresetPercent;
+      if (typeof rawPreset.weeklyTargetMinutes === "number") preset.weeklyTargetMinutes = rawPreset.weeklyTargetMinutes;
+      if (Object.keys(preset).length) presets[path] = preset;
+    }
+    return { effectiveWeekStart, presets };
+  }).sort((a2, b2) => a2.effectiveWeekStart.localeCompare(b2.effectiveWeekStart));
+  const hydrated = { goals, goalTemplates, timePresetRevisions };
+  assertCanonicalGoalSettings(hydrated);
+  return hydrated;
+}
+function sanitizeViewState(raw) {
+  const rawViews = Array.isArray(raw.viewInstances) ? raw.viewInstances : [];
+  const retiredIds = new Set(
+    rawViews.filter((entry) => isRecord(entry) && String(entry.viewType ?? "") === "AssociationView" && typeof entry.id === "string").map((entry) => String(entry.id))
+  );
+  const viewInstances = rawViews.filter(
+    (entry) => !(isRecord(entry) && String(entry.viewType ?? "") === "AssociationView")
+  );
+  const rawLayouts = Array.isArray(raw.layouts) ? raw.layouts : [];
+  const layouts = rawLayouts.map((entry) => {
+    if (!isRecord(entry)) return entry;
+    const viewInstanceIds = (Array.isArray(entry.viewInstanceIds) ? entry.viewInstanceIds : []).map((id) => String(id)).filter((id) => !retiredIds.has(id));
+    const rawPlacements = isRecord(entry.viewPlacements) ? entry.viewPlacements : void 0;
+    const viewPlacements = rawPlacements ? Object.fromEntries(Object.entries(rawPlacements).filter(([id]) => !retiredIds.has(id))) : void 0;
+    return {
+      ...entry,
+      viewInstanceIds,
+      ...viewPlacements ? { viewPlacements } : {}
+    };
+  });
+  return { viewInstances, layouts };
+}
+function toCurrentThinkSettings(rawValue) {
+  if (rawValue != null) {
+    if (!isRecord(rawValue)) throw new Error("settings_invalid_root: 设置文件必须是对象，不能作为空设置加载。");
+    const goal = rawValue.goalSettings;
+    if (!isRecord(goal) || !Array.isArray(goal.goals) || !Array.isArray(goal.goalTemplates)) {
+      throw new Error("settings_unsupported_shape: 缺少当前目标结构；请保留原文件后显式转换，不会自动清空。");
+    }
+    for (const key of ["groups", "viewInstances", "layouts"]) {
+      if (rawValue[key] !== void 0 && !Array.isArray(rawValue[key])) throw new Error(`settings_invalid_shape:${key}`);
+    }
+    if (goal.timePresetRevisions !== void 0 && !Array.isArray(goal.timePresetRevisions)) {
+      throw new Error("settings_invalid_shape:timePresetRevisions");
+    }
+  }
+  const raw = isRecord(rawValue) ? rawValue : {};
+  const partial2 = raw;
+  const sanitizedViews = sanitizeViewState(raw);
+  const current2 = {
+    ...DEFAULT_SETTINGS,
+    vikaApiToken: typeof raw.vikaApiToken === "string" ? raw.vikaApiToken : "",
+    groups: Array.isArray(partial2.groups) ? partial2.groups : [],
+    viewInstances: sanitizedViews.viewInstances,
+    layouts: sanitizedViews.layouts,
+    goalSettings: hydrateGoalOnlySettings(raw.goalSettings),
+    energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...isRecord(partial2.energySettings) ? partial2.energySettings : {} },
+    floatingTimerEnabled: typeof partial2.floatingTimerEnabled === "boolean" ? partial2.floatingTimerEnabled : DEFAULT_SETTINGS.floatingTimerEnabled,
+    aiSettings: isRecord(partial2.aiSettings) ? partial2.aiSettings : DEFAULT_SETTINGS.aiSettings,
+    devConsoleStackEnabled: typeof partial2.devConsoleStackEnabled === "boolean" ? partial2.devConsoleStackEnabled : DEFAULT_SETTINGS.devConsoleStackEnabled,
+    recentGoalPaths: Array.isArray(partial2.recentGoalPaths) ? partial2.recentGoalPaths.map(String) : [],
+    goalTaskDefaultsSeedVersion: typeof partial2.goalTaskDefaultsSeedVersion === "number" ? partial2.goalTaskDefaultsSeedVersion : 0,
+    recordTypeColors: normalizeRecordTypeColorOverrides(raw.recordTypeColors)
+  };
+  return current2;
+}
+function persistGoalOnlySettings(settings) {
+  const runtime = settings.goalSettings || { goals: [], goalTemplates: [], timePresetRevisions: [] };
+  const goals = (runtime.goals || []).map((goal) => {
+    const path = normalizeGoalPath(goal.path);
+    if (!path) throw new Error("Cannot persist Goal without canonical path.");
+    const source = goal;
+    return {
+      path,
+      status: goal.status,
+      ...goal.description ? { description: goal.description } : null,
+      ...source.icon ? { icon: source.icon } : null,
+      ...normalizeGoalColorHex(source.color) ? { color: normalizeGoalColorHex(source.color) } : null,
+      ...typeof source.sortOrder === "number" ? { sortOrder: source.sortOrder } : null,
+      ...typeof source.timePresetPercent === "number" ? { timePresetPercent: source.timePresetPercent } : null,
+      ...typeof source.weeklyTargetMinutes === "number" ? { weeklyTargetMinutes: source.weeklyTargetMinutes } : null,
+      ...goal.metrics?.length ? { metrics: goal.metrics } : null
+    };
+  });
+  const goalTemplates = (runtime.goalTemplates || []).map((template) => {
+    const path = normalizeGoalPath(template.goalPath);
+    if (!path) throw new Error("Cannot persist GoalTemplate without canonical Goal path.");
+    const recordSchema = getRecordSchemaDefinitionById(template.recordTypeId);
+    if (!recordSchema || recordSchema.captureMode !== "template") throw new Error(`无法保存当前版本不支持的目标模板记录类型：${template.recordTypeId}`);
+    const keepRecordSubtype = recordSchema.recordType === "energy";
+    const fields = stripGoalTemplateIconFieldDefaults((template.fields || []).filter((field) => {
+      const record2 = field;
+      if (record2.semantic === "goalPath" || record2.key === "goalPath" || record2.key === "目标") return false;
+      return !isRetiredTemplateField(record2, keepRecordSubtype);
+    })) || [];
+    const defaults = { ...stripGoalTemplateIconDefaults(template.defaultValues) || {} };
+    for (const key of ["goalPath", "目标", ...RETIRED_CATEGORY_FIELDS]) delete defaults[key];
+    if (!keepRecordSubtype) {
+      delete defaults.recordSubtype;
+      delete defaults["记录子类型"];
+    }
+    return {
+      goalPath: path,
+      recordTypeId: template.recordTypeId,
+      ...template.description ? { description: template.description } : null,
+      enabled: template.enabled !== false,
+      ...template.periodPolicy ? { periodPolicy: template.periodPolicy } : null,
+      ...fields.length ? { fields } : null,
+      ...template.targetFile ? { targetFile: template.targetFile } : null,
+      ...template.appendUnderHeader ? { appendUnderHeader: template.appendUnderHeader } : null,
+      ...Object.keys(defaults).length ? { defaultValues: defaults } : null,
+      ...template.requiredFields?.length ? { requiredFields: template.requiredFields.filter((key) => !RETIRED_CATEGORY_FIELDS.has(key) && (keepRecordSubtype || key !== "记录子类型" && key !== "recordSubtype")) } : null
+    };
+  });
+  const timePresetRevisions = (runtime.timePresetRevisions || []).map((revision) => ({
+    effectiveWeekStart: revision.effectiveWeekStart,
+    presets: Object.fromEntries(Object.entries(revision.presets || {}).map(([path, preset]) => [normalizeGoalPath(path), {
+      ...typeof preset.timePresetPercent === "number" ? { timePresetPercent: preset.timePresetPercent } : null,
+      ...typeof preset.weeklyTargetMinutes === "number" ? { weeklyTargetMinutes: preset.weeklyTargetMinutes } : null
+    }]).filter(([path]) => !!path))
+  }));
+  return { goals, goalTemplates, timePresetRevisions };
+}
+function toPersistedThinkSettings(settings) {
+  const out = JSON.parse(JSON.stringify(settings ?? {}));
+  delete out.inputSettings;
+  delete out.recordTypeSettings;
+  delete out.categoryColors;
+  const recordTypeColors = normalizeRecordTypeColorOverrides(settings.recordTypeColors);
+  if (Object.keys(recordTypeColors).length > 0) out.recordTypeColors = recordTypeColors;
+  else delete out.recordTypeColors;
+  out.goalSettings = persistGoalOnlySettings(settings);
+  return out;
+}
+class DurableSnapshot {
+  constructor(io) {
+    this.io = io;
+  }
+  io;
+  current;
+  ready = false;
+  loading = null;
+  queue = new SerialTaskQueue();
+  publish(before, after) {
     try {
-      notice = new obsidian.Notice(formatGitHubDevRestartNotice(installed) + warning, 0);
+      this.io.committed?.(before, after);
     } catch {
     }
-    if (!githubPushedAt && notice) {
-      const successNotice = notice;
-      void pushTimePromise.then((latePushedAt) => {
-        if (!latePushedAt) return;
-        try {
-          successNotice.setMessage(formatGitHubDevRestartNotice({
-            ...installed,
-            githubPushedAt: latePushedAt
-          }) + warning);
-        } catch {
-        }
-      });
+  }
+  load() {
+    if (this.ready) return Promise.resolve(this.get());
+    if (this.loading) return this.loading;
+    this.loading = this.queue.run(async () => {
+      const next2 = await this.io.load();
+      this.current = next2;
+      this.ready = true;
+      this.publish(void 0, next2);
+      return next2;
+    });
+    const pending = this.loading;
+    void pending.then(() => {
+      this.loading = null;
+    }, () => {
+      this.loading = null;
+    });
+    return pending;
+  }
+  get() {
+    if (!this.ready) throw new Error("设置尚未加载，请先完成加载。");
+    return this.current;
+  }
+  update(build) {
+    return this.queue.run(async () => {
+      const before = this.get();
+      const next2 = build(before);
+      if (next2 === before) return before;
+      await this.io.save(next2);
+      this.current = next2;
+      this.publish(before, next2);
+      return next2;
+    });
+  }
+  /** Whole-snapshot saves must not silently overwrite a queued newer update. */
+  replace(snapshot) {
+    const expected = this.get();
+    return this.update((current2) => {
+      if (current2 !== expected) throw new Error("settings_stale_snapshot: 设置已变化，请重新读取后保存。");
+      return snapshot;
+    });
+  }
+}
+var __getOwnPropDesc$g = Object.getOwnPropertyDescriptor;
+var __decorateClass$g = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$g(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$f = (index, decorator) => (target, key) => decorator(target, key, index);
+const SETTINGS_PERSISTENCE_TOKEN = "SettingsPersistence";
+function toSafePersistedThinkSettings(settings) {
+  const persisted = toPersistedThinkSettings(settings);
+  const aiSettings = persisted.aiSettings;
+  if (aiSettings && typeof aiSettings === "object" && aiSettings.persistApiKey !== true) {
+    if (aiSettings.apiKey) {
+      devWarn("[SettingsPersistence] persistApiKey 未显式开启，apiKey 将被剥离后保存");
     }
-    return installed;
-  }, "updates"));
+    aiSettings.apiKey = "";
+  }
+  return persisted;
+}
+let VaultSettingsPersistence = class {
+  constructor(storage) {
+    this.storage = storage;
+  }
+  storage;
+  async load() {
+    return await this.storage.readJSON(THINK_STORAGE_PATHS.settings);
+  }
+  async save(settings) {
+    await this.storage.writeJSON(
+      THINK_STORAGE_PATHS.settings,
+      toSafePersistedThinkSettings(settings)
+    );
+  }
+};
+VaultSettingsPersistence = __decorateClass$g([
+  singleton(),
+  __decorateParam$f(0, inject(STORAGE_TOKEN))
+], VaultSettingsPersistence);
+var __getOwnPropDesc$f = Object.getOwnPropertyDescriptor;
+var __decorateClass$f = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$f(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$e = (index, decorator) => (target, key) => decorator(target, key, index);
+let SettingsRepository = class {
+  state;
+  listeners = /* @__PURE__ */ new Set();
+  constructor(persistence) {
+    this.state = new DurableSnapshot({
+      load: async () => {
+        const loaded = await persistence.load();
+        return toCurrentThinkSettings(loaded);
+      },
+      save: async (settings) => {
+        assertCanonicalGoalSettings(settings.goalSettings);
+        await persistence.save(settings);
+      },
+      committed: (_before, settings) => {
+        for (const listener of this.listeners) {
+          try {
+            listener(settings);
+          } catch (error) {
+            devWarn("[SettingsRepository] 订阅者异常；已保存状态不回滚。", error);
+          }
+        }
+      }
+    });
+  }
+  subscribe(listener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+  load() {
+    return this.state.load();
+  }
+  getSettings() {
+    return this.state.get();
+  }
+  getSnapshot() {
+    return this.state.get();
+  }
+  async save(settings, meta) {
+    const before = this.state.get();
+    const snapshot = JSON.parse(JSON.stringify(settings));
+    await this.state.replace(snapshot);
+    logSettingsWrite(meta, before, snapshot);
+  }
+  async update(mutator, meta) {
+    let before;
+    const result = await this.state.update((current2) => {
+      before = current2;
+      return produce(current2, mutator);
+    });
+    if (before !== result) logSettingsWrite(meta, before, result);
+    return result;
+  }
+};
+SettingsRepository = __decorateClass$f([
+  singleton(),
+  __decorateParam$e(0, inject(SETTINGS_PERSISTENCE_TOKEN))
+], SettingsRepository);
+var __getOwnPropDesc$e = Object.getOwnPropertyDescriptor;
+var __decorateClass$e = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$e(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = decorator(result) || result;
+  return result;
+};
+var __decorateParam$d = (index, decorator) => (target, key) => decorator(target, key, index);
+let RepositorySettingsProvider = class {
+  constructor(settingsRepository) {
+    this.settingsRepository = settingsRepository;
+  }
+  settingsRepository;
+  getSettings() {
+    return this.settingsRepository.getSettings();
+  }
+};
+RepositorySettingsProvider = __decorateClass$e([
+  singleton(),
+  __decorateParam$d(0, inject(SettingsRepository))
+], RepositorySettingsProvider);
+function setupCoreContainer(app) {
+  instance.register(AppToken, { useValue: app });
+  instance.register(STORAGE_TOKEN, { useClass: VaultFileStorage });
+  instance.registerSingleton(SettingsRepository);
+  instance.registerSingleton(RepositorySettingsProvider);
+  instance.register(SettingsProviderToken, { useToken: RepositorySettingsProvider });
 }
 function toRecordViewItem(record2) {
   return record2;
@@ -12335,15 +13139,15 @@ async function buildWarmStartPlan(paths, cache, fileStat) {
   }
   return { seen, unchangedEntries, changedFiles };
 }
-var __getOwnPropDesc$g = Object.getOwnPropertyDescriptor;
-var __decorateClass$g = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$g(target, key) : target;
+var __getOwnPropDesc$d = Object.getOwnPropertyDescriptor;
+var __decorateClass$d = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$d(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$f = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$c = (index, decorator) => (target, key) => decorator(target, key, index);
 let DataStore = class {
   constructor(vault, metadata, fileStat, storage) {
     this.vault = vault;
@@ -12568,23 +13372,23 @@ let DataStore = class {
     if (this._assertNotDisposed()) this._emitThrottled();
   }
 };
-DataStore = __decorateClass$g([
+DataStore = __decorateClass$d([
   singleton(),
-  __decorateParam$f(0, inject(VAULT_PORT_TOKEN)),
-  __decorateParam$f(1, inject(METADATA_PORT_TOKEN)),
-  __decorateParam$f(2, inject(FILESTAT_PORT_TOKEN)),
-  __decorateParam$f(3, inject(STORAGE_TOKEN))
+  __decorateParam$c(0, inject(VAULT_PORT_TOKEN)),
+  __decorateParam$c(1, inject(METADATA_PORT_TOKEN)),
+  __decorateParam$c(2, inject(FILESTAT_PORT_TOKEN)),
+  __decorateParam$c(3, inject(STORAGE_TOKEN))
 ], DataStore);
 class RecordConflictError extends Error {
-  constructor(conflictCode, message2) {
-    super(message2);
+  constructor(conflictCode, message) {
+    super(message);
     this.conflictCode = conflictCode;
   }
   conflictCode;
   name = "RecordConflictError";
 }
-function createRecordConflictError(code, message2) {
-  return new RecordConflictError(code, message2);
+function createRecordConflictError(code, message) {
+  return new RecordConflictError(code, message);
 }
 function isRecordConflictError(error) {
   return error instanceof RecordConflictError || error?.name === "RecordConflictError";
@@ -14042,15 +14846,15 @@ async function appendUnderHeader(vault, filePath, header, payload, options = {})
   checkAbort(options);
   await vault.writeFile(filePath, next2);
 }
-var __getOwnPropDesc$f = Object.getOwnPropertyDescriptor;
-var __decorateClass$f = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$f(target, key) : target;
+var __getOwnPropDesc$c = Object.getOwnPropertyDescriptor;
+var __decorateClass$c = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$c(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$e = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$b = (index, decorator) => (target, key) => decorator(target, key, index);
 let InputService = class {
   constructor(vault, dataStore) {
     this.vault = vault;
@@ -14161,10 +14965,10 @@ ${outputContent}` : outputContent;
     }
   }
 };
-InputService = __decorateClass$f([
+InputService = __decorateClass$c([
   singleton(),
-  __decorateParam$e(0, inject(VAULT_PORT_TOKEN)),
-  __decorateParam$e(1, inject(DataStore))
+  __decorateParam$b(0, inject(VAULT_PORT_TOKEN)),
+  __decorateParam$b(1, inject(DataStore))
 ], InputService);
 class GoalTemplateMigrationMutation {
   constructor(repository) {
@@ -14221,14 +15025,14 @@ class MigrationBackupService {
    * - 备份 DataStore 中已索引到的 Markdown 文件
    * - 不修改原始记录；用于用户侧“一键迁移前备份”
    */
-  async createMigrationBackup(backupRoot, settings2) {
+  async createMigrationBackup(backupRoot, settings) {
     const root = String(backupRoot || "").replace(/^\/+|\/+$/g, "") || `${THINK_STORAGE_PATHS.backupsRoot}/goal-migration-${Date.now()}`;
     const settingsPath = `${root}/data-settings.json`;
     const items = this.dataStore.queryItems();
     const markdownPaths = Array.from(new Set(
       items.map((item) => item.source?.path || item.file?.path || "").filter((path) => !!path)
     )).sort((left2, right2) => left2.localeCompare(right2));
-    await this.vault.writeFile(settingsPath, JSON.stringify(settings2, null, 2));
+    await this.vault.writeFile(settingsPath, JSON.stringify(settings, null, 2));
     await this.vault.writeFile(`${root}/markdown-paths.json`, JSON.stringify(markdownPaths, null, 2));
     const failedPaths = [];
     let markdownFileCount = 0;
@@ -14357,12 +15161,12 @@ class TaskSessionMutation {
     return task;
   }
 }
-function getCreateEligibleGoalPaths(settings2, recordTypeId) {
+function getCreateEligibleGoalPaths(settings, recordTypeId) {
   const id = String(recordTypeId || "").trim();
   if (!id) return [];
   const seen = /* @__PURE__ */ new Set();
   const result = [];
-  for (const template of getGoalTemplates(settings2.goalSettings)) {
+  for (const template of getGoalTemplates(settings.goalSettings)) {
     if (template.recordTypeId !== id || template.enabled === false) continue;
     const path = normalizeGoalPath(template.goalPath);
     if (!path || seen.has(path)) continue;
@@ -14371,11 +15175,11 @@ function getCreateEligibleGoalPaths(settings2, recordTypeId) {
   }
   return result;
 }
-function getCreateAvailableRecordTypes(settings2, goalPath) {
+function getCreateAvailableRecordTypes(settings, goalPath) {
   const selectedGoalPath = normalizeGoalPath(goalPath) || "";
   return getEffectiveRecordTypes().filter((recordType) => {
     if (recordType.captureMode === "direct") return true;
-    const eligibleGoalPaths = getCreateEligibleGoalPaths(settings2, recordType.id);
+    const eligibleGoalPaths = getCreateEligibleGoalPaths(settings, recordType.id);
     return selectedGoalPath ? eligibleGoalPaths.includes(selectedGoalPath) : eligibleGoalPaths.length > 0;
   });
 }
@@ -14421,9 +15225,9 @@ function applyGoalIdentityIcon(template, goal) {
 }
 class GoalTemplateResolver {
   static resolve(input) {
-    const settings2 = input.settings;
+    const settings = input.settings;
     const recordTypeId = String(input.recordTypeId || "").trim();
-    const goal = findGoal(settings2.goalSettings, input.goalPath);
+    const goal = findGoal(settings.goalSettings, input.goalPath);
     const baseTemplate = getTemplateRecordTypeById(recordTypeId);
     if (!baseTemplate) {
       return {
@@ -14436,7 +15240,7 @@ class GoalTemplateResolver {
         effectiveRecordTypeId: null
       };
     }
-    const direct = input.goalPath ? findDirectGoalTemplate(settings2.goalSettings, input.goalPath, recordTypeId) : null;
+    const direct = input.goalPath ? findDirectGoalTemplate(settings.goalSettings, input.goalPath, recordTypeId) : null;
     if (input.requireDirectGoalTemplate && !input.goalPath) {
       return {
         status: "goal-required",
@@ -15099,17 +15903,15 @@ class RecordRepository {
     return { writtenPaths: committed.writtenPaths, createdRecordIds };
   }
 }
-const AppToken = "App";
-const SettingsProviderToken = "SettingsProvider";
-var __getOwnPropDesc$e = Object.getOwnPropertyDescriptor;
-var __decorateClass$e = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$e(target, key) : target;
+var __getOwnPropDesc$b = Object.getOwnPropertyDescriptor;
+var __decorateClass$b = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$b(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$d = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$a = (index, decorator) => (target, key) => decorator(target, key, index);
 let ItemService = class {
   taskCompletion;
   taskSessions;
@@ -15176,15 +15978,15 @@ let ItemService = class {
   upsertItemGoalTemplateMigrationFields(itemId, fields, mutationOptions = {}) {
     return this.goalTemplateMigration.upsertItemGoalTemplateMigrationFields(itemId, fields, mutationOptions);
   }
-  createMigrationBackup(backupRoot, settings2) {
-    return this.migrationBackup.createMigrationBackup(backupRoot, settings2);
+  createMigrationBackup(backupRoot, settings) {
+    return this.migrationBackup.createMigrationBackup(backupRoot, settings);
   }
 };
-ItemService = __decorateClass$e([
+ItemService = __decorateClass$b([
   singleton(),
-  __decorateParam$d(0, inject(DataStore)),
-  __decorateParam$d(1, inject(VAULT_PORT_TOKEN)),
-  __decorateParam$d(2, inject(SettingsProviderToken))
+  __decorateParam$a(0, inject(DataStore)),
+  __decorateParam$a(1, inject(VAULT_PORT_TOKEN)),
+  __decorateParam$a(2, inject(SettingsProviderToken))
 ], ItemService);
 function normalizeTagToken(value) {
   return String(value ?? "").trim();
@@ -15218,15 +16020,15 @@ function formatTagsForField(value) {
   return tags2.length ? tags2.map((tag) => tag.startsWith("#") ? tag : `#${tag}`).join(", ") : void 0;
 }
 const UI_PORT_TOKEN = "UiPort";
-var __getOwnPropDesc$d = Object.getOwnPropertyDescriptor;
-var __decorateClass$d = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$d(target, key) : target;
+var __getOwnPropDesc$a = Object.getOwnPropertyDescriptor;
+var __decorateClass$a = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$a(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$c = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$9 = (index, decorator) => (target, key) => decorator(target, key, index);
 let ActionService = class {
   constructor(ui, dataStore, settingsProvider, inputService) {
     this.ui = ui;
@@ -15346,22 +16148,22 @@ let ActionService = class {
     };
   }
 };
-ActionService = __decorateClass$d([
+ActionService = __decorateClass$a([
   singleton(),
-  __decorateParam$c(0, inject(UI_PORT_TOKEN)),
-  __decorateParam$c(1, inject(DataStore)),
-  __decorateParam$c(2, inject(SettingsProviderToken)),
-  __decorateParam$c(3, inject(InputService))
+  __decorateParam$9(0, inject(UI_PORT_TOKEN)),
+  __decorateParam$9(1, inject(DataStore)),
+  __decorateParam$9(2, inject(SettingsProviderToken)),
+  __decorateParam$9(3, inject(InputService))
 ], ActionService);
-var __getOwnPropDesc$c = Object.getOwnPropertyDescriptor;
-var __decorateClass$c = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$c(target, key) : target;
+var __getOwnPropDesc$9 = Object.getOwnPropertyDescriptor;
+var __decorateClass$9 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$9(target, key) : target;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
       result = decorator(result) || result;
   return result;
 };
-var __decorateParam$b = (index, decorator) => (target, key) => decorator(target, key, index);
+var __decorateParam$8 = (index, decorator) => (target, key) => decorator(target, key, index);
 const TIMER_RUNTIME_SCHEMA_VERSION = 3;
 function isTimerRuntimeState(entry) {
   if (!entry || typeof entry !== "object") return false;
@@ -15432,1331 +16234,10 @@ let TimerStateService = class {
     await this.json.writeJSON(THINK_STORAGE_PATHS.timerRuntime, payload);
   }
 };
-TimerStateService = __decorateClass$c([
+TimerStateService = __decorateClass$9([
   singleton(),
-  __decorateParam$b(0, inject(VAULT_PORT_TOKEN))
+  __decorateParam$8(0, inject(VAULT_PORT_TOKEN))
 ], TimerStateService);
-var NOTHING = /* @__PURE__ */ Symbol.for("immer-nothing");
-var DRAFTABLE = /* @__PURE__ */ Symbol.for("immer-draftable");
-var DRAFT_STATE = /* @__PURE__ */ Symbol.for("immer-state");
-function die(error, ...args) {
-  throw new Error(
-    `[Immer] minified error nr: ${error}. Full error at: https://bit.ly/3cXEKWf`
-  );
-}
-var getPrototypeOf = Object.getPrototypeOf;
-function isDraft(value) {
-  return !!value && !!value[DRAFT_STATE];
-}
-function isDraftable(value) {
-  if (!value)
-    return false;
-  return isPlainObject$2(value) || Array.isArray(value) || !!value[DRAFTABLE] || !!value.constructor?.[DRAFTABLE] || isMap(value) || isSet(value);
-}
-var objectCtorString = Object.prototype.constructor.toString();
-var cachedCtorStrings = /* @__PURE__ */ new WeakMap();
-function isPlainObject$2(value) {
-  if (!value || typeof value !== "object")
-    return false;
-  const proto2 = Object.getPrototypeOf(value);
-  if (proto2 === null || proto2 === Object.prototype)
-    return true;
-  const Ctor = Object.hasOwnProperty.call(proto2, "constructor") && proto2.constructor;
-  if (Ctor === Object)
-    return true;
-  if (typeof Ctor !== "function")
-    return false;
-  let ctorString = cachedCtorStrings.get(Ctor);
-  if (ctorString === void 0) {
-    ctorString = Function.toString.call(Ctor);
-    cachedCtorStrings.set(Ctor, ctorString);
-  }
-  return ctorString === objectCtorString;
-}
-function each(obj, iter, strict = true) {
-  if (getArchtype(obj) === 0) {
-    const keys = strict ? Reflect.ownKeys(obj) : Object.keys(obj);
-    keys.forEach((key) => {
-      iter(key, obj[key], obj);
-    });
-  } else {
-    obj.forEach((entry, index) => iter(index, entry, obj));
-  }
-}
-function getArchtype(thing) {
-  const state = thing[DRAFT_STATE];
-  return state ? state.type_ : Array.isArray(thing) ? 1 : isMap(thing) ? 2 : isSet(thing) ? 3 : 0;
-}
-function has(thing, prop) {
-  return getArchtype(thing) === 2 ? thing.has(prop) : Object.prototype.hasOwnProperty.call(thing, prop);
-}
-function set(thing, propOrOldValue, value) {
-  const t3 = getArchtype(thing);
-  if (t3 === 2)
-    thing.set(propOrOldValue, value);
-  else if (t3 === 3) {
-    thing.add(value);
-  } else
-    thing[propOrOldValue] = value;
-}
-function is(x2, y2) {
-  if (x2 === y2) {
-    return x2 !== 0 || 1 / x2 === 1 / y2;
-  } else {
-    return x2 !== x2 && y2 !== y2;
-  }
-}
-function isMap(target) {
-  return target instanceof Map;
-}
-function isSet(target) {
-  return target instanceof Set;
-}
-function latest$1(state) {
-  return state.copy_ || state.base_;
-}
-function shallowCopy(base, strict) {
-  if (isMap(base)) {
-    return new Map(base);
-  }
-  if (isSet(base)) {
-    return new Set(base);
-  }
-  if (Array.isArray(base))
-    return Array.prototype.slice.call(base);
-  const isPlain = isPlainObject$2(base);
-  if (strict === true || strict === "class_only" && !isPlain) {
-    const descriptors = Object.getOwnPropertyDescriptors(base);
-    delete descriptors[DRAFT_STATE];
-    let keys = Reflect.ownKeys(descriptors);
-    for (let i2 = 0; i2 < keys.length; i2++) {
-      const key = keys[i2];
-      const desc = descriptors[key];
-      if (desc.writable === false) {
-        desc.writable = true;
-        desc.configurable = true;
-      }
-      if (desc.get || desc.set)
-        descriptors[key] = {
-          configurable: true,
-          writable: true,
-          // could live with !!desc.set as well here...
-          enumerable: desc.enumerable,
-          value: base[key]
-        };
-    }
-    return Object.create(getPrototypeOf(base), descriptors);
-  } else {
-    const proto2 = getPrototypeOf(base);
-    if (proto2 !== null && isPlain) {
-      return { ...base };
-    }
-    const obj = Object.create(proto2);
-    return Object.assign(obj, base);
-  }
-}
-function freeze(obj, deep = false) {
-  if (isFrozen(obj) || isDraft(obj) || !isDraftable(obj))
-    return obj;
-  if (getArchtype(obj) > 1) {
-    Object.defineProperties(obj, {
-      set: dontMutateMethodOverride,
-      add: dontMutateMethodOverride,
-      clear: dontMutateMethodOverride,
-      delete: dontMutateMethodOverride
-    });
-  }
-  Object.freeze(obj);
-  if (deep)
-    Object.values(obj).forEach((value) => freeze(value, true));
-  return obj;
-}
-function dontMutateFrozenCollections() {
-  die(2);
-}
-var dontMutateMethodOverride = {
-  value: dontMutateFrozenCollections
-};
-function isFrozen(obj) {
-  if (obj === null || typeof obj !== "object")
-    return true;
-  return Object.isFrozen(obj);
-}
-var plugins = {};
-function getPlugin(pluginKey) {
-  const plugin = plugins[pluginKey];
-  if (!plugin) {
-    die(0, pluginKey);
-  }
-  return plugin;
-}
-var currentScope;
-function getCurrentScope() {
-  return currentScope;
-}
-function createScope(parent_, immer_) {
-  return {
-    drafts_: [],
-    parent_,
-    immer_,
-    // Whenever the modified draft contains a draft from another scope, we
-    // need to prevent auto-freezing so the unowned draft can be finalized.
-    canAutoFreeze_: true,
-    unfinalizedDrafts_: 0
-  };
-}
-function usePatchesInScope(scope, patchListener) {
-  if (patchListener) {
-    getPlugin("Patches");
-    scope.patches_ = [];
-    scope.inversePatches_ = [];
-    scope.patchListener_ = patchListener;
-  }
-}
-function revokeScope(scope) {
-  leaveScope(scope);
-  scope.drafts_.forEach(revokeDraft);
-  scope.drafts_ = null;
-}
-function leaveScope(scope) {
-  if (scope === currentScope) {
-    currentScope = scope.parent_;
-  }
-}
-function enterScope(immer2) {
-  return currentScope = createScope(currentScope, immer2);
-}
-function revokeDraft(draft) {
-  const state = draft[DRAFT_STATE];
-  if (state.type_ === 0 || state.type_ === 1)
-    state.revoke_();
-  else
-    state.revoked_ = true;
-}
-function processResult(result, scope) {
-  scope.unfinalizedDrafts_ = scope.drafts_.length;
-  const baseDraft = scope.drafts_[0];
-  const isReplaced = result !== void 0 && result !== baseDraft;
-  if (isReplaced) {
-    if (baseDraft[DRAFT_STATE].modified_) {
-      revokeScope(scope);
-      die(4);
-    }
-    if (isDraftable(result)) {
-      result = finalize$1(scope, result);
-      if (!scope.parent_)
-        maybeFreeze(scope, result);
-    }
-    if (scope.patches_) {
-      getPlugin("Patches").generateReplacementPatches_(
-        baseDraft[DRAFT_STATE].base_,
-        result,
-        scope.patches_,
-        scope.inversePatches_
-      );
-    }
-  } else {
-    result = finalize$1(scope, baseDraft, []);
-  }
-  revokeScope(scope);
-  if (scope.patches_) {
-    scope.patchListener_(scope.patches_, scope.inversePatches_);
-  }
-  return result !== NOTHING ? result : void 0;
-}
-function finalize$1(rootScope, value, path) {
-  if (isFrozen(value))
-    return value;
-  const useStrictIteration = rootScope.immer_.shouldUseStrictIteration();
-  const state = value[DRAFT_STATE];
-  if (!state) {
-    each(
-      value,
-      (key, childValue) => finalizeProperty(rootScope, state, value, key, childValue, path),
-      useStrictIteration
-    );
-    return value;
-  }
-  if (state.scope_ !== rootScope)
-    return value;
-  if (!state.modified_) {
-    maybeFreeze(rootScope, state.base_, true);
-    return state.base_;
-  }
-  if (!state.finalized_) {
-    state.finalized_ = true;
-    state.scope_.unfinalizedDrafts_--;
-    const result = state.copy_;
-    let resultEach = result;
-    let isSet2 = false;
-    if (state.type_ === 3) {
-      resultEach = new Set(result);
-      result.clear();
-      isSet2 = true;
-    }
-    each(
-      resultEach,
-      (key, childValue) => finalizeProperty(
-        rootScope,
-        state,
-        result,
-        key,
-        childValue,
-        path,
-        isSet2
-      ),
-      useStrictIteration
-    );
-    maybeFreeze(rootScope, result, false);
-    if (path && rootScope.patches_) {
-      getPlugin("Patches").generatePatches_(
-        state,
-        path,
-        rootScope.patches_,
-        rootScope.inversePatches_
-      );
-    }
-  }
-  return state.copy_;
-}
-function finalizeProperty(rootScope, parentState, targetObject, prop, childValue, rootPath2, targetIsSet) {
-  if (childValue == null) {
-    return;
-  }
-  if (typeof childValue !== "object" && !targetIsSet) {
-    return;
-  }
-  const childIsFrozen = isFrozen(childValue);
-  if (childIsFrozen && !targetIsSet) {
-    return;
-  }
-  if (isDraft(childValue)) {
-    const path = rootPath2 && parentState && parentState.type_ !== 3 && // Set objects are atomic since they have no keys.
-    !has(parentState.assigned_, prop) ? rootPath2.concat(prop) : void 0;
-    const res = finalize$1(rootScope, childValue, path);
-    set(targetObject, prop, res);
-    if (isDraft(res)) {
-      rootScope.canAutoFreeze_ = false;
-    } else
-      return;
-  } else if (targetIsSet) {
-    targetObject.add(childValue);
-  }
-  if (isDraftable(childValue) && !childIsFrozen) {
-    if (!rootScope.immer_.autoFreeze_ && rootScope.unfinalizedDrafts_ < 1) {
-      return;
-    }
-    if (parentState && parentState.base_ && parentState.base_[prop] === childValue && childIsFrozen) {
-      return;
-    }
-    finalize$1(rootScope, childValue);
-    if ((!parentState || !parentState.scope_.parent_) && typeof prop !== "symbol" && (isMap(targetObject) ? targetObject.has(prop) : Object.prototype.propertyIsEnumerable.call(targetObject, prop)))
-      maybeFreeze(rootScope, childValue);
-  }
-}
-function maybeFreeze(scope, value, deep = false) {
-  if (!scope.parent_ && scope.immer_.autoFreeze_ && scope.canAutoFreeze_) {
-    freeze(value, deep);
-  }
-}
-function createProxyProxy(base, parent) {
-  const isArray = Array.isArray(base);
-  const state = {
-    type_: isArray ? 1 : 0,
-    // Track which produce call this is associated with.
-    scope_: parent ? parent.scope_ : getCurrentScope(),
-    // True for both shallow and deep changes.
-    modified_: false,
-    // Used during finalization.
-    finalized_: false,
-    // Track which properties have been assigned (true) or deleted (false).
-    assigned_: {},
-    // The parent draft state.
-    parent_: parent,
-    // The base state.
-    base_: base,
-    // The base proxy.
-    draft_: null,
-    // set below
-    // The base copy with any updated values.
-    copy_: null,
-    // Called by the `produce` function.
-    revoke_: null,
-    isManual_: false
-  };
-  let target = state;
-  let traps = objectTraps;
-  if (isArray) {
-    target = [state];
-    traps = arrayTraps;
-  }
-  const { revoke, proxy } = Proxy.revocable(target, traps);
-  state.draft_ = proxy;
-  state.revoke_ = revoke;
-  return proxy;
-}
-var objectTraps = {
-  get(state, prop) {
-    if (prop === DRAFT_STATE)
-      return state;
-    const source = latest$1(state);
-    if (!has(source, prop)) {
-      return readPropFromProto(state, source, prop);
-    }
-    const value = source[prop];
-    if (state.finalized_ || !isDraftable(value)) {
-      return value;
-    }
-    if (value === peek$1(state.base_, prop)) {
-      prepareCopy(state);
-      return state.copy_[prop] = createProxy(value, state);
-    }
-    return value;
-  },
-  has(state, prop) {
-    return prop in latest$1(state);
-  },
-  ownKeys(state) {
-    return Reflect.ownKeys(latest$1(state));
-  },
-  set(state, prop, value) {
-    const desc = getDescriptorFromProto(latest$1(state), prop);
-    if (desc?.set) {
-      desc.set.call(state.draft_, value);
-      return true;
-    }
-    if (!state.modified_) {
-      const current2 = peek$1(latest$1(state), prop);
-      const currentState = current2?.[DRAFT_STATE];
-      if (currentState && currentState.base_ === value) {
-        state.copy_[prop] = value;
-        state.assigned_[prop] = false;
-        return true;
-      }
-      if (is(value, current2) && (value !== void 0 || has(state.base_, prop)))
-        return true;
-      prepareCopy(state);
-      markChanged(state);
-    }
-    if (state.copy_[prop] === value && // special case: handle new props with value 'undefined'
-    (value !== void 0 || prop in state.copy_) || // special case: NaN
-    Number.isNaN(value) && Number.isNaN(state.copy_[prop]))
-      return true;
-    state.copy_[prop] = value;
-    state.assigned_[prop] = true;
-    return true;
-  },
-  deleteProperty(state, prop) {
-    if (peek$1(state.base_, prop) !== void 0 || prop in state.base_) {
-      state.assigned_[prop] = false;
-      prepareCopy(state);
-      markChanged(state);
-    } else {
-      delete state.assigned_[prop];
-    }
-    if (state.copy_) {
-      delete state.copy_[prop];
-    }
-    return true;
-  },
-  // Note: We never coerce `desc.value` into an Immer draft, because we can't make
-  // the same guarantee in ES5 mode.
-  getOwnPropertyDescriptor(state, prop) {
-    const owner = latest$1(state);
-    const desc = Reflect.getOwnPropertyDescriptor(owner, prop);
-    if (!desc)
-      return desc;
-    return {
-      writable: true,
-      configurable: state.type_ !== 1 || prop !== "length",
-      enumerable: desc.enumerable,
-      value: owner[prop]
-    };
-  },
-  defineProperty() {
-    die(11);
-  },
-  getPrototypeOf(state) {
-    return getPrototypeOf(state.base_);
-  },
-  setPrototypeOf() {
-    die(12);
-  }
-};
-var arrayTraps = {};
-each(objectTraps, (key, fn3) => {
-  arrayTraps[key] = function() {
-    arguments[0] = arguments[0][0];
-    return fn3.apply(this, arguments);
-  };
-});
-arrayTraps.deleteProperty = function(state, prop) {
-  return arrayTraps.set.call(this, state, prop, void 0);
-};
-arrayTraps.set = function(state, prop, value) {
-  return objectTraps.set.call(this, state[0], prop, value, state[0]);
-};
-function peek$1(draft, prop) {
-  const state = draft[DRAFT_STATE];
-  const source = state ? latest$1(state) : draft;
-  return source[prop];
-}
-function readPropFromProto(state, source, prop) {
-  const desc = getDescriptorFromProto(source, prop);
-  return desc ? `value` in desc ? desc.value : (
-    // This is a very special case, if the prop is a getter defined by the
-    // prototype, we should invoke it with the draft as context!
-    desc.get?.call(state.draft_)
-  ) : void 0;
-}
-function getDescriptorFromProto(source, prop) {
-  if (!(prop in source))
-    return void 0;
-  let proto2 = getPrototypeOf(source);
-  while (proto2) {
-    const desc = Object.getOwnPropertyDescriptor(proto2, prop);
-    if (desc)
-      return desc;
-    proto2 = getPrototypeOf(proto2);
-  }
-  return void 0;
-}
-function markChanged(state) {
-  if (!state.modified_) {
-    state.modified_ = true;
-    if (state.parent_) {
-      markChanged(state.parent_);
-    }
-  }
-}
-function prepareCopy(state) {
-  if (!state.copy_) {
-    state.copy_ = shallowCopy(
-      state.base_,
-      state.scope_.immer_.useStrictShallowCopy_
-    );
-  }
-}
-var Immer2 = class {
-  constructor(config2) {
-    this.autoFreeze_ = true;
-    this.useStrictShallowCopy_ = false;
-    this.useStrictIteration_ = true;
-    this.produce = (base, recipe, patchListener) => {
-      if (typeof base === "function" && typeof recipe !== "function") {
-        const defaultBase = recipe;
-        recipe = base;
-        const self2 = this;
-        return function curriedProduce(base2 = defaultBase, ...args) {
-          return self2.produce(base2, (draft) => recipe.call(this, draft, ...args));
-        };
-      }
-      if (typeof recipe !== "function")
-        die(6);
-      if (patchListener !== void 0 && typeof patchListener !== "function")
-        die(7);
-      let result;
-      if (isDraftable(base)) {
-        const scope = enterScope(this);
-        const proxy = createProxy(base, void 0);
-        let hasError = true;
-        try {
-          result = recipe(proxy);
-          hasError = false;
-        } finally {
-          if (hasError)
-            revokeScope(scope);
-          else
-            leaveScope(scope);
-        }
-        usePatchesInScope(scope, patchListener);
-        return processResult(result, scope);
-      } else if (!base || typeof base !== "object") {
-        result = recipe(base);
-        if (result === void 0)
-          result = base;
-        if (result === NOTHING)
-          result = void 0;
-        if (this.autoFreeze_)
-          freeze(result, true);
-        if (patchListener) {
-          const p2 = [];
-          const ip = [];
-          getPlugin("Patches").generateReplacementPatches_(base, result, p2, ip);
-          patchListener(p2, ip);
-        }
-        return result;
-      } else
-        die(1, base);
-    };
-    this.produceWithPatches = (base, recipe) => {
-      if (typeof base === "function") {
-        return (state, ...args) => this.produceWithPatches(state, (draft) => base(draft, ...args));
-      }
-      let patches, inversePatches;
-      const result = this.produce(base, recipe, (p2, ip) => {
-        patches = p2;
-        inversePatches = ip;
-      });
-      return [result, patches, inversePatches];
-    };
-    if (typeof config2?.autoFreeze === "boolean")
-      this.setAutoFreeze(config2.autoFreeze);
-    if (typeof config2?.useStrictShallowCopy === "boolean")
-      this.setUseStrictShallowCopy(config2.useStrictShallowCopy);
-    if (typeof config2?.useStrictIteration === "boolean")
-      this.setUseStrictIteration(config2.useStrictIteration);
-  }
-  createDraft(base) {
-    if (!isDraftable(base))
-      die(8);
-    if (isDraft(base))
-      base = current(base);
-    const scope = enterScope(this);
-    const proxy = createProxy(base, void 0);
-    proxy[DRAFT_STATE].isManual_ = true;
-    leaveScope(scope);
-    return proxy;
-  }
-  finishDraft(draft, patchListener) {
-    const state = draft && draft[DRAFT_STATE];
-    if (!state || !state.isManual_)
-      die(9);
-    const { scope_: scope } = state;
-    usePatchesInScope(scope, patchListener);
-    return processResult(void 0, scope);
-  }
-  /**
-   * Pass true to automatically freeze all copies created by Immer.
-   *
-   * By default, auto-freezing is enabled.
-   */
-  setAutoFreeze(value) {
-    this.autoFreeze_ = value;
-  }
-  /**
-   * Pass true to enable strict shallow copy.
-   *
-   * By default, immer does not copy the object descriptors such as getter, setter and non-enumrable properties.
-   */
-  setUseStrictShallowCopy(value) {
-    this.useStrictShallowCopy_ = value;
-  }
-  /**
-   * Pass false to use faster iteration that skips non-enumerable properties
-   * but still handles symbols for compatibility.
-   *
-   * By default, strict iteration is enabled (includes all own properties).
-   */
-  setUseStrictIteration(value) {
-    this.useStrictIteration_ = value;
-  }
-  shouldUseStrictIteration() {
-    return this.useStrictIteration_;
-  }
-  applyPatches(base, patches) {
-    let i2;
-    for (i2 = patches.length - 1; i2 >= 0; i2--) {
-      const patch = patches[i2];
-      if (patch.path.length === 0 && patch.op === "replace") {
-        base = patch.value;
-        break;
-      }
-    }
-    if (i2 > -1) {
-      patches = patches.slice(i2 + 1);
-    }
-    const applyPatchesImpl = getPlugin("Patches").applyPatches_;
-    if (isDraft(base)) {
-      return applyPatchesImpl(base, patches);
-    }
-    return this.produce(
-      base,
-      (draft) => applyPatchesImpl(draft, patches)
-    );
-  }
-};
-function createProxy(value, parent) {
-  const draft = isMap(value) ? getPlugin("MapSet").proxyMap_(value, parent) : isSet(value) ? getPlugin("MapSet").proxySet_(value, parent) : createProxyProxy(value, parent);
-  const scope = parent ? parent.scope_ : getCurrentScope();
-  scope.drafts_.push(draft);
-  return draft;
-}
-function current(value) {
-  if (!isDraft(value))
-    die(10, value);
-  return currentImpl(value);
-}
-function currentImpl(value) {
-  if (!isDraftable(value) || isFrozen(value))
-    return value;
-  const state = value[DRAFT_STATE];
-  let copy2;
-  let strict = true;
-  if (state) {
-    if (!state.modified_)
-      return state.base_;
-    state.finalized_ = true;
-    copy2 = shallowCopy(value, state.scope_.immer_.useStrictShallowCopy_);
-    strict = state.scope_.immer_.shouldUseStrictIteration();
-  } else {
-    copy2 = shallowCopy(value, true);
-  }
-  each(
-    copy2,
-    (key, childValue) => {
-      set(copy2, key, currentImpl(childValue));
-    },
-    strict
-  );
-  if (state) {
-    state.finalized_ = false;
-  }
-  return copy2;
-}
-var immer = new Immer2();
-var produce = immer.produce;
-const DEFAULT_AI_SETTINGS = {
-  enabled: false,
-  provider: "openai_compat",
-  // 安全默认值：不预置任何第三方 endpoint / model / key，避免误请求或泄露。
-  apiEndpoint: "",
-  apiKey: "",
-  // 默认不把密钥写入 Think/data.json；用户明确打开后才保存。
-  persistApiKey: false,
-  model: "",
-  temperature: 0.7,
-  maxTokens: 4096,
-  requestTimeoutMs: 3e4,
-  enabledRecordTypeIds: [],
-  allowMultipleResults: false,
-  maxResults: 10,
-  confirmMode: "batch",
-  preloadConfigOnStartup: false,
-  configCacheTTLSeconds: 300,
-  customPrompt: ""
-};
-const CUSTOM_PROMPT_EXAMPLES = `【示例规则】
-1. 优先选择已有目标，再选择记录类型；一个目标 × Record Type 最多只有一个字段预设。
-2. 当我说"心情"、"开心"、"难过"等情绪词时，优先匹配最接近的完整目标路径。
-3. 当我说"写文章"、"写作"时，使用任务记录类型，并优先匹配对应目标路径。
-4. 不要把目标、模板ID、周期ID写进 fieldValues；这些属于 target 或应用自动推导。
-5. 计划/总结的周期由应用根据预设 periodPolicy 和日期自动生成。`;
-const DEFAULT_SETTINGS = {
-  groups: [],
-  viewInstances: [],
-  layouts: [],
-  goalSettings: DEFAULT_GOAL_SETTINGS,
-  energySettings: DEFAULT_ENERGY_SETTINGS,
-  floatingTimerEnabled: true,
-  aiSettings: DEFAULT_AI_SETTINGS,
-  devConsoleStackEnabled: false,
-  recentGoalPaths: [],
-  goalTaskDefaultsSeedVersion: 0,
-  recordTypeColors: {}
-};
-function isRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-const RETIRED_CATEGORY_FIELDS = /* @__PURE__ */ new Set(["categoryKey", "categoryPath", "baseCategory", "rootCategory", "leafCategory", "分类", "分类路径"]);
-function isRetiredTemplateField(field, keepRecordSubtype) {
-  const key = String(field.key ?? "").trim();
-  const semantic = String(field.semantic ?? field.semanticType ?? "").trim();
-  if (RETIRED_CATEGORY_FIELDS.has(key) || semantic === "categoryPath") return true;
-  if (!keepRecordSubtype && (key === "记录子类型" || key === "recordSubtype" || semantic === "recordSubtype")) return true;
-  return false;
-}
-function hydrateGoalOnlySettings(value) {
-  const raw = isRecord(value) ? value : {};
-  const rawGoals = Array.isArray(raw.goals) ? raw.goals : [];
-  const goals = rawGoals.map((entry) => {
-    if (!isRecord(entry)) throw new Error("目标数据无效：应为对象。");
-    const path = normalizeGoalPath(String(entry.path ?? ""));
-    if (!path) throw new Error("目标数据无效：缺少路径。");
-    return {
-      path,
-      description: typeof entry.description === "string" ? entry.description : void 0,
-      status: ["active", "paused", "completed", "archived"].includes(String(entry.status)) ? entry.status : "active",
-      metrics: Array.isArray(entry.metrics) ? entry.metrics : [],
-      createdAt: typeof entry.createdAt === "string" ? entry.createdAt : "",
-      updatedAt: typeof entry.updatedAt === "string" ? entry.updatedAt : "",
-      ...typeof entry.icon === "string" ? { icon: entry.icon } : null,
-      ...normalizeGoalColorHex(entry.color) ? { color: normalizeGoalColorHex(entry.color) } : null,
-      ...typeof entry.sortOrder === "number" ? { sortOrder: entry.sortOrder } : null,
-      ...typeof entry.timePresetPercent === "number" ? { timePresetPercent: entry.timePresetPercent } : null,
-      ...typeof entry.weeklyTargetMinutes === "number" ? { weeklyTargetMinutes: entry.weeklyTargetMinutes } : null
-    };
-  });
-  const goalPaths = new Set(goals.map((goal) => goal.path));
-  const rawTemplates = Array.isArray(raw.goalTemplates) ? raw.goalTemplates : [];
-  const goalTemplates = rawTemplates.map((entry) => {
-    if (!isRecord(entry)) throw new Error("目标模板数据无效：应为对象。");
-    const goalPath = normalizeGoalPath(String(entry.goalPath ?? ""));
-    const recordTypeId = String(entry.recordTypeId ?? "").trim();
-    if (!goalPath || !goalPaths.has(goalPath)) throw new Error(`目标模板引用了不存在的目标路径（${goalPath || "空"}）。`);
-    if (!recordTypeId) throw new Error(`目标模板 ${goalPath} 缺少记录类型标识。`);
-    const recordSchema = getRecordSchemaDefinitionById(recordTypeId);
-    if (!recordSchema || recordSchema.captureMode !== "template") {
-      throw new Error(`目标模板 ${goalPath} 引用了当前版本不支持的记录类型（${recordTypeId}）。请先完成 1.5.0 离线数据收敛。`);
-    }
-    const keepRecordSubtype = recordSchema.recordType === "energy";
-    const fields = stripGoalTemplateIconFieldDefaults(Array.isArray(entry.fields) ? entry.fields.filter((field) => {
-      if (!isRecord(field)) return false;
-      if (field.semantic === "goalPath" || field.key === "goalPath" || field.key === "目标") return false;
-      return !isRetiredTemplateField(field, keepRecordSubtype);
-    }) : void 0);
-    const defaults = stripGoalTemplateIconDefaults(isRecord(entry.defaultValues) ? { ...entry.defaultValues } : void 0);
-    if (defaults) {
-      delete defaults.goalPath;
-      delete defaults["目标"];
-      for (const key of RETIRED_CATEGORY_FIELDS) delete defaults[key];
-      if (!keepRecordSubtype) {
-        delete defaults.recordSubtype;
-        delete defaults["记录子类型"];
-      }
-    }
-    return {
-      goalPath,
-      recordTypeId,
-      description: typeof entry.description === "string" ? entry.description : void 0,
-      enabled: entry.enabled !== false,
-      periodPolicy: isRecord(entry.periodPolicy) ? entry.periodPolicy : void 0,
-      fields,
-      targetFile: typeof entry.targetFile === "string" ? entry.targetFile : void 0,
-      appendUnderHeader: typeof entry.appendUnderHeader === "string" ? entry.appendUnderHeader : void 0,
-      defaultValues: defaults && Object.keys(defaults).length ? defaults : void 0,
-      requiredFields: Array.isArray(entry.requiredFields) ? entry.requiredFields.map(String).filter((key) => !RETIRED_CATEGORY_FIELDS.has(key) && (keepRecordSubtype || key !== "记录子类型" && key !== "recordSubtype")) : void 0
-    };
-  });
-  const rawRevisions = Array.isArray(raw.timePresetRevisions) ? raw.timePresetRevisions : [];
-  const timePresetRevisions = rawRevisions.map((entry) => {
-    if (!isRecord(entry)) throw new Error("Invalid timePresetRevision: expected object.");
-    const effectiveWeekStart = String(entry.effectiveWeekStart ?? "").trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(effectiveWeekStart)) throw new Error("Invalid timePresetRevision effectiveWeekStart.");
-    const rawPresets = isRecord(entry.presets) ? entry.presets : {};
-    const presets = {};
-    for (const [rawPath, rawPreset] of Object.entries(rawPresets)) {
-      const path = normalizeGoalPath(rawPath);
-      if (!path || !isRecord(rawPreset)) continue;
-      const preset = {};
-      if (typeof rawPreset.timePresetPercent === "number") preset.timePresetPercent = rawPreset.timePresetPercent;
-      if (typeof rawPreset.weeklyTargetMinutes === "number") preset.weeklyTargetMinutes = rawPreset.weeklyTargetMinutes;
-      if (Object.keys(preset).length) presets[path] = preset;
-    }
-    return { effectiveWeekStart, presets };
-  }).sort((a2, b2) => a2.effectiveWeekStart.localeCompare(b2.effectiveWeekStart));
-  const hydrated = { goals, goalTemplates, timePresetRevisions };
-  assertCanonicalGoalSettings(hydrated);
-  return hydrated;
-}
-function sanitizeViewState(raw) {
-  const rawViews = Array.isArray(raw.viewInstances) ? raw.viewInstances : [];
-  const retiredIds = new Set(
-    rawViews.filter((entry) => isRecord(entry) && String(entry.viewType ?? "") === "AssociationView" && typeof entry.id === "string").map((entry) => String(entry.id))
-  );
-  const viewInstances = rawViews.filter(
-    (entry) => !(isRecord(entry) && String(entry.viewType ?? "") === "AssociationView")
-  );
-  const rawLayouts = Array.isArray(raw.layouts) ? raw.layouts : [];
-  const layouts = rawLayouts.map((entry) => {
-    if (!isRecord(entry)) return entry;
-    const viewInstanceIds = (Array.isArray(entry.viewInstanceIds) ? entry.viewInstanceIds : []).map((id) => String(id)).filter((id) => !retiredIds.has(id));
-    const rawPlacements = isRecord(entry.viewPlacements) ? entry.viewPlacements : void 0;
-    const viewPlacements = rawPlacements ? Object.fromEntries(Object.entries(rawPlacements).filter(([id]) => !retiredIds.has(id))) : void 0;
-    return {
-      ...entry,
-      viewInstanceIds,
-      ...viewPlacements ? { viewPlacements } : {}
-    };
-  });
-  return { viewInstances, layouts };
-}
-function toCurrentThinkSettings(rawValue) {
-  if (rawValue != null) {
-    if (!isRecord(rawValue)) throw new Error("settings_invalid_root: 设置文件必须是对象，不能作为空设置加载。");
-    const goal = rawValue.goalSettings;
-    if (!isRecord(goal) || !Array.isArray(goal.goals) || !Array.isArray(goal.goalTemplates)) {
-      throw new Error("settings_unsupported_shape: 缺少当前目标结构；请保留原文件后显式转换，不会自动清空。");
-    }
-    for (const key of ["groups", "viewInstances", "layouts"]) {
-      if (rawValue[key] !== void 0 && !Array.isArray(rawValue[key])) throw new Error(`settings_invalid_shape:${key}`);
-    }
-    if (goal.timePresetRevisions !== void 0 && !Array.isArray(goal.timePresetRevisions)) {
-      throw new Error("settings_invalid_shape:timePresetRevisions");
-    }
-  }
-  const raw = isRecord(rawValue) ? rawValue : {};
-  const partial2 = raw;
-  const sanitizedViews = sanitizeViewState(raw);
-  const current2 = {
-    ...DEFAULT_SETTINGS,
-    vikaApiToken: typeof raw.vikaApiToken === "string" ? raw.vikaApiToken : "",
-    groups: Array.isArray(partial2.groups) ? partial2.groups : [],
-    viewInstances: sanitizedViews.viewInstances,
-    layouts: sanitizedViews.layouts,
-    goalSettings: hydrateGoalOnlySettings(raw.goalSettings),
-    energySettings: { ...DEFAULT_ENERGY_SETTINGS, ...isRecord(partial2.energySettings) ? partial2.energySettings : {} },
-    floatingTimerEnabled: typeof partial2.floatingTimerEnabled === "boolean" ? partial2.floatingTimerEnabled : DEFAULT_SETTINGS.floatingTimerEnabled,
-    aiSettings: isRecord(partial2.aiSettings) ? partial2.aiSettings : DEFAULT_SETTINGS.aiSettings,
-    devConsoleStackEnabled: typeof partial2.devConsoleStackEnabled === "boolean" ? partial2.devConsoleStackEnabled : DEFAULT_SETTINGS.devConsoleStackEnabled,
-    recentGoalPaths: Array.isArray(partial2.recentGoalPaths) ? partial2.recentGoalPaths.map(String) : [],
-    goalTaskDefaultsSeedVersion: typeof partial2.goalTaskDefaultsSeedVersion === "number" ? partial2.goalTaskDefaultsSeedVersion : 0,
-    recordTypeColors: normalizeRecordTypeColorOverrides(raw.recordTypeColors)
-  };
-  return current2;
-}
-function persistGoalOnlySettings(settings2) {
-  const runtime = settings2.goalSettings || { goals: [], goalTemplates: [], timePresetRevisions: [] };
-  const goals = (runtime.goals || []).map((goal) => {
-    const path = normalizeGoalPath(goal.path);
-    if (!path) throw new Error("Cannot persist Goal without canonical path.");
-    const source = goal;
-    return {
-      path,
-      status: goal.status,
-      ...goal.description ? { description: goal.description } : null,
-      ...source.icon ? { icon: source.icon } : null,
-      ...normalizeGoalColorHex(source.color) ? { color: normalizeGoalColorHex(source.color) } : null,
-      ...typeof source.sortOrder === "number" ? { sortOrder: source.sortOrder } : null,
-      ...typeof source.timePresetPercent === "number" ? { timePresetPercent: source.timePresetPercent } : null,
-      ...typeof source.weeklyTargetMinutes === "number" ? { weeklyTargetMinutes: source.weeklyTargetMinutes } : null,
-      ...goal.metrics?.length ? { metrics: goal.metrics } : null
-    };
-  });
-  const goalTemplates = (runtime.goalTemplates || []).map((template) => {
-    const path = normalizeGoalPath(template.goalPath);
-    if (!path) throw new Error("Cannot persist GoalTemplate without canonical Goal path.");
-    const recordSchema = getRecordSchemaDefinitionById(template.recordTypeId);
-    if (!recordSchema || recordSchema.captureMode !== "template") throw new Error(`无法保存当前版本不支持的目标模板记录类型：${template.recordTypeId}`);
-    const keepRecordSubtype = recordSchema.recordType === "energy";
-    const fields = stripGoalTemplateIconFieldDefaults((template.fields || []).filter((field) => {
-      const record2 = field;
-      if (record2.semantic === "goalPath" || record2.key === "goalPath" || record2.key === "目标") return false;
-      return !isRetiredTemplateField(record2, keepRecordSubtype);
-    })) || [];
-    const defaults = { ...stripGoalTemplateIconDefaults(template.defaultValues) || {} };
-    for (const key of ["goalPath", "目标", ...RETIRED_CATEGORY_FIELDS]) delete defaults[key];
-    if (!keepRecordSubtype) {
-      delete defaults.recordSubtype;
-      delete defaults["记录子类型"];
-    }
-    return {
-      goalPath: path,
-      recordTypeId: template.recordTypeId,
-      ...template.description ? { description: template.description } : null,
-      enabled: template.enabled !== false,
-      ...template.periodPolicy ? { periodPolicy: template.periodPolicy } : null,
-      ...fields.length ? { fields } : null,
-      ...template.targetFile ? { targetFile: template.targetFile } : null,
-      ...template.appendUnderHeader ? { appendUnderHeader: template.appendUnderHeader } : null,
-      ...Object.keys(defaults).length ? { defaultValues: defaults } : null,
-      ...template.requiredFields?.length ? { requiredFields: template.requiredFields.filter((key) => !RETIRED_CATEGORY_FIELDS.has(key) && (keepRecordSubtype || key !== "记录子类型" && key !== "recordSubtype")) } : null
-    };
-  });
-  const timePresetRevisions = (runtime.timePresetRevisions || []).map((revision) => ({
-    effectiveWeekStart: revision.effectiveWeekStart,
-    presets: Object.fromEntries(Object.entries(revision.presets || {}).map(([path, preset]) => [normalizeGoalPath(path), {
-      ...typeof preset.timePresetPercent === "number" ? { timePresetPercent: preset.timePresetPercent } : null,
-      ...typeof preset.weeklyTargetMinutes === "number" ? { weeklyTargetMinutes: preset.weeklyTargetMinutes } : null
-    }]).filter(([path]) => !!path))
-  }));
-  return { goals, goalTemplates, timePresetRevisions };
-}
-function toPersistedThinkSettings(settings2) {
-  const out = JSON.parse(JSON.stringify(settings2 ?? {}));
-  delete out.inputSettings;
-  delete out.recordTypeSettings;
-  delete out.categoryColors;
-  const recordTypeColors = normalizeRecordTypeColorOverrides(settings2.recordTypeColors);
-  if (Object.keys(recordTypeColors).length > 0) out.recordTypeColors = recordTypeColors;
-  else delete out.recordTypeColors;
-  out.goalSettings = persistGoalOnlySettings(settings2);
-  return out;
-}
-class DurableSnapshot {
-  constructor(io) {
-    this.io = io;
-  }
-  io;
-  current;
-  ready = false;
-  loading = null;
-  queue = new SerialTaskQueue();
-  publish(before, after) {
-    try {
-      this.io.committed?.(before, after);
-    } catch {
-    }
-  }
-  load() {
-    if (this.ready) return Promise.resolve(this.get());
-    if (this.loading) return this.loading;
-    this.loading = this.queue.run(async () => {
-      const next2 = await this.io.load();
-      this.current = next2;
-      this.ready = true;
-      this.publish(void 0, next2);
-      return next2;
-    });
-    const pending = this.loading;
-    void pending.then(() => {
-      this.loading = null;
-    }, () => {
-      this.loading = null;
-    });
-    return pending;
-  }
-  get() {
-    if (!this.ready) throw new Error("设置尚未加载，请先完成加载。");
-    return this.current;
-  }
-  update(build) {
-    return this.queue.run(async () => {
-      const before = this.get();
-      const next2 = build(before);
-      if (next2 === before) return before;
-      await this.io.save(next2);
-      this.current = next2;
-      this.publish(before, next2);
-      return next2;
-    });
-  }
-  /** Whole-snapshot saves must not silently overwrite a queued newer update. */
-  replace(snapshot) {
-    const expected = this.get();
-    return this.update((current2) => {
-      if (current2 !== expected) throw new Error("settings_stale_snapshot: 设置已变化，请重新读取后保存。");
-      return snapshot;
-    });
-  }
-}
-var __getOwnPropDesc$b = Object.getOwnPropertyDescriptor;
-var __decorateClass$b = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$b(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-var __decorateParam$a = (index, decorator) => (target, key) => decorator(target, key, index);
-const SETTINGS_PERSISTENCE_TOKEN = "SettingsPersistence";
-function toSafePersistedThinkSettings(settings2) {
-  const persisted = toPersistedThinkSettings(settings2);
-  const aiSettings = persisted.aiSettings;
-  if (aiSettings && typeof aiSettings === "object" && aiSettings.persistApiKey !== true) {
-    if (aiSettings.apiKey) {
-      devWarn("[SettingsPersistence] persistApiKey 未显式开启，apiKey 将被剥离后保存");
-    }
-    aiSettings.apiKey = "";
-  }
-  return persisted;
-}
-let VaultSettingsPersistence = class {
-  constructor(storage) {
-    this.storage = storage;
-  }
-  storage;
-  async load() {
-    return await this.storage.readJSON(THINK_STORAGE_PATHS.settings);
-  }
-  async save(settings2) {
-    await this.storage.writeJSON(
-      THINK_STORAGE_PATHS.settings,
-      toSafePersistedThinkSettings(settings2)
-    );
-  }
-};
-VaultSettingsPersistence = __decorateClass$b([
-  singleton(),
-  __decorateParam$a(0, inject(STORAGE_TOKEN))
-], VaultSettingsPersistence);
-var __getOwnPropDesc$a = Object.getOwnPropertyDescriptor;
-var __decorateClass$a = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$a(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-var __decorateParam$9 = (index, decorator) => (target, key) => decorator(target, key, index);
-let SettingsRepository = class {
-  state;
-  listeners = /* @__PURE__ */ new Set();
-  constructor(persistence) {
-    this.state = new DurableSnapshot({
-      load: async () => {
-        const loaded = await persistence.load();
-        return toCurrentThinkSettings(loaded);
-      },
-      save: async (settings2) => {
-        assertCanonicalGoalSettings(settings2.goalSettings);
-        await persistence.save(settings2);
-      },
-      committed: (_before, settings2) => {
-        for (const listener of this.listeners) {
-          try {
-            listener(settings2);
-          } catch (error) {
-            devWarn("[SettingsRepository] 订阅者异常；已保存状态不回滚。", error);
-          }
-        }
-      }
-    });
-  }
-  subscribe(listener) {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-  load() {
-    return this.state.load();
-  }
-  getSettings() {
-    return this.state.get();
-  }
-  getSnapshot() {
-    return this.state.get();
-  }
-  async save(settings2, meta) {
-    const before = this.state.get();
-    const snapshot = JSON.parse(JSON.stringify(settings2));
-    await this.state.replace(snapshot);
-    logSettingsWrite(meta, before, snapshot);
-  }
-  async update(mutator, meta) {
-    let before;
-    const result = await this.state.update((current2) => {
-      before = current2;
-      return produce(current2, mutator);
-    });
-    if (before !== result) logSettingsWrite(meta, before, result);
-    return result;
-  }
-};
-SettingsRepository = __decorateClass$a([
-  singleton(),
-  __decorateParam$9(0, inject(SETTINGS_PERSISTENCE_TOKEN))
-], SettingsRepository);
-var __getOwnPropDesc$9 = Object.getOwnPropertyDescriptor;
-var __decorateClass$9 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$9(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = decorator(result) || result;
-  return result;
-};
-var __decorateParam$8 = (index, decorator) => (target, key) => decorator(target, key, index);
-let RepositorySettingsProvider = class {
-  constructor(settingsRepository) {
-    this.settingsRepository = settingsRepository;
-  }
-  settingsRepository;
-  getSettings() {
-    return this.settingsRepository.getSettings();
-  }
-};
-RepositorySettingsProvider = __decorateClass$9([
-  singleton(),
-  __decorateParam$8(0, inject(SettingsRepository))
-], RepositorySettingsProvider);
-const API$1 = "https://vika.cn/fusion/v1/datasheets/dstoKKbqk6Rv7E3vhy/records";
-const F$4 = { version: "版本号", build: "构建ID", time: "上传时间" };
-const MAX_BYTES = 40 * 1024 * 1024;
-function settings() {
-  return instance.resolve(SettingsRepository);
-}
-function credential() {
-  const token2 = settings().getSettings().vikaApiToken?.trim();
-  if (!token2) throw new Error("尚未配置维格表 API 令牌，请先运行命令「维格表：设置令牌」");
-  return token2;
-}
-function openVikaTokenDialog(app) {
-  new class extends obsidian.Modal {
-    onOpen() {
-      let input = "";
-      this.contentEl.createEl("h3", { text: "Think OS · 维格表令牌" });
-      this.contentEl.createEl("p", { text: "保存到现有 Think/data.json（明文，勿提交到 Git）。" });
-      new obsidian.Setting(this.contentEl).setName("API 令牌").addText((text2) => {
-        text2.inputEl.type = "password";
-        text2.setPlaceholder("粘贴你的新令牌").onChange((value) => {
-          input = value;
-        });
-      });
-      new obsidian.Setting(this.contentEl).addButton((button) => button.setButtonText("保存").setCta().onClick(async () => {
-        const value = input.trim();
-        if (!value || /\s/.test(value)) {
-          new obsidian.Notice("令牌不能为空或含空格");
-          return;
-        }
-        try {
-          await settings().update((draft) => {
-            draft.vikaApiToken = value;
-          });
-          new obsidian.Notice("维格表令牌已保存到 Think/data.json");
-          this.close();
-        } catch (error) {
-          new obsidian.Notice(`保存失败：${error instanceof Error ? error.message : String(error)}`);
-        }
-      }));
-    }
-    onClose() {
-      this.contentEl.empty();
-    }
-  }(app).open();
-}
-async function rows(token2, params) {
-  let response;
-  try {
-    response = await obsidian.requestUrl({
-      url: `${API$1}?${params}`,
-      method: "GET",
-      throw: false,
-      headers: { Authorization: `Bearer ${token2}`, Accept: "application/json", "Cache-Control": "no-cache" }
-    });
-  } catch {
-    throw new Error("无法连接维格表，请检查网络");
-  }
-  if (response.status !== 200) throw new Error(`维格表 API HTTP ${response.status}，请检查令牌和权限`);
-  let body;
-  try {
-    body = JSON.parse(response.text);
-  } catch {
-    throw new Error("维格表 API 返回无效 JSON");
-  }
-  if (!body?.success || body?.code !== 200 || !Array.isArray(body.data?.records)) {
-    throw new Error(`维格表返回错误：${String(body?.message ?? "未知错误").slice(0, 80)}`);
-  }
-  return body.data.records;
-}
-function parse$2(row) {
-  const fields = row?.fields;
-  if (!fields || typeof row.recordId !== "string" || typeof fields[F$4.version] !== "string" || !/^[a-f0-9]{64}$/i.test(fields[F$4.build]) || !Number.isFinite(fields[F$4.time])) return null;
-  const files = {};
-  for (const name of DEV_BUILD_FILES$1) {
-    const attachments = fields[name];
-    const item = Array.isArray(attachments) && attachments.length === 1 ? attachments[0] : null;
-    if (typeof item?.url !== "string" || typeof item?.token !== "string" || !Number.isSafeInteger(item?.size) || item.size < 1 || item.size > MAX_BYTES) return null;
-    files[name] = item;
-  }
-  return {
-    id: row.recordId,
-    version: fields[F$4.version],
-    fingerprint: fields[F$4.build].toLowerCase(),
-    time: fields[F$4.time],
-    files
-  };
-}
-async function newest(token2) {
-  const params = new URLSearchParams({ pageSize: "100", pageNum: "1" });
-  params.append("sort[][field]", F$4.time);
-  params.append("sort[][order]", "desc");
-  const valid = (await rows(token2, params)).map(parse$2).filter((r2) => r2 !== null);
-  valid.sort((a2, b2) => b2.time - a2.time);
-  if (!valid.length) throw new Error("维格表尚无完整的三文件构建记录");
-  return valid[0];
-}
-async function pinned$1(token2, id) {
-  await new Promise((resolve) => setTimeout(resolve, 550));
-  const found = (await rows(token2, new URLSearchParams({ recordIds: id }))).find((row) => row.recordId === id);
-  const build = parse$2(found);
-  if (!build) throw new Error("维格表构建记录已更改，请重新更新");
-  return build;
-}
-function attachmentUrl(link) {
-  let url;
-  try {
-    url = new URL(link);
-  } catch {
-    throw new Error("附件下载链接无效");
-  }
-  if (url.protocol !== "https:" || url.username || url.password || !/(^|\.)(vika\.cn|vika\.com|aitable\.ai|apitable\.com|apitable\.cn)$/.test(url.hostname.toLowerCase())) {
-    throw new Error("附件链接域名不符合预期，已取消下载");
-  }
-  return url.href;
-}
-async function getAttachment(name, data) {
-  let response;
-  try {
-    response = await obsidian.requestUrl({ url: attachmentUrl(data.url), method: "GET", throw: false });
-  } catch {
-    throw new Error(`下载 ${name} 失败`);
-  }
-  if (response.status !== 200) throw new Error(`${name} 下载 HTTP ${response.status}（链接可能已过期）`);
-  if (!response.arrayBuffer || response.arrayBuffer.byteLength !== data.size || data.size > MAX_BYTES) {
-    throw new Error(`${name} 下载大小不匹配`);
-  }
-  try {
-    return new TextDecoder("utf-8", { fatal: true }).decode(response.arrayBuffer);
-  } catch {
-    throw new Error(`${name} 编码无效`);
-  }
-}
-async function localFingerprint(host) {
-  const base = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
-  const files = {};
-  for (const name of DEV_BUILD_FILES$1) {
-    const path = `${base}/${name}`;
-    if (!await host.app.vault.adapter.exists(path)) return null;
-    files[name] = await host.app.vault.adapter.read(path);
-  }
-  try {
-    validateDevBuild$1(files, host.manifest.id);
-  } catch {
-    return null;
-  }
-  return buildFingerprint(files);
-}
-async function updateFromVika(host) {
-  return withDevBuildLock(async () => {
-    const token2 = credential();
-    const remote = await newest(token2);
-    const uploadTime = new Date(remote.time).toLocaleString("zh-CN");
-    if (await localFingerprint(host) === remote.fingerprint) {
-      new obsidian.Notice(`维格表已是最新构建（上传：${uploadTime}）`);
-      return;
-    }
-    const cloud = await pinned$1(token2, remote.id);
-    if (cloud.fingerprint !== remote.fingerprint) throw new Error("云端构建已变化，请重新操作");
-    const downloaded = {};
-    for (const name of DEV_BUILD_FILES$1) {
-      try {
-        downloaded[name] = await getAttachment(name, cloud.files[name]);
-      } catch (error) {
-        const refreshed = await pinned$1(token2, remote.id);
-        if (refreshed.fingerprint !== cloud.fingerprint) throw new Error("云端构建已变化，请重新操作");
-        try {
-          downloaded[name] = await getAttachment(name, refreshed.files[name]);
-        } catch {
-          throw error;
-        }
-      }
-    }
-    if (validateDevBuild$1(downloaded, host.manifest.id) !== remote.version || await buildFingerprint(downloaded) !== remote.fingerprint) {
-      throw new Error("下载文件与云端构建指纹不一致，未覆盖本地文件");
-    }
-    await installDevBuild$1(host, downloaded);
-    new obsidian.Notice(`Think OS 已安装维格表构建 ${remote.fingerprint.slice(0, 12)}
-上传：${uploadTime}
-请完全退出并重启 Obsidian`, 0);
-  });
-}
-function ensureReflectMetadata() {
-  if (typeof Reflect === "undefined") {
-    devError("[ThinkPlugin] Reflect 对象未定义!");
-    throw new Error("Reflect object is not available");
-  }
-  if (typeof Reflect.getOwnMetadata !== "function") {
-    devError("[ThinkPlugin] Reflect.getOwnMetadata 方法不可用!");
-    devLog("[ThinkPlugin] 可用的 Reflect 方法:", Object.getOwnPropertyNames(Reflect));
-    throw new Error("Reflect.getOwnMetadata is not a function - reflect-metadata polyfill not properly loaded");
-  }
-}
-function setupCoreContainer(app) {
-  instance.register(AppToken, { useValue: app });
-  instance.register(STORAGE_TOKEN, { useClass: VaultFileStorage });
-  instance.registerSingleton(SettingsRepository);
-  instance.registerSingleton(RepositorySettingsProvider);
-  instance.register(SettingsProviderToken, { useToken: RepositorySettingsProvider });
-}
 const AI_TASK_STATUS_ALIASES = {
   "已完成": "done",
   "完成": "done",
@@ -16878,8 +16359,8 @@ class AiConfigCache {
     const totalStart = nowMs();
     const prefix2 = traceId ? `[AiInput][${traceId}][ConfigCache]` : "[AiInput][ConfigCache]";
     const settingsStart = nowMs();
-    const settings2 = this.settingsProvider.getSettings();
-    const ai = settings2.aiSettings;
+    const settings = this.settingsProvider.getSettings();
+    const ai = settings.aiSettings;
     devLog(`${prefix2} 读取 settings 完成 (${elapsedMs(settingsStart)})`);
     if (!ai) {
       throw new Error("智能助手设置缺失");
@@ -16895,7 +16376,7 @@ class AiConfigCache {
     });
     if (!cacheHit) {
       const rebuildStart = nowMs();
-      const nextSnapshot = buildAiConfigSnapshot(buildRecordTypeInputSettings(), ai, settings2.goalSettings);
+      const nextSnapshot = buildAiConfigSnapshot(buildRecordTypeInputSettings(), ai, settings.goalSettings);
       this.snapshot = nextSnapshot;
       this.lastUpdated = now2;
       devLog(`${prefix2} buildAiConfigSnapshot 完成 (${elapsedMs(rebuildStart)})`, {
@@ -16941,8 +16422,8 @@ class AiConfigCache {
       devLog(`[AiInput][ConfigCache] isValid=false: snapshot missing (${elapsedMs(start2)})`);
       return false;
     }
-    const settings2 = this.settingsProvider.getSettings();
-    const ai = settings2.aiSettings;
+    const settings = this.settingsProvider.getSettings();
+    const ai = settings.aiSettings;
     if (!ai) {
       devLog(`[AiInput][ConfigCache] isValid=false: ai settings missing (${elapsedMs(start2)})`);
       return false;
@@ -17454,8 +16935,8 @@ class AiNaturalLanguageRecordParser {
       fastMode: !!input.fastMode
     });
     const settingsStart = nowMs();
-    const settings2 = this.settingsProvider.getSettings();
-    const ai = settings2.aiSettings;
+    const settings = this.settingsProvider.getSettings();
+    const ai = settings.aiSettings;
     logParserStep(traceId, "读取 settings 完成", settingsStart, {
       aiEnabled: !!ai?.enabled,
       model: ai?.model ?? "(missing)",
@@ -17997,14 +17478,14 @@ function prefixIssues(path, issues) {
     return iss;
   });
 }
-function unwrapMessage(message2) {
-  return typeof message2 === "string" ? message2 : message2?.message;
+function unwrapMessage(message) {
+  return typeof message === "string" ? message : message?.message;
 }
 function finalizeIssue(iss, ctx, config2) {
-  const message2 = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
+  const message = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
   const { inst: _inst, continue: _continue, input: _input, ...rest } = iss;
   rest.path ?? (rest.path = []);
-  rest.message = message2;
+  rest.message = message;
   if (ctx?.reportInput) {
     rest.input = _input;
   }
@@ -18205,7 +17686,7 @@ function timeSource(args) {
   const regex = typeof args.precision === "number" ? args.precision === -1 ? `${hhmm}` : args.precision === 0 ? `${hhmm}:[0-5]\\d` : `${hhmm}:[0-5]\\d\\.\\d{${args.precision}}` : `${hhmm}(?::[0-5]\\d(?:\\.\\d+)?)?`;
   return regex;
 }
-function time$2(args) {
+function time$1(args) {
   return new RegExp(`^${timeSource(args)}$`);
 }
 function datetime$1(args) {
@@ -18918,7 +18399,7 @@ const $ZodISODate = /* @__PURE__ */ $constructor("$ZodISODate", (inst, def) => {
   $ZodStringFormat.init(inst, def);
 });
 const $ZodISOTime = /* @__PURE__ */ $constructor("$ZodISOTime", (inst, def) => {
-  def.pattern ?? (def.pattern = time$2(def));
+  def.pattern ?? (def.pattern = time$1(def));
   $ZodStringFormat.init(inst, def);
 });
 const $ZodISODuration = /* @__PURE__ */ $constructor("$ZodISODuration", (inst, def) => {
@@ -21293,7 +20774,7 @@ const ZodISOTime = /* @__PURE__ */ $constructor("ZodISOTime", (inst, def) => {
   $ZodISOTime.init(inst, def);
   ZodStringFormat.init(inst, def);
 });
-function time$1(params) {
+function time(params) {
   return /* @__PURE__ */ _isoTime(ZodISOTime, params);
 }
 const ZodISODuration = /* @__PURE__ */ $constructor("ZodISODuration", (inst, def) => {
@@ -21340,7 +20821,7 @@ const initializer = (inst, issues) => {
 const ZodRealError = /* @__PURE__ */ $constructor("ZodError", initializer, {
   Parent: Error
 });
-const parse$1 = /* @__PURE__ */ _parse(ZodRealError);
+const parse$2 = /* @__PURE__ */ _parse(ZodRealError);
 const parseAsync = /* @__PURE__ */ _parseAsync(ZodRealError);
 const safeParse = /* @__PURE__ */ _safeParse(ZodRealError);
 const safeParseAsync = /* @__PURE__ */ _safeParseAsync(ZodRealError);
@@ -21401,7 +20882,7 @@ const ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
   inst.def = def;
   inst.type = def.type;
   Object.defineProperty(inst, "_def", { value: def });
-  inst.parse = (data, params) => parse$1(inst, data, params, { callee: inst.parse });
+  inst.parse = (data, params) => parse$2(inst, data, params, { callee: inst.parse });
   inst.safeParse = (data, params) => safeParse(inst, data, params);
   inst.parseAsync = async (data, params) => parseAsync(inst, data, params, { callee: inst.parseAsync });
   inst.safeParseAsync = async (data, params) => safeParseAsync(inst, data, params);
@@ -21602,7 +21083,7 @@ const ZodString = /* @__PURE__ */ $constructor("ZodString", (inst, def) => {
   inst.e164 = (params) => inst.check(/* @__PURE__ */ _e164(ZodE164, params));
   inst.datetime = (params) => inst.check(datetime(params));
   inst.date = (params) => inst.check(date(params));
-  inst.time = (params) => inst.check(time$1(params));
+  inst.time = (params) => inst.check(time(params));
   inst.duration = (params) => inst.check(duration$1(params));
 });
 function string(params) {
@@ -22375,7 +21856,7 @@ let ChatSessionStore = class {
     return this.commit((draft) => {
       const session = draft.sessions.find((entry) => entry.id === sessionId);
       if (!session) return null;
-      const message2 = {
+      const message = {
         id: generateId(),
         role,
         content,
@@ -22383,12 +21864,12 @@ let ChatSessionStore = class {
         created: Date.now(),
         meta
       };
-      session.messages.push(message2);
+      session.messages.push(message);
       session.modified = Date.now();
       if (role === "user" && session.messages.filter((entry) => entry.role === "user").length === 1) {
         session.title = content.slice(0, 30) + (content.length > 30 ? "..." : "");
       }
-      return message2;
+      return message;
     });
   }
   async updateSession(id, updates) {
@@ -22873,11 +22354,11 @@ let AiChatService = class {
    * - signal 用于 modal 关闭/unload/takeLatest 等场景的取消
    */
   async chat(request, signal) {
-    const settings2 = this.getAiSettings();
-    if (!settings2.enabled) {
+    const settings = this.getAiSettings();
+    if (!settings.enabled) {
       throw new Error("智能助手未启用，请在设置中开启");
     }
-    if (!settings2.apiEndpoint || !settings2.apiKey || !settings2.model) {
+    if (!settings.apiEndpoint || !settings.apiKey || !settings.model) {
       throw new Error("智能助手配置不完整，请检查接口设置");
     }
     const messages = [];
@@ -22929,19 +22410,19 @@ ${contextStr}
     });
     try {
       const content = await this.httpClient.chatCompletion({
-        baseURL: settings2.apiEndpoint,
-        apiKey: settings2.apiKey,
-        model: settings2.model,
-        temperature: settings2.temperature,
-        max_tokens: settings2.maxTokens,
+        baseURL: settings.apiEndpoint,
+        apiKey: settings.apiKey,
+        model: settings.model,
+        temperature: settings.temperature,
+        max_tokens: settings.maxTokens,
         messages,
-        timeoutMs: settings2.requestTimeoutMs,
+        timeoutMs: settings.requestTimeoutMs,
         signal
       });
       return {
         content,
         referencedItemIds,
-        model: settings2.model,
+        model: settings.model,
         retrievalCount
       };
     } catch (e2) {
@@ -22952,9 +22433,9 @@ ${contextStr}
   /**
    * 简单问答（不带上下文检索）
    */
-  async simpleChat(message2) {
+  async simpleChat(message) {
     const response = await this.chat({
-      userMessage: message2,
+      userMessage: message,
       enableRetrieval: false
     });
     return response.content;
@@ -22962,9 +22443,9 @@ ${contextStr}
   /**
    * 带检索的问答
    */
-  async chatWithRetrieval(message2, filters, history) {
+  async chatWithRetrieval(message, filters, history) {
     return this.chat({
-      userMessage: message2,
+      userMessage: message,
       enableRetrieval: true,
       retrievalFilters: filters,
       history
@@ -23582,8 +23063,8 @@ let WhiteboardStore = class {
     }).catch((error) => {
       if (!this.disposed) {
         this.initialized = false;
-        const message2 = error instanceof Error ? error.message : String(error);
-        this.setStatus({ state: "error", message: message2 });
+        const message = error instanceof Error ? error.message : String(error);
+        this.setStatus({ state: "error", message });
       }
       throw error;
     }).finally(() => {
@@ -24290,9 +23771,9 @@ function j$2(n2, l2, u3, t3) {
   } while (null != l2 && 8 == l2.nodeType);
   return l2;
 }
-function F$3(n2, l2) {
+function F$2(n2, l2) {
   return l2 = l2 || [], null == n2 || "boolean" == typeof n2 || (g$2(n2) ? n2.some(function(n3) {
-    F$3(n3, l2);
+    F$2(n3, l2);
   }) : l2.push(n2)), l2;
 }
 function O$1(n2, l2, u3, t3) {
@@ -24543,7 +24024,7 @@ function A$1(n2) {
     return { current: n2 };
   }, []);
 }
-function F$2(n2, t3, r2) {
+function F$1(n2, t3, r2) {
   o = 6, _(function() {
     if ("function" == typeof n2) {
       var r3 = n2(t3());
@@ -24726,15 +24207,15 @@ function D(n2) {
   }
   return t3.$$typeof = A, t3.render = n2, t3.prototype.isReactComponent = t3.__f = true, t3.displayName = "ForwardRef(" + (n2.displayName || n2.name) + ")", t3;
 }
-var F$1 = function(n2, t3) {
-  return null == n2 ? null : F$3(F$3(n2).map(t3));
-}, L = { map: F$1, forEach: F$1, count: function(n2) {
-  return n2 ? F$3(n2).length : 0;
+var F = function(n2, t3) {
+  return null == n2 ? null : F$2(F$2(n2).map(t3));
+}, L = { map: F, forEach: F, count: function(n2) {
+  return n2 ? F$2(n2).length : 0;
 }, only: function(n2) {
-  var t3 = F$3(n2);
+  var t3 = F$2(n2);
   if (1 !== t3.length) throw "Children.only";
   return t3[0];
-}, toArray: F$3 }, O = l$1.__e;
+}, toArray: F$2 }, O = l$1.__e;
 l$1.__e = function(n2, t3, e2, r2) {
   if (n2.then) {
     for (var u3, o2 = t3; o2 = o2.__; ) if ((u3 = o2.__c) && u3.__c) return null == t3.__e && (t3.__e = e2.__e, t3.__k = e2.__k), u3.__c(n2, t3);
@@ -24855,7 +24336,7 @@ function $(n2, e2) {
   };
 }, B.prototype.render = function(n2) {
   this.i = null, this.l = /* @__PURE__ */ new Map();
-  var t3 = F$3(n2.children);
+  var t3 = F$2(n2.children);
   n2.revealOrder && "b" === n2.revealOrder[0] && t3.reverse();
   for (var e2 = t3.length; e2--; ) this.l.set(t3[e2], this.i = [1, 0, this.i]);
   return n2.children;
@@ -24903,9 +24384,9 @@ l$1.vnode = function(n2) {
         "defaultValue" === i2 && "value" in t3 && null == t3.value ? i2 = "value" : "download" === i2 && true === l2 ? l2 = "" : "translate" === c2 && "no" === l2 ? l2 = false : "o" === c2[0] && "n" === c2[1] ? "ondoubleclick" === c2 ? i2 = "ondblclick" : "onchange" !== c2 || "input" !== e2 && "textarea" !== e2 || X(t3.type) ? "onfocus" === c2 ? i2 = "onfocusin" : "onblur" === c2 ? i2 = "onfocusout" : J.test(i2) && (i2 = c2) : c2 = i2 = "oninput" : o2 && G.test(i2) ? i2 = i2.replace(K, "-$&").toLowerCase() : null === l2 && (l2 = void 0), "oninput" === c2 && u3[i2 = c2] && (i2 = "oninputCapture"), u3[i2] = l2;
       }
     }
-    "select" == e2 && (u3.multiple && Array.isArray(u3.value) && (u3.value = F$3(t3.children).forEach(function(n4) {
+    "select" == e2 && (u3.multiple && Array.isArray(u3.value) && (u3.value = F$2(t3.children).forEach(function(n4) {
       n4.props.selected = -1 != u3.value.indexOf(n4.props.value);
-    })), null != u3.defaultValue && (u3.value = F$3(t3.children).forEach(function(n4) {
+    })), null != u3.defaultValue && (u3.value = F$2(t3.children).forEach(function(n4) {
       n4.props.selected = u3.multiple ? -1 != u3.defaultValue.indexOf(n4.props.value) : u3.defaultValue == n4.props.value;
     }))), t3.class && !t3.className ? (u3.class = t3.class, Object.defineProperty(u3, "className", un)) : t3.className && (u3.class = u3.className = t3.className), n3.props = u3;
   })(n2), n2.$$typeof = q, on && on(n2);
@@ -24922,7 +24403,7 @@ l$1.diffed = function(n2) {
 };
 var fn = { ReactCurrentDispatcher: { current: { readContext: function(n2) {
   return rn.__n[n2.__c].props.value;
-}, useCallback: q$1, useContext: x$1, useDebugValue: P$1, useDeferredValue: w, useEffect: y, useId: g$1, useImperativeHandle: F$2, useInsertionEffect: I, useLayoutEffect: _, useMemo: T$1, useReducer: h, useRef: A$1, useState: d, useSyncExternalStore: C, useTransition: k } } }, an = "18.3.1";
+}, useCallback: q$1, useContext: x$1, useDebugValue: P$1, useDeferredValue: w, useEffect: y, useId: g$1, useImperativeHandle: F$1, useInsertionEffect: I, useLayoutEffect: _, useMemo: T$1, useReducer: h, useRef: A$1, useState: d, useSyncExternalStore: C, useTransition: k } } }, an = "18.3.1";
 function sn(n2) {
   return k$2.bind(null, n2);
 }
@@ -24953,7 +24434,7 @@ var _n = function(n2, t3) {
   };
   var u3 = n2(t3);
   return l$1.debounceRendering = r2, u3;
-}, Sn = hn, gn = { useState: d, useId: g$1, useReducer: h, useEffect: y, useLayoutEffect: _, useInsertionEffect: I, useTransition: k, useDeferredValue: w, useSyncExternalStore: C, startTransition: x, useRef: A$1, useImperativeHandle: F$2, useMemo: T$1, useCallback: q$1, useContext: x$1, useDebugValue: P$1, version: "18.3.1", Children: L, render: nn, hydrate: tn, unmountComponentAtNode: pn, createPortal: $, createElement: k$2, createContext: X$1, createFactory: sn, cloneElement: mn, createRef: M$1, Fragment: S, isValidElement: hn, isElement: Sn, isFragment: vn, isMemo: dn, findDOMNode: yn, Component: C$2, PureComponent: M, memo: N, forwardRef: D, flushSync: bn, unstable_batchedUpdates: _n, StrictMode: S, Suspense: P, SuspenseList: B, lazy: z, __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: fn };
+}, Sn = hn, gn = { useState: d, useId: g$1, useReducer: h, useEffect: y, useLayoutEffect: _, useInsertionEffect: I, useTransition: k, useDeferredValue: w, useSyncExternalStore: C, startTransition: x, useRef: A$1, useImperativeHandle: F$1, useMemo: T$1, useCallback: q$1, useContext: x$1, useDebugValue: P$1, version: "18.3.1", Children: L, render: nn, hydrate: tn, unmountComponentAtNode: pn, createPortal: $, createElement: k$2, createContext: X$1, createFactory: sn, cloneElement: mn, createRef: M$1, Fragment: S, isValidElement: hn, isElement: Sn, isFragment: vn, isMemo: dn, findDOMNode: yn, Component: C$2, PureComponent: M, memo: N, forwardRef: D, flushSync: bn, unstable_batchedUpdates: _n, StrictMode: S, Suspense: P, SuspenseList: B, lazy: z, __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: fn };
 const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   Children: L,
@@ -24992,7 +24473,7 @@ const React = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePropert
   useEffect: y,
   useErrorBoundary: b,
   useId: g$1,
-  useImperativeHandle: F$2,
+  useImperativeHandle: F$1,
   useInsertionEffect: I,
   useLayoutEffect: _,
   useMemo: T$1,
@@ -25092,8 +24573,8 @@ function buildParsedRecordSnapshot(item) {
 function getStoreMutationErrorMessage(error, fallback) {
   if (error instanceof Error && error.message) return error.message;
   if (typeof error === "object" && error !== null && "message" in error) {
-    const message2 = error.message;
-    if (typeof message2 === "string" && message2.trim()) return message2;
+    const message = error.message;
+    if (typeof message === "string" && message.trim()) return message;
   }
   if (typeof error === "string" && error.trim()) return error;
   return fallback;
@@ -25115,9 +24596,9 @@ function createSettingsMutationRunner(options) {
       options.setStatus(false, null);
       return operation.onSuccess?.();
     } catch (error) {
-      const message2 = getStoreMutationErrorMessage(error, operation.fallbackError);
+      const message = getStoreMutationErrorMessage(error, operation.fallbackError);
       devError(`[${options.sliceName}] ${getActionShortName(operation.action)} 失败:`, error);
-      options.setStatus(false, message2);
+      options.setStatus(false, message);
       return operation.onError?.(error);
     }
   };
@@ -25689,10 +25170,10 @@ function createAppStore(settingsRepository) {
       isLoading: false,
       error: null,
       // ============== Core Actions ==============
-      initialize: (settings2) => {
+      initialize: (settings) => {
         set2((state) => ({
-          settings: settings2,
-          ui: { ...state.ui, isTimerWidgetVisible: settings2.floatingTimerEnabled },
+          settings,
+          ui: { ...state.ui, isTimerWidgetVisible: settings.floatingTimerEnabled },
           isInitialized: true
         }));
       },
@@ -27162,7 +26643,7 @@ function buildValidationErrorResult(operation, errors, warnings = []) {
     warnings
   };
 }
-function buildConflictResult(operation, message2, warnings = [], code = "record_conflict") {
+function buildConflictResult(operation, message, warnings = [], code = "record_conflict") {
   return {
     status: "conflict",
     operation,
@@ -27170,7 +26651,7 @@ function buildConflictResult(operation, message2, warnings = [], code = "record_
       scanPaths: [],
       notify: false
     },
-    errors: [{ code, message: message2 }],
+    errors: [{ code, message }],
     warnings
   };
 }
@@ -27185,7 +26666,7 @@ function buildCancelledResult(operation, warnings = []) {
     warnings
   };
 }
-function buildErrorResult(operation, message2, warnings = []) {
+function buildErrorResult(operation, message, warnings = []) {
   return {
     status: "error",
     operation,
@@ -27193,7 +26674,7 @@ function buildErrorResult(operation, message2, warnings = []) {
       scanPaths: [],
       notify: false
     },
-    errors: [{ code: "record_submit_error", message: message2 }],
+    errors: [{ code: "record_submit_error", message }],
     warnings
   };
 }
@@ -27341,9 +26822,9 @@ function isRecordDebugEnabled() {
   if (typeof window === "undefined") return false;
   return Boolean(window.__THINK_RECORD_DEBUG__);
 }
-function recordDebugLog(scope, message2, payload) {
+function recordDebugLog(scope, message, payload) {
   if (!isRecordDebugEnabled()) return;
-  const prefix2 = `[记录调试][${scope}] ${message2}`;
+  const prefix2 = `[记录调试][${scope}] ${message}`;
   if (payload === void 0) {
     console.info(prefix2);
     return;
@@ -27551,8 +27032,8 @@ function buildEditableRecordSnapshot(input) {
     persistencePlan
   };
 }
-function issue$2(code, message2, field) {
-  return { code, message: message2, field };
+function issue$2(code, message, field) {
+  return { code, message, field };
 }
 function resolveRecordDependencies(input) {
   const warnings = [];
@@ -28058,8 +27539,8 @@ function buildInitialFormData(template, item, snapshot = buildParsedRecordSnapsh
   return formData;
 }
 function buildEditRecordState(input) {
-  const { settings: settings2, item, preferredRecordTypeId } = input;
-  const fullSettings = settings2;
+  const { settings, item, preferredRecordTypeId } = input;
+  const fullSettings = settings;
   const canonicalRecordTypes = getTemplateRecordTypes();
   const resolvedRecordType = resolveRecordTypeForEdit(
     canonicalRecordTypes,
@@ -28211,8 +27692,8 @@ function normalizeRecordInput(input) {
     warnings: []
   };
 }
-function issue$1(code, message2, field) {
-  return { code, message: message2, field };
+function issue$1(code, message, field) {
+  return { code, message, field };
 }
 function isTaskOptionalDurationField(template, field) {
   const recordTypeId = String(template?.recordTypeId || template?.id || "").trim().replace(/^core\./, "");
@@ -28292,8 +27773,8 @@ function validateRecordInput(input) {
   };
 }
 class RecordInputKernel {
-  constructor(settings2) {
-    this.settings = settings2;
+  constructor(settings) {
+    this.settings = settings;
   }
   settings;
   prepareCreate(params) {
@@ -28356,8 +27837,8 @@ function buildRefreshPlan(paths, notify2 = true) {
 function getFileItemsByPath(dataStore, path) {
   return dataStore.queryItems().filter((item) => (item.source?.path || item.file?.path || "") === path);
 }
-function issue(code, message2, field) {
-  return { code, message: message2, field };
+function issue(code, message, field) {
+  return { code, message, field };
 }
 function toArray(value) {
   return Array.isArray(value) ? value : [];
@@ -28376,7 +27857,7 @@ function applyRecoveryRefresh(result, options = {}) {
 function mapSubmitError(operation, error, warnings = [], options = {}) {
   const errorLike = typeof error === "object" && error !== null ? error : {};
   const name = errorLike.name;
-  const message2 = error instanceof Error ? error.message : String(error);
+  const message = error instanceof Error ? error.message : String(error);
   if (name === "AbortError" || name === "CancelledError") {
     return buildCancelledResult(operation, toArray(warnings));
   }
@@ -28389,17 +27870,17 @@ function mapSubmitError(operation, error, warnings = [], options = {}) {
   const errorCode = typeof errorLike.conflictCode === "string" ? errorLike.conflictCode : typeof errorLike.code === "string" ? errorLike.code : void 0;
   if (errorCode && /^record_/.test(errorCode)) {
     return applyRecoveryRefresh(
-      buildConflictResult(operation, message2, toArray(warnings), errorCode),
+      buildConflictResult(operation, message, toArray(warnings), errorCode),
       options
     );
   }
-  if (/Unable to locate|无法定位原始记录|找不到文件|找不到条目文件|无效的条目ID格式|无效的条目行号|原始任务位置已变化|原始块位置已变化|原始块边界已损坏|条目已不存在/.test(message2)) {
+  if (/Unable to locate|无法定位原始记录|找不到文件|找不到条目文件|无效的条目ID格式|无效的条目行号|原始任务位置已变化|原始块位置已变化|原始块边界已损坏|条目已不存在/.test(message)) {
     return applyRecoveryRefresh(
-      buildConflictResult(operation, message2, toArray(warnings)),
+      buildConflictResult(operation, message, toArray(warnings)),
       options
     );
   }
-  return buildErrorResult(operation, message2 || "Unknown record submit error.", toArray(warnings));
+  return buildErrorResult(operation, message || "Unknown record submit error.", toArray(warnings));
 }
 function throwIfAborted$1(signal) {
   if (signal?.aborted) {
@@ -29225,11 +28706,11 @@ function createRecordInputUseCase(store, deps) {
 function nowIso() {
   return (/* @__PURE__ */ new Date()).toISOString();
 }
-function ensureGoalSettings(settings2) {
+function ensureGoalSettings(settings) {
   return {
-    goals: [...settings2?.goals || []],
-    goalTemplates: [...settings2?.goalTemplates || []],
-    timePresetRevisions: [...settings2?.timePresetRevisions || []]
+    goals: [...settings?.goals || []],
+    goalTemplates: [...settings?.goalTemplates || []],
+    timePresetRevisions: [...settings?.timePresetRevisions || []]
   };
 }
 function normalizeGoalInput(input) {
@@ -30352,9 +29833,9 @@ function identifier(index) {
   return slice(index, position);
 }
 function compile(value) {
-  return dealloc(parse("", null, null, null, [""], value = alloc(value), 0, [0], value));
+  return dealloc(parse$1("", null, null, null, [""], value = alloc(value), 0, [0], value));
 }
-function parse(value, root, parent, rule, rules, rulesets, pseudo, points, declarations) {
+function parse$1(value, root, parent, rule, rules, rulesets, pseudo, points, declarations) {
   var index = 0;
   var offset2 = 0;
   var length2 = pseudo;
@@ -30433,7 +29914,7 @@ function parse(value, root, parent, rule, rules, rulesets, pseudo, points, decla
             append(reference2 = ruleset(characters2, root, parent, index, offset2, rules, points, type, props = [], children = [], length2), rulesets);
             if (character2 === 123)
               if (offset2 === 0)
-                parse(characters2, root, reference2, reference2, props, rulesets, length2, points, children);
+                parse$1(characters2, root, reference2, reference2, props, rulesets, length2, points, children);
               else
                 switch (atrule === 99 && charat(characters2, 3) === 110 ? 100 : atrule) {
                   // d l m s
@@ -30441,10 +29922,10 @@ function parse(value, root, parent, rule, rules, rulesets, pseudo, points, decla
                   case 108:
                   case 109:
                   case 115:
-                    parse(value, reference2, reference2, rule && append(ruleset(value, reference2, reference2, 0, 0, rules, points, type, rules, props = [], length2), children), rules, children, length2, points, rule ? props : children);
+                    parse$1(value, reference2, reference2, rule && append(ruleset(value, reference2, reference2, 0, 0, rules, points, type, rules, props = [], length2), children), rules, children, length2, points, rule ? props : children);
                     break;
                   default:
-                    parse(characters2, reference2, reference2, reference2, [""], children, 0, points, children);
+                    parse$1(characters2, reference2, reference2, reference2, [""], children, 0, points, children);
                 }
         }
         index = offset2 = property = 0, variable = ampersand = 1, type = characters2 = "", length2 = pseudo;
@@ -37578,7 +37059,7 @@ const TouchRipple = /* @__PURE__ */ D(function TouchRipple2(inProps, ref) {
     });
     rippleCallback.current = cb;
   }, [startTimer]);
-  F$2(ref, () => ({
+  F$1(ref, () => ({
     pulsate,
     start: start2,
     stop
@@ -37701,7 +37182,7 @@ const ButtonBase = /* @__PURE__ */ D(function ButtonBase2(inProps, ref) {
   if (disabled && focusVisible) {
     setFocusVisible(false);
   }
-  F$2(action2, () => ({
+  F$1(action2, () => ({
     focusVisible: () => {
       setFocusVisible(true);
       buttonRef.current.focus();
@@ -39806,7 +39287,7 @@ const PopperTooltip = /* @__PURE__ */ D(function PopperTooltip2(props, forwarded
   useEnhancedEffect(() => {
     handlePopperRefRef.current = handlePopperRef;
   }, [handlePopperRef]);
-  F$2(popperRefProp, () => popperRef.current, []);
+  F$1(popperRefProp, () => popperRef.current, []);
   const rtlPlacement = flipPlacement(initialPlacement, direction);
   const [placement, setPlacement] = d(rtlPlacement);
   const [resolvedAnchorElement, setResolvedAnchorElement] = d(resolveAnchorEl$1(anchorEl));
@@ -43133,7 +42614,7 @@ const MenuList = /* @__PURE__ */ D(function MenuList2(props, ref) {
       listRef.current.focus();
     }
   }, [autoFocus]);
-  F$2(actions, () => ({
+  F$1(actions, () => ({
     adjustStyleForScrollbar: (containerElement, {
       direction
     }) => {
@@ -43451,7 +42932,7 @@ const Popover = /* @__PURE__ */ D(function Popover2(inProps, ref) {
       setPositioningStyles();
     }
   });
-  F$2(action2, () => open ? {
+  F$1(action2, () => open ? {
     updatePosition: () => {
       setPositioningStyles();
     }
@@ -44108,7 +43589,7 @@ const SelectInput = /* @__PURE__ */ D(function SelectInput2(props, ref) {
     }
   }, []);
   const anchorElement = displayNode?.parentNode;
-  F$2(handleRef, () => ({
+  F$1(handleRef, () => ({
     focus: () => {
       displayRef.current.focus();
     },
@@ -46155,7 +45636,6 @@ function ThinkRange({ className, ...props }) {
 }
 const RECORD_GESTURE_MULTI_ACTIVATION_MS = 320;
 const RECORD_GESTURE_HINT = "点击编辑；按住控制键或⌘键点击，或双击打开原文";
-const RECORD_MODIFIER_ORIGIN_HINT = "点击编辑；按住控制键或⌘键点击打开原文";
 function createRecordGestureHandlers(params) {
   let lastTouchAt = 0;
   let suppressClickUntil = 0;
@@ -47589,6 +47069,10 @@ class TimelineTouchScope {
       this.candidates.delete(candidate);
     };
   }
+  /** An armed time edit owns the finger, so horizontal panning must stand down. */
+  hasArmedEdit() {
+    return [...this.candidates].some((candidate) => candidate.armed?.() ?? candidate.dragging());
+  }
   requestPinch() {
     const wasDragging = [...this.candidates].some((candidate) => candidate.dragging());
     for (const candidate of this.candidates) candidate.cancel();
@@ -47610,6 +47094,7 @@ function useTimelineTouchGesture(onArm, onPinchCancel) {
     return scope.register({
       pending: () => controller.pending,
       dragging: () => controller.dragging,
+      armed: () => controller.armed,
       cancel: () => {
         const wasActive = controller.pending;
         controller.cancel();
@@ -47619,6 +47104,135 @@ function useTimelineTouchGesture(onArm, onPinchCancel) {
   }, [scope]);
   y(() => () => controllerRef.current?.cancel(), []);
   return controllerRef.current;
+}
+const PAN_SLOP_PX = 10;
+const WHEEL_BURST_MS = 160;
+function attachTimelineAxisLockedPan(surface, isTimeEditing = () => false) {
+  let touch = null;
+  let kineticFrame = null;
+  let wheelAxis = null;
+  let lastWheelAt = -Infinity;
+  const stopKinetic = () => {
+    if (kineticFrame !== null && typeof cancelAnimationFrame === "function") cancelAnimationFrame(kineticFrame);
+    kineticFrame = null;
+  };
+  const maxLeft = () => Math.max(0, surface.scrollWidth - surface.clientWidth);
+  const setLeft = (left2) => {
+    surface.scrollLeft = Math.max(0, Math.min(maxLeft(), left2));
+  };
+  const onTouchStart = (event) => {
+    stopKinetic();
+    if (event.touches.length !== 1) {
+      touch = null;
+      return;
+    }
+    const finger = event.touches.item(0);
+    if (!finger) return;
+    touch = {
+      id: finger.identifier,
+      startX: finger.clientX,
+      startY: finger.clientY,
+      startScrollLeft: surface.scrollLeft,
+      startScrollTop: surface.scrollTop,
+      lastX: finger.clientX,
+      lastTime: Date.now(),
+      velocity: 0,
+      axis: null
+    };
+  };
+  const onTouchMove = (event) => {
+    const session = touch;
+    if (!session) return;
+    if (event.touches.length !== 1) {
+      touch = null;
+      return;
+    }
+    const finger = event.touches.item(0);
+    if (!finger || finger.identifier !== session.id) {
+      touch = null;
+      return;
+    }
+    if (!session.axis && isTimeEditing()) {
+      if (event.cancelable) event.preventDefault();
+      touch = null;
+      return;
+    }
+    const dx = finger.clientX - session.startX;
+    const dy = finger.clientY - session.startY;
+    if (!session.axis) {
+      if (Math.hypot(dx, dy) < PAN_SLOP_PX) return;
+      session.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    }
+    if (session.axis === "y") return;
+    if (event.cancelable) event.preventDefault();
+    setLeft(session.startScrollLeft - dx);
+    if (surface.scrollTop !== session.startScrollTop) surface.scrollTop = session.startScrollTop;
+    const now2 = Date.now();
+    const elapsed = now2 - session.lastTime;
+    if (elapsed > 0) {
+      const sample = Math.max(-1.6, Math.min(1.6, -(finger.clientX - session.lastX) / elapsed));
+      session.velocity = session.velocity * 0.45 + sample * 0.55;
+    }
+    session.lastX = finger.clientX;
+    session.lastTime = now2;
+  };
+  const onTouchEnd = (event) => {
+    const session = touch;
+    touch = null;
+    if (!session || session.axis !== "x" || event.type === "touchcancel" || event.touches.length) return;
+    if (Date.now() - session.lastTime > 90 || isTimeEditing() || Math.abs(session.velocity) < 0.12 || typeof requestAnimationFrame !== "function") return;
+    if (surface.ownerDocument?.defaultView?.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    let velocity = session.velocity;
+    let previous = 0;
+    const tick = (now2) => {
+      const dt = previous ? Math.min(34, Math.max(1, now2 - previous)) : 16;
+      previous = now2;
+      const before = surface.scrollLeft;
+      setLeft(before + velocity * dt);
+      velocity *= Math.pow(0.88, dt / 16);
+      if (Math.abs(velocity) < 0.025 || before === surface.scrollLeft) {
+        kineticFrame = null;
+        return;
+      }
+      kineticFrame = requestAnimationFrame(tick);
+    };
+    kineticFrame = requestAnimationFrame(tick);
+  };
+  const onWheel = (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey || !event.cancelable) return;
+    const x2 = Math.abs(event.deltaX);
+    const y2 = Math.abs(event.deltaY);
+    if (x2 < 0.5 && y2 < 0.5) return;
+    const now2 = Date.now();
+    if (!wheelAxis || now2 - lastWheelAt > WHEEL_BURST_MS) {
+      wheelAxis = x2 > y2 ? "x" : "y";
+    }
+    lastWheelAt = now2;
+    const mixed = x2 >= 0.5 && y2 >= 0.5;
+    const orthogonalOnly = wheelAxis === "y" ? y2 < 0.5 : x2 < 0.5;
+    if (!mixed && !orthogonalOnly) return;
+    if (wheelAxis === "y" && surface.scrollHeight <= surface.clientHeight) return;
+    if (wheelAxis === "x" && surface.scrollWidth <= surface.clientWidth) return;
+    event.preventDefault();
+    if (orthogonalOnly) return;
+    const factor = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? surface.clientHeight || 500 : 1;
+    if (wheelAxis === "x") setLeft(surface.scrollLeft + event.deltaX * factor);
+    else surface.scrollTop += event.deltaY * factor;
+  };
+  surface.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
+  surface.addEventListener("touchmove", onTouchMove, { capture: true, passive: false });
+  surface.addEventListener("touchend", onTouchEnd, { capture: true, passive: true });
+  surface.addEventListener("touchcancel", onTouchEnd, { capture: true, passive: true });
+  surface.addEventListener("wheel", onWheel, { capture: true, passive: false });
+  return () => {
+    stopKinetic();
+    surface.removeEventListener("touchstart", onTouchStart, true);
+    surface.removeEventListener("touchmove", onTouchMove, true);
+    surface.removeEventListener("touchend", onTouchEnd, true);
+    surface.removeEventListener("touchcancel", onTouchEnd, true);
+    surface.removeEventListener("wheel", onWheel, true);
+    touch = null;
+  };
 }
 function mountWithServices(containerEl, children, services) {
   const finalServices = services ?? createServices();
@@ -51524,16 +51138,16 @@ function setupQuickInputKeyboardDetection(host) {
     );
   };
 }
-function formatQuickInputNotice(message2, tone = "error") {
+function formatQuickInputNotice(message, tone = "error") {
   const prefix2 = tone === "success" ? "" : tone === "warning" ? "⚠️ " : "❌ ";
   const duration2 = tone === "success" ? 4e3 : tone === "warning" ? 12e3 : 1e4;
   return {
-    text: `${prefix2}${message2}`,
+    text: `${prefix2}${message}`,
     duration: duration2
   };
 }
-function showQuickInputNotice(message2, tone = "error") {
-  const payload = formatQuickInputNotice(message2, tone);
+function showQuickInputNotice(message, tone = "error") {
+  const payload = formatQuickInputNotice(message, tone);
   new obsidian.Notice(payload.text, payload.duration);
 }
 class QuickInputModal extends obsidian.Modal {
@@ -51594,9 +51208,9 @@ class QuickInputModal extends obsidian.Modal {
     if ((this.options?.mode || "create") !== "create") return null;
     const recordType = getRecordTypeById(this.recordTypeId);
     if (!recordType || recordType.captureMode === "direct") return null;
-    const settings2 = this.services.zustandStore.getState().settings;
+    const settings = this.services.zustandStore.getState().settings;
     const goalPath = normalizeGoalPath(resolveRecordGoalPath({ context: this.context })) || "";
-    const eligibleGoalPaths = getCreateEligibleGoalPaths(settings2, recordType.id);
+    const eligibleGoalPaths = getCreateEligibleGoalPaths(settings, recordType.id);
     if (!goalPath) {
       return eligibleGoalPaths.length > 0 ? null : `「${recordType.name}」还没有配置任何目标模板。`;
     }
@@ -52128,17 +51742,17 @@ function openEditFromItem(params) {
 }
 async function runUiRecordAction(action2, options) {
   const result = await action2();
-  const message2 = readRecordSubmitMessage(result, options.failureMessage);
+  const message = readRecordSubmitMessage(result, options.failureMessage);
   if (isRecordSubmitSuccess(result, { treatCancelledAsSuccess: true })) {
     const successFallback = result.status === "success" ? options.successFallback : void 0;
     const notice = result.feedback?.notice || successFallback;
     if (options.successNotice && notice) {
       options.uiPort.notice(notice);
     }
-    return { ok: true, message: message2, result };
+    return { ok: true, message, result };
   }
-  options.uiPort.notice(message2);
-  return { ok: false, message: message2, result };
+  options.uiPort.notice(message);
+  return { ok: false, message, result };
 }
 async function completeFromView(params) {
   const { ok } = await runUiRecordAction(
@@ -52270,19 +51884,19 @@ async function commitExcelCellFromView(params) {
   const canonicalField = normalizeEditableFieldKey(params.canonicalField || params.field);
   const policy = getFieldEditPolicy(canonicalField, params.oldValue);
   if (!isExcelInlineCommitSupported(canonicalField)) {
-    const message22 = "当前表格初版只开放常用安全字段和自定义字段；路径、文件、派生字段保持只读。";
-    params.uiPort.notice(message22);
-    return { ok: false, message: message22 };
+    const message2 = "当前表格初版只开放常用安全字段和自定义字段；路径、文件、派生字段保持只读。";
+    params.uiPort.notice(message2);
+    return { ok: false, message: message2 };
   }
   if (policy.editorKind === "path") {
-    const message22 = "路径类字段不能在表格视图中修改，请通过完整编辑或配置入口处理。";
-    params.uiPort.notice(message22);
-    return { ok: false, message: message22 };
+    const message2 = "路径类字段不能在表格视图中修改，请通过完整编辑或配置入口处理。";
+    params.uiPort.notice(message2);
+    return { ok: false, message: message2 };
   }
   if (!policy.editable || policy.commitMode !== "inline") {
-    const message22 = policy.reason || "该字段不可内联编辑";
-    params.uiPort.notice(message22);
-    return { ok: false, message: message22 };
+    const message2 = policy.reason || "该字段不可内联编辑";
+    params.uiPort.notice(message2);
+    return { ok: false, message: message2 };
   }
   const prepared = params.useCases.recordInput.prepareEditRecord({
     item: params.item,
@@ -52290,16 +51904,16 @@ async function commitExcelCellFromView(params) {
     source: "quickinput"
   });
   if (!prepared.recordTypeId) {
-    const message22 = "无法定位该记录的编辑模板，已取消单元格保存。";
-    params.uiPort.notice(message22);
-    return { ok: false, message: message22 };
+    const message2 = "无法定位该记录的编辑模板，已取消单元格保存。";
+    params.uiPort.notice(message2);
+    return { ok: false, message: message2 };
   }
   const recordTypeId = prepared.recordTypeId;
   const templateField = resolveTemplateFieldForExcelCommit(prepared.template?.fields, canonicalField);
   if (templateField && getTemplateFieldInputType(templateField).toLowerCase().includes("path")) {
-    const message22 = "路径类模板字段不能在表格视图中修改。";
-    params.uiPort.notice(message22);
-    return { ok: false, message: message22 };
+    const message2 = "路径类模板字段不能在表格视图中修改。";
+    params.uiPort.notice(message2);
+    return { ok: false, message: message2 };
   }
   const formData = writeExcelCommitValueToFormData(
     prepared.initialFormData || {},
@@ -52307,7 +51921,7 @@ async function commitExcelCellFromView(params) {
     canonicalField,
     params.nextValue
   );
-  const { ok, message: message2 } = await runUiRecordAction(
+  const { ok, message } = await runUiRecordAction(
     () => params.useCases.recordInput.submitUpdateRecord({
       item: params.item,
       recordTypeId,
@@ -52324,11 +51938,11 @@ async function commitExcelCellFromView(params) {
   if (ok) {
     return {
       ok: true,
-      message: message2,
+      message,
       normalizedValue: normalizeExcelCommitValue(templateField, canonicalField, params.nextValue)
     };
   }
-  return { ok: false, message: message2 };
+  return { ok: false, message };
 }
 function getVaultName(app) {
   try {
@@ -53034,11 +52648,11 @@ function useAiBatchConfirmActions({
     const nextRecords = materializeDraftIntoRecords(recordsRef.current, currentIndexRef.current);
     publishView(nextRecords, index);
   };
-  const beginPendingAction = (action2, message2) => {
+  const beginPendingAction = (action2, message) => {
     if (pendingActionRef.current) return false;
     pendingActionRef.current = action2;
     setPendingAction(action2);
-    setActionStatus({ tone: "working", message: message2 });
+    setActionStatus({ tone: "working", message });
     return true;
   };
   const endPendingAction = () => {
@@ -53100,8 +52714,8 @@ function useAiBatchConfirmActions({
       showAiBatchSaveFailure(result, indexToSave);
     } catch (error) {
       if (!mountedRef.current) return;
-      const message2 = error instanceof Error ? error.message : String(error);
-      setActionStatus({ tone: "error", message: `保存失败：${message2}` });
+      const message = error instanceof Error ? error.message : String(error);
+      setActionStatus({ tone: "error", message: `保存失败：${message}` });
       showAiBatchUnexpectedSaveError(traceId, "single", error);
     } finally {
       if (activeAbortControllerRef.current === abortController) activeAbortControllerRef.current = null;
@@ -53177,8 +52791,8 @@ function useAiBatchConfirmActions({
       });
     } catch (error) {
       if (!mountedRef.current) return;
-      const message2 = error instanceof Error ? error.message : String(error);
-      setActionStatus({ tone: "error", message: `批量保存中断：${message2}` });
+      const message = error instanceof Error ? error.message : String(error);
+      setActionStatus({ tone: "error", message: `批量保存中断：${message}` });
       showAiBatchUnexpectedSaveError(traceId, "batch", error);
     } finally {
       if (activeAbortControllerRef.current === abortController) activeAbortControllerRef.current = null;
@@ -53280,19 +52894,19 @@ function AiBatchConfirmForm({
 }) {
   const [previewMode, setPreviewMode] = d(initialItems.length >= 3 ? "timeline" : "form");
   const fullSettings = useSelector(selectSettings);
-  const settings2 = buildRecordTypeInputSettings();
+  const settings = buildRecordTypeInputSettings();
   const goalSettings = fullSettings.goalSettings;
   const useCases = useUseCases();
-  const recordTypes = settings2.recordTypes || [];
+  const recordTypes = settings.recordTypes || [];
   const isMobileLike = T$1(() => isMobileLikeEnvironment(), []);
   const initialRecords = T$1(
     () => buildAiBatchConfirmRecordItems({
       items: initialItems,
       recordTypes,
       goalSettings,
-      inputSettings: settings2
+      inputSettings: settings
     }),
-    [initialItems, recordTypes, goalSettings, settings2]
+    [initialItems, recordTypes, goalSettings, settings]
   );
   const {
     records,
@@ -54240,9 +53854,9 @@ async function initializeCore(opts) {
     devLog("[ThinkPlugin] Zustand Store 初始化完成");
     setDevConsoleStackEnabled(!!zustandStore.getState().settings.devConsoleStackEnabled);
     applyRecordTypeColorOverrides(zustandStore.getState().settings.recordTypeColors);
-    const unsubscribeSettingsRepo = settingsRepository.subscribe((settings2) => {
-      zustandStore.setState({ settings: settings2 });
-      applyRecordTypeColorOverrides(settings2.recordTypeColors);
+    const unsubscribeSettingsRepo = settingsRepository.subscribe((settings) => {
+      zustandStore.setState({ settings });
+      applyRecordTypeColorOverrides(settings.recordTypeColors);
     });
     disposables?.add("SettingsRepository.subscribe()", unsubscribeSettingsRepo);
     disposables?.add("RecordTypeColorRuntime", clearRecordTypeColorOverrides);
@@ -56385,7 +55999,7 @@ function useDroppableMeasuring(containers, _ref) {
     dependencies,
     config: config2
   } = _ref;
-  const [queue2, setQueue] = d(null);
+  const [queue, setQueue] = d(null);
   const {
     frequency,
     measure,
@@ -56413,13 +56027,13 @@ function useDroppableMeasuring(containers, _ref) {
     if (disabled && !dragging) {
       return defaultValue;
     }
-    if (!previousValue || previousValue === defaultValue || containersRef.current !== containers || queue2 != null) {
+    if (!previousValue || previousValue === defaultValue || containersRef.current !== containers || queue != null) {
       const map = /* @__PURE__ */ new Map();
       for (let container of containers) {
         if (!container) {
           continue;
         }
-        if (queue2 && queue2.length > 0 && !queue2.includes(container.id) && container.rect.current) {
+        if (queue && queue.length > 0 && !queue.includes(container.id) && container.rect.current) {
           map.set(container.id, container.rect.current);
           continue;
         }
@@ -56433,7 +56047,7 @@ function useDroppableMeasuring(containers, _ref) {
       return map;
     }
     return previousValue;
-  }, [containers, queue2, dragging, disabled, measure]);
+  }, [containers, queue, dragging, disabled, measure]);
   y(() => {
     containersRef.current = containers;
   }, [containers]);
@@ -56449,12 +56063,12 @@ function useDroppableMeasuring(containers, _ref) {
   );
   y(
     () => {
-      if (queue2 && queue2.length > 0) {
+      if (queue && queue.length > 0) {
         setQueue(null);
       }
     },
     //eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(queue2)]
+    [JSON.stringify(queue)]
   );
   y(
     () => {
@@ -56472,7 +56086,7 @@ function useDroppableMeasuring(containers, _ref) {
   return {
     droppableRects,
     measureDroppableContainers,
-    measuringScheduled: queue2 != null
+    measuringScheduled: queue != null
   };
   function isDisabled() {
     switch (strategy) {
@@ -58692,8 +58306,8 @@ function useSaveHandler(saveAction, options = {}) {
       onSuccess?.();
     } catch (error) {
       const errorObj = error instanceof Error ? error : new Error(String(error));
-      const message2 = errorObj.message || "未知错误";
-      options.uiPort?.notice(`❌ ${errorMessage}：${message2}`);
+      const message = errorObj.message || "未知错误";
+      options.uiPort?.notice(`❌ ${errorMessage}：${message}`);
       devError(`${errorMessage}:`, errorObj);
       onError?.(errorObj);
     }
@@ -60478,6 +60092,9 @@ function DayColumnHeader({
   ] });
 }
 const MOUSE_DRAG_THRESHOLD_PX = 4;
+const TASK_DOUBLE_TAP_MS = 350;
+const TASK_DOUBLE_TAP_SLOP_PX = 24;
+const TIMELINE_TASK_INTERACTION_HINT = "双击编辑；Ctrl/⌘+单击打开原文；触屏轻触选中、长按拖动调整时间";
 function formatTimeMinute$1(minute) {
   const total = Math.round(minute);
   const h2 = Math.floor(total / 60) % 24;
@@ -60489,7 +60106,7 @@ function generateTaskBlockTitle(block) {
     return `${block.timelineSource === "task-plan" ? "计划" : "任务"}: ${block.pureText}
 时间点: ${formatTimeMinute$1(block.startMinute)}
 鼠标拖动；触屏长按后拖动可修改时间
-${RECORD_MODIFIER_ORIGIN_HINT}`;
+${TIMELINE_TASK_INTERACTION_HINT}`;
   }
   const start2 = dayjs(block.timelineRange.start);
   const end2 = dayjs(block.timelineRange.end);
@@ -60497,7 +60114,7 @@ ${RECORD_MODIFIER_ORIGIN_HINT}`;
   return `${block.timelineSource === "task-plan" ? "计划" : "任务"}: ${block.pureText}
 时间: ${rangeText}
 鼠标直接拖动；触屏长按后拖动块或上下边缘可修改时间
-${RECORD_MODIFIER_ORIGIN_HINT}`;
+${TIMELINE_TASK_INTERACTION_HINT}`;
 }
 function formatPreviewLabel(range, durationMinutes2) {
   const start2 = dayjs(range.start);
@@ -60524,6 +60141,7 @@ function TimelineTaskBlock({
   const touchAnchorMinuteRef = A$1(null);
   const touchGestureModeRef = A$1("move");
   const suppressClickUntilRef = A$1(0);
+  const lastTaskTapRef = A$1(null);
   const [preview, setPreview] = d(null);
   const previewRef = A$1(null);
   const [isDragging, setIsDragging] = d(false);
@@ -60540,6 +60158,7 @@ function TimelineTaskBlock({
     if (!wasActive) return;
     touchIdentifierRef.current = null;
     touchAnchorMinuteRef.current = null;
+    lastTaskTapRef.current = null;
     suppressClickUntilRef.current = Date.now() + 450;
     previewRef.current = null;
     setPreview(null);
@@ -60655,6 +60274,7 @@ function TimelineTaskBlock({
     if (event.touches?.length !== 1) {
       touchGesture.cancel();
       touchIdentifierRef.current = null;
+      lastTaskTapRef.current = null;
       resetTouchPreview();
       return;
     }
@@ -60675,6 +60295,7 @@ function TimelineTaskBlock({
     if (!touch || event.touches.length !== 1) {
       touchGesture.cancel();
       touchIdentifierRef.current = null;
+      lastTaskTapRef.current = null;
       resetTouchPreview();
       return;
     }
@@ -60682,6 +60303,7 @@ function TimelineTaskBlock({
     if (outcome === "scroll") {
       suppressClickUntilRef.current = Date.now() + 350;
       touchIdentifierRef.current = null;
+      lastTaskTapRef.current = null;
       resetTouchPreview();
       return;
     }
@@ -60706,6 +60328,7 @@ function TimelineTaskBlock({
   };
   const finishTouchGesture = (event, cancelled = false) => {
     event.stopPropagation();
+    if (cancelled) lastTaskTapRef.current = null;
     const identifier2 = touchIdentifierRef.current;
     const touch = identifier2 == null ? null : findTimelineTouch(event.changedTouches, identifier2);
     if (!touch) {
@@ -60720,8 +60343,25 @@ function TimelineTaskBlock({
     setIsTouchArmed(false);
     if (!outcome || outcome.kind === "tap") {
       resetTouchPreview();
+      if (!outcome || cancelled) return;
+      const dx = touch.clientX - outcome.anchor.clientX;
+      const dy = touch.clientY - outcome.anchor.clientY;
+      if (Math.hypot(dx, dy) > 10) {
+        lastTaskTapRef.current = null;
+        return;
+      }
+      const now2 = Date.now();
+      const previous = lastTaskTapRef.current;
+      const doubleTap = !!previous && now2 - previous.time <= TASK_DOUBLE_TAP_MS && Math.abs(previous.x - touch.clientX) <= TASK_DOUBLE_TAP_SLOP_PX && Math.abs(previous.y - touch.clientY) <= TASK_DOUBLE_TAP_SLOP_PX;
+      lastTaskTapRef.current = doubleTap ? null : { time: now2, x: touch.clientX, y: touch.clientY };
+      if (!doubleTap) return;
+      suppressClickUntilRef.current = now2 + 500;
+      event.preventDefault();
+      setIsEditMode(true);
+      handleOpenTask();
       return;
     }
+    lastTaskTapRef.current = null;
     suppressClickUntilRef.current = Date.now() + 450;
     event.preventDefault();
     const anchorMinute = touchAnchorMinuteRef.current;
@@ -60782,12 +60422,23 @@ function TimelineTaskBlock({
 状态: ${lifecycle.label}`,
       style: blockStyle,
       onClick: (event) => {
+        event.stopPropagation();
         if (Date.now() < suppressClickUntilRef.current) {
           event.preventDefault();
-          event.stopPropagation();
           return;
         }
-        blockGesture.onClick?.(event);
+        if (hasPlatformModifier(event) && onOpenRecordOrigin) {
+          blockGesture.onClick?.(event);
+          return;
+        }
+        setIsEditMode(true);
+      },
+      onDblClick: (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+        if (Date.now() < suppressClickUntilRef.current || hasPlatformModifier(event)) return;
+        setIsEditMode(true);
+        handleOpenTask();
       },
       onPointerDown: (event) => beginGesture(event, "move"),
       onPointerMove: (event) => handlePointerMove(event),
@@ -60798,7 +60449,7 @@ function TimelineTaskBlock({
       onTouchEnd: (event) => finishTouchGesture(event),
       onTouchCancel: (event) => finishTouchGesture(event, true),
       children: [
-        !isPoint && block.isRangeStart && isEditMode ? /* @__PURE__ */ u2(
+        !isPoint && block.isRangeStart ? /* @__PURE__ */ u2(
           "div",
           {
             class: "timeline-task-resize-handle timeline-task-resize-handle--start",
@@ -60806,7 +60457,8 @@ function TimelineTaskBlock({
             "aria-label": "拖动修改开始时间",
             onPointerDown: (event) => beginGesture(event, "resize-start"),
             onTouchStart: (event) => beginTouchGesture(event, "resize-start"),
-            onClick: (event) => event.stopPropagation()
+            onClick: (event) => event.stopPropagation(),
+            onDblClick: (event) => event.stopPropagation()
           }
         ) : null,
         /* @__PURE__ */ u2(
@@ -60831,6 +60483,7 @@ function TimelineTaskBlock({
             onPointerDown: (event) => event.stopPropagation(),
             onTouchStart: (event) => event.stopPropagation(),
             onClick: (event) => event.stopPropagation(),
+            onDblClick: (event) => event.stopPropagation(),
             children: canAlign && isEditMode ? /* @__PURE__ */ u2(S, { children: [
               /* @__PURE__ */ u2(
                 ThinkIconButton,
@@ -60865,7 +60518,8 @@ function TimelineTaskBlock({
             "aria-label": "拖动修改结束时间",
             onPointerDown: (event) => beginGesture(event, "resize-end"),
             onTouchStart: (event) => beginTouchGesture(event, "resize-end"),
-            onClick: (event) => event.stopPropagation()
+            onClick: (event) => event.stopPropagation(),
+            onDblClick: (event) => event.stopPropagation()
           }
         ) : null
       ]
@@ -61261,17 +60915,24 @@ function TimelineDailyView({
   const scopeRef = A$1(null);
   if (!scopeRef.current) scopeRef.current = new TimelineTouchScope();
   const detachPinchRef = A$1(null);
+  const detachPanRef = A$1(null);
   const bindPinch = zoomHandlers.bindTouchSurface;
   const setHostRef = q$1((node2) => {
     if (hostRef.current === node2) return;
     detachPinchRef.current?.();
     detachPinchRef.current = null;
+    detachPanRef.current?.();
+    detachPanRef.current = null;
     hostRef.current = node2;
+    if (node2) detachPanRef.current = attachTimelineAxisLockedPan(node2, () => scopeRef.current?.hasArmedEdit() ?? false);
     if (node2 && bindPinch) {
       detachPinchRef.current = bindPinch(node2, () => scopeRef.current?.requestPinch() ?? true);
     }
   }, [bindPinch]);
-  y(() => () => detachPinchRef.current?.(), []);
+  y(() => () => {
+    detachPinchRef.current?.();
+    detachPanRef.current?.();
+  }, []);
   const densityMode = useTimelineDensityMode(hostRef);
   const scale = buildTimelineScale({ hourHeight, maxHours, densityMode });
   const dayColumns = buildTimelineDayColumns(dailyViewData);
@@ -61280,6 +60941,7 @@ function TimelineDailyView({
     "div",
     {
       class: "timeline-view-wrapper think-viz-surface",
+      "data-timeline-axis-pan": "locked",
       ref: setHostRef,
       "data-timeline-tick-step": scale.tickStepMinutes,
       "data-timeline-label-step": scale.labelStepMinutes,
@@ -66704,8 +66366,8 @@ function ExcelView({
     try {
       await onFieldsChange(normalizedNextFields);
     } catch (error) {
-      const message2 = error instanceof Error ? error.message : "字段设置保存失败";
-      setFieldConfigError(message2);
+      const message = error instanceof Error ? error.message : "字段设置保存失败";
+      setFieldConfigError(message);
     } finally {
       setFieldConfigSaving(false);
     }
@@ -67185,7 +66847,7 @@ function useViewRuntimeHandlers({
       date: request.date,
       item: request.item,
       goalPath: request.goalPath,
-      notice: (message2) => ui.notice(message2)
+      notice: (message) => ui.notice(message)
     });
   }, [app, ui]);
   const onOpenCheckinManager = q$1((request) => {
@@ -67323,7 +66985,7 @@ function ViewContent({
   onDataLoaded
 }) {
   const messageRenderPort = useMessageRenderPort();
-  const settings2 = useSelector(selectSettings);
+  const settings = useSelector(selectSettings);
   const normalizedViewInstance = viewInstance;
   const viewItems = useViewData({
     dataStore,
@@ -67373,11 +67035,11 @@ function ViewContent({
     timerService,
     timers,
     inputSettings,
-    goals: settings2.goalSettings?.goals || [],
+    goals: settings.goalSettings?.goals || [],
     messageRenderPort,
     allItems,
     allRecords,
-    goalSettings: settings2.goalSettings
+    goalSettings: settings.goalSettings
   });
   return /* @__PURE__ */ u2(ViewComponent, { ...viewProps });
 }
@@ -68045,7 +67707,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
     [allViews]
   );
   const inputSettings = useSelector(selectInputSettings);
-  const settings2 = useSelector(selectSettings);
+  const settings = useSelector(selectSettings);
   const timers = useSelector(selectTimers);
   const allItems = useLayoutItems({ dataStore, layout });
   const allRecords = dataStore.queryRecords();
@@ -68097,7 +67759,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
     allViews,
     modulesDataCache,
     allRecords,
-    goals: settings2.goalSettings?.goals || [],
+    goals: settings.goalSettings?.goals || [],
     dateRange: dateRangeForView,
     ui,
     useCases
@@ -68335,9 +67997,9 @@ class RendererService {
   }
   register(container, layout) {
     this.unregister(container);
-    const settings2 = getZustandState(this.store, (state) => state.settings);
-    const latestLayout = settings2.layouts.find((candidate) => candidate.id === layout.id) ?? layout;
-    const signature = createLayoutRenderSignature(latestLayout, settings2.viewInstances);
+    const settings = getZustandState(this.store, (state) => state.settings);
+    const latestLayout = settings.layouts.find((candidate) => candidate.id === layout.id) ?? layout;
+    const signature = createLayoutRenderSignature(latestLayout, settings.viewInstances);
     this.renderLayout(container, latestLayout);
     this.activeLayouts.push({
       container,
@@ -68356,17 +68018,17 @@ class RendererService {
     container.empty();
     this.activeLayouts.splice(index, 1);
   }
-  rerenderChangedLayouts(settings2) {
+  rerenderChangedLayouts(settings) {
     if (!this.isInitialized) return;
     for (const activeLayout of [...this.activeLayouts]) {
-      const nextLayout = settings2.layouts.find((layout) => layout.id === activeLayout.layoutId);
+      const nextLayout = settings.layouts.find((layout) => layout.id === activeLayout.layoutId);
       if (!nextLayout) {
         const { container, layoutName } = activeLayout;
         this.unregister(container);
         container.createDiv({ text: `布局配置 "${layoutName}" 已被删除。` });
         continue;
       }
-      const nextSignature = createLayoutRenderSignature(nextLayout, settings2.viewInstances);
+      const nextSignature = createLayoutRenderSignature(nextLayout, settings.viewInstances);
       if (nextSignature === activeLayout.signature) continue;
       this.renderLayout(activeLayout.container, nextLayout);
       activeLayout.layoutName = nextLayout.name;
@@ -68933,8 +68595,8 @@ async function loadTimerServices(opts) {
       });
       await services.useCases.timer.setInitialTimersFromDisk();
       devLog("[ThinkPlugin] Zustand Timers Loaded:", services.useCases.timer.getTimers());
-      const settings2 = services.settingsRepository.getSettings();
-      if (settings2.floatingTimerEnabled) {
+      const settings = services.settingsRepository.getSettings();
+      if (settings.floatingTimerEnabled) {
         services.timerWidget = new FloatingTimerWidget(plugin);
         services.timerWidget.load();
       }
@@ -69510,27 +69172,27 @@ function SessionList({ sessions, currentSessionId, onNewSession, onSelectSession
     }) })
   ] });
 }
-function MessageBubble({ message: message2 }) {
-  const isUser = message2.role === "user";
-  const isSystem = message2.role === "system";
+function MessageBubble({ message }) {
+  const isUser = message.role === "user";
+  const isSystem = message.role === "system";
   const contentRef = A$1(null);
   const renderPort = useMessageRenderPort();
   const [copied, setCopied] = d(false);
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(message2.content);
+      await navigator.clipboard.writeText(message.content);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2e3);
     } catch (error) {
       devError("复制失败:", error);
     }
   };
-  const contentType = message2.contentType ?? (isUser ? "plain" : "markdown");
+  const contentType = message.contentType ?? (isUser ? "plain" : "markdown");
   y(() => {
     if (!contentRef.current) return;
     renderPort.renderMessage({
       containerEl: contentRef.current,
-      content: message2.content,
+      content: message.content,
       contentType: contentType === "plain" ? "plain" : "markdown",
       sourcePath: "",
       cls: "message-content"
@@ -69538,7 +69200,7 @@ function MessageBubble({ message: message2 }) {
     return () => {
       if (contentRef.current) renderPort.clear(contentRef.current);
     };
-  }, [message2.content, message2.id, contentType, renderPort]);
+  }, [message.content, message.id, contentType, renderPort]);
   const classes = [
     "think-ai-message",
     isUser ? "is-user" : "",
@@ -69557,10 +69219,10 @@ function MessageBubble({ message: message2 }) {
     ),
     /* @__PURE__ */ u2("div", { ref: contentRef, className: "think-ai-message__content" }),
     /* @__PURE__ */ u2("div", { className: "think-ai-message__meta", children: [
-      /* @__PURE__ */ u2("time", { children: dayjs(message2.created).format("HH:mm") }),
-      message2.meta?.retrievalCount && message2.meta.retrievalCount > 0 ? /* @__PURE__ */ u2("span", { title: `基于 ${message2.meta.retrievalCount} 条记录回答`, children: [
+      /* @__PURE__ */ u2("time", { children: dayjs(message.created).format("HH:mm") }),
+      message.meta?.retrievalCount && message.meta.retrievalCount > 0 ? /* @__PURE__ */ u2("span", { title: `基于 ${message.meta.retrievalCount} 条记录回答`, children: [
         "引用 ",
-        message2.meta.retrievalCount
+        message.meta.retrievalCount
       ] }) : null
     ] })
   ] }) });
@@ -69729,9 +69391,9 @@ function buildTaskCaptureText(text2, selectedGoalPath) {
 function AiChatModalContainer({ closeModal, services }) {
   const aiSettings = useSelector(selectAiSettings);
   const inputSettings = useSelector(selectInputSettings);
-  const settings2 = useSelector(selectSettings);
+  const settings = useSelector(selectSettings);
   const recordTypes = inputSettings?.recordTypes ?? [];
-  const goals = (settings2.goalSettings?.goals ?? []).map((goal) => String(goal.path || "").trim()).filter(Boolean).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
+  const goals = (settings.goalSettings?.goals ?? []).map((goal) => String(goal.path || "").trim()).filter(Boolean).sort((a2, b2) => a2.localeCompare(b2, "zh-CN"));
   const { chatService, retrievalService, sessionStore } = services;
   const [sessions, setSessions] = d([]);
   const [currentSessionId, setCurrentSessionId] = d(null);
@@ -69976,8 +69638,8 @@ function summarizeEndpointHost(endpoint) {
 }
 function readAiRuntimeConfig(store, traceId) {
   const readSettingsStart = nowMs();
-  const settings2 = getZustandState(store, (s2) => s2.settings);
-  const ai = settings2.aiSettings;
+  const settings = getZustandState(store, (s2) => s2.settings);
+  const ai = settings.aiSettings;
   const recordTypes = [...getTemplateRecordTypes()];
   logAiInputStep(traceId, "读取 settings 完成", readSettingsStart, {
     aiEnabled: !!ai?.enabled,
@@ -69990,7 +69652,7 @@ function readAiRuntimeConfig(store, traceId) {
     maxResults: ai?.maxResults,
     timeoutMs: ai?.requestTimeoutMs ?? 3e4
   });
-  return { settings: settings2, ai, recordTypes };
+  return { settings, ai, recordTypes };
 }
 function validateAiRuntimeConfig(ui, traceId, ai, recordTypes) {
   if (!ai?.enabled) {
@@ -70256,14 +69918,14 @@ var __decorateClass$1 = (decorators, target, key, kind) => {
   return result;
 };
 let ObsidianUiPort = class {
-  notice(message2, timeoutMs) {
+  notice(message, timeoutMs) {
     if (isDevConsoleStackEnabled()) {
       try {
-        diagnosticTrace("[Think][Notice]", message2);
+        diagnosticTrace("[Think][Notice]", message);
       } catch {
       }
     }
-    const notice = new obsidian.Notice(message2, timeoutMs);
+    const notice = new obsidian.Notice(message, timeoutMs);
     return {
       hide() {
         try {
@@ -70374,9 +70036,9 @@ let ObsidianVaultPort = class {
   // ------------------------------
   assertActive(operation, path) {
     if (!isDisposed()) return;
-    const message2 = `[ObsidianVaultPort] ${operation} blocked after dispose: ${path}`;
-    devWarn(message2);
-    throw new Error(message2);
+    const message = `[ObsidianVaultPort] ${operation} blocked after dispose: ${path}`;
+    devWarn(message);
+    throw new Error(message);
   }
   async ensureFolderFor(filePath) {
     const folder = filePath.includes("/") ? filePath.slice(0, filePath.lastIndexOf("/")) : "";
@@ -70394,8 +70056,8 @@ let ObsidianVaultPort = class {
           await this.app.vault.createFolder(cur);
         } catch (e2) {
           const recheck = this.app.vault.getAbstractFileByPath(cur);
-          const message2 = e2 instanceof Error ? e2.message : String(e2);
-          if (recheck instanceof obsidian.TFolder || message2.includes("Folder already exists")) {
+          const message = e2 instanceof Error ? e2.message : String(e2);
+          if (recheck instanceof obsidian.TFolder || message.includes("Folder already exists")) {
             continue;
           }
           if (recheck instanceof obsidian.TFile) {
@@ -70414,218 +70076,36 @@ ObsidianVaultPort = __decorateClass([
   singleton(),
   __decorateParam(0, inject(AppToken))
 ], ObsidianVaultPort);
-function formatGitHubCommitTime(value) {
-  if (!value || !Number.isFinite(Date.parse(value))) return "暂不可用";
-  return new Date(value).toLocaleString("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  });
-}
-function DevBuildUpdateControl({ currentVersion, onInspectDevBuild, onPullDevBuild }) {
+function VikaUpdateControl({ vika }) {
   const [updating, setUpdating] = d(false);
-  const [checking, setChecking] = d(Boolean(onInspectDevBuild));
-  const [preview, setPreview] = d(null);
-  const [checkError, setCheckError] = d("");
-  const [state, setState] = d({ kind: "idle", message: "" });
-  const [showPinnedFallback, setShowPinnedFallback] = d(false);
-  const inspectRef = A$1(onInspectDevBuild);
-  inspectRef.current = onInspectDevBuild;
-  y(() => {
-    const inspect = inspectRef.current;
-    if (!inspect) return;
-    let mounted = true;
-    setChecking(true);
-    inspect().then((info) => {
-      if (mounted) {
-        setPreview(info);
-        setCheckError("");
-      }
-    }).catch((error) => {
-      if (mounted) setCheckError(`检查 GitHub 版本失败：${error instanceof Error ? error.message : String(error)}`);
-    }).finally(() => {
-      if (mounted) setChecking(false);
-    });
-    return () => {
-      mounted = false;
-    };
-  }, []);
-  const handlePull = async (pinnedPreview = null) => {
+  const [message, setMessage] = d("");
+  const [error, setError] = d(false);
+  const download2 = async () => {
     if (updating) return;
     setUpdating(true);
-    setShowPinnedFallback(false);
-    setState({ kind: "idle", message: "" });
+    setMessage("");
     try {
-      const result = await onPullDevBuild(pinnedPreview);
-      const versionText = currentVersion ? `${currentVersion} → ${result.remoteVersion}` : result.remoteVersion;
-      const time2 = result.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(result.githubPushedAt)}` : `GitHub 推送时间：暂未查到该版本的推送记录；Git 提交时间（非推送时间）：${formatGitHubCommitTime(result.githubCommitAt)}`;
-      setPreview(result);
-      setState({
-        kind: "success",
-        message: `已拉取 GitHub ${result.branch} 开发版（${versionText}，SHA ${result.commitSha.slice(0, 7)}）。${time2}。${pinnedPreview ? "本次安装的是之前检查的 SHA，未验证它仍为最新。" : ""}请完全关闭并重新打开 Obsidian。`
-      });
-    } catch (error) {
-      const isHeadError = Boolean(error && typeof error === "object" && "requestStage" in error && error.requestStage === "head");
-      setShowPinnedFallback(!pinnedPreview && isHeadError && Boolean(preview));
-      setState({ kind: "error", message: `拉取失败：${error instanceof Error ? error.message : String(error)}` });
+      if (await vika.update()) {
+        setMessage("更新已安装，请完全退出并重新打开 Obsidian。");
+        setError(false);
+      }
+    } catch (err) {
+      setMessage(`维格表更新失败：${err instanceof Error ? err.message : String(err)}`);
+      setError(true);
     } finally {
       setUpdating(false);
     }
   };
-  return /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
-    /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "GitHub 开发版" }),
+  return /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
+    /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "维格表（Vika）更新" }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-settings-stack think-settings-stack--tight", children: [
-      preview ? /* @__PURE__ */ u2("span", { className: "think-settings-help", "data-github-commit-time": true, children: [
-        "远端版本：",
-        preview.remoteVersion,
-        " · SHA：",
-        preview.commitSha.slice(0, 7),
-        " · ",
-        preview.githubPushedAt ? `GitHub 推送时间（本地）：${formatGitHubCommitTime(preview.githubPushedAt)}` : `${state.kind === "success" ? "GitHub 推送时间：暂未查到对应推送记录" : "GitHub 推送时间：安装后查询"}；Git 提交时间（非推送时间）：${formatGitHubCommitTime(preview.githubCommitAt)}`
-      ] }) : checking ? /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "正在读取 GitHub 版本与提交时间…" }) : checkError ? /* @__PURE__ */ u2("span", { className: "think-settings-help", children: checkError }) : null,
+      /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", disabled: updating, onClick: vika.configureToken, children: "设置 / 修改 API 令牌" }),
       /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", loading: updating, onClick: () => {
-        void handlePull();
-      }, children: updating ? "正在拉取…" : "从 GitHub 拉取最新开发版" }),
-      showPinnedFallback && preview && !updating ? /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: () => {
-        void handlePull(preview);
-      }, children: [
-        "下载已检查的 ",
-        preview.commitSha.slice(0, 7),
-        "（可能不是最新）"
-      ] }) : null,
-      /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "正常下载会重新检查 main 最新 SHA，并校验三个插件文件，失败自动回滚。推送时间只在成功安装后尝试查询一次；若 GitHub 拒绝查询最新提交，可明确选择已检查的 SHA（可能不是最新）。" }),
-      state.kind !== "idle" ? /* @__PURE__ */ u2(ThinkNotice, { tone: state.kind === "success" ? "success" : "danger", children: state.message }) : null
+        void download2();
+      }, children: updating ? "正在检查并下载…" : "从维格表下载最新构建" }),
+      message ? /* @__PURE__ */ u2(ThinkNotice, { tone: error ? "danger" : "success", children: message }) : null
     ] })
-  ] }) });
-}
-function time(value) {
-  if (!Number.isFinite(value) || value <= 0) return "未知";
-  return new Date(value).toLocaleString("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  });
-}
-function short(id) {
-  return id ? id.slice(0, 12) : "本地文件不完整";
-}
-function message(error) {
-  return error instanceof Error ? error.message : String(error);
-}
-function VikaReleaseUpdateControl({ actions }) {
-  const [configured, setConfigured] = d(() => actions.hasToken());
-  const [editingToken, setEditingToken] = d(() => !actions.hasToken());
-  const [tokenInput, setTokenInput] = d("");
-  const [busy, setBusy] = d(false);
-  const [remote, setRemote] = d(null);
-  const [status, setStatus] = d(null);
-  const actionsRef = A$1(actions);
-  actionsRef.current = actions;
-  y(() => {
-    setConfigured(actionsRef.current.hasToken());
-  }, []);
-  const saveToken = async () => {
-    if (busy) return;
-    setBusy(true);
-    try {
-      await actions.saveToken(tokenInput);
-      setTokenInput("");
-      setConfigured(true);
-      setEditingToken(false);
-      setRemote(null);
-      setStatus({ tone: "success", text: "API 令牌已保存至 Think/data.json（明文，请勿公开或提交 Git）。" });
-    } catch (error) {
-      setStatus({ tone: "danger", text: `保存失败：${message(error)}` });
-    } finally {
-      setBusy(false);
-    }
-  };
-  const inspect = async () => {
-    if (busy) return;
-    setBusy(true);
-    setStatus(null);
-    try {
-      const info = await actions.inspect();
-      setRemote(info);
-      setStatus({ tone: "success", text: info.isNewBuild ? "检测到新构建（即使 manifest.json 版本号未变也可安装）。" : "本地三个插件文件的内容指纹与云端一致，无需重新下载。" });
-    } catch (error) {
-      setStatus({ tone: "danger", text: `检查失败：${message(error)}` });
-    } finally {
-      setBusy(false);
-    }
-  };
-  const install = async () => {
-    if (busy) return;
-    setBusy(true);
-    setStatus(null);
-    try {
-      const info = await actions.pull();
-      setRemote({ ...info, localBuildId: info.buildId, isNewBuild: false });
-      setStatus({ tone: "success", text: info.isNewBuild ? `已安装构建 ${short(info.buildId)}。请完全关闭并重新打开 Obsidian。` : "当前本地三个文件已与云端一致，无需下载。" });
-    } catch (error) {
-      setStatus({ tone: "danger", text: `更新失败：${message(error)}` });
-    } finally {
-      setBusy(false);
-    }
-  };
-  return /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
-    /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "维格表云端更新" }),
-    /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-settings-stack think-settings-stack--tight", children: [
-      /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "云端每次上传 main.js、styles.css、manifest.json 三个独立文件。通过文件内容指纹判断更新，不要求修改正式版本号。" }),
-      /* @__PURE__ */ u2(S, { children: [
-        configured && !editingToken ? /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
-          /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "API 令牌保存在 Think/data.json 中（明文，会随 Vault 同步）。请勿公开或提交 Git。" }),
-          /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: () => setEditingToken(true), children: "更换 API 令牌" })
-        ] }) : /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
-          /* @__PURE__ */ u2("label", { className: "think-settings-help", htmlFor: "think-vika-api-token", children: "维格表 API 令牌（保存在 Think/data.json）" }),
-          /* @__PURE__ */ u2(
-            "input",
-            {
-              id: "think-vika-api-token",
-              type: "password",
-              value: tokenInput,
-              autoComplete: "off",
-              spellcheck: false,
-              placeholder: "保存至 Think/data.json，不会写入插件代码",
-              onInput: (e2) => setTokenInput(e2.currentTarget.value)
-            }
-          ),
-          /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", loading: busy, onClick: () => {
-            void saveToken();
-          }, children: "保存到 Think/data.json" })
-        ] }),
-        configured ? /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
-          remote ? /* @__PURE__ */ u2("span", { className: "think-settings-help", children: [
-            "云端版本：",
-            remote.remoteVersion,
-            " · 云端构建：",
-            short(remote.buildId),
-            " · ",
-            "本地构建：",
-            short(remote.localBuildId),
-            " · ",
-            "上传时间：",
-            time(remote.uploadedAt),
-            " · ",
-            remote.isNewBuild ? "有可用更新" : "内容已一致"
-          ] }) : /* @__PURE__ */ u2("span", { className: "think-settings-help", children: "点击“检查更新”读取维格表最新构建和上传时间。" }),
-          /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", loading: busy, onClick: () => {
-            void inspect();
-          }, children: busy ? "正在处理…" : "检查维格表更新" }),
-          remote?.isNewBuild ? /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", loading: busy, onClick: () => {
-            void install();
-          }, children: "下载并安装云端构建" }) : null
-        ] }) : null
-      ] }),
-      status ? /* @__PURE__ */ u2(ThinkNotice, { tone: status.tone, children: status.text }) : null
-    ] })
-  ] }) });
+  ] });
 }
 function SettingsNavigation({
   label,
@@ -70773,22 +70253,16 @@ function RecordTypeColorSettingsSection() {
     /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: RECORD_TYPE_PRESENTATION_ORDER.map((recordType) => /* @__PURE__ */ u2(RecordTypeColorRow, { recordType }, recordType)) })
   ] });
 }
-function GeneralSettings({
-  currentVersion,
-  onPullDevBuild,
-  onInspectDevBuild,
-  vika
-} = {}) {
+function GeneralSettings({ vika }) {
   const floatingTimerEnabled = useSelector(selectFloatingTimerEnabled);
   const devConsoleStackEnabled = useSelector(selectDevConsoleStackEnabled);
   const useCases = useUseCases();
   return /* @__PURE__ */ u2("div", { className: "think-settings-page", children: [
     /* @__PURE__ */ u2(RecordTypeColorSettingsSection, {}),
-    onPullDevBuild ? /* @__PURE__ */ u2("section", { className: "think-settings-section", children: [
-      /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "开发版更新" }),
-      vika ? /* @__PURE__ */ u2(VikaReleaseUpdateControl, { actions: vika }) : null,
-      /* @__PURE__ */ u2(DevBuildUpdateControl, { currentVersion, onPullDevBuild, onInspectDevBuild })
-    ] }) : null,
+    /* @__PURE__ */ u2("section", { className: "think-settings-section", children: [
+      /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "云端更新" }),
+      /* @__PURE__ */ u2(VikaUpdateControl, { vika })
+    ] }),
     /* @__PURE__ */ u2("section", { className: "think-settings-section", children: [
       /* @__PURE__ */ u2("h2", { className: "think-settings-section__title", children: "模块开关" }),
       /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
@@ -70820,36 +70294,36 @@ function GeneralSettings({
     ] })
   ] });
 }
-function AiAdvancedSettingsSection({ settings: settings2, onUpdate }) {
+function AiAdvancedSettingsSection({ settings, onUpdate }) {
   return /* @__PURE__ */ u2(S, { children: [
     /* @__PURE__ */ u2(ThinkDisclosure, { title: "多结果设置", children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "多条结果" }),
-        /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings2.allowMultipleResults, onChange: (e2) => onUpdate({ allowMultipleResults: e2.currentTarget.checked }), label: "允许" }) })
+        /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings.allowMultipleResults, onChange: (e2) => onUpdate({ allowMultipleResults: e2.currentTarget.checked }), label: "允许" }) })
       ] }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "最大数量" }),
-        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: settings2.maxResults, disabled: !settings2.allowMultipleResults, onInput: (e2) => onUpdate({ maxResults: parseInt(e2.currentTarget.value, 10) || 5 }) })
+        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--sm", type: "number", value: settings.maxResults, disabled: !settings.allowMultipleResults, onInput: (e2) => onUpdate({ maxResults: parseInt(e2.currentTarget.value, 10) || 5 }) })
       ] }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "确认模式" }),
-        /* @__PURE__ */ u2(SimpleSelect, { value: settings2.confirmMode, options: [{ value: "single", label: "单条确认" }, { value: "batch", label: "批量确认" }], onChange: (confirmMode) => onUpdate({ confirmMode }) })
+        /* @__PURE__ */ u2(SimpleSelect, { value: settings.confirmMode, options: [{ value: "single", label: "单条确认" }, { value: "batch", label: "批量确认" }], onChange: (confirmMode) => onUpdate({ confirmMode }) })
       ] })
     ] }) }),
     /* @__PURE__ */ u2(ThinkDisclosure, { title: "性能设置", children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "预加载" }),
-        /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings2.preloadConfigOnStartup, onChange: (e2) => onUpdate({ preloadConfigOnStartup: e2.currentTarget.checked }), label: "启动时加载配置" }) })
+        /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings.preloadConfigOnStartup, onChange: (e2) => onUpdate({ preloadConfigOnStartup: e2.currentTarget.checked }), label: "启动时加载配置" }) })
       ] }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "缓存有效期（秒）" }),
-        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings2.configCacheTTLSeconds, onInput: (e2) => onUpdate({ configCacheTTLSeconds: parseInt(e2.currentTarget.value, 10) || 300 }) })
+        /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings.configCacheTTLSeconds, onInput: (e2) => onUpdate({ configCacheTTLSeconds: parseInt(e2.currentTarget.value, 10) || 300 }) })
       ] })
     ] }) })
   ] });
 }
 function AiApiConfigSection({
-  settings: settings2,
+  settings,
   onUpdate,
   readiness,
   apiAccessReadiness,
@@ -70862,26 +70336,26 @@ function AiApiConfigSection({
   modelFetchMessage,
   onFetchModels
 }) {
-  const selectedFetchedModel = availableModels.includes(settings2.model) ? settings2.model : "";
+  const selectedFetchedModel = availableModels.includes(settings.model) ? settings.model : "";
   return /* @__PURE__ */ u2(ThinkDisclosure, { title: "接口配置", open: true, children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "接口地址" }),
-      /* @__PURE__ */ u2(ThinkInput, { value: settings2.apiEndpoint, placeholder: "https://api.openai.com/v1", onInput: (e2) => onUpdate({ apiEndpoint: e2.currentTarget.value }) })
+      /* @__PURE__ */ u2(ThinkInput, { value: settings.apiEndpoint, placeholder: "https://api.openai.com/v1", onInput: (e2) => onUpdate({ apiEndpoint: e2.currentTarget.value }) })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "接口密钥" }),
-      /* @__PURE__ */ u2(ThinkInput, { type: "password", value: settings2.apiKey, onInput: (e2) => onUpdate({ apiKey: e2.currentTarget.value }) })
+      /* @__PURE__ */ u2(ThinkInput, { type: "password", value: settings.apiKey, onInput: (e2) => onUpdate({ apiKey: e2.currentTarget.value }) })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "保存密钥" }),
-      /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings2.persistApiKey === true, onChange: (e2) => onUpdate({ persistApiKey: e2.currentTarget.checked }), label: "持久化到设置" }) })
+      /* @__PURE__ */ u2("div", { className: "think-settings-row__body", children: /* @__PURE__ */ u2(ThinkToggle, { checked: settings.persistApiKey === true, onChange: (e2) => onUpdate({ persistApiKey: e2.currentTarget.checked }), label: "持久化到设置" }) })
     ] }),
-    settings2.persistApiKey && /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: apiKeyPersistenceMessage }),
+    settings.persistApiKey && /* @__PURE__ */ u2(ThinkNotice, { tone: "warning", children: apiKeyPersistenceMessage }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "模型" }),
       /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-settings-stack think-settings-stack--tight", children: [
         /* @__PURE__ */ u2("div", { className: "think-ai-model-picker", children: [
-          /* @__PURE__ */ u2(ThinkInput, { value: settings2.model, placeholder: "gpt-4", onInput: (e2) => onUpdate({ model: e2.currentTarget.value }) }),
+          /* @__PURE__ */ u2(ThinkInput, { value: settings.model, placeholder: "gpt-4", onInput: (e2) => onUpdate({ model: e2.currentTarget.value }) }),
           /* @__PURE__ */ u2(
             ThinkButton,
             {
@@ -70917,17 +70391,17 @@ function AiApiConfigSection({
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: [
         "温度 ",
-        settings2.temperature
+        settings.temperature
       ] }),
-      /* @__PURE__ */ u2(ThinkRange, { value: settings2.temperature, onInput: (e2) => onUpdate({ temperature: Number(e2.currentTarget.value) }), min: 0, max: 2, step: 0.1 })
+      /* @__PURE__ */ u2(ThinkRange, { value: settings.temperature, onInput: (e2) => onUpdate({ temperature: Number(e2.currentTarget.value) }), min: 0, max: 2, step: 0.1 })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "最大生成长度（令牌数）" }),
-      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings2.maxTokens, onInput: (e2) => onUpdate({ maxTokens: parseInt(e2.currentTarget.value, 10) || 4096 }) })
+      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings.maxTokens, onInput: (e2) => onUpdate({ maxTokens: parseInt(e2.currentTarget.value, 10) || 4096 }) })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "超时毫秒" }),
-      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings2.requestTimeoutMs, onInput: (e2) => onUpdate({ requestTimeoutMs: parseInt(e2.currentTarget.value, 10) || 3e4 }) })
+      /* @__PURE__ */ u2(ThinkInput, { className: "think-settings-field--md", type: "number", value: settings.requestTimeoutMs, onInput: (e2) => onUpdate({ requestTimeoutMs: parseInt(e2.currentTarget.value, 10) || 3e4 }) })
     ] }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
       /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "连接" }),
@@ -70940,16 +70414,16 @@ function AiApiConfigSection({
     !readiness.ready && apiAccessReadiness.ready && /* @__PURE__ */ u2(ThinkNotice, { children: "拉取模型后选择一个模型，或继续手动填写模型名称。" })
   ] }) });
 }
-function AiPromptRulesSection({ settings: settings2, onUpdate, onInsertExample }) {
+function AiPromptRulesSection({ settings, onUpdate, onInsertExample }) {
   return /* @__PURE__ */ u2(ThinkDisclosure, { title: "个性化规则", open: true, children: /* @__PURE__ */ u2("div", { className: "think-settings-row think-settings-row--top", children: [
     /* @__PURE__ */ u2("span", { className: "think-settings-row__label think-settings-row__label--top", children: "自定义提示词" }),
     /* @__PURE__ */ u2("div", { className: "think-settings-row__body think-settings-stack think-settings-stack--tight", children: [
-      /* @__PURE__ */ u2(ThinkTextarea, { rows: 8, placeholder: CUSTOM_PROMPT_EXAMPLES, value: settings2.customPrompt ?? "", onInput: (e2) => onUpdate({ customPrompt: e2.currentTarget.value }) }),
+      /* @__PURE__ */ u2(ThinkTextarea, { rows: 8, placeholder: CUSTOM_PROMPT_EXAMPLES, value: settings.customPrompt ?? "", onInput: (e2) => onUpdate({ customPrompt: e2.currentTarget.value }) }),
       /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onInsertExample, children: "插入示例" }) })
     ] })
   ] }) });
 }
-function AiScopeSection({ settings: settings2, recordTypes, onUpdate: _onUpdate, staleEnabledRecordTypeIds = [], onInitAllRecordTypes, onClearStaleRecordTypeIds, onToggleRecordType }) {
+function AiScopeSection({ settings, recordTypes, onUpdate: _onUpdate, staleEnabledRecordTypeIds = [], onInitAllRecordTypes, onClearStaleRecordTypeIds, onToggleRecordType }) {
   return /* @__PURE__ */ u2(ThinkDisclosure, { title: "记录类型参与范围", children: /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
     /* @__PURE__ */ u2("div", { className: "think-settings-actions think-settings-actions--start", children: [
       /* @__PURE__ */ u2(ThinkButton, { variant: "secondary", size: "sm", onClick: onInitAllRecordTypes, children: "全部记录类型" }),
@@ -70960,7 +70434,7 @@ function AiScopeSection({ settings: settings2, recordTypes, onUpdate: _onUpdate,
       staleEnabledRecordTypeIds.length,
       " 个已失效记录类型标识。"
     ] }),
-    /* @__PURE__ */ u2("div", { className: "think-ai-scope-list", children: recordTypes.map((recordType) => /* @__PURE__ */ u2(ThinkCheckbox, { checked: (settings2.enabledRecordTypeIds ?? []).length === 0 || (settings2.enabledRecordTypeIds ?? []).includes(recordType.id), onChange: () => onToggleRecordType(recordType.id), label: recordType.name, compact: true }, recordType.id)) }),
+    /* @__PURE__ */ u2("div", { className: "think-ai-scope-list", children: recordTypes.map((recordType) => /* @__PURE__ */ u2(ThinkCheckbox, { checked: (settings.enabledRecordTypeIds ?? []).length === 0 || (settings.enabledRecordTypeIds ?? []).includes(recordType.id), onChange: () => onToggleRecordType(recordType.id), label: recordType.name, compact: true }, recordType.id)) }),
     recordTypes.length === 0 && /* @__PURE__ */ u2("div", { className: "think-settings-caption", children: "暂无记录类型模板。" })
   ] }) });
 }
@@ -70987,28 +70461,28 @@ function buildReadiness(missingFields, readyMessage, missingPrefix) {
     message: `${missingPrefix}${missingFields.join("、")}。`
   };
 }
-function getAiApiAccessReadiness(settings2) {
+function getAiApiAccessReadiness(settings) {
   const missingFields = [];
-  if (!settings2.apiEndpoint?.trim()) missingFields.push("接口地址");
-  if (!settings2.apiKey?.trim()) missingFields.push("接口密钥");
+  if (!settings.apiEndpoint?.trim()) missingFields.push("接口地址");
+  if (!settings.apiKey?.trim()) missingFields.push("接口密钥");
   return buildReadiness(
     missingFields,
     "接口访问配置已完整，可以测试连接或拉取模型。",
     "接口还不能访问：请先填写 "
   );
 }
-function getAiSettingsReadiness(settings2) {
-  const apiReadiness = getAiApiAccessReadiness(settings2);
+function getAiSettingsReadiness(settings) {
+  const apiReadiness = getAiApiAccessReadiness(settings);
   const missingFields = [...apiReadiness.missingFields];
-  if (!settings2.model?.trim()) missingFields.push("模型名称");
+  if (!settings.model?.trim()) missingFields.push("模型名称");
   return buildReadiness(
     missingFields,
     "智能助手配置已具备最小可用条件。",
     "智能助手还不能使用：请先填写 "
   );
 }
-function getApiKeyPersistenceMessage(settings2) {
-  if (settings2.persistApiKey) {
+function getApiKeyPersistenceMessage(settings) {
+  if (settings.persistApiKey) {
     return "接口密钥会随插件设置明文保存；如果开启笔记同步或第三方同步，也可能被同步。";
   }
   return "接口密钥只保留在当前设置页内存中；保存设置时不会写入插件数据。关闭或重载笔记软件后需要重新输入。";
@@ -71222,10 +70696,10 @@ function AiSettings(_props) {
   ] });
 }
 function EnergyRecordTypeSettings() {
-  const settings2 = useSelector(selectSettings);
+  const settings = useSelector(selectSettings);
   const defaultGoalPath = useSelector(selectEnergyDefaultGoalPath);
   const useCases = useUseCases();
-  const goals = (settings2.goalSettings?.goals || []).filter((goal) => goal.status !== "archived");
+  const goals = (settings.goalSettings?.goals || []).filter((goal) => goal.status !== "archived");
   const goalOptions = [{ value: "", label: "自动选择第一个活跃目标" }, ...goals.map((goal) => ({ value: goal.path, label: goal.path }))];
   return /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
     /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "默认目标" }),
@@ -72807,15 +72281,15 @@ function orderGoalTemplateRecordTypes(recordTypes) {
   return sortRecordTypesByPresentation(recordTypes, (recordType) => recordType.recordType);
 }
 function GoalTemplateMatrix() {
-  const settings2 = useSelector(selectSettings);
+  const settings = useSelector(selectSettings);
   const useCases = useUseCases();
   const ui = useUiPort();
   const goals = T$1(
-    () => sortGoalsForMatrix((settings2.goalSettings?.goals || []).filter((goal) => goal.status !== "archived")),
-    [settings2.goalSettings?.goals]
+    () => sortGoalsForMatrix((settings.goalSettings?.goals || []).filter((goal) => goal.status !== "archived")),
+    [settings.goalSettings?.goals]
   );
-  const templates = T$1(() => getGoalTemplates(settings2.goalSettings), [settings2.goalSettings]);
-  const recordTypes = T$1(() => orderGoalTemplateRecordTypes(getTemplateRecordTypes()), [settings2]);
+  const templates = T$1(() => getGoalTemplates(settings.goalSettings), [settings.goalSettings]);
+  const recordTypes = T$1(() => orderGoalTemplateRecordTypes(getTemplateRecordTypes()), [settings]);
   const allGoalPaths = T$1(() => new Set(goals.map(getGoalDisplayPath)), [goals]);
   const [expandedPaths, setExpandedPaths] = d(() => /* @__PURE__ */ new Set());
   const [query, setQuery] = d("");
@@ -72981,11 +72455,11 @@ function GoalTemplateMatrix() {
   ] });
 }
 function GoalManager() {
-  const settings2 = useSelector(selectSettings);
+  const settings = useSelector(selectSettings);
   const useCases = useUseCases();
-  const goals = settings2.goalSettings?.goals || [];
+  const goals = settings.goalSettings?.goals || [];
   const [goalPath, setGoalPath] = d("");
-  const [message2, setMessage] = d("");
+  const [message, setMessage] = d("");
   const handleAddGoal = async () => {
     const path = goalPath.trim();
     if (!path) return;
@@ -73004,7 +72478,7 @@ function GoalManager() {
           /* @__PURE__ */ u2(ThinkInput, { "aria-label": "目标路径", value: goalPath, onInput: (event) => setGoalPath(event.currentTarget.value), placeholder: "目标路径，例如 了解自我/情绪" }),
           /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: handleAddGoal, disabled: !goalPath.trim(), children: "添加" })
         ] }),
-        message2 && /* @__PURE__ */ u2("div", { className: "think-settings-caption think-goal-manager__status", role: "status", children: message2 })
+        message && /* @__PURE__ */ u2("div", { className: "think-settings-caption think-goal-manager__status", role: "status", children: message })
       ] })
     ] }),
     /* @__PURE__ */ u2(GoalTemplateMatrix, {})
@@ -73029,11 +72503,11 @@ function metricPresetKey(label) {
   return label.trim() || "goal.metric";
 }
 function GoalMetricSection() {
-  const settings2 = useSelector(selectSettings);
+  const settings = useSelector(selectSettings);
   const useCases = useUseCases();
-  const goals = settings2.goalSettings?.goals || [];
+  const goals = settings.goalSettings?.goals || [];
   const activeGoalOptions = goals.filter((goal) => goal.status !== "archived").map((goal) => ({ value: goal.path, label: goal.path }));
-  const [message2, setMessage] = d("");
+  const [message, setMessage] = d("");
   const [metricGoalPath, setMetricGoalPath] = d(activeGoalOptions[0]?.value || "");
   const selectedMetricGoal = goals.find((goal) => goal.path === metricGoalPath) || null;
   const selectedMetrics = selectedMetricGoal?.metrics || [];
@@ -73075,7 +72549,7 @@ function GoalMetricSection() {
     setMessage("已删除指标");
   };
   return /* @__PURE__ */ u2("section", { className: "think-settings-section think-goal-metrics", children: [
-    message2 && /* @__PURE__ */ u2(ThinkNotice, { children: message2 }),
+    message && /* @__PURE__ */ u2(ThinkNotice, { children: message }),
     /* @__PURE__ */ u2("div", { className: "think-settings-stack think-settings-stack--tight", children: [
       /* @__PURE__ */ u2("div", { className: "think-settings-row", children: [
         /* @__PURE__ */ u2("span", { className: "think-settings-row__label", children: "目标" }),
@@ -73174,9 +72648,6 @@ function clampTabIndex(value) {
 function SettingsRoot({
   app,
   variant = "workspace",
-  currentVersion,
-  onPullDevBuild,
-  onInspectDevBuild,
   vika
 }) {
   const deviceProfileAttrs = getThinkDeviceProfileAttributes();
@@ -73197,314 +72668,264 @@ function SettingsRoot({
     /* @__PURE__ */ u2("main", { className: "think-settings-workspace__content", children: [
       /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 0, children: /* @__PURE__ */ u2(DataManagementSettings, {}) }),
       /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 1, children: /* @__PURE__ */ u2(LayoutSettings, { app }) }),
-      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(GeneralSettings, { vika, currentVersion, onPullDevBuild, onInspectDevBuild }) }),
+      /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 2, children: /* @__PURE__ */ u2(GeneralSettings, { vika }) }),
       /* @__PURE__ */ u2(TabPanel, { value: tabIndex, index: 3, children: /* @__PURE__ */ u2(AiSettings, {}) })
     ] })
   ] }) });
 }
 const DEV_BUILD_FILES = ["main.js", "styles.css", "manifest.json"];
-let installInProgress = false;
-async function withDevBuildInstallLock(action2) {
-  if (installInProgress) throw new Error("Think OS 开发版正在下载或安装，请勿重复操作");
-  installInProgress = true;
+let installing = false;
+async function withDevBuildLock(work) {
+  if (installing) throw new Error("Think OS 开发版正在下载或安装，请勿重复操作");
+  installing = true;
   try {
-    return await action2();
+    return await work();
   } finally {
-    installInProgress = false;
+    installing = false;
   }
 }
-function validateDevBuild(contents, expectedPluginId) {
-  for (const file of DEV_BUILD_FILES) {
-    const content = contents[file];
-    if (typeof content !== "string" || !content.trim()) throw new Error(`${file} 内容为空`);
-    if (/^\s*<(?:!doctype|html)/i.test(content)) throw new Error(`${file} 返回网页内容`);
+async function buildFingerprint(files) {
+  if (!globalThis.crypto?.subtle) throw new Error("当前 Obsidian 无法进行 SHA-256 校验");
+  const encoder = new TextEncoder();
+  const parts = [encoder.encode("think-os-build-v1\0")];
+  for (const name of DEV_BUILD_FILES) {
+    const bytes = encoder.encode(files[name]);
+    parts.push(encoder.encode(`${name}\0${bytes.byteLength}\0`), bytes, encoder.encode("\0"));
   }
-  if (contents["main.js"].length < 1e3) throw new Error("main.js 内容异常，已停止覆盖");
-  if (contents["styles.css"].length < 100) throw new Error("styles.css 内容异常，已停止覆盖");
+  const all = new Uint8Array(parts.reduce((total, bytes) => total + bytes.byteLength, 0));
+  let offset2 = 0;
+  for (const part of parts) {
+    all.set(part, offset2);
+    offset2 += part.byteLength;
+  }
+  const digest = await crypto.subtle.digest("SHA-256", all);
+  return Array.from(new Uint8Array(digest), (n2) => n2.toString(16).padStart(2, "0")).join("");
+}
+function validateDevBuild(files, expectedId) {
+  for (const name of DEV_BUILD_FILES) {
+    const text2 = files[name];
+    if (typeof text2 !== "string" || !text2.trim()) throw new Error(`${name} 内容为空`);
+    if (/^\s*<(?:!doctype|html)/i.test(text2)) throw new Error(`${name} 返回了网页内容`);
+  }
+  if (files["main.js"].length < 1e3 || files["styles.css"].length < 100) {
+    throw new Error("下载的插件文件大小异常，已停止覆盖");
+  }
   let manifest;
   try {
-    manifest = JSON.parse(contents["manifest.json"]);
+    manifest = JSON.parse(files["manifest.json"]);
   } catch {
-    throw new Error("manifest.json 不是有效 JSON");
+    throw new Error("远端 manifest.json 不是有效 JSON");
   }
-  if (manifest?.id !== expectedPluginId) throw new Error(`插件 ID 不匹配：${String(manifest?.id || "unknown")}`);
-  if (manifest?.main && manifest.main !== "main.js") throw new Error("manifest.json 的 main 字段异常");
-  if (manifest?.styles && manifest.styles !== "styles.css") throw new Error("manifest.json 的 styles 字段异常");
-  if (typeof manifest?.version !== "string" || !manifest.version.trim()) throw new Error("manifest.json 版本号缺失");
+  if (manifest.id !== expectedId) throw new Error(`远端插件 ID 不匹配：${String(manifest.id || "unknown")}`);
+  if (manifest.main && manifest.main !== "main.js") throw new Error("manifest.json main 字段异常");
+  if (manifest.styles && manifest.styles !== "styles.css") throw new Error("manifest.json styles 字段异常");
+  if (typeof manifest.version !== "string" || !manifest.version.trim()) throw new Error("manifest.json 版本号缺失");
   return manifest.version.trim();
 }
-async function backupsOf(adapter, dir) {
-  const entries = await Promise.all(DEV_BUILD_FILES.map(async (file) => {
-    const path = `${dir}/${file}`;
-    return [file, await adapter.exists(path) ? await adapter.read(path) : null];
-  }));
-  const backups = Object.fromEntries(entries);
-  if (DEV_BUILD_FILES.some((file) => backups[file] === null) && !adapter.remove) {
-    throw new Error("插件文件缺失且当前存储不支持回滚删除，已停止覆盖");
-  }
-  return backups;
-}
-async function installDevBuild(host, contents) {
-  validateDevBuild(contents, host.manifest.id);
-  const dir = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
+async function installDevBuild(host, files) {
+  validateDevBuild(files, host.manifest.id);
   const adapter = host.app.vault.adapter;
-  const backups = await backupsOf(adapter, dir);
+  const dir = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
+  const backups = {};
+  for (const name of DEV_BUILD_FILES) {
+    const path = `${dir}/${name}`;
+    backups[name] = await adapter.exists(path) ? await adapter.read(path) : null;
+  }
+  if (DEV_BUILD_FILES.some((name) => backups[name] === null) && !adapter.remove) {
+    throw new Error("本地文件缺失，当前存储不支持回滚删除，已停止更新");
+  }
   const touched = [];
   try {
-    for (const file of DEV_BUILD_FILES) {
-      touched.push(file);
-      const path = `${dir}/${file}`;
-      await adapter.write(path, contents[file]);
-      if (await adapter.read(path) !== contents[file]) throw new Error(`${file} 写入校验失败`);
+    for (const name of DEV_BUILD_FILES) {
+      touched.push(name);
+      const path = `${dir}/${name}`;
+      await adapter.write(path, files[name]);
+      if (await adapter.read(path) !== files[name]) throw new Error(`${name} 写入校验失败`);
     }
   } catch (error) {
-    const failed = [];
-    for (const file of touched.reverse()) {
+    const rollbackFailed = [];
+    for (const name of touched.reverse()) {
+      const path = `${dir}/${name}`;
       try {
-        const path = `${dir}/${file}`;
-        if (backups[file] === null) await adapter.remove(path);
-        else await adapter.write(path, backups[file]);
+        if (backups[name] === null) await adapter.remove(path);
+        else await adapter.write(path, backups[name]);
       } catch {
-        failed.push(file);
+        rollbackFailed.push(name);
       }
     }
-    const message2 = error instanceof Error ? error.message : String(error);
-    if (failed.length) throw new Error(`${message2}；回滚 ${failed.join("、")} 失败，请从备份恢复`);
-    throw new Error(`${message2}；已回滚到原版本`);
+    const reason = error instanceof Error ? error.message : String(error);
+    if (rollbackFailed.length) throw new Error(`${reason}；回滚 ${rollbackFailed.join("、")} 失败，请手动恢复备份`);
+    throw new Error(`${reason}；已回滚到原版本`);
   }
 }
-async function sha256Hex(bytes) {
-  if (!globalThis.crypto?.subtle) throw new Error("当前 Obsidian 不支持安全 SHA-256 校验，请升级 Obsidian");
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+const API = "https://vika.cn/fusion/v1/datasheets/dstoKKbqk6Rv7E3vhy/records";
+const FIELDS = { version: "版本号", build: "构建ID", time: "上传时间" };
+const MAX_BYTES = 40 * 1024 * 1024;
+function credential() {
+  const value = instance.resolve(SettingsRepository).getSettings().vikaApiToken?.trim();
+  if (!value) throw new Error("请在 Think OS 设置的维格表更新区域填写 API 令牌");
+  return value;
 }
-async function contentBuildId(files) {
-  const encoder = new TextEncoder();
-  const segments = [encoder.encode("think-os-build-v1\0")];
-  for (const file of DEV_BUILD_FILES) {
-    const bytes = encoder.encode(files[file]);
-    segments.push(encoder.encode(`${file}\0${bytes.length}\0`), bytes, encoder.encode("\0"));
-  }
-  const all = new Uint8Array(segments.reduce((sum, segment) => sum + segment.length, 0));
-  let offset2 = 0;
-  for (const segment of segments) {
-    all.set(segment, offset2);
-    offset2 += segment.length;
-  }
-  return sha256Hex(all);
-}
-const API = "https://vika.cn/fusion/v1";
-const DATASHEET = "dstoKKbqk6Rv7E3vhy";
-const F = { version: "版本号", build: "构建ID", uploaded: "上传时间" };
-const MAX_FILE_BYTES = 40 * 1024 * 1024;
-let lastRequest = 0;
-let queue = Promise.resolve();
-function apiRequest(action2) {
-  const run = queue.then(async () => {
-    const wait = Math.max(0, lastRequest + 650 - Date.now());
-    if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
-    lastRequest = Date.now();
-    return action2();
-  });
-  queue = run.then(() => void 0, () => void 0);
-  return run;
-}
-const validHash = (value) => typeof value === "string" && /^[a-f0-9]{64}$/i.test(value);
-function repo() {
-  return instance.resolve(SettingsRepository);
-}
-function hasVikaCredential() {
-  return !!repo().getSettings().vikaApiToken?.trim();
-}
-async function saveVikaCredential(token2) {
-  const value = token2.trim();
-  if (!value || /\s/.test(value)) throw new Error("维格表 API 令牌不能为空或包含空白字符");
-  await repo().update((draft) => {
-    draft.vikaApiToken = value;
-  });
-}
-function tokenOf() {
-  const token2 = repo().getSettings().vikaApiToken?.trim();
-  if (!token2) throw new Error("请先在 Think OS 设置中保存维格表 API 令牌（Think/data.json）");
-  return token2;
-}
-async function getJson(path, token2) {
-  return apiRequest(async () => {
-    let response;
-    try {
-      response = await obsidian.requestUrl({
-        url: `${API}${path}`,
-        method: "GET",
-        throw: false,
-        headers: { Authorization: `Bearer ${token2}`, Accept: "application/json", "Cache-Control": "no-cache" }
+function openVikaTokenDialog(app) {
+  new class extends obsidian.Modal {
+    onOpen() {
+      this.modalEl.addClass("think-vika-token-modal");
+      let value = "";
+      this.contentEl.createEl("h3", { text: "维格表 API 令牌" });
+      new obsidian.Setting(this.contentEl).setName("令牌").addText((text2) => {
+        text2.inputEl.type = "password";
+        text2.inputEl.autocomplete = "off";
+        text2.setPlaceholder("输入维格表令牌").onChange((next2) => {
+          value = next2;
+        });
       });
-    } catch {
-      throw new Error("无法访问维格表 API，请检查网络");
+      new obsidian.Setting(this.contentEl).addButton((button) => button.setButtonText("保存").setCta().onClick(async () => {
+        if (!value.trim() || /\s/.test(value)) {
+          new obsidian.Notice("令牌不能为空或含有空白字符");
+          return;
+        }
+        try {
+          await instance.resolve(SettingsRepository).update((draft) => {
+            draft.vikaApiToken = value.trim();
+          });
+          this.close();
+        } catch (error) {
+          new obsidian.Notice(`保存令牌失败：${error instanceof Error ? error.message : String(error)}`, 1e4);
+        }
+      }));
     }
-    if (response.status !== 200) throw new Error(`维格表 API HTTP ${response.status}，请检查令牌和数据表权限`);
-    let body;
-    try {
-      body = JSON.parse(response.text);
-    } catch {
-      throw new Error("维格表 API 返回非 JSON 内容");
+    onClose() {
+      this.contentEl.empty();
     }
-    if (!body || body.success !== true || body.code !== 200) {
-      throw new Error(`维格表 API 错误 ${String(body?.code ?? "unknown")}：${String(body?.message ?? "未知错误").slice(0, 100)}`);
-    }
-    return body.data;
-  });
+  }(app).open();
 }
-function parseRow(row) {
-  const fields = row.fields ?? {};
-  const attachments = {};
-  for (const file of DEV_BUILD_FILES) {
-    const list = fields[file];
-    if (!Array.isArray(list) || list.length !== 1) return null;
-    const attachment = list[0];
-    if (!attachment || !attachment.url || !attachment.token || !Number.isSafeInteger(attachment.size) || attachment.size <= 0 || attachment.size > MAX_FILE_BYTES) return null;
-    attachments[file] = attachment;
+async function rows(token2, params) {
+  let response;
+  try {
+    response = await obsidian.requestUrl({
+      url: `${API}?${params}`,
+      method: "GET",
+      throw: false,
+      headers: { Authorization: `Bearer ${token2}`, Accept: "application/json", "Cache-Control": "no-cache" }
+    });
+  } catch {
+    throw new Error("维格表连接失败，请检查网络");
   }
-  if (!row.recordId || !/^rec\w+$/.test(row.recordId) || typeof fields[F.version] !== "string" || !fields[F.version].trim() || !validHash(fields[F.build]) || typeof fields[F.uploaded] !== "number" || !Number.isFinite(fields[F.uploaded]) || fields[F.uploaded] <= 0) return null;
+  if (response.status !== 200) throw new Error(`维格表 API HTTP ${response.status}`);
+  let body;
+  try {
+    body = JSON.parse(response.text);
+  } catch {
+    throw new Error("维格表返回的内容不是 JSON");
+  }
+  if (!body?.success || body.code !== 200 || !Array.isArray(body.data?.records)) {
+    throw new Error(`维格表 API 错误：${String(body?.message ?? body?.code ?? "未知错误").slice(0, 80)}`);
+  }
+  return body.data.records;
+}
+function parse(row) {
+  const f2 = row?.fields;
+  if (!f2 || typeof row.recordId !== "string" || typeof f2[FIELDS.version] !== "string" || typeof f2[FIELDS.build] !== "string" || !/^[a-f0-9]{64}$/i.test(f2[FIELDS.build]) || !Number.isFinite(f2[FIELDS.time])) return null;
+  const files = {};
+  for (const name of DEV_BUILD_FILES) {
+    const items = f2[name];
+    const item = Array.isArray(items) && items.length === 1 ? items[0] : null;
+    if (typeof item?.url !== "string" || typeof item?.token !== "string" || !Number.isSafeInteger(item?.size) || item.size < 1 || item.size > MAX_BYTES) return null;
+    files[name] = item;
+  }
   return {
-    recordId: row.recordId,
-    remoteVersion: fields[F.version].trim(),
-    buildId: fields[F.build].toLowerCase(),
-    uploadedAt: fields[F.uploaded],
-    attachments
+    id: row.recordId,
+    version: f2[FIELDS.version],
+    fingerprint: f2[FIELDS.build].toLowerCase(),
+    time: f2[FIELDS.time],
+    files
   };
 }
 async function latest(token2) {
-  const params = new URLSearchParams();
-  params.set("pageSize", "100");
-  params.set("pageNum", "1");
-  params.append("sort[][field]", F.uploaded);
+  const params = new URLSearchParams({ pageSize: "100", pageNum: "1" });
+  params.append("sort[][field]", FIELDS.time);
   params.append("sort[][order]", "desc");
-  const data = await getJson(`/datasheets/${DATASHEET}/records?${params}`, token2);
-  if (!Array.isArray(data?.records)) throw new Error("维格表记录格式异常");
-  const rows2 = data.records.map(parseRow).filter((r2) => r2 !== null);
-  rows2.sort((a2, b2) => b2.uploadedAt - a2.uploadedAt);
-  if (!rows2.length) throw new Error("维格表还没有包含三个原始文件的完整上传记录");
-  return rows2[0];
+  const valid = (await rows(token2, params)).map(parse).filter((r2) => r2 !== null);
+  if (!valid.length) throw new Error("维格表中没有完整的三文件构建记录");
+  valid.sort((a2, b2) => b2.time - a2.time);
+  return valid[0];
 }
-async function pinned(token2, recordId) {
-  const data = await getJson(`/datasheets/${DATASHEET}/records?recordIds=${encodeURIComponent(recordId)}`, token2);
-  const row = (data?.records ?? []).find((item) => item.recordId === recordId);
-  const result = row && parseRow(row);
-  if (!result) throw new Error("选中的维格表构建记录已失效或缺少附件");
-  return result;
+async function pinned(token2, id) {
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+  const row = (await rows(token2, new URLSearchParams({ recordIds: id }))).find((item) => item.recordId === id);
+  const build = parse(row);
+  if (!build) throw new Error("维格表构建记录发生变化");
+  return build;
 }
-async function localBuildId(host) {
-  const dir = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
+function safeUrl(link) {
+  let url;
+  try {
+    url = new URL(link);
+  } catch {
+    throw new Error("附件下载地址无效");
+  }
+  if (url.protocol !== "https:" || url.username || url.password || !/(^|\.)(vika\.cn|vika\.com|aitable\.ai|apitable\.com|apitable\.cn)$/.test(url.hostname.toLowerCase())) {
+    throw new Error("附件下载域名不符合预期");
+  }
+  return url.href;
+}
+async function download(name, item) {
+  let response;
+  try {
+    response = await obsidian.requestUrl({ url: safeUrl(item.url), method: "GET", throw: false });
+  } catch {
+    throw new Error(`下载 ${name} 失败`);
+  }
+  if (response.status !== 200) throw new Error(`${name} 下载 HTTP ${response.status}`);
+  if (!response.arrayBuffer || response.arrayBuffer.byteLength !== item.size) throw new Error(`${name} 文件大小与云端不一致`);
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(response.arrayBuffer);
+  } catch {
+    throw new Error(`${name} 不是有效的 UTF-8 文件`);
+  }
+}
+async function localFingerprint(host) {
+  const folder = obsidian.normalizePath(`${host.app.vault.configDir}/plugins/${host.manifest.id}`);
   const files = {};
-  for (const file of DEV_BUILD_FILES) {
-    const path = `${dir}/${file}`;
+  for (const name of DEV_BUILD_FILES) {
+    const path = `${folder}/${name}`;
     if (!await host.app.vault.adapter.exists(path)) return null;
-    files[file] = await host.app.vault.adapter.read(path);
+    files[name] = await host.app.vault.adapter.read(path);
   }
   try {
     validateDevBuild(files, host.manifest.id);
   } catch {
     return null;
   }
-  return contentBuildId(files);
+  return buildFingerprint(files);
 }
-function safeAttachmentUrl(link) {
-  let url;
-  try {
-    url = new URL(link);
-  } catch {
-    throw new Error("附件下载链接无效");
-  }
-  const host = url.hostname.toLowerCase();
-  if (url.protocol !== "https:" || url.username || url.password || !/(^|\.)(vika\.cn|vika\.com|aitable\.ai|apitable\.com|apitable\.cn)$/.test(host)) {
-    throw new Error("附件地址不是允许的维格表域名，拒绝下载");
-  }
-  return url.href;
-}
-async function downloadFile(attachment, name) {
-  let response;
-  try {
-    response = await obsidian.requestUrl({ url: safeAttachmentUrl(attachment.url), throw: false, method: "GET" });
-  } catch {
-    throw new Error(`下载 ${name} 失败，请检查网络`);
-  }
-  if (response.status !== 200) throw new Error(`${name} 下载 HTTP ${response.status}（附件链接可能已过期）`);
-  const buffer = response.arrayBuffer;
-  if (!buffer || buffer.byteLength !== attachment.size || buffer.byteLength > MAX_FILE_BYTES) {
-    throw new Error(`${name} 附件大小异常，拒绝安装`);
-  }
-  try {
-    return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
-  } catch {
-    throw new Error(`${name} 不是有效 UTF-8 文件`);
-  }
-}
-async function inspectVikaBuild(host) {
-  return traceThinkOperation("vika.check", async () => {
-    const cloud = await latest(tokenOf());
-    const local = await localBuildId(host);
-    return {
-      remoteVersion: cloud.remoteVersion,
-      buildId: cloud.buildId,
-      uploadedAt: cloud.uploadedAt,
-      recordId: cloud.recordId,
-      localBuildId: local,
-      isNewBuild: local !== cloud.buildId
-    };
-  }, "updates");
-}
-async function pullVikaBuild(host) {
-  return withDevBuildInstallLock(() => traceThinkOperation("vika.install", async () => {
-    const token2 = tokenOf();
-    const cloud = await latest(token2);
-    const local = await localBuildId(host);
-    const info = {
-      remoteVersion: cloud.remoteVersion,
-      buildId: cloud.buildId,
-      uploadedAt: cloud.uploadedAt,
-      recordId: cloud.recordId,
-      localBuildId: local,
-      isNewBuild: local !== cloud.buildId
-    };
-    if (!info.isNewBuild) return info;
-    let chosen = await pinned(token2, cloud.recordId);
-    if (chosen.buildId !== cloud.buildId) throw new Error("下载期间云端构建发生变化，请重新检查更新");
-    const files = {};
+async function updateFromVika(host) {
+  return withDevBuildLock(async () => {
+    const token2 = credential();
+    const newest = await latest(token2);
+    if (await localFingerprint(host) === newest.fingerprint) return false;
+    const cloud = await pinned(token2, newest.id);
+    if (cloud.fingerprint !== newest.fingerprint) throw new Error("云端构建已变化，请重试");
+    const contents = {};
     for (const name of DEV_BUILD_FILES) {
       try {
-        files[name] = await downloadFile(chosen.attachments[name], name);
-      } catch (firstError) {
-        chosen = await pinned(token2, cloud.recordId);
-        if (chosen.buildId !== cloud.buildId) throw new Error("云端构建发生变化，拒绝安装");
+        contents[name] = await download(name, cloud.files[name]);
+      } catch (error) {
+        const refreshed = await pinned(token2, newest.id);
+        if (refreshed.fingerprint !== cloud.fingerprint) throw new Error("云端构建已变化，请重试");
         try {
-          files[name] = await downloadFile(chosen.attachments[name], name);
+          contents[name] = await download(name, refreshed.files[name]);
         } catch {
-          throw firstError;
+          throw error;
         }
       }
     }
-    const version2 = validateDevBuild(files, host.manifest.id);
-    if (version2 !== cloud.remoteVersion) throw new Error("manifest.json 与云端版本号不一致");
-    if (await contentBuildId(files) !== cloud.buildId) throw new Error("三个插件文件的内容指纹不一致，已停止覆盖");
-    await installDevBuild(host, files);
-    try {
-      new obsidian.Notice(`Think OS 维格表更新完成
-版本：${version2} · 构建 ${cloud.buildId.slice(0, 12)}
-上传时间：${new Date(cloud.uploadedAt).toLocaleString("zh-CN")}
-请完全退出并重新打开 Obsidian。`, 0);
-    } catch {
+    if (validateDevBuild(contents, host.manifest.id) !== cloud.version || await buildFingerprint(contents) !== cloud.fingerprint) {
+      throw new Error("云端文件校验失败，未覆盖本地插件");
     }
-    return info;
-  }, "updates"));
-}
-function vikaSettingsActions(_host) {
-  return {
-    supported: true,
-    hasToken: () => hasVikaCredential(),
-    saveToken: (token2) => saveVikaCredential(token2),
-    inspect: () => inspectVikaBuild(_host),
-    pull: () => pullVikaBuild(_host)
-  };
+    await installDevBuild(host, contents);
+    return true;
+  });
 }
 const THINK_SETTINGS_VIEW_TYPE = "think-os-settings-view";
 class ThinkSettingsView extends obsidian.ItemView {
@@ -73535,10 +72956,10 @@ class ThinkSettingsView extends obsidian.ItemView {
         {
           app: this.plugin.app,
           variant: "workspace",
-          currentVersion: this.plugin.manifest.version,
-          vika: vikaSettingsActions(this.plugin),
-          onInspectDevBuild: () => getGitHubDevBuildInfo(this.plugin.manifest.id),
-          onPullDevBuild: (preview) => pullGitHubDevBuild(this.plugin, preview)
+          vika: {
+            configureToken: () => openVikaTokenDialog(this.plugin.app),
+            update: () => updateFromVika(this.plugin)
+          }
         }
       ),
       this.services
@@ -73566,17 +72987,13 @@ async function openThinkSettingsWorkspaceView(plugin) {
 }
 function SettingsLauncher({
   onOpenWorkspace,
-  onPullDevBuild,
-  onInspectDevBuild,
-  currentVersion,
   vika
 }) {
   const deviceProfileAttrs = getThinkDeviceProfileAttributes();
   return /* @__PURE__ */ u2("section", { className: "think-os think-os--settings think-setting-root think-setting-root--launcher", ...deviceProfileAttrs, children: [
     /* @__PURE__ */ u2("h2", { className: "think-settings-launcher__title", children: "思考系统控制台" }),
     /* @__PURE__ */ u2(ThinkButton, { variant: "primary", size: "sm", onClick: onOpenWorkspace, children: "打开 思考系统控制台" }),
-    /* @__PURE__ */ u2(VikaReleaseUpdateControl, { actions: vika }),
-    /* @__PURE__ */ u2(DevBuildUpdateControl, { currentVersion, onPullDevBuild, onInspectDevBuild })
+    /* @__PURE__ */ u2(VikaUpdateControl, { vika })
   ] });
 }
 class SettingsTab extends obsidian.PluginSettingTab {
@@ -73600,10 +73017,10 @@ class SettingsTab extends obsidian.PluginSettingTab {
       /* @__PURE__ */ u2(
         SettingsLauncher,
         {
-          currentVersion: this.plugin.manifest.version,
-          vika: vikaSettingsActions(this.plugin),
-          onInspectDevBuild: () => getGitHubDevBuildInfo(this.plugin.manifest.id),
-          onPullDevBuild: (preview) => pullGitHubDevBuild(this.plugin, preview),
+          vika: {
+            configureToken: () => openVikaTokenDialog(this.app),
+            update: () => updateFromVika(this.plugin)
+          },
           onOpenWorkspace: () => {
             void openThinkSettingsWorkspaceView(this.plugin).catch((error) => {
               new obsidian.Notice(`打开 思考系统控制台失败：${error instanceof Error ? error.message : String(error)}`);
@@ -76280,15 +75697,15 @@ function arrangeGraph(items, edges) {
     incoming.set(edge.toItemId, (incoming.get(edge.toItemId) ?? 0) + 1);
   });
   const depth = /* @__PURE__ */ new Map();
-  const queue2 = [...items].filter((item) => incoming.get(item.id) === 0).sort(bySpatialOrder$1);
-  queue2.forEach((item) => depth.set(item.id, 0));
-  while (queue2.length) {
-    const current2 = queue2.shift();
+  const queue = [...items].filter((item) => incoming.get(item.id) === 0).sort(bySpatialOrder$1);
+  queue.forEach((item) => depth.set(item.id, 0));
+  while (queue.length) {
+    const current2 = queue.shift();
     const currentDepth = depth.get(current2.id) ?? 0;
     outgoing.get(current2.id).forEach((nextId) => {
       incoming.set(nextId, (incoming.get(nextId) ?? 1) - 1);
       depth.set(nextId, Math.max(depth.get(nextId) ?? 0, currentDepth + 1));
-      if (incoming.get(nextId) === 0) queue2.push(items.find((item) => item.id === nextId));
+      if (incoming.get(nextId) === 0) queue.push(items.find((item) => item.id === nextId));
     });
   }
   const maxDepth = Math.max(0, ...depth.values());
@@ -78446,7 +77863,7 @@ function WhiteboardRoot({ app }) {
       whiteboardStore,
       onOpenRecord,
       onOpenRecordOrigin,
-      onNotice: (message2) => ui.notice(message2)
+      onNotice: (message) => ui.notice(message)
     }
   ) });
 }
@@ -78581,10 +77998,10 @@ function registerEnergyProtocolHandler(plugin, deps) {
       new obsidian.Notice(`思考系统：${parsed.message}`, 5e3);
       return;
     }
-    const settings2 = deps.getSettings();
+    const settings = deps.getSettings();
     const goal = resolveEnergyCaptureGoal(
-      settings2.goalSettings?.goals || [],
-      settings2.energySettings?.defaultGoalPath
+      settings.goalSettings?.goals || [],
+      settings.energySettings?.defaultGoalPath
     );
     if (!goal) {
       new obsidian.Notice("思考系统：没有可用于精力记录的目标，请先在设置中创建/选择默认精力目标。", 6e3);
@@ -78694,8 +78111,8 @@ class CodeblockEmbedder {
           el.createDiv({ text: "代码块内容解析失败，请检查语法。应为布局名称或结构化配置数据。" });
           return;
         }
-        const settings2 = this.getSettings();
-        const allLayouts = settings2.layouts;
+        const settings = this.getSettings();
+        const allLayouts = settings.layouts;
         if (!layoutName && allLayouts.length > 0) {
           layoutName = allLayouts[0].name;
           this.uiPort.notice(`思考插件：未指定布局，已自动选择第一个布局“${layoutName}”。`);
@@ -78793,7 +78210,7 @@ function startAiProgressNotice(ui, options) {
     const seconds = Math.floor((nowMs() - startedAt) / 1e3);
     if (seconds === lastSecond) return;
     lastSecond = seconds;
-    const message2 = buildAiWaitingMessage({
+    const message = buildAiWaitingMessage({
       fastMode: options.fastMode,
       mode: options.mode,
       seconds,
@@ -78801,7 +78218,7 @@ function startAiProgressNotice(ui, options) {
       endpointHost: options.endpointHost
     });
     try {
-      handle?.setMessage?.(message2);
+      handle?.setMessage?.(message);
     } catch {
     }
     if (seconds > 0 && seconds % 10 === 0) {
@@ -79368,10 +78785,10 @@ class CapabilityRegistry {
   keys() {
     return [...this.factories.keys()];
   }
-  createAll(app, settings2, deps) {
+  createAll(app, settings, deps) {
     const out = {};
     for (const [key, factory] of this.factories.entries()) {
-      out[String(key)] = factory(app, settings2, deps);
+      out[String(key)] = factory(app, settings, deps);
     }
     return out;
   }
@@ -79433,8 +78850,8 @@ function createDefaultCapabilityRegistry() {
   registerCapabilityContributions(registry2);
   return registry2;
 }
-function createCapabilities(app, settings2, deps, registry2 = createDefaultCapabilityRegistry()) {
-  return registry2.createAll(app, settings2, deps);
+function createCapabilities(app, settings, deps, registry2 = createDefaultCapabilityRegistry()) {
+  return registry2.createAll(app, settings, deps);
 }
 ensureReflectMetadata();
 devLog(`[ThinkPlugin] main.ts 已加载，版本时间: ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
@@ -79476,12 +78893,12 @@ class ThinkPlugin extends obsidian.Plugin {
         this.serviceManager = new ServiceManager(this);
         devLog("[ThinkPlugin][BOOT] before ServiceManager.bootstrap");
         await this.serviceManager.bootstrap();
-        const settings2 = this.serviceManager.settingsRepository.getSettings();
+        const settings = this.serviceManager.settingsRepository.getSettings();
         devLog("[ThinkPlugin][BOOT] after ServiceManager.bootstrap");
         const capabilityRegistry = createDefaultCapabilityRegistry();
         const runtime = buildRuntime(instance);
         this.modalPort = runtime.modalPort;
-        this.capabilities = createCapabilities(this.app, settings2, {
+        this.capabilities = createCapabilities(this.app, settings, {
           modalPort: runtime.modalPort,
           timerService: this.serviceManager.timerService
         }, capabilityRegistry);
@@ -79505,35 +78922,6 @@ class ThinkPlugin extends obsidian.Plugin {
     );
   }
   registerCommands() {
-    this.addCommand({
-      id: "think-update-github-dev-build",
-      name: "更新：从 GitHub 下载并安装最新开发版",
-      callback: async () => {
-        new obsidian.Notice("Think OS：正在检查 GitHub 最新开发版并下载…", 4e3);
-        try {
-          await pullGitHubDevBuild(this);
-        } catch (error) {
-          new obsidian.Notice(`Think OS 更新失败：${error instanceof Error ? error.message : String(error)}`, 1e4);
-        }
-      }
-    });
-    this.addCommand({
-      id: "think-vika-save-token",
-      name: "维格表：设置 API 令牌",
-      callback: () => openVikaTokenDialog(this.app)
-    });
-    this.addCommand({
-      id: "think-vika-update",
-      name: "维格表：下载并安装最新构建",
-      callback: async () => {
-        new obsidian.Notice("Think OS：正在检查维格表…", 3500);
-        try {
-          await updateFromVika(this);
-        } catch (error) {
-          new obsidian.Notice(`维格表更新失败：${error instanceof Error ? error.message : String(error)}`, 1e4);
-        }
-      }
-    });
     this.addCommand({
       id: "think-mark-performance-lag",
       name: "诊断：标记刚才发生的一次卡顿",
@@ -79609,8 +78997,8 @@ class ThinkPlugin extends obsidian.Plugin {
   }
   async saveSettings() {
     if (isDisposed()) return;
-    const settings2 = this.serviceManager.settingsRepository.getSettings();
-    await this.serviceManager.settingsRepository.save(settings2);
+    const settings = this.serviceManager.settingsRepository.getSettings();
+    await this.serviceManager.settingsRepository.save(settings);
   }
   // 提供服务访问方法（P0-1: 已移除 appStore getter）
   get dataStore() {

@@ -14,7 +14,7 @@ import {
 } from '@core/utils/public';
 import { getTaskSessionResultPresentation, getTaskStatusPresentation } from '@core/records/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, UpdateTimelineRangeHandler } from '@shared/types/public';
-import { createRecordGestureHandlers, findTimelineTouch, RECORD_MODIFIER_ORIGIN_HINT, ThinkIcon, ThinkIconButton, useTimelineTouchGesture } from '@shared/ui/public';
+import { createRecordGestureHandlers, findTimelineTouch, hasPlatformModifier, ThinkIcon, ThinkIconButton, useTimelineTouchGesture } from '@shared/ui/public';
 
 interface TimelineTaskBlockProps {
   block: TaskBlock;
@@ -40,6 +40,9 @@ interface ActiveGesture {
 }
 
 const MOUSE_DRAG_THRESHOLD_PX = 4;
+const TASK_DOUBLE_TAP_MS = 350;
+const TASK_DOUBLE_TAP_SLOP_PX = 24;
+const TIMELINE_TASK_INTERACTION_HINT = '双击编辑；Ctrl/⌘+单击打开原文；触屏轻触选中、长按拖动调整时间';
 
 function formatTimeMinute(minute: number): string {
   const total = Math.round(minute);
@@ -50,7 +53,7 @@ function formatTimeMinute(minute: number): string {
 
 function generateTaskBlockTitle(block: TaskBlock): string {
   if (!block.timelineRange.end) {
-    return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间点: ${formatTimeMinute(block.startMinute)}\n鼠标拖动；触屏长按后拖动可修改时间\n${RECORD_MODIFIER_ORIGIN_HINT}`;
+    return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间点: ${formatTimeMinute(block.startMinute)}\n鼠标拖动；触屏长按后拖动可修改时间\n${TIMELINE_TASK_INTERACTION_HINT}`;
   }
 
   const start = dayjs(block.timelineRange.start);
@@ -58,7 +61,7 @@ function generateTaskBlockTitle(block: TaskBlock): string {
   const rangeText = start.isSame(end, 'day')
     ? `${start.format('HH:mm')} - ${end.format('HH:mm')}`
     : `${start.format('MM-DD HH:mm')} - ${end.format('MM-DD HH:mm')}`;
-  return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间: ${rangeText}\n鼠标直接拖动；触屏长按后拖动块或上下边缘可修改时间\n${RECORD_MODIFIER_ORIGIN_HINT}`;
+  return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间: ${rangeText}\n鼠标直接拖动；触屏长按后拖动块或上下边缘可修改时间\n${TIMELINE_TASK_INTERACTION_HINT}`;
 }
 
 function formatPreviewLabel(range: { start: string; end?: string }, durationMinutes: number): string {
@@ -89,6 +92,7 @@ export function TimelineTaskBlock({
   const touchAnchorMinuteRef = useRef<number | null>(null);
   const touchGestureModeRef = useRef<GestureMode>('move');
   const suppressClickUntilRef = useRef(0);
+  const lastTaskTapRef = useRef<{ time: number; x: number; y: number } | null>(null);
   const [preview, setPreview] = useState<ReturnType<typeof buildTimelineBlockGesturePreview>>(null);
   const previewRef = useRef<ReturnType<typeof buildTimelineBlockGesturePreview>>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -108,6 +112,7 @@ export function TimelineTaskBlock({
     // editor before zoom can start, not just when this block sees touchmove.
     touchIdentifierRef.current = null;
     touchAnchorMinuteRef.current = null;
+    lastTaskTapRef.current = null;
     suppressClickUntilRef.current = Date.now() + 450;
     previewRef.current = null;
     setPreview(null);
@@ -137,10 +142,9 @@ export function TimelineTaskBlock({
     void onOpenRecord?.(editItem);
   };
 
-  // Timeline uses the shared Record interaction contract at the block boundary:
-  // normal click edits the owning Task; Ctrl/⌘+click opens the origin.
-  // Pointer gestures remain responsible only for move/resize and suppress the
-  // synthetic click after a real drag.
+  // Timeline specializes the Record contract: click only selects the block,
+  // double-click / mobile double-tap opens the editor, Ctrl/⌘+click opens the
+  // origin. Keyboard Enter/Space remains an accessible editor shortcut.
   const blockGesture = createRecordGestureHandlers({
     item: originItem,
     onOpenOrigin: onOpenRecordOrigin,
@@ -252,6 +256,7 @@ export function TimelineTaskBlock({
     if (event.touches?.length !== 1) {
       touchGesture.cancel();
       touchIdentifierRef.current = null;
+      lastTaskTapRef.current = null;
       resetTouchPreview();
       return;
     }
@@ -273,6 +278,7 @@ export function TimelineTaskBlock({
     if (!touch || event.touches.length !== 1) {
       touchGesture.cancel();
       touchIdentifierRef.current = null;
+      lastTaskTapRef.current = null;
       resetTouchPreview();
       return;
     }
@@ -281,6 +287,7 @@ export function TimelineTaskBlock({
       // On an ordinary finger swipe let the browser pan without interference.
       suppressClickUntilRef.current = Date.now() + 350;
       touchIdentifierRef.current = null;
+      lastTaskTapRef.current = null;
       resetTouchPreview();
       return;
     }
@@ -304,6 +311,7 @@ export function TimelineTaskBlock({
     // Always stop bubbling to the empty-cell double-tap create handler, even if
     // the user swiped and the long-press candidate was already discarded.
     event.stopPropagation();
+    if (cancelled) lastTaskTapRef.current = null;
     const identifier = touchIdentifierRef.current;
     const touch = identifier == null ? null : findTimelineTouch(event.changedTouches, identifier);
     if (!touch) {
@@ -315,8 +323,26 @@ export function TimelineTaskBlock({
     setIsTouchArmed(false);
     if (!outcome || outcome.kind === 'tap') {
       resetTouchPreview();
+      if (!outcome || cancelled) return;
+      // A synthesized click follows many mobile touchends; only the second
+      // real tap edits, and neither tap may have been a swipe or drag.
+      const dx = touch.clientX - outcome.anchor.clientX;
+      const dy = touch.clientY - outcome.anchor.clientY;
+      if (Math.hypot(dx, dy) > 10) { lastTaskTapRef.current = null; return; }
+      const now = Date.now();
+      const previous = lastTaskTapRef.current;
+      const doubleTap = !!previous && now - previous.time <= TASK_DOUBLE_TAP_MS
+        && Math.abs(previous.x - touch.clientX) <= TASK_DOUBLE_TAP_SLOP_PX
+        && Math.abs(previous.y - touch.clientY) <= TASK_DOUBLE_TAP_SLOP_PX;
+      lastTaskTapRef.current = doubleTap ? null : { time: now, x: touch.clientX, y: touch.clientY };
+      if (!doubleTap) return;
+      suppressClickUntilRef.current = now + 500;
+      event.preventDefault();
+      setIsEditMode(true);
+      handleOpenTask();
       return;
     }
+    lastTaskTapRef.current = null;
     suppressClickUntilRef.current = Date.now() + 450;
     event.preventDefault();
     const anchorMinute = touchAnchorMinuteRef.current;
@@ -391,15 +417,25 @@ export function TimelineTaskBlock({
       title={`${generateTaskBlockTitle(block)}\n状态: ${lifecycle.label}`}
       style={blockStyle}
       onClick={(event) => {
-        // Pointerup drag may be followed by a synthetic click; the range is already saved.
+        // Never reopen after moving/resizing or a touch double-tap.
+        event.stopPropagation();
         if (Date.now() < suppressClickUntilRef.current) {
           event.preventDefault();
-          event.stopPropagation();
           return;
         }
-        // The whole task block is the primary interaction target. Child controls
-        // stop their own clicks so alignment/resize affordances never open the editor.
-        blockGesture.onClick?.(event as any);
+        if (hasPlatformModifier(event) && onOpenRecordOrigin) {
+          blockGesture.onClick?.(event as any);
+          return;
+        }
+        // A single click/tap is selection, NOT an editor activation.
+        setIsEditMode(true);
+      }}
+      onDblClick={(event) => {
+        event.stopPropagation();
+        event.preventDefault();
+        if (Date.now() < suppressClickUntilRef.current || hasPlatformModifier(event)) return;
+        setIsEditMode(true);
+        handleOpenTask();
       }}
       onPointerDown={(event) => beginGesture(event as any, 'move')}
       onPointerMove={(event) => handlePointerMove(event as any)}
@@ -410,7 +446,7 @@ export function TimelineTaskBlock({
       onTouchEnd={(event) => finishTouchGesture(event as any)}
       onTouchCancel={(event) => finishTouchGesture(event as any, true)}
     >
-      {!isPoint && block.isRangeStart && isEditMode ? (
+      {!isPoint && block.isRangeStart ? (
         <div
           class="timeline-task-resize-handle timeline-task-resize-handle--start"
           role="separator"
@@ -418,6 +454,7 @@ export function TimelineTaskBlock({
           onPointerDown={(event) => beginGesture(event as any, 'resize-start')}
           onTouchStart={(event) => beginTouchGesture(event as any, 'resize-start')}
           onClick={(event) => event.stopPropagation()}
+          onDblClick={(event) => event.stopPropagation()}
         />
       ) : null}
 
@@ -447,6 +484,7 @@ export function TimelineTaskBlock({
         onPointerDown={(event) => event.stopPropagation()}
         onTouchStart={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
+        onDblClick={(event) => event.stopPropagation()}
       >
         {canAlign && isEditMode ? (
           <>
@@ -478,6 +516,7 @@ export function TimelineTaskBlock({
           onPointerDown={(event) => beginGesture(event as any, 'resize-end')}
           onTouchStart={(event) => beginTouchGesture(event as any, 'resize-end')}
           onClick={(event) => event.stopPropagation()}
+          onDblClick={(event) => event.stopPropagation()}
         />
       ) : null}
     </div>

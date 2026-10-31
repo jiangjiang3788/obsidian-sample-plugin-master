@@ -1,8 +1,6 @@
 import "reflect-metadata";
 import { assertSettingsLocationSafe } from '@/platform/obsidian/settingsLocationGuard';
 import { ThinkDiagnostics, recordThinkDiagnostic, traceThinkOperation } from '@/platform/obsidian/ThinkDiagnostics';
-import { pullGitHubDevBuild } from '@/platform/obsidian/GitHubDevUpdater';
-import { openVikaTokenDialog, updateFromVika } from '@/platform/obsidian/VikaUpdater';
 
 import { ensureReflectMetadata } from '@core/bootstrap/public';
 
@@ -151,36 +149,6 @@ export default class ThinkPlugin extends Plugin {
     private registerCommands(): void {
         // [恢复工具] 清空索引缓存并重新全量扫描
         // 主要用于修复：升级/重构后 cache 不一致导致 items=0 的情况。
-
-        this.addCommand({
-            id: 'think-update-github-dev-build',
-            name: '更新：从 GitHub 下载并安装最新开发版',
-            callback: async () => {
-                new Notice('Think OS：正在检查 GitHub 最新开发版并下载…', 4000);
-                try {
-                    // Share the settings button's validation, rollback and restart notice.
-                    // This command queries main directly: opening Settings is unnecessary.
-                    await pullGitHubDevBuild(this);
-                } catch (error: unknown) {
-                    new Notice(`Think OS 更新失败：${error instanceof Error ? error.message : String(error)}`, 10000);
-                }
-            },
-        });
-
-        this.addCommand({
-            id: 'think-vika-save-token',
-            name: '维格表：设置 API 令牌',
-            callback: () => openVikaTokenDialog(this.app),
-        });
-        this.addCommand({
-            id: 'think-vika-update',
-            name: '维格表：下载并安装最新构建',
-            callback: async () => {
-                new Notice('Think OS：正在检查维格表…', 3500);
-                try { await updateFromVika(this); }
-                catch (error) { new Notice(`维格表更新失败：${error instanceof Error ? error.message : String(error)}`, 10000); }
-            },
-        });
 
         this.addCommand({
             id: 'think-mark-performance-lag',

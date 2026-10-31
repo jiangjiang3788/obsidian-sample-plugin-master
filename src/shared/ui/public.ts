@@ -44,3 +44,4 @@ export { useCoarseTimelineDensity } from './timeline/useCoarseTimelineDensity';
 
 export { useTimelineTouchGesture, TimelineTouchScopeContext } from './timeline/useTimelineTouchGesture';
 export { findTimelineTouch, TIMELINE_TOUCH_POLICY, TimelineTouchScope } from './timeline/TimelineTouchGesture';
+export { attachTimelineAxisLockedPan } from './timeline/TimelineAxisPan';

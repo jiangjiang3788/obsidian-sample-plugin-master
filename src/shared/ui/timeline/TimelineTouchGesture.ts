@@ -121,12 +121,18 @@ export class TimelineTouchScope {
   private readonly candidates = new Set<{
     pending: () => boolean;
     dragging: () => boolean;
+    armed?: () => boolean;
     cancel: () => void;
   }>();
 
   register(candidate: { pending: () => boolean; dragging: () => boolean; cancel: () => void }): () => void {
     this.candidates.add(candidate);
     return () => { this.candidates.delete(candidate); };
+  }
+
+  /** An armed time edit owns the finger, so horizontal panning must stand down. */
+  hasArmedEdit(): boolean {
+    return [...this.candidates].some((candidate) => candidate.armed?.() ?? candidate.dragging());
   }
 
   requestPinch(): boolean {

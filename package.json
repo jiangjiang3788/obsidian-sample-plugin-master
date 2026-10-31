@@ -190,8 +190,7 @@
     "验证:时间轴刻度": "npm --silent run typecheck:src && npm --silent run test:timeline-scale && npm --silent run build",
     "verify:timeline-scale:e2e": "npm run build:debug && npx wdio run ./test/configs/wdio.conf.mts --spec ./test/specs/restart-timeline-preview.e2e.ts",
     "验证:时间轴刻度:真机": "npm run build:debug && npx wdio run ./test/configs/wdio.conf.mts --spec ./test/specs/restart-timeline-preview.e2e.ts",
-    "发布:维格": "node scripts/build/publish-vika.mjs",
-    "检查:维格": "node scripts/build/publish-vika.mjs --dry-run"
+    "发布:维格": "node scripts/build/publish-vika.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

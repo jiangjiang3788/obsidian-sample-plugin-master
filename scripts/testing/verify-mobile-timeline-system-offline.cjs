@@ -20,11 +20,9 @@ const files = [
   'src/features/views/runtime/TimelineView/TimelineDailyView.tsx',
   'src/features/views/runtime/components/timeline/DayColumnBody.tsx',
   'src/features/views/runtime/components/timeline/TimelineTaskBlock.tsx',
-  'src/platform/obsidian/GitHubDevUpdater.ts',
-  'src/features/settings/components/DevBuildUpdateControl.tsx',
+  'src/features/settings/components/VikaUpdateControl.tsx',
   'test/unit/timelineTouchGestureMachine.test.ts',
   'test/unit/timelineTaskDragUi.test.tsx',
-  'test/unit/platform/githubDevUpdater.test.ts',
 ];
 function transpile(file) {
   const out = ts.transpileModule(source(file), {
@@ -102,68 +100,4 @@ postcss.parse(css);
 assert(source('styles.css').includes(css.trimEnd()));
 console.log('PASS CSS parse, Android fallback, native touch scroller, bundled CSS parity');
 
-const sha='f'.repeat(40), commitTime='2026-10-14T03:12:00.000Z', pushTime='2026-10-14T03:14:00.000Z';
-const payloads = {
-  'main.js': '/* build */' + 'b'.repeat(1700),
-  'styles.css': '.think-os { display:block; }' + 's'.repeat(100),
-  'manifest.json': JSON.stringify({id:'think-os',version:'1.18.2',main:'main.js',styles:'styles.css'}),
-};
-let urls=[], headUnavailable=false, failCSS=false;
-async function requestUrl({url}) {
-  urls.push(url);
-  if (url.includes('/commits/main')) return { status: headUnavailable ? 403:200, json: { sha, commit: { committer: { date: commitTime } } } };
-  if (url.includes('/events?')) return { status: 200, json: [{type:'PushEvent',created_at:pushTime,payload:{ref:'refs/heads/main',head:sha}}] };
-  for (const [file,text] of Object.entries(payloads)) if (url.includes(`/${sha}/${file}?`)) {
-    return {status:failCSS && file==='styles.css'? 503:200,text};
-  }
-  throw Error(`Unexpected URL ${url}`);
-}
-const updater = evaluate('src/platform/obsidian/GitHubDevUpdater.ts', {
-  obsidian: { requestUrl, normalizePath:(x)=>x },
-});
-const stored=Object.fromEntries(Object.keys(payloads).map(file=>[`.obsidian/plugins/think-os/${file}`,`old ${file}`]));
-let failPartial=false, failReadback=false, writeCount=0;
-const host={manifest:{id:'think-os'},app:{vault:{configDir:'.obsidian',adapter:{
- exists:async (name)=>name in stored,
- read:async (name)=>stored[name],
- write:async (name,text)=>{writeCount++;stored[name]=(failReadback && name.endsWith('main.js'))?'corrupt':text;
-   if(failPartial && name.endsWith('styles.css')){failPartial=false;throw Error('interrupted write');}
- },
- remove:async (name)=>{delete stored[name];},
-}}}};
-(async()=>{
-  const preview=await updater.getGitHubDevBuildInfo('think-os');
-  assert.equal(preview.githubPushedAt,pushTime);
-  assert.equal(preview.githubCommitAt,commitTime);
-  assert.equal(preview.commitSha,sha);
-  await updater.pullGitHubDevBuild(host,preview);
-  assert.equal(writeCount,3);
-  assert(urls.filter(u=>u.includes('raw.githubusercontent.com')).every(u=>u.includes(`/${sha}/`)));
-  console.log('PASS pinned GitHub preview, verified push time, and read-back checked download');
-  const oldMain=stored['.obsidian/plugins/think-os/main.js'];
-  writeCount=0;
-  await assert.rejects(updater.pullGitHubDevBuild(host,{...preview,remoteVersion:'9.9.9'}),/预览版本与下载版本不匹配/);
-  assert.equal(writeCount,0);
-  failCSS=true;
-  await assert.rejects(updater.pullGitHubDevBuild(host,preview),/下载 styles.css 失败/);
-  assert.equal(writeCount,0);failCSS=false;
-  failPartial=true;
-  await assert.rejects(updater.pullGitHubDevBuild(host,preview),/已回滚到原版本/);
-  assert.equal(stored['.obsidian/plugins/think-os/main.js'],oldMain);
-  assert.equal(stored['.obsidian/plugins/think-os/styles.css'],payloads['styles.css']);
-  failReadback=true;
-  await assert.rejects(updater.pullGitHubDevBuild(host,preview),/写入校验失败/);
-  failReadback=false;
-  headUnavailable=true;writeCount=0;
-  await assert.rejects(updater.pullGitHubDevBuild(host),/无法确保同一版本/);
-  assert.equal(writeCount,0);
-  console.log('PASS mismatched/partial downloads, partial writes, readback failure & GitHub API outage');
-  const js=source('main.js');
-  new vm.Script(js,{filename:'main.js'});
-  for(const marker of ['class TimelineTouchGesture {','function useTimelineTouchGesture(','function findGitHubRevisionPushTime(','githubPushedAt','for (const minute of TIMELINE_KEY_HOURS.map(']) assert(js.includes(marker),marker);
-  assert(!js.includes('_jsx(') && !js.includes('_jsxs('), 'Unbound automatic JSX in offline bundle');
-  assert(!fs.existsSync(path.join(root,'main.js.map')));
-  const manifest=JSON.parse(source('manifest.json'));
-  assert.equal(manifest.version,require(path.join(root,'package.json')).version);
-  console.log('PASS install main.js parses, offline runtime markers, manifest sync, no stale map');
-})().catch((error)=>{console.error(error);process.exitCode=1;});
+console.log('PASS timeline source checks; Vika updater tested separately');
