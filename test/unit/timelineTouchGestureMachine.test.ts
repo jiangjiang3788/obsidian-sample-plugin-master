@@ -1,4 +1,4 @@
-import { TIMELINE_TOUCH_POLICY, TimelineTouchGesture, TimelineTouchScope } from '@/shared/ui/timeline/TimelineTouchGesture';
+import { classifyTimelineTap, TIMELINE_TOUCH_POLICY, TimelineTouchGesture, TimelineTouchScope } from '@/shared/ui/timeline/TimelineTouchGesture';
 
 const point = (clientX = 10, clientY = 50, identifier = 7) => ({ identifier, clientX, clientY });
 
@@ -118,5 +118,23 @@ describe('Timeline touch scope: pinch and edit are mutually exclusive', () => {
     expect(scope.requestPinch()).toBe(false);
     expect(gesture.pending).toBe(false);
     expect(gesture.end(point(10, 100))).toBeNull();
+  });
+});
+
+describe('Timeline shared double-tap contract', () => {
+  it('recognizes same-location taps within 350ms and resets after the second tap', () => {
+    const first = classifyTimelineTap(null, { clientX: 20, clientY: 50 }, 1000);
+    expect(first.doubleTap).toBe(false);
+    const second = classifyTimelineTap(first.next, { clientX: 22, clientY: 52 }, 1240);
+    expect(second.doubleTap).toBe(true);
+    expect(second.next).toBeNull();
+    const third = classifyTimelineTap(second.next, { clientX: 22, clientY: 52 }, 1300);
+    expect(third.doubleTap).toBe(false);
+  });
+  it('rejects widely separated taps, delayed taps, or clock rollback', () => {
+    const previous = { time: 1000, x: 20, y: 50 };
+    expect(classifyTimelineTap(previous, { clientX: 55, clientY: 50 }, 1100).doubleTap).toBe(false);
+    expect(classifyTimelineTap(previous, { clientX: 20, clientY: 50 }, 1400).doubleTap).toBe(false);
+    expect(classifyTimelineTap(previous, { clientX: 20, clientY: 50 }, 900).doubleTap).toBe(false);
   });
 });

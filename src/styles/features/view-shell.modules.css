@@ -120,6 +120,35 @@
     }
 }
 
+/* Timeline is already its own bounded scrollport. The generic module padding
+ * previously left a visible inset/blank band around the timeline, and the
+ * generic overflow made a second potential scroller. Other views retain their
+ * original inset and overflow behavior. */
+.think-os .think-module--timeline-scroll > .module-content {
+    padding: 0;
+    overflow: hidden;
+}
+
+.think-os .think-module--timeline-scroll > .module-content > .think-view-viewport-gate {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Freeform items have a fixed frame height: use that height instead of leaving
+ * empty space below the timeline's default viewport-height cap. */
+.think-os .think-freeform-item .think-module--timeline-scroll > .module-content {
+    display: flex;
+    flex-direction: column;
+}
+.think-os .think-freeform-item .think-module--timeline-scroll > .module-content > .think-view-viewport-gate {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+.think-os .think-freeform-item .think-module--timeline-scroll .timeline-view-wrapper {
+    height: 100%;
+    max-height: 100%;
+}
+
 /* Expanded dashboard views are viewport-gated so a long layout does not execute every
  * heavy view model at once. The placeholder keeps layout geometry stable until the
  * panel approaches the viewport. */

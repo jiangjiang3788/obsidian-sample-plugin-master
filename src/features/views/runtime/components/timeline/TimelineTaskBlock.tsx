@@ -14,10 +14,12 @@ import {
 } from '@core/utils/public';
 import { getTaskSessionResultPresentation, getTaskStatusPresentation } from '@core/records/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, UpdateTimelineRangeHandler } from '@shared/types/public';
-import { createRecordGestureHandlers, findTimelineTouch, hasPlatformModifier, ThinkIcon, ThinkIconButton, useTimelineTouchGesture } from '@shared/ui/public';
+import { classifyTimelineTap, createRecordGestureHandlers, findTimelineTouch, hasPlatformModifier, ThinkIcon, ThinkIconButton, useTimelineTouchGesture } from '@shared/ui/public';
 
 interface TimelineTaskBlockProps {
   block: TaskBlock;
+  selectedBlockKey?: string | null;
+  onSelectBlock?: (key: string | null) => void;
   prevBlock: TaskBlock | null;
   nextBlock: TaskBlock | null;
   hourHeight: number;
@@ -40,20 +42,18 @@ interface ActiveGesture {
 }
 
 const MOUSE_DRAG_THRESHOLD_PX = 4;
-const TASK_DOUBLE_TAP_MS = 350;
-const TASK_DOUBLE_TAP_SLOP_PX = 24;
-const TIMELINE_TASK_INTERACTION_HINT = '双击编辑；Ctrl/⌘+单击打开原文；触屏轻触选中、长按拖动调整时间';
+const TIMELINE_TASK_INTERACTION_HINT = '单击选中后显示上下把手；双击编辑；拖动上下短横柄调整边界；Esc取消选中；Ctrl/⌘+单击打开原文；触屏长按再拖动';
 
 function formatTimeMinute(minute: number): string {
   const total = Math.round(minute);
   const h = Math.floor(total / 60) % 24;
   const m = ((total % 60) + 60) % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  return total === 24 * 60 ? '24:00' : `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 function generateTaskBlockTitle(block: TaskBlock): string {
   if (!block.timelineRange.end) {
-    return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间点: ${formatTimeMinute(block.startMinute)}\n鼠标拖动；触屏长按后拖动可修改时间\n${TIMELINE_TASK_INTERACTION_HINT}`;
+    return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间点: ${formatTimeMinute(block.startMinute)}\n鼠标拖动块主体；触屏长按后拖动可修改时间\n${TIMELINE_TASK_INTERACTION_HINT}`;
   }
 
   const start = dayjs(block.timelineRange.start);
@@ -61,7 +61,7 @@ function generateTaskBlockTitle(block: TaskBlock): string {
   const rangeText = start.isSame(end, 'day')
     ? `${start.format('HH:mm')} - ${end.format('HH:mm')}`
     : `${start.format('MM-DD HH:mm')} - ${end.format('MM-DD HH:mm')}`;
-  return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间: ${rangeText}\n鼠标直接拖动；触屏长按后拖动块或上下边缘可修改时间\n${TIMELINE_TASK_INTERACTION_HINT}`;
+  return `${block.timelineSource === 'task-plan' ? '计划' : '任务'}: ${block.pureText}\n时间: ${rangeText}\n鼠标拖动块主体可平移；选中后拖动上下把手可调整边界；触屏长按后拖动\n${TIMELINE_TASK_INTERACTION_HINT}`;
 }
 
 function formatPreviewLabel(range: { start: string; end?: string }, durationMinutes: number): string {
@@ -76,6 +76,8 @@ function formatPreviewLabel(range: { start: string; end?: string }, durationMinu
 
 export function TimelineTaskBlock({
   block,
+  selectedBlockKey,
+  onSelectBlock,
   prevBlock,
   nextBlock,
   hourHeight,
@@ -97,14 +99,22 @@ export function TimelineTaskBlock({
   const previewRef = useRef<ReturnType<typeof buildTimelineBlockGesturePreview>>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isTouchArmed, setIsTouchArmed] = useState(false);
-  // Editing controls are intentionally hidden until a deliberate long press.
-  const [isEditMode, setIsEditMode] = useState(false);
+  // Selection is owned by the whole timeline. Standalone block renderers have
+  // a local fallback for embedded consumers and focused UI tests.
+  const [localSelected, setLocalSelected] = useState(false);
+  const blockSelectionKey = `${block.day}::${block.id}`;
+  const isEditMode = selectedBlockKey === undefined
+    ? localSelected : selectedBlockKey === blockSelectionKey;
+  const selectBlock = () => {
+    if (onSelectBlock) onSelectBlock(blockSelectionKey);
+    else setLocalSelected(true);
+  };
 
   // Task blocks and empty day cells consume the SAME long-press policy. The
   // controller owns cancellation/timers; native scrolling stays the default.
   const touchGesture = useTimelineTouchGesture<GestureMode>(() => {
     setIsTouchArmed(true);
-    setIsEditMode(true);
+    selectBlock();
     try { navigator.vibrate?.(8); } catch { /* optional vibration */ }
   }, (wasActive) => {
     if (!wasActive) return;
@@ -168,6 +178,7 @@ export function TimelineTaskBlock({
     const minute = minuteFromClientY(event.clientY);
     if (minute == null) return;
     event.stopPropagation();
+    selectBlock();
     gestureRef.current = {
       pointerId: event.pointerId,
       mode,
@@ -239,7 +250,7 @@ export function TimelineTaskBlock({
     Promise.resolve(onUpdateTimelineRange({
       target: block.timelineEditTarget,
       range: committedPreview.range,
-    })).catch(() => undefined);
+    })).catch(() => onNotice?.('时间调整保存失败，请重试'));
   };
 
   const resetTouchPreview = () => {
@@ -330,15 +341,12 @@ export function TimelineTaskBlock({
       const dy = touch.clientY - outcome.anchor.clientY;
       if (Math.hypot(dx, dy) > 10) { lastTaskTapRef.current = null; return; }
       const now = Date.now();
-      const previous = lastTaskTapRef.current;
-      const doubleTap = !!previous && now - previous.time <= TASK_DOUBLE_TAP_MS
-        && Math.abs(previous.x - touch.clientX) <= TASK_DOUBLE_TAP_SLOP_PX
-        && Math.abs(previous.y - touch.clientY) <= TASK_DOUBLE_TAP_SLOP_PX;
-      lastTaskTapRef.current = doubleTap ? null : { time: now, x: touch.clientX, y: touch.clientY };
+      const { doubleTap, next } = classifyTimelineTap(lastTaskTapRef.current, touch, now);
+      lastTaskTapRef.current = next;
+      selectBlock();
       if (!doubleTap) return;
       suppressClickUntilRef.current = now + 500;
       event.preventDefault();
-      setIsEditMode(true);
       handleOpenTask();
       return;
     }
@@ -361,7 +369,7 @@ export function TimelineTaskBlock({
     Promise.resolve(onUpdateTimelineRange({
       target: block.timelineEditTarget,
       range: committedPreview.range,
-    })).catch(() => undefined);
+    })).catch(() => onNotice?.('时间调整保存失败，请重试'));
   };
 
   const commitRange = (range: TaskBlock['timelineRange'] | null, failureMessage: string) => {
@@ -374,7 +382,7 @@ export function TimelineTaskBlock({
       return;
     }
     Promise.resolve(onUpdateTimelineRange({ target: block.timelineEditTarget, range }))
-      .catch(() => undefined);
+      .catch(() => onNotice?.('时间调整保存失败，请重试'));
   };
 
   const handleAlignToPrev = () => {
@@ -391,10 +399,24 @@ export function TimelineTaskBlock({
     );
   };
 
+  // One 5-minute keyboard step (Shift: 15 minutes) works on desktop and with
+  // iOS/Android hardware keyboards; it uses the same range validator/saver.
+  const handleGripKeyDown = (event: KeyboardEvent, edge: 'start' | 'end') => {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    event.stopPropagation();
+    selectBlock();
+    const delta = (event.key === 'ArrowDown' ? 1 : -1) * (event.shiftKey ? 15 : 5);
+    const minute = (edge === 'start' ? block.blockStartMinute : block.blockEndMinute) + delta;
+    const range = resizeTimelineLogicalRange(block.timelineRange, edge, block.day, minute, maxHours);
+    commitRange(range, '无法调整：时间段至少需要 5 分钟，且不能越过另一端');
+  };
+
   const canAlign = !isPoint && !isPlanned && block.isRangeStart && block.isRangeEnd;
   const canAlignToNext = !!(canAlign && nextBlock && nextBlock.blockStartMinute > block.blockStartMinute);
   const className = `timeline-task-block timeline-task-block--${lifecycle.className}`
     + `${isPoint ? ' timeline-task-block--point' : ''}`
+    + `${!isPoint && renderHeight < 24 ? ' timeline-task-block--short' : ''}`
     + `${isPlanned ? ' timeline-task-block--planned' : ''}`
     + `${isTouchArmed ? ' timeline-task-block--touch-armed' : ''}`
     + `${isEditMode ? ' timeline-task-block--edit-mode' : ''}`
@@ -416,6 +438,12 @@ export function TimelineTaskBlock({
       data-timeline-editable="true"
       title={`${generateTaskBlockTitle(block)}\n状态: ${lifecycle.label}`}
       style={blockStyle}
+      onKeyDown={(event) => {
+        if (event.key !== 'Escape') return;
+        event.stopPropagation();
+        onSelectBlock?.(null);
+        setLocalSelected(false);
+      }}
       onClick={(event) => {
         // Never reopen after moving/resizing or a touch double-tap.
         event.stopPropagation();
@@ -428,13 +456,13 @@ export function TimelineTaskBlock({
           return;
         }
         // A single click/tap is selection, NOT an editor activation.
-        setIsEditMode(true);
+        selectBlock();
       }}
       onDblClick={(event) => {
         event.stopPropagation();
         event.preventDefault();
         if (Date.now() < suppressClickUntilRef.current || hasPlatformModifier(event)) return;
-        setIsEditMode(true);
+        selectBlock();
         handleOpenTask();
       }}
       onPointerDown={(event) => beginGesture(event as any, 'move')}
@@ -450,7 +478,12 @@ export function TimelineTaskBlock({
         <div
           class="timeline-task-resize-handle timeline-task-resize-handle--start"
           role="separator"
-          aria-label="拖动修改开始时间"
+          aria-label="拖动修改开始时间（上下方向键每次调整5分钟，Shift调整15分钟）"
+          aria-orientation="horizontal"
+          aria-valuetext={formatTimeMinute(block.blockStartMinute)}
+          tabIndex={0}
+          onKeyDown={(event) => handleGripKeyDown(event as any, 'start')}
+          onFocus={selectBlock}
           onPointerDown={(event) => beginGesture(event as any, 'resize-start')}
           onTouchStart={(event) => beginTouchGesture(event as any, 'resize-start')}
           onClick={(event) => event.stopPropagation()}
@@ -463,6 +496,7 @@ export function TimelineTaskBlock({
         role="button"
         tabIndex={0}
         onKeyDown={blockGesture.onKeyDown as any}
+        onFocus={selectBlock}
       >
         <div class="timeline-task-content">
           <span class="timeline-task-status" aria-label={lifecycle.label} title={lifecycle.label}>
@@ -512,7 +546,12 @@ export function TimelineTaskBlock({
         <div
           class="timeline-task-resize-handle timeline-task-resize-handle--end"
           role="separator"
-          aria-label="拖动修改结束时间"
+          aria-label="拖动修改结束时间（上下方向键每次调整5分钟，Shift调整15分钟）"
+          aria-orientation="horizontal"
+          aria-valuetext={formatTimeMinute(block.blockEndMinute)}
+          tabIndex={0}
+          onKeyDown={(event) => handleGripKeyDown(event as any, 'end')}
+          onFocus={selectBlock}
           onPointerDown={(event) => beginGesture(event as any, 'resize-end')}
           onTouchStart={(event) => beginTouchGesture(event as any, 'resize-end')}
           onClick={(event) => event.stopPropagation()}

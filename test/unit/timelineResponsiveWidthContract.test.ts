@@ -40,9 +40,11 @@ describe('Timeline colored-block visibility across desktop, iOS and Android', ()
     expect(css).toContain('opacity: 0.50;');
   });
 
-  it('exposes zero vs nonzero rendered block counts without changing interactions', () => {
+  it('omits temporary recorder metrics while keeping the timeline grid', () => {
     const view = read('src/features/views/runtime/TimelineView/TimelineDailyView.tsx');
-    expect(view).toContain('data-timeline-rendered-blocks={dayColumns.reduce((count, column) => count + column.blocks.length, 0)}');
+    expect(view).not.toContain('data-timeline-rendered-blocks');
+    expect(view).not.toContain('attachTimelineMobileDiagnostics');
+    expect(view).toContain('dayColumns.map(');
   });
 });
 
@@ -50,10 +52,13 @@ describe('Timeline colored-block visibility across desktop, iOS and Android', ()
 describe('Mobile timeline scrolling and Android WebView compatibility', () => {
   it('uses a bounded, touch-native vertical scroller and disables native iOS selection', () => {
     const css = read('src/styles/features/timeline.css');
-    expect(css).toContain('max-height: 68vh');
+    expect(css).toContain('max-height: min(72vh, 900px)');
+    expect(css).toContain('overscroll-behavior: contain');
+    expect(css).toContain('overflow-y: auto');
     expect(css).toContain('-webkit-overflow-scrolling: touch');
     expect(css).toContain('-webkit-user-select: none');
     expect(css).toContain('-webkit-touch-callout: none');
+    expect(css).toContain('touch-action: pan-y');
   });
 
   it('always mounts mobile timeline even if IntersectionObserver is stalled', () => {
@@ -71,5 +76,26 @@ describe('Mobile timeline scrolling and Android WebView compatibility', () => {
     expect(css).toContain('@supports (color: color-mix(in srgb, white 50%, black))');
     const grid = read('src/shared/ui/timeline/TimeRulerGrid.tsx');
     expect(grid).toContain('timelineKeyHour(tick.minute)');
+  });
+});
+
+describe('Timeline boundary grips on every input modality', () => {
+  it('shows boundary grips only on the selected task on desktop and touch', () => {
+    const css = read('src/styles/features/timeline.css');
+    expect(css).toMatch(/\.timeline-task-resize-handle\s*\{\s*display: none/);
+    expect(css).toMatch(/\.timeline-task-block--edit-mode \.timeline-task-resize-handle,\s*\.timeline-task-block--touch-armed \.timeline-task-resize-handle\s*\{\s*display: block/);
+    expect(css).not.toContain('body.is-mobile .timeline-task-block:not(.timeline-task-block--edit-mode)');
+    const block = read('src/features/views/runtime/components/timeline/TimelineTaskBlock.tsx');
+    expect(block).toContain('onKeyDown={(event) => handleGripKeyDown(event as any,');
+    expect(block).toContain("if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;");
+  });
+});
+
+describe('Timeline current-time navigation scroll isolation', () => {
+  it('scrolls the timeline owner without invoking scrollIntoView on the whole dashboard', () => {
+    const source = read('src/features/views/runtime/components/timeline/TimelineTimeAxis.tsx');
+    expect(source).toContain("closest<HTMLElement>('.timeline-view-wrapper')");
+    expect(source).toContain('viewport.scrollTop = Math.min(maxTop');
+    expect(source).not.toContain('anchor.scrollIntoView(');
   });
 });

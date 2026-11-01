@@ -2,7 +2,7 @@ import { h } from 'preact';
 import type { JSX } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import type { TaskBlock } from '@core/types/public';
-import { findTimelineTouch, TimeRulerGrid, useTimelineTouchGesture } from '@shared/ui/public';
+import { classifyTimelineTap, findTimelineTouch, TimeRulerGrid, useTimelineTouchGesture } from '@shared/ui/public';
 import {
   buildTimelineDragSelection,
   buildTimelineScale,
@@ -18,6 +18,8 @@ import { TimelineTaskBlock } from './TimelineTaskBlock';
 interface DayColumnBodyProps {
   day: string;
   blocks: TaskBlock[];
+  selectedBlockKey?: string | null;
+  onSelectBlock?: (key: string | null) => void;
   hourHeight: number;
   scale?: TimelineScale;
   colorMap: Record<string, string>;
@@ -43,6 +45,8 @@ const formatRangeBoundaryMinute = (minute: number) => minute === 24 * 60 ? '24:0
 export function DayColumnBody({
   day,
   blocks,
+  selectedBlockKey,
+  onSelectBlock,
   hourHeight,
   scale,
   colorMap,
@@ -87,6 +91,7 @@ export function DayColumnBody({
 
   const handleBodyClick = (event: MouseEvent) => {
     if (Date.now() < suppressClickUntilRef.current) return;
+    onSelectBlock?.(null);
     onColumnClick(day, event);
   };
 
@@ -239,19 +244,15 @@ export function DayColumnBody({
       });
       return;
     }
+    onSelectBlock?.(null);
     // Keep mobile double tap to create a point, but only after TWO true taps.
     const now = Date.now();
-    const previous = lastTouchRef.current;
-    const isDoubleTap = !!previous
-      && now - previous.time <= 350
-      && Math.abs(previous.x - touch.clientX) <= 24
-      && Math.abs(previous.y - touch.clientY) <= 24;
-    lastTouchRef.current = { time: now, x: touch.clientX, y: touch.clientY };
+    const { doubleTap, next } = classifyTimelineTap(lastTouchRef.current, touch, now);
+    lastTouchRef.current = next;
     suppressClickUntilRef.current = now + 450;
-    if (!isDoubleTap) return;
+    if (!doubleTap) return;
     event.preventDefault();
     onColumnClick(day, event);
-    lastTouchRef.current = null;
   };
 
   const handleBodyTouchCancel = (_event: TouchEvent) => {
@@ -303,6 +304,8 @@ export function DayColumnBody({
         <TimelineTaskBlock
           key={block.id + block.day}
           block={block}
+          selectedBlockKey={selectedBlockKey}
+          onSelectBlock={onSelectBlock}
           prevBlock={index > 0 ? blocks[index - 1] : null}
           nextBlock={index < blocks.length - 1 ? blocks[index + 1] : null}
           hourHeight={hourHeight}

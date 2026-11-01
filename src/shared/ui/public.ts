@@ -43,5 +43,6 @@ export type { TimelineUiDensityMode } from './timeline/useTimelineDensityMode';
 export { useCoarseTimelineDensity } from './timeline/useCoarseTimelineDensity';
 
 export { useTimelineTouchGesture, TimelineTouchScopeContext } from './timeline/useTimelineTouchGesture';
-export { findTimelineTouch, TIMELINE_TOUCH_POLICY, TimelineTouchScope } from './timeline/TimelineTouchGesture';
-export { attachTimelineAxisLockedPan } from './timeline/TimelineAxisPan';
+export { findTimelineTouch, classifyTimelineTap, TIMELINE_TOUCH_POLICY, TimelineTouchScope } from './timeline/TimelineTouchGesture';
+export { attachTimelineAxisLockedPan, attachTimelineViewportInteractions } from './timeline/TimelineAxisPan';
+

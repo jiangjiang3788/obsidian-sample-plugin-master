@@ -39,6 +39,7 @@ import { TimerStateService } from '@core/services/public';
 import { TimerService } from '@features/timer/TimerService';
 import { ActionService } from '@core/services/public';
 import { devLog } from '@core/utils/public';
+import { openVikaTokenDialog, updateFromVika } from '@/platform/obsidian/VikaUpdater';
 import {
     ObsidianAiHttpTransport,
     ObsidianEventsPort,
@@ -58,6 +59,7 @@ export default class ThinkPlugin extends Plugin {
     private capabilities!: Capabilities;
     private modalPort?: ModalPort;
     private diagnostics?: ThinkDiagnostics;
+    private updateCommandRunning = false;
 
     /**
      * [主流程] 插件启动入口
@@ -149,6 +151,42 @@ export default class ThinkPlugin extends Plugin {
     private registerCommands(): void {
         // [恢复工具] 清空索引缓存并重新全量扫描
         // 主要用于修复：升级/重构后 cache 不一致导致 items=0 的情况。
+
+        // Keep the update command in the original Think OS plugin. It uses
+        // EXACTLY the same authenticated, validated installer as Settings;
+        // it does not silently install files from a different update channel.
+        this.addCommand({
+            id: 'think-update-plugin',
+            name: '更新 Think OS 插件（从维格表检查并安装）',
+            callback: () => {
+                if (this.updateCommandRunning) {
+                    new Notice('Think OS：正在检查或安装更新，请勿重复操作。');
+                    return;
+                }
+                this.updateCommandRunning = true;
+                void (async () => {
+                    try {
+                        new Notice('Think OS：正在检查维格表最新构建…', 3500);
+                        const changed = await updateFromVika(this);
+                        if (changed) {
+                            new Notice('Think OS：更新已安装。请完全退出并重新打开 Obsidian 后生效。', 0);
+                        } else {
+                            new Notice('Think OS：已是维格表最新构建，无需更新。', 4000);
+                        }
+                    } catch (error: unknown) {
+                        const message = error instanceof Error ? error.message : String(error);
+                        if (message.includes('维格表更新区域填写 API 令牌')) {
+                            new Notice('Think OS：首次使用更新命令，需要先配置维格表 API 令牌。');
+                            openVikaTokenDialog(this.app);
+                        } else {
+                            new Notice(`Think OS：更新失败，未完成安装。${message}`, 10000);
+                        }
+                    } finally {
+                        this.updateCommandRunning = false;
+                    }
+                })();
+            },
+        });
 
         this.addCommand({
             id: 'think-mark-performance-lag',

@@ -7,6 +7,8 @@ export interface ModulePanelProps {
     title: string;
     collapsed?: boolean;
     children: any;
+    /** Daily/weekly timeline owns its scrollport; remove only its surrounding padding. */
+    flushTimeline?: boolean;
     onActionClick?: () => void;
     onToggle?: (e: MouseEvent | KeyboardEvent) => void;
     onExport?: () => void;
@@ -27,6 +29,7 @@ export function ModulePanel({
     title,
     collapsed,
     children,
+    flushTimeline = false,
     onActionClick,
     onToggle,
     onExport,
@@ -58,6 +61,7 @@ export function ModulePanel({
 
     const moduleClassName = [
         'think-module',
+        flushTimeline ? 'think-module--timeline-scroll' : '',
         collapsed ? 'is-collapsed' : '',
         layoutEditing ? 'is-layout-editing' : '',
         layoutSelected ? 'is-layout-selected' : '',

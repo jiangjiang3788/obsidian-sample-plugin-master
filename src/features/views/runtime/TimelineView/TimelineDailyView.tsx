@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
-import { useCallback, useEffect, useRef } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { buildTimelineScale } from '@core/utils/public';
-import { attachTimelineAxisLockedPan, useTimelineDensityMode, TimelineTouchScope, TimelineTouchScopeContext } from '@shared/ui/public';
+import { attachTimelineViewportInteractions, useTimelineDensityMode, TimelineTouchScope, TimelineTouchScopeContext } from '@shared/ui/public';
 import type { OpenRecordHandler, OpenRecordOriginHandler, UpdateTimelineRangeHandler } from '@shared/types/public';
 import type { GoalTimeAllocationSummary } from '@core/goal/public';
 import { DayColumnHeader, DayColumnBody, TimelineOverallSummary, TimelineTimeAxis } from '../components/timeline';
@@ -55,24 +55,26 @@ export function TimelineDailyView({
   onColumnClick,
 }: TimelineDailyViewProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
+  // One selected block per timeline, not one permanent edit flag per block.
+  const [selectedBlockKey, setSelectedBlockKey] = useState<string | null>(null);
   const scopeRef = useRef<TimelineTouchScope | null>(null);
   if (!scopeRef.current) scopeRef.current = new TimelineTouchScope();
-  const detachPinchRef = useRef<(() => void) | null>(null);
-  const detachPanRef = useRef<(() => void) | null>(null);
+  const detachViewportRef = useRef<(() => void) | null>(null);
   const bindPinch = zoomHandlers.bindTouchSurface;
   const setHostRef = useCallback((node: HTMLDivElement | null) => {
     if (hostRef.current === node) return;
-    detachPinchRef.current?.();
-    detachPinchRef.current = null;
-    detachPanRef.current?.();
-    detachPanRef.current = null;
+    detachViewportRef.current?.();
+    detachViewportRef.current = null;
     hostRef.current = node;
-    if (node) detachPanRef.current = attachTimelineAxisLockedPan(node, () => scopeRef.current?.hasArmedEdit() ?? false);
-    if (node && bindPinch) {
-      detachPinchRef.current = bindPinch(node, () => scopeRef.current?.requestPinch() ?? true);
+    if (node) {
+      detachViewportRef.current = attachTimelineViewportInteractions(node, {
+        isTimeEditing: () => scopeRef.current?.hasArmedEdit() ?? false,
+        requestPinch: () => scopeRef.current?.requestPinch() ?? true,
+        bindPinch,
+      });
     }
   }, [bindPinch]);
-  useEffect(() => () => { detachPinchRef.current?.(); detachPanRef.current?.(); }, []);
+  useEffect(() => () => { detachViewportRef.current?.(); }, []);
   const densityMode = useTimelineDensityMode(hostRef);
   const scale = buildTimelineScale({ hourHeight, maxHours, densityMode });
   const dayColumns = buildTimelineDayColumns(dailyViewData);
@@ -81,15 +83,7 @@ export function TimelineDailyView({
     <TimelineTouchScopeContext.Provider value={scopeRef.current}>
     <div
       class="timeline-view-wrapper think-viz-surface"
-      data-timeline-axis-pan="locked"
       ref={setHostRef}
-      data-timeline-tick-step={scale.tickStepMinutes}
-      data-timeline-label-step={scale.labelStepMinutes}
-      data-timeline-grid-step={scale.gridStepMinutes}
-      data-timeline-density={densityMode}
-      data-timeline-rendered-blocks={dayColumns.reduce((count, column) => count + column.blocks.length, 0)}
-      data-timeline-hour-height={Math.round(hourHeight * 100) / 100}
-      data-timeline-tick-gap={Math.round(scale.tickPixelGap * 100) / 100}
       onContextMenu={(event) => {
         // Block the iOS text-selection/copy callout only on coarse touch devices.
         // Mouse users keep the desktop right-click context menu.
@@ -140,6 +134,8 @@ export function TimelineDailyView({
           <DayColumnBody
             key={day}
             onOpenRecordOrigin={onOpenRecordOrigin}
+            selectedBlockKey={selectedBlockKey}
+            onSelectBlock={setSelectedBlockKey}
             day={day}
             blocks={blocks}
             scale={scale}

@@ -35,9 +35,15 @@ export function TimelineTimeAxis({
 
   const scrollCurrentTimeIntoView = () => {
     const anchor = currentTimeAnchorRef.current;
-    if (anchor && typeof anchor.scrollIntoView === 'function') {
-      anchor.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
-    }
+    const viewport = anchor?.closest<HTMLElement>('.timeline-view-wrapper');
+    if (!anchor || !viewport) return;
+    // scrollIntoView() scrolls *all* scrollable ancestors in some WebViews,
+    // moving the Obsidian dashboard or horizontal date columns as a side effect.
+    // Scroll only the owning timeline viewport and only on the Y axis.
+    const position = anchor.getBoundingClientRect().top
+      - viewport.getBoundingClientRect().top + viewport.scrollTop;
+    const maxTop = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+    viewport.scrollTop = Math.min(maxTop, Math.max(0, position - viewport.clientHeight / 2));
   };
 
   useEffect(() => {

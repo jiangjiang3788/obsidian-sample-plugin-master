@@ -88,16 +88,19 @@ console.log('PASS same long-press controller: scrolling/tap/drag/multitouch/canc
 
 const css = source('src/styles/features/timeline.css');
 for (const hour of [3,6,9,12]) assert(css.includes(`.think-time-grid__tick--key-${hour}`));
-assert(css.includes('body.is-mobile .timeline-view-wrapper'));
+assert(/\.timeline-view-wrapper\s*\{[^}]*overflow-x:\s*auto/s.test(css), 'baseline X scroller must be restored');
+assert(!/body\.is-mobile\s+\.timeline-view-wrapper\s*\{[^}]*overflow-x:\s*hidden/s.test(css), '1.18.3 hidden overflow regression must not return');
 assert(css.includes('@supports not (container-type: inline-size)'));
 assert(css.includes('-webkit-touch-callout: none'));
-assert(css.includes('overflow: auto'));
+assert(css.includes('overflow-y: auto'), 'native Y overflow must be preserved');
 assert(source('src/app/dashboard/ViewportDeferredView.tsx').includes('eagerMobileTimeline'));
 let postcss;
 try { postcss = require('postcss'); } catch { postcss = require('/opt/nvm/versions/node/v22.16.0/lib/node_modules/postcss'); }
-postcss.parse(source('styles.css'));
 postcss.parse(css);
-assert(source('styles.css').includes(css.trimEnd()));
-console.log('PASS CSS parse, Android fallback, native touch scroller, bundled CSS parity');
+if (fs.existsSync(path.join(root, 'styles.css'))) {
+  postcss.parse(source('styles.css'));
+  assert(source('styles.css').includes(css.trimEnd()));
+  console.log('PASS CSS parse, Android fallback, native touch scroller, bundled CSS parity');
+} else console.log('PASS source CSS parse and baseline mobile scroll; SKIP built styles.css parity (source-only package)');
 
 console.log('PASS timeline source checks; Vika updater tested separately');

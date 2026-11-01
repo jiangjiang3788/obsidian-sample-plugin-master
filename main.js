@@ -46984,8 +46984,17 @@ function useTimelineDensityMode(host) {
 const TIMELINE_TOUCH_POLICY = Object.freeze({
   longPressMs: 520,
   panSlopPx: 10,
-  dragThresholdPx: 2
+  dragThresholdPx: 2,
+  doubleTapMs: 350,
+  doubleTapSlopPx: 24
 });
+function classifyTimelineTap(previous, point, now2 = Date.now()) {
+  const doubleTap = !!previous && now2 >= previous.time && now2 - previous.time <= TIMELINE_TOUCH_POLICY.doubleTapMs && Math.abs(previous.x - point.clientX) <= TIMELINE_TOUCH_POLICY.doubleTapSlopPx && Math.abs(previous.y - point.clientY) <= TIMELINE_TOUCH_POLICY.doubleTapSlopPx;
+  return {
+    doubleTap,
+    next: doubleTap ? null : { time: now2, x: point.clientX, y: point.clientY }
+  };
+}
 class TimelineTouchGesture {
   constructor(onArm) {
     this.onArm = onArm;
@@ -47105,133 +47114,235 @@ function useTimelineTouchGesture(onArm, onPinchCancel) {
   y(() => () => controllerRef.current?.cancel(), []);
   return controllerRef.current;
 }
-const PAN_SLOP_PX = 10;
-const WHEEL_BURST_MS = 160;
+const TOUCH_SLOP = Math.max(16, TIMELINE_TOUCH_POLICY.panSlopPx);
+const TOUCH_X_DOMINANCE = 2;
+const WHEEL_X_DOMINANCE = 1.3;
+const WHEEL_BURST_MS = 150;
+const WHEEL_EPSILON = 0.5;
+const VERTICAL_IDLE_MS = 300;
+const RELEASE_SETTLE_MS = 320;
+function resolveTimelinePanAxis(dx, dy) {
+  if (Math.hypot(dx, dy) < TOUCH_SLOP) return null;
+  return Math.abs(dx) > Math.abs(dy) * TOUCH_X_DOMINANCE ? "x" : "y";
+}
 function attachTimelineAxisLockedPan(surface, isTimeEditing = () => false) {
-  let touch = null;
-  let kineticFrame = null;
+  let finger = null;
+  let vertical = null;
+  let correctionFrame = null;
+  let idleTimer = null;
   let wheelAxis = null;
   let lastWheelAt = -Infinity;
-  const stopKinetic = () => {
-    if (kineticFrame !== null && typeof cancelAnimationFrame === "function") cancelAnimationFrame(kineticFrame);
-    kineticFrame = null;
+  let detached = false;
+  const stopCorrection = () => {
+    if (correctionFrame !== null && typeof cancelAnimationFrame === "function") cancelAnimationFrame(correctionFrame);
+    correctionFrame = null;
   };
-  const maxLeft = () => Math.max(0, surface.scrollWidth - surface.clientWidth);
-  const setLeft = (left2) => {
-    surface.scrollLeft = Math.max(0, Math.min(maxLeft(), left2));
+  const stopIdleTimer = () => {
+    if (idleTimer !== null) clearTimeout(idleTimer);
+    idleTimer = null;
   };
-  const onTouchStart = (event) => {
-    stopKinetic();
-    if (event.touches.length !== 1) {
-      touch = null;
-      return;
+  const scrollX = (left2) => {
+    const maximum = Math.max(0, surface.scrollWidth - surface.clientWidth);
+    const clamped = Math.max(0, Math.min(maximum, left2));
+    if (surface.scrollLeft !== clamped) surface.scrollLeft = clamped;
+  };
+  const clearVertical = () => {
+    stopIdleTimer();
+    stopCorrection();
+    vertical = null;
+  };
+  const scheduleIdleCheck = () => {
+    stopIdleTimer();
+    const guard = vertical;
+    if (!guard || guard.releasedAt === null || detached) return;
+    const readyAt = Math.max(
+      guard.releasedAt + RELEASE_SETTLE_MS,
+      guard.lastMotionAt + VERTICAL_IDLE_MS
+    );
+    idleTimer = setTimeout(() => {
+      idleTimer = null;
+      if (detached || vertical !== guard) return;
+      const now2 = Date.now();
+      if (now2 >= guard.releasedAt + RELEASE_SETTLE_MS && now2 >= guard.lastMotionAt + VERTICAL_IDLE_MS) clearVertical();
+      else scheduleIdleCheck();
+    }, Math.max(1, readyAt - Date.now()));
+  };
+  const observeVertical = () => {
+    const guard = vertical;
+    if (!guard || detached) return;
+    const top2 = surface.scrollTop;
+    if (top2 !== guard.lastTop) {
+      guard.lastTop = top2;
+      guard.lastMotionAt = Date.now();
     }
-    const finger = event.touches.item(0);
-    if (!finger) return;
-    touch = {
-      id: finger.identifier,
-      startX: finger.clientX,
-      startY: finger.clientY,
-      startScrollLeft: surface.scrollLeft,
-      startScrollTop: surface.scrollTop,
-      lastX: finger.clientX,
-      lastTime: Date.now(),
-      velocity: 0,
+    if (surface.scrollLeft !== guard.left) {
+      scrollX(guard.left);
+      guard.lastMotionAt = Date.now();
+    }
+    if (guard.releasedAt !== null) scheduleIdleCheck();
+  };
+  const scheduleCorrection = () => {
+    if (correctionFrame !== null || typeof requestAnimationFrame !== "function") return;
+    correctionFrame = requestAnimationFrame(() => {
+      correctionFrame = null;
+      observeVertical();
+    });
+  };
+  const lockVertical = (left2) => {
+    clearVertical();
+    vertical = {
+      left: left2,
+      lastTop: surface.scrollTop,
+      lastMotionAt: Date.now(),
+      releasedAt: null
+    };
+    observeVertical();
+  };
+  const releaseVertical = () => {
+    if (!vertical || vertical.releasedAt !== null) return;
+    vertical.releasedAt = Date.now();
+    observeVertical();
+    scheduleCorrection();
+    scheduleIdleCheck();
+  };
+  const start2 = (event) => {
+    clearVertical();
+    finger = null;
+    if (event.touches.length !== 1) return;
+    const touch = event.touches.item(0);
+    if (!touch) return;
+    finger = {
+      id: touch.identifier,
+      x: touch.clientX,
+      y: touch.clientY,
+      lastY: touch.clientY,
+      edgeOwnedY: false,
+      left: surface.scrollLeft,
+      top: surface.scrollTop,
       axis: null
     };
   };
-  const onTouchMove = (event) => {
-    const session = touch;
-    if (!session) return;
+  const move2 = (event) => {
+    const current2 = finger;
+    if (!current2) return;
     if (event.touches.length !== 1) {
-      touch = null;
+      if (current2.axis === "y") releaseVertical();
+      finger = null;
       return;
     }
-    const finger = event.touches.item(0);
-    if (!finger || finger.identifier !== session.id) {
-      touch = null;
+    const touch = event.touches.item(0);
+    if (!touch || touch.identifier !== current2.id) {
+      if (current2.axis === "y") releaseVertical();
+      finger = null;
       return;
     }
-    if (!session.axis && isTimeEditing()) {
+    if (isTimeEditing()) {
       if (event.cancelable) event.preventDefault();
-      touch = null;
+      finger = null;
       return;
     }
-    const dx = finger.clientX - session.startX;
-    const dy = finger.clientY - session.startY;
-    if (!session.axis) {
-      if (Math.hypot(dx, dy) < PAN_SLOP_PX) return;
-      session.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    const dx = touch.clientX - current2.x;
+    const dy = touch.clientY - current2.y;
+    if (current2.axis === null) {
+      const direction = resolveTimelinePanAxis(dx, dy);
+      if (!direction) return;
+      current2.axis = direction === "x" && !event.cancelable ? "y" : direction;
+      if (current2.axis === "y") lockVertical(current2.left);
     }
-    if (session.axis === "y") return;
-    if (event.cancelable) event.preventDefault();
-    setLeft(session.startScrollLeft - dx);
-    if (surface.scrollTop !== session.startScrollTop) surface.scrollTop = session.startScrollTop;
-    const now2 = Date.now();
-    const elapsed = now2 - session.lastTime;
-    if (elapsed > 0) {
-      const sample = Math.max(-1.6, Math.min(1.6, -(finger.clientX - session.lastX) / elapsed));
-      session.velocity = session.velocity * 0.45 + sample * 0.55;
-    }
-    session.lastX = finger.clientX;
-    session.lastTime = now2;
-  };
-  const onTouchEnd = (event) => {
-    const session = touch;
-    touch = null;
-    if (!session || session.axis !== "x" || event.type === "touchcancel" || event.touches.length) return;
-    if (Date.now() - session.lastTime > 90 || isTimeEditing() || Math.abs(session.velocity) < 0.12 || typeof requestAnimationFrame !== "function") return;
-    if (surface.ownerDocument?.defaultView?.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    let velocity = session.velocity;
-    let previous = 0;
-    const tick = (now2) => {
-      const dt = previous ? Math.min(34, Math.max(1, now2 - previous)) : 16;
-      previous = now2;
-      const before = surface.scrollLeft;
-      setLeft(before + velocity * dt);
-      velocity *= Math.pow(0.88, dt / 16);
-      if (Math.abs(velocity) < 0.025 || before === surface.scrollLeft) {
-        kineticFrame = null;
-        return;
+    if (current2.axis === "y") {
+      observeVertical();
+      const directionY = touch.clientY - current2.lastY;
+      current2.lastY = touch.clientY;
+      const maxTop = Math.max(0, surface.scrollHeight - surface.clientHeight);
+      const nextTop = surface.scrollTop - directionY;
+      const crossesEdge = nextTop < 0 || nextTop > maxTop;
+      if (event.cancelable && (current2.edgeOwnedY || crossesEdge)) {
+        current2.edgeOwnedY = true;
+        event.preventDefault();
+        surface.scrollTop = Math.max(0, Math.min(maxTop, nextTop));
+        observeVertical();
       }
-      kineticFrame = requestAnimationFrame(tick);
-    };
-    kineticFrame = requestAnimationFrame(tick);
+      return;
+    }
+    current2.lastY = touch.clientY;
+    if (!event.cancelable) {
+      finger = null;
+      return;
+    }
+    event.preventDefault();
+    scrollX(current2.left - dx);
   };
-  const onWheel = (event) => {
+  const stopAtTimelineBoundary = (event) => event.stopPropagation();
+  const end2 = (event) => {
+    const current2 = finger;
+    finger = null;
+    if (current2?.axis === "y") {
+      releaseVertical();
+    } else if (current2?.axis === null && event.type === "touchcancel" && surface.scrollTop !== current2.top) {
+      lockVertical(current2.left);
+      releaseVertical();
+    }
+  };
+  const scroll = (event) => {
+    if (event.target !== surface || !vertical) return;
+    observeVertical();
+    scheduleCorrection();
+  };
+  const wheel = (event) => {
     if (event.altKey || event.ctrlKey || event.metaKey || !event.cancelable) return;
     const x2 = Math.abs(event.deltaX);
     const y2 = Math.abs(event.deltaY);
-    if (x2 < 0.5 && y2 < 0.5) return;
+    if (x2 < WHEEL_EPSILON && y2 < WHEEL_EPSILON) return;
+    clearVertical();
     const now2 = Date.now();
-    if (!wheelAxis || now2 - lastWheelAt > WHEEL_BURST_MS) {
-      wheelAxis = x2 > y2 ? "x" : "y";
+    if (wheelAxis === null || now2 - lastWheelAt > WHEEL_BURST_MS) {
+      wheelAxis = x2 > y2 * WHEEL_X_DOMINANCE ? "x" : "y";
     }
     lastWheelAt = now2;
-    const mixed = x2 >= 0.5 && y2 >= 0.5;
-    const orthogonalOnly = wheelAxis === "y" ? y2 < 0.5 : x2 < 0.5;
-    if (!mixed && !orthogonalOnly) return;
-    if (wheelAxis === "y" && surface.scrollHeight <= surface.clientHeight) return;
-    if (wheelAxis === "x" && surface.scrollWidth <= surface.clientWidth) return;
+    const mixed = x2 >= WHEEL_EPSILON && y2 >= WHEEL_EPSILON;
+    const offAxis = wheelAxis === "y" ? y2 < WHEEL_EPSILON : x2 < WHEEL_EPSILON;
+    if (!mixed && !offAxis) return;
+    const hasRoom = wheelAxis === "y" ? surface.scrollHeight > surface.clientHeight : surface.scrollWidth > surface.clientWidth;
+    if (!hasRoom) return;
     event.preventDefault();
-    if (orthogonalOnly) return;
-    const factor = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? surface.clientHeight || 500 : 1;
-    if (wheelAxis === "x") setLeft(surface.scrollLeft + event.deltaX * factor);
+    if (offAxis) return;
+    const factor = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? (wheelAxis === "y" ? surface.clientHeight : surface.clientWidth) || 500 : 1;
+    if (wheelAxis === "x") scrollX(surface.scrollLeft + event.deltaX * factor);
     else surface.scrollTop += event.deltaY * factor;
   };
-  surface.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
-  surface.addEventListener("touchmove", onTouchMove, { capture: true, passive: false });
-  surface.addEventListener("touchend", onTouchEnd, { capture: true, passive: true });
-  surface.addEventListener("touchcancel", onTouchEnd, { capture: true, passive: true });
-  surface.addEventListener("wheel", onWheel, { capture: true, passive: false });
+  surface.addEventListener("touchstart", start2, { capture: true, passive: true });
+  surface.addEventListener("touchstart", stopAtTimelineBoundary, { passive: true });
+  surface.addEventListener("touchmove", move2, { capture: true, passive: false });
+  surface.addEventListener("touchmove", stopAtTimelineBoundary, { passive: true });
+  surface.addEventListener("touchend", end2, { capture: true, passive: true });
+  surface.addEventListener("touchend", stopAtTimelineBoundary, { passive: true });
+  surface.addEventListener("touchcancel", end2, { capture: true, passive: true });
+  surface.addEventListener("touchcancel", stopAtTimelineBoundary, { passive: true });
+  surface.addEventListener("wheel", wheel, { capture: true, passive: false });
+  surface.addEventListener("scroll", scroll, { capture: true, passive: true });
   return () => {
-    stopKinetic();
-    surface.removeEventListener("touchstart", onTouchStart, true);
-    surface.removeEventListener("touchmove", onTouchMove, true);
-    surface.removeEventListener("touchend", onTouchEnd, true);
-    surface.removeEventListener("touchcancel", onTouchEnd, true);
-    surface.removeEventListener("wheel", onWheel, true);
-    touch = null;
+    detached = true;
+    clearVertical();
+    surface.removeEventListener("touchstart", start2, { capture: true });
+    surface.removeEventListener("touchstart", stopAtTimelineBoundary);
+    surface.removeEventListener("touchmove", move2, { capture: true });
+    surface.removeEventListener("touchmove", stopAtTimelineBoundary);
+    surface.removeEventListener("touchend", end2, { capture: true });
+    surface.removeEventListener("touchend", stopAtTimelineBoundary);
+    surface.removeEventListener("touchcancel", end2, { capture: true });
+    surface.removeEventListener("touchcancel", stopAtTimelineBoundary);
+    surface.removeEventListener("wheel", wheel, { capture: true });
+    surface.removeEventListener("scroll", scroll, { capture: true });
+    finger = null;
+    wheelAxis = null;
+  };
+}
+function attachTimelineViewportInteractions(surface, options) {
+  const detachPan = attachTimelineAxisLockedPan(surface, options.isTimeEditing);
+  const detachPinch = options.bindPinch?.(surface, options.requestPinch);
+  return () => {
+    detachPinch?.();
+    detachPan();
   };
 }
 function mountWithServices(containerEl, children, services) {
@@ -53969,6 +54080,7 @@ function ModulePanel({
   title,
   collapsed,
   children,
+  flushTimeline = false,
   onActionClick,
   onToggle,
   onExport,
@@ -53995,6 +54107,7 @@ function ModulePanel({
   };
   const moduleClassName = [
     "think-module",
+    flushTimeline ? "think-module--timeline-scroll" : "",
     collapsed ? "is-collapsed" : "",
     layoutEditing ? "is-layout-editing" : "",
     layoutSelected ? "is-layout-selected" : ""
@@ -60092,20 +60205,18 @@ function DayColumnHeader({
   ] });
 }
 const MOUSE_DRAG_THRESHOLD_PX = 4;
-const TASK_DOUBLE_TAP_MS = 350;
-const TASK_DOUBLE_TAP_SLOP_PX = 24;
-const TIMELINE_TASK_INTERACTION_HINT = "双击编辑；Ctrl/⌘+单击打开原文；触屏轻触选中、长按拖动调整时间";
+const TIMELINE_TASK_INTERACTION_HINT = "单击选中后显示上下把手；双击编辑；拖动上下短横柄调整边界；Esc取消选中；Ctrl/⌘+单击打开原文；触屏长按再拖动";
 function formatTimeMinute$1(minute) {
   const total = Math.round(minute);
   const h2 = Math.floor(total / 60) % 24;
   const m2 = (total % 60 + 60) % 60;
-  return `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
+  return total === 24 * 60 ? "24:00" : `${String(h2).padStart(2, "0")}:${String(m2).padStart(2, "0")}`;
 }
 function generateTaskBlockTitle(block) {
   if (!block.timelineRange.end) {
     return `${block.timelineSource === "task-plan" ? "计划" : "任务"}: ${block.pureText}
 时间点: ${formatTimeMinute$1(block.startMinute)}
-鼠标拖动；触屏长按后拖动可修改时间
+鼠标拖动块主体；触屏长按后拖动可修改时间
 ${TIMELINE_TASK_INTERACTION_HINT}`;
   }
   const start2 = dayjs(block.timelineRange.start);
@@ -60113,7 +60224,7 @@ ${TIMELINE_TASK_INTERACTION_HINT}`;
   const rangeText = start2.isSame(end2, "day") ? `${start2.format("HH:mm")} - ${end2.format("HH:mm")}` : `${start2.format("MM-DD HH:mm")} - ${end2.format("MM-DD HH:mm")}`;
   return `${block.timelineSource === "task-plan" ? "计划" : "任务"}: ${block.pureText}
 时间: ${rangeText}
-鼠标直接拖动；触屏长按后拖动块或上下边缘可修改时间
+鼠标拖动块主体可平移；选中后拖动上下把手可调整边界；触屏长按后拖动
 ${TIMELINE_TASK_INTERACTION_HINT}`;
 }
 function formatPreviewLabel(range, durationMinutes2) {
@@ -60125,6 +60236,8 @@ function formatPreviewLabel(range, durationMinutes2) {
 }
 function TimelineTaskBlock({
   block,
+  selectedBlockKey,
+  onSelectBlock,
   prevBlock,
   nextBlock,
   hourHeight,
@@ -60146,10 +60259,16 @@ function TimelineTaskBlock({
   const previewRef = A$1(null);
   const [isDragging, setIsDragging] = d(false);
   const [isTouchArmed, setIsTouchArmed] = d(false);
-  const [isEditMode, setIsEditMode] = d(false);
+  const [localSelected, setLocalSelected] = d(false);
+  const blockSelectionKey = `${block.day}::${block.id}`;
+  const isEditMode = selectedBlockKey === void 0 ? localSelected : selectedBlockKey === blockSelectionKey;
+  const selectBlock = () => {
+    if (onSelectBlock) onSelectBlock(blockSelectionKey);
+    else setLocalSelected(true);
+  };
   const touchGesture = useTimelineTouchGesture(() => {
     setIsTouchArmed(true);
-    setIsEditMode(true);
+    selectBlock();
     try {
       navigator.vibrate?.(8);
     } catch {
@@ -60198,6 +60317,7 @@ function TimelineTaskBlock({
     const minute = minuteFromClientY(event.clientY);
     if (minute == null) return;
     event.stopPropagation();
+    selectBlock();
     gestureRef.current = {
       pointerId: event.pointerId,
       mode,
@@ -60261,7 +60381,7 @@ function TimelineTaskBlock({
     Promise.resolve(onUpdateTimelineRange({
       target: block.timelineEditTarget,
       range: committedPreview.range
-    })).catch(() => void 0);
+    })).catch(() => onNotice?.("时间调整保存失败，请重试"));
   };
   const resetTouchPreview = () => {
     previewRef.current = null;
@@ -60351,13 +60471,12 @@ function TimelineTaskBlock({
         return;
       }
       const now2 = Date.now();
-      const previous = lastTaskTapRef.current;
-      const doubleTap = !!previous && now2 - previous.time <= TASK_DOUBLE_TAP_MS && Math.abs(previous.x - touch.clientX) <= TASK_DOUBLE_TAP_SLOP_PX && Math.abs(previous.y - touch.clientY) <= TASK_DOUBLE_TAP_SLOP_PX;
-      lastTaskTapRef.current = doubleTap ? null : { time: now2, x: touch.clientX, y: touch.clientY };
+      const { doubleTap, next: next2 } = classifyTimelineTap(lastTaskTapRef.current, touch, now2);
+      lastTaskTapRef.current = next2;
+      selectBlock();
       if (!doubleTap) return;
       suppressClickUntilRef.current = now2 + 500;
       event.preventDefault();
-      setIsEditMode(true);
       handleOpenTask();
       return;
     }
@@ -60376,7 +60495,7 @@ function TimelineTaskBlock({
     Promise.resolve(onUpdateTimelineRange({
       target: block.timelineEditTarget,
       range: committedPreview.range
-    })).catch(() => void 0);
+    })).catch(() => onNotice?.("时间调整保存失败，请重试"));
   };
   const commitRange = (range, failureMessage) => {
     if (!range) {
@@ -60387,7 +60506,7 @@ function TimelineTaskBlock({
       onNotice?.("未提供时间轴保存处理器，无法更新时间");
       return;
     }
-    Promise.resolve(onUpdateTimelineRange({ target: block.timelineEditTarget, range })).catch(() => void 0);
+    Promise.resolve(onUpdateTimelineRange({ target: block.timelineEditTarget, range })).catch(() => onNotice?.("时间调整保存失败，请重试"));
   };
   const handleAlignToPrev = () => {
     if (!prevBlock) return;
@@ -60401,9 +60520,19 @@ function TimelineTaskBlock({
       "无法向后对齐：时间段至少需要 5 分钟"
     );
   };
+  const handleGripKeyDown = (event, edge) => {
+    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+    event.preventDefault();
+    event.stopPropagation();
+    selectBlock();
+    const delta = (event.key === "ArrowDown" ? 1 : -1) * (event.shiftKey ? 15 : 5);
+    const minute = (edge === "start" ? block.blockStartMinute : block.blockEndMinute) + delta;
+    const range = resizeTimelineLogicalRange(block.timelineRange, edge, block.day, minute, maxHours);
+    commitRange(range, "无法调整：时间段至少需要 5 分钟，且不能越过另一端");
+  };
   const canAlign = !isPoint && !isPlanned && block.isRangeStart && block.isRangeEnd;
   const canAlignToNext = !!(canAlign && nextBlock && nextBlock.blockStartMinute > block.blockStartMinute);
-  const className = `timeline-task-block timeline-task-block--${lifecycle.className}${isPoint ? " timeline-task-block--point" : ""}${isPlanned ? " timeline-task-block--planned" : ""}${isTouchArmed ? " timeline-task-block--touch-armed" : ""}${isEditMode ? " timeline-task-block--edit-mode" : ""}${isDragging ? " timeline-task-block--dragging" : ""}`;
+  const className = `timeline-task-block timeline-task-block--${lifecycle.className}${isPoint ? " timeline-task-block--point" : ""}${!isPoint && renderHeight < 24 ? " timeline-task-block--short" : ""}${isPlanned ? " timeline-task-block--planned" : ""}${isTouchArmed ? " timeline-task-block--touch-armed" : ""}${isEditMode ? " timeline-task-block--edit-mode" : ""}${isDragging ? " timeline-task-block--dragging" : ""}`;
   const blockStyle = {
     top: `${top2}px`,
     height: `${renderHeight}px`,
@@ -60421,6 +60550,12 @@ function TimelineTaskBlock({
       title: `${generateTaskBlockTitle(block)}
 状态: ${lifecycle.label}`,
       style: blockStyle,
+      onKeyDown: (event) => {
+        if (event.key !== "Escape") return;
+        event.stopPropagation();
+        onSelectBlock?.(null);
+        setLocalSelected(false);
+      },
       onClick: (event) => {
         event.stopPropagation();
         if (Date.now() < suppressClickUntilRef.current) {
@@ -60431,13 +60566,13 @@ function TimelineTaskBlock({
           blockGesture.onClick?.(event);
           return;
         }
-        setIsEditMode(true);
+        selectBlock();
       },
       onDblClick: (event) => {
         event.stopPropagation();
         event.preventDefault();
         if (Date.now() < suppressClickUntilRef.current || hasPlatformModifier(event)) return;
-        setIsEditMode(true);
+        selectBlock();
         handleOpenTask();
       },
       onPointerDown: (event) => beginGesture(event, "move"),
@@ -60454,7 +60589,12 @@ function TimelineTaskBlock({
           {
             class: "timeline-task-resize-handle timeline-task-resize-handle--start",
             role: "separator",
-            "aria-label": "拖动修改开始时间",
+            "aria-label": "拖动修改开始时间（上下方向键每次调整5分钟，Shift调整15分钟）",
+            "aria-orientation": "horizontal",
+            "aria-valuetext": formatTimeMinute$1(block.blockStartMinute),
+            tabIndex: 0,
+            onKeyDown: (event) => handleGripKeyDown(event, "start"),
+            onFocus: selectBlock,
             onPointerDown: (event) => beginGesture(event, "resize-start"),
             onTouchStart: (event) => beginTouchGesture(event, "resize-start"),
             onClick: (event) => event.stopPropagation(),
@@ -60468,6 +60608,7 @@ function TimelineTaskBlock({
             role: "button",
             tabIndex: 0,
             onKeyDown: blockGesture.onKeyDown,
+            onFocus: selectBlock,
             children: /* @__PURE__ */ u2("div", { class: "timeline-task-content", children: [
               /* @__PURE__ */ u2("span", { class: "timeline-task-status", "aria-label": lifecycle.label, title: lifecycle.label, children: lifecycle.emoji }),
               block.icon ? /* @__PURE__ */ u2("span", { class: "timeline-task-icon", children: block.icon }) : null,
@@ -60515,7 +60656,12 @@ function TimelineTaskBlock({
           {
             class: "timeline-task-resize-handle timeline-task-resize-handle--end",
             role: "separator",
-            "aria-label": "拖动修改结束时间",
+            "aria-label": "拖动修改结束时间（上下方向键每次调整5分钟，Shift调整15分钟）",
+            "aria-orientation": "horizontal",
+            "aria-valuetext": formatTimeMinute$1(block.blockEndMinute),
+            tabIndex: 0,
+            onKeyDown: (event) => handleGripKeyDown(event, "end"),
+            onFocus: selectBlock,
             onPointerDown: (event) => beginGesture(event, "resize-end"),
             onTouchStart: (event) => beginTouchGesture(event, "resize-end"),
             onClick: (event) => event.stopPropagation(),
@@ -60537,6 +60683,8 @@ const formatRangeBoundaryMinute = (minute) => minute === 24 * 60 ? "24:00" : for
 function DayColumnBody({
   day,
   blocks,
+  selectedBlockKey,
+  onSelectBlock,
   hourHeight,
   scale,
   colorMap,
@@ -60578,6 +60726,7 @@ function DayColumnBody({
   });
   const handleBodyClick = (event) => {
     if (Date.now() < suppressClickUntilRef.current) return;
+    onSelectBlock?.(null);
     onColumnClick(day, event);
   };
   const minuteFromClientY = (clientY) => {
@@ -60715,15 +60864,14 @@ function DayColumnBody({
       });
       return;
     }
+    onSelectBlock?.(null);
     const now2 = Date.now();
-    const previous = lastTouchRef.current;
-    const isDoubleTap = !!previous && now2 - previous.time <= 350 && Math.abs(previous.x - touch.clientX) <= 24 && Math.abs(previous.y - touch.clientY) <= 24;
-    lastTouchRef.current = { time: now2, x: touch.clientX, y: touch.clientY };
+    const { doubleTap, next: next2 } = classifyTimelineTap(lastTouchRef.current, touch, now2);
+    lastTouchRef.current = next2;
     suppressClickUntilRef.current = now2 + 450;
-    if (!isDoubleTap) return;
+    if (!doubleTap) return;
     event.preventDefault();
     onColumnClick(day, event);
-    lastTouchRef.current = null;
   };
   const handleBodyTouchCancel = (_event) => {
     touchGesture.cancel();
@@ -60780,6 +60928,8 @@ function DayColumnBody({
           TimelineTaskBlock,
           {
             block,
+            selectedBlockKey,
+            onSelectBlock,
             prevBlock: index > 0 ? blocks[index - 1] : null,
             nextBlock: index < blocks.length - 1 ? blocks[index + 1] : null,
             hourHeight,
@@ -60823,9 +60973,11 @@ function TimelineTimeAxis({
   );
   const scrollCurrentTimeIntoView = () => {
     const anchor = currentTimeAnchorRef.current;
-    if (anchor && typeof anchor.scrollIntoView === "function") {
-      anchor.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
-    }
+    const viewport2 = anchor?.closest(".timeline-view-wrapper");
+    if (!anchor || !viewport2) return;
+    const position2 = anchor.getBoundingClientRect().top - viewport2.getBoundingClientRect().top + viewport2.scrollTop;
+    const maxTop = Math.max(0, viewport2.scrollHeight - viewport2.clientHeight);
+    viewport2.scrollTop = Math.min(maxTop, Math.max(0, position2 - viewport2.clientHeight / 2));
   };
   y(() => {
     if (!pendingCurrentTimeFocusRef.current || hourHeight < effectiveMaxHourHeight) return;
@@ -60912,26 +61064,26 @@ function TimelineDailyView({
   onColumnClick
 }) {
   const hostRef = A$1(null);
+  const [selectedBlockKey, setSelectedBlockKey] = d(null);
   const scopeRef = A$1(null);
   if (!scopeRef.current) scopeRef.current = new TimelineTouchScope();
-  const detachPinchRef = A$1(null);
-  const detachPanRef = A$1(null);
+  const detachViewportRef = A$1(null);
   const bindPinch = zoomHandlers.bindTouchSurface;
   const setHostRef = q$1((node2) => {
     if (hostRef.current === node2) return;
-    detachPinchRef.current?.();
-    detachPinchRef.current = null;
-    detachPanRef.current?.();
-    detachPanRef.current = null;
+    detachViewportRef.current?.();
+    detachViewportRef.current = null;
     hostRef.current = node2;
-    if (node2) detachPanRef.current = attachTimelineAxisLockedPan(node2, () => scopeRef.current?.hasArmedEdit() ?? false);
-    if (node2 && bindPinch) {
-      detachPinchRef.current = bindPinch(node2, () => scopeRef.current?.requestPinch() ?? true);
+    if (node2) {
+      detachViewportRef.current = attachTimelineViewportInteractions(node2, {
+        isTimeEditing: () => scopeRef.current?.hasArmedEdit() ?? false,
+        requestPinch: () => scopeRef.current?.requestPinch() ?? true,
+        bindPinch
+      });
     }
   }, [bindPinch]);
   y(() => () => {
-    detachPinchRef.current?.();
-    detachPanRef.current?.();
+    detachViewportRef.current?.();
   }, []);
   const densityMode = useTimelineDensityMode(hostRef);
   const scale = buildTimelineScale({ hourHeight, maxHours, densityMode });
@@ -60941,15 +61093,7 @@ function TimelineDailyView({
     "div",
     {
       class: "timeline-view-wrapper think-viz-surface",
-      "data-timeline-axis-pan": "locked",
       ref: setHostRef,
-      "data-timeline-tick-step": scale.tickStepMinutes,
-      "data-timeline-label-step": scale.labelStepMinutes,
-      "data-timeline-grid-step": scale.gridStepMinutes,
-      "data-timeline-density": densityMode,
-      "data-timeline-rendered-blocks": dayColumns.reduce((count, column2) => count + column2.blocks.length, 0),
-      "data-timeline-hour-height": Math.round(hourHeight * 100) / 100,
-      "data-timeline-tick-gap": Math.round(scale.tickPixelGap * 100) / 100,
       onContextMenu: (event) => {
         if (typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches) {
           event.preventDefault();
@@ -61002,6 +61146,8 @@ function TimelineDailyView({
             DayColumnBody,
             {
               onOpenRecordOrigin,
+              selectedBlockKey,
+              onSelectBlock: setSelectedBlockKey,
               day,
               blocks,
               scale,
@@ -67813,6 +67959,7 @@ function LayoutRenderer({ layout, dataStore, app, actionService, timerService })
       ModulePanel,
       {
         title: viewInstance.title,
+        flushTimeline: viewInstance.viewType === "TimelineView" && layoutView !== "年" && layoutView !== "季",
         collapsed: !isExpanded,
         onToggle: handlePanelToggle,
         onActionClick: isModuleHeaderCreateAllowed(viewInstance.viewType) ? () => handleQuickInputAction(viewInstance) : void 0,
@@ -78860,6 +79007,7 @@ class ThinkPlugin extends obsidian.Plugin {
   capabilities;
   modalPort;
   diagnostics;
+  updateCommandRunning = false;
   /**
    * [主流程] 插件启动入口
    * 1. 注册 DI / 平台适配器
@@ -78922,6 +79070,38 @@ class ThinkPlugin extends obsidian.Plugin {
     );
   }
   registerCommands() {
+    this.addCommand({
+      id: "think-update-plugin",
+      name: "更新 Think OS 插件（从维格表检查并安装）",
+      callback: () => {
+        if (this.updateCommandRunning) {
+          new obsidian.Notice("Think OS：正在检查或安装更新，请勿重复操作。");
+          return;
+        }
+        this.updateCommandRunning = true;
+        void (async () => {
+          try {
+            new obsidian.Notice("Think OS：正在检查维格表最新构建…", 3500);
+            const changed2 = await updateFromVika(this);
+            if (changed2) {
+              new obsidian.Notice("Think OS：更新已安装。请完全退出并重新打开 Obsidian 后生效。", 0);
+            } else {
+              new obsidian.Notice("Think OS：已是维格表最新构建，无需更新。", 4e3);
+            }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            if (message.includes("维格表更新区域填写 API 令牌")) {
+              new obsidian.Notice("Think OS：首次使用更新命令，需要先配置维格表 API 令牌。");
+              openVikaTokenDialog(this.app);
+            } else {
+              new obsidian.Notice(`Think OS：更新失败，未完成安装。${message}`, 1e4);
+            }
+          } finally {
+            this.updateCommandRunning = false;
+          }
+        })();
+      }
+    });
     this.addCommand({
       id: "think-mark-performance-lag",
       name: "诊断：标记刚才发生的一次卡顿",

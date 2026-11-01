@@ -134,7 +134,7 @@ describe('Timeline pointer gesture UI', () => {
     expect(onOpenRecord).toHaveBeenCalledTimes(1);
   });
 
-  it('has both mouse resize grips before any click and commits start/end boundary drags', async () => {
+  it('reveals mouse resize grips after selecting a task and commits start/end boundary drags', async () => {
     const onUpdateTimelineRange = jest.fn().mockResolvedValue(undefined);
     await act(async () => render(
       <DayColumnBody
@@ -153,6 +153,12 @@ describe('Timeline pointer gesture UI', () => {
       configurable: true,
       value: () => ({ top: 0, left: 0, right: 100, bottom: 1440 }),
     });
+    // Desktop follows the same selection-first affordance as touch: clicking
+    // the task reveals its boundary controls before either edge can be dragged.
+    await act(async () => {
+      task.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    });
+    expect(task.classList.contains('timeline-task-block--edit-mode')).toBe(true);
     const startGrip = task.querySelector('.timeline-task-resize-handle--start') as HTMLElement;
     const endGrip = task.querySelector('.timeline-task-resize-handle--end') as HTMLElement;
     expect(startGrip).toBeTruthy();
@@ -174,6 +180,28 @@ describe('Timeline pointer gesture UI', () => {
     expect(onUpdateTimelineRange).toHaveBeenCalledWith({
       target: { kind: 'task-range', recordId: 'task-resize' },
       range: { start: '2026-08-26T01:00', end: '2026-08-26T02:00' },
+    });
+    expect(onUpdateTimelineRange).toHaveBeenCalledTimes(2);
+  });
+
+  it('keyboard handles adjust 5/15 minutes through the same range writer', async () => {
+    const onUpdateTimelineRange = jest.fn().mockResolvedValue(undefined);
+    await act(async () => render(
+      <DayColumnBody day="2026-08-26" blocks={[taskBlock('task-keyboard')]}
+        hourHeight={60} colorMap={{}} maxHours={24}
+        onColumnClick={() => undefined} onUpdateTimelineRange={onUpdateTimelineRange} />,
+      host,
+    ));
+    const end = host.querySelector('.timeline-task-resize-handle--end') as HTMLElement;
+    await act(async () => {
+      end.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'ArrowDown' }));
+    });
+    expect(onUpdateTimelineRange).toHaveBeenCalledWith({
+      target: { kind: 'task-range', recordId: 'task-keyboard' },
+      range: { start: '2026-08-26T01:00', end: '2026-08-26T01:35' },
+    });
+    await act(async () => {
+      end.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'ArrowUp', shiftKey: true }));
     });
     expect(onUpdateTimelineRange).toHaveBeenCalledTimes(2);
   });

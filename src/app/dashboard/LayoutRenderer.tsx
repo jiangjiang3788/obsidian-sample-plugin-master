@@ -197,6 +197,7 @@ export function LayoutRenderer({ layout, dataStore, app, actionService, timerSer
       <ModulePanel
         key={viewId}
         title={viewInstance.title}
+        flushTimeline={viewInstance.viewType === 'TimelineView' && layoutView !== '年' && layoutView !== '季'}
         collapsed={!isExpanded}
         onToggle={handlePanelToggle}
         onActionClick={isModuleHeaderCreateAllowed(viewInstance.viewType)

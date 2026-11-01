@@ -28,7 +28,30 @@ export const TIMELINE_TOUCH_POLICY = Object.freeze({
   longPressMs: 520,
   panSlopPx: 10,
   dragThresholdPx: 2,
+  doubleTapMs: 350,
+  doubleTapSlopPx: 24,
 });
+
+/** Shared double-tap recognition for both empty cells and task blocks. */
+export interface TimelineLastTap {
+  time: number;
+  x: number;
+  y: number;
+}
+export function classifyTimelineTap(
+  previous: TimelineLastTap | null,
+  point: Pick<TimelineTouchPoint, 'clientX' | 'clientY'>,
+  now: number = Date.now(),
+): { doubleTap: boolean; next: TimelineLastTap | null } {
+  const doubleTap = !!previous && now >= previous.time
+    && now - previous.time <= TIMELINE_TOUCH_POLICY.doubleTapMs
+    && Math.abs(previous.x - point.clientX) <= TIMELINE_TOUCH_POLICY.doubleTapSlopPx
+    && Math.abs(previous.y - point.clientY) <= TIMELINE_TOUCH_POLICY.doubleTapSlopPx;
+  return {
+    doubleTap,
+    next: doubleTap ? null : { time: now, x: point.clientX, y: point.clientY },
+  };
+}
 
 interface ActiveTouch<Mode extends string> {
   anchor: TimelineTouchAnchor<Mode>;
@@ -125,7 +148,12 @@ export class TimelineTouchScope {
     cancel: () => void;
   }>();
 
-  register(candidate: { pending: () => boolean; dragging: () => boolean; cancel: () => void }): () => void {
+  register(candidate: {
+    pending: () => boolean;
+    dragging: () => boolean;
+    armed?: () => boolean;
+    cancel: () => void;
+  }): () => void {
     this.candidates.add(candidate);
     return () => { this.candidates.delete(candidate); };
   }

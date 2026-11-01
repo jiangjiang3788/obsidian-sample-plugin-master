@@ -4443,6 +4443,39 @@
     }
 }
 
+/* Timeline is already its own bounded scrollport. The generic module padding
+ * previously left a visible inset/blank band around the timeline, and the
+ * generic overflow made a second potential scroller. Other views retain their
+ * original inset and overflow behavior. */
+
+.think-os .think-module--timeline-scroll > .module-content {
+    padding: 0;
+    overflow: hidden;
+}
+
+.think-os .think-module--timeline-scroll > .module-content > .think-view-viewport-gate {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Freeform items have a fixed frame height: use that height instead of leaving
+ * empty space below the timeline's default viewport-height cap. */
+
+.think-os .think-freeform-item .think-module--timeline-scroll > .module-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.think-os .think-freeform-item .think-module--timeline-scroll > .module-content > .think-view-viewport-gate {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.think-os .think-freeform-item .think-module--timeline-scroll .timeline-view-wrapper {
+    height: 100%;
+    max-height: 100%;
+}
+
 /* Expanded dashboard views are viewport-gated so a long layout does not execute every
  * heavy view model at once. The placeholder keeps layout geometry stable until the
  * panel approaches the viewport. */
@@ -7008,54 +7041,41 @@ body.theme-dark .heatmap-cell.empty {
  * empty states and interaction states consume the shared visualization contract.
  */
 
+/* The timeline has exactly ONE scroll port on all three platforms.
+ * Keep the header inside the port for sticky positioning, and isolate its
+ * vertical bounds from the surrounding Obsidian dashboard/page scroll. */
+
 .timeline-view-wrapper {
   --timeline-day-width: 150px;
   --timeline-time-axis-width: 90px;
   container: think-timeline / inline-size;
-  overflow-x: auto;
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
   max-width: 100%;
-  overscroll-behavior-x: contain;
-  /* Native vertical momentum; horizontal swipes use a JS axis lock. */
+  margin: 0;
+  max-height: min(72vh, 900px);
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-  color: var(--think-text-primary);
-  /* Timeline cells are interaction targets, never selectable article text. */
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-}
-
-/* Provide a bounded vertical scroll region; axis-locked horizontal motion
- * is separate, so a vertical swipe never drifts between day columns. */
-
-@media (hover: none) and (pointer: coarse) {
-  .timeline-view-wrapper {
-    max-height: 68vh;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
-  }
-  @supports (height: 100dvh) {
-    .timeline-view-wrapper { max-height: 68dvh; }
-  }
-}
-
-/* The Obsidian mobile class is a stable fallback when an Android WebView
- * reports mouse-like hover/pointer capabilities (stylus, Samsung DeX, etc.). */
-
-body.is-mobile .timeline-view-wrapper {
-  max-height: 68vh;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  color: var(--think-text-primary);
 }
 
 @supports (height: 100dvh) {
-  body.is-mobile .timeline-view-wrapper { max-height: 68dvh; }
+  .timeline-view-wrapper { max-height: min(72dvh, 900px); }
 }
 
 .timeline-sticky-header,
 .timeline-scrollable-body {
   display: flex;
+  /* Fill the frame for a single day, but keep all seven columns when wider. */
+  width: 100%;
   min-width: max-content;
 }
 
@@ -7064,6 +7084,11 @@ body.is-mobile .timeline-view-wrapper {
   top: 0;
   z-index: var(--think-z-raised);
   background: var(--think-bg-canvas);
+}
+
+.time-axis,
+.summary-progress-container {
+  min-width: 0;
 }
 
 .time-axis {
@@ -7082,7 +7107,9 @@ body.is-mobile .timeline-view-wrapper {
 
 .day-column-header,
 .day-column-body {
-  flex: 0 0 var(--timeline-day-width);
+  flex: 1 0 var(--timeline-day-width);
+  min-width: 0;
+  box-sizing: border-box;
   border-inline-start: 1px solid var(--think-viz-guide);
 }
 
@@ -7438,9 +7465,8 @@ body.is-mobile .timeline-view-wrapper {
   opacity: 0.72;
 }
 
-/* Timeline direct manipulation. Mouse/pen drag immediately; touch requires a
- * deliberate long press before the same move/resize operation is accepted.
- * Native pan/pinch remains available before the long-press gesture is armed. */
+/* Timeline direct manipulation: mouse/pen drag immediately; touch requires
+ * a long press. Before arming, the single scroll port owns the swipe. */
 
 .timeline-task-block[data-timeline-editable="true"] {
   cursor: grab;
@@ -7464,6 +7490,9 @@ body.is-mobile .timeline-view-wrapper {
   pointer-events: none;
 }
 
+/* Keep the timeline visually quiet: only the single selected task exposes
+ * its boundary controls. Selection is shared by mouse, keyboard and touch. */
+
 .timeline-task-resize-handle {
   display: none;
   position: absolute;
@@ -7472,19 +7501,26 @@ body.is-mobile .timeline-view-wrapper {
   height: 12px;
   cursor: ns-resize;
   touch-action: pan-y;
+  outline-offset: -1px;
+}
+
+.timeline-task-block--edit-mode .timeline-task-resize-handle,
+.timeline-task-block--touch-armed .timeline-task-resize-handle {
+  display: block;
 }
 
 .timeline-task-resize-handle::after {
   content: "";
   position: absolute;
   left: 50%;
-  width: 28px;
-  height: 2px;
+  width: 32px;
+  height: 4px;
   border-radius: var(--think-radius-pill);
   background: var(--timeline-goal-color, var(--think-accent));
-  opacity: 0;
+  opacity: 0.56;
   transform: translateX(-50%);
   transition: opacity var(--think-duration-fast) var(--think-ease-standard);
+  pointer-events: none;
 }
 
 .timeline-task-resize-handle--start { top: -5px; }
@@ -7495,12 +7531,40 @@ body.is-mobile .timeline-view-wrapper {
 
 .timeline-task-resize-handle--end::after { bottom: 3px; }
 
+.timeline-task-resize-handle:hover::after,
+.timeline-task-resize-handle:focus-visible::after,
 .timeline-task-block:hover .timeline-task-resize-handle::after,
-.timeline-task-block:focus-within .timeline-task-resize-handle::after,
+.timeline-task-block--edit-mode .timeline-task-resize-handle::after,
 .timeline-task-block--touch-armed .timeline-task-resize-handle::after,
-.timeline-task-block--dragging .timeline-task-resize-handle::after {
-  opacity: 1;
+.timeline-task-block--dragging .timeline-task-resize-handle::after { opacity: 1; }
+
+.timeline-task-resize-handle:focus-visible {
+  outline: var(--think-focus-ring-width, 2px) solid var(--think-focus-ring-color, var(--think-accent));
 }
+
+/* A five-minute task may render as only a few pixels high. Split its
+ * boundary hit targets into left/right halves instead of overlapping them. */
+
+.timeline-task-block--short .timeline-task-resize-handle--start {
+  inset-inline-end: 50%;
+}
+
+.timeline-task-block--short .timeline-task-resize-handle--end {
+  inset-inline-start: 50%;
+}
+
+.timeline-task-block--short .timeline-task-resize-handle::after {
+  width: min(20px, 85%);
+}
+
+/* Coarse pointers need a larger touch target, but visibility still follows
+ * the same selected-only rule as desktop. */
+
+@media (hover: none), (pointer: coarse) {
+  .timeline-task-resize-handle { height: 16px; }
+}
+
+body.is-mobile .timeline-task-resize-handle { height: 16px; }
 
 .timeline-task-drag-label {
   position: absolute;
@@ -7668,24 +7732,19 @@ body.is-mobile .timeline-view-wrapper {
 
 .think-time-grid__label.is-last { transform: translateY(-100%); }
 
-/* Desktop: show real boundary grips on hover/focus; touch: only after
- * tapping to select or a deliberate long press. Never hide all desktop grips. */
-
-.timeline-task-block--edit-mode .timeline-task-resize-handle {
-  display: block;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .timeline-task-block:hover .timeline-task-resize-handle,
-  .timeline-task-block:focus-within .timeline-task-resize-handle { display: block; }
-}
-
 .timeline-task-block:not(.timeline-task-block--edit-mode) .task-buttons {
   display: none;
 }
 
 .timeline-task-block--edit-mode {
   z-index: calc(var(--think-z-raised) + 1);
+}
+
+/* Explicit selection is visible even when a mouse is no longer hovering. */
+
+.timeline-task-block--edit-mode .timeline-task-link {
+  outline: 1px solid var(--think-accent);
+  outline-offset: -1px;
 }
 
 /* Timeline Goal time-budget / balance presentation. Kept separate from the
