@@ -60,6 +60,12 @@ function isoNow() {
 
 class ChineseJestReporter {
   constructor(globalConfig) {
+    this.guardFile = process.env.THINK_TEST_GUARD_EVENTS_FILE || '';
+    if (this.guardFile) {
+      // `npm test` 的进程监督模式只发出结构化事件，真实错误由 Jest 默认报告器输出。
+      fs.mkdirSync(path.dirname(this.guardFile), { recursive: true });
+      return;
+    }
     this.rootDir = globalConfig.rootDir || process.cwd();
     this.failed = [];
     const configArgIndex = process.argv.indexOf('--config');
@@ -116,16 +122,38 @@ class ChineseJestReporter {
   }
 
   onRunStart(results) {
+    if (this.guardFile) return;
     this.write(`\n【测试】开始执行，共发现 ${results.numTotalTestSuites || 0} 个测试文件。`);
   }
 
   onTestStart(test) {
+    if (this.guardFile) {
+      fs.appendFileSync(this.guardFile, JSON.stringify({ event: 'start', file: test.path, at: Date.now() }) + '\n');
+      return;
+    }
     const file = rel(this.rootDir, test.path);
     this.emit({ event: 'start', file });
     this.write(`【正在测试】${file}`);
   }
 
   onTestResult(test, result) {
+    if (this.guardFile) {
+      const suiteError = result.testExecError || (result.failureMessage && result.numPassingTests === 0 &&
+        result.numFailingTests === 0 ? { message: result.failureMessage } : null);
+      const failed = result.numFailingTests > 0 || Boolean(suiteError);
+      const passed = result.numPassingTests || 0;
+      const pending = result.numPendingTests || 0;
+      const details = failed ? firstFailure(result, suiteError) : {};
+      const rawFailure = failed ? stripAnsi(result.failureMessage ||
+        (result.testResults || []).filter(a => a.status === 'failed')
+          .flatMap(a => a.failureMessages || []).join('\n') ||
+        suiteError?.stack || suiteError?.message || '') : '';
+      fs.appendFileSync(this.guardFile, JSON.stringify({ event: 'result', file: test.path, at: Date.now(),
+        status: failed ? 'fail' : passed > 0 ? 'pass' : 'skip',
+        durationMs: Math.max(0, Number(result.perfStats?.end || 0) - Number(result.perfStats?.start || 0)),
+        ...details, ...(rawFailure ? { rawFailure } : {}) }) + '\n');
+      return;
+    }
     const file = rel(this.rootDir, test.path);
     const passed = result.numPassingTests || 0;
     const failed = result.numFailingTests || 0;
@@ -180,6 +208,12 @@ class ChineseJestReporter {
   }
 
   onRunComplete(_contexts, results) {
+    if (this.guardFile) {
+      const success = !results.wasInterrupted && results.numFailedTests === 0 &&
+        results.numFailedTestSuites === 0 && results.numRuntimeErrorTestSuites === 0;
+      fs.appendFileSync(this.guardFile, JSON.stringify({ event: 'complete', success, at: Date.now() }) + '\n');
+      return;
+    }
     const durationMs = Date.now() - this.startedAt;
     const slowCases = this.cases
       .filter((item) => Number.isFinite(item.durationMs))
