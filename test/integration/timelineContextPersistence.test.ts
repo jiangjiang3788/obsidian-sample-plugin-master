@@ -7,6 +7,7 @@
 import { resolveTimelineCreateContext } from '@/app/actions/recordCreate/timelineCreateAction';
 import { applyQuickInputFieldUpdate, applyQuickInputTimeDirectionChange, buildQuickInputDisplayTemplate, hydrateQuickInputTemplateDefaults } from '@/features/quickinput/editor/QuickInputEditorModel';
 import { buildRecordOutputPlan } from '@/core/recordInput/snapshot/OutputPlanner';
+import { normalizeRecordInput } from '@/core/recordInput/normalization';
 import { getRecordTypeById, RECORD_TYPE_IDS } from '@core/recordTypes/public';
 import { parseRecordBlock } from '@/core/utils/parser';
 import { asTaskRecord, asTaskSessionRecord } from '@/core/records/public';
@@ -48,6 +49,43 @@ function splitRecordBlocks(markdown: string): string[] {
 }
 
 describe('integration: Timeline click context -> Task persistence', () => {
+  it('首次提交不触碰任务内容，模板预设正文仍写入 Markdown 且重新解析一致', () => {
+    const base = getRecordTypeById(RECORD_TYPE_IDS.TASK);
+    if (!base) throw new Error('Task template missing');
+    const template = {
+      ...base,
+      fields: (base.fields || []).map((field) => field.key === '任务内容'
+        ? { ...field, defaultValue: '预设 {{goal.path}}' }
+        : field),
+    };
+    const invocation = resolveTimelineCreateContext({
+      day: '2026-05-13', clickedMinute: 90, dayBlocks: [],
+    });
+    const dataWithoutTouch = {
+      ...invocation.context,
+      goalPath: '工作/专注',
+    };
+    const normalized = normalizeRecordInput({
+      template, formData: dataWithoutTouch, context: invocation.context, mode: 'create',
+    }).normalizedFormData;
+    expect(normalized['任务内容']).toBe('预设 工作/专注');
+
+    const plan = buildRecordOutputPlan({ template, formData: normalized, context: invocation.context });
+    expect(plan.outputContent).toContain('内容:: 预设 工作/专注');
+    const taskLines = splitRecordBlocks(plan.outputContent)[0].split(/\r?\n/);
+    const parsed = asTaskRecord(parseRecordBlock(plan.targetFilePath!, taskLines, 0, taskLines.length - 1, '记录'));
+    expect(parsed?.content).toBe('预设 工作/专注');
+
+    const cleared = normalizeRecordInput({
+      template, formData: { ...dataWithoutTouch, 任务内容: '' }, context: invocation.context, mode: 'create',
+    }).normalizedFormData;
+    expect(cleared['任务内容']).toBe('');
+    const userEdited = normalizeRecordInput({
+      template, formData: { ...dataWithoutTouch, 任务内容: '手工输入' }, context: invocation.context, mode: 'create',
+    }).normalizedFormData;
+    expect(userEdited['任务内容']).toBe('手工输入');
+  });
+
   it('persists the inferred previous-end/next-start gap through QuickInput hydration and Markdown parsing', () => {
     const template = getRecordTypeById(RECORD_TYPE_IDS.TASK);
     if (!template) throw new Error('Task template missing');

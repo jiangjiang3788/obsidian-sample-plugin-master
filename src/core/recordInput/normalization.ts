@@ -5,6 +5,7 @@ import {
 } from '@/core/fields/TemplateFieldAdapter';
 import { normalizeFieldValueByBehavior } from '@/core/fields/FieldBehavior';
 import { recordDebugLog } from '@/core/recordInput/debug';
+import { renderTemplate } from '@/core/utils/templateUtils';
 import { applyTaskTimePolicy } from '@/core/records/task/taskTime';
 import type { TaskTimeDirection } from '@/core/records/task/taskTime';
 
@@ -81,8 +82,38 @@ function finalizeTimeFieldsByTemplate(
   return finalized;
 }
 
+/**
+ * 模板正文默认值属于创建语义，不能只依赖 QuickInput 的异步 UI 水合。
+ * 只填真正缺失的正文；显式空字符串以及其它正文别名均视为用户/调用方决定。
+ */
+function applyMissingBodyDefault(input: NormalizeRecordInputParams, formData: Record<string, unknown>): void {
+  if (input.mode !== 'create') return;
+  const bodyFields = (input.template.fields || []).filter((field) => getTemplateFieldSemantic(field) === 'body');
+  if (!bodyFields.length) return;
+
+  const bodyKeys = new Set(['内容', '任务内容', '正文', 'content', 'body']);
+  for (const field of bodyFields) {
+    if (field.key) bodyKeys.add(field.key);
+    if (field.label) bodyKeys.add(field.label);
+  }
+  if ([...bodyKeys].some((key) => Object.prototype.hasOwnProperty.call(formData, key) && formData[key] !== undefined)) return;
+
+  const fieldWithDefault = bodyFields.find((field) => typeof field.defaultValue === 'string' && field.defaultValue.length > 0);
+  if (!fieldWithDefault) return;
+  const goalPath = String(formData.goalPath ?? formData['目标'] ?? input.context?.goalPath ?? '').trim();
+  const goalTitle = goalPath.split('/').filter(Boolean).pop() || '';
+  const value = renderTemplate(fieldWithDefault.defaultValue as string, {
+    ...(input.context || {}),
+    ...formData,
+    goalPath,
+    goal: { path: goalPath, title: goalTitle },
+  });
+  if (value) formData[fieldWithDefault.key] = value;
+}
+
 export function normalizeRecordInput(input: NormalizeRecordInputParams): NormalizeRecordInputResult {
   const normalizedFormData: Record<string, unknown> = { ...input.formData };
+  applyMissingBodyDefault(input, normalizedFormData);
   const timeDirection = (normalizedFormData as any).__timeDirection === 'backward' ? 'backward' : 'forward';
   delete (normalizedFormData as any).lastChanged;
   delete (normalizedFormData as any).__timeDirection;

@@ -37,4 +37,4 @@ npm run help
 
 ### Windows 10 全量测试
 
-`npm test` 会先运行测试调度器自检，再用 Node 独立监控各个 Jest 文件（30 秒上限，失败与超时继续）。遇到异常先查看 `reports/testing/日常测试-汇总.json` 的 `activeFile` 和 `completed`，不要根据中文报告误判业务错误。只验证运行器可执行 `node scripts/testing/selftest-runner.mjs`。不需要 PowerShell。
+`npm test` 先检查 Jest 环境，再让两个长期复用的 Jest 进程执行全部测试；Node 独立监控每个活动文件（30 秒上限，失败与超时继续），卡住时仅重启所在进程。遇到异常先查看 `reports/testing/日常测试-汇总.json` 的 `activeFile` 和 `completed`，不要根据中文报告误判业务错误。仅验证运行器调度逻辑可执行 `node scripts/testing/selftest-runner.mjs`（不需要每次 `npm test` 都执行）。不需要 PowerShell。

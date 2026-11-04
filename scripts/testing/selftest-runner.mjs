@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-// No npm dependencies required. Proves the supervisor's behavior with fake Jest
-// subprocesses BEFORE asking Windows 10 to run hundreds of real suites.
+// 不依赖 Jest 的调度器自检；必须覆盖异常退出、卡死、恢复和误报防护。
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -11,17 +10,87 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const runner = path.join(here, 'run-jest-with-timeout.mjs');
-const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'thinkos-runner-selftest-'));
-const root = path.join(temp, 'test project with spaces');
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'thinkos-jest-watchdog-'));
+const root = path.join(temp, '中文 test project with spaces');
 const reports = path.join(temp, 'reports');
 const fakeJest = path.join(temp, 'fake-jest.cjs');
 const config = path.join(root, 'test/configs/jest.core.config.js');
-const names = ['pass 中文 空格.test.ts', 'fail.test.ts', 'hang.test.ts', 'hang-two.test.ts', 'pass-last.test.ts'];
 
-function runSupervisor(scenario, timeoutMs = 8000, selection = []) {
+const fakeCode = String.raw`
+const fs = require('node:fs');
+const path = require('node:path');
+const args = process.argv.slice(2);
+const root = process.env.THINK_TEST_INTERNAL_ROOT;
+const scenario = process.env.THINK_TEST_INTERNAL_CASE;
+const names = {
+  many: Array.from({length:291}, (_,i) => 'file-' + String(i + 1).padStart(3,'0') + '.test.ts'),
+  pass: ['通过 中文 空格.test.ts', 'last.test.ts'],
+  parallel: ['通过 中文 空格.test.ts', 'last.test.ts'],
+  fail: ['通过 中文 空格.test.ts', 'fail.test.ts', 'last.test.ts'],
+  hang: ['通过 中文 空格.test.ts', 'last.test.ts', 'hang.test.ts', 'after-hang.test.ts', 'end.test.ts'],
+  twohang: ['通过 中文 空格.test.ts', 'last.test.ts', 'hang.test.ts', 'after-hang.test.ts', 'hang-two.test.ts', 'end.test.ts'],
+  startup: ['通过 中文 空格.test.ts', 'last.test.ts'],
+  ghost: ['通过 中文 空格.test.ts'],
+  stuckcleanup: ['通过 中文 空格.test.ts'],
+  crash: ['crash.test.ts', 'last.test.ts'],
+  empty: [],
+  badjson: [],
+};
+let all = names[scenario] || [];
+if (args.includes('--listTests')) {
+  const filter = args.find((arg) => arg.endsWith('.test.ts'));
+  if (filter) all = all.filter((name) => name.includes(filter));
+  if (scenario === 'badjson') { console.log('not json'); process.exit(0); }
+  process.stdout.write(JSON.stringify(all.map((name) => path.join(root, 'test/unit', name))));
+  process.exit(0);
+}
+if (!process.env.THINK_JEST_EVENTS_FILE) process.exit(2);
+const selection = args.slice(args.indexOf('--runTestsByPath') + 1).filter((arg) => arg.endsWith('.test.ts'));
+const events = process.env.THINK_JEST_EVENTS_FILE;
+const failures = process.env.THINK_JEST_FAILURE_FILE;
+const startedLog = path.join(root, 'started-' + scenario + '.txt');
+function emit(event) { fs.appendFileSync(events, JSON.stringify(event) + '\n'); }
+async function run() {
+  if (scenario === 'startup') { setInterval(() => {}, 1000); return; }
+  let failed = 0;
+  for (const file of selection) {
+    const name = path.basename(file);
+    if (!all.includes(name)) process.exit(2);
+    const id = 'test/unit/' + name;
+    fs.appendFileSync(startedLog, name + '\n');
+    emit({event:'start',file:id});
+    if (scenario === 'parallel') {
+      const marker = path.join(root, 'parallel-started.txt');
+      fs.appendFileSync(marker, name + '\n');
+      let tries = 0;
+      while (fs.readFileSync(marker, 'utf8').trim().split('\n').length < 2) {
+        if (++tries >= 150) process.exit(3);
+        await new Promise((res) => setTimeout(res, 20));
+      }
+    }
+    if (name.startsWith('hang')) { setInterval(() => {}, 1000); return; }
+    if (name === 'crash.test.ts') process.exit(2);
+    const bad = name === 'fail.test.ts';
+    if (bad) {
+      failed++;
+      fs.appendFileSync(failures, 'Jest mock: expected 10, actual 20\n');
+    }
+    await new Promise((res) => setTimeout(res, 15));
+    emit({event:'result',file:id,status:bad?'失败':'通过',passed:bad?0:1,
+      failed:bad?1:0,pending:0,durationMs:15,
+      ...(bad ? {reason:'Expected 10 but received 20',expected:'10',actual:'20'} : {})});
+  }
+  if (scenario !== 'ghost') emit({event:'complete',success:failed===0,files:selection.length});
+  if (scenario === 'stuckcleanup') { setInterval(() => {}, 1000); return; }
+  process.exitCode = failed ? 1 : 0;
+}
+run().catch((error) => { console.error(error); process.exitCode = 3; });
+`;
+
+function runScenario(scenario, { timeoutMs = 8000, selection = [], concurrency = 2, interruptAfter = 0 } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [runner, ...selection], {
-      cwd: root, windowsHide: true, shell: false,
+      cwd: root, shell: false, windowsHide: true,
       env: {
         ...process.env,
         THINK_TEST_INTERNAL_SELFTEST: '1',
@@ -31,219 +100,132 @@ function runSupervisor(scenario, timeoutMs = 8000, selection = []) {
         THINK_TEST_INTERNAL_REPORT_DIR: reports,
         THINK_TEST_INTERNAL_CASE: scenario,
         THINK_TEST_FILE_TIMEOUT_MS: String(timeoutMs),
-        THINK_TEST_CONCURRENCY: scenario === 'parallel' ? '2' : process.env.THINK_TEST_CONCURRENCY,
+        THINK_TEST_CONCURRENCY: String(concurrency),
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let output = '';
-    child.stdout.on('data', (data) => { output += String(data); });
-    child.stderr.on('data', (data) => { output += String(data); });
+    child.stdout.on('data', (chunk) => { output += String(chunk); });
+    child.stderr.on('data', (chunk) => { output += String(chunk); });
     child.once('error', reject);
+    const interruption = interruptAfter ? setTimeout(() => child.kill('SIGINT'), interruptAfter) : null;
     const timer = setTimeout(() => {
       child.kill('SIGKILL');
-      reject(new Error(`模拟场景 ${scenario} 调度器未能正常退出：${output.slice(-2000)}`));
-    }, 40_000);
-    child.once('close', (code, signal) => {
+      reject(new Error(`模拟场景 ${scenario} 运行器超时：${output.slice(-1000)}`));
+    }, 30_000);
+    child.once('close', (code) => {
       clearTimeout(timer);
+      clearTimeout(interruption);
       try {
-        const summaryPath = path.join(reports, '日常测试-汇总.json');
-        const summary = fs.existsSync(summaryPath) ? JSON.parse(fs.readFileSync(summaryPath, 'utf8')) : null;
-        resolve({ code, signal, output, summary });
+        const summary = JSON.parse(fs.readFileSync(path.join(reports, '日常测试-汇总.json'), 'utf8'));
+        resolve({ code, output, summary });
       } catch (error) { reject(error); }
     });
   });
 }
-
-const fakeCode = String.raw`
-const fs = require('node:fs');
-const path = require('node:path');
-const args = process.argv.slice(2);
-const root = process.env.THINK_TEST_INTERNAL_ROOT;
-const scenario = process.env.THINK_TEST_INTERNAL_CASE;
-const choose = {
-  pass: ['pass 中文 空格.test.ts', 'pass-last.test.ts'],
-  parallel: ['pass 中文 空格.test.ts', 'pass-last.test.ts'],
-  fail: ['pass 中文 空格.test.ts', 'fail.test.ts', 'pass-last.test.ts'],
-  timeout: ['pass 中文 空格.test.ts', 'hang.test.ts', 'pass-last.test.ts'],
-  empty: [],
-  badjson: [],
-  fastpass: ['pass 中文 空格.test.ts', 'pass-last.test.ts'],
-  fastfail: ['pass 中文 空格.test.ts', 'fail.test.ts', 'pass-last.test.ts'],
-  fasthang: ['pass 中文 空格.test.ts', 'hang.test.ts', 'pass-last.test.ts'],
-  fasttwohang: ['pass 中文 空格.test.ts', 'hang.test.ts', 'hang-two.test.ts', 'pass-last.test.ts'],
-  fastghost: ['pass 中文 空格.test.ts'],
-  fastnostart: ['pass 中文 空格.test.ts'],
-};
-let all = choose[scenario] || [];
-if (args.includes('--listTests')) {
-  const selection = args.find(a => a.endsWith('.test.ts'));
-  if (selection) all = all.filter(n => n.includes(selection));
-  if (scenario === 'badjson') { process.stdout.write('invalid result\n'); process.exit(0); }
-  process.stdout.write(JSON.stringify(all.map(n => path.join(root, 'test/unit', n))));
-  process.exit(0);
+function counts(summary) {
+  return [summary.counts.passed, summary.counts.failed, summary.counts.timedOut, summary.counts.notRun];
 }
-const selected = args.includes('--runTestsByPath')
-  ? args.slice(args.indexOf('--runTestsByPath') + 1).filter(a => a.endsWith('.test.ts'))
-  : [];
-const target = selected[0];
-const name = path.basename(target || '');
-if (!all.includes(name)) { console.error('fake Jest: unknown test file'); process.exit(2); }
-if (scenario.startsWith('fast')) {
-  const progressFile = process.env.THINK_JEST_EVENTS_FILE;
-  const failureFile = process.env.THINK_JEST_FAILURE_FILE;
-  const startedFile = path.join(root, 'started-' + scenario + '.txt');
-  if (!progressFile) { console.error('event output not enabled'); process.exit(2); }
-  if (scenario === 'fastnostart') { setInterval(() => {}, 1000); } else {
-  let failed = 0;
-  for (const file of selected) {
-    const short = path.basename(file);
-    fs.appendFileSync(startedFile, short + '\n');
-    fs.appendFileSync(progressFile, JSON.stringify({event:'start',file:'test/unit/'+short})+'\n');
-    if (short.startsWith('hang')) { setInterval(() => {}, 1000); break; }
-    const bad = short === 'fail.test.ts';
-    if (bad) {
-      failed++;
-      fs.appendFileSync(failureFile, '\n=== bad assertion: '+short+' ===\nExpected true but got false\n');
-    }
-    fs.appendFileSync(progressFile, JSON.stringify({event:'result',file:'test/unit/'+short,
-      status: bad ? '失败' : '通过', durationMs: 12, passed: bad ? 0 : 1, failed: bad ? 1 : 0})+'\n');
-  }
-  if (!selected.some(f=>path.basename(f).startsWith('hang')) && scenario !== 'fastghost') {
-    fs.appendFileSync(progressFile, JSON.stringify({event:'complete',success: failed === 0})+'\n');
-  }
-  if (!selected.some(f=>path.basename(f).startsWith('hang'))) process.exitCode = failed ? 1 : 0;
-  }
-} else
-if (scenario === 'parallel') {
-  // Both child processes must start before either can finish.
-  const marker = path.join(root, 'parallel-started.txt');
-  fs.appendFileSync(marker, name + '\n');
-  let attempts = 0;
-  const poll = setInterval(() => {
-    if (fs.readFileSync(marker, 'utf8').trim().split('\n').length >= 2) {
-      clearInterval(poll);
-      console.log('SIMULATED PARALLEL PASS: ' + name);
-      process.exitCode = 0;
-    } else if (++attempts > 350) {
-      clearInterval(poll);
-      console.error('SIMULATED PARALLEL FAILURE: only one child started');
-      process.exitCode = 1;
-    }
-  }, 20);
-} else if (name === 'hang.test.ts') {
-  setInterval(() => {}, 1000);
-} else if (name === 'fail.test.ts') {
-  console.error('SIMULATED ASSERTION FAILURE');
-  process.exitCode = 1;
-} else {
-  console.log('SIMULATED JEST PASS: ' + name);
-  process.exitCode = 0;
-}
-`;
 
 try {
   fs.mkdirSync(path.dirname(config), { recursive: true });
   fs.mkdirSync(path.join(root, 'test/unit'), { recursive: true });
   fs.writeFileSync(config, 'module.exports = {};\n');
-  for (const name of names) fs.writeFileSync(path.join(root, 'test/unit', name), '');
   fs.writeFileSync(fakeJest, fakeCode);
+  let result = await runScenario('pass');
+  assert.equal(result.code, 0, result.output);
+  assert.equal(result.summary.success, true);
+  assert.deepEqual(counts(result.summary), [2, 0, 0, 0]);
+  assert.match(result.output, /OOO.*通过 中文 空格\.test\.ts/);
+  console.log('【运行器自检】正常通过、中文及空格路径：通过');
 
-  let result = await runSupervisor('pass');
-  assert.equal(result.code, 0, `全通过场景不应失败：${result.output}`);
-  assert.equal(result.summary?.success, true);
-  assert.deepEqual(result.summary?.counts, { passed: 2, failed: 0, timedOut: 0, notRun: 0 });
-  console.log('【运行器自检】正常通过、中文/空格路径：通过');
+  result = await runScenario('many');
+  assert.equal(result.code, 0, result.output);
+  assert.equal(result.summary.total, 291);
+  assert.deepEqual(counts(result.summary), [291, 0, 0, 0]);
+  assert.equal(new Set(result.summary.files.map((file) => file.file)).size, 291);
+  console.log('【运行器自检】291 文件复用进程、完整去重汇总：通过');
 
-  result = await runSupervisor('parallel', 8000);
-  assert.equal(result.code, 0, `并发场景两个子进程必须同时启动：${result.output}`);
-  assert.equal(result.summary?.success, true);
-  assert.deepEqual(result.summary?.counts, { passed: 2, failed: 0, timedOut: 0, notRun: 0 });
-  assert.deepEqual(result.summary?.activeFiles, []);
-  assert.equal(result.summary?.activeFile, null);
-  assert.ok(result.output.includes('[OK] 通过'), '成功文件应显示文本标记');
-  const raw = fs.readFileSync(path.join(reports, '日常测试-完整技术日志.txt'), 'utf8');
-  assert.equal((raw.match(/SIMULATED PARALLEL PASS:/g) || []).length, 2, '并行日志不得丢失');
-  console.log('【运行器自检】并发执行、独立汇总与ASCII标记：通过');
+  result = await runScenario('parallel');
+  assert.equal(result.code, 0, result.output);
+  assert.deepEqual(counts(result.summary), [2, 0, 0, 0]);
+  console.log('【运行器自检】两个长期进程真正并发：通过');
 
-  // Reuse one process for multiple files; successful suites need not be rerun.
-  result = await runSupervisor('fastpass', 8000, ['--fast']);
-  assert.equal(result.code, 0, `快速批次全通过不能失败：${result.output}`);
-  assert.equal(result.summary?.success, true);
-  assert.deepEqual(result.summary?.counts, { passed: 2, failed: 0, timedOut: 0, notRun: 0 });
-  assert.ok(result.output.includes('[OK] 通过'));
-  console.log('【运行器自检】快速批次复用 Jest、结果实时上报：通过');
+  result = await runScenario('fail');
+  assert.equal(result.code, 1, result.output);
+  assert.deepEqual(counts(result.summary), [2, 1, 0, 0]);
+  assert.match(result.output, /XXX.*fail\.test\.ts/);
+  assert.match(result.output, /原因：Expected 10 but received 20/);
+  assert.match(result.output, /期望：10/);
+  assert.match(result.output, /实际：20/);
+  const failureLog = fs.readFileSync(path.join(reports, '日常测试-失败技术日志.txt'), 'utf8');
+  assert.match(failureLog, /Jest mock: expected 10, actual 20/);
+  console.log('【运行器自检】真实失败保留原因、继续运行：通过');
 
-  result = await runSupervisor('fastfail', 8000, ['--fast']);
-  assert.equal(result.code, 1, `快速批次断言失败应退出 1：${result.output}`);
-  assert.deepEqual(result.summary?.counts, { passed: 2, failed: 1, timedOut: 0, notRun: 0 });
-  const failLog = fs.readFileSync(path.join(reports, '日常测试-失败技术日志.txt'), 'utf8');
-  assert.ok(failLog.includes('Expected true but got false'), '真实失败细节必须保留');
-  console.log('【运行器自检】快速批次真实失败、记录堆栈、后续继续：通过');
+  result = await runScenario('hang', { timeoutMs: 650 });
+  assert.equal(result.code, 1, result.output);
+  assert.deepEqual(counts(result.summary), [4, 0, 1, 0]);
+  assert.match(result.output, /!!!.*hang\.test\.ts/);
+  const history = fs.readFileSync(path.join(root, 'started-hang.txt'), 'utf8');
+  assert.equal(history.split('通过 中文 空格.test.ts').length - 1, 1, '已通过文件不应补跑');
+  assert.equal(history.split('end.test.ts').length - 1, 1, '超时后应该跑后续文件');
+  console.log('【运行器自检】卡住后杀进程、只补跑剩余文件：通过');
 
-  result = await runSupervisor('fasthang', 650, ['--fast']);
-  assert.equal(result.code, 1, `快速批次卡住必须终止并继续：${result.output}`);
-  assert.deepEqual(result.summary?.counts, { passed: 2, failed: 0, timedOut: 1, notRun: 0 });
-  assert.equal(result.summary?.completed, true);
-  const startedNames = fs.readFileSync(path.join(root, 'started-fasthang.txt'), 'utf8');
-  assert.equal(startedNames.split('pass 中文 空格.test.ts').length - 1, 1, '已完成文件不能重复跑');
-  assert.ok(result.output.includes('[TIMEOUT] 超时'));
-  console.log('【运行器自检】快速批次超时杀进程、仅补跑剩余文件：通过');
+  result = await runScenario('twohang', { timeoutMs: 650 });
+  assert.equal(result.code, 1, result.output);
+  assert.deepEqual(counts(result.summary), [4, 0, 2, 0]);
+  console.log('【运行器自检】连续两个文件卡住后继续：通过');
 
-  result = await runSupervisor('fasttwohang', 650, ['--fast']);
-  assert.equal(result.code, 1, `两个连续卡死用例均必须得到超时结果：${result.output}`);
-  assert.deepEqual(result.summary?.counts, { passed: 2, failed: 0, timedOut: 2, notRun: 0 });
-  const twoHangs = fs.readFileSync(path.join(root, 'started-fasttwohang.txt'), 'utf8');
-  assert.equal(twoHangs.split('pass-last.test.ts').length - 1, 1, '两个超时后必须执行最后一个文件');
-  console.log('【运行器自检】连续两个卡死，不误伤未执行文件：通过');
-
-  result = await runSupervisor('fastnostart', 650, ['--fast']);
-  assert.notEqual(result.code, 0, 'Jest 从未发出启动事件时不能误报通过');
-  assert.equal(result.summary?.completed, false, '启动阶段卡死后应保留未完成状态');
-  assert.equal(result.summary?.counts.notRun, 1);
-  console.log('【运行器自检】启动阶段卡住，不冒充测试已执行：通过');
-
-  result = await runSupervisor('fastghost', 8000, ['--fast']);
-  assert.notEqual(result.code, 0, '未收到 Jest 完成事件不能报全通过');
-  assert.equal(result.summary?.success, false);
-  console.log('【运行器自检】快速批次缺少结束确认不得误报成功：通过');
-
-  result = await runSupervisor('pass', 8000, ['pass-last.test.ts']);
-  assert.equal(result.code, 0, `单文件选择不应失败：${result.output}`);
-  assert.equal(result.summary?.total, 1);
-  assert.deepEqual(result.summary?.counts, { passed: 1, failed: 0, timedOut: 0, notRun: 0 });
-  console.log('【运行器自检】命令行选择单文件：通过');
-
-  result = await runSupervisor('fail');
-  assert.equal(result.code, 1, `断言失败场景退出码应为 1：${result.output}`);
-  assert.equal(result.summary?.completed, true);
-  assert.deepEqual(result.summary?.counts, { passed: 2, failed: 1, timedOut: 0, notRun: 0 });
-  assert.ok(result.output.includes('pass-last.test.ts'), '失败后仍应执行下一文件');
-  assert.ok(result.output.includes('[FAIL] 失败'), '失败文件应显示文本标记');
-  console.log('【运行器自检】真实失败如实记录、失败后继续：通过');
-
-  result = await runSupervisor('timeout', 2500);
-  assert.equal(result.code, 1, `超时场景退出码应为 1：${result.output}`);
-  assert.equal(result.summary?.completed, true);
-  assert.deepEqual(result.summary?.counts, { passed: 2, failed: 0, timedOut: 1, notRun: 0 });
-  assert.ok(result.output.includes('pass-last.test.ts'), '超时后仍应执行下一文件');
-  assert.ok(result.output.includes('[TIMEOUT] 超时'), '超时文件应有独立文本标记');
-  console.log('【运行器自检】强制超时、终止后继续：通过');
-
-  result = await runSupervisor('empty');
+  result = await runScenario('startup', { timeoutMs: 650 });
   assert.notEqual(result.code, 0);
-  assert.equal(result.summary?.success, false);
-  console.log('【运行器自检】无测试文件不能误报成功：通过');
+  assert.equal(result.summary.completed, false);
+  assert.deepEqual(counts(result.summary), [0, 0, 0, 2]);
+  console.log('【运行器自检】启动无进度不误报成功：通过');
 
-  result = await runSupervisor('badjson');
+  result = await runScenario('ghost');
   assert.notEqual(result.code, 0);
-  assert.equal(result.summary?.success, false);
-  console.log('【运行器自检】列表解析错误不能误报成功：通过');
+  assert.equal(result.summary.success, false);
+  console.log('【运行器自检】缺少 Jest 完成事件不能成功：通过');
 
-  console.log('【运行器自检】全部十三组通过，未运行真实项目的 Jest 测试。');
+  result = await runScenario('stuckcleanup', { timeoutMs: 650 });
+  assert.notEqual(result.code, 0, result.output);
+  assert.equal(result.summary.completed, false, '收尾卡住不得报告完整成功');
+  assert.equal(result.summary.success, false);
+  console.log('【运行器自检】所有文件结束但 Jest 收尾卡住，不误报成功：通过');
+
+  result = await runScenario('crash');
+  assert.equal(result.code, 1, result.output);
+  assert.deepEqual(counts(result.summary), [1, 1, 0, 0]);
+  console.log('【运行器自检】Jest 连续异常退出，记录失败并继续：通过');
+
+  if (process.platform !== 'win32') {
+    result = await runScenario('hang', { timeoutMs: 8000, interruptAfter: 350 });
+    assert.equal(result.code, 130, result.output);
+    assert.equal(result.summary.success, false);
+    assert.equal(result.summary.interrupted, true);
+    console.log('【运行器自检】中断清理与失败状态（非 Windows）：通过');
+  }
+
+  result = await runScenario('pass', { selection: ['last.test.ts'], concurrency: 1 });
+  assert.equal(result.code, 0, result.output);
+  assert.deepEqual(counts(result.summary), [1, 0, 0, 0]);
+  console.log('【运行器自检】单文件筛选、单进程回退：通过');
+
+  result = await runScenario('empty');
+  assert.notEqual(result.code, 0);
+  assert.equal(result.summary.success, false);
+  console.log('【运行器自检】0 文件不误报成功：通过');
+
+  result = await runScenario('badjson');
+  assert.notEqual(result.code, 0);
+  assert.equal(result.summary.success, false);
+  console.log('【运行器自检】无效列表不误报成功：通过');
+
+  console.log('【运行器自检】全部核心场景通过；真实 Jest 与 Windows 10 行为尚待本机验证。');
 } catch (error) {
   console.error(`【运行器自检失败】${String(error?.stack || error)}`);
   process.exitCode = 1;
 } finally {
   try { fs.rmSync(temp, { recursive: true, force: true }); }
-  catch { /* Antiviruses may momentarily hold temp files on Windows */ }
+  catch { /* Windows antivirus may briefly lock temporary files */ }
 }
