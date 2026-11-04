@@ -1,5 +1,26 @@
 type InputLike = HTMLInputElement | HTMLTextAreaElement;
 
+// The editor publishes GoalTemplate defaults to its save owner synchronously,
+// before Preact necessarily paints them into the focused native input. Keep the
+// last value actually rendered to each control so an old DOM snapshot cannot
+// overwrite a newer draft. Weak keys avoid retaining detached modal controls.
+const renderedValueByControl = new WeakMap<InputLike, string>();
+
+export function rememberQuickInputRenderedValue(control: InputLike | null, renderedValue: string): void {
+  if (control) renderedValueByControl.set(control, renderedValue);
+}
+
+/**
+ * Blur/change only reconciles a native edit which differs from the last render.
+ * Real input/composition events still commit directly, including a user clear.
+ */
+export function shouldCommitQuickInputPassiveValue(event: Event): boolean {
+  const control = event.currentTarget as InputLike | null;
+  if (!control) return false;
+  const renderedValue = renderedValueByControl.get(control);
+  return renderedValue === undefined || control.value !== renderedValue;
+}
+
 export function readInputValue(event: Event): string {
   return String((event.currentTarget as InputLike | null)?.value ?? '');
 }
@@ -26,13 +47,17 @@ export function readLatestQuickInputTextFields(
     if (!key) return;
     const storedValue = Array.isArray(next[key]) ? next[key].join('\n') : String(next[key] ?? '');
     if (control.value === storedValue) return;
-    // The Goal selection event may have synchronously published its template
-    // default while Preact has not yet painted the new native input value.
-    // Do not misread an unfocused old empty control as a user clear for a
-    // freshly seeded Goal default, Timeline execution range, or edit backfill.
-    // Real user changes are tracked by source=user; a focused IME is still read.
-    if (control.value === '' && storedValue !== '' && fieldSources[key] && fieldSources[key] !== 'user'
-      && control !== control.ownerDocument.activeElement) return;
+    // A freshly selected Goal can update the canonical draft before its text
+    // control has re-rendered. This applies to *focused* controls (Save uses
+    // preventDefault on pointerdown), and to prior nonempty template defaults.
+    // A genuine late IME edit changes the native value away from the last
+    // painted value and must still be reconciled.
+    const lastRendered = renderedValueByControl.get(control);
+    if (lastRendered !== undefined && control.value === lastRendered) return;
+    // Defensive fallback for untracked controls: never treat an old empty DOM
+    // value as an explicit clear of a non-user template/context seed.
+    if (lastRendered === undefined && control.value === '' && storedValue !== ''
+      && fieldSources[key] && fieldSources[key] !== 'user') return;
     if (next === formData) next = { ...formData };
     next[key] = control.value;
     changedKeys.push(key);

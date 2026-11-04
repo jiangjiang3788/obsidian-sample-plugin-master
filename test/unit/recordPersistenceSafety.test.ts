@@ -83,10 +83,15 @@ describe('Record Markdown 数据完整性', () => {
     expect(decodeRecordContentLines(lines.slice(1, -1), '').content).toBe(body);
   });
 
-  it('preserves unknown field strings and explicitly typed text', () => {
+  it('keeps legacy numeric/boolean KV semantics while preserving leading-zero identifiers and typed text', () => {
     expect(decodeUnknownMarkdownKvValue('00123')).toBe('00123');
-    expect(decodeUnknownMarkdownKvValue('42')).toBe('42');
+    expect(decodeUnknownMarkdownKvValue('00.50')).toBe('00.50');
+    // Without a declared schema, existing Energy/rating records rely on this
+    // historical inference; canonical numbers must not silently become text.
+    expect(decodeUnknownMarkdownKvValue('42')).toBe(42);
+    expect(decodeUnknownMarkdownKvValue('true')).toBe(true);
     expect(decodeMarkdownFieldValue('00123', FIELD_CODEC_PRESETS.text)).toBe('00123');
+    expect(decodeMarkdownFieldValue('42', FIELD_CODEC_PRESETS.text)).toBe('42');
     expect(decodeMarkdownFieldValue('42', FIELD_CODEC_PRESETS.number)).toBe(42);
     expect(decodeMarkdownFieldValue('true', FIELD_CODEC_PRESETS.boolean)).toBe(true);
   });

@@ -148,6 +148,19 @@ export function normalizeRecordInput(input: NormalizeRecordInputParams): Normali
     timeDirection,
   );
 
+  // A Timeline completed-execution capture is an historical fact. The normal
+  // select-field normalizer intentionally produces UI option objects, but the
+  // persistence-facing status must be the canonical scalar. Preserve other
+  // callers' selectable-value contract and only enforce this for Timeline
+  // creation. Also set a custom status field key if the template has one:
+  // normalizeTemplateRenderData would otherwise overwrite the canonical alias.
+  if (input.mode === 'create' && isTimelineCompletedExecutionContext(input.context)) {
+    for (const field of input.template.fields || []) {
+      if (getTemplateFieldSemantic(field) === 'status') finalized[field.key] = 'done';
+    }
+    finalized.status = 'done';
+  }
+
   return {
     normalizedFormData: finalized,
     warnings: [],

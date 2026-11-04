@@ -11,6 +11,7 @@ import { normalizeRecordInput } from '@/core/recordInput/normalization';
 import { getRecordTypeById, RECORD_TYPE_IDS } from '@core/recordTypes/public';
 import { parseRecordBlock } from '@/core/utils/parser';
 import { asTaskRecord, asTaskSessionRecord } from '@/core/records/public';
+import { readLatestQuickInputTextFields, rememberQuickInputRenderedValue } from '@/features/quickinput/editor/fields/inputEvents';
 import type { TaskBlock } from '@core/types/public';
 
 function taskBlock(start: number, end: number, id: string): TaskBlock {
@@ -83,6 +84,66 @@ describe('integration: Timeline click context -> Task persistence', () => {
     expect(task?.content).toBe('首次预设 工作/专注');
     expect(task?.status).toBe('done');
     expect(session).toMatchObject({ taskId: task?.id, sessionDurationMinutes: 40, sessionSource: 'timeline' });
+  });
+
+  it('时间轴选择 Goal 后立刻保存：旧焦点输入框不能覆盖默认值，Markdown 重读仍保留正文和 Session', () => {
+    const base = getRecordTypeById(RECORD_TYPE_IDS.TASK);
+    if (!base) throw new Error('Task template missing');
+    const template = {
+      ...base,
+      fields: (base.fields || []).map((field) => field.key === '任务内容'
+        ? { ...field, defaultValue: '首次预设 {{goal.path}}' }
+        : field),
+    };
+    const invocation = resolveTimelineCreateContext({ day: '2026-05-13', clickedMinute: 90, dayBlocks: [] });
+    const root = document.createElement('div');
+    root.innerHTML = '<textarea data-quick-input-field-key="任务内容"></textarea>';
+    document.body.appendChild(root);
+    try {
+      const nativeBody = root.querySelector('textarea')!;
+      rememberQuickInputRenderedValue(nativeBody, '');
+      nativeBody.focus();
+      const formData = { goalPath: '工作/专注', 任务内容: '首次预设 工作/专注' };
+      const saveSnapshot = readLatestQuickInputTextFields(root, formData, { 任务内容: 'template_default' });
+      expect(saveSnapshot.formData).toBe(formData);
+      const normalized = normalizeRecordInput({
+        template, formData: saveSnapshot.formData, context: invocation.context, mode: 'create',
+      }).normalizedFormData;
+      const plan = buildRecordOutputPlan({ template, formData: normalized, context: invocation.context });
+      const blocks = splitRecordBlocks(plan.outputContent);
+      expect(blocks).toHaveLength(2);
+      const taskLines = blocks[0].split(/\r?\n/);
+      const sessionLines = blocks[1].split(/\r?\n/);
+      const task = asTaskRecord(parseRecordBlock(plan.targetFilePath!, taskLines, 0, taskLines.length - 1, '记录'));
+      const session = asTaskSessionRecord(parseRecordBlock(plan.targetFilePath!, sessionLines, 0, sessionLines.length - 1, '记录'));
+      expect(task?.content).toBe('首次预设 工作/专注');
+      expect(task?.status).toBe('done');
+      expect(session).toMatchObject({ taskId: task?.id, sessionSource: 'timeline', sessionDurationMinutes: 90 });
+    } finally {
+      root.remove();
+    }
+  });
+
+  it('时间轴创建的持久化状态是 done 标量，但普通表单选项仍保留 UI 标签', () => {
+    const template = getRecordTypeById(RECORD_TYPE_IDS.TASK);
+    if (!template) throw new Error('Task template missing');
+    const invocation = resolveTimelineCreateContext({ day: '2026-05-13', clickedMinute: 90, dayBlocks: [] });
+    const staleOption = { value: 'open', label: '未完成' };
+    const fromTimeline = normalizeRecordInput({
+      template,
+      formData: { status: staleOption, goalPath: '工作/专注' },
+      context: invocation.context,
+      mode: 'create',
+    }).normalizedFormData;
+    expect(fromTimeline.status).toBe('done');
+
+    const normalCreate = normalizeRecordInput({
+      template,
+      formData: { status: staleOption, goalPath: '工作/专注' },
+      context: {},
+      mode: 'create',
+    }).normalizedFormData;
+    expect(normalCreate.status).toMatchObject(staleOption);
   });
 
   it('时间轴用户主动清空开始或结束时间，不从调用上下文偷偷补回来', () => {

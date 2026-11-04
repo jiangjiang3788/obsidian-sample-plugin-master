@@ -6,7 +6,14 @@ import { getTemplateFieldSemantic, isTemplateMultiValueField } from '@core/field
 import { QuickInputFieldFrame } from './FieldFrame';
 import { isQuickInputInlineRowField, isQuickInputTimeField } from './fieldSemantics';
 import type { QuickInputFieldRendererBaseProps } from './types';
-import { readInputValue, setTextareaAutoHeight, shouldSubmitPlainEnter, shouldSubmitShortcutEnter } from './inputEvents';
+import {
+  readInputValue,
+  rememberQuickInputRenderedValue,
+  setTextareaAutoHeight,
+  shouldCommitQuickInputPassiveValue,
+  shouldSubmitPlainEnter,
+  shouldSubmitShortcutEnter,
+} from './inputEvents';
 
 export function QuickInputTextAreaValueFieldRenderer({
   field,
@@ -20,6 +27,9 @@ export function QuickInputTextAreaValueFieldRenderer({
   const displayValue = Array.isArray(value) ? value.join('\n') : String(value ?? '');
   const minHeight = dense ? 78 : 96;
   const commitNativeValue = (event: Event) => onUpdate(field.key, readInputValue(event));
+  const commitPassiveValue = (event: Event) => {
+    if (shouldCommitQuickInputPassiveValue(event)) commitNativeValue(event);
+  };
   return (
     <QuickInputFieldFrame label={field.label || field.key} required={field.required} textarea>
       <textarea
@@ -31,9 +41,9 @@ export function QuickInputTextAreaValueFieldRenderer({
           commitNativeValue(event);
           setTextareaAutoHeight(event.currentTarget as HTMLTextAreaElement, minHeight);
         }}
-        onChange={commitNativeValue}
+        onChange={commitPassiveValue}
         onCompositionEnd={commitNativeValue}
-        onBlur={commitNativeValue}
+        onBlur={commitPassiveValue}
         onKeyDown={(event) => {
           event.stopPropagation();
           if (shouldSubmitShortcutEnter(event, isMobileLike)) {
@@ -42,7 +52,10 @@ export function QuickInputTextAreaValueFieldRenderer({
           }
         }}
         placeholder={multiline ? '每行一个，或用逗号分隔' : undefined}
-        ref={(el: HTMLTextAreaElement | null) => setTextareaAutoHeight(el, minHeight)}
+        ref={(el: HTMLTextAreaElement | null) => {
+          rememberQuickInputRenderedValue(el, displayValue);
+          setTextareaAutoHeight(el, minHeight);
+        }}
       />
     </QuickInputFieldFrame>
   );
@@ -61,6 +74,9 @@ export function QuickInputNativeFieldRenderer({
   const minHeight = dense ? 96 : 118;
   const shouldAutoFocus = autoFocusContent && getTemplateFieldSemantic(field) === 'body';
   const commitNativeValue = (event: Event) => onUpdate(field.key, readInputValue(event));
+  const commitPassiveValue = (event: Event) => {
+    if (shouldCommitQuickInputPassiveValue(event)) commitNativeValue(event);
+  };
   const commonProps = {
     className: inputType === 'textarea' ? (dense ? 'think-native-input think-native-input--textarea think-qif-textarea is-dense' : 'think-native-input think-native-input--textarea think-qif-textarea') : 'think-native-input',
     value: String(value || ''),
@@ -69,9 +85,9 @@ export function QuickInputNativeFieldRenderer({
       commitNativeValue(event);
       if (inputType === 'textarea') setTextareaAutoHeight(event.currentTarget as HTMLTextAreaElement, minHeight);
     },
-    onChange: commitNativeValue,
+    onChange: commitPassiveValue,
     onCompositionEnd: commitNativeValue,
-    onBlur: commitNativeValue,
+    onBlur: commitPassiveValue,
     onKeyDown: (event: KeyboardEvent) => {
       event.stopPropagation();
       if (inputType === 'textarea') {
@@ -93,7 +109,10 @@ export function QuickInputNativeFieldRenderer({
       {...commonProps}
       rows={dense ? 4 : 5}
       enterkeyhint={isMobileLike ? 'enter' : 'done'}
-      ref={(el: HTMLTextAreaElement | null) => setTextareaAutoHeight(el, minHeight)}
+      ref={(el: HTMLTextAreaElement | null) => {
+        rememberQuickInputRenderedValue(el, String(value || ''));
+        setTextareaAutoHeight(el, minHeight);
+      }}
       autoFocus={shouldAutoFocus}
       data-quick-input-content={shouldAutoFocus ? 'true' : undefined}
     />
@@ -107,6 +126,7 @@ export function QuickInputNativeFieldRenderer({
       className={isQuickInputTimeField(field) ? `${commonProps.className} think-qif-time-input` : commonProps.className}
       autoFocus={shouldAutoFocus}
       data-quick-input-content={shouldAutoFocus ? 'true' : undefined}
+      ref={(el: HTMLInputElement | null) => rememberQuickInputRenderedValue(el, String(value || ''))}
     />
   );
 

@@ -259,6 +259,11 @@ export class RecordInputUseCase {
     context?: Record<string, unknown>,
   ): RecordSubmitResult {
     if (result.status !== 'success' && result.status !== 'partial_success') return result;
+    // Continuation requires a validated __recordContinuation invocation. Normal
+    // Energy snapshots (including Timer before/after samples) have none. Do not
+    // turn a successful durable write into an error by reading Store/DataStore
+    // for a follow-up which cannot exist.
+    if (!context?.__recordContinuation) return result;
     const recordId = String(result.affectedRecordId || '').trim();
     if (!recordId) return result;
 
