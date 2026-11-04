@@ -71,7 +71,7 @@ describe('integration: Goal template -> Quick Input RecordType runtime', () => {
       selectedGoalPath: goal.path,
       requireDirectGoalTemplate: true,
     });
-    expect(quickInput.status).toBe('available');
+    expect(('status' in quickInput ? quickInput.status : undefined)).toBe('available');
     expect(quickInput.templateId).toBe(direct.templateId);
     expect(quickInput.templateSourceType).toBe('goal-template');
   });
@@ -89,7 +89,7 @@ describe('integration: Goal template -> Quick Input RecordType runtime', () => {
       requireDirectGoalTemplate: true,
     });
 
-    expect(result.status).toBe('missing-goal-template');
+    expect(('status' in result ? result.status : undefined)).toBe('missing-goal-template');
     expect(result.template).toBeNull();
   });
 });

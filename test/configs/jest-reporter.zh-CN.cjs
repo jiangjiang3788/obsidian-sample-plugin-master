@@ -66,17 +66,25 @@ class ChineseJestReporter {
     const safeLabel = this.label.replace(/[^\p{L}\p{N}_-]+/gu, '-').replace(/^-+|-+$/g, '') || 'jest';
     const defaultReportDir = path.resolve(this.rootDir, 'reports/testing');
     this.reportFile = process.env.THINK_JEST_REPORT_FILE || '';
-    this.failureFile = process.env.THINK_JEST_FAILURE_FILE || path.join(defaultReportDir, `${safeLabel}-失败技术日志.txt`);
+    this.eventsFile = process.env.THINK_JEST_EVENTS_FILE || '';
+    // Standalone Jest must not truncate the supervisor's accumulated failure log.
+    // The supervisor supplies THINK_JEST_FAILURE_FILE explicitly for each child.
+    const defaultFailureLabel = safeLabel === '日常测试' ? '独立Jest日常测试' : safeLabel;
+    this.failureFile = process.env.THINK_JEST_FAILURE_FILE || path.join(defaultReportDir, `${defaultFailureLabel}-失败技术日志.txt`);
     this.structuredFile = process.env.THINK_JEST_STRUCTURED_FILE || path.join(defaultReportDir, `${safeLabel}-结构化结果.json`);
     this.startedAt = Date.now();
     this.startedAtIso = isoNow();
     this.files = [];
     this.cases = [];
-    for (const file of [this.reportFile, this.failureFile, this.structuredFile]) {
+    for (const file of [this.reportFile, this.failureFile, this.structuredFile, this.eventsFile]) {
       if (!file) continue;
       fs.mkdirSync(path.dirname(file), { recursive: true });
       if (file !== this.structuredFile) fs.writeFileSync(file, '');
     }
+  }
+
+  emit(event) {
+    if (this.eventsFile) fs.appendFileSync(this.eventsFile, `${JSON.stringify(event)}\n`, 'utf8');
   }
 
   write(line = '', isError = false) {
@@ -98,6 +106,12 @@ class ChineseJestReporter {
     this.write(`\n【测试】开始执行，共发现 ${results.numTotalTestSuites || 0} 个测试文件。`);
   }
 
+  onTestStart(test) {
+    const file = rel(this.rootDir, test.path);
+    this.emit({ event: 'start', file });
+    this.write(`【正在测试】${file}`);
+  }
+
   onTestResult(test, result) {
     const file = rel(this.rootDir, test.path);
     const passed = result.numPassingTests || 0;
@@ -109,7 +123,8 @@ class ChineseJestReporter {
     const status = suiteFailed ? '失败' : '通过';
     const fileDurationMs = Math.max(0, Number(result.perfStats?.end || 0) - Number(result.perfStats?.start || 0));
     this.files.push({ file, status, passed, failed, pending, durationMs: fileDurationMs, suiteError: Boolean(suiteError) });
-    this.write(`【测试文件】${status}：${file}（通过 ${passed}，失败 ${failed}，跳过 ${pending}，耗时 ${fileDurationMs}ms）`, suiteFailed);
+    this.emit({ event: 'result', file, status, passed, failed, pending, durationMs: fileDurationMs });
+    this.write(`【测试文件】${suiteFailed ? '[FAIL]' : '[OK]'} ${status}：${file}（通过 ${passed}，失败 ${failed}，跳过 ${pending}，耗时 ${fileDurationMs}ms）`, suiteFailed);
 
     if (suiteError) {
       this.write('  【套件错误】测试文件在执行具体用例前发生运行错误；详细堆栈已写入技术失败日志。', true);
@@ -162,11 +177,12 @@ class ChineseJestReporter {
       && Number(results.numRuntimeErrorTestSuites || 0) === 0
       && results.wasInterrupted !== true;
 
+    this.emit({ event: 'complete', success, files: this.files.length });
     this.write('\n【测试汇总】');
     this.write(`- 测试文件：${results.numTotalTestSuites}，通过 ${results.numPassedTestSuites}，失败 ${results.numFailedTestSuites}，待处理 ${results.numPendingTestSuites}`);
     this.write(`- 测试用例：${results.numTotalTests}，通过 ${results.numPassedTests}，失败 ${results.numFailedTests}，跳过 ${results.numPendingTests}`);
     this.write(`- 总耗时：${durationMs}ms`);
-    this.write(`- 执行结果：${success ? '全部通过' : '存在失败'}`, !success);
+    this.write(`- 执行结果：${success ? '[OK] 全部通过' : '[FAIL] 存在失败'}`, !success);
     if (slowCases.length) {
       this.write('- 最慢用例：');
       for (const item of slowCases.slice(0, 5)) this.write(`  - ${item.durationMs}ms：${publicTitle(item.title)}（${item.file}）`);

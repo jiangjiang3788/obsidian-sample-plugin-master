@@ -130,6 +130,8 @@ export class ThinkDiagnostics {
   start(): void {
     if (this.running) return;
     this.running = true;
+    // 运行期只有一个活动诊断收集器；这是模块级指针，不是把 this 缓存为局部别名。
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     activeDiagnostics = this;
     for (const type of EVENT_TYPES) document.addEventListener(type, this.onInteraction, true);
     document.addEventListener('visibilitychange', this.onVisibilityChange);

@@ -28,7 +28,7 @@ Think OS 测试命令（简化版）
   npm run test:whiteboard:full
     白板完整：专项单元/组合 + 真实 Obsidian 白板 E2E。
 
-  中文别名：npm run 测试:白板 / 测试:白板:真机 / 测试:白板:完整
+  白板专项统一使用上面的 test:whiteboard* 命令，不再维护重复中文别名。
 
 需要定位问题时再用：
 

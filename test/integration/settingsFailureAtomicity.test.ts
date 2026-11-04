@@ -28,7 +28,7 @@ describe('重启安全：真实 SettingsRepository + VaultFileStorage', () => {
   it('使用真实Immer，20次并发更新无丢失且新实例可恢复', async () => {
     const h = vault(JSON.stringify(seed)); const persistence = new VaultSettingsPersistence(new VaultFileStorage(h.port));
     const repo = new SettingsRepository(persistence); await repo.load();
-    await Promise.all(Array.from({ length: 20 }, (_, i) => repo.update((draft) => { draft.recentGoalPaths.push(String(i)); })));
+    await Promise.all(Array.from({ length: 20 }, (_, i) => repo.update((draft) => { (draft.recentGoalPaths ??= []).push(String(i)); })));
     expect(repo.getSnapshot().recentGoalPaths).toHaveLength(20);
     const restarted = new SettingsRepository(new VaultSettingsPersistence(new VaultFileStorage(h.port)));
     expect((await restarted.load()).recentGoalPaths).toEqual(repo.getSnapshot().recentGoalPaths);

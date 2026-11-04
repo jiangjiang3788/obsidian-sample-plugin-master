@@ -8,11 +8,11 @@ const read = (file) => fs.existsSync(path.join(root,file)) ? fs.readFileSync(pat
 const json = (file) => JSON.parse(read(file) || '{}');
 const pkg = json('package.json');
 const baseline = json('scripts/gates/refactor-budget-baseline.json');
-for (const name of ['gate:product','gate:architecture','gate:records','gate:task-session','gate:energy','gate:ui-runtime','gate:quality','gate:stability']) {
-  if (!pkg.scripts?.[name]) failures.push(`missing aggregate ${name}`);
-  if (!pkg.scripts?.gate?.includes(`npm run ${name}`)) failures.push(`main gate missing ${name}`);
+for (const name of ['build', 'check', 'check:contracts', 'ci', 'test', 'test:smoke', 'publish:vika', 'publish:vika:check']) {
+  if (!pkg.scripts?.[name]) failures.push(`缺少有效工程入口 ${name}`);
 }
-for (const name of ['test:unit','test:integration','build','build:release','release:check','verify','verify:ci']) if (!pkg.scripts?.[name]) failures.push(`missing verification/release script ${name}`);
+if (!String(pkg.scripts?.ci || '').includes('npm run build')) failures.push('CI 必须构建 Obsidian 插件');
+if (String(pkg.scripts?.['publish:vika'] || '').includes('npm run build')) failures.push('Vika 上传不应重复构建');
 const report = buildReport({ root });
 const budgets = baseline.budgets || {};
 const ceilings = [

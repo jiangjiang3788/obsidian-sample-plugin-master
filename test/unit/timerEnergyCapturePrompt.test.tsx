@@ -34,7 +34,7 @@ describe('Timer Energy quick capture prompt', () => {
     const onSubmit = jest.fn();
     await act(async () => render(<TimerEnergyCapturePrompt request={request} onSubmit={onSubmit} onSkip={jest.fn()} />, host));
 
-    await act(async () => window.dispatchEvent(new KeyboardEvent('keydown', { key: '4', bubbles: true })));
+    await act(async () => { window.dispatchEvent(new KeyboardEvent('keydown', { key: '4', bubbles: true })); });
 
     expect(onSubmit).toHaveBeenCalledWith(80);
   });
@@ -43,7 +43,7 @@ describe('Timer Energy quick capture prompt', () => {
     const onSkip = jest.fn();
     await act(async () => render(<TimerEnergyCapturePrompt request={request} onSubmit={jest.fn()} onSkip={onSkip} />, host));
 
-    await act(async () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x', bubbles: true })));
+    await act(async () => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x', bubbles: true })); });
     expect(onSkip).toHaveBeenCalledTimes(1);
   });
 
@@ -62,8 +62,8 @@ describe('Timer Energy quick capture prompt', () => {
     const range = host.querySelector('input[type="range"]') as HTMLInputElement;
     expect(range.value).toBe('80');
     range.value = '72';
-    await act(async () => range.dispatchEvent(new Event('input', { bubbles: true })));
-    await act(async () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
+    await act(async () => { range.dispatchEvent(new Event('input', { bubbles: true })); });
+    await act(async () => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); });
 
     expect(onSubmit).toHaveBeenCalledWith(72);
   });

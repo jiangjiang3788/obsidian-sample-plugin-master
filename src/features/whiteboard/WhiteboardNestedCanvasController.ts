@@ -51,14 +51,17 @@ export function useWhiteboardNestedCanvasController({ groups, items, annotations
 
   const stepHistory = useCallback((delta: -1 | 1) => {
     let next = historyRef.current;
-    while (true) {
+    // 每次前进/后退至少移动一个历史下标，因此遍历至多 entries.length 次。
+    for (let attempts = 0; attempts < historyRef.current.entries.length; attempts += 1) {
       const stepped = stepWhiteboardCanvasNavigation(next, delta);
       if (stepped.index === next.index) return;
       next = stepped;
       const target = getWhiteboardCanvasNavigationTarget(next);
-      if (!target || groupById.has(target)) break;
+      if (!target || groupById.has(target)) {
+        historyRef.current = next; setHistory(next); focusTarget(target, true);
+        return;
+      }
     }
-    historyRef.current = next; setHistory(next); focusTarget(getWhiteboardCanvasNavigationTarget(next), true);
   }, [focusTarget, groupById]);
 
   useEffect(() => {

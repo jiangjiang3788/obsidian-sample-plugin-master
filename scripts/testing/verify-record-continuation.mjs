@@ -25,7 +25,7 @@ function run(label, command, args) {
   console.log(`✅ ${label}`);
 }
 
-run('TypeScript', 'npm', ['--silent', 'run', 'typecheck:src']);
+run('TypeScript', 'node', ['node_modules/typescript/bin/tsc', '-p', 'config/tsconfig.json', '--noEmit']);
 run('连续记录单元测试', 'node', [
   './node_modules/jest/bin/jest.js', '--config', './test/configs/jest.unit.config.js', '--runInBand', '--runTestsByPath',
   'test/unit/createAvailableRecordTypes.test.ts',
@@ -38,11 +38,11 @@ run('连续记录组合测试', 'node', [
   './node_modules/jest/bin/jest.js', '--config', './test/configs/jest.integration.config.js', '--runInBand', '--runTestsByPath',
   'test/integration/recordInputTaskCompletionFollowUp.test.ts',
 ]);
-run('架构边界', 'npm', ['--silent', 'run', 'gate:architecture']);
-run('Record 边界', 'npm', ['--silent', 'run', 'gate:records']);
-run('Task Session 边界', 'npm', ['--silent', 'run', 'gate:task-session']);
-run('精力边界', 'npm', ['--silent', 'run', 'gate:energy']);
-run('工程质量', 'npm', ['--silent', 'run', 'gate:quality']);
+run('架构边界', 'node', ['scripts/gates/architecture-gate.mjs']);
+run('Record 边界', 'node', ['scripts/gates/records-gate.mjs']);
+run('Task Session 边界', 'node', ['scripts/gates/task-session-gate.mjs']);
+run('精力边界', 'node', ['scripts/gates/energy-gate.mjs']);
+run('工程质量', 'node', ['scripts/gates/quality-gate.mjs']);
 run('生产构建', 'npm', ['--silent', 'run', 'build']);
 
 console.log('\n✅ 连续记录专项验证全部通过');

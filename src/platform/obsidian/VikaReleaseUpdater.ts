@@ -83,15 +83,18 @@ function parseRow(row: RecordRow): CloudBuild | null {
       || !Number.isSafeInteger(attachment.size) || attachment.size! <= 0 || attachment.size! > MAX_FILE_BYTES) return null;
     attachments[file] = attachment;
   }
+  const version = fields[F.version];
+  const buildId = fields[F.build];
+  const uploadedAt = fields[F.uploaded];
   if (!row.recordId || !/^rec\w+$/.test(row.recordId)
-    || typeof fields[F.version] !== 'string' || !fields[F.version].trim()
-    || !validHash(fields[F.build])
-    || typeof fields[F.uploaded] !== 'number' || !Number.isFinite(fields[F.uploaded]) || fields[F.uploaded] <= 0) return null;
+    || typeof version !== 'string' || !version.trim()
+    || !validHash(buildId)
+    || typeof uploadedAt !== 'number' || !Number.isFinite(uploadedAt) || uploadedAt <= 0) return null;
   return {
     recordId: row.recordId,
-    remoteVersion: (fields[F.version] as string).trim(),
-    buildId: (fields[F.build] as string).toLowerCase(),
-    uploadedAt: fields[F.uploaded] as number,
+    remoteVersion: version.trim(),
+    buildId: buildId.toLowerCase(),
+    uploadedAt,
     attachments,
   };
 }

@@ -77,7 +77,8 @@ describe('Whiteboard 1.3.6 Daily-use Closure', () => {
     const restoreOrigin = { x: deepTarget.x, y: deepTarget.y, zIndex: deepTarget.zIndex, groupId: deepTarget.groupId };
     await store.archiveItems(DEFAULT_WHITEBOARD_ID, [target.id]);
     await store.moveArchivedItems(DEFAULT_WHITEBOARD_ID, [{ itemId: target.id, archiveX: -44_000, archiveY: 71_000, archiveZIndex: 77 }]);
-    const archived = store.getBoard(DEFAULT_WHITEBOARD_ID)!.archivedItems?.find((item) => item.id === target.id)!;
+    const archived = store.getBoard(DEFAULT_WHITEBOARD_ID)?.archivedItems?.find((item) => item.id === target.id);
+    if (!archived) throw new Error('归档后必须能够找到目标白板卡片');
     expect(archived).toMatchObject({ ...restoreOrigin, archiveX: -44_000, archiveY: 71_000, archiveZIndex: 77 });
     expect(store.getBoard(DEFAULT_WHITEBOARD_ID)?.archivedEdges).toEqual([expect.objectContaining({ id: edge.id, label: 'daily closure' })]);
 

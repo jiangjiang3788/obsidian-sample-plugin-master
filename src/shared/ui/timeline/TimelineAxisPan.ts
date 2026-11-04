@@ -40,7 +40,9 @@ const WHEEL_X_DOMINANCE = 1.3;
 const WHEEL_BURST_MS = 150;
 const WHEEL_EPSILON = 0.5;
 const VERTICAL_IDLE_MS = 300;
-const RELEASE_SETTLE_MS = 320;
+// iOS 的 Y 惯性滚动可能在 touchcancel 后 800ms 才再次触发 scroll。
+// 延长最小保护期，且仅在观察到 Y 静止后才释放水平位置锁。
+const RELEASE_SETTLE_MS = 900;
 
 export function resolveTimelinePanAxis(dx: number, dy: number): TimelinePanAxis | null {
   if (Math.hypot(dx, dy) < TOUCH_SLOP) return null;

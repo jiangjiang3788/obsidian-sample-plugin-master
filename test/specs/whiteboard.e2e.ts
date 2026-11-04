@@ -544,8 +544,12 @@ ${externalTaskMarkdown(ARCHIVE_ID, ARCHIVE_CONTENT, 'E2E')}\n${externalTaskMarkd
     const selectionIds = await browser.execute(() => Array.from(document.querySelectorAll<HTMLElement>('[data-whiteboard-item-id]')).filter((element) => element.offsetParent !== null).slice(0, 2).map((element) => element.dataset.whiteboardItemId ?? ''));
     expect(selectionIds).toHaveLength(2);
     await browser.execute((ids) => ids.forEach((id, index) => document.querySelector(`[data-whiteboard-item-id="${id}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 120 + index, pointerType: 'mouse', button: 0, ctrlKey: true }))), selectionIds);
-    const firstCard = await $(`[data-whiteboard-item-id="${selectionIds[0]}"]`); const rect = await firstCard.getRect();
-    await browser.execute(({ id, x, y }) => document.querySelector(`[data-whiteboard-item-id="${id}"]`)?.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: x + 40, clientY: y + 40, button: 2 })), { id: selectionIds[0], x: rect.x, y: rect.y });
+    await browser.execute((id) => {
+      const card = document.querySelector(`[data-whiteboard-item-id="${id}"]`);
+      if (!card) throw new Error('白板节点未找到，无法打开右键菜单');
+      const rect = card.getBoundingClientRect();
+      card.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: rect.left + 40, clientY: rect.top + 40, button: 2 }));
+    }, selectionIds[0]);
     const align = await $('button*=左对齐'); await align.waitForClickable({ timeout: 4_000 }); await align.click();
     await browser.waitUntil(async () => browser.executeObsidian(async ({ app }, ids) => {
       const file = app.vault.getAbstractFileByPath('Think/whiteboards.json'); if (!file || !('path' in file)) return false;

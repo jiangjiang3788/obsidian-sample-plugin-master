@@ -135,7 +135,7 @@ describe('白板 Zoom + Camera UI 1.1.5', () => {
     const store = createReadyStore(board);
     await act(async () => render(<WhiteboardWorkspace records={[rec]} whiteboardStore={store} />, host));
     let viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLElement;
-    await act(async () => viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true })));
+    await act(async () => { viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true })); });
     expect(viewport.getAttribute('data-whiteboard-camera-y')).toBe('120');
 
     await act(async () => render(null, host));

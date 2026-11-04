@@ -14,14 +14,14 @@ const requiredDefaultKeys = [
 ] as const;
 
 function settingsWithTaskGoals(): ThinkSettings {
-  return {
+  const settings: ThinkSettings = {
     groups: [], viewInstances: [], layouts: [], floatingTimerEnabled: true,
     goalTaskDefaultsSeedVersion: 0,
     goalSettings: {
       goals: [
-        { path: '武装大脑', status: 'active' },
-        { path: '工作能力/通勤', status: 'active' },
-        { path: '仪容仪表/剪头发', status: 'active' },
+        { path: '武装大脑', status: 'active', createdAt: '', updatedAt: '' },
+        { path: '工作能力/通勤', status: 'active', createdAt: '', updatedAt: '' },
+        { path: '仪容仪表/剪头发', status: 'active', createdAt: '', updatedAt: '' },
       ],
       goalTemplates: [
         { goalPath: '武装大脑', recordTypeId: 'core.task', enabled: true, defaultValues: { 自定义: '保留' } },
@@ -30,7 +30,8 @@ function settingsWithTaskGoals(): ThinkSettings {
         { goalPath: '武装大脑', recordTypeId: 'core.review', enabled: true, defaultValues: { 不应被改: true } },
       ],
     },
-  } as ThinkSettings;
+  };
+  return settings;
 }
 
 describe('Goal Task defaults seed', () => {

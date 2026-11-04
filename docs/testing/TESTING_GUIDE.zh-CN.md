@@ -146,33 +146,21 @@ Think OS 第一版把这个问题固化为功能测试总账：
 7. Bug 修复必须补防复发测试；
 8. 运行测试体系报告，确认没有遗漏。
 
-## 9. 第一版可用命令
+## 9. 当前可用命令（v1.18.4）
 
 ```bash
-# 查看功能测试体系缺口，不阻断开发
-npm run test:system
-
-# 严格模式：任何 P0 必测维度缺失就失败
-npm run test:system:strict
-
-# 单元测试
-npm run test:unit
-
-# 组合测试
-npm run test:integration
-
-# 真实 Obsidian E2E
-npm run test:e2e
-
-# 统计整个 src 的代码覆盖，而不只统计被测试 import 的文件
-npm run test:coverage
-
-# 第一版发布验证（报告缺口但不因功能地图缺口直接失败）
-npm run verify:release
-
-# 未来 P0 补齐后启用的严格发布验证
-npm run verify:release:strict
+npm test                # 默认单元 + 集成
+npm run check           # lint + 类型 + 日常测试 + 八组内部契约
+npm run test:unit       # 仅单元
+npm run test:integration # 仅集成
+npm run test:coverage   # 代码覆盖率
+npm run test:system     # 功能证据审计与地图报告
+npm run test:fault      # 故障实验室（需补齐样本）
+npm run test:smoke      # 真 Obsidian 冒烟
+npm run test:e2e        # 真 Obsidian 全套 E2E
 ```
+
+完整解释在 `docs/testing/TEST_COMMANDS_SIMPLE.zh-CN.md`。旧的 `test:release` / `test:system:strict` 已从 npm 入口撤销；如需专项严格审计，可由工程人员直接调用对应内部脚本，普通使用者不必记忆。
 
 ## 10. v1 的原则
 

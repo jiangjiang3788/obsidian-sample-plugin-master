@@ -111,7 +111,7 @@ describe('Whiteboard Workbench 1.1.7 UI', () => {
     await waitForUi(() => host.textContent?.includes('睡眠研究') === true, '等待工作台重命名');
     expect(host.textContent).toContain('睡眠研究');
     const card = host.querySelector('[data-whiteboard-item-id="item-a"]') as HTMLElement;
-    await act(async () => card.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 40, clientY: 40 })));
+    await act(async () => { card.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 40, clientY: 40 })); });
     const removeFromGroup = Array.from(host.querySelectorAll('.think-whiteboard-context-menu button')).find((button) => button.textContent === '移出工作台') as HTMLButtonElement;
     expect(removeFromGroup).toBeTruthy();
     await act(async () => { removeFromGroup.click(); });

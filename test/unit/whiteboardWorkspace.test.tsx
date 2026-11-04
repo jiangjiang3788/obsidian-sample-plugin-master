@@ -12,7 +12,7 @@ import type { RecordViewItem } from '@core/types/public';
 import { DEFAULT_WHITEBOARD_ID, type WhiteboardBoard, type WhiteboardStore } from '@core/whiteboard/public';
 import { WhiteboardWorkspace } from '@/features/whiteboard/WhiteboardWorkspace';
 
-function record(id: string, recordType: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
+function record(id: string, recordType: RecordViewItem['recordType'], overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return { id, recordType, title: id, content: `${id} content`, tags: [], goalPath: '真实/主题', date: '2026-09-01', created: 0, modified: 0, extra: {}, ...overrides };
 }
 

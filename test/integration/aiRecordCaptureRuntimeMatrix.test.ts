@@ -9,7 +9,7 @@ import type { ThinkSettings } from '@/core/settings/ThinkSettings';
 import { DEFAULT_TEMPLATE_RECORD_TYPES } from '@/core/recordTypes/public';
 import { GoalTemplateResolver } from '@/core/services/GoalTemplateResolver';
 import { buildRecordOutputPlan } from '@/core/recordInput/public';
-import { parseRecordBlock } from '@/core/records/public';
+import { parseRecordBlock } from '@/core/utils/parser';
 import { hydrateQuickInputTemplateDefaults } from '@/features/quickinput/editor/QuickInputEditorModel';
 import { buildAiBatchConfirmRecordItems } from '@/platform/obsidian/modals/AiBatchConfirmModel';
 

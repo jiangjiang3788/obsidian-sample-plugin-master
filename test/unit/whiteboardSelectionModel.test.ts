@@ -64,7 +64,7 @@ describe('Whiteboard Canvas selection 1.1.8 纯模型', () => {
     expect(getWhiteboardDirectGroups(groups, null).map((entry) => entry.id)).toEqual(['group-a']);
     expect(getWhiteboardDirectItems(items, 'group-a').map((entry) => entry.id)).toEqual(['child-card']);
     expect(getWhiteboardDirectGroups(groups, 'group-a').map((entry) => entry.id)).toEqual(['group-b']);
-    expect(getWhiteboardGroupsIntersectingRect(groups.slice(0, 1), items, { left: 90, top: 90, right: 500, bottom: 500 })).toEqual(['group-a']);
+    expect(getWhiteboardGroupsIntersectingRect(groups.slice(0, 1), items, { left: 90, top: 90, right: 500, bottom: 500, width: 410, height: 410 })).toEqual(['group-a']);
   });
 
 });

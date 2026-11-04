@@ -56,7 +56,7 @@ describe('ProgressView goal mode', () => {
   });
 
   it('groups recent records by child Goal inside each root Goal card', () => {
-    const themedItems = [
+    const themedItems: RecordViewItem[] = [
       { id: 'sleep-1', title: '昨晚睡眠', recordType: 'habit', goalPath: '照顾好自己/睡眠', date: '2026-08-12', extra: {}, tags: [], content: '', created: 0, modified: 0 },
       { id: 'sleep-2', title: '午休记录', recordType: 'habit', goalPath: '照顾好自己/睡眠', date: '2026-08-11', extra: {}, tags: [], content: '', created: 0, modified: 0 },
       { id: 'sport-1', title: '跑步', recordType: 'task', goalPath: '照顾好自己/运动', date: '2026-08-10', extra: {}, tags: [], content: '', created: 0, modified: 0 },

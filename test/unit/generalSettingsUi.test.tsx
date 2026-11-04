@@ -14,6 +14,7 @@ const mockUseCases = {
   },
 };
 const mockState: any = { settings: { floatingTimerEnabled: true, devConsoleStackEnabled: false, recordTypeColors: { task: '#123456' } } };
+const vikaActions = { configureToken: jest.fn(), update: jest.fn(async () => false) };
 
 jest.mock('@/app/public', () => ({
   selectFloatingTimerEnabled: (state: any) => state.settings.floatingTimerEnabled,
@@ -34,7 +35,7 @@ describe('通用设置界面', () => {
   afterEach(() => { render(null, host); host.remove(); });
 
   it('切换悬浮计时器会调用唯一设置用例', async () => {
-    await act(async () => render(<GeneralSettings />, host));
+    await act(async () => render(<GeneralSettings vika={vikaActions} />, host));
     const row = [...host.querySelectorAll('.think-settings-row')].find((node) => node.textContent?.includes('悬浮计时器'))!;
     const checkbox = row.querySelector('input[type="checkbox"]') as HTMLInputElement;
     checkbox.checked = false;
@@ -43,7 +44,7 @@ describe('通用设置界面', () => {
   });
 
   it('1.6.0 固定渲染 10 种用户记录类型颜色，并且不恢复旧分类颜色编辑器', async () => {
-    await act(async () => render(<GeneralSettings />, host));
+    await act(async () => render(<GeneralSettings vika={vikaActions} />, host));
     const section = host.querySelector('[data-settings-section="record-type-colors"]')!;
     expect(section.querySelectorAll('.think-settings-record-type-color-row')).toHaveLength(10);
     expect(section.textContent).toContain('任务');
@@ -55,10 +56,10 @@ describe('通用设置界面', () => {
   });
 
   it('修改任务颜色与恢复默认只走 SettingsUseCase', async () => {
-    await act(async () => render(<GeneralSettings />, host));
+    await act(async () => render(<GeneralSettings vika={vikaActions} />, host));
     const picker = host.querySelector('input[aria-label="任务颜色"]') as HTMLInputElement;
     picker.value = '#abcdef';
-    await act(async () => picker.dispatchEvent(new Event('input', { bubbles: true })));
+    await act(async () => { picker.dispatchEvent(new Event('input', { bubbles: true })); });
     expect(mockUseCases.settings.setRecordTypeColor).toHaveBeenCalledWith('task', '#abcdef');
 
     const taskRow = picker.closest('.think-settings-record-type-color-row')!;

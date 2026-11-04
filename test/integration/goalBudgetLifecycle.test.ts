@@ -44,7 +44,7 @@ describe('Goal 时间预设持久化', () => {
     await useCase.setGoalTimePresetPercent('工作', 21);
     await useCase.setGoalWeeklyTargetMinutes('休息/睡眠', 56 * 60);
 
-    const current = store.getState().settings.goalSettings.goals;
+    const current = store.getState().settings.goalSettings!.goals;
     expect(current.find((goal) => goal.path === '休息')?.timePresetPercent).toBe(42);
     expect(current.find((goal) => goal.path === '工作')?.timePresetPercent).toBe(21);
     expect(current.find((goal) => goal.path === '休息/睡眠')?.weeklyTargetMinutes).toBe(56 * 60);

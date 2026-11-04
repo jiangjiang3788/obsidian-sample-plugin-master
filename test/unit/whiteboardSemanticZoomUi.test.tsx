@@ -57,7 +57,7 @@ describe('Whiteboard semantic zoom UI', () => {
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLElement;
     expect(viewport.getAttribute('data-whiteboard-lod')).toBe('detail');
 
-    await act(async () => viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, ctrlKey: true, bubbles: true, cancelable: true })));
+    await act(async () => { viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, ctrlKey: true, bubbles: true, cancelable: true })); });
     expect(viewport.getAttribute('data-whiteboard-lod')).toBe('compact');
     expect(host.querySelector('[data-whiteboard-item-id="item-semantic"]')).toBeNull();
     expect(host.querySelector('[data-whiteboard-overview-group-id="group-semantic"]')).not.toBeNull();
@@ -65,7 +65,7 @@ describe('Whiteboard semantic zoom UI', () => {
     expect(host.querySelector('.think-whiteboard-semantic-status')?.textContent).toContain('简化视图');
 
     await act(async () => (host.querySelector('button[aria-label^="重置白板缩放"]') as HTMLButtonElement).click());
-    await act(async () => viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 1000, ctrlKey: true, bubbles: true, cancelable: true })));
+    await act(async () => { viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 1000, ctrlKey: true, bubbles: true, cancelable: true })); });
     expect(viewport.getAttribute('data-whiteboard-lod')).toBe('overview');
     expect(host.querySelector('[data-whiteboard-item-id="item-semantic"]')).toBeNull();
     expect(host.querySelector('[data-whiteboard-overview-item-id="item-semantic"]')).not.toBeNull();
@@ -81,7 +81,7 @@ describe('Whiteboard semantic zoom UI', () => {
     const onOpenRecord = jest.fn();
     await act(async () => render(<WhiteboardWorkspace records={[rec]} whiteboardStore={store} onOpenRecord={onOpenRecord} />, host));
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLElement;
-    await act(async () => viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, ctrlKey: true, bubbles: true, cancelable: true })));
+    await act(async () => { viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, ctrlKey: true, bubbles: true, cancelable: true })); });
     expect(viewport.getAttribute('data-whiteboard-lod')).not.toBe('detail');
     const marker = host.querySelector('[data-whiteboard-overview-item-id="item-hover-card"]') as HTMLElement;
     const hoverCard = marker.querySelector('[data-whiteboard-hover-item-id="item-hover-card"]') as HTMLElement;
@@ -92,7 +92,7 @@ describe('Whiteboard semantic zoom UI', () => {
     expect(onOpenRecord).toHaveBeenCalledWith(rec);
     expect(viewport.getAttribute('data-whiteboard-lod')).not.toBe('detail');
 
-    await act(async () => hoverCard.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 450, clientY: 260, button: 2 })));
+    await act(async () => { hoverCard.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 450, clientY: 260, button: 2 })); });
     expect(host.querySelector('.think-whiteboard-context-menu')).not.toBeNull();
     expect(host.querySelector('.think-whiteboard-workspace')?.getAttribute('data-whiteboard-selection-count')).toBe('1');
   });
@@ -103,11 +103,11 @@ describe('Whiteboard semantic zoom UI', () => {
       { id: 'item-connect-source', recordId: source.id, x: 100, y: 100 },
       { id: 'item-connect-target', recordId: target.id, x: 800, y: 100 },
     ], edges: [], modified: 1 };
-    const store = createReadyStore(board); store.addEdge.mockResolvedValue(true);
+    const store = createReadyStore(board); (store.addEdge as unknown as jest.Mock).mockResolvedValue(true);
     await act(async () => render(<WhiteboardWorkspace records={[source, target]} whiteboardStore={store} />, host));
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLElement;
     viewport.getBoundingClientRect = () => ({ left: 0, top: 0, right: 1200, bottom: 800, width: 1200, height: 800, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
-    await act(async () => viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, ctrlKey: true, bubbles: true, cancelable: true })));
+    await act(async () => { viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, ctrlKey: true, bubbles: true, cancelable: true })); });
     const sourceMarker = host.querySelector('[data-whiteboard-overview-item-id="item-connect-source"]') as HTMLElement;
     const targetMarker = host.querySelector('[data-whiteboard-overview-item-id="item-connect-target"]') as HTMLElement;
     const handle = sourceMarker.querySelector('[data-whiteboard-edge-handle="right"]') as HTMLButtonElement;
@@ -120,7 +120,7 @@ describe('Whiteboard semantic zoom UI', () => {
         window.dispatchEvent(pointer('pointermove', 88, 600, 200));
         window.dispatchEvent(pointer('pointerup', 88, 600, 200));
       });
-      await waitForUi(() => store.addEdge.mock.calls.length === 1, '等待低倍率 Hover Card 连线写入');
+      await waitForUi(() => (store.addEdge as unknown as jest.Mock).mock.calls.length === 1, '等待低倍率 Hover Card 连线写入');
       expect(store.addEdge).toHaveBeenCalledWith('whiteboard-default', 'item-connect-source', 'item-connect-target');
     } finally {
       Object.defineProperty(document, 'elementFromPoint', { configurable: true, value: originalElementFromPoint });
@@ -133,7 +133,7 @@ describe('Whiteboard semantic zoom UI', () => {
     const store = createReadyStore(board);
     await act(async () => render(<WhiteboardWorkspace records={[rec]} whiteboardStore={store} />, host));
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLElement;
-    await act(async () => viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 1000, ctrlKey: true, bubbles: true, cancelable: true })));
+    await act(async () => { viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 1000, ctrlKey: true, bubbles: true, cancelable: true })); });
     const marker = host.querySelector('button[aria-label="定位卡片：rec-focus"]') as HTMLButtonElement;
     expect(marker).not.toBeNull();
     await act(async () => marker.click());
@@ -158,7 +158,7 @@ describe('Whiteboard semantic zoom UI', () => {
     const store = createReadyStore(board);
     await act(async () => render(<WhiteboardWorkspace records={[root, nested]} whiteboardStore={store} />, host));
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLElement;
-    await act(async () => viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, ctrlKey: true, bubbles: true, cancelable: true })));
+    await act(async () => { viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, ctrlKey: true, bubbles: true, cancelable: true })); });
     expect(viewport.getAttribute('data-whiteboard-lod')).not.toBe('detail');
     expect(host.querySelector('[data-whiteboard-overview-item-id="item-root"]')).toBeTruthy();
     expect(host.querySelector('[data-whiteboard-overview-item-id="item-nested"]')).toBeNull(); // 当前层只把 Workbench 当原子节点
@@ -172,17 +172,17 @@ describe('Whiteboard semantic zoom UI', () => {
     expect(host.querySelector('.think-whiteboard-workspace')?.getAttribute('data-whiteboard-selection-count')).toBe('2');
     expect(itemButton.classList.contains('is-selected')).toBe(true); expect(groupButton.classList.contains('is-selected')).toBe(true);
     await act(async () => { groupButton.dispatchEvent(pointer('pointerdown', 33, 300, 100)); window.dispatchEvent(pointer('pointermove', 33, 360, 130)); window.dispatchEvent(pointer('pointerup', 33, 360, 130)); });
-    await waitForUi(() => store.translateNodes.mock.calls.length > 0, '等待低倍率节点平移写入');
-    const call = store.translateNodes.mock.calls.at(-1); expect(call?.[1]).toEqual(['item-root']); expect(call?.[2]).toEqual(['group-root']); expect(typeof call?.[3]).toBe('number'); expect(typeof call?.[4]).toBe('number');
+    await waitForUi(() => (store.translateNodes as unknown as jest.Mock).mock.calls.length > 0, '等待低倍率节点平移写入');
+    const call = (store.translateNodes as unknown as jest.Mock).mock.calls.at(-1); expect(call?.[1]).toEqual(['item-root']); expect(call?.[2]).toEqual(['group-root']); expect(typeof call?.[3]).toBe('number'); expect(typeof call?.[4]).toBe('number');
 
-    await act(async () => groupButton.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 300, clientY: 100, button: 2 })));
+    await act(async () => { groupButton.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 300, clientY: 100, button: 2 })); });
     expect(host.querySelector('.think-whiteboard-context-menu')?.textContent).toContain('1 卡片 · 1 工作台');
     const alignTop = Array.from(host.querySelectorAll('.think-whiteboard-context-menu button')).find((button) => button.textContent === '顶部对齐') as HTMLButtonElement;
     expect(alignTop.disabled).toBe(false);
     await act(async () => { alignTop.click(); });
-    await waitForUi(() => store.moveNodes.mock.calls.length === 1, '等待语义布局批量移动写入');
+    await waitForUi(() => (store.moveNodes as unknown as jest.Mock).mock.calls.length === 1, '等待语义布局批量移动写入');
     expect(store.moveNodes).toHaveBeenCalledTimes(1);
-    const arrangeCall = store.moveNodes.mock.calls[0]; expect(arrangeCall[1]).toHaveLength(1); expect(arrangeCall[2]).toHaveLength(1);
+    const arrangeCall = (store.moveNodes as unknown as jest.Mock).mock.calls[0]; expect(arrangeCall[1]).toHaveLength(1); expect(arrangeCall[2]).toHaveLength(1);
     expect(arrangeCall[1][0].itemId).toBe('item-root'); expect(arrangeCall[2][0].groupId).toBe('group-root');
     expect(arrangeCall[1][0].position.y).toBe(arrangeCall[2][0].position.y);
   });
@@ -196,7 +196,7 @@ describe('Whiteboard semantic zoom UI', () => {
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLElement;
     const source = host.querySelector('.think-whiteboard-source') as HTMLElement;
     source.getBoundingClientRect = () => ({ left: 0, top: 0, right: 280, bottom: 900, width: 280, height: 900, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
-    await act(async () => viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, ctrlKey: true, bubbles: true, cancelable: true })));
+    await act(async () => { viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, ctrlKey: true, bubbles: true, cancelable: true })); });
     const button = host.querySelector('[data-whiteboard-overview-item-id="item-source-drop"] button') as HTMLButtonElement;
     const pointer = (type: string, id: number, x: number, y: number) => { return createPointerEvent(type, {
       pointerId: id, pointerType: 'mouse', button: 0, clientX: x, clientY: y, ctrlKey: false, metaKey: false,
@@ -205,7 +205,7 @@ describe('Whiteboard semantic zoom UI', () => {
     await waitForUi(() => source.classList.contains('is-remove-drop-target'), '等待低倍率拖回来源区高亮');
     expect(source.classList.contains('is-remove-drop-target')).toBe(true);
     await act(async () => { window.dispatchEvent(pointer('pointerup', 61, 120, 320)); });
-    await waitForUi(() => store.removeItem.mock.calls.length > 0, '等待低倍率卡片移回 Record Source');
+    await waitForUi(() => (store.removeItem as unknown as jest.Mock).mock.calls.length > 0, '等待低倍率卡片移回 Record Source');
     expect(store.removeItem).toHaveBeenCalledWith('whiteboard-default', 'item-source-drop');
     expect(store.translateNodes).not.toHaveBeenCalled();
   });
@@ -216,19 +216,19 @@ describe('Whiteboard semantic zoom UI', () => {
       title: '白板', items: [{ id: 'item-annotation-anchor', recordId: rec.id, x: 0, y: 0 }],
       annotations: [{ id: 'annotation-move-low', kind: 'text', text: '低倍率可移动文字', x: 50, y: 80 }], edges: [], modified: 1,
     };
-    const store = createReadyStore(board); store.moveAnnotation.mockResolvedValue(true);
+    const store = createReadyStore(board); (store.moveAnnotation as unknown as jest.Mock).mockResolvedValue(true);
     await act(async () => render(<WhiteboardWorkspace records={[rec]} whiteboardStore={store} />, host));
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLElement;
-    await act(async () => viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 1000, ctrlKey: true, bubbles: true, cancelable: true })));
+    await act(async () => { viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 1000, ctrlKey: true, bubbles: true, cancelable: true })); });
     expect(viewport.getAttribute('data-whiteboard-lod')).toBe('overview');
     const button = host.querySelector('[data-whiteboard-overview-annotation-id="annotation-move-low"] button') as HTMLButtonElement;
     const pointer = (type: string, id: number, x: number, y: number) => { return createPointerEvent(type, {
       pointerId: id, pointerType: 'mouse', button: 0, clientX: x, clientY: y,
     }); };
     await act(async () => { button.dispatchEvent(pointer('pointerdown', 62, 300, 200)); window.dispatchEvent(pointer('pointermove', 62, 260, 200)); window.dispatchEvent(pointer('pointerup', 62, 260, 200)); });
-    await waitForUi(() => store.moveAnnotation.mock.calls.length > 0, '等待低倍率标注移动写入');
+    await waitForUi(() => (store.moveAnnotation as unknown as jest.Mock).mock.calls.length > 0, '等待低倍率标注移动写入');
     expect(store.moveAnnotation).toHaveBeenCalled();
-    const call = store.moveAnnotation.mock.calls.at(-1); expect(call?.[1]).toBe('annotation-move-low'); expect(call?.[2].x).toBeLessThan(0); expect(call?.[2].y).toBe(80);
+    const call = (store.moveAnnotation as unknown as jest.Mock).mock.calls.at(-1); expect(call?.[1]).toBe('annotation-move-low'); expect(call?.[2].x).toBeLessThan(0); expect(call?.[2].y).toBe(80);
   });
 
 });

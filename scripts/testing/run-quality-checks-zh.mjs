@@ -10,7 +10,7 @@ fs.mkdirSync(reportDir, { recursive: true });
 
 const steps = [
   ['类型检查', 'typecheck'],
-  ['工程与架构门禁', 'gate'],
+  ['工程与架构检查', 'check:contracts'],
   ['当前源码构建', 'build'],
 ];
 

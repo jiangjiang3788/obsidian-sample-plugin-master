@@ -12,7 +12,7 @@
  * @covers F127/regression
  * @covers F127/restart
  */
-import type { ThinkSettings } from '@/core/settings/ThinkSettings';
+import { DEFAULT_SETTINGS, type ThinkSettings } from '@/core/settings/ThinkSettings';
 import { toPersistedThinkSettings } from '@/core/settings/currentSettingsSchema';
 import { SettingsRepository, type ISettingsPersistence } from '@/core/services/SettingsRepository';
 import { VaultSettingsPersistence } from '@/core/services/SettingsPersistence';
@@ -124,8 +124,9 @@ describe('P0 SettingsRepository 落盘与重启恢复', () => {
 describe('P0 Settings Vault 持久化路径', () => {
   it('只通过统一路径表读写 Think/data.json，并在落盘副本中剥离未授权 API Key', async () => {
     const writes: Array<{ path: string; data: any }> = [];
+    const readJSON = jest.fn(async () => initialData);
     const storage: IPluginStorage = {
-      readJSON: jest.fn(async () => initialData),
+      readJSON: readJSON as unknown as IPluginStorage['readJSON'],
       writeJSON: jest.fn(async (path, data) => { writes.push({ path, data }); }),
       remove: jest.fn(async () => undefined),
     };
@@ -138,6 +139,7 @@ describe('P0 Settings Vault 持久化路径', () => {
     const repository = new SettingsRepository(persistence);
     const settings = await repository.load();
     settings.aiSettings = {
+      ...DEFAULT_SETTINGS.aiSettings!,
       ...settings.aiSettings,
       apiKey: 'secret-key',
       persistApiKey: false,

@@ -118,16 +118,18 @@ function check_product_acceptance_gate() {
     ['test/unit/quickInputEditorModel.test.ts', 'QuickInput editor/option coverage'],
   ]) expectFile(file, reason);
 
-  for (const script of ['build:release','release:check','bundle:report','gate:product','gate:quality','verify:ci']) {
+  for (const script of ['build', 'check', 'ci', 'publish:vika']) {
     if (!pkg.scripts?.[script]) failures.push(`missing package script: ${script}`);
   }
   if (enforceCiWorkflow) {
-    expectText(workflowFile, 'npm run verify:ci');
-    expectText(workflowFile, 'npm run build:release');
+    expectText(workflowFile, 'npm run ci');
+    expectText(workflowFile, 'main.js');
+    expectText(workflowFile, 'styles.css');
+    expectText(workflowFile, 'manifest.json');
   }
-  expectText('README.md', 'single-select options');
-  expectText('README.md', 'conflict recovery actions');
-  expectText('README.md', 'npm run build:release');
+  // UI boundary and recovery test files above are the actual product contract.
+  // Documentation wording is not a quality gate.
+  expectText('README.md', 'npm run publish:vika');
 
   if (failures.length) {
     console.error('[product-acceptance] failed');

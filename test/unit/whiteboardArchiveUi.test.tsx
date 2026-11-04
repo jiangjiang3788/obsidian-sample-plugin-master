@@ -55,11 +55,11 @@ describe('白板 Archive / Restore UI 1.1.9', () => {
     expect(activeCard.textContent).not.toContain('归档');
     expect(activeCard.textContent).not.toContain('移出');
     const contextMenuEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 20, clientY: 30 });
-    await act(async () => activeCard.dispatchEvent(contextMenuEvent));
+    await act(async () => { activeCard.dispatchEvent(contextMenuEvent); });
     const archiveButton = Array.from(host.querySelectorAll('.think-whiteboard-context-menu button')).find((button) => button.textContent === '归档') as HTMLButtonElement;
     expect(archiveButton).toBeTruthy();
     await act(async () => { archiveButton.click(); });
-    await waitForUi(() => store.archiveItems.mock.calls.length > 0, '等待归档写入');
+    await waitForUi(() => (store.archiveItems as unknown as jest.Mock).mock.calls.length > 0, '等待归档写入');
     expect(store.archiveItems).toHaveBeenCalledWith(DEFAULT_WHITEBOARD_ID, ['item-active']);
 
     const openArchive = host.querySelector('button[aria-label="归档箱（1）"]') as HTMLButtonElement;
@@ -68,7 +68,7 @@ describe('白板 Archive / Restore UI 1.1.9', () => {
     expect(host.querySelector('[data-whiteboard-archived-item-id="item-archived"]')?.textContent).toContain('恢复位置 -500, -300');
     const restore = Array.from(host.querySelectorAll('[data-whiteboard-archived-item-id="item-archived"] button')).find((button) => button.textContent === '恢复到原位置') as HTMLButtonElement;
     await act(async () => { restore.click(); });
-    await waitForUi(() => store.restoreArchivedItem.mock.calls.length > 0, '等待归档恢复');
+    await waitForUi(() => (store.restoreArchivedItem as unknown as jest.Mock).mock.calls.length > 0, '等待归档恢复');
     expect(store.restoreArchivedItem).toHaveBeenCalledWith(DEFAULT_WHITEBOARD_ID, 'item-archived');
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLElement;
     expect(viewport.getAttribute('data-whiteboard-camera-x')).toBe('-376');
@@ -95,7 +95,7 @@ describe('白板 Archive / Restore UI 1.1.9', () => {
     await act(async () => (host.querySelector('button[aria-label="归档箱（1）"]') as HTMLButtonElement).click());
     const restore = host.querySelector('[data-whiteboard-archived-item-id="nested-archived-item"] button') as HTMLButtonElement;
     await act(async () => { restore.click(); });
-    await waitForUi(() => store.restoreArchivedItem.mock.calls.length > 0, '等待深层归档恢复');
+    await waitForUi(() => (store.restoreArchivedItem as unknown as jest.Mock).mock.calls.length > 0, '等待深层归档恢复');
 
     const workspace = host.querySelector('.think-whiteboard-workspace') as HTMLElement;
     const viewport = host.querySelector('.think-whiteboard-canvas-viewport') as HTMLElement;
@@ -125,19 +125,19 @@ describe('白板 Archive / Restore UI 1.1.9', () => {
     await act(async () => { archiveViewport.dispatchEvent(pointer('pointerdown', 0, 0)); window.dispatchEvent(pointer('pointermove', 380, 360)); });
     await waitForUi(() => host.querySelector('.think-whiteboard-archive-canvas__title')?.textContent?.includes('已选 1') === true, '等待归档框选状态');
     expect(host.querySelector('.think-whiteboard-archive-canvas__title')?.textContent).toContain('已选 1');
-    await act(async () => window.dispatchEvent(pointer('pointerup', 380, 360)));
+    await act(async () => { window.dispatchEvent(pointer('pointerup', 380, 360)); });
     const selectAll = Array.from(host.querySelectorAll('.think-whiteboard-archive-canvas button')).find((button) => button.textContent === '全选') as HTMLButtonElement;
     await act(async () => selectAll.click());
     expect(host.querySelector('.think-whiteboard-archive-canvas__title')?.textContent).toContain('已选 2');
     const grid = Array.from(host.querySelectorAll('.think-whiteboard-archive-canvas button')).find((button) => button.textContent === '网格整理') as HTMLButtonElement;
     await act(async () => { grid.click(); });
-    await waitForUi(() => store.moveArchivedItems.mock.calls.length >= 1, '等待归档网格整理');
+    await waitForUi(() => (store.moveArchivedItems as unknown as jest.Mock).mock.calls.length >= 1, '等待归档网格整理');
     expect(store.moveArchivedItems).toHaveBeenCalledWith(DEFAULT_WHITEBOARD_ID, expect.arrayContaining([
       expect.objectContaining({ itemId: 'archive-layout-item-a' }), expect.objectContaining({ itemId: 'archive-layout-item-b' }),
     ]));
     const semantic = Array.from(host.querySelectorAll('.think-whiteboard-archive-canvas button')).find((button) => button.textContent === '目标 × 类型 × 时间') as HTMLButtonElement;
     await act(async () => { semantic.click(); });
-    await waitForUi(() => store.moveArchivedItems.mock.calls.length === 2, '等待归档语义整理');
+    await waitForUi(() => (store.moveArchivedItems as unknown as jest.Mock).mock.calls.length === 2, '等待归档语义整理');
     expect(store.moveArchivedItems).toHaveBeenCalledTimes(2);
     expect(board.archivedItems?.[0]).toMatchObject({ x: -800, y: -500 });
   });

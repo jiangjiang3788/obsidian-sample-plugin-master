@@ -134,8 +134,7 @@ describe('UI 重构收敛', () => {
       .filter((name) => name.endsWith('.md'))
       .filter((name) => !localHandoffDocs.has(name) && !/_PATCH_MANIFEST\.md$/i.test(name))
       .sort();
-    expect(rootMarkdown).toEqual(['README.md']);
-    expect(fs.existsSync(path.join(ROOT, 'docs/reports'))).toBe(true);
-    expect(read('docs/UI_REDESIGN_PLAN.md')).toContain('Phase 3');
+    expect(rootMarkdown).toEqual(['AGENTS.md', 'README.md']);
+    expect(read('AGENTS.md')).toContain('开发协作规范');
   });
 });

@@ -131,4 +131,4 @@
 1. 新增功能先在 `test/system/feature-test-map.json` 登记，再补测试。
 2. 自动统计同时要求证据文件存在并带有对应 `@covers 功能/维度` 声明；它提高可追溯性，但关键 P0 仍需人工审查场景质量。
 3. 普通开发运行 `npm run test:system` 只报告，不阻断。
-4. 当 P0 缺口逐步补齐后，可使用 `npm run test:system:strict` 作为发布门禁。
+4. 当 P0 缺口逐步补齐后，可使用 `node scripts/testing/test-system-report.mjs --strict` 作为发布门禁。

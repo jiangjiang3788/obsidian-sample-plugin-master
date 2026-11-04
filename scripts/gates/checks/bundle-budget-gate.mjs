@@ -27,7 +27,7 @@ if (!Number.isFinite(maxGzipBytes) || maxGzipBytes <= 0) {
   fail(`THINK_OS_MAX_GZIP_BUNDLE_BYTES must be a positive number, got ${process.env.THINK_OS_MAX_GZIP_BUNDLE_BYTES}`);
 }
 if (!existsSync(artifactPath)) {
-  fail(`missing ${relative(root, artifactPath)}. Run npm run build:release before npm run release:check.`);
+  fail(`missing ${relative(root, artifactPath)}. 先执行 npm run build（或 npm run ci）生成正式构建。`);
 }
 
 const rawBytes = statSync(artifactPath).size;

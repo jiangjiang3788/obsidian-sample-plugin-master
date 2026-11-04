@@ -115,7 +115,7 @@ lines.push('');
 lines.push('1. 新增功能先在 `test/system/feature-test-map.json` 登记，再补测试。');
 lines.push('2. 自动统计同时要求证据文件存在并带有对应 `@covers 功能/维度` 声明；它提高可追溯性，但关键 P0 仍需人工审查场景质量。');
 lines.push('3. 普通开发运行 `npm run test:system` 只报告，不阻断。');
-lines.push('4. 当 P0 缺口逐步补齐后，可使用 `npm run test:system:strict` 作为发布门禁。');
+lines.push('4. 如需严格审计 P0 缺口，可由工程人员运行 `node scripts/testing/test-system-report.mjs --strict`；此项目前不是默认 CI 门禁。');
 fs.writeFileSync(path.join(outDir, 'test-system-report.md'), lines.join('\n') + '\n');
 
 console.log('\n【测试体系】Think OS 功能测试地图');

@@ -87,7 +87,7 @@ describe('P0 GoalUseCase → SettingsRepository → 重启恢复', () => {
         fields: expect.arrayContaining([expect.objectContaining({ key: '场景', type: 'singleSelect', required: true })]),
       }),
     ]));
-    expect(h.persistence.saveData).toHaveBeenCalled();
+    expect(h.persistence.save).toHaveBeenCalled();
 
     const restarted = new SettingsRepository(h.persistence);
     const restored = await restarted.load();

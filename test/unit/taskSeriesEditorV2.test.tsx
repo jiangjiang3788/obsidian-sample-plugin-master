@@ -176,9 +176,7 @@ describe('周期任务专用编辑器 V2', () => {
     const onRecurrenceChange = jest.fn();
     await act(async () => render(
       <RecurringTaskSeriesEditor
-        scope="current_and_future"
         recurrence={{ unit: 'week', interval: 1, anchor: 'start' }}
-        onScopeChange={() => {}}
         onRecurrenceChange={onRecurrenceChange}
         onSkipCurrent={() => {}}
         onStopSeries={() => {}}

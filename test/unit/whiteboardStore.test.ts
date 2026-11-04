@@ -265,7 +265,8 @@ describe('WhiteboardStore 1.1.0', () => {
     const member = await store.addRecord(DEFAULT_WHITEBOARD_ID, 'semantic-member', { x: 280, y: 260 }, child.id);
     const archived = await store.addRecord(DEFAULT_WHITEBOARD_ID, 'semantic-archived', { x: 320, y: 300 }, child.id); await store.archiveItems(DEFAULT_WHITEBOARD_ID, [archived.id]);
     const standalone = await store.addRecord(DEFAULT_WHITEBOARD_ID, 'semantic-standalone', { x: -400, y: -200 });
-    const archiveBefore = store.getBoard(DEFAULT_WHITEBOARD_ID)?.archivedItems?.find((entry) => entry.id === archived.id)!;
+    const archiveBefore = store.getBoard(DEFAULT_WHITEBOARD_ID)?.archivedItems?.find((entry) => entry.id === archived.id);
+    if (!archiveBefore) throw new Error('开始平移之前应当存在归档卡片');
     const writesBefore = (h.storage.writeJSON as jest.Mock).mock.calls.length;
     await expect(store.translateNodes(DEFAULT_WHITEBOARD_ID, [member.id, standalone.id], [parent.id, child.id], 50, -30)).resolves.toBe(true);
     expect((h.storage.writeJSON as jest.Mock).mock.calls.length).toBe(writesBefore + 1);
@@ -274,7 +275,8 @@ describe('WhiteboardStore 1.1.0', () => {
     expect(board.groups?.find((entry) => entry.id === child.id)).toMatchObject({ x: 270, y: 170 });
     expect(board.items.find((entry) => entry.id === member.id)).toMatchObject({ x: 330, y: 230 });
     expect(board.items.find((entry) => entry.id === standalone.id)).toMatchObject({ x: -350, y: -230 });
-    const archivedAfter = board.archivedItems?.find((entry) => entry.id === archived.id)!;
+    const archivedAfter = board.archivedItems?.find((entry) => entry.id === archived.id);
+    if (!archivedAfter) throw new Error('平移之后不应丢失归档卡片');
     expect(archivedAfter).toMatchObject({ x: 370, y: 270, archiveX: archiveBefore.archiveX, archiveY: archiveBefore.archiveY });
   });
 

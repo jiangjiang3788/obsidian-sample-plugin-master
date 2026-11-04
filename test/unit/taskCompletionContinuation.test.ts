@@ -143,4 +143,37 @@ describe('resolveTaskCompletionContinuation', () => {
     ]);
   });
 
+  it('rejects non-string Goal paths from persisted continuation context', () => {
+    const result = resolveContinuationAfterCreate({
+      record: doneTask({ recordType: 'habit' }),
+      settings: settingsWithTemplates(),
+      context: {
+        __recordContinuation: {
+          sourceRecordId: 'task_sleep_1',
+          reason: 'task_completion',
+          expectedGoalPath: { path: '照顾好自己/睡眠' },
+          completedRecordTypeIds: ['core.task'],
+        },
+      },
+    });
+    expect(result).toBeNull();
+  });
+
+  it('ignores invalid context dates instead of interpreting objects as dates', () => {
+    const result = resolveContinuationAfterCreate({
+      record: doneTask({ recordType: 'habit', date: '2026-09-14' }),
+      settings: settingsWithTemplates(),
+      context: {
+        date: { userControlled: true },
+        __recordContinuation: {
+          sourceRecordId: 'task_sleep_1',
+          reason: 'task_completion',
+          expectedGoalPath: '照顾好自己/睡眠',
+          completedRecordTypeIds: ['core.task'],
+        },
+      },
+    });
+    expect(result?.options[0]?.context.date).toBe('2026-09-14');
+  });
+
 });

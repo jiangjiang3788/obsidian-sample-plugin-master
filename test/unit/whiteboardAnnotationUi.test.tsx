@@ -18,7 +18,7 @@ describe('Whiteboard 1.2.2/1.3.7 空间标注 UI', () => {
     await act(async () => render(<WhiteboardAnnotation annotation={{ id: 'note-1', kind: 'sticky', text: '旧说明', x: -20, y: 40 }} zoom={1} onUpdate={update} onMove={move} onRemove={remove} />, host));
     const note = host.querySelector('[data-whiteboard-annotation-id="note-1"]') as HTMLElement;
     expect(note.classList.contains('is-sticky')).toBe(true); expect(host.querySelector('[data-whiteboard-item-id]')).toBeNull();
-    await act(async () => note.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true })));
+    await act(async () => { note.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true })); });
     const editor = host.querySelector('textarea') as HTMLTextAreaElement; expect(editor).toBeTruthy();
     await inputText(editor, '新的空间说明');
     await commitTextInput(editor);

@@ -58,7 +58,7 @@ describe('Whiteboard 1.2.5 R2 Nested Workbench 可靠性回归', () => {
     await act(async () => (host.querySelector('button[aria-label="返回上一级工作台"]') as HTMLButtonElement).click());
     expect(workspace.dataset.whiteboardActiveGroupId).toBe(parent.id);
     await act(async () => (host.querySelector(`[data-whiteboard-group-id="${child.id}"] button[aria-label="全屏进入工作台"]`) as HTMLButtonElement).click());
-    await act(async () => workspace.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })));
+    await act(async () => { workspace.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); });
     expect(workspace.dataset.whiteboardActiveGroupId).toBe(parent.id);
     await act(async () => (host.querySelector(`[data-whiteboard-group-id="${child.id}"] button[aria-label="全屏进入工作台"]`) as HTMLButtonElement).click());
     await act(async () => (host.querySelector('button[aria-label="退出到根白板"]') as HTMLButtonElement).click());

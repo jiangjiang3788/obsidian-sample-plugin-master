@@ -61,7 +61,7 @@ describe('自由布局持久化', () => {
       });
     });
 
-    expect(persistence.saveData).toHaveBeenCalledTimes(1);
+    expect(persistence.save).toHaveBeenCalledTimes(1);
     expectPlacements(repository.getSnapshot().layouts.find((layout) => layout.id === 'layout-a')?.viewPlacements);
     expectPlacements(persisted.layouts.find((layout: any) => layout.id === 'layout-a')?.viewPlacements);
 

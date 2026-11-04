@@ -5,7 +5,7 @@
 import type { RecordViewItem } from '@core/types/public';
 import { buildWhiteboardRecordPresentation, getDefaultWhiteboardPosition } from '@/features/whiteboard/WhiteboardRecordPresentation';
 
-function record(recordType: string, overrides: Partial<RecordViewItem> = {}): RecordViewItem {
+function record(recordType: RecordViewItem['recordType'], overrides: Partial<RecordViewItem> = {}): RecordViewItem {
   return {
     id: `rec.${recordType}`, recordType, title: `${recordType} title`, content: `${recordType} content`, tags: [],
     goalPath: '健康/运动', date: '2026-09-01', created: 0, modified: 0, extra: {}, ...overrides,

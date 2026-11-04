@@ -5,8 +5,10 @@ import { getCreateAvailableRecordTypes } from '@/core/services/GoalTemplateResol
 import { getEffectiveRecordTypes, normalizeRecordTypePresentationKey } from '@/core/recordTypes/public';
 import type { RecordContinuationContext, RecordContinuationFollowUp } from '@/core/types/recordInput';
 
-function localDateKey(value: string | number | Date | null | undefined): string | null {
+function localDateKey(value: unknown): string | null {
   if (value === null || value === undefined || value === '') return null;
+  // Context is untrusted; never pass objects or booleans to the Date constructor.
+  if (!(value instanceof Date) && typeof value !== 'string' && typeof value !== 'number') return null;
   const raw = typeof value === 'string' ? value.trim() : '';
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
 
@@ -56,7 +58,9 @@ function readContinuationContext(context?: Record<string, unknown> | null): Reco
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const candidate = raw as Record<string, unknown>;
   const sourceRecordId = String(candidate.sourceRecordId || '').trim();
-  const expectedGoalPath = normalizeGoalPath(candidate.expectedGoalPath) || '';
+  const expectedGoalPath = typeof candidate.expectedGoalPath === 'string'
+    ? normalizeGoalPath(candidate.expectedGoalPath) || ''
+    : '';
   if (!sourceRecordId || !expectedGoalPath || candidate.reason !== 'task_completion') return null;
   return {
     sourceRecordId,

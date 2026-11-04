@@ -142,7 +142,7 @@ const heartbeat = setInterval(() => {
   const seconds = Math.max(1, Math.floor((Date.now() - childStartedAt) / 1000));
   console.log(`【真机测试】仍在运行，已用时 ${seconds} 秒……`);
   if (seconds >= 60 && seconds < 75) {
-    console.log('【真机测试】首次运行较慢时，通常正在下载/解压 Obsidian 或启动 Electron。可另开终端运行 npm run 测试:真机:诊断 查看原始进度。');
+    console.log('【真机测试】首次运行较慢时，通常正在下载/解压 Obsidian 或启动 Electron。可查看 reports/testing 中的真机测试技术日志。');
   }
 }, 10000);
 heartbeat.unref?.();

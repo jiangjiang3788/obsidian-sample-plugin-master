@@ -71,13 +71,13 @@ describe('Whiteboard Canvas selection 1.1.8 UI', () => {
     expect(host.querySelector('[data-whiteboard-item-id="item-a"]')?.getAttribute('data-whiteboard-selected')).toBe('true');
     expect(host.querySelector('[data-whiteboard-item-id="item-b"]')?.getAttribute('data-whiteboard-selected')).toBe('false');
     expect(host.querySelector('.think-whiteboard-selection-marquee')).not.toBeNull();
-    await act(async () => window.dispatchEvent(pointer('pointerup', 260, 270, true)));
+    await act(async () => { window.dispatchEvent(pointer('pointerup', 260, 270, true)); });
     expect(host.querySelector('.think-whiteboard-selection-marquee')).toBeNull();
 
-    await act(async () => viewport.dispatchEvent(pointer('pointerdown', 10, 10, false, true)));
+    await act(async () => { viewport.dispatchEvent(pointer('pointerdown', 10, 10, false, true)); });
     expect(host.querySelector('.think-whiteboard-workspace')?.getAttribute('data-whiteboard-selection-count')).toBe('0');
     expect(host.querySelector('.think-whiteboard-selection-marquee')).toBeNull();
-    await act(async () => window.dispatchEvent(pointer('pointerup', 10, 10, false, true)));
+    await act(async () => { window.dispatchEvent(pointer('pointerup', 10, 10, false, true)); });
   });
 
   test('多选拖入展开工作台时整批 moveItems 指向同一 groupId；点击移出会批量移出白板', async () => {

@@ -4,7 +4,7 @@ import {
   getGitHubDevBuildInfo, pullGitHubDevBuild, findGitHubRevisionPushTime,
 } from '@/platform/obsidian/GitHubDevUpdater';
 
-const requestUrlMock = requestUrl as jest.MockedFunction<typeof requestUrl>;
+const requestUrlMock = requestUrl as unknown as jest.Mock;
 const sha = 'a'.repeat(40);
 const previousSha = 'b'.repeat(40);
 const committedAt = '2026-10-14T03:12:00.000Z';

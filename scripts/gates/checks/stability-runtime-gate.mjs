@@ -156,8 +156,8 @@ function check_record_foundation_v2_stability_gate() {
   const enforceCiWorkflow = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
   if (enforceCiWorkflow) {
     expectFile('.github/workflows/ci.yml');
-    expectContains('.github/workflows/ci.yml', 'npm run verify:ci', 'CI must execute the full verification path');
-    expectContains('.github/workflows/ci.yml', 'npm run build:release', 'CI must exercise release packaging');
+    expectContains('.github/workflows/ci.yml', 'npm run ci', 'CI must execute the project verification path');
+    expectContains('.github/workflows/ci.yml', 'manifest.json', 'CI must preserve the Obsidian plugin artifacts');
   }
 
   expectContains('src/core/types/cache.ts', 'CURRENT_CACHE_SCHEMA_VERSION = 17', 'scanner integrity diagnostics changed cache shape');

@@ -1,85 +1,48 @@
-# Think OS 测试命令：日常使用版
+# 测试命令（`npm run test:help`）
 
-当前版本将日常测试统一到 npm 生态最常见的英文入口；中文命令继续保留兼容。
+## 默认：全部单元 + 集成
 
-## 只记 4 条
-
-### 1. `npm test`
-
-日常默认测试。直接运行单元测试 + 组合测试。
-
-- 这是唯一推荐的日常入口。
-- Jest 仍使用项目内置中文 Reporter，因此测试文件、失败用例、期望/实际、汇总结果都以中文展示。
-- 如果依赖未安装完整，会先用中文提示运行 `npm install`，不会直接掉进难读的 Jest 模块缺失错误。
-
-适合：每次改完代码先跑。
-
-### 2. `npm run test:full`
-
-本机完整质量检查，包括：
-
-- 功能测试地图严格审计
-- 测试源码语法
-- 工程质量
-- 单元 + 组合测试
-- 覆盖率
-- 性能基线
-- 故障实验室
-- 质量报告
-
-适合：准备提交代码、合并代码前。
-
-### 3. `npm run test:smoke`
-
-构建当前源码并启动真实 Obsidian 快速冒烟测试。
-
-适合：修改 UI、Quick Input、Timer、设置、Layout、AI Chat 等真实交互功能后。
-
-### 4. `npm run test:release`
-
-发布前最终检查。在“完整检查”基础上继续运行：
-
-- P0/P1/P2 真 Obsidian 测试
-- 大 Vault
-- Obsidian 兼容矩阵
-- 不稳定测试重复运行
-- 严格质量报告
-- Release 构建
-
-只有准备真正发布新版本时才需要运行。
-
-## 出问题时才用的细分命令
-
-| 命令 | 用途 |
-|---|---|
-| `npm run test:unit` | 只检查单元测试 |
-| `npm run test:integration` | 只检查组合测试 |
-| `npm run test:coverage` | 查看覆盖率 |
-| `npm run test:performance` | 检查性能退化 |
-| `npm run 测试:故障` | 主动制造坏文件、冲突、AI 失败等异常 |
-| `npm run test:system` | 查看功能测试地图 |
-| `npm run test:syntax` | 检查测试源码是否能解析 |
-| `npm run test:help` | 在终端重新显示本说明的简版 |
-
-## 中文兼容命令
-
-旧命令仍可继续使用：
-
-- `npm run 测试` = `npm test`
-- `npm run 测试:完整` = `npm run test:full`
-- `npm run 测试:真机` = `npm run test:smoke`
-- `npm run 测试:发布` = `npm run test:release`
-
-新代码、文档和人工操作优先使用 `npm test` / `npm run test:*`，避免两套入口继续分叉。
-
-## Windows 说明
-
-单元、组合、覆盖率、性能测试继续直接调用：
-
-```text
-node ./node_modules/jest/bin/jest.js ... --runInBand
+```bash
+npm test
 ```
 
-不经过此前 Windows 上出过问题的 `run-jest-zh.mjs -> child_process -> Jest` 日常链路。
+- 扫描全部匹配的单元与集成测试文件（目前约 291 个），**不是固定 5 个**。先自动执行 6 组模拟场景，确认运行器能够正确区分正常、失败、超时等状态。
+- 测试文件超过 **30 秒**还未结束：终止该文件的 Jest 子进程，记录超时，然后继续下一个文件；普通失败也继续。
+- 最后输出通过、失败、超时、未执行的文件数量。只要有失败或超时，命令退出状态就不是成功。
+- 这不是“忽略失败”：近期不修改的白板测试也照常执行，已知失败会留在报告里。
 
-中文输出由 `test/configs/jest-reporter.zh-CN.cjs` 提供，因此“直连 Jest”和“中文结果”并不冲突。
+## 日常整体检查
+
+```bash
+npm run check
+```
+
+依次运行：ESLint（仅显示 error）→ 全部 TypeScript 类型检查 → 上述 `npm test`。注意：前面的静态检查失败时，`check` 不会继续运行测试；如果只想完成全部测试，直接用 `npm test`。
+
+## 只看某次修改的关联测试（可选）
+
+```bash
+npm test -- --findRelatedTests src/需要检查的文件.ts
+```
+
+## 其他专项
+
+- `npm run test:unit` / `npm run test:integration`：按层级测试，仍走原生 Jest。
+- `npm run test:whiteboard`：白板专项。
+- `npm run test:coverage`：覆盖率；`npm run test:performance`：性能基线。
+- `npm run test:smoke` / `npm run test:e2e`：真实 Obsidian 环境，需要测试 Vault。
+- `npm run test:system` / `npm run test:fault`：证据审计与故障实验，非默认测试范围。
+
+## 怎么判断是否卡住
+
+终端会打印 `【正在测试 1/291】文件名`。超时 30 秒后会显示 `【超时跳过】` 并继续。详情见 `reports/testing/日常测试-失败技术日志.txt` 和 `reports/testing/日常测试-汇总.json`。
+
+30 秒限制作用于**整个测试文件**，并非每一个 `it()`。若该文件正常执行就需要超过 30 秒，可能会被误判超时，需单独评估。
+
+## Windows 10 上先做运行器自检
+
+```bash
+node scripts/testing/selftest-runner.mjs
+```
+
+仅运行模拟文件，不调用真实 Jest，不修改业务数据。通过后使用 `npm test`。现在只使用 Node 调度器，不使用 PowerShell；Jest 退出码才决定是否通过。

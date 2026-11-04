@@ -67,8 +67,9 @@ if (fs.existsSync(fixtureDir)) {
 }
 
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-for (const command of ['测试:故障实验室:审计', '测试:故障实验室', '测试:故障实验室:报告']) {
-  if (!pkg.scripts?.[command]) fail(`package.json 缺少中文命令：${command}`);
+const faultCommand = String(pkg.scripts?.['test:fault'] || '');
+for (const runner of ['audit-fault-lab.mjs', 'run-fault-lab-zh.mjs', 'generate-fault-lab-report.mjs']) {
+  if (!faultCommand.includes(runner)) fail(`test:fault 未串联 ${runner}`);
 }
 
 console.log('\n【故障实验室审计】');
