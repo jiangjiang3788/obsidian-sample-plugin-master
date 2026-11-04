@@ -60,3 +60,36 @@ describe('record input workflow error boundary', () => {
     });
   });
 });
+
+describe('create after durable write but before DataStore indexing', () => {
+  it('returns a non-retryable partial success instead of reporting a failed write', async () => {
+    const recordId = 'thought.01JWF7T20074QW3VAKQMEWSBK0';
+    const kernel = {
+      resolveMissingDependencies: () => ({
+        errors: [], warnings: [], recordTypeId: 'thought',
+        template: { id: 'thought', fields: [], targetFile: 'notes.md' },
+      }),
+      normalizeRecordInput: ({ formData }: { formData: Record<string, unknown> }) => ({ normalizedFormData: formData, warnings: [] }),
+      validateRecordInput: () => ({ ok: true, errors: [], warnings: [] }),
+    };
+    const workflow = new CreateRecordWorkflow({
+      getKernel: () => kernel,
+      deps: {
+        inputService: {
+          previewTemplateExecution: () => ({ recordId, outputContent: 'text', targetFilePath: 'notes.md' }),
+          executeTemplate: jest.fn(async () => 'notes.md'),
+          isRecordWritten: jest.fn(async () => true),
+        },
+        dataStore: { scanFileByPath: jest.fn(async () => []), notifyChange: jest.fn(), queryItems: () => [] },
+      },
+    } as never);
+
+    const result = await workflow.submit({ recordTypeId: 'thought', formData: { 内容: '正文' }, source: 'quickinput' });
+    expect(result).toMatchObject({
+      status: 'partial_success', operation: 'create', affectedPath: 'notes.md', affectedRecordId: recordId,
+      warnings: [expect.objectContaining({ code: 'record_create_index_pending' })],
+    });
+    expect(result.feedback?.notice).toContain('勿再次保存');
+    expect(result.followUp?.startTimerForRecordId).toBeUndefined();
+  });
+});

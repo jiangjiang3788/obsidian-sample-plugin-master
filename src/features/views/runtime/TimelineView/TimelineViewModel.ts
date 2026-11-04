@@ -134,10 +134,7 @@ export function buildTimelineSummaryData(args: {
   isSummaryView: boolean;
 }): TimelineSummaryRow[] {
   if (!args.isSummaryView) return [];
-  const viewStart = dayjs(args.dateRange[0]);
-  const viewEnd = dayjs(args.dateRange[1]);
-  const tasksInRange = args.timelineTasks.filter((task) => dayjs(task.doneDate).isBetween(viewStart, viewEnd, 'day', '[]'));
-  return buildMonthlyAndWeeklySummary(tasksInRange, args.config.UNTRACKED_LABEL) as TimelineSummaryRow[];
+  return buildMonthlyAndWeeklySummary(args.timelineTasks, args.config.UNTRACKED_LABEL, args.dateRange) as TimelineSummaryRow[];
 }
 
 

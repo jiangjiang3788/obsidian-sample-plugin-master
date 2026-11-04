@@ -26,6 +26,7 @@ import {
   deriveQuickInputInitialSelection,
   getGoalPath,
   hydrateQuickInputTemplateDefaults,
+  isUntouchedEmptyNativeInput,
   resolveQuickInputRecordTypeId,
   resolveTaskQuickInputTimingMode,
   shouldShowQuickInputTimeDirectionControl,
@@ -229,7 +230,7 @@ export function QuickInputEditor({
   const currentGoalPath = selectedGoalPath || getGoalPath(selectedGoal || resolvedGoal) || null;
   const currentGoalTitle = currentGoalPath ? currentGoalPath.split('/').filter(Boolean).pop() || currentGoalPath : null;
   const currentGoalParts = splitPathParts(currentGoalPath);
-  const currentRecordDate = String(formData['日期'] ?? formData.date ?? dayjs().format('YYYY-MM-DD')).trim();
+  const currentRecordDate = String(formData['日期'] ?? formData.date ?? context?.['日期'] ?? context?.date ?? dayjs().format('YYYY-MM-DD')).trim();
   const periodPolicy = isEnergyDirect ? null : resolveTemplatePeriodPolicy(displayRawTemplate as any);
   const currentPeriod = periodPolicy ? resolveDerivedPeriod(currentRecordDate || dayjs().format('YYYY-MM-DD'), periodPolicy.granularity) : null;
   const currentPeriodUi = useMemo(() => buildQuickInputPeriodUi(currentPeriod), [currentPeriod?.id, currentPeriod?.label, currentPeriod?.granularity]);
@@ -259,11 +260,15 @@ export function QuickInputEditor({
 
   useEffect(() => {
     if (isEnergyDirect || !template) return;
+    const latest = liveSessionRef.current;
+    // An earlier passive effect must not hydrate the newly selected Goal with
+    // the previous Goal/template before the event's synchronous update renders.
+    if (latest.selectedGoalPath !== selectedGoalPath || latest.currentRecordTypeId !== currentRecordTypeId) return;
     const hydrated = hydrateQuickInputTemplateDefaults({
       template,
       context,
-      current: liveSessionRef.current.formData,
-      fieldSources: liveSessionRef.current.fieldSources,
+      current: latest.formData,
+      fieldSources: latest.fieldSources,
       selectedGoal,
       currentGoalPath,
       currentGoalTitle,
@@ -299,11 +304,19 @@ export function QuickInputEditor({
 
   useEffect(() => {
     const latest = liveSessionRef.current;
+    // Do not let an older render publish its stale template after an immediate
+    // Goal click already published a newer session revision to the Save owner.
+    if (latest.selectedGoalPath !== selectedGoalPath || latest.currentRecordTypeId !== currentRecordTypeId) return;
     onStateChange?.(makeEditorState(latest.formData, latest.timeDirection, latest.fieldSources));
   }, [currentRecordTypeId, effectiveRecordTypeId, selectedGoalPath, currentGoalPath, currentGoalTitle, currentGoalParts.root, currentGoalParts.leaf, formData, timeDirection, template, displayTemplateId, displayTemplateSourceType, fieldSources]);
 
   const handleUpdateField = (key: string, value: any, isOptionObject = false) => {
     const latest = liveSessionRef.current;
+    // Clicking a Goal moves focus away from the initially blank Task body.
+    // The native blur event reports '' even when nobody typed anything.
+    // Marking that as a user clear makes subsequent GoalTemplate hydration
+    // refuse to insert its body default on the FIRST create.
+    if (!isOptionObject && isUntouchedEmptyNativeInput(latest.formData, latest.fieldSources, key, value)) return;
     if (!isOptionObject && latest.formData[key] === value) return;
     const updated = applyQuickInputFieldUpdate({ formData: latest.formData, fieldSources: latest.fieldSources, key, value, isOptionObject, timeDirection: latest.timeDirection });
     const next = applySession({
@@ -347,7 +360,12 @@ export function QuickInputEditor({
       return;
     }
 
-    const nextSelection = applyQuickInputGoalSelection({ formData, fieldSources, option });
+    const currentDraft = liveSessionRef.current;
+    const nextSelection = applyQuickInputGoalSelection({
+      formData: currentDraft.formData,
+      fieldSources: currentDraft.fieldSources,
+      option,
+    });
     let nextFormData = nextSelection.formData;
     let nextFieldSources = nextSelection.fieldSources;
 
@@ -384,12 +402,87 @@ export function QuickInputEditor({
       }
     }
 
-    applySession({
+    if (isEnergyDirect) {
+      applySession({
+        type: 'selectGoal',
+        goalPath: nextSelection.goalPath,
+        formData: nextFormData,
+        fieldSources: nextFieldSources,
+      });
+      return;
+    }
+
+    // Commit the newly selected Goal's template defaults in THIS event turn.
+    // Waiting for a passive useEffect left a window where the Save button was
+    // enabled while the parent still held the previous/empty form draft.
+    const targetGoal = option.goal || (fullSettings.goalSettings?.goals || [])
+      .find((goal) => getGoalPath(goal) === nextSelection.goalPath) || null;
+    const targetRuntime = resolveQuickInputRecordTypeRuntime({
+      settings: fullSettings,
+      isEnergyDirect,
+      currentRecordTypeId,
+      selectedGoal: targetGoal,
+      selectedGoalPath: nextSelection.goalPath,
+      requireDirectGoalTemplate,
+    });
+    const targetRawTemplate = targetRuntime.template || baseDisplayRuntime.template;
+    const targetEffectiveTypeId = targetRuntime.template
+      ? targetRuntime.effectiveRecordTypeId
+      : baseDisplayRuntime.effectiveRecordTypeId;
+    const targetTemplate = buildQuickInputDisplayTemplate(
+      targetRawTemplate,
+      targetEffectiveTypeId,
+      goalFieldOptions,
+      {
+        taskTimingMode: resolveTaskQuickInputTimingMode({
+          context,
+          formData: nextFormData,
+          recordInputMode: recordInputMode === 'create' ? 'create' : 'edit',
+          effectiveRecordTypeId: targetEffectiveTypeId || currentRecordTypeId,
+        }),
+        recordInputMode: recordInputMode === 'create' ? 'create' : 'edit',
+      },
+    );
+    const selectedDate = String(nextFormData['日期'] ?? nextFormData.date ?? context?.['日期'] ?? context?.date ?? dayjs().format('YYYY-MM-DD')).trim();
+    const targetPolicy = targetRawTemplate ? resolveTemplatePeriodPolicy(targetRawTemplate as any) : null;
+    const targetPeriod = targetPolicy ? resolveDerivedPeriod(selectedDate || undefined, targetPolicy.granularity) : null;
+    const targetGoalTitle = nextSelection.goalPath.split('/').filter(Boolean).pop() || nextSelection.goalPath;
+    const draft = liveSessionRef.current;
+    const hydrated = hydrateQuickInputTemplateDefaults({
+      template: targetTemplate,
+      context,
+      current: nextFormData,
+      fieldSources: nextFieldSources,
+      selectedGoal: targetGoal,
+      currentGoalPath: nextSelection.goalPath,
+      currentGoalTitle: targetGoalTitle,
+      currentPeriod: targetPeriod,
+      timeDirection: draft.timeDirection,
+    });
+    const next = applySession({
       type: 'selectGoal',
       goalPath: nextSelection.goalPath,
-      formData: nextFormData,
-      fieldSources: nextFieldSources,
+      formData: hydrated.formData,
+      fieldSources: hydrated.fieldSources,
     });
+    // Publish the exact same revision synchronously to the modal's Save owner.
+    // The later editor effect stays as a general projection for other changes.
+    onStateChange?.(buildQuickInputEditorState({
+      recordTypeId: currentRecordTypeId,
+      effectiveRecordTypeId: targetEffectiveTypeId,
+      selectedGoal: targetGoal,
+      currentGoalPath: nextSelection.goalPath,
+      currentGoalTitle: targetGoalTitle,
+      currentGoalParts: splitPathParts(nextSelection.goalPath),
+      currentPeriod: targetPeriod,
+      currentPeriodFields: buildQuickInputPeriodUi(targetPeriod).fields,
+      formData: next.formData,
+      timeDirection: next.timeDirection,
+      template: targetTemplate,
+      templateId: targetRuntime.template ? targetRuntime.templateId : baseDisplayRuntime.templateId,
+      templateSourceType: targetRuntime.template ? targetRuntime.templateSourceType : baseDisplayRuntime.templateSourceType,
+      fieldSources: next.fieldSources,
+    }));
   };
 
   if (isEnergyDirect) {

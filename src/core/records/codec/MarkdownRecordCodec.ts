@@ -129,6 +129,17 @@ const TASK_READABLE_DATETIME_LABELS = new Set([
   '创建于', '计划时间', '开始时间', '结束时间', '截止时间', '完成于', '取消于', '跳过于',
 ]);
 
+/** Escape structural marker lines in user body text without altering regular Markdown. */
+function escapeRecordBodyLine(line: string): string {
+  return /^(\s*)\\*(<!-- (?:start|end) -->)\s*$/.test(line)
+    ? line.replace(/^(\s*)/, '$1\\')
+    : line;
+}
+
+function unescapeRecordBodyLine(line: string): string {
+  return line.replace(/^(\s*)\\(\\*<!-- (?:start|end) -->\s*)$/, '$1$2');
+}
+
 /** Record Block body -> canonical typed metadata. Only canonical Record Block fields are accepted here. */
 export function decodeRecordContentLines(contentLines: string[], _parentFolder: string): ParsedRecordMetadata {
   let date: string | undefined;
@@ -196,7 +207,7 @@ export function decodeRecordContentLines(contentLines: string[], _parentFolder: 
 
   for (const rawLine of contentLines) {
     if (contentStarted) {
-      content += (content ? '\n' : '') + rawLine;
+      content += (content ? '\n' : '') + unescapeRecordBodyLine(rawLine);
       continue;
     }
 
@@ -363,7 +374,7 @@ function emitBody(lines: string[], body: string): void {
   if (!body) return;
   const parts = body.split('\n');
   lines.push(`内容:: ${parts.shift() || ''}`);
-  lines.push(...parts);
+  lines.push(...parts.map(escapeRecordBodyLine));
 }
 
 /** Canonical Record encoder. Custom metadata is emitted before an optional terminal body. */

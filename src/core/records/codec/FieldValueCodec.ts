@@ -59,12 +59,20 @@ export function splitMarkdownMultiValue(value: unknown): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Legacy custom KV values have no schema at parse time. Preserve the long-standing
+ * numeric/boolean contract consumed by energy, rating and custom-number records,
+ * but never coerce identifiers with leading zeroes (e.g. "00123" -> 123).
+ * A caller that knows a field is text can use decodeMarkdownFieldValue(...,
+ * { valueType: 'string' }) to avoid inferring even canonical numeric literals.
+ */
 export function decodeUnknownMarkdownKvValue(value: unknown): string | number | boolean {
   const raw = String(value ?? '').trim();
   if (/^(true|false)$/i.test(raw)) return raw.toLowerCase() === 'true';
-  if (raw !== '') {
+  if (/^[+-]?0\d/.test(raw)) return raw;
+  if (raw) {
     const numeric = Number(raw);
-    if (!Number.isNaN(numeric)) return numeric;
+    if (Number.isFinite(numeric)) return numeric;
   }
   return raw;
 }
@@ -128,6 +136,7 @@ export function decodeMarkdownFieldValue(value: unknown, def?: FieldCodecDefinit
   }
 
   if (valueKind(def) === 'boolean') return decodeBooleanValue(value);
+  if (valueKind(def) === 'string') return String(value).trim();
 
   return decodeUnknownMarkdownKvValue(value);
 }

@@ -81,18 +81,54 @@ export class ObsidianVaultPort implements VaultPort {
       try {
         await this.app.vault.create(path, content);
       } catch (e) {
-        // 竞争条件：并发创建同一路径时，Obsidian 可能抛错。
-        // 再次确认是否已存在，如果已存在则改为覆盖写入。
+        // Two creators racing on the same path must not silently overwrite the
+        // winner's content; only the caller knows whether retry is safe.
         const recheck = this.app.vault.getAbstractFileByPath(path);
-        if (recheck instanceof TFile) {
-          await this.app.vault.modify(recheck, content);
-          return;
-        }
         if (recheck instanceof TFolder) {
           throw new Error(`路径冲突："${path}" 是文件夹，无法写入文件。`);
         }
+        if (recheck instanceof TFile || await this.app.vault.adapter.exists(path)) {
+          throw new Error(`record_write_conflict:${path}`, { cause: e });
+        }
         devError(`[ObsidianVaultPort] create file failed: ${path}`, e);
         throw e;
+      }
+    }, 'storage');
+  }
+
+  /** Atomic Record mutation for files already known to Obsidian. */
+  async mutateFile(path: string, change: (current: string | null) => string): Promise<void> {
+    return traceThinkOperation('vault.mutate', async () => {
+      this.assertActive('mutateFile', path);
+      await this.ensureFolderFor(path);
+      const af = this.app.vault.getAbstractFileByPath(path);
+      if (af instanceof TFile) {
+        // Obsidian process is serialized with other Vault.process callers and
+        // computes the replacement from the latest file content.
+        await this.app.vault.process(af, (current) => change(current));
+        return;
+      }
+      if (af instanceof TFolder) throw new Error(`路径冲突："${path}" 是文件夹，无法写入文件。`);
+
+      if (await this.app.vault.adapter.exists(path)) {
+        // Startup-only fallback: the adapter sees this file before TFile cache does.
+        // Adapter has no atomic compare-and-swap; recheck to avoid common stale writes.
+        const before = await this.app.vault.adapter.read(path);
+        const after = change(before);
+        if (await this.app.vault.adapter.read(path) !== before) {
+          throw new Error(`record_write_conflict:${path}`);
+        }
+        await this.app.vault.adapter.write(path, after);
+        return;
+      }
+
+      const next = change(null);
+      try {
+        await this.app.vault.create(path, next);
+      } catch (error) {
+        // A concurrent creator must never trigger the old overwrite-on-create-error path.
+        if (await this.app.vault.adapter.exists(path)) throw new Error(`record_write_conflict:${path}`, { cause: error });
+        throw error;
       }
     }, 'storage');
   }

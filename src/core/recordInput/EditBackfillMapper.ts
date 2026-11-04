@@ -173,6 +173,7 @@ export function buildInitialEditFormData(input: {
   // or detach a recurring instance from its TaskSeries.
   if (input.item.recordType === 'task') {
     if (isPresent(input.item.status)) result.status = input.item.status;
+    if (isPresent(input.item.createdAt)) result.createdAt = input.item.createdAt;
     if (isPresent(input.item.seriesId)) result.seriesId = input.item.seriesId;
     // Legacy/manual actual ranges remain compatibility facts until explicitly edited
     // through Timeline. Ordinary planning edits must not silently convert them into

@@ -24,6 +24,21 @@ export const isSameValue = isRecordInputSameValue;
 export const isRefreshableSource = (source?: QuickInputFieldSource) =>
   isRecordInputRefreshableSource(source);
 
+/**
+ * Blur/change fires when an untouched empty native text field loses focus to
+ * the Goal selector. This must not be treated as an explicit user clear, or
+ * selecting a GoalTemplate cannot populate the Task body on the first create.
+ */
+export function isUntouchedEmptyNativeInput(
+  formData: QuickInputFormData,
+  fieldSources: QuickInputFieldSourceMap,
+  key: string,
+  nextValue: unknown,
+): boolean {
+  return nextValue === '' && (formData[key] === undefined || formData[key] === null || formData[key] === '')
+    && fieldSources[key] === undefined;
+}
+
 export const buildInitialFieldSources = (
   initialData?: QuickInputFormData,
   source: QuickInputFieldSource = 'context',

@@ -146,7 +146,7 @@ export function QuickInputModalContent({
   } = useQuickInputOriginalNavigation({ mode, editItem, vaultName, showNotice });
   const getCurrentState = useCallback(() => {
     const state = editorStateRef.current || editorState;
-    const latest = readLatestQuickInputTextFields(panelRef.current, state.formData);
+    const latest = readLatestQuickInputTextFields(panelRef.current, state.formData, state.fieldSources);
     if (!latest.changedKeys.length) return state;
     // One final native-DOM reconciliation at the submission boundary covers
     // WebViews which delay their last dictated input/change notification.

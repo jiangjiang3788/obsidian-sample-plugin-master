@@ -53,10 +53,39 @@ export class CreateRecordWorkflow {
       );
 
       const refreshPlan = buildRefreshPlan([path]);
-      const scannedByPath = await applyRecordRefreshPlan(this.runtime.deps.dataStore, refreshPlan);
-      const scannedItems = scannedByPath.get(path) ?? getFileItemsByPath(this.runtime.deps.dataStore, path);
-      const createdRecord = scannedItems.find(item => item.id === preview.recordId);
-      if (!createdRecord) throw new Error(`record_create_scan_failed:${preview.recordId}`);
+      let createdRecord;
+      try {
+        const scannedByPath = await applyRecordRefreshPlan(this.runtime.deps.dataStore, refreshPlan);
+        const scannedItems = scannedByPath.get(path) ?? getFileItemsByPath(this.runtime.deps.dataStore, path);
+        createdRecord = scannedItems.find(item => item.id === preview.recordId);
+      } catch {
+        // A completed file write must not be reclassified as a failed create just
+        // because the index or Obsidian's TFile cache is not ready yet.
+      }
+      if (!createdRecord) {
+        let written: boolean | null = null;
+        try { written = await this.runtime.deps.inputService.isRecordWritten(path, preview.recordId); }
+        catch { /* A failed verification is NOT proof that the completed write was rolled back. */ }
+        if (written !== false) {
+          const confirmed = written === true;
+          return buildSuccessResult('create', {
+            status: 'partial_success',
+            affectedPath: path,
+            affectedRecordId: preview.recordId,
+            refresh: refreshPlan,
+            feedback: { notice: confirmed
+              ? '记录已写入 Markdown，但索引尚未完成。请重新扫描笔记库，勿再次保存。'
+              : 'Markdown 写入已返回成功，但无法核对落盘状态。请先检查原文件，勿重复提交。' },
+            warnings: [...warnings, {
+              code: confirmed ? 'record_create_index_pending' : 'record_create_commit_uncertain',
+              message: confirmed
+                ? 'Markdown 文件已确认包含此记录；DataStore 尚未索引成功，避免重复创建。'
+                : '读取文件失败，无法确认记录当前状态。请检查文件后再处理，不应直接重试写入。',
+            }],
+          });
+        }
+        throw new Error(`record_create_scan_failed:${preview.recordId}`);
+      }
 
       return buildSuccessResult('create', {
         affectedPath: path,

@@ -29,9 +29,12 @@ describe('FieldValueCodec', () => {
     expect(formatFieldValueForTemplate({ src: 'cover.png' }, FIELD_CODEC_PRESETS.image)).toBe('cover.png');
   });
 
-  it('未知 KV 只做基础标量解码', () => {
+  it('未知 KV 与历史数字/布尔记录兼容，但保留前导零编号', () => {
     expect(decodeUnknownMarkdownKvValue('true')).toBe(true);
     expect(decodeUnknownMarkdownKvValue('42')).toBe(42);
+    expect(decodeUnknownMarkdownKvValue('00123')).toBe('00123');
+    expect(decodeUnknownMarkdownKvValue('00.50')).toBe('00.50');
+    expect(decodeMarkdownFieldValue('42', { valueType: 'string' })).toBe('42');
     expect(decodeUnknownMarkdownKvValue('项目/插件')).toBe('项目/插件');
   });
 

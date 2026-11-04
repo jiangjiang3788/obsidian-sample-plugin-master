@@ -2,41 +2,81 @@
 import { dayjs } from '@core/utils/date';
 import { normalizeGoalPath, UNASSIGNED_GOAL_KEY } from '@core/goal/public';
 import type { TaskBlock, TimelineTask } from '@core/types/timeline';
+import { splitTaskIntoDayBlocks } from './timelineBlocks';
 
 /** Timeline aggregation is keyed directly by canonical Goal path. */
 export function getTimelineGoalKey(task: Pick<TimelineTask, 'goalPath'>): string {
     return normalizeGoalPath(String(task.goalPath || '').trim()) || UNASSIGNED_GOAL_KEY;
 }
 
+interface TrackedSlice {
+    day: string;
+    goalKey: string;
+    hours: number;
+}
+
+/** Use the same day slices as Timeline itself, rather than assigning a whole session to its start date. */
+function trackedSlices(tasks: TimelineTask[], range: [dayjs.Dayjs, dayjs.Dayjs]): TrackedSlice[] {
+    const result: TrackedSlice[] = [];
+    for (const task of tasks) {
+        if (task.timelineSource === 'task-plan' || task.timelineSource === 'task-point'
+            || !task.actualStartDate || !dayjs(task.actualStartDate).isValid()
+            || !Number.isFinite(task.duration) || task.duration <= 0) continue;
+        // Old/injected Timeline projections may have a valid start and duration
+        // but no explicit range.end. Keep their recorded duration compatible;
+        // the day splitter otherwise classifies them as zero-length points.
+        const derivedStart = dayjs(`${task.actualStartDate}T00:00:00`).add(task.startMinute, 'minute');
+        const withEnd: TimelineTask = task.timelineRange?.end ? task : {
+            ...task,
+            doneDate: task.doneDate || task.actualStartDate,
+            timelineRange: {
+                start: task.timelineRange?.start || derivedStart.format('YYYY-MM-DDTHH:mm'),
+                end: derivedStart.add(task.duration, 'minute').format('YYYY-MM-DDTHH:mm'),
+            },
+        };
+        const blocks = splitTaskIntoDayBlocks(withEnd, range);
+        const goalKey = getTimelineGoalKey(task);
+        for (const block of blocks) {
+            const minutes = block.blockEndMinute - block.blockStartMinute;
+            if (minutes > 0) result.push({ day: block.day, goalKey, hours: minutes / 60 });
+        }
+    }
+    return result;
+}
+
 /** Build month/week summaries keyed by Goal path, plus untracked clock time. */
 export function buildMonthlyAndWeeklySummary(
     timelineTasks: TimelineTask[],
     untrackedLabel: string,
+    dateRange?: [Date, Date],
 ): any[] {
+    const valid = (timelineTasks || []).filter(task => task.actualStartDate && dayjs(task.actualStartDate).isValid());
+    if (!valid.length) return [];
+
+    const start = dateRange
+        ? dayjs(dateRange[0]).startOf('day')
+        : valid.map(task => dayjs(task.actualStartDate)).reduce((min, date) => date.isBefore(min) ? date : min).startOf('day');
+    const end = dateRange
+        ? dayjs(dateRange[1]).endOf('day')
+        : valid.map(task => dayjs(task.actualStartDate).add(Math.max(0, Number(task.duration) || 0), 'minute'))
+            .reduce((max, date) => date.isAfter(max) ? date : max).endOf('day');
+    if (!start.isValid() || !end.isValid() || start.isAfter(end)) return [];
+    const slices = trackedSlices(valid, [start, end]);
+    if (!slices.length) return [];
+    const sliceMonths = slices.map(slice => slice.day.slice(0, 7));
+    let month = dayjs(`${sliceMonths.reduce((min, value) => value < min ? value : min)}-01`);
+    const lastMonth = sliceMonths.reduce((max, value) => value > max ? value : max);
     const data: any[] = [];
-    if (!timelineTasks?.length) return data;
 
-    const validTasks = timelineTasks.filter((task) => dayjs(task.doneDate).isValid());
-    if (!validTasks.length) return data;
-    const taskDates = validTasks.map((task) => dayjs(task.doneDate));
-    const minDate = taskDates.reduce((min, d) => d.isBefore(min) ? d : min);
-    const maxDate = taskDates.reduce((max, d) => d.isAfter(max) ? d : max);
-
-    let month = minDate.startOf('month');
-    const end = maxDate.endOf('month');
-    while (month.isBefore(end) || month.isSame(end, 'month')) {
+    while (month.format('YYYY-MM') <= lastMonth) {
         const monthStr = month.format('YYYY-MM');
-        const tasksInMonth = validTasks.filter((task) => dayjs(task.doneDate).format('YYYY-MM') === monthStr);
+        const slicesInMonth = slices.filter(slice => slice.day.startsWith(monthStr));
         const monthlySummary: Record<string, number> = {};
         let totalTrackedHoursInMonth = 0;
-
-        for (const task of tasksInMonth) {
-            const goalKey = getTimelineGoalKey(task);
-            const durationHours = Number(task.duration || 0) / 60;
-            monthlySummary[goalKey] = (monthlySummary[goalKey] || 0) + durationHours;
-            totalTrackedHoursInMonth += durationHours;
+        for (const slice of slicesInMonth) {
+            monthlySummary[slice.goalKey] = (monthlySummary[slice.goalKey] || 0) + slice.hours;
+            totalTrackedHoursInMonth += slice.hours;
         }
-
         const daysInMonth = month.daysInMonth();
         const untrackedHoursInMonth = Math.max(0, daysInMonth * 24 - totalTrackedHoursInMonth);
         if (untrackedHoursInMonth > 0.01) monthlySummary[untrackedLabel] = untrackedHoursInMonth;
@@ -46,13 +86,11 @@ export function buildMonthlyAndWeeklySummary(
             if (weekStartDay > daysInMonth) return null;
             const weeklySummary: Record<string, number> = {};
             let totalTrackedHoursInWeek = 0;
-            for (const task of tasksInMonth) {
-                const taskDay = dayjs(task.doneDate).date();
+            for (const slice of slicesInMonth) {
+                const taskDay = Number(slice.day.slice(-2));
                 if (taskDay < weekStartDay || taskDay >= weekStartDay + 7) continue;
-                const goalKey = getTimelineGoalKey(task);
-                const durationHours = Number(task.duration || 0) / 60;
-                weeklySummary[goalKey] = (weeklySummary[goalKey] || 0) + durationHours;
-                totalTrackedHoursInWeek += durationHours;
+                weeklySummary[slice.goalKey] = (weeklySummary[slice.goalKey] || 0) + slice.hours;
+                totalTrackedHoursInWeek += slice.hours;
             }
             if (totalTrackedHoursInWeek < 0.01) return null;
             const daysInSlice = Math.min(7, daysInMonth - weekStartDay + 1);
@@ -60,7 +98,6 @@ export function buildMonthlyAndWeeklySummary(
             if (untrackedHours > 0.01) weeklySummary[untrackedLabel] = untrackedHours;
             return { summary: weeklySummary, totalHours: daysInSlice * 24 };
         });
-
         data.push({ month: monthStr, monthlySummary, totalMonthHours: daysInMonth * 24, weeklySummaries });
         month = month.add(1, 'month');
     }
@@ -73,18 +110,15 @@ export function buildSummaryGoalHours(
     dateRange: [Date, Date],
     untrackedLabel: string,
 ): Record<string, number> {
-    const viewStart = dayjs(dateRange[0]);
-    const viewEnd = dayjs(dateRange[1]);
-    const tasksInRange = timelineTasks.filter((task) => dayjs(task.doneDate).isBetween(viewStart, viewEnd, 'day', '[]'));
+    const viewStart = dayjs(dateRange[0]).startOf('day');
+    const viewEnd = dayjs(dateRange[1]).endOf('day');
     const hours: Record<string, number> = {};
     let totalTrackedHours = 0;
-    for (const task of tasksInRange) {
-        const goalKey = getTimelineGoalKey(task);
-        const durationHours = Number(task.duration || 0) / 60;
-        hours[goalKey] = (hours[goalKey] || 0) + durationHours;
-        totalTrackedHours += durationHours;
+    for (const slice of trackedSlices(timelineTasks || [], [viewStart, viewEnd])) {
+        hours[slice.goalKey] = (hours[slice.goalKey] || 0) + slice.hours;
+        totalTrackedHours += slice.hours;
     }
-    const dayCount = dayjs(dateRange[1]).diff(dayjs(dateRange[0]), 'day') + 1;
+    const dayCount = viewEnd.startOf('day').diff(viewStart, 'day') + 1;
     const untrackedHours = Math.max(0, dayCount * 24 - totalTrackedHours);
     if (untrackedHours > 0.01) hours[untrackedLabel] = untrackedHours;
     return hours;

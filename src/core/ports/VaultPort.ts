@@ -48,6 +48,9 @@ export interface VaultPort {
    */
   writeFile(path: string, content: string): Promise<void>;
 
+  /** Optional atomic read/modify/write; platform implementations should use their native file process API. */
+  mutateFile?(path: string, change: (current: string | null) => string): Promise<void>;
+
   /**
    * 删除文件。
    * - 文件不存在 -> no-op

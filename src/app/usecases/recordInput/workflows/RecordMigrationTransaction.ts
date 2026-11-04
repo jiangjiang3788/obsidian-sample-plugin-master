@@ -38,21 +38,44 @@ export class RecordMigrationTransaction {
 
   async execute(params: RecordMigrationTransactionParams): Promise<RecordSubmitResult> {
     const targetPath = params.outputPlan.targetFilePath || '';
+    const sourceBlock = await this.runtime.deps.inputService.readExistingRecordBlock?.(params.item);
     const createdPath = await this.runtime.deps.inputService.createRecordAtPlannedLocation(
       params.template,
       params.normalized.normalizedFormData,
-      { signal: params.signal, autoRefresh: false, recordId: params.item.id },
+      { signal: params.signal, autoRefresh: false, recordId: params.item.id, sourceBlock },
     );
 
-    const scannedNewPath = await applyRecordRefreshPlan(this.runtime.deps.dataStore, buildRefreshPlan([createdPath], false));
-    const afterTargetItems = scannedNewPath.get(createdPath) ?? getFileItemsByPath(this.runtime.deps.dataStore, createdPath);
-    const createdRecord = afterTargetItems.find(item => item.id === params.item.id);
-    if (!createdRecord) throw new Error(`record_move_scan_failed:${params.item.id}`);
+    let createdRecord: RecordViewItem | undefined;
+    try {
+      const scannedNewPath = await applyRecordRefreshPlan(this.runtime.deps.dataStore, buildRefreshPlan([createdPath], false));
+      const afterTargetItems = scannedNewPath.get(createdPath) ?? getFileItemsByPath(this.runtime.deps.dataStore, createdPath);
+      createdRecord = afterTargetItems.find(item => item.id === params.item.id);
+    } catch { /* The new file was written before indexing; retain the original on failure. */ }
+    if (!createdRecord) {
+      let written: boolean | undefined;
+      try { written = await this.runtime.deps.inputService.isRecordWritten?.(createdPath, params.item.id); }
+      catch { /* Uncertain is not proof of absence. */ }
+      if (written !== false && this.runtime.deps.inputService.isRecordWritten) {
+        return finalizeRecordSubmitResult(this.runtime.deps.dataStore, {
+          status: 'partial_success',
+          operation: 'update',
+          affectedPath: createdPath,
+          affectedRecordId: params.item.id,
+          refresh: buildRefreshPlan([createdPath, params.persistencePlan.originalPath]),
+          feedback: { notice: written === true
+            ? '新位置已写入，但索引尚未就绪；旧位置保留，请重新扫描后核对，不要重复迁移。'
+            : '新文件的写入已返回成功，但无法核对索引或文件状态；旧位置保留，请先检查文件，不要重复迁移。' },
+          warnings: [...(params.warnings || []), issue(written === true ? 'record_move_index_pending' : 'record_move_commit_uncertain', '新位置索引未确认，旧文件未删除以防止数据丢失。')],
+        });
+      }
+      throw new Error(`record_move_scan_failed:${params.item.id}`);
+    }
 
     try {
       const deletedPath = await this.runtime.deps.inputService.deleteExistingRecord(params.item, {
         signal: params.signal,
         autoRefresh: false,
+        expectedRecordBlock: sourceBlock,
       });
       return finalizeRecordSubmitResult(this.runtime.deps.dataStore, buildSuccessResult('update', {
         affectedPath: createdPath,

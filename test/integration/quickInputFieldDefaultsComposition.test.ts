@@ -4,6 +4,7 @@
  * @covers F042/integration
  */
 import { hydrateQuickInputTemplateDefaults, applyQuickInputFieldUpdate, finalizeQuickInputFormData } from '@/features/quickinput/editor/QuickInputEditorModel';
+import { isUntouchedEmptyNativeInput } from '@/features/quickinput/editor/quickInputFieldSourceModel';
 
 const template = {
   fields: [
@@ -14,6 +15,25 @@ const template = {
 };
 
 describe('模板字段 → 默认值水合 → 用户修改 → 提交表单组合', () => {
+  it('首次点击模板：空正文失焦不应标记 user，模板默认内容仍能填入', () => {
+    const initial = {};
+    expect(isUntouchedEmptyNativeInput(initial, {}, '内容', '')).toBe(true);
+    expect(isUntouchedEmptyNativeInput({ 内容: '' }, {}, '内容', '')).toBe(true);
+    const result = hydrateQuickInputTemplateDefaults({
+      template,
+      context: { 日期: '2026-05-13' },
+      current: initial,
+      fieldSources: {},
+      selectedGoal: { path: '学习/英语' },
+      currentGoalPath: '学习/英语',
+      currentGoalTitle: '英语',
+      timeDirection: 'backward',
+    } as never);
+    expect(result.formData.内容).toBe('默认 学习/英语');
+    expect(result.fieldSources.内容).toBe('template_default');
+    // A user-cleared hydrated value is a real override, not an untouched blur.
+    expect(isUntouchedEmptyNativeInput(result.formData, result.fieldSources, '内容', '')).toBe(false);
+  });
   it('模板默认值带来源进入编辑状态，用户修改后来源转为 user，最终表单保留 canonical 值', () => {
     const hydrated = hydrateQuickInputTemplateDefaults({
       template,

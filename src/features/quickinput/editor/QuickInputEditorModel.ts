@@ -35,6 +35,7 @@ export {
   isOptionLike,
   isRefreshableSource,
   isSameValue,
+  isUntouchedEmptyNativeInput,
   preserveQuickInputRecordTypeSwitchState,
 } from './quickInputFieldSourceModel';
 export {

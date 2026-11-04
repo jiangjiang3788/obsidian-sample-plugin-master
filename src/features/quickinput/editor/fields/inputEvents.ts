@@ -13,6 +13,7 @@ export function readInputValue(event: Event): string {
 export function readLatestQuickInputTextFields(
   root: Element | null,
   formData: Record<string, unknown>,
+  fieldSources: Record<string, string> = {},
 ): { formData: Record<string, unknown>; changedKeys: string[] } {
   if (!root) return { formData, changedKeys: [] };
   let next = formData;
@@ -25,6 +26,13 @@ export function readLatestQuickInputTextFields(
     if (!key) return;
     const storedValue = Array.isArray(next[key]) ? next[key].join('\n') : String(next[key] ?? '');
     if (control.value === storedValue) return;
+    // The Goal selection event may have synchronously published its template
+    // default while Preact has not yet painted the new native input value.
+    // Do not misread an unfocused old empty control as a user clear for a
+    // freshly seeded Goal default, Timeline execution range, or edit backfill.
+    // Real user changes are tracked by source=user; a focused IME is still read.
+    if (control.value === '' && storedValue !== '' && fieldSources[key] && fieldSources[key] !== 'user'
+      && control !== control.ownerDocument.activeElement) return;
     if (next === formData) next = { ...formData };
     next[key] = control.value;
     changedKeys.push(key);

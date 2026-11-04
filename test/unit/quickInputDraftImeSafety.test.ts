@@ -23,6 +23,24 @@ describe('Quick Input mobile IME consistency', () => {
     expect(readLatestQuickInputTextFields(root, original)).toEqual({ formData: original, changedKeys: [] });
   });
 
+  it('does not let an unpainted blank control erase a freshly selected Goal template default', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<textarea data-quick-input-field-key="任务内容"></textarea>';
+    const original = { 任务内容: '模板预设正文' };
+    const snapshot = readLatestQuickInputTextFields(root, original, { 任务内容: 'template_default' });
+    expect(snapshot.formData).toBe(original);
+    expect(snapshot.changedKeys).toEqual([]);
+
+    const edited = readLatestQuickInputTextFields(root, original, { 任务内容: 'user' });
+    expect(edited.formData.任务内容).toBe('');
+    expect(edited.changedKeys).toEqual(['任务内容']);
+
+    // Timeline invocation times use source=context instead of template_default.
+    // The first Save must not turn an unpainted datetime field into ''.
+    const execution = readLatestQuickInputTextFields(root, { 任务内容: '2026-05-13T01:20' }, { 任务内容: 'context' });
+    expect(execution.changedKeys).toEqual([]);
+  });
+
   it('only allows keyboard dismissal on blank space inside current modal', () => {
     const modal = document.createElement('div');
     const editor = document.createElement('div');

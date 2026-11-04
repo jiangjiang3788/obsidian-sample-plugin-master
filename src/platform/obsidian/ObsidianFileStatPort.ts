@@ -15,11 +15,14 @@ export class ObsidianFileStatPort implements FileStatPort {
 
   async stat(path: string): Promise<FileStat | null> {
     const af = this.app.vault.getAbstractFileByPath(path);
-    if (!(af instanceof TFile)) return null;
-    return {
+    if (af instanceof TFile) return {
       ctime: af.stat.ctime,
       mtime: af.stat.mtime,
       size: af.stat.size,
     };
+    // Files written via the adapter during startup can exist before the TFile
+    // cache is populated. Do not discard a readable new Record for lack of stat.
+    const stat = await this.app.vault.adapter.stat(path);
+    return stat ? { ctime: stat.ctime, mtime: stat.mtime, size: stat.size } : null;
   }
 }

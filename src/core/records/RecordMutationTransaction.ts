@@ -1,4 +1,5 @@
 import type { VaultPort } from '@/core/ports/VaultPort';
+import { replaceRecordFile, withRecordFileLocks } from './RecordFileCoordinator';
 
 export interface RecordFileWrite {
   path: string;
@@ -32,34 +33,33 @@ export class RecordMutationTransaction {
     for (const write of writes) unique.set(write.path, write);
     const ordered = [...unique.values()];
 
-    for (const write of ordered) {
-      const current = await this.vault.readFile(write.path);
-      if ((current ?? '') !== write.before) {
-        throw new Error(`record_write_conflict:${write.path}`);
-      }
-    }
-
-    const written: RecordFileWrite[] = [];
-    try {
+    return withRecordFileLocks(this.vault, ordered.map(write => write.path), async () => {
+      // Verify every snapshot under the shared lock BEFORE touching any file.
       for (const write of ordered) {
-        await this.vault.writeFile(write.path, write.after);
-        written.push(write);
+        const current = await this.vault.readFile(write.path);
+        if ((current ?? '') !== write.before) throw new Error(`record_write_conflict:${write.path}`);
       }
-      return { writtenPaths: written.map(write => write.path) };
-    } catch (error) {
-      const recoveryFailedPaths: string[] = [];
-      for (const write of written.reverse()) {
-        try { await this.vault.writeFile(write.path, write.before); }
-        catch { recoveryFailedPaths.push(write.path); }
+
+      const written: RecordFileWrite[] = [];
+      try {
+        for (const write of ordered) {
+          await replaceRecordFile(this.vault, write.path, write.before, write.after);
+          written.push(write);
+        }
+        return { writtenPaths: written.map(write => write.path) };
+      } catch (error) {
+        const writtenPaths = written.map(write => write.path);
+        const recoveryFailedPaths: string[] = [];
+        for (const write of written.reverse()) {
+          // Rollback is conditional: never undo an external edit made after our write.
+          try { await replaceRecordFile(this.vault, write.path, write.after, write.before); }
+          catch { recoveryFailedPaths.push(write.path); }
+        }
+        if (recoveryFailedPaths.length > 0) {
+          throw new RecordTransactionRecoveryError(error, writtenPaths, recoveryFailedPaths);
+        }
+        throw error;
       }
-      if (recoveryFailedPaths.length > 0) {
-        throw new RecordTransactionRecoveryError(
-          error,
-          written.map(write => write.path),
-          recoveryFailedPaths,
-        );
-      }
-      throw error;
-    }
+    });
   }
 }

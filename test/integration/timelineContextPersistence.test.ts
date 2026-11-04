@@ -49,6 +49,58 @@ function splitRecordBlocks(markdown: string): string[] {
 }
 
 describe('integration: Timeline click context -> Task persistence', () => {
+  it('第一次选模板后立即保存：即便表单尚未水合，也一次性写入默认正文、完成状态和执行 Session', () => {
+    const base = getRecordTypeById(RECORD_TYPE_IDS.TASK);
+    if (!base) throw new Error('Task template missing');
+    const template = {
+      ...base,
+      fields: (base.fields || []).map((field) => field.key === '任务内容'
+        ? { ...field, defaultValue: '首次预设 {{goal.path}}' }
+        : field),
+    };
+    const invocation = resolveTimelineCreateContext({
+      day: '2026-05-13',
+      clickedMinute: 90,
+      dayBlocks: [taskBlock(40, 80, 'previous-task'), taskBlock(120, 180, 'next-task')],
+    });
+    const normalized = normalizeRecordInput({
+      template,
+      formData: { goalPath: '工作/专注' },
+      context: invocation.context,
+      mode: 'create',
+    }).normalizedFormData;
+    expect(normalized).toMatchObject({
+      任务内容: '首次预设 工作/专注',
+      status: 'done',
+      startAt: '2026-05-13T01:20',
+      endAt: '2026-05-13T02:00',
+    });
+    const plan = buildRecordOutputPlan({ template, formData: normalized, context: invocation.context });
+    const blocks = splitRecordBlocks(plan.outputContent);
+    expect(blocks).toHaveLength(2);
+    const task = asTaskRecord(parseRecordBlock(plan.targetFilePath!, blocks[0].split(/\r?\n/), 0, blocks[0].split(/\r?\n/).length - 1, '记录'));
+    const session = asTaskSessionRecord(parseRecordBlock(plan.targetFilePath!, blocks[1].split(/\r?\n/), 0, blocks[1].split(/\r?\n/).length - 1, '记录'));
+    expect(task?.content).toBe('首次预设 工作/专注');
+    expect(task?.status).toBe('done');
+    expect(session).toMatchObject({ taskId: task?.id, sessionDurationMinutes: 40, sessionSource: 'timeline' });
+  });
+
+  it('时间轴用户主动清空开始或结束时间，不从调用上下文偷偷补回来', () => {
+    const template = getRecordTypeById(RECORD_TYPE_IDS.TASK);
+    if (!template) throw new Error('Task template missing');
+    const invocation = resolveTimelineCreateContext({ day: '2026-05-13', clickedMinute: 90, dayBlocks: [] });
+    const normalized = normalizeRecordInput({
+      template,
+      formData: { goalPath: '工作/专注', startAt: '', endAt: '', status: 'done' },
+      context: invocation.context,
+      mode: 'create',
+    }).normalizedFormData;
+    expect(normalized.startAt).toBe('');
+    expect(normalized.endAt).toBe('');
+    const plan = buildRecordOutputPlan({ template, formData: normalized, context: invocation.context });
+    expect(splitRecordBlocks(plan.outputContent)).toHaveLength(1);
+  });
+
   it('首次提交不触碰任务内容，模板预设正文仍写入 Markdown 且重新解析一致', () => {
     const base = getRecordTypeById(RECORD_TYPE_IDS.TASK);
     if (!base) throw new Error('Task template missing');

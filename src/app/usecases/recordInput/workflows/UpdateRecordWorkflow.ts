@@ -207,7 +207,13 @@ export class UpdateRecordWorkflow {
         operation: 'update',
         recordTypeId: params.recordTypeId,
         item: params.item,
-        formData: { ...params.formData, seriesId: params.item.seriesId },
+        formData: {
+          ...params.formData,
+          seriesId: params.item.seriesId,
+          ...(params.item.recordType === 'task' && params.item.createdAt
+            ? { createdAt: params.item.createdAt }
+            : {}),
+        },
         normalizeMode: 'edit',
         validateMode: 'edit',
       });
@@ -217,6 +223,11 @@ export class UpdateRecordWorkflow {
       warnings = prepared.submit.warnings;
       const lifecycleIssue = buildTaskLifecycleBypassIssue(params.item, normalized.normalizedFormData);
       if (lifecycleIssue) return buildValidationErrorResult('update', [lifecycleIssue], warnings);
+      // Lifecycle status is not editable here, but the encoder must receive the
+      // persisted status even when a caller omitted the hidden form value.
+      if (params.item.recordType === 'task' && params.item.status) {
+        normalized.normalizedFormData.status = params.item.status;
+      }
       const outputPlan = buildRecordOutputPlan({
         template: resolved.template,
         formData: normalized.normalizedFormData,

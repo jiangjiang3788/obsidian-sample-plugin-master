@@ -62,3 +62,20 @@ describe('RecordMutationTransaction v2 stabilization', () => {
     await expect(promise).rejects.toMatchObject({ recoveryFailedPaths: ['a.md'] });
   });
 });
+
+describe('P0 concurrent Record commits', () => {
+  it('does not allow two transactions that read the same snapshot to both commit', async () => {
+    const { vault, files } = memoryVault({ 'same.md': 'origin' });
+    const first = new RecordMutationTransaction(vault);
+    const second = new RecordMutationTransaction(vault);
+    const results = await Promise.allSettled([
+      first.commit([{ path: 'same.md', before: 'origin', after: 'origin+A' }]),
+      second.commit([{ path: 'same.md', before: 'origin', after: 'origin+B' }]),
+    ]);
+    expect(results.filter(result => result.status === 'fulfilled')).toHaveLength(1);
+    expect(results.filter(result => result.status === 'rejected')).toHaveLength(1);
+    expect((results.find(result => result.status === 'rejected') as PromiseRejectedResult).reason.message)
+      .toContain('record_write_conflict:same.md');
+    expect(['origin+A', 'origin+B']).toContain(files.get('same.md'));
+  });
+});

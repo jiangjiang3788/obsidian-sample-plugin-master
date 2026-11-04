@@ -8,6 +8,7 @@ import { recordDebugLog } from '@/core/recordInput/debug';
 import { renderTemplate } from '@/core/utils/templateUtils';
 import { applyTaskTimePolicy } from '@/core/records/task/taskTime';
 import type { TaskTimeDirection } from '@/core/records/task/taskTime';
+import { isTimelineCompletedExecutionContext } from '@/core/records/task/taskExecutionCapture';
 
 function fieldMatches(field: any, aliases: string[]): boolean {
   return templateFieldMatches(field, aliases);
@@ -111,10 +112,28 @@ function applyMissingBodyDefault(input: NormalizeRecordInputParams, formData: Re
   if (value) formData[fieldWithDefault.key] = value;
 }
 
+/**
+ * A Timeline capture must remain persistable even if the QuickInput UI's
+ * passive default-hydration effect has not run yet. The invocation range is a
+ * fallback only: an explicitly entered/cleared field is never overwritten.
+ * Without this, saving immediately after choosing a Goal writes a completed
+ * Task without its TaskSession, so the new task is absent from the Timeline.
+ */
+function applyMissingTimelineExecutionContext(input: NormalizeRecordInputParams, formData: Record<string, unknown>): void {
+  if (input.mode !== 'create' || !isTimelineCompletedExecutionContext(input.context)) return;
+  for (const key of ['startAt', 'endAt', 'status'] as const) {
+    if (Object.prototype.hasOwnProperty.call(formData, key)) continue;
+    const value = input.context?.[key];
+    if (value !== undefined && value !== null && value !== '') formData[key] = value;
+  }
+}
+
 export function normalizeRecordInput(input: NormalizeRecordInputParams): NormalizeRecordInputResult {
   const normalizedFormData: Record<string, unknown> = { ...input.formData };
+  applyMissingTimelineExecutionContext(input, normalizedFormData);
   applyMissingBodyDefault(input, normalizedFormData);
-  const timeDirection = (normalizedFormData as any).__timeDirection === 'backward' ? 'backward' : 'forward';
+  const declaredDirection = normalizedFormData.__timeDirection ?? input.context?.__timeDirection;
+  const timeDirection = declaredDirection === 'backward' ? 'backward' : 'forward';
   delete (normalizedFormData as any).lastChanged;
   delete (normalizedFormData as any).__timeDirection;
 
